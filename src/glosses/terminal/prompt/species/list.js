@@ -49,13 +49,10 @@ export default class ListPrompt extends terminal.BasePrompt {
 
         const def = this.opt.default;
 
-        // Default being a Number
+        // If def is a Number, then use as index. Otherwise, check for value.
         if (is.number(def) && def >= 0 && def < this.opt.choices.realLength) {
             this.selected = def;
-        }
-
-        // Default being a String
-        if (is.string(def)) {
+        } else if (!is.number(def) && !is.nil(def)) {
             this.selected = this.opt.choices.pluck("value").indexOf(def);
         }
 

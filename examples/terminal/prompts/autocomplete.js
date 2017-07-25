@@ -80,7 +80,7 @@ adone.run({
         });
     },
     main() {
-        adone.terminal.prompt([
+        adone.terminal.prompt().run([
             {
                 type: "autocomplete",
                 name: "fruit",

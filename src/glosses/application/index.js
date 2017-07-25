@@ -407,7 +407,7 @@ class PositionalArgument extends Argument {
             throw new x.IllegalState(`${this.names[0]}: A positional argument cannot have multiple names`);
         }
         if (this.names[0][0] === "-") {
-            throw new x.IllegalState(`${this.names[0]}: The name of a positional argument cannot start with \"-\"`);
+            throw new x.IllegalState(`${this.names[0]}: The name of a positional argument cannot start with "-"`);
         }
     }
 
@@ -475,7 +475,7 @@ class OptionalArgument extends Argument {
         }, options), command);
         for (const name of this.names) {
             if (name[0] !== "-") {
-                throw new x.IllegalState(`${this.names[0]}: The name of an optional argument must start with \"-\": ${name}`);
+                throw new x.IllegalState(`${this.names[0]}: The name of an optional argument must start with "-": ${name}`);
             }
             if (/\s/.test(name)) {
                 throw new x.IllegalState(`${this.names[0]}: The name of an optional argument cannot have space characters: ${name}`);
@@ -1131,16 +1131,16 @@ class Command {
                         message: arg.getShortHelpMessage()
                     };
                 }), {
-                        model: [
-                            { id: "left-spacing", width: 4 },
-                            { id: "names", maxWidth: 40, wordwrap: true },
-                            { id: "between-cells", width: 2 },
-                            { id: "message", wordwrap: false }
-                        ],
-                        width: "100%",
-                        borderless: true,
-                        noHeader: true
-                    }));
+                    model: [
+                        { id: "left-spacing", width: 4 },
+                        { id: "names", maxWidth: 40, wordwrap: true },
+                        { id: "between-cells", width: 2 },
+                        { id: "message", wordwrap: false }
+                    ],
+                    width: "100%",
+                    borderless: true,
+                    noHeader: true
+                }));
             }
             if (options.length) {
                 if (this.arguments.length) {
@@ -1171,16 +1171,16 @@ class Command {
                             message: opt.getShortHelpMessage()
                         };
                     }), {
-                            model: [
-                                { id: "left-spacing", width: 4 },
-                                { id: "names", maxWidth: 40, wordwrap: true },
-                                { id: "between-cells", width: 2 },
-                                { id: "message", wordwrap: false }
-                            ],
-                            width: "100%",
-                            borderless: true,
-                            noHeader: true
-                        }));
+                        model: [
+                            { id: "left-spacing", width: 4 },
+                            { id: "names", maxWidth: 40, wordwrap: true },
+                            { id: "between-cells", width: 2 },
+                            { id: "message", wordwrap: false }
+                        ],
+                        width: "100%",
+                        borderless: true,
+                        noHeader: true
+                    }));
                 }
             }
             if (commands.length) {
@@ -1212,16 +1212,16 @@ class Command {
                             message: cmd.getShortHelpMessage()
                         };
                     }), {
-                            model: [
-                                { id: "left-spacing", width: 4 },
-                                { id: "names", maxWidth: 40, wordwrap: true },
-                                { id: "between-cells", width: 2 },
-                                { id: "message", wordwrap: true }
-                            ],
-                            width: "100%",
-                            borderless: true,
-                            noHeader: true
-                        }));
+                        model: [
+                            { id: "left-spacing", width: 4 },
+                            { id: "names", maxWidth: 40, wordwrap: true },
+                            { id: "between-cells", width: 2 },
+                            { id: "message", wordwrap: true }
+                        ],
+                        width: "100%",
+                        borderless: true,
+                        noHeader: true
+                    }));
                 }
             }
         }
@@ -1277,7 +1277,7 @@ export class Application extends Subsystem {
         this._commandRequired = commandRequired;
 
         this._exiting = false;
-        this._main = main;
+        this.isMain = main;
         this._mainCommand = null;
         this._errorScope = false;
         this._version = null;
@@ -1326,7 +1326,7 @@ export class Application extends Subsystem {
         process.on("unhandledRejection", unhandledRejection);
         process.on("rejectionHandled", rejectionHandled);
         process.on("beforeExit", beforeExit);
-        this._main = true;
+        this.isMain = true;
     }
 
     enableReport({
@@ -1359,7 +1359,7 @@ export class Application extends Subsystem {
 
     async run({ ignoreArgs = false } = {}) {
         try {
-            if (is.nil(adone.appinstance) && this._main !== false) {
+            if (is.nil(adone.appinstance) && this.isMain !== false) {
                 this._setupMain();
             }
 
@@ -1375,7 +1375,7 @@ export class Application extends Subsystem {
             // Initialize subsystems
             for (let i = 0; i < this._subsystems.length; i++) {
                 const ss = this._subsystems[i];
-                await ss.initialize();  // eslint-disable-line no-await-in-loop
+                await ss.initialize(); // eslint-disable-line no-await-in-loop
             }
             this._errorScope = false;
             let command = this._mainCommand;
@@ -1478,7 +1478,7 @@ export class Application extends Subsystem {
 
         this.removeProcessHandlers();
 
-        if (this._main) {
+        if (this.isMain) {
             adone.terminal.destroy();
         }
 
@@ -1553,7 +1553,7 @@ export class Application extends Subsystem {
                 //
             }
             const nextPath = adone.std.path.dirname(currentPath);
-            if (currentPath === nextPath) {  // that was the root
+            if (currentPath === nextPath) { // that was the root
                 break;
             }
             currentPath = nextPath;
@@ -1830,8 +1830,8 @@ export class Application extends Subsystem {
             // check if it is --smth=VALUE or -smth=VALUE
             if (!hasStopMark && /^--?[^\s]+?=/.test(part)) {
                 const index = part.indexOf("=");
-                argv.push(part.slice(0, index));  // --smth
-                argv.push(part.slice(index + 1));  // VALUE, can be empty, ok? --opt="" or --opt=
+                argv.push(part.slice(0, index)); // --smth
+                argv.push(part.slice(index + 1)); // VALUE, can be empty, ok? --opt="" or --opt=
                 // all the quotes must be handled by the shell, ok?
             } else {
                 argv.push(part);
@@ -1944,7 +1944,7 @@ export class Application extends Subsystem {
                             }
                             if (argument.optional) {
                                 nextPart();
-                            }  // current part is a parameter if the argument is positional
+                            } // current part is a parameter if the argument is positional
                             continue next;
                         }
                         // doesnt match anything
@@ -1994,7 +1994,7 @@ export class Application extends Subsystem {
                         possible: for (let j = partIndex + 1; j < argv.length; ++j) {
                             for (const arg of optional) {
                                 if (arg.match(argv[j])) {
-                                    continue possible;   // calc n of required args
+                                    continue possible; // calc n of required args
                                 }
                             }
                             for (const cmd of commands) {
@@ -2022,7 +2022,7 @@ export class Application extends Subsystem {
                         }
 
                         let thisAtLeast = 0;
-                        if (argument.required || argument.optional) {  // optional was passed, have to calculate
+                        if (argument.required || argument.optional) { // optional was passed, have to calculate
                             const { nargs } = argument;
                             const hasValue = argument.hasValue();
                             if (is.integer(nargs)) {
@@ -2120,7 +2120,7 @@ export class Application extends Subsystem {
                     }
                     case "finish": {
                         finished = true;
-                        if (remaining >= 0) {  // it should be -1 if there are no elements, so we have extra args, weird
+                        if (remaining >= 0) { // it should be -1 if there are no elements, so we have extra args, weird
                             errors.push(new x.IllegalState(`unknown parameter ${part}`));
                         }
                         // check required arguments

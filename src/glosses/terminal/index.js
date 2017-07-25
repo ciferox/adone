@@ -35,7 +35,7 @@ function write(data) {
 }
 
 function tryRead(file) {
-    if (Array.isArray(file)) {
+    if (is.array(file)) {
         for (let i = 0; i < file.length; i++) {
             const data = tryRead(file[i]);
             if (data) {
@@ -621,7 +621,7 @@ class Terminfo {
             sfile,
             list;
 
-        if (Array.isArray(prefix)) {
+        if (is.array(prefix)) {
             for (i = 0; i < prefix.length; i++) {
                 file = this._tprefix(prefix[i], term, soft);
                 if (file) {
@@ -1440,7 +1440,7 @@ class Terminfo {
                 // Are we supposed to store the result on the stack?
                 expr(`(stack.push(v = (stack.pop() ${
                     ch === "A" ? "&&" : "||"
-                    } stack.pop())), v)`);
+                } stack.pop())), v)`);
                 continue;
             }
 
@@ -1526,7 +1526,7 @@ class Terminfo {
         // Some terminfos (I'm looking at you, atari-color), don't end an if
         // statement. It's assumed terminfo will automatically end it for
         // them, because they are a bunch of lazy bastards.
-        if (end != null) {
+        if (!is.nil(end)) {
             stmt("}");
         }
 
@@ -1749,7 +1749,7 @@ class Terminfo {
             data,
             i;
 
-        if (Array.isArray(file)) {
+        if (is.array(file)) {
             for (i = 0; i < file.length; i++) {
                 data = this._tryCap(file[i], term);
                 if (data) {
@@ -1946,7 +1946,7 @@ class Terminfo {
 
         let capstart;
 
-        if (parameterized == null) {
+        if (is.nil(parameterized)) {
             parameterized = 0;
         }
 
@@ -2123,7 +2123,7 @@ class Terminfo {
 
         // skip the initial padding (if we haven't been told not to)
         capstart = null;
-        if (s == null) {
+        if (is.nil(s)) {
             s = "";
         }
 
@@ -2380,7 +2380,7 @@ class Terminfo {
 
         // Now, if we stripped off some leading padding, add it at the end
         // of the string as mandatory padding.
-        if (capstart != null) {
+        if (!is.nil(capstart)) {
             out += "$<";
             for (i = capstart; ; i++) {
                 if (isdigit(s[i]) || s[i] === "*" || s[i] === ".") {
@@ -2405,9 +2405,9 @@ class Terminfo {
      */
 
     getAll() {
-        let dir = this._prefix(),
-            list = asort(adone.std.fs.readdirSync(dir)),
-            infos = [];
+        let dir = this._prefix();
+        let list = asort(adone.std.fs.readdirSync(dir));
+        let infos = [];
 
         list.forEach((letter) => {
             const terms = asort(adone.std.fs.readdirSync(adone.std.path.resolve(dir, letter)));
@@ -2460,14 +2460,11 @@ class Terminfo {
     }
 
     detectUnicode() {
-        if (process.env.NCURSES_FORCE_UNICODE != null) {
+        if (!is.nil(process.env.NCURSES_FORCE_UNICODE)) {
             return Boolean(Number(process.env.NCURSES_FORCE_UNICODE));
         }
 
-        const LANG = `${process.env.LANG
-            }:${process.env.LANGUAGE
-            }:${process.env.LC_ALL
-            }:${process.env.LC_CTYPE}`;
+        const LANG = `${process.env.LANG}:${process.env.LANGUAGE}:${process.env.LC_ALL}:${process.env.LC_CTYPE}`;
 
         return /utf-?8/i.test(LANG) || (this.GetConsoleCP() === 65001);
     }
@@ -2485,7 +2482,7 @@ class Terminfo {
     // ~/ncurses/ncurses/tinfo/lib_setup.c
     detectBrokenACS(info) {
         // ncurses-compatible env variable.
-        if (process.env.NCURSES_NO_UTF8_ACS != null) {
+        if (!is.nil(process.env.NCURSES_NO_UTF8_ACS)) {
             return Boolean(Number(process.env.NCURSES_NO_UTF8_ACS));
         }
 
@@ -2538,15 +2535,15 @@ class Terminfo {
     }
 
     detectMagicCookie() {
-        return process.env.NCURSES_NO_MAGIC_COOKIE == null;
+        return is.nil(process.env.NCURSES_NO_MAGIC_COOKIE);
     }
 
     detectPadding() {
-        return process.env.NCURSES_NO_PADDING == null;
+        return is.nil(process.env.NCURSES_NO_PADDING);
     }
 
     detectSetbuf() {
-        return process.env.NCURSES_NO_SETBUF == null;
+        return is.nil(process.env.NCURSES_NO_SETBUF);
     }
 
     parseACS(info) {
@@ -2564,9 +2561,9 @@ class Terminfo {
 
         // See: ~/ncurses/ncurses/tinfo/lib_acs.c: L208
         Object.keys(Terminfo.acsc).forEach((ch) => {
-            let acs_chars = info.strings.acs_chars || "",
-                i = acs_chars.indexOf(ch),
-                next = acs_chars[i + 1];
+            const acs_chars = info.strings.acs_chars || "";
+            const i = acs_chars.indexOf(ch);
+            const next = acs_chars[i + 1];
 
             if (!next || i === -1 || !Terminfo.acsc[next]) {
                 return;
@@ -2629,7 +2626,7 @@ class Terminfo {
             return false;
         }
 
-        if (typeof val === "number") {
+        if (is.number(val)) {
             return val !== -1;
         }
 
@@ -2730,7 +2727,7 @@ Terminfo._alias.bools = {
     status_line_esc_ok: ["eslok", "es"], //                                escape can be used on the status line
     tilde_glitch: ["hz", "hz"], //                                cannot print ~'s (hazeltine)
     transparent_underline: ["ul", "ul"], //                                underline character overstrikes
-    xon_xoff: ["xon", "xo"]  //                                terminal uses xon/xoff handshaking
+    xon_xoff: ["xon", "xo"] //                                terminal uses xon/xoff handshaking
 };
 
 // These are the numeric capabilities:
@@ -2776,7 +2773,7 @@ Terminfo._alias.numbers = {
     output_res_line: ["orl", "Yj"], //                                vertical resolution in units per line
     output_res_vert_inch: ["orvi", "Yl"], //                                vertical resolution in units per inch
     print_rate: ["cps", "Ym"], //                                print rate in char‐ acters per second
-    wide_char_size: ["widcs", "Yn"]  //                                character step size when in double wide mode
+    wide_char_size: ["widcs", "Yn"] //                                character step size when in double wide mode
 };
 
 // These are the string capabilities:
@@ -3202,7 +3199,7 @@ Terminfo._alias.strings = {
     enter_top_hl_mode: ["ethlm", "Xt"], //                               Enter top highlight mode
     enter_vertical_hl_mode: ["evhlm", "Xv"], //                               Enter vertical high‐ light mode
     set_a_attributes: ["sgr1", "sA"], //                               Define second set of video attributes #1-#6
-    set_pglen_inch: ["slength", "sL"]  //                               YI Set page length to #1 hundredth of an inch
+    set_pglen_inch: ["slength", "sL"] //                               YI Set page length to #1 hundredth of an inch
 };
 
 Terminfo.alias = {};
@@ -3769,7 +3766,7 @@ Terminfo.strings = [
 
 // DEC Special Character and Line Drawing Set.
 // Taken from tty.js.
-Terminfo.acsc = {    // (0
+Terminfo.acsc = { // (0
     "`": "\u25c6", // '◆'
     a: "\u2592", // '▒'
     b: "\u0009", // '\t'
@@ -3800,7 +3797,7 @@ Terminfo.acsc = {    // (0
     "{": "\u03c0", // 'π'
     "|": "\u2260", // '≠'
     "}": "\u00a3", // '£'
-    "~": "\u00b7"  // '·'
+    "~": "\u00b7" // '·'
 };
 
 // Convert ACS unicode characters to the most similar-looking ascii characters.
@@ -3835,7 +3832,7 @@ Terminfo.utoa = Terminfo.prototype.utoa = {
     π: "?", // 'π'
     "\u2260": "=", // '≠'
     "\u00a3": "?", // '£'
-    "\u00b7": "*"  // '·'
+    "\u00b7": "*" // '·'
 };
 
 
@@ -3891,8 +3888,8 @@ const isMouse = (s) => {
 };
 
 const emitKeys = (stream, s) => {
-    if (Buffer.isBuffer(s)) {
-        if (s[0] > 127 && s[1] === undefined) {
+    if (is.buffer(s)) {
+        if (s[0] > 127 && is.undefined(s[1])) {
             s[0] -= 128;
             s = `\x1b${s.toString(stream.encoding || "utf-8")}`;
         } else {
@@ -4081,7 +4078,7 @@ const emitKeys = (stream, s) => {
         }
 
         // Don't emit a key if no name was found
-        if (key.name === undefined) {
+        if (is.undefined(key.name)) {
             key = undefined;
         }
 
@@ -4114,17 +4111,7 @@ export default class Terminal extends adone.EventEmitter {
         this.timeout = 200;	// 200ms timeout by default, so ssh can work without trouble
         this.hasProcessOnExit = false;
         this.lock = {};
-
-        // const listeners = process.listeners("exit");
-        // process.removeAllListeners("exit");
-        // process.on("exit", Terminal._exitHandler = () => {
-        //     this.flush();
-        //     this._exiting = true;
-        // });
-        // listeners.forEach((listener) => {
-        //     process.on("exit", listener);
-        // });
-
+        this.activePrompt = null;
         this._rl = null;
         this._logger = null;
         this.x = 0;
@@ -4848,14 +4835,16 @@ export default class Terminal extends adone.EventEmitter {
     }
 
     destroy() {
+        if (!is.null(this.activePrompt)) {
+            // Make sure new prompt start on a newline when closing
+            this.activePrompt.forceClose();
+        }
         this.flush();
         this._exiting = true;
 
         this.styleReset();
         this.showCursor(); // Restore cursor
 
-        // process.removeListener("exit", Terminal._exitHandler);
-        // delete Terminal._exitHandler;
         this.input._adoneInput--;
 
         if (this.input._adoneInput === 0) {
@@ -4898,21 +4887,21 @@ export default class Terminal extends adone.EventEmitter {
     }
 
     key(key, listener) {
-        if (typeof key === "string") {
+        if (is.string(key)) {
             key = key.split(/\s*,\s*/);
         }
         key.forEach((key) => this.on(`key ${key}`, listener), this);
     }
 
     onceKey(key, listener) {
-        if (typeof key === "string") {
+        if (is.string(key)) {
             key = key.split(/\s*,\s*/);
         }
         key.forEach((key) => this.once(`key ${key}`, listener), this);
     }
 
     unkey(key, listener) {
-        if (typeof key === "string") {
+        if (is.string(key)) {
             key = key.split(/\s*,\s*/);
         }
         key.forEach((key) => this.removeListener(`key ${key}`, listener), this);
@@ -4969,7 +4958,7 @@ export default class Terminal extends adone.EventEmitter {
                 shift: false
             };
 
-            if (Buffer.isBuffer(text)) {
+            if (is.buffer(text)) {
                 if (text[0] > 127 && is.undefined(text[1])) {
                     text[0] -= 128;
                     text = `\x1b${text.toString("utf-8")}`;
@@ -5426,7 +5415,7 @@ export default class Terminal extends adone.EventEmitter {
 
         this.on("data", (data) => {
             data = decoder.write(data);
-            
+
             if (!data) {
                 return;
             }
@@ -5438,8 +5427,8 @@ export default class Terminal extends adone.EventEmitter {
         const out = {};
         let parts;
 
-        if (Buffer.isBuffer(s)) {
-            if (s[0] > 127 && s[1] === undefined) {
+        if (is.buffer(s)) {
+            if (s[0] > 127 && is.undefined(s[1])) {
                 s[0] -= 128;
                 s = `\x1b${s.toString("utf-8")}`;
             } else {
@@ -6072,7 +6061,7 @@ export default class Terminal extends adone.EventEmitter {
     //     Ps = 2 3  ;  2  -> Restore xterm window title from stack.
     //     Ps >= 2 4  -> Resize to Ps lines (DECSLPP).
     manipulateWindow(...args) {
-        const callback = typeof args[args.length - 1] === "function" ? args.pop() : function () { };
+        const callback = is.function(args[args.length - 1]) ? args.pop() : function () { };
 
         return this.response("window-manipulation", `\x1b[${args.join(";")}t`, callback);
     }
@@ -6765,10 +6754,9 @@ export default class Terminal extends adone.EventEmitter {
     }
 
     prompt(questions) {
-        const ui = new this.Prompt();
-        const promise = ui.run(questions);
-        promise.ui = ui;
-        return promise;
+        const p = new this.Prompt();
+        this.activePrompt = p;
+        return p;
     }
 
     progress(options) {
@@ -7578,14 +7566,14 @@ conversions.rgb.hcg = function (rgb) {
     if (chroma <= 0) {
         hue = 0;
     } else
-        if (max === r) {
-            hue = ((g - b) / chroma) % 6;
-        } else
-            if (max === g) {
-                hue = 2 + (b - r) / chroma;
-            } else {
-                hue = 4 + (r - g) / chroma + 4;
-            }
+    if (max === r) {
+        hue = ((g - b) / chroma) % 6;
+    } else
+    if (max === g) {
+        hue = 2 + (b - r) / chroma;
+    } else {
+        hue = 4 + (r - g) / chroma + 4;
+    }
 
     hue /= 6;
     hue %= 1;
@@ -7689,9 +7677,9 @@ conversions.hcg.hsl = function (hcg) {
     if (l > 0.0 && l < 0.5) {
         s = c / (2 * l);
     } else
-        if (l >= 0.5 && l < 1.0) {
-            s = c / (2 * (1 - l));
-        }
+    if (l >= 0.5 && l < 1.0) {
+        s = c / (2 * (1 - l));
+    }
 
     return [hcg[0], s * 100, l * 100];
 };
@@ -7843,7 +7831,7 @@ const route = (fromModel) => {
         const toModel = models[i];
         const node = graph[toModel];
 
-        if (node.parent === null) {
+        if (is.null(node.parent)) {
             // no possible conversion, or this node is the source model.
             continue;
         }
@@ -7860,7 +7848,7 @@ models = Object.keys(conversions);
 
 function wrapRaw(fn) {
     const wrappedFn = function (args) {
-        if (args === undefined || args === null) {
+        if (is.undefined(args) || is.null(args)) {
             return args;
         }
 
@@ -7881,7 +7869,7 @@ function wrapRaw(fn) {
 
 function wrapRounded(fn) {
     const wrappedFn = function (args) {
-        if (args === undefined || args === null) {
+        if (is.undefined(args) || is.null(args)) {
             return args;
         }
 

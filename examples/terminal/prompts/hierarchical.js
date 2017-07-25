@@ -11,7 +11,7 @@ adone.run({
         this._exitHouse();
     },
     _exitHouse() {
-        adone.terminal.prompt(this.directionsPrompt).then((answers) => {
+        adone.terminal.prompt().run(this.directionsPrompt).then((answers) => {
             if (answers.direction === "Forward") {
                 adone.log("You find yourself in a forest");
                 adone.log("There is a wolf in front of you; a friendly looking dwarf to the right and an impasse to the left.");
@@ -23,7 +23,7 @@ adone.run({
         });
     },
     _encounter1() {
-        adone.terminal.prompt(this.directionsPrompt).then((answers) => {
+        adone.terminal.prompt().run(this.directionsPrompt).then((answers) => {
             const direction = answers.direction;
             if (direction === "Forward") {
                 adone.log("You attempt to fight the wolf");
@@ -40,7 +40,7 @@ adone.run({
         });
     },
     _encounter2a() {
-        adone.terminal.prompt(this.directionsPrompt).then((answers) => {
+        adone.terminal.prompt().run(this.directionsPrompt).then((answers) => {
             const direction = answers.direction;
             if (direction === "Forward") {
                 let output = "You find a painted wooden sign that says:";
@@ -57,7 +57,7 @@ adone.run({
         });
     },
     _encounter2b() {
-        adone.terminal.prompt({
+        adone.terminal.prompt().run({
             type: "list",
             name: "weapon",
             message: "Pick one",

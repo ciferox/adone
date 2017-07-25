@@ -10,7 +10,7 @@ adone.run({
             short: "The long option"
         });
 
-        adone.terminal.prompt([
+        adone.terminal.prompt().run([
             {
                 type: "list",
                 name: "letter",

@@ -7,7 +7,7 @@ adone.run({
             return "Password need to have at least a letter and a number";
         };
 
-        adone.terminal.prompt([
+        adone.terminal.prompt().run([
             {
                 type: "password",
                 message: "Enter a password",

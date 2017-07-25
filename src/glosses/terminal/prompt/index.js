@@ -5,11 +5,6 @@ export default class Prompt {
         this.rl = terminal.readline;
         this.rl.resume();
 
-        this.onForceClose = this.onForceClose.bind(this);
-
-        // Make sure new prompt start on a newline when closing
-        this.rl.on("SIGINT", this.onForceClose);
-        process.on("exit", this.onForceClose);
         this.prompts = adone.lazify({
             list: "./species/list",
             input: "./species/input",
@@ -68,23 +63,12 @@ export default class Prompt {
         return this.onCompletion(answers);
     }
 
-    /**
-     * Handle the ^C exit
-     * @return {null}
-     */
-    onForceClose() {
+    forceClose() {
         this.close();
         console.log("");
     }
 
-    /**
-     * Close the interface and cleanup listeners
-     */
     close() {
-        // Remove events listeners
-        this.rl.removeListener("SIGINT", this.onForceClose);
-        process.removeListener("exit", this.onForceClose);
-
         this.rl.output.unmute();
 
         if (this.activePrompt && is.function(this.activePrompt.close)) {
@@ -92,11 +76,9 @@ export default class Prompt {
         }
 
         terminal.resetReadline();
+        terminal.activePrompt = null;
     }
 
-    /**
-     * Once all prompt are over
-     */
     onCompletion(answers) {
         this.close();
 
