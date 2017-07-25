@@ -1,45 +1,19 @@
-const { x, is, std: { crypto: { randomBytes } } } = adone;
-
-const rnd16 = () => randomBytes(16);
-rnd16();
-
-const seedBytes = rnd16();
-const byteToHex = [];
-const hexToByte = {};
-for (let i = 0; i < 256; i++) {
-    byteToHex[i] = (i + 0x100).toString(16).substr(1);
-    hexToByte[byteToHex[i]] = i;
-}
+const { is, x, util: { uuid } } = adone;
 
 // Per 4.5, create and 48-bit node id, (47 random bits + multicast bit = 1)
 const nodeId = [
-    seedBytes[0] | 0x01,
-    seedBytes[1], seedBytes[2], seedBytes[3], seedBytes[4], seedBytes[5]
+    uuid.__.seedBytes[0] | 0x01,
+    uuid.__.seedBytes[1], uuid.__.seedBytes[2], uuid.__.seedBytes[3], uuid.__.seedBytes[4], uuid.__.seedBytes[5]
 ];
 
 // Per 4.2.2, randomize (14 bit) clockseq
-let _clockseq = (seedBytes[6] << 8 | seedBytes[7]) & 0x3fff;
+let _clockseq = (uuid.__.seedBytes[6] << 8 | uuid.__.seedBytes[7]) & 0x3fff;
 
 // Previous uuid creation time
 let _lastMSecs = 0;
 let _lastNSecs = 0;
 
-export const unparse = (buf, offset) => {
-    let i = offset || 0;
-
-    let res = "";
-
-    for (let j = 0; j < 16; ++j) {
-        res += byteToHex[buf[i++]];
-        if (j === 3 || j === 5 || j === 7 || j === 9) {
-            res += "-";
-        }
-    }
-
-    return res;
-};
-
-export const v1 = (options, buf, offset) => {
+const v1 = (options, buf, offset) => {
     let i = buf && offset || 0;
     const b = buf || [];
 
@@ -111,45 +85,7 @@ export const v1 = (options, buf, offset) => {
         b[i + n] = node[n];
     }
 
-    return buf ? buf : unparse(b);
+    return buf ? buf : uuid.__.bytesToUuid(b);
 };
 
-export const v4 = (buf) => {
-    if (is.string(buf)) {
-        buf = buf === "binary" ? Buffer.alloc(16) : null;
-    }
-
-    const rnds = rnd16();
-
-    // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
-    rnds[6] = (rnds[6] & 0x0f) | 0x40;
-    rnds[8] = (rnds[8] & 0x3f) | 0x80;
-
-    // Copy bytes to buffer, if provided
-    if (buf) {
-        for (let ii = 0; ii < 16; ++ii) {
-            buf[ii] = rnds[ii];
-        }
-    }
-
-    return buf || unparse(rnds);
-};
-
-export const parse = (s, buf, offset) => {
-    const i = (buf && offset) || 0;
-    let ii = 0;
-
-    buf = buf || [];
-    s.toLowerCase().replace(/[0-9a-f]{2}/g, (oct) => {
-        if (ii < 16) { // Don't overflow!
-            buf[i + ii++] = hexToByte[oct];
-        }
-    });
-
-    // Zero out remaining bytes if string was short
-    while (ii < 16) {
-        buf[i + ii++] = 0;
-    }
-
-    return buf;
-};
+export default v1;

@@ -21,8 +21,6 @@ class CloseEvent extends Event {
 
         this.wasClean = is.undefined(code) || code === 1000 || (code >= 3000 && code <= 4999);
         this.reason = reason;
-        this.target = target;
-        this.type = "close";
         this.code = code;
     }
 }

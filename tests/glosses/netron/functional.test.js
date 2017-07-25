@@ -1,4 +1,4 @@
-const { is, x, netron: { DEFAULT_PORT, Netron, decorator: { Private, Readonly, Type, Args, Description, Property, Contextable } } } = adone;
+const { is, netron: { DEFAULT_PORT, Netron, decorator: { Private, Readonly, Type, Args, Description, Property, Contextable } } } = adone;
 
 let defaultPort = DEFAULT_PORT;
 let NETRON_PORT = 32348;

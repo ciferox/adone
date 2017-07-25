@@ -462,9 +462,9 @@ export const namespaces = [
     },
     {
         name: "adone.util.uuid",
-        description: "UUID v1/v4",
+        description: "UUID v1/v4/v5",
         paths: [
-            "glosses/utils/uuid"
+            "glosses/utils/uuid/index"
         ]
     },
     {

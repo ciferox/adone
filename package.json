@@ -79,6 +79,7 @@
     "rimraf": "^2.2.8",
     "rx": "^4.1.0",
     "seedrandom": "2.4.3",
+    "self-path": "^1.0.0",
     "shortid": "^2.2.4",
     "smtp-server": "^1.17.0",
     "st": "~1.1.0",
@@ -88,9 +89,7 @@
     "tmp": "0.0.24",
     "useref": "^1.2.0",
     "uuid": "^2.0.1",
-    "vuvuzela": "^1.0.3",
-    "ws": "^1.0.1",
-    "self-path": "^1.0.0"
+    "vuvuzela": "^1.0.3"
   },
   "optionalDependencies": {
     "fsevents": "^1.0.0"

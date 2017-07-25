@@ -168,4 +168,21 @@ describe("Meta tests", () => {
             assert.includeMembers(Object.keys(ns.exports), ["compress", "decompress", "compressSync", "decompressSync", "isValidCompressed", "isValidCompressedSync"]);
         });
     });
+
+    describe("util", () => {
+        it("uuid", async () => {
+            const inspector = new adone.meta.code.Inspector();
+            await inspector.attachNamespace("adone.util.uuid");
+            const ns = inspector.getNamespace("adone.util.uuid");
+            assert.includeMembers(Object.keys(ns.exports), ["__", "v1", "v4", "v5"]);
+            
+            const privateModule = inspector.get("adone.util.uuid.__");
+            assert.isTrue(adone.meta.code.is.module(privateModule));
+            assert.includeMembers(Object.keys(privateModule.exports()), ["seedBytes", "bytesToUuid"]);
+
+            assert.isTrue(adone.meta.code.is.functionLike(inspector.get("adone.util.uuid.v1")));
+            assert.isTrue(adone.meta.code.is.functionLike(inspector.get("adone.util.uuid.v4")));
+            assert.isTrue(adone.meta.code.is.functionLike(inspector.get("adone.util.uuid.v5")));
+        });
+    });
 });

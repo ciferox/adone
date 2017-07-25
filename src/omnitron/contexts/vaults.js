@@ -6,6 +6,8 @@ const SEPARATOR = "|";
 @Private
 @Contextable
 @Description("The valuable of vault")
+@Method("name", { private: false })
+@Method("internalId", { private: false })
 @Method("set", { private: false })
 @Method("setMulti", { private: false })
 @Method("get", { private: false })
@@ -20,6 +22,8 @@ const SEPARATOR = "|";
 @Method("tags", { private: false })
 @Method("addTag", { private: false })
 @Method("deleteTag", { private: false })
+@Method("getNotes", { private: false })
+@Method("setNotes", { private: false })
 class Valuable extends adone.vault.Valuable {
 }
 

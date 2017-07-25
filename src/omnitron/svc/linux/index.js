@@ -125,8 +125,8 @@ export default class Service {
                 } else {
                     await adone.system.process.exec("/sbin/chkconfig", ["omnitron", "off"]);
                 }
-            } else if (this.config.mode == "sysd") {
-                await adone.system.process.exec("systemctl", ["disable", "omnitron.service"])
+            } else if (this.config.mode === "sysd") {
+                await adone.system.process.exec("systemctl", ["disable", "omnitron.service"]);
             }
             adone.info("System startup disabled");
 
