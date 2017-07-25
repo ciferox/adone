@@ -29,7 +29,7 @@ const META_SCHEMA_ID = "http://json-schema.org/draft-06/schema";
 const META_IGNORE_OPTIONS = ["removeAdditional", "useDefaults", "coerceTypes"];
 const META_SUPPORT_DATA = ["/properties"];
 
-const defaultSerializer = (data) => adone.data.json.encode(data, { stable: true }).toString("utf8");
+const defaultSerializer = (data) => adone.data.json.encodeStable(data).toString("utf8");
 
 const IDENTIFIER = /^[a-z_$][a-z0-9_$-]*$/i;
 

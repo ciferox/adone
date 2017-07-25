@@ -131,6 +131,13 @@ export const namespaces = [
         ]
     },
     {
+        name: "adone.data.json",
+        description: "Implementation of JSON serializers",
+        paths: [
+            "glosses/data/json/index"
+        ]
+    },
+    {
         name: "adone.data.base64",
         description: "Implementation of BASE64 serializer",
         paths: [

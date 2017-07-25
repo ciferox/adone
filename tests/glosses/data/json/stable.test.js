@@ -1,7 +1,7 @@
 describe("data", "json", "stable", () => {
     const stringify = (x, opts = {}) => {
         opts.stable = true;
-        return adone.data.json.encode(x, opts).toString();
+        return adone.data.json.encodeStable(x, opts).toString();
     };
     describe("cmp", () => {
         specify("custom comparison function", () => {

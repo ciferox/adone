@@ -1,7 +1,5 @@
 const { is } = adone;
 
-export const any = false;
-
 const stableEncode = function (obj, opts) {
     let { space } = opts;
     if (is.number(space)) {
@@ -74,11 +72,8 @@ const stableEncode = function (obj, opts) {
     })({ "": obj }, "", obj, 0);
 };
 
-export const encode = (obj, { space = "", replacer, cycles = false, cmp, stable = false } = {}) => {
-    const data = stable
-        ? stableEncode(obj, { space, replacer, cycles, cmp })
-        : JSON.stringify(obj, replacer, space);
-    return Buffer.from(data, "utf8");
+const encodeStable = (obj, { space = "", replacer, cycles = false, cmp } = {}) => {
+    return Buffer.from(stableEncode(obj, { space, replacer, cycles, cmp }), "utf8");
 };
 
-export const decode = (buf) => JSON.parse(buf.toString());
+export default encodeStable;

@@ -165,7 +165,7 @@ export default function compile(schema, root, localRefs, baseId) {
                 if (is.null(value)) {
                     return "null";
                 }
-                const valueStr = adone.data.json.encode(value, { stable: true }).toString();
+                const valueStr = adone.data.json.encodeStable(value).toString();
                 let index = defaultsHash[valueStr];
                 if (is.undefined(index)) {
                     index = defaultsHash[valueStr] = defaults.length;
