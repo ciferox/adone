@@ -1,7 +1,4 @@
-/* global describe it */
-
-
-const semver = adone.semver;
+const { x, semver } = adone;
 const eq = semver.eq;
 const gt = semver.gt;
 const lt = semver.lt;
@@ -16,6 +13,7 @@ const diff = semver.diff;
 const toComparators = semver.toComparators;
 const SemVer = semver.SemVer;
 const Range = semver.Range;
+const Comparator = semver.Comparator;
 
 describe("semver", () => {
     it("comparison tests", () => {
@@ -129,7 +127,6 @@ describe("semver", () => {
         });
     });
 
-
     it("range tests", () => {
         // [range, version]
         // version should be included by range
@@ -188,6 +185,8 @@ describe("semver", () => {
             ["*", "1.2.3"],
             ["2", "2.1.2"],
             ["2.3", "2.3.1"],
+            ["~x", "0.0.9"], // >=2.4.0 <2.5.0
+            ["~2", "2.0.9"], // >=2.4.0 <2.5.0
             ["~2.4", "2.4.0"], // >=2.4.0 <2.5.0
             ["~2.4", "2.4.5"],
             ["~>3.2.1", "3.2.2"], // >=3.2.1 <3.3.0,
@@ -221,11 +220,19 @@ describe("semver", () => {
             ["^1.2.3", "1.8.1"],
             ["^0.1.2", "0.1.2"],
             ["^0.1", "0.1.2"],
+            ["^0.0.1", "0.0.1"],
             ["^1.2", "1.4.2"],
             ["^1.2 ^1", "1.4.2"],
             ["^1.2.3-alpha", "1.2.3-pre"],
             ["^1.2.0-alpha", "1.2.0-pre"],
-            ["^0.0.1-alpha", "0.0.1-beta"]
+            ["^0.0.1-alpha", "0.0.1-beta"],
+            ["^0.1.1-alpha", "0.1.1-beta"],
+            ["^x", "1.2.3"],
+            ["x - 1.0.0", "0.9.7"],
+            ["x - 1.x", "0.9.7"],
+            ["1.0.0 - x", "1.9.7"],
+            ["1.x - x", "1.9.7"],
+            ["<=7.x", "7.9.9"]
         ].forEach((v) => {
             const range = v[0];
             const ver = v[1];
@@ -298,6 +305,7 @@ describe("semver", () => {
             ["<1.2.3", "1.2.3-beta"],
             ["=1.2.3", "1.2.3-beta"],
             [">1.2", "1.2.8"],
+            ["^0.0.1", "0.0.2"],
             ["^1.2.3", "2.0.0-alpha"],
             ["^1.2.3", "1.2.2"],
             ["^1.2", "1.1.9"],
@@ -305,7 +313,8 @@ describe("semver", () => {
             // invalid ranges never satisfied!
             ["blerg", "1.2.3"],
             ["git+https://user:password0123@github.com/foo", "123.0.0", true],
-            ["^1.2.3", "2.0.0-pre"]
+            ["^1.2.3", "2.0.0-pre"],
+            ["^1.2.3", false]
         ].forEach((v) => {
             const range = v[0];
             const ver = v[1];
@@ -417,9 +426,7 @@ describe("semver", () => {
                 assert.equal(parsed.version, wanted, `${cmd} object version updated`);
                 assert.equal(parsed.raw, wanted, `${cmd} object raw field updated`);
             } else if (parsed) {
-                assert.throws(() => {
-                    parsed.inc(what, id);
-                });
+                assert.throws(() => parsed.inc(what, id));
             } else {
                 assert.equal(parsed, null);
             }
@@ -544,222 +551,75 @@ describe("semver", () => {
         // [range, comparators]
         // turn range into a set of individual comparators
         [
-            ["1.0.0 - 2.0.0", [
-                [">=1.0.0", "<=2.0.0"]
-            ]],
-            ["1.0.0", [
-                ["1.0.0"]
-            ]],
-            [">=*", [
-                [""]
-            ]],
-            ["", [
-                [""]
-            ]],
-            ["*", [
-                [""]
-            ]],
-            ["*", [
-                [""]
-            ]],
-            [">=1.0.0", [
-                [">=1.0.0"]
-            ]],
-            [">=1.0.0", [
-                [">=1.0.0"]
-            ]],
-            [">=1.0.0", [
-                [">=1.0.0"]
-            ]],
-            [">1.0.0", [
-                [">1.0.0"]
-            ]],
-            [">1.0.0", [
-                [">1.0.0"]
-            ]],
-            ["<=2.0.0", [
-                ["<=2.0.0"]
-            ]],
-            ["1", [
-                [">=1.0.0", "<2.0.0"]
-            ]],
-            ["<=2.0.0", [
-                ["<=2.0.0"]
-            ]],
-            ["<=2.0.0", [
-                ["<=2.0.0"]
-            ]],
-            ["<2.0.0", [
-                ["<2.0.0"]
-            ]],
-            ["<2.0.0", [
-                ["<2.0.0"]
-            ]],
-            [">= 1.0.0", [
-                [">=1.0.0"]
-            ]],
-            [">=  1.0.0", [
-                [">=1.0.0"]
-            ]],
-            [">=   1.0.0", [
-                [">=1.0.0"]
-            ]],
-            ["> 1.0.0", [
-                [">1.0.0"]
-            ]],
-            [">  1.0.0", [
-                [">1.0.0"]
-            ]],
-            ["<=   2.0.0", [
-                ["<=2.0.0"]
-            ]],
-            ["<= 2.0.0", [
-                ["<=2.0.0"]
-            ]],
-            ["<=  2.0.0", [
-                ["<=2.0.0"]
-            ]],
-            ["<    2.0.0", [
-                ["<2.0.0"]
-            ]],
-            ["<\t2.0.0", [
-                ["<2.0.0"]
-            ]],
-            [">=0.1.97", [
-                [">=0.1.97"]
-            ]],
-            [">=0.1.97", [
-                [">=0.1.97"]
-            ]],
-            ["0.1.20 || 1.2.4", [
-                ["0.1.20"],
-                ["1.2.4"]
-            ]],
-            [">=0.2.3 || <0.0.1", [
-                [">=0.2.3"],
-                ["<0.0.1"]
-            ]],
-            [">=0.2.3 || <0.0.1", [
-                [">=0.2.3"],
-                ["<0.0.1"]
-            ]],
-            [">=0.2.3 || <0.0.1", [
-                [">=0.2.3"],
-                ["<0.0.1"]
-            ]],
-            ["||", [
-                [""],
-                [""]
-            ]],
-            ["2.x.x", [
-                [">=2.0.0", "<3.0.0"]
-            ]],
-            ["1.2.x", [
-                [">=1.2.0", "<1.3.0"]
-            ]],
-            ["1.2.x || 2.x", [
-                [">=1.2.0", "<1.3.0"],
-                [">=2.0.0", "<3.0.0"]
-            ]],
-            ["1.2.x || 2.x", [
-                [">=1.2.0", "<1.3.0"],
-                [">=2.0.0", "<3.0.0"]
-            ]],
-            ["x", [
-                [""]
-            ]],
-            ["2.*.*", [
-                [">=2.0.0", "<3.0.0"]
-            ]],
-            ["1.2.*", [
-                [">=1.2.0", "<1.3.0"]
-            ]],
-            ["1.2.* || 2.*", [
-                [">=1.2.0", "<1.3.0"],
-                [">=2.0.0", "<3.0.0"]
-            ]],
-            ["1.2.* || 2.*", [
-                [">=1.2.0", "<1.3.0"],
-                [">=2.0.0", "<3.0.0"]
-            ]],
-            ["*", [
-                [""]
-            ]],
-            ["2", [
-                [">=2.0.0", "<3.0.0"]
-            ]],
-            ["2.3", [
-                [">=2.3.0", "<2.4.0"]
-            ]],
-            ["~2.4", [
-                [">=2.4.0", "<2.5.0"]
-            ]],
-            ["~2.4", [
-                [">=2.4.0", "<2.5.0"]
-            ]],
-            ["~>3.2.1", [
-                [">=3.2.1", "<3.3.0"]
-            ]],
-            ["~1", [
-                [">=1.0.0", "<2.0.0"]
-            ]],
-            ["~>1", [
-                [">=1.0.0", "<2.0.0"]
-            ]],
-            ["~> 1", [
-                [">=1.0.0", "<2.0.0"]
-            ]],
-            ["~1.0", [
-                [">=1.0.0", "<1.1.0"]
-            ]],
-            ["~ 1.0", [
-                [">=1.0.0", "<1.1.0"]
-            ]],
-            ["~ 1.0.3", [
-                [">=1.0.3", "<1.1.0"]
-            ]],
-            ["~> 1.0.3", [
-                [">=1.0.3", "<1.1.0"]
-            ]],
-            ["<1", [
-                ["<1.0.0"]
-            ]],
-            ["< 1", [
-                ["<1.0.0"]
-            ]],
-            [">=1", [
-                [">=1.0.0"]
-            ]],
-            [">= 1", [
-                [">=1.0.0"]
-            ]],
-            ["<1.2", [
-                ["<1.2.0"]
-            ]],
-            ["< 1.2", [
-                ["<1.2.0"]
-            ]],
-            ["1", [
-                [">=1.0.0", "<2.0.0"]
-            ]],
-            ["1 2", [
-                [">=1.0.0", "<2.0.0", ">=2.0.0", "<3.0.0"]
-            ]],
-            ["1.2 - 3.4.5", [
-                [">=1.2.0", "<=3.4.5"]
-            ]],
-            ["1.2.3 - 3.4", [
-                [">=1.2.3", "<3.5.0"]
-            ]],
-            ["1.2.3 - 3", [
-                [">=1.2.3", "<4.0.0"]
-            ]],
-            [">*", [
-                ["<0.0.0"]
-            ]],
-            ["<*", [
-                ["<0.0.0"]
-            ]]
+            ["1.0.0 - 2.0.0", [[">=1.0.0", "<=2.0.0"]]],
+            ["1.0.0", [["1.0.0"]]],
+            [">=*", [[""]]],
+            ["", [[""]]],
+            ["*", [[""]]],
+            ["*", [[""]]],
+            [">=1.0.0", [[">=1.0.0"]]],
+            [">=1.0.0", [[">=1.0.0"]]],
+            [">=1.0.0", [[">=1.0.0"]]],
+            [">1.0.0", [[">1.0.0"]]],
+            [">1.0.0", [[">1.0.0"]]],
+            ["<=2.0.0", [["<=2.0.0"]]],
+            ["1", [[">=1.0.0", "<2.0.0"]]],
+            ["<=2.0.0", [["<=2.0.0"]]],
+            ["<=2.0.0", [["<=2.0.0"]]],
+            ["<2.0.0", [["<2.0.0"]]],
+            ["<2.0.0", [["<2.0.0"]]],
+            [">= 1.0.0", [[">=1.0.0"]]],
+            [">=  1.0.0", [[">=1.0.0"]]],
+            [">=   1.0.0", [[">=1.0.0"]]],
+            ["> 1.0.0", [[">1.0.0"]]],
+            [">  1.0.0", [[">1.0.0"]]],
+            ["<=   2.0.0", [["<=2.0.0"]]],
+            ["<= 2.0.0", [["<=2.0.0"]]],
+            ["<=  2.0.0", [["<=2.0.0"]]],
+            ["<    2.0.0", [["<2.0.0"]]],
+            ["<\t2.0.0", [["<2.0.0"]]],
+            [">=0.1.97", [[">=0.1.97"]]],
+            [">=0.1.97", [[">=0.1.97"]]],
+            ["0.1.20 || 1.2.4", [["0.1.20"], ["1.2.4"]]],
+            [">=0.2.3 || <0.0.1", [[">=0.2.3"], ["<0.0.1"]]],
+            [">=0.2.3 || <0.0.1", [[">=0.2.3"], ["<0.0.1"]]],
+            [">=0.2.3 || <0.0.1", [[">=0.2.3"], ["<0.0.1"]]],
+            ["||", [[""], [""]]],
+            ["2.x.x", [[">=2.0.0", "<3.0.0"]]],
+            ["1.2.x", [[">=1.2.0", "<1.3.0"]]],
+            ["1.2.x || 2.x", [[">=1.2.0", "<1.3.0"], [">=2.0.0", "<3.0.0"]]],
+            ["1.2.x || 2.x", [[">=1.2.0", "<1.3.0"], [">=2.0.0", "<3.0.0"]]],
+            ["x", [[""]]],
+            ["2.*.*", [[">=2.0.0", "<3.0.0"]]],
+            ["1.2.*", [[">=1.2.0", "<1.3.0"]]],
+            ["1.2.* || 2.*", [[">=1.2.0", "<1.3.0"], [">=2.0.0", "<3.0.0"]]],
+            ["1.2.* || 2.*", [[">=1.2.0", "<1.3.0"], [">=2.0.0", "<3.0.0"]]],
+            ["*", [[""]]],
+            ["2", [[">=2.0.0", "<3.0.0"]]],
+            ["2.3", [[">=2.3.0", "<2.4.0"]]],
+            ["~2.4", [[">=2.4.0", "<2.5.0"]]],
+            ["~2.4", [[">=2.4.0", "<2.5.0"]]],
+            ["~>3.2.1", [[">=3.2.1", "<3.3.0"]]],
+            ["~1", [[">=1.0.0", "<2.0.0"]]],
+            ["~>1", [[">=1.0.0", "<2.0.0"]]],
+            ["~> 1", [[">=1.0.0", "<2.0.0"]]],
+            ["~1.0", [[">=1.0.0", "<1.1.0"]]],
+            ["~ 1.0", [[">=1.0.0", "<1.1.0"]]],
+            ["~ 1.0.3", [[">=1.0.3", "<1.1.0"]]],
+            ["~> 1.0.3", [[">=1.0.3", "<1.1.0"]]],
+            ["<1", [["<1.0.0"]]],
+            ["< 1", [["<1.0.0"]]],
+            [">=1", [[">=1.0.0"]]],
+            [">= 1", [[">=1.0.0"]]],
+            ["<1.2", [["<1.2.0"]]],
+            ["< 1.2", [["<1.2.0"]]],
+            ["1", [[">=1.0.0", "<2.0.0"]]],
+            ["1 2", [[">=1.0.0", "<2.0.0", ">=2.0.0", "<3.0.0"]]],
+            ["1.2 - 3.4.5", [[">=1.2.0", "<=3.4.5"]]],
+            ["1.2.3 - 3.4", [[">=1.2.3", "<3.5.0"]]],
+            ["1.2.3 - 3", [[">=1.2.3", "<4.0.0"]]],
+            [">*", [["<0.0.0"]]],
+            ["<*", [["<0.0.0"]]]
         ].forEach((v) => {
             const pre = v[0];
             const wanted = v[1];
@@ -776,9 +636,9 @@ describe("semver", () => {
             null,
             "Infinity.NaN.Infinity"
         ].forEach((v) => {
-            assert.throws(() => {
-                SemVer.get(v);
-            }, adone.x.InvalidArgument, `Invalid Version: ${v}`);
+            const err = assert.throws(() => new SemVer(v));
+            assert.instanceOf(err, x.InvalidArgument);
+            assert.equal(err.message, `Invalid Version: ${v}`);
         });
     });
 
@@ -792,18 +652,13 @@ describe("semver", () => {
         ].forEach((v) => {
             const loose = v[0];
             const strict = v[1];
-            assert.throws(() => {
-                SemVer.get(loose);
-            });
-            const lv = SemVer.get(loose, true);
+            assert.throws(() => new SemVer(loose));
+            const lv = new SemVer(loose, true);
             assert.equal(lv.version, strict);
             assert.isOk(eq(loose, strict, true));
-            assert.throws(() => {
-                eq(loose, strict);
-            });
-            assert.throws(() => {
-                SemVer.get(strict).compare(loose);
-            });
+            assert.throws(() => eq(loose, strict));
+            assert.throws(() => new SemVer(strict).compare(loose));
+            assert.equal(semver.compareLoose(v[0], v[1]), 0);
         });
     });
 
@@ -814,27 +669,17 @@ describe("semver", () => {
         ].forEach((v) => {
             const loose = v[0];
             const comps = v[1];
-            assert.throws(() => {
-                new Range(loose);
-            });
+            assert.throws(() => new Range(loose));
             assert.equal(new Range(loose, true).range, comps);
         });
     });
 
     it("max satisfying", () => {
         [
-            [
-                ["1.2.3", "1.2.4"], "1.2", "1.2.4"
-            ],
-            [
-                ["1.2.4", "1.2.3"], "1.2", "1.2.4"
-            ],
-            [
-                ["1.2.3", "1.2.4", "1.2.5", "1.2.6"], "~1.2.3", "1.2.6"
-            ],
-            [
-                ["1.1.0", "1.2.0", "1.2.1", "1.3.0", "2.0.0b1", "2.0.0b2", "2.0.0b3", "2.0.0", "2.1.0"], "~2.0.0", "2.0.0", true
-            ]
+            [["1.2.3", "1.2.4"], "1.2", "1.2.4"],
+            [["1.2.4", "1.2.3"], "1.2", "1.2.4"],
+            [["1.2.3", "1.2.4", "1.2.5", "1.2.6"], "~1.2.3", "1.2.6"],
+            [["1.1.0", "1.2.0", "1.2.1", "1.3.0", "2.0.0b1", "2.0.0b2", "2.0.0b3", "2.0.0", "2.1.0"], "~2.0.0", "2.0.0", true]
         ].forEach((v) => {
             const versions = v[0];
             const range = v[1];
@@ -847,18 +692,10 @@ describe("semver", () => {
 
     it("min satisfying", () => {
         [
-            [
-                ["1.2.3", "1.2.4"], "1.2", "1.2.3"
-            ],
-            [
-                ["1.2.4", "1.2.3"], "1.2", "1.2.3"
-            ],
-            [
-                ["1.2.3", "1.2.4", "1.2.5", "1.2.6"], "~1.2.3", "1.2.3"
-            ],
-            [
-                ["1.1.0", "1.2.0", "1.2.1", "1.3.0", "2.0.0b1", "2.0.0b2", "2.0.0b3", "2.0.0", "2.1.0"], "~2.0.0", "2.0.0", true
-            ]
+            [["1.2.3", "1.2.4"], "1.2", "1.2.3"],
+            [["1.2.4", "1.2.3"], "1.2", "1.2.3"],
+            [["1.2.3", "1.2.4", "1.2.5", "1.2.6"], "~1.2.3", "1.2.3"],
+            [["1.1.0", "1.2.0", "1.2.1", "1.3.0", "2.0.0b1", "2.0.0b2", "2.0.0b3", "2.0.0", "2.1.0"], "~2.0.0", "2.0.0", true]
         ].forEach((v) => {
             const versions = v[0];
             const range = v[1];
@@ -867,5 +704,164 @@ describe("semver", () => {
             const actual = semver.minSatisfying(versions, range, loose);
             assert.equal(actual, expect);
         });
+    });
+
+    it("intersect comparators", () => {
+        [
+            // One is a Version
+            ["1.3.0", ">=1.3.0", true],
+            ["1.3.0", ">1.3.0", false],
+            [">=1.3.0", "1.3.0", true],
+            [">1.3.0", "1.3.0", false],
+            // Same direction increasing
+            [">1.3.0", ">1.2.0", true],
+            [">1.2.0", ">1.3.0", true],
+            [">=1.2.0", ">1.3.0", true],
+            [">1.2.0", ">=1.3.0", true],
+            // Same direction decreasing
+            ["<1.3.0", "<1.2.0", true],
+            ["<1.2.0", "<1.3.0", true],
+            ["<=1.2.0", "<1.3.0", true],
+            ["<1.2.0", "<=1.3.0", true],
+            // Different directions, same semver and inclusive operator
+            [">=1.3.0", "<=1.3.0", true],
+            [">=v1.3.0", "<=1.3.0", true],
+            [">=1.3.0", ">=1.3.0", true],
+            ["<=1.3.0", "<=1.3.0", true],
+            ["<=1.3.0", "<=v1.3.0", true],
+            [">1.3.0", "<=1.3.0", false],
+            [">=1.3.0", "<1.3.0", false],
+            // Opposite matching directions
+            [">1.0.0", "<2.0.0", true],
+            [">=1.0.0", "<2.0.0", true],
+            [">=1.0.0", "<=2.0.0", true],
+            [">1.0.0", "<=2.0.0", true],
+            ["<=2.0.0", ">1.0.0", true],
+            ["<=1.0.0", ">=2.0.0", false]
+        ].forEach((v) => {
+            const comparator1 = new Comparator(v[0]);
+            const comparator2 = new Comparator(v[1]);
+            const expect = v[2];
+
+            const actual1 = comparator1.intersects(comparator2);
+            const actual2 = comparator2.intersects(comparator1);
+            const actual3 = semver.intersects(comparator1, comparator2);
+            let actual4 = semver.intersects(comparator2, comparator1);
+            actual4 = semver.intersects(comparator1, comparator2, true);
+            const actual5 = semver.intersects(comparator2, comparator1, true);
+            const actual6 = semver.intersects(v[0], v[1]);
+            const actual7 = semver.intersects(v[1], v[0]);
+            const actual8 = semver.intersects(v[0], v[1], true);
+            const actual9 = semver.intersects(v[1], v[0], true);
+            assert.equal(actual1, expect);
+            assert.equal(actual2, expect);
+            assert.equal(actual3, expect);
+            assert.equal(actual4, expect);
+            assert.equal(actual5, expect);
+            assert.equal(actual6, expect);
+            assert.equal(actual7, expect);
+            assert.equal(actual8, expect);
+            assert.equal(actual9, expect);
+        });
+    });
+
+    it("missing comparator parameter in intersect comparators", () => {
+        const err = assert.throws(() => new Comparator(">1.0.0").intersects());
+        assert.instanceOf(err, TypeError);
+        assert.equal(err.message, "a Comparator is required");
+    });
+
+    it("ranges intersect", () => {
+        [
+            ["1.3.0 || <1.0.0 >2.0.0", "1.3.0 || <1.0.0 >2.0.0", true],
+            ["<1.0.0 >2.0.0", ">0.0.0", true],
+            ["<1.0.0 >2.0.0", ">1.4.0 <1.6.0", false],
+            ["<1.0.0 >2.0.0", ">1.4.0 <1.6.0 || 2.0.0", false],
+            [">1.0.0 <=2.0.0", "2.0.0", true],
+            ["<1.0.0 >=2.0.0", "2.1.0", false],
+            ["<1.0.0 >=2.0.0", ">1.4.0 <1.6.0 || 2.0.0", false]
+        ].forEach((v) => {
+            const range1 = new Range(v[0]);
+            const range2 = new Range(v[1]);
+            const expect = v[2];
+            const actual1 = range1.intersects(range2);
+            const actual2 = range2.intersects(range1);
+            const actual3 = semver.intersects(v[1], v[0]);
+            const actual4 = semver.intersects(v[0], v[1]);
+            const actual5 = semver.intersects(v[1], v[0], true);
+            const actual6 = semver.intersects(v[0], v[1], true);
+            const actual7 = semver.intersects(range1, range2);
+            const actual8 = semver.intersects(range2, range1);
+            const actual9 = semver.intersects(range1, range2, true);
+            const actual0 = semver.intersects(range2, range1, true);
+            assert.equal(actual1, expect);
+            assert.equal(actual2, expect);
+            assert.equal(actual3, expect);
+            assert.equal(actual4, expect);
+            assert.equal(actual5, expect);
+            assert.equal(actual6, expect);
+            assert.equal(actual7, expect);
+            assert.equal(actual8, expect);
+            assert.equal(actual9, expect);
+            assert.equal(actual0, expect);
+        });
+    });
+
+    it("missing range parameter in range intersect", () => {
+        const err = assert.throws(() => new Range("1.0.0").intersects());
+        assert.instanceOf(err, TypeError);
+        assert.equal(err.message, "a Range is required");
+    });
+
+    it("outside with bad hilo throws", () => {
+        const err = assert.throws(() => semver.outside("1.2.3", ">1.5.0", "blerg", true));
+        assert.instanceOf(err, TypeError);
+        assert.equal(err.message, 'Must provide a hilo val of "<" or ">"');
+    });
+
+    it("comparator testing", () => {
+        const c = new Comparator(">=1.2.3");
+        assert.isOk(c.test("1.2.4"));
+        const c2 = new Comparator(c);
+        assert.isOk(c2.test("1.2.4"));
+        const c3 = new Comparator(c, true);
+        assert.isOk(c3.test("1.2.4"));
+    });
+
+    it("tostrings", () => {
+        assert.equal(new Range(">= v1.2.3").toString(), ">=1.2.3");
+        assert.equal(new Comparator(">= v1.2.3").toString(), ">=1.2.3");
+    });
+
+    it("invalid cmp usage", () => {
+        const err = assert.throws(() => cmp("1.2.3", "a frog", "4.5.6"));
+        assert.instanceOf(err, TypeError);
+        assert.equal(err.message, "Invalid operator: a frog");
+    });
+
+    it("sorting", () => {
+        const list = [
+            "1.2.3",
+            "5.9.6",
+            "0.1.2"
+        ];
+        const sorted = [
+            "0.1.2",
+            "1.2.3",
+            "5.9.6"
+        ];
+        const rsorted = [
+            "5.9.6",
+            "1.2.3",
+            "0.1.2"
+        ];
+        assert.sameMembers(semver.sort(list), sorted);
+        assert.sameMembers(semver.rsort(list), rsorted);
+    });
+
+    it("bad ranges in max/min satisfying", () => {
+        const r = "some frogs and sneks-v2.5.6";
+        assert.equal(semver.maxSatisfying([], r), null);
+        assert.equal(semver.minSatisfying([], r), null);
     });
 });

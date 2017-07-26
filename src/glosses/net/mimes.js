@@ -2,8 +2,8 @@ const { is, std: { path: { extname } }, util } = adone;
 
 const db = new Map(util.entries(adone.loadAsset("glosses/net/mimes.json")));
 
-const extractTypeRegExp = /^\s*([^;\s]*)(?:;|\s|$)/;
-const textTypeRegExp = /^text\//i;
+const EXTRACT_TYPE_REGEXP = /^\s*([^;\s]*)(?:;|\s|$)/;
+const TEXT_TYPE_REGEXP = /^text\//i;
 
 export const extensions = new Map();
 export const types = new Map();
@@ -44,7 +44,7 @@ export const charset = (type) => {
     }
 
     // TODO: use media-typer
-    const match = extractTypeRegExp.exec(type);
+    const match = EXTRACT_TYPE_REGEXP.exec(type);
     const mime = match && db.get(match[1].toLowerCase());
 
     if (mime && mime.charset) {
@@ -52,7 +52,7 @@ export const charset = (type) => {
     }
 
     // default text/* to utf-8
-    if (match && textTypeRegExp.test(match[1])) {
+    if (match && TEXT_TYPE_REGEXP.test(match[1])) {
         return "UTF-8";
     }
 
@@ -109,7 +109,7 @@ export const extension = (type) => {
     }
 
     // TODO: use media-typer
-    const match = extractTypeRegExp.exec(type);
+    const match = EXTRACT_TYPE_REGEXP.exec(type);
 
     // get extensions
     const exts = match && extensions.get(match[1].toLowerCase());
