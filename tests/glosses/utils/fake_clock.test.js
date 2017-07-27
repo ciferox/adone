@@ -1,5 +1,6 @@
+const { is, util: { fakeClock }, noop } = adone;
+
 describe("util", "fakeClock", () => {
-    const { is, util: { fakeClock }, noop } = adone;
     const GlobalDate = Date;
 
     before(() => {
@@ -34,7 +35,51 @@ describe("util", "fakeClock", () => {
         });
     });
 
-    describe("common cases", () => {
+    describe("issue #67", () => {
+        // see https://nodejs.org/api/timers.html
+        it("should overflow to 1 on very big timeouts", () => {
+            const clock = fakeClock.install();
+            const stub1 = stub();
+            const stub2 = stub();
+
+            clock.setTimeout(stub1, 100);
+            clock.setTimeout(stub2, 214748334700); //should be called after 1 tick
+
+            clock.tick(1);
+            assert(stub2.called);
+            assert.isFalse(stub1.called);
+
+            clock.tick(99);
+            assert(stub1.called);
+            assert(stub2.called);
+
+            clock.uninstall();
+        });
+
+        it("should overflow to interval 1 on very big timeouts", () => {
+            const clock = fakeClock.install();
+            const s = stub();
+
+            clock.setInterval(s, 214748334700);
+            clock.tick(3);
+            assert(s.calledThrice);
+
+            clock.uninstall();
+        });
+
+        it("should execute setTimeout smaller than 1", () => {
+            const clock = fakeClock.install();
+            const stub1 = stub();
+
+            clock.setTimeout(stub1, 0.5);
+            clock.tick(1);
+            assert(stub1.calledOnce);
+
+            clock.uninstall();
+        });
+    });
+
+    describe("common cases", function () {
         describe("setTimeout", () => {
             beforeEach(function () {
                 this.clock = fakeClock.createClock();
@@ -1920,18 +1965,19 @@ describe("util", "fakeClock", () => {
                 assert.equal(order[2], "timer-2");
             });
 
-            it("installs with microticks", function () {
-                this.clock = fakeClock.install();
+            it("installs with microticks", () => {
+                const clock = fakeClock.install({ toFake: ["nextTick"] });
                 let called = false;
                 process.nextTick(() => {
                     called = true;
                 });
-                this.clock.runAll();
+                clock.runAll();
                 assert(called);
+                clock.uninstall();
             });
 
-            it("installs with microticks and timers in order", function () {
-                const clock = this.clock = fakeClock.install();
+            it("installs with microticks and timers in order", () => {
+                const clock = fakeClock.install({ toFake: ["nextTick", "setTimeout"] });
                 const order = [];
                 setTimeout(() => {
                     order.push("timer-1");
@@ -1946,10 +1992,11 @@ describe("util", "fakeClock", () => {
                 assert.equal(order[0], "timer-1");
                 assert.equal(order[1], "tick");
                 assert.equal(order[2], "timer-2");
+                clock.uninstall();
             });
 
-            it("uninstalls", function () {
-                const clock = this.clock = fakeClock.install();
+            it("uninstalls", () => {
+                const clock = fakeClock.install({ toFake: ["nextTick"] });
                 clock.uninstall();
                 let called = false;
                 process.nextTick(() => {
@@ -1957,16 +2004,31 @@ describe("util", "fakeClock", () => {
                 });
                 clock.runAll();
                 assert(!called);
+                clock.uninstall();
             });
 
-            it("passes arguments when installed - GitHub#122", function () {
-                const clock = this.clock = fakeClock.install();
+            it("passes arguments when installed - GitHub#122", () => {
+                const clock = fakeClock.install({ toFake: ["nextTick"] });
                 let called = false;
                 process.nextTick((value) => {
                     called = value;
                 }, true);
                 clock.runAll();
                 assert(called);
+                clock.uninstall();
+            });
+
+            it("does not install by default - GitHub#126", (done) => {
+                const clock = fakeClock.install();
+                const s = spy(clock, "nextTick");
+                let called = false;
+                process.nextTick((value) => {
+                    called = value;
+                    assert(called);
+                    assert(!s.called);
+                    clock.uninstall();
+                    done();
+                }, true);
             });
         });
     });

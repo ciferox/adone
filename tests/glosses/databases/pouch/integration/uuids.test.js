@@ -32,32 +32,8 @@ describe("test.uuid.js", () => {
         assert.lengthOf(testUtils.eliminateDuplicates(uuids), count, "Generated small UUIDS are unique.");
     });
 
-    it("Test custom length", () => {
-        const length = 32;
-        const count = 10;
-        const uuids = makeUuids(count, length);
-        // Test single UUID wrapper
-        uuids.push(testUtils.uuid(length));
-        uuids.map((uuid) => {
-            assert.lengthOf(uuid, length, "UUID length is correct.");
-        });
-    });
-
-    it("Test custom length, redix", () => {
-        const length = 32;
-        const count = 10;
-        const radix = 5;
-        const uuids = makeUuids(count, length, radix);
-        // Test single UUID wrapper
-        uuids.push(testUtils.uuid(length, radix));
-        uuids.map((uuid) => {
-            const nums = uuid.split("").map((character) => {
-                return parseInt(character, radix);
-            });
-            const max = Math.max.apply(Math, nums);
-            const min = Math.min.apply(Math, nums);
-            assert.isBelow(max, radix, "Maximum character is less than radix");
-            assert.isAtLeast(min, 0, "Min character is greater than or equal to 0");
-        });
+    it("_rev generation", () => {
+        let _rev = testUtils.rev();
+        assert.match(_rev, /^[0-9a-fA-F]{32}$/);
     });
 });

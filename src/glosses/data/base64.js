@@ -10,17 +10,17 @@ export const encodeNumber = (number) => {
 };
 
 export const decodeCharCode = (charCode) => {
-    const bigA = 65;  // 'A'
-    const bigZ = 90;  // 'Z'
+    const bigA = 65; // 'A'
+    const bigZ = 90; // 'Z'
 
-    const littleA = 97;  // 'a'
-    const littleZ = 122;  // 'z'
+    const littleA = 97; // 'a'
+    const littleZ = 122; // 'z'
 
-    const zero = 48;  // '0'
-    const nine = 57;  // '9'
+    const zero = 48; // '0'
+    const nine = 57; // '9'
 
-    const plus = 43;  // '+'
-    const slash = 47;  // '/'
+    const plus = 43; // '+'
+    const slash = 47; // '/'
 
     const littleOffset = 26;
     const numberOffset = 52;

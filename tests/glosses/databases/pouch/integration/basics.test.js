@@ -1,3 +1,4 @@
+const { is } = adone;
 require("./node.setup");
 
 const adapters = ["http", "local"];
@@ -112,7 +113,39 @@ adapters.forEach((adapter) => {
                 throw new Error("should not be here");
             }).catch((err) => {
                 assert.exists(err);
-                assert.equal(err.requestedDocId, "abc-123");
+                assert.equal(err.docId, "abc-123");
+            });
+        });
+
+        it("PUTed Conflicted doc should contain ID in error object", () => {
+            const db = new PouchDB(dbs.name);
+            let savedDocId;
+            return db.post({}).then((info) => {
+                savedDocId = info.id;
+                return db.put({
+                    _id: savedDocId
+                });
+            }).then(() => {
+                throw new Error("should not be here");
+            }).catch((err) => {
+                assert.propertyVal(err, "status", 409);
+                assert.equal(err.docId, savedDocId);
+            });
+        });
+
+        it("POSTed Conflicted doc should contain ID in error object", () => {
+            const db = new PouchDB(dbs.name);
+            let savedDocId;
+            return db.post({}).then((info) => {
+                savedDocId = info.id;
+                return db.post({
+                    _id: savedDocId
+                });
+            }).then(() => {
+                throw new Error("should not be here");
+            }).catch((err) => {
+                assert.propertyVal(err, "status", 409);
+                assert.equal(err.docId, savedDocId);
             });
         });
 
@@ -498,10 +531,7 @@ adapters.forEach((adapter) => {
             const db = new PouchDB(dbs.name);
             db.bulkDocs({ docs: bad_docs }, (err) => {
                 assert.equal(err.name, "doc_validation");
-                assert.equal(err.status, testUtils.errors.DOC_VALIDATION.status);
-                assert.equal(err.message, `${testUtils.errors.DOC_VALIDATION.message
-                    }: _zing`,
-                    "correct error message returned");
+                assert.equal(err.message, `${testUtils.errors.DOC_VALIDATION.message}: _zing`, "correct error message returned");
                 done();
             });
         });
@@ -876,7 +906,7 @@ adapters.forEach((adapter) => {
                 initPull() {
                     this.oldPut = this.put;
                     this.put = function () {
-                        if (typeof arguments[arguments.length - 1] === "function") {
+                        if (is.function(arguments[arguments.length - 1])) {
                             called++;
                         }
                         return this.oldPut.apply(this, arguments);
@@ -1130,7 +1160,7 @@ adapters.forEach((adapter) => {
                 return db1.info().then(() => {
                     const db2 = new PouchDB(dbs.name);
                     return db2.info().then(() => {
-                        if (typeof db1._blobSupport !== "undefined") {
+                        if (!is.undefined(db1._blobSupport)) {
                             assert.equal(db1._blobSupport, db2._blobSupport, "same blob support");
                         } else {
                             assert.isTrue(true);
@@ -1147,9 +1177,9 @@ adapters.forEach((adapter) => {
             });
         }
 
-        if (typeof process !== "undefined" && !process.browser) {
+        if (!is.undefined(process) && !process.browser) {
             it("#5471 PouchDB.plugin() should throw error if passed wrong type or empty object", () => {
-                assert.throws(function () {
+                assert.throws(() => {
                     PouchDB.plugin("pouchdb-adapter-memory");
                 }, 'Invalid plugin: got "pouchdb-adapter-memory", expected an object or a function');
             });

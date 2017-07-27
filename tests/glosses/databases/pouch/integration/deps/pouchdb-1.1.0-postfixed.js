@@ -5499,7 +5499,7 @@ process.chdir = function (dir) {
 
 "use strict";
 
-var pouchCollate = require('pouchdb-collate');
+var pouchCollate = require('collate');
 
 // This is the first implementation of a basic plugin, we register the
 // plugin object with pouch and it is mixin'd to each database created
@@ -5803,7 +5803,7 @@ function MapReduce(db) {
 MapReduce._delete = function () { };
 module.exports = MapReduce;
 
-},{"pouchdb-collate":21}],21:[function(require,module,exports){
+},{"collate":21}],21:[function(require,module,exports){
 'use strict';
 
 function arrayCollate(a, b) {

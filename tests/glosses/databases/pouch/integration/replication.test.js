@@ -193,7 +193,7 @@ adapters.forEach((adapters) => {
             let remote = new PouchDB(dbs.remote);
             // simulate 5000 normal commits with two conflicts at the very end
             function uuid() {
-                return testUtils.uuid(32, 16).toLowerCase();
+                return testUtils.rev();
             }
 
             let numRevs = 5000;
@@ -324,7 +324,7 @@ adapters.forEach((adapters) => {
             let numRevs = 200; // repro "url too long" error with open_revs
             let docs = [];
             for (let i = 0; i < numRevs; i++) {
-                let rev = "1-" + testUtils.uuid(32, 16).toLowerCase();
+                let rev = "1-" + testUtils.rev();
                 docs.push({ _id: "doc", _rev: rev });
             }
 
@@ -3315,22 +3315,18 @@ adapters.forEach((adapters) => {
             let remote = new PouchDB(dbs.remote);
             let docid = "mydoc";
 
-            function uuid() {
-                return testUtils.uuid(32, 16).toLowerCase();
-            }
-
             // create a bunch of rando, good revisions
             let numRevs = 5;
             let uuids = [];
             for (let i = 0; i < numRevs - 1; i++) {
-                uuids.push(uuid());
+                uuids.push(testUtils.rev());
             }
 
             // good branch
             // this branch is one revision ahead of the conflicted branch
-            let a_conflict = uuid();
-            let a_burner = uuid();
-            let a_latest = uuid();
+            let a_conflict = testUtils.rev();
+            let a_burner = testUtils.rev();
+            let a_latest = testUtils.rev();
             let a_rev_num = numRevs + 2;
             let a_doc = {
                 _id: docid,
@@ -3342,8 +3338,8 @@ adapters.forEach((adapters) => {
             };
 
             // conflicted deleted branch
-            let b_conflict = uuid();
-            let b_deleted = uuid();
+            let b_conflict = testUtils.rev();
+            let b_deleted = testUtils.rev();
             let b_rev_num = numRevs + 1;
             let b_doc = {
                 _id: docid,

@@ -13,7 +13,7 @@ export default class FileConfiguration extends adone.configuration.Configuration
 
             const content = buf.toString();
 
-            if (content.indexOf(DONT_TRANSPILE_COMMENT_S) >= 0 || content.indexOf(DONT_TRANSPILE_COMMENT) >= 0) {
+            if (content.includes(DONT_TRANSPILE_COMMENT_S) || content.includes(DONT_TRANSPILE_COMMENT)) {
                 transform = null;
             } else {
                 transform = adone.js.Module.transforms.transpile(adone.require.options);
@@ -103,7 +103,9 @@ export default class FileConfiguration extends adone.configuration.Configuration
             try {
                 const content = await adone.fs.readFile(conf.path);
                 confObj = await conf.serializer.decode(content, conf.path, correctName);
-            } catch (err) { }
+            } catch (err) {
+                //
+            }
 
             if (!is.object(confObj)) {
                 throw new adone.x.NotValid(`'${conf.path}' is not valid ${conf.ext}-configuration file`);

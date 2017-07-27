@@ -1,8 +1,10 @@
 const { is, util: { uuid } } = adone;
 
-const v4 = (buf) => {
+const v4 = (options, buf, offset) => {
+    const i = buf && offset || 0;
+
     if (is.string(buf)) {
-        buf = buf === "binary" ? Buffer.alloc(16) : null;
+        buf = options === "binary" ? Buffer.alloc(16) : null;
     }
 
     const rnds = uuid.__.rnd16();
@@ -14,7 +16,7 @@ const v4 = (buf) => {
     // Copy bytes to buffer, if provided
     if (buf) {
         for (let ii = 0; ii < 16; ++ii) {
-            buf[ii] = rnds[ii];
+            buf[i + ii] = rnds[ii];
         }
     }
 

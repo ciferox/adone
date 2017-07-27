@@ -265,8 +265,8 @@ testUtils.promisify = function (fun, context) {
     };
 };
 
-// We need to use pouchdb-for-coverage here to ensure that e.g pouchdb-utils
-// and pouchdb-ajax don't get pulled in, because then our coverage tests
+// We need to use pouchdb-for-coverage here to ensure that e.g utils
+// and ajax don't get pulled in, because then our coverage tests
 // would complain that we're not using the "whole" thing.
 const PouchForCoverage = adone.database.pouch.coverage.DB;
 const pouchUtils = PouchForCoverage.utils;
@@ -276,6 +276,7 @@ testUtils.atob = pouchUtils.atob;
 testUtils.Promise = pouchUtils.Promise;
 testUtils.ajax = PouchForCoverage.ajax;
 testUtils.uuid = pouchUtils.uuid;
+testUtils.rev = pouchUtils.rev;
 testUtils.parseUri = pouchUtils.parseUri;
 testUtils.errors = PouchForCoverage.Errors;
 testUtils.assign = pouchUtils.assign;

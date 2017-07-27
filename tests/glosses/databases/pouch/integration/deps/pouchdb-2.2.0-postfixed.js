@@ -7533,7 +7533,7 @@ module.exports = function (func, emit, sum, log, isArray, toJSON) {
 },{}],48:[function(_dereq_,module,exports){
 'use strict';
 
-var pouchCollate = _dereq_('pouchdb-collate');
+var pouchCollate = _dereq_('collate');
 var TaskQueue = _dereq_('./taskqueue');
 var collate = pouchCollate.collate;
 var toIndexableString = pouchCollate.toIndexableString;
@@ -8279,7 +8279,7 @@ function QueryParseError(message) {
 
 utils.inherits(QueryParseError, Error);
 
-},{"./create-view":46,"./evalfunc":47,"./taskqueue":51,"./utils":53,"pouchdb-collate":49}],49:[function(_dereq_,module,exports){
+},{"./create-view":46,"./evalfunc":47,"./taskqueue":51,"./utils":53,"collate":49}],49:[function(_dereq_,module,exports){
 'use strict';
 
 var MIN_MAGNITUDE = -324; // verified by -Number.MIN_VALUE

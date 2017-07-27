@@ -1,9 +1,9 @@
-import DB from "./pouchdb-core";
+import DB from "./core";
 
-import LevelPouch from "./pouchdb-adapter-leveldb";
-import HttpPouch from "./pouchdb-adapter-http";
-import mapreduce from "./pouchdb-mapreduce";
-import replication from "./pouchdb-replication";
+import LevelPouch from "./adapter-leveldb";
+import HttpPouch from "./adapter-http";
+import mapreduce from "./mapreduce";
+import replication from "./replication";
 
 DB.plugin(LevelPouch)
     .plugin(HttpPouch)
@@ -13,5 +13,5 @@ DB.plugin(LevelPouch)
 export { DB };
 
 export const coverage = adone.lazify({
-    DB: "./pouchdb-for-coverage"
+    DB: "./for-coverage"
 }, null, require);

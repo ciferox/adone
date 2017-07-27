@@ -827,7 +827,7 @@ adapters.forEach((adapters) => {
             });
         });
 
-        it("5007 sync 2 databases", () => {
+        it("5007 sync 2 databases", (done) => {
 
             const db = new PouchDB(dbs.name);
 
@@ -840,22 +840,26 @@ adapters.forEach((adapters) => {
             let numChanges = 0;
             function onChange() {
                 if (++numChanges === 2) {
-                    changes1.cancel();
-                    changes2.cancel();
-                    sync1.cancel();
-                    sync2.cancel();
+                    complete();
                 }
             }
 
             var changes1 = remote1.changes({ live: true }).on("change", onChange);
             var changes2 = remote2.changes({ live: true }).on("change", onChange);
 
-            db.post({ foo: "bar" });
+            db.post({ foo: 'bar' });
 
-            const promises = [changes1, changes2, sync1, sync2];
-            return testUtils.Promise.all(promises).then(() => {
-                return remote2.destroy();
-            });
+            var toCancel = [changes1, changes2, sync1, sync2];
+            function complete() {
+                if (!toCancel.length) {
+                    return remote2.destroy().then(function () {
+                        done();
+                    });
+                }
+                var cancelling = toCancel.shift();
+                cancelling.on('complete', complete);
+                cancelling.cancel();
+            }
         });
 
         it("5782 sync rev-1 conflicts", () => {

@@ -6962,7 +6962,7 @@ module.exports = function (func, emit, sum, log, isArray, toJSON) {
 (function (process,global){
 'use strict';
 
-var pouchCollate = _dereq_('pouchdb-collate');
+var pouchCollate = _dereq_('collate');
 var Promise = typeof global.Promise === 'function' ? global.Promise : _dereq_('lie');
 var collate = pouchCollate.collate;
 var evalFunc = _dereq_('./evalfunc');
@@ -7395,7 +7395,7 @@ exports.query = function (fun, opts, callback) {
 };
 
 }).call(this,_dereq_("/Users/daleharvey/src/pouchdb/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./evalfunc":34,"/Users/daleharvey/src/pouchdb/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":22,"lie":24,"pouchdb-collate":36}],36:[function(_dereq_,module,exports){
+},{"./evalfunc":34,"/Users/daleharvey/src/pouchdb/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":22,"lie":24,"collate":36}],36:[function(_dereq_,module,exports){
 'use strict';
 
 exports.collate = function (a, b) {

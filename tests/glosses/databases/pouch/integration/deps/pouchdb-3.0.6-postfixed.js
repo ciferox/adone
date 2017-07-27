@@ -8729,7 +8729,7 @@ module.exports = function (func, emit, sum, log, isArray, toJSON) {
 (function (process){
 'use strict';
 
-var pouchCollate = _dereq_('pouchdb-collate');
+var pouchCollate = _dereq_('collate');
 var TaskQueue = _dereq_('./taskqueue');
 var collate = pouchCollate.collate;
 var toIndexableString = pouchCollate.toIndexableString;
@@ -9507,7 +9507,7 @@ function NotFoundError(message) {
 utils.inherits(NotFoundError, Error);
 
 }).call(this,_dereq_("/Users/nolan/workspace/pouchdb/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"))
-},{"./create-view":49,"./evalfunc":50,"./taskqueue":54,"./utils":56,"/Users/nolan/workspace/pouchdb/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":28,"pouchdb-collate":52}],52:[function(_dereq_,module,exports){
+},{"./create-view":49,"./evalfunc":50,"./taskqueue":54,"./utils":56,"/Users/nolan/workspace/pouchdb/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":28,"collate":52}],52:[function(_dereq_,module,exports){
 'use strict';
 
 var MIN_MAGNITUDE = -324; // verified by -Number.MIN_VALUE

@@ -2,6 +2,7 @@ const { is, x, noop } = adone;
 
 const NativeDate = Date;
 let uniqueTimerId = 1;
+const maxTimeout = Math.pow(2, 31) - 1; //see https://heycam.github.io/webidl/#abstract-opdef-converttoint
 
 const parseTime = (str) => {
     if (!str) {
@@ -144,6 +145,14 @@ const runJobs = (clock) => {
 const addTimer = (clock, timer) => {
     if (is.undefined(timer.func)) {
         throw new Error("Callback must be provided to timer calls");
+    }
+
+    if (timer.hasOwnProperty("delay")) {
+        timer.delay = timer.delay > maxTimeout ? 1 : timer.delay;
+    }
+
+    if (timer.hasOwnProperty("interval")) {
+        timer.interval = timer.interval > maxTimeout ? 1 : timer.interval;
     }
 
     if (!clock.timers) {
@@ -580,7 +589,8 @@ export const install = (...args) => {
     clock.methods = methods || [];
 
     if (clock.methods.length === 0) {
-        clock.methods = Object.keys(timers);
+        // do not fake nextTick by default - GitHub#126
+        clock.methods = Object.keys(timers).filter((key) => key !== "nextTick");
     }
 
     for (let i = 0; i < clock.methods.length; i++) {
