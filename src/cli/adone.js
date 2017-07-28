@@ -13,14 +13,8 @@ export default class AdoneCLI extends adone.application.Application {
         });
 
         for (const ss of this.config.subsystems) {
-            this.loadSubsystem(ss.path); 
+            this.loadSubsystem(adone.std.path.isAbsolute(ss.path) ? ss.path : adone.std.path.join(this.adoneRootPath, ss.path)); 
         }
-
-        // this.loadSubsystem(adone.std.path.resolve(__dirname, "./subsystems/meta"));
-        // this.loadSubsystem(adone.std.path.resolve(__dirname, "./subsystems/bench"));
-        // this.loadSubsystem(adone.std.path.resolve(__dirname, "./subsystems/shani"));
-        // this.loadSubsystem(adone.std.path.resolve(__dirname, "./subsystems/specter"));
-        // this.loadSubsystem(adone.std.path.resolve(__dirname, "../lib/omnitron/cli"));
 
         this.defineArguments({
             commandsGroups: [
