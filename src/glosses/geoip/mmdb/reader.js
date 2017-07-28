@@ -1,5 +1,5 @@
-const { geoip: { maxmind }, collection: { FastLRU } } = adone;
-const { __: { Metadata, Decoder, helper: { concat3, concat4, ip: ipUtil } } } = maxmind;
+const { geoip: { mmdb }, collection: { FastLRU } } = adone;
+const { __: { Metadata, Decoder, helper: { concat3, concat4, ip: ipUtil } } } = mmdb;
 
 const DATA_SECTION_SEPARATOR_SIZE = 16;
 

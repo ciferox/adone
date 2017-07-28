@@ -1,3 +1,3 @@
 adone.lazify({
-    maxmind: "./maxmind"
+    mmdb: "./mmdb"
 }, exports, require);

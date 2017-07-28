@@ -1420,7 +1420,9 @@ export class Application extends Subsystem {
         }
         if (userConfig) {
             const configPath = adone.std.path.join(this.config.adone.configsPath, basename);
-            await this.config.load(configPath, path);
+            if (await adone.fs.exists(configPath)) {
+                await this.config.load(configPath, path);
+            }
         }
     }
 

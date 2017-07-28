@@ -1,0 +1,26 @@
+[
+    {
+        "name": "app",
+        "path": "./lib/subsystems/app"
+    },
+    {
+        "name": "omnitron",
+        "path": "./lib/subsystems/omnitron"
+    },
+    {
+        "name": "bench",
+        "path": "./lib/subsystems/bench"
+    },
+    {
+        "name": "shani",
+        "path": "./lib/subsystems/shani"
+    },
+    {
+        "name": "meta",
+        "path": "./lib/subsystems/meta"
+    },
+    {
+        "name": "specter",
+        "path": "./lib/subsystems/specter"
+    }
+]

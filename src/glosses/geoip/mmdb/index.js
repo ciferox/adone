@@ -9,9 +9,6 @@ export const __ = adone.lazify({
 
 export const open = async (filepath, opts) => {
     const database = await adone.fs.readFile(filepath);
-    // if (is.null(database)) {
-    //     throw new x.InvalidArgument("Invalid database file");
-    // }
     return new __.Reader(database, opts);
 };
 

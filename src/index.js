@@ -205,6 +205,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
     });
 
     adone.lazify({
+        // NodeJS embedded modules
         std: () => adone.lazify({
             assert: "assert",
             fs: "fs",
@@ -239,6 +240,8 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             timers: "timers",
             dgram: "dgram"
         }),
+
+        // Glosses
         require: () => {
             const plugins = [
                 "transform.flowStripTypes",
@@ -324,11 +327,20 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         system: "./glosses/system",
         hardware: "./glosses/hardware",
         shell: "./glosses/shell",
-        vendor: "./glosses/vendor",
         virt: "./glosses/virt",
         vault: "./glosses/vault",
         specter: "./glosses/specter",
         netscan: "./glosses/netscan",
+        timing: () => ({
+            now: adone.native.Common.now,
+            nowDouble: adone.native.Common.nowDouble,
+            nowStruct: adone.native.Common.nowStruct
+        }),
+        schema: "./glosses/schema",
+        geoip: "./glosses/geoip",
+        notifier: "./glosses/notifier",
+
+        // Omnitron
         omnitron: () => adone.lazify({
             const: "./omnitron/consts",
             GateManager: "./omnitron/gate_manager",
@@ -337,14 +349,9 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             Omnitron: "./omnitron",
             Dispatcher: "./omnitron/dispatcher"
         }),
-        timing: () => ({
-            now: adone.native.Common.now,
-            nowDouble: adone.native.Common.nowDouble,
-            nowStruct: adone.native.Common.nowStruct
-        }),
-        schema: "./glosses/schema",
-        geoip: "./glosses/geoip",
-        notifier: "./glosses/notifier"
+
+        // Vendor
+        vendor: "./vendor"
     }, adone);
 } else {
     exports.default = global.adone;

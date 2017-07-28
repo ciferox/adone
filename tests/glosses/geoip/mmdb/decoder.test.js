@@ -1,5 +1,5 @@
-describe("geoip", "maxmind", "Decoder", () => {
-    const { geoip: { maxmind: { __: { Decoder } } } } = adone;
+describe("geoip", "mmdb", "Decoder", () => {
+    const { geoip: { mmdb: { __: { Decoder } } } } = adone;
 
     let decoder = null;
     const fixtures = new adone.fs.Directory(__dirname, "fixtures");

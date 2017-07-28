@@ -1,4 +1,4 @@
-const { x, geoip: { maxmind: { __: { helper: { concat2, concat3, concat4 } } } } } = adone;
+const { x, geoip: { mmdb: { __: { helper: { concat2, concat3, concat4 } } } } } = adone;
 
 const types = [
     "extended",         //  0

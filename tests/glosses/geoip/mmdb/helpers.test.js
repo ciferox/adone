@@ -1,5 +1,5 @@
-describe("geoip", "maxmind", "helpers", () => {
-    const { geoip: { maxmind: { __: { helper: { ip } } } } } = adone;
+describe("geoip", "mmdb", "helpers", () => {
+    const { geoip: { mmdb: { __: { helper: { ip } } } } } = adone;
 
     describe("parse()", () => {
         describe("ipv4", () => {
