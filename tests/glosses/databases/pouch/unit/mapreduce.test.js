@@ -1,9 +1,8 @@
 const PouchDB = adone.database.pouch.coverage.DB;
 const upsert = PouchDB.utils.upsert;
 const utils = PouchDB.utils.mapReduceUtils;
-const Promise = PouchDB.utils.Promise;
 
-describe("test.mapreduce.js-upsert", () => {
+describe("db", "pouch", "mapreduce", () => {
     it("should throw an error with no doc id", async () => {
         await assert.throws(async () => upsert());
     });
@@ -37,8 +36,7 @@ describe("test.mapreduce.js-upsert", () => {
     });
 });
 
-describe("test.mapreduce.js-utils", () => {
-
+describe("db", "pouch", "mapreduce", () => {
     it("callbackify should work with a callback", (done) => {
         function fromPromise() {
             return Promise.resolve(true);
@@ -61,5 +59,4 @@ describe("test.mapreduce.js-utils", () => {
             return Promise.resolve();
         }));
     });
-
 });

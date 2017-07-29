@@ -6,7 +6,6 @@ const toIndexableString = pouchCollate.toIndexableString;
 const parseIndexableString = pouchCollate.parseIndexableString;
 
 function stringLexCompare(a, b) {
-
     const aLen = a.length;
     const bLen = b.length;
 
@@ -36,7 +35,6 @@ function stringLexCompare(a, b) {
  * out all the digits (in base-10) instead of using scientific notation
  */
 function intToDecimalForm(int) {
-
     const isNeg = int < 0;
     let result = "";
 
@@ -72,7 +70,7 @@ const verifyLexicalKeysSort = function (keys) {
 };
 
 
-describe("test.collate.js", () => {
+describe("db", "pouch", "collate", () => {
     const a = {
         array: [1, 2, 3],
         bool: true,
@@ -166,16 +164,15 @@ describe("test.collate.js", () => {
         assert.isAbove(collate(a.number, null), 0);
     });
     it("compare number to function", () => {
-        assert.notEqual(collate(a.number, () => {}), collate(a.number, () => { }));
-        assert.notEqual(collate(b.number, () => {}), collate(b.number, () => { }));
-        assert.notEqual(collate(() => {}, a.number), collate(() => { }, a.number));
-        assert.notEqual(collate(() => {}, b.number), collate(() => { }, b.number));
+        assert.notEqual(collate(a.number, () => { }), collate(a.number, () => { }));
+        assert.notEqual(collate(b.number, () => { }), collate(b.number, () => { }));
+        assert.notEqual(collate(() => { }, a.number), collate(() => { }, a.number));
+        assert.notEqual(collate(() => { }, b.number), collate(() => { }, b.number));
     });
 
 });
 
-describe("normalizeKey", () => {
-
+describe("db", "pouch", "normalizeKey", () => {
     it("verify key normalizations", () => {
         const normalizations = [
             [null, null],
@@ -198,16 +195,13 @@ describe("normalizeKey", () => {
             const expected = normalization[1];
             const normalized = normalizeKey(original);
 
-            const message = `check normalization of ${JSON.stringify(original)
-                } to ${JSON.stringify(expected)
-                }, got ${JSON.stringify(normalized)}`;
+            const message = `check normalization of ${JSON.stringify(original)} to ${JSON.stringify(expected)}, got ${JSON.stringify(normalized)}`;
             assert.equal(normalized, expected, message);
         });
     });
 });
 
-describe("indexableString", () => {
-
+describe("db", "pouch", "indexableString", () => {
     it("verify intToDecimalForm", () => {
         assert.equal(intToDecimalForm(0), "0");
         assert.equal(intToDecimalForm(Number.MIN_VALUE), "0");
@@ -444,7 +438,7 @@ describe("indexableString", () => {
 
         keys.forEach((key) => {
             const indexableString = toIndexableString(key);
-            assert.equal(JSON.stringify(parseIndexableString(indexableString)), 
+            assert.equal(JSON.stringify(parseIndexableString(indexableString)),
                 JSON.stringify(key), `check parseIndexableString for key: ${key
                 }(indexable string is: ${indexableString})`);
         });

@@ -1,19 +1,18 @@
 const PouchDB = adone.database.pouch.coverage.DB;
-var once = PouchDB.utils.once;
-var toPromise = PouchDB.utils.toPromise;
+const once = PouchDB.utils.once;
+const toPromise = PouchDB.utils.toPromise;
 
-describe('test.once.js', function () {
-
-    it('Only call once ... once', function () {
-        var myFun = once(function () { });
+describe("db", "pouch", "once", () => {
+    it("Only call once ... once", () => {
+        const myFun = once(() => { });
         myFun();
         assert.throws(myFun);
     });
 
-    it('Once wrapped in a promise', function (done) {
-        var callback = function () { };
-        var myFun = toPromise(function (callback) {
-            setTimeout(function () {
+    it("Once wrapped in a promise", (done) => {
+        const callback = function () { };
+        const myFun = toPromise((callback) => {
+            setTimeout(() => {
                 callback();
                 assert.throws(callback);
                 done();

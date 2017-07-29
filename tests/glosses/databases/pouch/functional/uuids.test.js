@@ -12,8 +12,7 @@ function makeUuids(count, length, radix) {
     return out;
 }
 
-describe("test.uuid.js", () => {
-
+describe("db", "pouch", "uuid", () => {
     it("UUID RFC4122 test", () => {
         assert.equal(rfcRegexp.test(makeUuids()[0]), true, "Single UUID complies with RFC4122.");
         assert.equal(rfcRegexp.test(testUtils.uuid()), true, "Single UUID through Pouch.utils.uuid complies with RFC4122.");

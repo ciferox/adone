@@ -1,8 +1,7 @@
 const PouchDB = adone.database.pouch.coverage.DB;
 const parseUri = PouchDB.utils.parseUri;
 
-describe("test.parse-uri.js", () => {
-
+describe("db", "pouch", "parse-uri", () => {
     it("parses a basic uri", () => {
         const parsed = parseUri("http://foobar.com");
         assert.equal(parsed.host, "foobar.com");

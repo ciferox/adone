@@ -4,7 +4,7 @@ const genReplicationId = PouchDB.utils.generateReplicationId;
 const sourceDb = new PouchDB({ name: "local_db", db: memdown });
 const targetDb = new PouchDB({ name: "target_db", db: memdown });
 
-describe("test.gen-replication-id.js", () => {
+describe("db", "pouch", "gen-replication-id", () => {
     it("is different with different `doc_ids` option", () => {
         const opts2 = { doc_ids: ["1"] };
         const opts1 = { doc_ids: ["2"] };
@@ -109,51 +109,49 @@ describe("test.gen-replication-id.js", () => {
         }
     );
 
-    it("it ignores the `view` option unless the `filter` option value " +
-        "is `_view`",
-        () => {
-            const opts1 = { view: "ddoc/view" };
-            const opts2 = { view: "ddoc/other_view" };
-            const opts3 = { filter: "ddoc/view", view: "ddoc/view" };
-            const opts4 = { filter: "ddoc/view", view: "ddoc/other_view" };
-            const opts5 = { filter: "_view", view: "ddoc/other_view" };
-            const opts6 = { filter: "_view", view: "ddoc/view" };
+    it("it ignores the `view` option unless the `filter` option value is `_view`", () => {
+        const opts1 = { view: "ddoc/view" };
+        const opts2 = { view: "ddoc/other_view" };
+        const opts3 = { filter: "ddoc/view", view: "ddoc/view" };
+        const opts4 = { filter: "ddoc/view", view: "ddoc/other_view" };
+        const opts5 = { filter: "_view", view: "ddoc/other_view" };
+        const opts6 = { filter: "_view", view: "ddoc/view" };
 
-            return genReplicationId(sourceDb, targetDb, opts1).then(
-                (replicationId1) => {
-                    return genReplicationId(sourceDb, targetDb, opts2).then(
-                        (replicationId2) => {
-                            assert.equal(replicationId2, replicationId1);
-                            return replicationId2;
+        return genReplicationId(sourceDb, targetDb, opts1).then(
+            (replicationId1) => {
+                return genReplicationId(sourceDb, targetDb, opts2).then(
+                    (replicationId2) => {
+                        assert.equal(replicationId2, replicationId1);
+                        return replicationId2;
+                    }
+                );
+            }
+        ).then((replicationId2) => {
+            return genReplicationId(sourceDb, targetDb, opts3).then(
+                (replicationId3) => {
+                    assert.notEqual(replicationId3, replicationId2);
+
+                    return genReplicationId(sourceDb, targetDb, opts4).then(
+                        (replicationId4) => {
+                            assert.equal(replicationId4, replicationId3);
+                            return replicationId4;
                         }
                     );
                 }
-            ).then((replicationId2) => {
-                return genReplicationId(sourceDb, targetDb, opts3).then(
-                    (replicationId3) => {
-                        assert.notEqual(replicationId3, replicationId2);
+            );
+        }).then((replicationId4) => {
+            return genReplicationId(sourceDb, targetDb, opts5).then(
+                (replicationId5) => {
+                    assert.notEqual(replicationId5, replicationId4);
 
-                        return genReplicationId(sourceDb, targetDb, opts4).then(
-                            (replicationId4) => {
-                                assert.equal(replicationId4, replicationId3);
-                                return replicationId4;
-                            }
-                        );
-                    }
-                );
-            }).then((replicationId4) => {
-                return genReplicationId(sourceDb, targetDb, opts5).then(
-                    (replicationId5) => {
-                        assert.notEqual(replicationId5, replicationId4);
-
-                        return genReplicationId(sourceDb, targetDb, opts6).then(
-                            (replicationId6) => {
-                                assert.notEqual(replicationId6, replicationId5);
-                            }
-                        );
-                    }
-                );
-            });
-        }
+                    return genReplicationId(sourceDb, targetDb, opts6).then(
+                        (replicationId6) => {
+                            assert.notEqual(replicationId6, replicationId5);
+                        }
+                    );
+                }
+            );
+        });
+    }
     );
 });

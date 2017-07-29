@@ -1,13 +1,5 @@
 require("./node.setup");
 
-const adapters = ["local", "http"];
-const repl_adapters = [
-    ["local", "http"],
-    ["http", "http"],
-    ["http", "local"],
-    ["local", "local"]
-];
-
 /* jshint maxlen:false */
 const icons = [
     "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAABIAAAASABGyWs+AAAACXZwQWcAAAAQAAAAEABcxq3DAAAC8klEQVQ4y6WTS2hcZQCFv//eO++ZpDMZZjKdZB7kNSUpeWjANikoWiMUtEigBdOFipS6Ercu3bpTKF23uGkWBUGsoBg1KRHapjU0U81rpp3ESdNMZu6dx70zc38XdSFYVz1wNmdxzuKcAy8I8RxNDfs705ne5FmX0+mXUtK0mka2kLvxRC9vAe3nGmRiCQ6reux4auDi6ZenL0wOjaa6uoKK2+kgv1O0l1dvby/8/tvVe1t/XAn6ArvZ3fyzNIBjsQS5YiH6/ul3v/z0/AcfTx8fC24+zgvV4SXccYTtYlGM9MSDMydee1W27OQPd5d+Hujure4bZRQVeLCTY2p44tJ7M2/Pjg1lOLQkXy2scP3OQ1b3Snzx3SK/PCoxOphh7q13ZqeGJy492MmhAkoyHMUlRN8b4yfnBnqSWLqJItzkXZPoWhzF4WZdjGJ6+7H0OoPxFG9OnppzCtGXCEdRZ16axu1yffjRmfPnYqEw7WIdj1OlO6wx1e0g7hckO1ReH4wSrkgUVcEfDITub6w9Gus7tqS4NAcOVfMpCFq2jdrjwxv2cG48SejPFe59/gmnyuuMHA0ien0oR1x0BgJ4XG5fwO9Hk802sm3TbFiYVhNNU1FUBYCBsRNEmiad469gYyNUgRDPipNIQKKVajo1s1F9WjqgVjZQELg9Ek3TUFNHCaXnEEiQEvkPDw4PqTfMalk3UKt1g81ioRgLRc6MxPtDbdtGKgIhBdgSKW2kLWm327SaLayGxfzCzY2vf/zms0pVLyn7lQOadbmxuHb7WrawhW220J+WKZXK6EaNsl7F0GsYep1q3eTW6grfLv90zZRyI7dfRDNtSPdE+av05PL8re+HgdlMPI2wJXrDRAACgdVusfZ4k+uLN+eXs/cvp7oitP895UQogt6oxYZiiYsnMxMXpjPjqaC/QwEoGRX71+yd7aXs3asPd/NXAm7vbv5g7//P1OHxpvsj8bMep8sPULdMY32vcKNSr/3nTC+MvwEdhUhhkKTyPgAAAEJ0RVh0Y29tbWVudABGaWxlIHNvdXJjZTogaHR0cDovL3d3dy5zc2J3aWtpLmNvbS9GaWxlOktpcmJ5SGVhZFNTQkIucG5nSbA1rwAAACV0RVh0Y3JlYXRlLWRhdGUAMjAxMC0xMi0xNFQxNjozNDoxMCswMDowMDpPBjcAAAAldEVYdG1vZGlmeS1kYXRlADIwMTAtMTAtMDdUMjA6NTA6MzYrMDA6MDCjC6s7AAAAAElFTkSuQmCC",
@@ -27,13 +19,13 @@ const iconDigests = [
 
 const iconLengths = [1047, 789, 967, 527, 1108];
 
-adapters.forEach((adapter) => {
-    describe(`suite2 test.attachments.js-${adapter}`, () => {
+describe("db", "pouch", () => {
+    describe("suite2 attachments", () => {
 
         const dbs = {};
 
         beforeEach((done) => {
-            dbs.name = testUtils.adapterUrl(adapter, "testdb");
+            dbs.name = testUtils.adapterUrl("local", "testdb");
             testUtils.cleanup([dbs.name], done);
         });
 
@@ -246,7 +238,7 @@ adapters.forEach((adapter) => {
             const db = new PouchDB(dbs.name);
             const docs = [binAttDoc, binAttDoc2, pngAttDoc];
             return db.bulkDocs(docs).then(() => {
-                return testUtils.Promise.all(docs.map((doc) => {
+                return Promise.all(docs.map((doc) => {
                     const attName = Object.keys(doc._attachments)[0];
                     const expected = doc._attachments[attName];
                     return db.get(doc._id, {
@@ -271,7 +263,7 @@ adapters.forEach((adapter) => {
             const db = new PouchDB(dbs.name);
             const docs = [binAttDoc, binAttDoc2, pngAttDoc, { _id: "foo" }];
             return db.bulkDocs(docs).then(() => {
-                return testUtils.Promise.all(docs.map((doc) => {
+                return Promise.all(docs.map((doc) => {
                     const atts = doc._attachments;
                     const attName = atts && Object.keys(atts)[0];
                     const expected = atts && atts[attName];
@@ -313,7 +305,7 @@ adapters.forEach((adapter) => {
                     const savedDocs = res.rows.map((x) => {
                         return x.doc;
                     });
-                    return testUtils.Promise.all(docs.map((doc) => {
+                    return Promise.all(docs.map((doc) => {
                         const atts = doc._attachments;
                         const attName = atts && Object.keys(atts)[0];
                         const expected = atts && atts[attName];
@@ -353,7 +345,7 @@ adapters.forEach((adapter) => {
                     const savedDocs = res.rows.map((x) => {
                         return x.doc;
                     });
-                    return testUtils.Promise.all(docs.filter((doc) => {
+                    return Promise.all(docs.filter((doc) => {
                         return !doc._deleted;
                     }).map((doc) => {
                         const atts = doc._attachments;
@@ -422,7 +414,7 @@ adapters.forEach((adapter) => {
                 }).then((res) => {
                     assert.lengthOf(res.rows, 5);
 
-                    return testUtils.Promise.all(res.rows.map((row, i) => {
+                    return Promise.all(res.rows.map((row, i) => {
                         if (docs[i]._deleted) {
                             assert.isUndefined(row.doc);
                             return;
@@ -513,13 +505,13 @@ adapters.forEach((adapter) => {
                 }).then((res) => {
                     assert.lengthOf(res.rows, 5);
 
-                    return testUtils.Promise.all(res.rows.map((row) => {
+                    return Promise.all(res.rows.map((row) => {
                         const doc = docs.filter((x) => {
                             return x._id === row.id;
                         })[0];
                         const atts = doc._attachments;
                         const attNames = Object.keys(atts);
-                        return testUtils.Promise.all(attNames.map((attName) => {
+                        return Promise.all(attNames.map((attName) => {
                             const expected = atts && atts[attName];
                             const savedDoc = row.doc;
                             const att = savedDoc._attachments[attName];
@@ -613,7 +605,7 @@ adapters.forEach((adapter) => {
                 }).then((res) => {
                     assert.lengthOf(res.rows, 8);
 
-                    return testUtils.Promise.all(res.rows.map((row) => {
+                    return Promise.all(res.rows.map((row) => {
                         const doc = docs.filter((x) => {
                             return x._id === row.id;
                         })[0];
@@ -627,7 +619,7 @@ adapters.forEach((adapter) => {
                             return;
                         }
                         const attNames = Object.keys(atts);
-                        return testUtils.Promise.all(attNames.map((attName) => {
+                        return Promise.all(attNames.map((attName) => {
                             const expected = atts && atts[attName];
                             const savedDoc = row.doc;
                             const att = savedDoc._attachments[attName];
@@ -658,7 +650,7 @@ adapters.forEach((adapter) => {
                 }).then((res) => {
                     assert.lengthOf(res.results, 5);
 
-                    return testUtils.Promise.all(res.results.map((row) => {
+                    return Promise.all(res.results.map((row) => {
                         const doc = docs.filter((x) => {
                             return x._id === row.id;
                         })[0];
@@ -752,13 +744,13 @@ adapters.forEach((adapter) => {
                 }).then((res) => {
                     assert.lengthOf(res.results, 5);
 
-                    return testUtils.Promise.all(res.results.map((row) => {
+                    return Promise.all(res.results.map((row) => {
                         const doc = docs.filter((x) => {
                             return x._id === row.id;
                         })[0];
                         const atts = doc._attachments;
                         const attNames = Object.keys(atts);
-                        return testUtils.Promise.all(attNames.map((attName) => {
+                        return Promise.all(attNames.map((attName) => {
                             const expected = atts && atts[attName];
                             const savedDoc = row.doc;
                             const att = savedDoc._attachments[attName];
@@ -852,7 +844,7 @@ adapters.forEach((adapter) => {
                 }).then((res) => {
                     assert.lengthOf(res.results, 9);
 
-                    return testUtils.Promise.all(res.results.map((row) => {
+                    return Promise.all(res.results.map((row) => {
                         const doc = docs.filter((x) => {
                             return x._id === row.id;
                         })[0];
@@ -862,7 +854,7 @@ adapters.forEach((adapter) => {
                             return;
                         }
                         const attNames = Object.keys(atts);
-                        return testUtils.Promise.all(attNames.map((attName) => {
+                        return Promise.all(attNames.map((attName) => {
                             const expected = atts && atts[attName];
                             const savedDoc = row.doc;
                             const att = savedDoc._attachments[attName];
@@ -949,14 +941,14 @@ adapters.forEach((adapter) => {
                 }
             ];
             return db.bulkDocs(docs).then(() => {
-                return new testUtils.Promise((resolve, reject) => {
+                return new Promise((resolve, reject) => {
                     db.changes({
                         attachments: true,
                         binary: true,
                         include_docs: true
                     }).on("error", reject).on("complete", resolve);
                 }).then((results) => {
-                    return testUtils.Promise.all(results.results.map((row) => {
+                    return Promise.all(results.results.map((row) => {
                         const doc = docs.filter((x) => {
                             return x._id === row.id;
                         })[0];
@@ -971,7 +963,7 @@ adapters.forEach((adapter) => {
                             return;
                         }
                         const attNames = Object.keys(atts);
-                        return testUtils.Promise.all(attNames.map((attName) => {
+                        return Promise.all(attNames.map((attName) => {
                             const expected = atts && atts[attName];
                             const att = savedDoc._attachments[attName];
                             assert.isUndefined(att.stub);
@@ -994,7 +986,7 @@ adapters.forEach((adapter) => {
                 { _id: "bar" },
                 { _id: "foo", deleted: true }];
             return db.bulkDocs(docs).then(() => {
-                return new testUtils.Promise((resolve, reject) => {
+                return new Promise((resolve, reject) => {
                     const ret = db.changes({
                         attachments: true,
                         binary: true,
@@ -1004,7 +996,7 @@ adapters.forEach((adapter) => {
                         .on("change", handleChange)
                         .on("complete", resolve);
 
-                    let promise = testUtils.Promise.resolve();
+                    let promise = Promise.resolve();
                     let done = 0;
 
                     function doneWithDoc() {
@@ -1117,7 +1109,7 @@ adapters.forEach((adapter) => {
                 }
             ];
             return db.bulkDocs(docs).then(() => {
-                return new testUtils.Promise((resolve, reject) => {
+                return new Promise((resolve, reject) => {
                     const ret = db.changes({
                         attachments: true,
                         binary: true,
@@ -1127,7 +1119,7 @@ adapters.forEach((adapter) => {
                         .on("change", handleChange)
                         .on("complete", resolve);
 
-                    let promise = testUtils.Promise.resolve();
+                    let promise = Promise.resolve();
                     let done = 0;
 
                     function doneWithDoc() {
@@ -1154,7 +1146,7 @@ adapters.forEach((adapter) => {
                                 return doneWithDoc();
                             }
                             const attNames = Object.keys(atts);
-                            return testUtils.Promise.all(attNames.map((attName) => {
+                            return Promise.all(attNames.map((attName) => {
                                 const expected = atts && atts[attName];
                                 const att = savedDoc._attachments[attName];
                                 assert.isUndefined(att.stub);
@@ -1178,7 +1170,7 @@ adapters.forEach((adapter) => {
                 { _id: "bar" },
                 { _id: "foo", deleted: true }];
             return db.bulkDocs(docs).then(() => {
-                return new testUtils.Promise((resolve, reject) => {
+                return new Promise((resolve, reject) => {
                     const ret = db.changes({
                         attachments: true,
                         binary: true,
@@ -1188,7 +1180,7 @@ adapters.forEach((adapter) => {
                         .on("change", handleChange)
                         .on("complete", resolve);
 
-                    let promise = testUtils.Promise.resolve();
+                    let promise = Promise.resolve();
                     let done = 0;
 
                     function doneWithDoc() {
@@ -1238,7 +1230,7 @@ adapters.forEach((adapter) => {
                 { _id: "bar" },
                 { _id: "foo", deleted: true }];
             return db.bulkDocs(docs).then(() => {
-                return new testUtils.Promise((resolve, reject) => {
+                return new Promise((resolve, reject) => {
                     const ret = db.changes({
                         include_docs: true,
                         binary: true,
@@ -1247,7 +1239,7 @@ adapters.forEach((adapter) => {
                         .on("change", handleChange)
                         .on("complete", resolve);
 
-                    let promise = testUtils.Promise.resolve();
+                    let promise = Promise.resolve();
                     let done = 0;
 
                     function doneWithDoc() {
@@ -1293,7 +1285,7 @@ adapters.forEach((adapter) => {
                 { _id: "bar" },
                 { _id: "foo", deleted: true }];
             return db.bulkDocs(docs).then(() => {
-                return new testUtils.Promise((resolve, reject) => {
+                return new Promise((resolve, reject) => {
                     const ret = db.changes({
                         attachments: true,
                         binary: true,
@@ -1302,7 +1294,7 @@ adapters.forEach((adapter) => {
                         .on("change", handleChange)
                         .on("complete", resolve);
 
-                    let promise = testUtils.Promise.resolve();
+                    let promise = Promise.resolve();
                     let done = 0;
 
                     function doneWithDoc() {
@@ -1421,7 +1413,7 @@ adapters.forEach((adapter) => {
 
             function liveChangesPromise(opts) {
                 opts.live = true;
-                return new testUtils.Promise((resolve, reject) => {
+                return new Promise((resolve, reject) => {
                     const retChanges = { results: [] };
                     var changes = db.changes(opts)
                         .on("change", (change) => {
@@ -1556,7 +1548,7 @@ adapters.forEach((adapter) => {
 
             function liveChangesPromise(opts) {
                 opts.live = true;
-                return new testUtils.Promise((resolve, reject) => {
+                return new Promise((resolve, reject) => {
                     const retChanges = { results: [] };
                     var changes = db.changes(opts)
                         .on("change", (change) => {
@@ -2202,7 +2194,7 @@ adapters.forEach((adapter) => {
             return db.putAttachment("doc", "att", null, "Zm9v", "text/plain").then(() => {
                 return db.getAttachment("doc", "att");
             }).then((blob) => {
-                return new testUtils.Promise((resolve) => {
+                return new Promise((resolve) => {
                     testUtils.base64Blob(blob, (data) => {
                         assert.equal(data, "Zm9v", "should get the correct base64 back");
                         resolve();
@@ -2505,7 +2497,7 @@ adapters.forEach((adapter) => {
                     const doc = res.rows[0].doc;
                     assert.equal(doc._attachments["foo.txt"].stub, true);
                     assert.equal(doc._attachments["foo.txt"].length, 29);
-                    return new testUtils.Promise((resolve, reject) => {
+                    return new Promise((resolve, reject) => {
                         let change;
                         var changes = db.changes({ include_docs: true, live: true })
                             .on("change", (x) => {
@@ -2823,7 +2815,7 @@ adapters.forEach((adapter) => {
             }).then((blob) => {
                 assert.exists(blob);
 
-                return testUtils.Promise.all([
+                return Promise.all([
                     db.getAttachment("a", "foo.txt", { rev: rev1 }),
                     db.getAttachment("a", "foo.txt", { rev: "3-fake" }),
                     db.getAttachment("a", "foo.txt"),
@@ -2883,7 +2875,7 @@ adapters.forEach((adapter) => {
                     [db.getAttachment("a", "foo.txt", { rev: rev1 }), "foo"]
                 ];
 
-                return testUtils.Promise.all(testCases.map((testCase) => {
+                return Promise.all(testCases.map((testCase) => {
                     const promise = testCase[0];
                     const expected = testCase[1];
                     return promise.then((blob) => {
@@ -3099,61 +3091,6 @@ adapters.forEach((adapter) => {
             });
         });
 
-        if (typeof process === "undefined" || process.browser) {
-            it("test stored URL content type of png data", (done) => {
-                const db = new PouchDB(dbs.name);
-                db.put({ _id: "foo" }, () => {
-                    db.get("foo", (err, doc) => {
-                        const data = pngAttDoc._attachments["foo.png"].data;
-                        const blob = testUtils.binaryStringToBlob(
-                            testUtils.atob(data), "image/png");
-                        if (typeof URL === "undefined") {
-                            // phantomjs doesn't have this, give up on this test
-                            return done();
-                        }
-                        let checkedOnce = false;
-                        function checkBlobType(blob, cb) {
-                            const url = URL.createObjectURL(blob);
-                            testUtils.ajax({
-                                url,
-                                cache: true,
-                                binary: true
-                            }, (err, res) => {
-                                if (err && err.status === 500) {
-                                    // firefox won't let us use ajax to get the blob.
-                                    // too bad, but firefox wasn't the problem anyway
-                                    return done();
-                                }
-                                assert.isNull(err, "ajax gotten");
-                                if (!checkedOnce) {
-                                    checkedOnce = true;
-                                    if (res.type !== "image/png") {
-                                        // in Safari/iOS 7, blob URLs are missing
-                                        // the content type even without storing them.
-                                        // so just give up.
-                                        return done();
-                                    }
-                                } else {
-                                    assert.equal(res.type, "image/png");
-                                }
-                                cb();
-                            });
-                        }
-                        checkBlobType(blob, () => {
-                            db.putAttachment("foo", "foo.png", doc._rev, blob, "image/png",
-                                (err) => {
-                                    assert.isNull(err, "attachment inserted");
-                                    db.getAttachment("foo", "foo.png", (err, blob) => {
-                                        assert.isNull(err, "attachment gotten");
-                                        checkBlobType(blob, done);
-                                    });
-                                });
-                        });
-                    });
-                });
-            });
-        }
-
         it("#3008 test correct encoding/decoding of \\u0000 etc.", () => {
 
             const base64 =
@@ -3308,641 +3245,5 @@ adapters.forEach((adapter) => {
                 });
             });
         });
-
     });
-});
-
-repl_adapters.forEach((adapters) => {
-    describe(`suite2 test.attachments.js- ${adapters[0]}:${adapters[1]}`,
-        () => {
-
-            const dbs = {};
-
-            beforeEach((done) => {
-                dbs.name = testUtils.adapterUrl(adapters[0], "testdb");
-                dbs.remote = testUtils.adapterUrl(adapters[1], "test_attach_remote");
-                testUtils.cleanup([dbs.name, dbs.remote], done);
-            });
-
-            afterEach((done) => {
-                testUtils.cleanup([dbs.name, dbs.remote], done);
-            });
-
-            it("Attachments replicate back and forth", () => {
-                const db = new PouchDB(dbs.name);
-                const remote = new PouchDB(dbs.remote);
-
-                const doc = {
-                    _id: "doc",
-                    _attachments: {
-                        "foo.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("foo")
-                        }
-                    }
-                };
-
-                return db.bulkDocs({ docs: [doc] }).then(() => {
-                    return db.replicate.to(remote);
-                }).then(() => {
-                    doc._id = "doc2";
-                    return remote.put(doc);
-                }).then(() => {
-                    doc._id = "doc3";
-                    return db.put(doc);
-                }).then(() => {
-                    return db.sync(remote);
-                }).then(() => {
-                    return testUtils.Promise.all([db, remote].map((pouch) => {
-                        return pouch.allDocs({
-                            include_docs: true,
-                            attachments: true
-                        }).then((res) => {
-                            assert.lengthOf(res.rows, 3);
-                            res.rows.forEach((row) => {
-                                assert.lengthOf(Object.keys(row.doc._attachments), 1);
-                                const att = row.doc._attachments["foo.txt"];
-                                assert.equal(att.content_type, "text/plain");
-                                assert.equal(att.data, testUtils.btoa("foo"));
-                                assert.isString(att.digest);
-                                assert.isUndefined(att.length);
-                                assert.isUndefined(att.stub);
-                            });
-                        });
-                    }));
-                });
-            });
-
-            it("Replicate same doc, same atts", () => {
-                const db = new PouchDB(dbs.name);
-                const remote = new PouchDB(dbs.remote);
-
-                const doc = {
-                    _id: "doc",
-                    _attachments: {
-                        "foo.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("foo")
-                        }
-                    }
-                };
-
-                return remote.put(doc).then((res) => {
-                    doc._rev = res.rev;
-                    return db.replicate.from(remote);
-                }).then(() => {
-                    return db.put(doc);
-                }).then((res) => {
-                    doc._rev = res.rev;
-                    return db.replicate.to(remote);
-                }).then(() => {
-                    return remote.put(doc);
-                }).then(() => {
-                    return db.sync(remote);
-                }).then(() => {
-                    return testUtils.Promise.all([db, remote].map((pouch) => {
-                        return pouch.allDocs({
-                            include_docs: true,
-                            attachments: true
-                        }).then((res) => {
-                            assert.lengthOf(res.rows, 1);
-                            res.rows.forEach((row) => {
-                                assert.lengthOf(Object.keys(row.doc._attachments), 1);
-                                const att = row.doc._attachments["foo.txt"];
-                                assert.equal(att.content_type, "text/plain");
-                                assert.equal(att.data, testUtils.btoa("foo"));
-                                assert.isString(att.digest);
-                                assert.isUndefined(att.length);
-                                assert.isUndefined(att.stub);
-                            });
-                        });
-                    }));
-                });
-            });
-
-            it("Replicate same doc, same atts 2", () => {
-                const db = new PouchDB(dbs.name);
-                const remote = new PouchDB(dbs.remote);
-
-                const doc = {
-                    _id: "doc",
-                    _attachments: {
-                        "foo.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("foo")
-                        }
-                    }
-                };
-
-                return db.put(doc).then((res) => {
-                    doc._rev = res.rev;
-                    return db.replicate.to(remote);
-                }).then(() => {
-                    return remote.put(doc);
-                }).then((res) => {
-                    doc._rev = res.rev;
-                    return db.replicate.from(remote);
-                }).then(() => {
-                    return db.put(doc);
-                }).then(() => {
-                    return db.sync(remote);
-                }).then(() => {
-                    return testUtils.Promise.all([db, remote].map((pouch) => {
-                        return pouch.allDocs({
-                            include_docs: true,
-                            attachments: true
-                        }).then((res) => {
-                            assert.lengthOf(res.rows, 1);
-                            res.rows.forEach((row) => {
-                                assert.lengthOf(Object.keys(row.doc._attachments), 1);
-                                const att = row.doc._attachments["foo.txt"];
-                                assert.equal(att.content_type, "text/plain");
-                                assert.equal(att.data, testUtils.btoa("foo"));
-                                assert.isString(att.digest);
-                                assert.isUndefined(att.length);
-                                assert.isUndefined(att.stub);
-                            });
-                        });
-                    }));
-                });
-            });
-
-            it("Attachments replicate", (done) => {
-                const binAttDoc = {
-                    _id: "bin_doc",
-                    _attachments: {
-                        "foo.txt": {
-                            content_type: "text/plain",
-                            data: "VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ="
-                        }
-                    }
-                };
-                const docs1 = [
-                    binAttDoc,
-                    { _id: "0", integer: 0 },
-                    { _id: "1", integer: 1 },
-                    { _id: "2", integer: 2 },
-                    { _id: "3", integer: 3 }
-                ];
-
-                const db = new PouchDB(dbs.name);
-                const remote = new PouchDB(dbs.remote);
-
-                remote.bulkDocs({ docs: docs1 }, () => {
-                    db.replicate.from(remote, () => {
-                        db.get("bin_doc", { attachments: true }, (err, doc) => {
-                            assert.equal(binAttDoc._attachments["foo.txt"].data, doc._attachments["foo.txt"].data);
-                            done();
-                        });
-                    });
-                });
-            });
-
-            it("Attachment types replicate", () => {
-                const binAttDoc = {
-                    _id: "bin_doc",
-                    _attachments: {
-                        "foo.txt": {
-                            content_type: "text/plain",
-                            data: "VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ="
-                        }
-                    }
-                };
-                const docs1 = [
-                    binAttDoc,
-                    { _id: "0", integer: 0 },
-                    { _id: "1", integer: 1 },
-                    { _id: "2", integer: 2 },
-                    { _id: "3", integer: 3 }
-                ];
-
-                const db = new PouchDB(dbs.name);
-                const remote = new PouchDB(dbs.remote);
-
-                return remote.bulkDocs({ docs: docs1 }).then(() => {
-                    return db.replicate.from(remote);
-                }).then(() => {
-                    return db.get("bin_doc", { attachments: true, binary: true });
-                }).then((doc) => {
-                    const blob = doc._attachments["foo.txt"].data;
-                    assert.equal(blob.type, "text/plain");
-                    return testUtils.readBlobPromise(blob);
-                }).then((bin) => {
-                    assert.equal(bin, testUtils.atob("VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ="));
-                });
-            });
-
-            it("Many many attachments replicate", () => {
-                const doc = { _id: "foo" };
-
-                const db = new PouchDB(dbs.name);
-                const remote = new PouchDB(dbs.remote);
-
-                const data = testUtils.btoa("foobar");
-                const blob = testUtils.binaryStringToBlob(
-                    testUtils.atob(data), "text/plain");
-
-                doc._attachments = {};
-                const expectedKeys = [];
-                for (let i = 0; i < 50; i++) {
-                    doc._attachments[`${i}.txt`] = {
-                        content_type: "text/plain",
-                        data: blob
-                    };
-                    expectedKeys.push(`${i}.txt`);
-                }
-                return db.put(doc).then(() => {
-                    return db.replicate.to(remote);
-                }).then(() => {
-                    return remote.get("foo", { attachments: true });
-                }).then((doc) => {
-                    const keys = Object.keys(doc._attachments);
-                    keys.sort();
-                    assert.deepEqual(keys, expectedKeys.sort());
-                    assert.equal(doc._attachments[keys[0]].data, data);
-                });
-            });
-
-            it("Many many png attachments replicate", () => {
-                const doc = { _id: "foo" };
-
-                const db = new PouchDB(dbs.name);
-                const remote = new PouchDB(dbs.remote);
-
-                const data = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAMFBMVEX+9+" +
-                    "j+9OD+7tL95rr93qT80YD7x2L6vkn6syz5qRT4ogT4nwD4ngD4nQD4nQD4" +
-                    "nQDT2nT/AAAAcElEQVQY002OUQLEQARDw1D14f7X3TCdbfPnhQTqI5UqvG" +
-                    "OWIz8gAIXFH9zmC63XRyTsOsCWk2A9Ga7wCXlA9m2S6G4JlVwQkpw/Ymxr" +
-                    "UgNoMoyxBwSMH/WnAzy5cnfLFu+dK2l5gMvuPGLGJd1/9AOiBQiEgkzOpg" +
-                    "AAAABJRU5ErkJggg==";
-                const blob = testUtils.binaryStringToBlob(testUtils.atob(data),
-                    "image/png");
-
-                doc._attachments = {};
-                const expectedKeys = [];
-                for (let i = 0; i < 50; i++) {
-                    doc._attachments[`${i}.txt`] = {
-                        content_type: "image/png",
-                        data: blob
-                    };
-                    expectedKeys.push(`${i}.txt`);
-                }
-                return db.put(doc).then(() => {
-                    return db.replicate.to(remote);
-                }).then(() => {
-                    return remote.get("foo", { attachments: true });
-                }).then((doc) => {
-                    const keys = Object.keys(doc._attachments);
-                    keys.sort();
-                    assert.deepEqual(keys, expectedKeys.sort());
-                    assert.equal(doc._attachments[keys[0]].data, data);
-                });
-            });
-
-            it("Multiple attachments replicate", () => {
-                const doc = { _id: "foo" };
-
-                const db = new PouchDB(dbs.name);
-                const remote = new PouchDB(dbs.remote);
-
-                const data = "VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ=";
-                let rev;
-                return db.put(doc).then((info) => {
-                    rev = info.rev;
-                    return db.replicate.to(remote);
-                }).then(() => {
-                    return db.putAttachment(doc._id, "foo1.txt", rev, data, "text/plain");
-                }).then((info) => {
-                    rev = info.rev;
-                    return db.putAttachment(doc._id, "foo2.txt", rev, data, "text/plain");
-                }).then((info) => {
-                    rev = info.rev;
-                    return db.putAttachment(doc._id, "foo3.txt", rev, data, "text/plain");
-                }).then(() => {
-                    return db.replicate.to(remote);
-                }).then(() => {
-                    return remote.get("foo", { attachments: true });
-                }).then((doc) => {
-                    const keys = Object.keys(doc._attachments);
-                    keys.sort();
-                    assert.deepEqual(keys, ["foo1.txt", "foo2.txt", "foo3.txt"]);
-                });
-            });
-
-            it("#3961 Many attachments on same doc", () => {
-                const doc = { _id: "foo", _attachments: {} };
-
-                const db = new PouchDB(dbs.name);
-                const remote = new PouchDB(dbs.remote);
-
-                for (let i = 0; i < 100; i++) {
-                    doc._attachments[`${i}.txt`] = {
-                        data: testUtils.btoa(i.toString()),
-                        content_type: "text/plain"
-                    };
-                }
-
-                return db.put(doc).then(() => {
-                    return db.replicate.to(remote);
-                }).then(() => {
-                    return testUtils.Promise.all([
-                        db, remote
-                    ].map((pouch) => {
-                        return pouch.get("foo", { attachments: true }).then((doc) => {
-                            const atts = doc._attachments;
-                            assert.equal(Object.keys(atts).length, 100);
-                            for (let i = 0; i < 100; i++) {
-                                const att = atts[`${i}.txt`];
-                                assert.isUndefined(att.stub);
-                                assert.equal(att.data, testUtils.btoa(i.toString()));
-                                assert.equal(att.content_type, "text/plain");
-                            }
-                        }).then(() => {
-                            return pouch.get("foo");
-                        }).then((doc) => {
-                            const atts = doc._attachments;
-                            assert.equal(Object.keys(atts).length, 100);
-                            for (let i = 0; i < 100; i++) {
-                                const att = atts[`${i}.txt`];
-                                assert.equal(att.stub, true);
-                                assert.equal(att.content_type, "text/plain");
-                                assert.equal(att.length, i.toString().length);
-                                assert.exists(att.digest);
-                            }
-                        });
-                    }));
-                });
-            });
-
-            it("Multiple attachments replicate, different docs (#2698)", () => {
-                const db = new PouchDB(dbs.name);
-                const remote = new PouchDB(dbs.remote);
-                const docs = [];
-                for (let i = 0; i < 5; i++) {
-                    docs.push({
-                        _id: i.toString(),
-                        _attachments: {
-                            "foo.txt": {
-                                data: "VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ=",
-                                content_type: "text/plain"
-                            }
-                        }
-                    });
-                }
-                return remote.bulkDocs(docs).then(() => {
-                    return remote.replicate.to(db);
-                }).then(() => {
-                    return db.allDocs();
-                }).then((res) => {
-                    return testUtils.Promise.all(res.rows.map((row) => {
-                        return db.get(row.id, { attachments: true });
-                    }));
-                }).then((docs) => {
-                    const attachments = docs.map((doc) => {
-                        delete doc._attachments["foo.txt"].revpos;
-                        delete doc._attachments["foo.txt"].digest;
-                        return doc._attachments;
-                    });
-                    assert.deepEqual(attachments, [1, 2, 3, 4, 5].map(() => {
-                        return {
-                            "foo.txt": {
-                                content_type: "text/plain",
-                                data: "VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ="
-                            }
-                        };
-                    }));
-                });
-            });
-
-            it("Multiple attachments replicate, different docs png (#2698)", () => {
-                const db = new PouchDB(dbs.name);
-                const remote = new PouchDB(dbs.remote);
-                const docs = [];
-                for (let i = 0; i < 5; i++) {
-                    docs.push({
-                        _id: i.toString(),
-                        _attachments: {
-                            "foo.png": {
-                                data: icons[i],
-                                content_type: "image/png"
-                            }
-                        }
-                    });
-                }
-                return remote.bulkDocs(docs).then(() => {
-                    return remote.replicate.to(db);
-                }).then(() => {
-                    return db.allDocs();
-                }).then((res) => {
-                    return testUtils.Promise.all(res.rows.map((row) => {
-                        return db.get(row.id, { attachments: true });
-                    }));
-                }).then((docs) => {
-                    const attachments = docs.map((doc) => {
-                        delete doc._attachments["foo.png"].revpos;
-                        return doc._attachments;
-                    });
-                    assert.deepEqual(attachments, icons.map((icon, i) => {
-                        return {
-                            "foo.png": {
-                                content_type: "image/png",
-                                data: icon,
-                                digest: iconDigests[i]
-                            }
-                        };
-                    }));
-
-                    return testUtils.Promise.all(docs.map((doc) => {
-                        return db.get(doc._id);
-                    }));
-                }).then((docs) => {
-                    const attachments = docs.map((doc) => {
-                        delete doc._attachments["foo.png"].revpos;
-                        return doc._attachments["foo.png"];
-                    });
-                    assert.deepEqual(attachments, icons.map((icon, i) => {
-                        return {
-                            content_type: "image/png",
-                            stub: true,
-                            digest: iconDigests[i],
-                            length: iconLengths[i]
-                        };
-                    }));
-                });
-            });
-
-            it("#3932 attachments with tricky revpos", () => {
-                const db = new PouchDB(dbs.name);
-                const remote = new PouchDB(dbs.remote);
-
-                let rev;
-
-                return remote.put({
-                    _id: "test1",
-                    type: "XX",
-                    name: "Test1",
-                    _attachments: {
-                        "1.txt": { content_type: "text/plain", data: "Wlpa" }
-                    }
-                }).then(() => {
-                    return db.replicate.from(remote);
-                }).then(() => {
-                    return db.get("test1");
-                }).then((doc) => {
-                    return db.put(doc);
-                }).then((res) => {
-                    rev = res.rev;
-                    return db.replicate.to(remote);
-                }).then(() => {
-                    return remote.putAttachment("test1", "2.txt", rev,
-                        "Wlpa", "text/plain");
-                }).then(() => {
-                    return remote.replicate.to(db);
-                }).then(() => {
-                    return db.get("test1", { attachments: true });
-                }).then(() => {
-                    return remote.get("test1", { attachments: true });
-                }).then((doc) => {
-                    doc._attachments = {
-                        "1.txt": { content_type: "text/plain", data: "Wlpa" },
-                        "2.txt": { content_type: "text/plain", data: "Wlpa" }
-                    };
-                    return db.put(doc);
-                }).then(() => {
-                    return db.get("test1", { attachments: true });
-                }).then((doc) => {
-                    return db.put(doc);
-                }).then(() => {
-                    return db.replicate.to(remote);
-                }).then(() => {
-                    return testUtils.Promise.all([db, remote].map((pouch) => {
-                        return pouch.get("test1", { attachments: true }).then((doc) => {
-                            const filenames = Object.keys(doc._attachments);
-                            assert.lengthOf(filenames, 2);
-                            filenames.forEach((filename) => {
-                                const data = doc._attachments[filename].data;
-                                assert.equal(data, "Wlpa");
-                            });
-                        });
-                    }));
-                });
-            });
-
-            it("replication with changing attachments", () => {
-                const attachment = {
-                    content_type: "text/plain",
-                    data: "VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ="
-                };
-                const attachment2 = {
-                    content_type: "text/plain",
-                    data: ""
-                };
-                const binAttDoc = {
-                    _id: "bin_doc",
-                    _attachments: {
-                        "foo.txt": attachment
-                    }
-                };
-                const db = new PouchDB(dbs.name);
-                const remote = new PouchDB(dbs.remote);
-                return db.put(binAttDoc).then(() => {
-                    return db.get(binAttDoc._id);
-                }).then((doc) => {
-                    assert.exists(doc);
-                    return db.get(binAttDoc._id);
-                }).then((doc) => {
-                    doc._attachments["bar.txt"] = attachment2;
-                    return db.put(doc);
-                }).then(() => {
-                    return db.get(binAttDoc._id);
-                }).then((doc) => {
-                    assert.exists(doc);
-                    return db.get(binAttDoc._id, { attachments: true });
-                }).then((doc) => {
-                    assert.isUndefined(doc._attachments["foo.txt"].stub);
-                    assert.isUndefined(doc._attachments["bar.txt"].stub);
-                    return db.replicate.to(remote);
-                }).then(() => {
-                    return remote.get(binAttDoc._id, { attachments: true });
-                }).then((doc) => {
-                    assert.isUndefined(doc._attachments["foo.txt"].stub);
-                    doc._attachments["baz.txt"] = doc._attachments["foo.txt"];
-                    return remote.put(doc);
-                }).then(() => {
-                    return remote.replicate.to(db);
-                }).then(() => {
-                    return db.get(binAttDoc._id, { attachments: true });
-                }).then((doc) => {
-                    assert.isUndefined(doc._attachments["foo.txt"].stub);
-                    assert.isUndefined(doc._attachments["bar.txt"].stub);
-                    assert.isUndefined(doc._attachments["baz.txt"].stub);
-                    return db.get(binAttDoc._id);
-                }).then((doc) => {
-                    assert.exists(doc);
-                });
-            });
-
-            it("3955 race condition in put", (done) => {
-
-                const db = new PouchDB(dbs.name);
-                const btoa = testUtils.btoa;
-                const srcdata = ["", "", ""];
-
-                for (let i = 0; i < 50; i++) {
-                    srcdata[0] += "AAA";
-                    srcdata[1] += "BBB";
-                    srcdata[2] += "CCC";
-                }
-
-                const doc = {
-                    _id: "x",
-                    type: "testdoc",
-                    _attachments: {
-                        "a.txt": {
-                            content_type: "text/plain",
-                            data: btoa(srcdata[0])
-                        },
-                        "b.txt": {
-                            content_type: "text/plain",
-                            data: btoa(srcdata[1])
-                        },
-                        "c.txt": {
-                            content_type: "text/plain",
-                            data: btoa(srcdata[2])
-                        },
-                        "zzz.txt": {
-                            content_type: "text/plain",
-                            data: btoa("ZZZ")
-                        }
-                    }
-                };
-
-                db.put(doc).then(() => {
-                    return db.get("x");
-                }).then((doc) => {
-                    const digests = Object.keys(doc._attachments).map((a) => {
-                        return doc._attachments[a].digest;
-                    });
-                    if (isUnique(digests)) {
-                        done();
-                    } else {
-                        done("digests are not unique");
-                    }
-                });
-
-                doc._attachments["c.txt"].data = btoa("ZZZ");
-                doc._attachments["b.txt"].data = btoa("ZZZ");
-
-                function isUnique(arr) {
-                    arr.sort();
-                    for (let i = 1; i < arr.length; i++) {
-                        if (arr[i - 1] === arr[i]) {
-                            return false;
-                        }
-                    }
-                    return true;
-                }
-            });
-
-        });
 });

@@ -1,12 +1,10 @@
 import DB from "./core";
 
 import LevelPouch from "./adapter-leveldb";
-import HttpPouch from "./adapter-http";
 import mapreduce from "./mapreduce";
 import replication from "./replication";
 
 DB.plugin(LevelPouch)
-    .plugin(HttpPouch)
     .plugin(mapreduce)
     .plugin(replication);
 

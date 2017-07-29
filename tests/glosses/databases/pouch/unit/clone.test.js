@@ -1,8 +1,7 @@
 const PouchDB = adone.database.pouch.coverage.DB;
 const clone = PouchDB.utils.clone;
 
-describe("test.clone.js", () => {
-
+describe("db", "pouch", "clone", () => {
     it("Clones regular objects", () => {
         const obj1 = { foo: "bar" };
         const obj2 = clone(obj1);

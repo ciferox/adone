@@ -5,8 +5,6 @@
 // but for practical reasons (legacy code, test code, etc.) this is still here.
 //
 
-import ajax from '../ajax';
-
 import {
     parseUri,
     uuid,
@@ -50,12 +48,10 @@ import generateReplicationId from '../generate-replication-id';
 import checkpointer from '../checkpointer';
 
 export default {
-    ajax: ajax,
     blob: blob,
     parseUri: parseUri,
     uuid: uuid,
     rev: rev,
-    Promise: Promise,
     atob: atob,
     btoa: btoa,
     binaryStringToBlobOrBuffer: binaryStringToBlobOrBuffer,

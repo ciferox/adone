@@ -1,7 +1,6 @@
 require("./node.setup");
 
-describe("constructor errors", () => {
-
+describe("db", "pouch", "constructor errors", () => {
     it("should error on an undefined name", (done) => {
         try {
             new PouchDB();
@@ -32,5 +31,4 @@ describe("constructor errors", () => {
             done();
         }
     });
-
 });

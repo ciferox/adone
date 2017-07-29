@@ -86,7 +86,7 @@ testUtils.readBlob = function (blob, callback) {
 };
 
 testUtils.readBlobPromise = function (blob) {
-    return new testUtils.Promise((resolve) => {
+    return new Promise((resolve) => {
         testUtils.readBlob(blob, resolve);
     });
 };
@@ -191,13 +191,6 @@ testUtils.putTree = function (db, tree, callback) {
     insert(0);
 };
 
-testUtils.isCouchDB = function (cb) {
-    testUtils.ajax({ url: `${testUtils.couchHost()}/` }, (err, res) => {
-        // either CouchDB or pouchdb-server qualify here
-        cb("couchdb" in res || "express-pouchdb" in res);
-    });
-};
-
 testUtils.writeDocs = function (db, docs, callback, res) {
     if (!res) {
         res = [];
@@ -253,7 +246,7 @@ testUtils.promisify = function (fun, context) {
         for (let i = 0; i < arguments.length; i++) {
             args[i] = arguments[i];
         }
-        return new testUtils.Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             args.push((err, res) => {
                 if (err) {
                     return reject(err);
@@ -266,15 +259,13 @@ testUtils.promisify = function (fun, context) {
 };
 
 // We need to use pouchdb-for-coverage here to ensure that e.g utils
-// and ajax don't get pulled in, because then our coverage tests
+// don't get pulled in, because then our coverage tests
 // would complain that we're not using the "whole" thing.
 const PouchForCoverage = adone.database.pouch.coverage.DB;
 const pouchUtils = PouchForCoverage.utils;
 testUtils.binaryStringToBlob = pouchUtils.binaryStringToBlobOrBuffer;
 testUtils.btoa = pouchUtils.btoa;
 testUtils.atob = pouchUtils.atob;
-testUtils.Promise = pouchUtils.Promise;
-testUtils.ajax = PouchForCoverage.ajax;
 testUtils.uuid = pouchUtils.uuid;
 testUtils.rev = pouchUtils.rev;
 testUtils.parseUri = pouchUtils.parseUri;

@@ -1,8 +1,7 @@
 const Pouch = adone.database.pouch.coverage.DB;
 const defaultBackOff = Pouch.utils.defaultBackOff;
 
-describe("test.backoff.js", () => {
-
+describe("db", "pouch", "backoff", () => {
     it("defaultBackoff should start off at most 2 seconds and never exceed 10 minutes", () => {
         assert.exists(defaultBackOff);
         const limit = 600000;
@@ -16,5 +15,4 @@ describe("test.backoff.js", () => {
         assert.isAtMost(values[0], 2000);
         assert.isAtMost(max, limit);
     });
-
 });

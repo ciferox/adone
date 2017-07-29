@@ -6,7 +6,7 @@ const PouchDB = adone.database.pouch.coverage.DB;
 const merge = PouchDB.utils.merge;
 const winningRev = PouchDB.utils.winningRev;
 
-describe("test.merge.js", () => {
+describe("db", "pouch", "merge", () => {
 
     let simple;
     let two0;

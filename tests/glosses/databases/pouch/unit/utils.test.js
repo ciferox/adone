@@ -4,7 +4,7 @@ const parseDdocFunctionName = PouchDB.utils.parseDdocFunctionName;
 const createError = PouchDB.utils.createError;
 const errors = PouchDB.Errors;
 
-describe("test.utils.js", () => {
+describe("db", "pouch", "utils", () => {
     describe("the design doc function name normalizer", () => {
         it("normalizes foo to foo/foo", () => {
             assert.equal(normalizeDdocFunctionName("foo"), "foo/foo");
