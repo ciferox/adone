@@ -353,6 +353,9 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         // Vendor
         vendor: "./vendor"
     }, adone);
+    if (process.env.ADONE_SOURCEMAPS) {
+        adone.sourcemap.support(Error).install();
+    }
 } else {
     exports.default = global.adone;
 }

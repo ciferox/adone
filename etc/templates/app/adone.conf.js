@@ -3,8 +3,8 @@ export default {
         name: "app",
         structure: {
             bin: {
-                from: "src/app.js",
-                to: "bin/app.js"
+                $from: "src/app.js",
+                $to: "bin/app.js"
             }
         }
     }
