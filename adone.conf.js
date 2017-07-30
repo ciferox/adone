@@ -21,6 +21,36 @@ const transpile = (stream, ...plugins) => stream.transpile({
     ]
 });
 
+const $watchOpts = {
+    awaitWriteFinish: {
+        stabilityThreshold: 500,
+        pollInterval: 100
+    }
+};
+
+const notificatorFor = (title) => ({ watch }) => ({
+    title,
+    filter: (file) => file.extname !== ".map",
+    message: watch ? (file) => path.relative(process.cwd(), file.path) : "done",
+    onLast: !watch,
+    console: watch
+});
+
+const errorHandlerFor = (title) => fast.transform.notify.onError({
+    title,
+    message: (error) => error.message
+});
+
+const importAdoneReplacer = (replacer) => () => ({
+    visitor: {
+        ImportDeclaration(p, state) {
+            if (p.node.source.value === "adone") {
+                p.node.source.value = replacer(state.file.opts);
+            }
+        }
+    }
+});
+
 export default {
     project: {
         structure: {
@@ -35,48 +65,23 @@ export default {
                 },
                 $from: "src/cli/adone.js",
                 $to: "bin",
-                $transform: (stream, { watch }) => {
+                $watchOpts,
+                $transform: (stream) => {
                     stream.sourcemapsInit();
-                    transpile(stream, () => ({
-                        visitor: {
-                            ImportDeclaration(p, state) {
-                                if (p.node.source.value === "adone") {
-                                    p.node.source.value = path.relative(
-                                        path.join("bin", path.dirname(state.file.opts.filenameRelative)),
-                                        "lib"
-                                    );
-                                }
-                            }
-                        }
+                    transpile(stream, importAdoneReplacer(({ filenameRelative }) => {
+                        return path.relative(path.join("bin", path.dirname(filenameRelative)), "lib");
                     }));
                     stream.sourcemapsWrite(".", {
-                        mapSources: (sourcePath, file) => {
-                            return path.relative(path.dirname(path.resolve("bin", file.relative)), file.path);
-                        }
+                        destPath: "bin"
                     });
                     stream.chmod({
                         owner: { read: true, write: true, execute: true },
                         group: { read: true, write: false, execute: true },
                         others: { read: true, write: false, execute: true }
                     });
-                    if (watch) {
-                        stream.notify({
-                            title: "bin",
-                            filter: (file) => file.extname !== ".map",
-                            message: (file) => path.relative(process.cwd(), file.path)
-                        }).on("error", fast.transform.notify.onError({
-                            title: "bin",
-                            message: (error) => error.message
-                        }));
-                    } else {
-                        stream.notify({
-                            onLast: true,
-                            title: "bin",
-                            message: "done",
-                            console: false
-                        });
-                    }
-                }
+                },
+                $notify: notificatorFor("bin"),
+                $onError: errorHandlerFor("bin")
             },
             glosses: {
                 async $before({ watch }) {
@@ -90,50 +95,23 @@ export default {
                     $progress: ({ watch }) => !watch,
                     $from: "src/glosses/**/*.js",
                     $to: "lib/glosses",
-                    $transform: (stream, { watch }) => {
+                    $watchOpts,
+                    $transform: (stream) => {
                         stream.sourcemapsInit();
-                        transpile(stream, () => ({
-                            visitor: {
-                                ImportDeclaration(p, state) {
-                                    if (p.node.source.value === "adone") {
-                                        p.node.source.value = path.relative(
-                                            path.dirname(state.file.opts.filename),
-                                            "lib"
-                                        );
-                                    }
-                                }
-                            }
+                        transpile(stream, importAdoneReplacer(({ filename }) => {
+                            return path.relative(path.dirname(filename), "lib");
                         }));
                         stream.sourcemapsWrite(".", {
-                            mapSources: (sourcePath, file) => {
-                                return path.relative(
-                                    path.dirname(path.resolve("lib", "glosses", file.relative)),
-                                    file.path
-                                );
-                            }
+                            destPath: "lib/glosses"
                         });
-                        if (watch) {
-                            stream.notify({
-                                title: "glosses.js",
-                                filter: (file) => file.extname !== ".map",
-                                message: (file) => path.relative(process.cwd(), file.path)
-                            }).on("error", fast.transform.notify.onError({
-                                title: "glosses.js",
-                                message: (error) => error.message
-                            }));
-                        } else {
-                            stream.notify({
-                                onLast: true,
-                                title: "glosses.js",
-                                message: "done",
-                                console: false
-                            });
-                        }
-                    }
+                    },
+                    $notify: notificatorFor("glosses.js"),
+                    $onError: errorHandlerFor("glosses.js")
                 },
                 dot: {
                     $progress: ({ watch }) => !watch,
                     $watch: "src/glosses/schema/__/dot/**/*",
+                    $watchOpts,
                     async $handler({ watch }, event, file) {
                         const FUNCTION_NAME = /function\s+anonymous\s*\(it[^)]*\)\s*{/;
                         const OUT_EMPTY_STRING = /out\s*\+=\s*'\s*';/g;
@@ -187,32 +165,16 @@ export default {
                                 message: watch ? path.relative(process.cwd(), file) : "done",
                                 console: watch
                             })
-                            .dest("lib/glosses/schema/__/dot");
+                            .on("error", errorHandlerFor("glosses.js"))
+                            .dest("lib/glosses/schema/__/dot").catch(adone.noop);
                     }
                 },
                 other: {
                     $progress: ({ watch }) => !watch,
                     $from: ["src/glosses/**/*", "!src/glosses/**/*.js", "!src/glosses/schema/__/dot/*"],
                     $to: "lib/glosses",
-                    $transform: (stream, { watch }) => {
-                        if (watch) {
-                            stream.notify({
-                                title: "glosses.other",
-                                filter: (file) => file.extname !== ".map",
-                                message: (file) => path.relative(process.cwd(), file.path)
-                            }).on("error", fast.transform.notify.onError({
-                                title: "glosses.other",
-                                message: (error) => error.message
-                            }));
-                        } else {
-                            stream.notify({
-                                onLast: true,
-                                title: "glosses.other",
-                                message: "done",
-                                console: false
-                            });
-                        }
-                    }
+                    $watchOpts,
+                    $notify: notificatorFor("glosses.other")
                 }
             },
             vendor: {
@@ -226,25 +188,8 @@ export default {
                 },
                 $from: "src/vendor/**/*",
                 $to: "lib/vendor",
-                transform: (stream, { watch }) => {
-                    if (watch) {
-                        stream.notify({
-                            title: "vendor",
-                            filter: (file) => file.extname !== ".map",
-                            message: (file) => path.relative(process.cwd(), file.path)
-                        }).on("error", fast.transform.notify.onError({
-                            title: "vendor",
-                            message: (error) => error.message
-                        }));
-                    } else {
-                        stream.notify({
-                            onLast: true,
-                            title: "vendor",
-                            message: "done",
-                            console: false
-                        });
-                    }
-                }
+                $watchOpts,
+                $notify: notificatorFor("vendor")
             },
             index: {
                 $progress: ({ watch }) => !watch,
@@ -257,35 +202,16 @@ export default {
                 },
                 $from: "src/index.js",
                 $to: "lib",
-                $transform: (stream, { watch }) => {
+                $watchOpts,
+                $transform: (stream) => {
                     stream.sourcemapsInit();
                     transpile(stream);
                     stream.sourcemapsWrite(".", {
-                        mapSources: (sourcePath, file) => {
-                            return path.relative(
-                                path.dirname(path.resolve("lib", file.relative)),
-                                file.path
-                            );
-                        }
+                        destPath: "lib"
                     });
-                    if (watch) {
-                        stream.notify({
-                            title: "index",
-                            filter: (file) => file.extname !== ".map",
-                            message: (file) => path.relative(process.cwd(), file.path)
-                        }).on("error", fast.transform.notify.onError({
-                            title: "index",
-                            message: (error) => error.message
-                        }));
-                    } else {
-                        stream.notify({
-                            onLast: true,
-                            title: "index",
-                            message: "done",
-                            console: false
-                        });
-                    }
-                }
+                },
+                $notify: notificatorFor("index"),
+                $onError: errorHandlerFor("index")
             },
             omnitron: {
                 $progress: ({ watch }) => !watch,
@@ -298,46 +224,18 @@ export default {
                 },
                 $from: "src/omnitron/**/*",
                 $to: "lib/omnitron",
-                $transform: (stream, { watch }) => {
+                $watchOpts,
+                $transform: (stream) => {
                     stream.sourcemapsInit();
-                    transpile(stream, () => ({
-                        visitor: {
-                            ImportDeclaration(p, state) {
-                                if (p.node.source.value === "adone") {
-                                    p.node.source.value = path.relative(
-                                        path.dirname(state.file.opts.filename),
-                                        "lib"
-                                    );
-                                }
-                            }
-                        }
+                    transpile(stream, importAdoneReplacer(({ filename }) => {
+                        return path.relative(path.dirname(filename), "lib");
                     }));
                     stream.sourcemapsWrite(".", {
-                        mapSources: (sourcePath, file) => {
-                            return path.relative(
-                                path.dirname(path.resolve("lib", "omnitron", file.relative)),
-                                file.path
-                            );
-                        }
+                        destPath: "lib/omnitron"
                     });
-                    if (watch) {
-                        stream.notify({
-                            title: "omnitron",
-                            filter: (file) => file.extname !== ".map",
-                            message: (file) => path.relative(process.cwd(), file.path)
-                        }).on("error", fast.transform.notify.onError({
-                            title: "omnitron",
-                            message: (error) => error.message
-                        }));
-                    } else {
-                        stream.notify({
-                            onLast: true,
-                            title: "omnitron",
-                            message: "done",
-                            console: false
-                        });
-                    }
-                }
+                },
+                $notify: notificatorFor("omnitron"),
+                $onError: errorHandlerFor("omnitron")
             },
             subsystems: {
                 $progress: ({ watch }) => !watch,
@@ -350,35 +248,16 @@ export default {
                 },
                 $from: "src/subsystems/**/*",
                 $to: "lib/subsystems",
-                $transform: (stream, { watch }) => {
+                $watchOpts,
+                $transform: (stream) => {
                     stream.sourcemapsInit();
                     transpile(stream);
                     stream.sourcemapsWrite(".", {
-                        mapSources: (sourcePath, file) => {
-                            return path.relative(
-                                path.dirname(path.resolve("lib", "subsystems", file.relative)),
-                                file.path
-                            );
-                        }
+                        destPath: "lib/subsystems"
                     });
-                    if (watch) {
-                        stream.notify({
-                            title: "subsystems",
-                            filter: (file) => file.extname !== ".map",
-                            message: (file) => path.relative(process.cwd(), file.path)
-                        }).on("error", fast.transform.notify.onError({
-                            title: "subsystems",
-                            message: (error) => error.message
-                        }));
-                    } else {
-                        stream.notify({
-                            onLast: true,
-                            title: "subsystems",
-                            message: "done",
-                            console: false
-                        });
-                    }
-                }
+                },
+                $notify: notificatorFor("subsystems"),
+                $onError: errorHandlerFor("subsystems")
             }
         }
     }

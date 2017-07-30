@@ -187,7 +187,7 @@ export default class ProgressBar {
         this.current += delta;
         this.completed = this.current >= this.total;
         if (is.plainObject(tokens)) {
-            this.customTokens = Object.assign({ }, this.customTokens, tokens); 
+            this.customTokens = Object.assign({ }, this.customTokens, tokens);
         }
         this.compile();
         this.snoop();

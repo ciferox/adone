@@ -1,4 +1,4 @@
-const { is, util, fast, fs, terminal } = adone;
+const { is, util, fast, fs, terminal, noop } = adone;
 
 const isTasksComposition = (descriptor) => {
     return is.plainObject(descriptor)
@@ -21,9 +21,30 @@ const onlyOnce = () => (target, key, descriptor) => {
 };
 
 class AbstractTask {
-    constructor(parent, key) {
+    constructor(parent, descriptor, key, options) {
         this.parent = parent;
         this.key = key;
+        ({
+            $description: this.description = null,
+            $progress: this.progress = false,
+            $notify: this.notify = false,
+            $depends: this.dependencies = [],
+            $before: this.before = noop,
+            $after: this.after = noop
+        } = descriptor);
+        this.options = options;
+        this.dependencies = util.arrify(
+            is.function(this.dependencies)
+                ? this.dependencies(this.options)
+                : this.dependencies
+        );
+        if (is.function(this.progress)) {
+            this.progress = this.progress(this.options);
+        }
+    }
+
+    resolveDependencies(resolver) {
+        this.dependencies = this.dependencies.map((dep) => resolver.resolve(dep, this));
     }
 
     hasParent() {
@@ -39,6 +60,9 @@ class AbstractTask {
     }
 
     getDescription() {
+        if (!is.null(this.description)) {
+            return this.description;
+        }
         const key = this.getKey();
         if (!this.hasParent()) {
             return key;
@@ -58,32 +82,31 @@ class AbstractTask {
 
     @onlyOnce()
     async execute() {
+        await Promise.all(this.dependencies.map((dep) => dep.execute()));
+        await this.before(this.options);
         let bar;
-        if (this.progress) { // ugly, todo fix
-            if (is.function(this.progress)) {
-                this.progress = this.progress(this.options);
-            }
-            if (this.progress) {
-                bar = terminal.progress({
-                    schema: `:spinner ${this.getDescription()} :elapsed`
-                });
-                bar.update(0);
-            }
+        if (this.progress) {
+            bar = terminal.progress({
+                schema: `:spinner ${this.getDescription()} :elapsed`
+            });
+            bar.update(0);
         }
         const res = await this._execute();
         if (this.progress) {
             bar.complete(true);
         }
+        if (this.options.watch) {
+            return;
+        }
+        await this.after(this.options);
         return res;
     }
 }
 
 class Task extends AbstractTask {
     constructor(parent, descriptor, key, options) {
-        super(parent, key);
+        super(parent, descriptor, key, options);
         ({
-            $depends: this.dependencies = [],
-            $description: this.description = null,
             $handler: this.handler = null,
             $from: this.from = null,
             $to: this.to = null,
@@ -91,33 +114,12 @@ class Task extends AbstractTask {
             $watch: this.watchPattern = null,
             $watchOpts: this.watchOpts = {},
             $streamOpts: this.streamOpts = {},
-            $before: this.before = adone.noop,
-            $after: this.after = adone.noop,
-            $progress: this.progress = false
+            $notify: this.notify = {},
+            $onError: this.onError = null
         } = descriptor);
-        this.options = options;
-        this.dependencies = util.arrify(
-            is.function(this.dependencies)
-                ? this.dependencies(this.options)
-                : this.dependencies
-        );
-        // if (is.function(this.from)) {
-        //     this.from = this.from(this.options);
-        // }
-        // if (is.function(this.to)) {
-        //     this.to = this.to(this.options);
-        // }
-        // if (is.function(this.transform)) {
-        //     this.transform = this.transform(this.options);
-        // }
-        // if (is.function(this.description)) {
-        //     this.description = this.description(this.options);
-        // }
-        // this.context = Object.create(descriptor);
-    }
-
-    resolveDependencies(resolver) {
-        this.dependencies = this.dependencies.map((dep) => resolver.resolve(dep, this));
+        if (is.function(this.notify)) {
+            this.notify = this.notify(this.options);
+        }
     }
 
     isHandledByUser() {
@@ -129,11 +131,18 @@ class Task extends AbstractTask {
     }
 
     async _execute() {
-        await Promise.all(this.dependencies.map((dep) => dep.execute()));
-        await this.before(this.options);
         if (this.isHandledByUser()) {
             if (!this.options.watch || !this.watchPattern) {
-                const res = await this.handler(this.options);
+                let res;
+                try {
+                    res = await this.handler(this.options);
+                } catch (err) {
+                    if (this.onError) {
+                        await this.onError(err, this.options);
+                        return;
+                    }
+                    throw err;
+                }
                 await this.after(res);
                 return res;
             }
@@ -142,9 +151,16 @@ class Task extends AbstractTask {
                 ignoreInitial: true,
                 ...this.watchOpts
             });
-            watcher.on("all", (event, path, stat) => {
-                // errors ?
-                this.handler(this.options, event, path, stat);
+            watcher.on("all", async (event, path, stat) => {
+                try {
+                    this.handler(this.options, event, path, stat);
+                } catch (err) {
+                    if (this.onError) {
+                        await this.onError(err, this.options, event, path, stat);
+                        return;
+                    }
+                    throw err;
+                }
             });
             return;
         }
@@ -157,29 +173,33 @@ class Task extends AbstractTask {
         if (this.transform) {
             stream = this.transform(stream, this.options) || stream;
         }
+        if (this.notify) {
+            stream.notify(this.notify);
+        }
+        if (this.onError) {
+            stream.on("error", this.onError);
+        }
         if (this.options.watch) {
             stream.dest(this.to);
             return null;
         }
-        await stream.dest(this.to);
-        await this.after(this.options);
-    }
-
-    getDescription() {
-        if (!is.null(this.description)) {
-            return this.description;
+        try {
+            await stream.dest(this.to);
+        } catch (err) {
+            if (!this.onError) {
+                throw err;
+            }
+            // must have been handled
+            return;
         }
-        return super.getDescription();
+        await this.after(this.options);
     }
 }
 
 class TasksComposition extends AbstractTask {
-    constructor(parent, key, options) {
-        super(parent, key);
+    constructor(parent, descriptor, key, options) {
+        super(parent, descriptor, key, options);
         this.tasks = {};
-        this.options = options;
-        this.before = adone.noop;
-        this.after = adone.noop;
     }
 
     addTask(id, task) {
@@ -194,13 +214,10 @@ class TasksComposition extends AbstractTask {
         return this.tasks[id];
     }
 
-    async _execute() {
-        await this.before(this.options);
-        const res = await Promise.all(util.entries(this.tasks).map(async ([id, task]) => {
+    _execute() {
+        return Promise.all(util.entries(this.tasks).map(async ([id, task]) => {
             return [id, await task.execute()];
         }));
-        await this.after(this.options);
-        return res;
     }
 
     [Symbol.iterator]() {
@@ -210,7 +227,7 @@ class TasksComposition extends AbstractTask {
 
 class SequentalTasks extends AbstractTask {
     constructor(parent, key) {
-        super(parent, key);
+        super(parent, {}, key, {});
         this.tasks = [];
     }
 
@@ -240,10 +257,9 @@ class SequentalTasks extends AbstractTask {
 }
 
 const parseComposition = (parent, rawStructure, key, options) => {
-    const composition = new TasksComposition(parent, key, options);
+    const composition = new TasksComposition(parent, rawStructure, key, options);
     for (const [key, value] of util.entries(rawStructure)) {
         if (key.startsWith("$")) {
-            composition[key.slice(1)] = value;
             continue;
         }
         composition.addTask(key, parseValue(composition, value, key, options));
@@ -342,7 +358,7 @@ const resolveDependencies = (schema, resolver = new Resolver()) => {
 
 export class Builder {
     constructor(schema, options = {}) {
-        this.schema = new TasksComposition(null);
+        this.schema = new TasksComposition(null, {}, "", {});
         this.schema.addTask("", parseValue(this.schema, schema, "", options));
         resolveDependencies(this.schema);
     }

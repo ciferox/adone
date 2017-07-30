@@ -60,7 +60,7 @@ export default function writeInternals(destPath, options) {
         let comment;
         const commentFormatter = __.util.getCommentFormatter(file);
 
-        if (is.undefined(destPath) || is.null(destPath)) {
+        if (is.nil(destPath)) {
             // encode source map into comment
             const base64Map = Buffer.from(JSON.stringify(sourceMap)).toString("base64");
             comment = commentFormatter(`data:application/json;charset=${options.charset};base64,${base64Map}`);
