@@ -555,17 +555,19 @@ export class Serializer {
 
 adone.lazify({
     serializer: () => {
-        // Reserved custom type ids:
+        // Custom types mapping:
         // 127 - adone exceptions
         // 126 - standart errors
-        // 89 - adone.Long
-        // 88 - adon.netron.Definition
-        // 87 - adone.netron.Reference
-        // 86 - adone.netron.Definitions
-
+        // 125 - Date
+        // 124 - Map
+        // 123 - Set
+        // 120-122 - reserved for std types
+        // 119 - adone.math.Long
+        // 110-118 - reserved for other adone types
+        // 100-109 - reserved for netron types
+        // 1-99 - user-defined types
+        
         const s = new adone.data.mpak.Serializer();
-
-        // Here we register custom types for default serializer
 
         const decodeException = (buf) => {
             const id = buf.readUInt16BE();
@@ -573,6 +575,8 @@ adone.lazify({
             const stack = s.decode(buf);
             return adone.x.create(id, message, stack);
         };
+
+        // Adone exceptions should be registered before std errors in case of inheritance from Error class.
 
         // Adone exceptions encoders/decoders
         s.register(127, adone.x.Exception, (obj, buf) => {
@@ -588,8 +592,49 @@ adone.lazify({
             s.encode(obj.stack, buf);
         }, decodeException);
 
+        // Date
+        s.register(125, Date, (obj, buf) => {
+            buf.writeUInt64BE(obj.getTime());
+        }, (buf) => {
+            return new Date(buf.readUInt64BE().toNumber());
+        });
+
+        // Map
+        s.register(124, Map, (obj, buf) => {
+            buf.writeUInt32BE(obj.size);
+            for (const [key, val] of obj.entries()) {
+                s.encode(key, buf);
+                s.encode(val, buf);
+            }
+        }, (buf) => {
+            const map = new Map();
+            const size = buf.readUInt32BE();
+            for (let i = 0; i < size; i++) {
+                const key = s.decode(buf);
+                const val = s.decode(buf);
+                map.set(key, val);
+            }
+            return map;
+        });
+
+        // Set
+        s.register(123, Set, (obj, buf) => {
+            buf.writeUInt32BE(obj.size);
+            for (const val of obj.values()) {
+                s.encode(val, buf);
+            }
+        }, (buf) => {
+            const set = new Set();
+            const size = buf.readUInt32BE();
+            for (let i = 0; i < size; i++) {
+                const val = s.decode(buf);
+                set.add(val);
+            }
+            return set;
+        });
+
         // Long encoder/decoder
-        s.register(125, adone.math.Long, (obj, buf) => {
+        s.register(119, adone.math.Long, (obj, buf) => {
             buf.writeInt8(obj.unsigned ? 1 : 0);
             if (obj.unsigned) {
                 buf.writeUInt64BE(obj);
@@ -599,7 +644,7 @@ adone.lazify({
         }, (buf) => {
             const unsigned = Boolean(buf.readInt8());
             return (unsigned ? buf.readUInt64BE() : buf.readInt64BE());
-        });
+        });        
 
         return s;
     }

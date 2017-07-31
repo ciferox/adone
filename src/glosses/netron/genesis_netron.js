@@ -41,13 +41,13 @@ class Flags {
 }
 
 // Netron specific encoders/decoders
-serializer.register(124, Identity, (obj, buf) => {
+serializer.register(109, Identity, (obj, buf) => {
     serializer.encode(obj.uid, buf);
 }, (buf) => {
     const uid = serializer.decode(buf);
     const identity = new Identity(uid);
     return identity;
-}).register(123, Definition, (obj, buf) => {
+}).register(108, Definition, (obj, buf) => {
     buf.writeUInt32BE(obj.id);
     buf.writeUInt32BE(obj.parentId);
     serializer.encode(obj.name, buf);
@@ -63,13 +63,13 @@ serializer.register(124, Identity, (obj, buf) => {
     def.$ = serializer.decode(buf);
     def.twin = serializer.decode(buf);
     return def;
-}).register(122, Reference, (obj, buf) => {
+}).register(107, Reference, (obj, buf) => {
     buf.writeUInt32BE(obj.defId);
 }, (buf) => {
     const ref = new Reference();
     ref.defId = buf.readUInt32BE();
     return ref;
-}).register(121, Definitions, (obj, buf) => {
+}).register(106, Definitions, (obj, buf) => {
     const len = obj.length;
     buf.writeUInt32BE(len);
     for (let i = 0; i < obj.length; i++) {

@@ -111,6 +111,7 @@ class Vaults {
                         path: adone.std.path.join(this._path, adone.std.path.dirname(realName)),
                         state: (opened.includes(realName) ? "open" : "close"),
                         encrypted: parts.length > 1 && parts.includes("crypt"),
+                        created: new Date(),
                         size: 0
                     };
                 });

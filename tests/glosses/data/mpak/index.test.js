@@ -147,18 +147,6 @@ describe("data", "mpak", "Serializer", () => {
         });
     });
 
-    it("encode/decode Long mirror test", () => {
-        let orig = Long.fromString("1152921504606912512", true); // 2**60 + 2**16
-        let encoded = serializer.encode(orig);
-        let output = serializer.decode(encoded.flip());
-        assert.ok(output.equals(orig), "must stay the same");
-
-        orig = Long.fromString("-1152921504606912512"); // -2**60 - 2**16
-        encoded = serializer.encode(orig);
-        output = serializer.decode(encoded.flip());
-        assert.ok(output.equals(orig), "must stay the same");
-    });
-
     describe("1-byte-length-strings", () => {
         it("encode/decode 32 <-> (2^8-1) bytes strings", () => {
             const all = [];
@@ -1370,6 +1358,47 @@ describe("data", "mpak", "Serializer", () => {
             }, {});
 
             assert.deepEqual(serializer.decode(serializer.encode(map).flip()), map);
+        });
+    });
+
+    describe.only("some std and adone types encode/decode", () => {
+        it("encode/decode Long mirror test", () => {
+            let orig = Long.fromString("1152921504606912512", true); // 2**60 + 2**16
+            let encoded = serializer.encode(orig);
+            let output = serializer.decode(encoded.flip());
+            assert.ok(output.equals(orig), "must stay the same");
+
+            orig = Long.fromString("-1152921504606912512"); // -2**60 - 2**16
+            encoded = serializer.encode(orig);
+            output = serializer.decode(encoded.flip());
+            assert.ok(output.equals(orig), "must stay the same");
+        });
+
+        it("encode/decode Date", () => {
+            const val = new Date();
+            const encoded = serializer.encode(val);
+            const decodedVal = serializer.decode(encoded.flip());
+            assert.deepEqual(decodedVal, val, "must stay the same");
+        });
+
+        it("encode/decode Map", () => {
+            const val = new Map();
+            val.set("key1", "val2");
+            val.set(888, "adone");
+            val.set("state", true);
+            const encoded = serializer.encode(val);
+            const decodedVal = serializer.decode(encoded.flip());
+            assert.deepEqual([...decodedVal.entries()], [...val.entries()], "must stay the same");
+        });
+
+        it("encode/decode Set", () => {
+            const val = new Set();
+            val.add("very");
+            val.add("good");
+            val.add("stuff");
+            const encoded = serializer.encode(val);
+            const decodedVal = serializer.decode(encoded.flip());
+            assert.deepEqual([...decodedVal.entries()], [...val.entries()], "must stay the same");
         });
     });
 });
