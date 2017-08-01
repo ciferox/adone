@@ -1,17 +1,13 @@
 import adone from "adone";
 
-class $App extends adone.application.Application {
+adone.run({
     initialize() {
 
-    }
-
+    },
     main() {
 
-    }
-
+    },
     uninitialize() {
-
+        
     }
-}
-
-adone.run($App);
+});

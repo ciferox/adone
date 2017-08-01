@@ -400,9 +400,7 @@ export const mapToWin8 = (options) => {
 
     for (const key in options) {
         // Check if is allowed. If not, delete!
-        if (
-            options.hasOwnProperty(key) && allowedToasterFlags.indexOf(key) === -1
-        ) {
+        if (options.hasOwnProperty(key) && allowedToasterFlags.indexOf(key) === -1) {
             delete options[key];
         }
     }
@@ -524,4 +522,3 @@ export const checkGrowl = async (growlConfig = {}) => {
         });
     });
 };
-

@@ -77,7 +77,7 @@ const doNotification = async (options, notifierOptions) => {
     if (options.wait) {
         try {
             await __.util.fileCommand(localNotifier, argsList);
-            return "error";  // ?
+            return "error"; // ?
         } catch (err) {
             const action = fromErrorCodeToAction(err.code);
             if (action === "error") {

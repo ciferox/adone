@@ -1,4 +1,4 @@
-const { std: { path }, lazify, fs } = adone;
+const { std: { path }, lazify, fs, terminal } = adone;
 
 const lazy = lazify({
     Builder: ["./builder", (x) => x.Builder]
@@ -55,6 +55,10 @@ export default class extends adone.application.Subsystem {
                             choices: ["app", "subsystem", "service"],
                             default: "app",
                             help: "Type of adone project"
+                        },
+                        {
+                            name: "--compact",
+                            help: "Generate compact version of application entry point"
                         }
                     ],
                     handler: this.newCommand
@@ -85,15 +89,71 @@ export default class extends adone.application.Subsystem {
 
     async newCommand(args, opts) {
         const name = args.get("name");
+        const type = opts.get("type");
         const appPath = path.join(process.cwd(), name);
+        const templateBasePath = adone.std.path.join(this.app.adoneEtcPath, "templates", type);
 
-        if ((await adone.fs.exists(appPath))) {
-            throw new adone.x.Exists(`Directory ${name} already exists`);
+        try {
+            if ((await adone.fs.exists(appPath))) {
+                throw new adone.x.Exists(`Directory '${name}' already exists`);
+            }
+
+            terminal.print(`{white-fg}Generating {bold}${type}{/} project {green-fg}{bold}${name}{/}:\n`);
+
+            await adone.fs.mkdir(appPath);
+
+            // 'src' directory
+            terminal.print(`  {green-fg}src/${type}.js{/}...`);
+            await adone.fs.mkdir(adone.std.path.join(appPath, "src"));
+
+            let appContent;
+
+            if (type === "app") {
+                const isCompact = opts.has("compact");
+                appContent = await adone.fs.readFile(adone.std.path.join(templateBasePath, "src", `${isCompact ? "compact." : ""}${type}.js`), { encoding: "utf8" });
+
+                if (!opts.has("compact")) {
+                    appContent = appContent.replace(/\$App/gi, `${adone.text.capitalize(name)}Application`);
+                }
+            } else {
+                //
+            }
+            await adone.fs.writeFile(adone.std.path.join(appPath, "src", `${type}.js`), appContent);
+            terminal.print("{white-fg}{bold}OK{/}\n");
+
+            // package.json
+            terminal.print("  {green-fg}package.json{/}...");
+            const packageJson = new adone.configuration.FileConfiguration();
+            await packageJson.load(adone.std.path.join(templateBasePath, `${type}.package.json`));
+            packageJson.name = name;
+            await packageJson.save(adone.std.path.join(appPath, "package.json"), null, { space: "  " });
+            terminal.print("{white-fg}{bold}OK{/}\n");
+
+            // adone.conf.js
+            terminal.print("  {green-fg}adone.conf.js{/}...");
+            let adoneConfJs = await adone.fs.readFile(adone.std.path.join(templateBasePath, `${type}.adone.conf.js`), { encoding: "utf8" });
+            adoneConfJs = adoneConfJs.replace(/\$app/gi, name);
+            await adone.fs.writeFile(adone.std.path.join(appPath, "adone.conf.js"), adoneConfJs);
+            terminal.print("{white-fg}{bold}OK{/}\n");
+            
+            const asIsFiles = [".eslintrc.js"];
+
+            for (const name of asIsFiles) {
+                terminal.print(`  {green-fg}${name}{/}...`);
+                await adone.fs.copy(adone.std.path.join(templateBasePath, name), appPath);
+                terminal.print("{white-fg}{bold}OK{/}\n");
+            }
+
+            terminal.print("{white-fg}Done!{/}\n");
+            return 0;
+        } catch (err) {
+            adone.log(err);
+            if (!(err instanceof adone.x.Exists)) {
+                await adone.fs.rm(appPath);
+            }
+
+            return 1;
         }
-
-        await adone.fs.mkdir(appPath);
-
-        adone.info(`Project '${name}' successfully created.`);
     }
 
     async loadAdoneConfig() {
@@ -126,7 +186,7 @@ export default class extends adone.application.Subsystem {
             return 1;
         }
         if (!conf.project.structure) {
-            adone.error("project structure is not defined");
+            adone.error("Project structure is not defined");
             return 1;
         }
         const parsedRest = parseRestArgs(rest);

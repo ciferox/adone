@@ -1,11 +1,9 @@
 {
-  "name": "app",
+  "name": "$app",
   "version": "0.0.0",
   "license": "MIT",
   "private": true,
   "main": "./bin/app.js",
   "dependencies": {
-  },
-  "devDependencies": {
   }
 }
