@@ -75,8 +75,8 @@ export default class Collection {
     }
 
     stub(object, property, ...args) {
-        if (arguments.length > 2) {
-            return __.sandboxStub.apply(this, [object, property, ...args]);
+        if (object && !is.undefined(property) && !is.propertyOwned(object, property)) {
+            throw new TypeError(`Cannot stub non-existent own property ${__.util.valueToString(property)}`);
         }
 
         const stubbed = util.stub(object, property, ...args);

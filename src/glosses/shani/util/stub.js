@@ -96,21 +96,21 @@ for (const name of keys(__.defaultBehaviors)) {
     }
 }
 
-export default function stub(object, property, descriptor) {
-    __.throwOnFalsyObject(object, property, descriptor);
+export default function stub(object, property, ...args) {
+    if (args.length) {
+        throw new TypeError("stub(obj, 'meth', fn) has been removed, see documentation");
+    }
+    __.throwOnFalsyObject(object, property);
 
     const actualDescriptor = __.util.getPropertyDescriptor(object, property);
     const isStubbingEntireObject = is.undefined(property) && is.object(object) && !is.function(object);
     const isCreatingNewStub = !object && is.undefined(property);
-    const isStubbingDescriptor = object && property && Boolean(descriptor);
 
     const isStubbingNonFuncProperty = is.object(object)
         && !is.undefined(property)
-        && (is.undefined(actualDescriptor) || !is.function(actualDescriptor.value)) &&
-        is.undefined(descriptor);
+        && (is.undefined(actualDescriptor) || !is.function(actualDescriptor.value));
 
-    const isStubbingExistingMethod = !isStubbingDescriptor &&
-        is.object(object) &&
+    const isStubbingExistingMethod = is.object(object) &&
         !is.undefined(actualDescriptor) &&
         is.function(actualDescriptor.value);
 
@@ -118,10 +118,6 @@ export default function stub(object, property, descriptor) {
 
     if (isStubbingEntireObject) {
         return __.stubEntireObject(stub, object);
-    }
-
-    if (isStubbingDescriptor) {
-        return __.stubDescriptor(object, property, descriptor);
     }
 
     if (isCreatingNewStub) {

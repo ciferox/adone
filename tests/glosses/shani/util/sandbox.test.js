@@ -164,7 +164,8 @@ describe("shani", "util", "sandbox", () => {
 
         it("allows stubbing setters", () => {
             const object = {
-                prop: "bar"
+                prop: "bar",
+                foo: undefined
             };
 
             const s = sandbox.create();

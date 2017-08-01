@@ -5,12 +5,9 @@ const { __ } = util;
 // This is deprecated and will be removed in a future version.
 // We will only consider pull requests that fix serious bugs in the implementation
 export default function sandboxStub(object, property, ...args) {
-    adone.warn(
-      "sandbox.stub(obj, 'meth', val) is deprecated and will be removed from " +
-      "the public API in a future version." +
-      "\n Use sandbox.stub(obj, 'meth').callsFake(fn) instead in order to stub a function." +
-      "\n Use sandbox.stub(obj, 'meth').value(fn) instead in order to stub a non-function value."
-    );
+    if (args.length) {
+        throw new TypeError("stub(obj, 'meth', fn) has been removed, see documentation");
+    }
 
     __.throwOnFalsyObject(object, property, ...args);
 

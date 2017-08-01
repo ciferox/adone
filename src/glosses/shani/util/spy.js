@@ -372,6 +372,11 @@ const proto = {
         fake.parent = this;
         this.fakes.push(fake);
 
+        if (original.defaultBehavior && original.defaultBehavior.promiseLibrary) {
+            fake.defaultBehavior = fake.defaultBehavior || __.behavior.create(fake);
+            fake.defaultBehavior.promiseLibrary = original.defaultBehavior.promiseLibrary;
+        }
+
         fake.withArgs = function (...args) {
             return original.withArgs(...args);
         };

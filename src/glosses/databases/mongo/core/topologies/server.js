@@ -1,12 +1,12 @@
 const {
     database: { mongo: { core: {
         ReadPreference,
-        Pool,
-        Query,
-        MongoError,
-        wireProtocol,
-        Cursor: BasicCursor,
-        helper
+    Pool,
+    Query,
+    MongoError,
+    wireProtocol,
+    Cursor: BasicCursor,
+    helper
     } } },
     std: { events: EventEmitter },
     data: { bson },
@@ -248,6 +248,14 @@ const eventHandler = (self, event) => {
                 delete servers[self.id];
             }
 
+            if (event === "close") {
+                // Closing emits a server description changed event going to unknown.
+                emitServerDescriptionChanged(self, {
+                    address: self.name, arbiters: [], hosts: [], passives: [], type: "Unknown"
+                });
+            }
+
+
             // Reconnect failed return error
             if (event === "reconnectFailed") {
                 self.emit("reconnectFailed", err);
@@ -271,6 +279,11 @@ const eventHandler = (self, event) => {
 
             // Reconnect event, emit the server
             if (event === "reconnect") {
+                // Reconnecting emits a server description changed event going from unknown to the
+                // current server type.
+                emitServerDescriptionChanged(self, {
+                    address: self.name, arbiters: [], hosts: [], passives: [], type: sdam.getTopologyType(self)
+                });
                 return self.emit(event, self);
             }
 

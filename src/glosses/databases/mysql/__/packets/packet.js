@@ -266,6 +266,7 @@ export default class Packet {
         let H = 0;
         let M = 0;
         let S = 0;
+        let ms = 0;
         let str;
         if (length > 3) {
             y = this.readInt16();
@@ -279,12 +280,11 @@ export default class Packet {
             S = this.readInt8();
             str += ` ${[leftPad(2, H), leftPad(2, M), leftPad(2, S)].join(":")}`;
         }
-        /* in text protocol you don't see microseconds as DATETIME/TIMESTAMP result.
-           instead you need to use MICROSECOND() function
         if (length > 10) {
-          ms = this.readInt32();
+            ms = this.readInt32();
+            str += ".";
+            str += ms;
         }
-        */
         return str;
     }
 
@@ -468,51 +468,58 @@ export default class Packet {
             const byteOrder = buffer.readUInt8(offset);
             offset += 1;
             const wkbType = byteOrder ? buffer.readUInt32LE(offset) :
-                                        buffer.readUInt32BE(offset);
+                buffer.readUInt32BE(offset);
             offset += 4;
             switch (wkbType) {
                 case 1: { // WKBPoint
-                    const x = byteOrder ? buffer.readDoubleLE(offset) :
-                                          buffer.readDoubleBE(offset);
+                    const x = byteOrder
+                        ? buffer.readDoubleLE(offset)
+                        : buffer.readDoubleBE(offset);
                     offset += 8;
                     const y = byteOrder ? buffer.readDoubleLE(offset) :
-                                          buffer.readDoubleBE(offset);
+                        buffer.readDoubleBE(offset);
                     offset += 8;
                     result = { x, y };
                     break;
                 }
-                case 2: {  // WKBLineString
+                case 2: { // WKBLineString
                     const numPoints = byteOrder ? buffer.readUInt32LE(offset) :
-                                                  buffer.readUInt32BE(offset);
+                        buffer.readUInt32BE(offset);
                     offset += 4;
                     result = [];
                     for (let i = numPoints; i > 0; i--) {
-                        const x = byteOrder ? buffer.readDoubleLE(offset) :
-                                              buffer.readDoubleBE(offset);
+                        const x = byteOrder
+                            ? buffer.readDoubleLE(offset)
+                            : buffer.readDoubleBE(offset);
                         offset += 8;
-                        const y = byteOrder ? buffer.readDoubleLE(offset) :
-                                              buffer.readDoubleBE(offset);
+                        const y = byteOrder
+                            ? buffer.readDoubleLE(offset)
+                            : buffer.readDoubleBE(offset);
                         offset += 8;
                         result.push({ x, y });
                     }
                     break;
                 }
-                case 3: {  // WKBPolygon
-                    const numRings = byteOrder ? buffer.readUInt32LE(offset) :
-                                                 buffer.readUInt32BE(offset);
+                case 3: { // WKBPolygon
+                    const numRings = byteOrder
+                        ? buffer.readUInt32LE(offset)
+                        : buffer.readUInt32BE(offset);
                     offset += 4;
                     result = [];
                     for (let i = numRings; i > 0; i--) {
-                        const numPoints = byteOrder ? buffer.readUInt32LE(offset) :
-                                                      buffer.readUInt32BE(offset);
+                        const numPoints = byteOrder
+                            ? buffer.readUInt32LE(offset)
+                            : buffer.readUInt32BE(offset);
                         offset += 4;
                         const line = [];
                         for (let j = numPoints; j > 0; j--) {
-                            const x = byteOrder ? buffer.readDoubleLE(offset) :
-                                                  buffer.readDoubleBE(offset);
+                            const x = byteOrder
+                                ? buffer.readDoubleLE(offset)
+                                : buffer.readDoubleBE(offset);
                             offset += 8;
-                            const y = byteOrder ? buffer.readDoubleLE(offset) :
-                                                  buffer.readDoubleBE(offset);
+                            const y = byteOrder
+                                ? buffer.readDoubleLE(offset)
+                                : buffer.readDoubleBE(offset);
                             offset += 8;
                             line.push({ x, y });
                         }
@@ -523,9 +530,10 @@ export default class Packet {
                 case 4: // WKBMultiPoint
                 case 5: // WKBMultiLineString
                 case 6: // WKBMultiPolygon
-                case 7: {  // WKBGeometryCollection
-                    const num = byteOrder ? buffer.readUInt32LE(offset) :
-                                            buffer.readUInt32BE(offset);
+                case 7: { // WKBGeometryCollection
+                    const num = byteOrder
+                        ? buffer.readUInt32LE(offset)
+                        : buffer.readUInt32BE(offset);
                     offset += 4;
                     result = [];
                     for (let i = num; i > 0; i--) {
@@ -551,9 +559,9 @@ export default class Packet {
             return new Date(NaN);
         }
         const y = this.parseInt(4);
-        this.offset++;  // -
+        this.offset++; // -
         const m = this.parseInt(2);
-        this.offset++;  // -
+        this.offset++; // -
         const d = this.parseInt(2);
         return new Date(y, m - 1, d);
     }
@@ -643,7 +651,7 @@ export default class Packet {
     asError(encoding) {
         this.reset();
 
-        this.readInt8();  // field count
+        this.readInt8(); // field count
         const errorCode = this.readInt16();
         let sqlState = "";
         if (this.buffer[this.offset] === 0x23) {

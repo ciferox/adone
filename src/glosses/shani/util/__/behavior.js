@@ -83,6 +83,10 @@ export const proto = {
         delete behavior.createBehavior;
         behavior.stub = stub;
 
+        if (stub.defaultBehavior && stub.defaultBehavior.promiseLibrary) {
+            behavior.promiseLibrary = stub.defaultBehavior.promiseLibrary;
+        }
+
         return behavior;
     },
     isPresent() {

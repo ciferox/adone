@@ -147,8 +147,8 @@ class Mock {
 }
 
 export default function mock(object) {
-    if (!object) {
-        return util.expectation.create("Anonymous mock");
+    if (!object || is.string(object)) {
+        return util.expectation.create(object ? object : "Anonymous mock");
     }
     return mock.create(object);
 }

@@ -2,11 +2,11 @@ const { x: { Exception } } = adone;
 
 export default class YAMLException extends Exception {
     constructor(reason, mark) {
-        super();
+        const message = (reason || "(unknown reason)") + (mark ? ` ${mark.toString()}` : "");
+        super(message, false);
         this.reason = reason;
         this.mark = mark;
-        this.message = (this.reason || "(unknown reason)") +
-            (this.mark ? ` ${this.mark.toString()}` : "");
+        this.message = message;
     }
 
     toString(compact) {
@@ -21,3 +21,4 @@ export default class YAMLException extends Exception {
         return result;
     }
 }
+YAMLException.prototype.name = "YAMLException";

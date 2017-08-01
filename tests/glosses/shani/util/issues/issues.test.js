@@ -1,4 +1,5 @@
 describe("shani", "util", "issues", () => {
+    const { is } = adone;
     const { sandbox, stub, spy, match, assert: sassert } = adone.shani.util;
 
     beforeEach(function () {
@@ -10,7 +11,7 @@ describe("shani", "util", "issues", () => {
     });
 
     describe("#458", () => {
-        if (typeof require("fs").readFileSync !== "undefined") {
+        if (!is.undefined(require("fs").readFileSync)) {
             describe("on node", () => {
                 it("stub out fs.readFileSync", function () {
                     const fs = require("fs");
@@ -80,7 +81,7 @@ describe("shani", "util", "issues", () => {
             // makes sure that Object.prototype.watch is set back to its old value
             function restore(oldWatch) {
                 if (oldWatch) {
-                    Object.prototype.watch = oldWatch;  // eslint-disable-line no-extend-native
+                    Object.prototype.watch = oldWatch; // eslint-disable-line no-extend-native
                 } else {
                     delete Object.prototype.watch;
                 }
@@ -89,7 +90,7 @@ describe("shani", "util", "issues", () => {
             try { // eslint-disable-line no-restricted-syntax
                 var oldWatch = Object.prototype.watch;
 
-                if (typeof Object.prototype.watch !== "function") {
+                if (!is.function(Object.prototype.watch)) {
                     Object.prototype.watch = function rolex() { }; // eslint-disable-line no-extend-native
                 }
 
@@ -151,7 +152,7 @@ describe("shani", "util", "issues", () => {
             this.sandbox.resetHistory();
 
             spy();
-            assert.equal(spy.callCount, 1);  // should not fail but fails
+            assert.equal(spy.callCount, 1); // should not fail but fails
         });
     });
 
@@ -168,6 +169,66 @@ describe("shani", "util", "issues", () => {
             assert.throws(() => {
                 sassert.callOrder(s2, s1, s2);
             });
+        });
+    });
+
+    describe("#1474 - promise library should be propagated through fakes and behaviors", () => {
+        let s;
+
+        const makeAssertions = (fake, expected) => {
+            assert.isFunction(fake.then);
+            assert.isFunction(fake.tap);
+
+            assert.equal(fake.tap(), expected);
+        };
+
+        beforeEach(() => {
+            const promiseLib = {
+                resolve(value) {
+                    const promise = Promise.resolve(value);
+                    promise.tap = function () {
+                        return `tap ${value}`;
+                    };
+
+                    return promise;
+                }
+            };
+
+            s = stub().usingPromise(promiseLib);
+
+            s.resolves("resolved");
+        });
+
+        it("stub.onCall", () => {
+            s.onSecondCall().resolves("resolved again");
+
+            makeAssertions(s(), "tap resolved");
+            makeAssertions(s(), "tap resolved again");
+        });
+
+        it("stub.withArgs", () => {
+            s.withArgs(42).resolves("resolved again");
+            s.withArgs(true).resolves("okay");
+
+            makeAssertions(s(), "tap resolved");
+            makeAssertions(s(42), "tap resolved again");
+            makeAssertions(s(true), "tap okay");
+        });
+    });
+
+    describe("#1487 - withArgs() returnValue", () => {
+        beforeEach(function () {
+            this.stub = stub().throws("Nothing set");
+            this.stub.withArgs("arg").returns("return value");
+            this.stub("arg");
+        });
+
+        it("sets correct firstCall.returnValue", function () {
+            assert.equal(this.stub.withArgs("arg").firstCall.returnValue, "return value");
+        });
+
+        it("sets correct lastCall.returnValue", function () {
+            assert.equal(this.stub.withArgs("arg").lastCall.returnValue, "return value");
         });
     });
 });

@@ -29,20 +29,6 @@ describe("shani", "util", "stub", () => {
         );
     });
 
-    it("fails if called with an empty property descriptor", () => {
-        const propertyKey = "ea762c6d-16ab-4ded-8bc2-3bc6f2de2925";
-        const object = {};
-
-        object[propertyKey] = "257b38d8-3c02-4353-82ab-b1b588be6990";
-
-        assert.throws(
-            () => {
-                createStub(object, propertyKey, {});
-            },
-            "Expected property descriptor to have at least one key"
-        );
-    });
-
     it("throws a readable error if stubbing Symbol on null", () => {
         if (is.function(Symbol)) {
             assert.throws(
@@ -827,12 +813,12 @@ describe("shani", "util", "stub", () => {
             }
         });
 
-        it("throws if third argument is provided but not a proprety descriptor", function () {
+        it("throws if third argument is provided", function () {
             const object = this.object;
 
             assert.throws(() => {
                 createStub(object, "method", 1);
-            }, x.InvalidArgument);
+            });
         });
 
         it("stubbed method should be proper stub", function () {
@@ -983,10 +969,9 @@ describe("shani", "util", "stub", () => {
                     assert.fail("should not call getter");
                 }
             };
-            const stub = createStub(obj, "prop", {
-                get() {
-                    return 43;
-                }
+
+            const stub = createStub(obj, "prop").get(() => {
+                return 43;
             });
 
             assert.equal(obj.prop, 43);

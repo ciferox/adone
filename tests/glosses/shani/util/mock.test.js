@@ -1,5 +1,5 @@
 describe("shani", "util", "mock", () => {
-    const { x } = adone;
+    const { is, x } = adone;
     const {
         mock,
         expectation,
@@ -7,6 +7,16 @@ describe("shani", "util", "mock", () => {
         stub,
         spy
     } = adone.shani.util;
+
+    it("creates anonymous mock functions", () => {
+        const expectation = mock();
+        assert.equal(expectation.method, "Anonymous mock");
+    });
+
+    it("creates named anonymous mock functions", () => {
+        const expectation = mock("functionName");
+        assert.equal(expectation.method, "functionName");
+    });
 
     describe(".create", () => {
         it("returns function with expects method", () => {
@@ -24,7 +34,7 @@ describe("shani", "util", "mock", () => {
 
     describe(".expects", () => {
         beforeEach(function () {
-            this.mock = mock.create({ someMethod() {} });
+            this.mock = mock.create({ someMethod() { } });
         });
 
         it("throws without method", function () {
@@ -227,7 +237,7 @@ describe("shani", "util", "mock", () => {
             });
 
             it("throws with Symbol", function () {
-                if (typeof Symbol === "function") {
+                if (is.function(Symbol)) {
                     const expectation = this.expectation;
 
                     assert.throws(() => {
@@ -255,7 +265,7 @@ describe("shani", "util", "mock", () => {
             });
 
             it("throws with Symbol", function () {
-                if (typeof Symbol === "function") {
+                if (is.function(Symbol)) {
                     const expectation = this.expectation;
 
                     assert.throws(() => {
@@ -305,7 +315,7 @@ describe("shani", "util", "mock", () => {
             });
 
             it("should not throw when exceeding at least expectation", () => {
-                const obj = { foobar() {} };
+                const obj = { foobar() { } };
                 const m = mock(obj);
                 m.expects("foobar").atLeast(1);
 
@@ -318,7 +328,7 @@ describe("shani", "util", "mock", () => {
             });
 
             it("should not throw when exceeding at least expectation and withargs", () => {
-                const obj = { foobar() {} };
+                const obj = { foobar() { } };
                 const m = mock(obj);
 
                 m.expects("foobar").withArgs("arg1");
@@ -350,7 +360,7 @@ describe("shani", "util", "mock", () => {
             });
 
             it("throws with Symbol", function () {
-                if (typeof Symbol === "function") {
+                if (is.function(Symbol)) {
                     const expectation = this.expectation;
 
                     assert.throws(() => {
@@ -537,7 +547,7 @@ describe("shani", "util", "mock", () => {
 
             it("works with matchers", function () {
                 this.expectation.withArgs(match.number, match.string, match.func);
-                this.expectation(1, "test", () => {});
+                this.expectation(1, "test", () => { });
 
                 assert(this.expectation.met());
             });
@@ -639,7 +649,7 @@ describe("shani", "util", "mock", () => {
             });
 
             it("throws if calls on wrong Symbol", () => {
-                if (typeof Symbol === "function") {
+                if (is.function(Symbol)) {
                     const e = expectation.create("method");
                     e.on(Symbol());
 
@@ -685,7 +695,7 @@ describe("shani", "util", "mock", () => {
 
     describe(".verify", () => {
         beforeEach(function () {
-            this.method = function () {};
+            this.method = function () { };
             this.object = { method: this.method };
             this.mock = mock.create(this.object);
         });
@@ -894,7 +904,7 @@ describe("shani", "util", "mock", () => {
 
     describe("mock object", () => {
         beforeEach(function () {
-            this.method = function () {};
+            this.method = function () { };
             this.object = { method: this.method };
             this.mock = mock.create(this.object);
         });
@@ -950,7 +960,7 @@ describe("shani", "util", "mock", () => {
     describe("mock method multiple times", () => {
         beforeEach(function () {
             this.thisValue = {};
-            this.method = function () {};
+            this.method = function () { };
             this.object = { method: this.method };
             this.mock = mock.create(this.object);
             this.mock.expects("method");
@@ -985,7 +995,7 @@ describe("shani", "util", "mock", () => {
         });
 
         it("allows mock calls in any order", () => {
-            const object = { method() {} };
+            const object = { method() { } };
             const m = mock(object);
             m.expects("method").once().withArgs(42);
             m.expects("method").twice().withArgs("Yeah");

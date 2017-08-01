@@ -584,4 +584,14 @@ describe("data", "yaml", "issues", () => {
             );
         });
     });
+
+    context("0351", () => {
+        it("should include the error message in the error stack", async () => {
+            const src = fixtures.getVirtualFile("0351.yml");
+            const err = await assert.throws(async () => {
+                yaml.safeLoad(await src.content(), "utf8");
+            });
+            expect(err.stack).to.match(/^YAMLException: end of the stream or a document separator is expected/);
+        });
+    });
 });

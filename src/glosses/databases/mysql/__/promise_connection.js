@@ -9,12 +9,22 @@ const makeDoneCb = (resolve, reject) => (err, rows, columns) => {
 };
 
 const inheritEvents = (source, target, events) => {
-    for (const eventName of events) {
-        source.on(eventName, (...args) => {
-            args.unshift(eventName);
-            target.emit(...args);
-        });
-    }
+    const listeners = {};
+    target.on("newListener", (eventName) => {
+        if (events.includes(eventName) && !target.listenerCount(eventName)) {
+            const listener = function (...args) {
+                args.unshift(eventName);
+                target.emit(...args);
+            };
+            listeners[eventName] = listener;
+            source.on(eventName, listener);
+        }
+    }).on("removeListener", (eventName) => {
+        if (events.includes(eventName) && !target.listenerCount(eventName)) {
+            source.removeListener(eventName, listeners[eventName]);
+            delete listeners[eventName];
+        }
+    });
 };
 
 class PromisePreparedStatementInfo {

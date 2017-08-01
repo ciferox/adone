@@ -99,7 +99,7 @@ describe("shani", "util", "__", "collection", () => {
                 });
 
                 it("stubs environment property", function () {
-                    this.collection.stub(process.env, "HELL", "froze over");
+                    this.collection.stub(process.env, "HELL").value("froze over");
                     assert.equal(process.env.HELL, "froze over");
 
                 });
@@ -114,13 +114,13 @@ describe("shani", "util", "__", "collection", () => {
         });
 
         it("stubs number property", function () {
-            this.collection.stub(this.object, "property", 1);
+            this.collection.stub(this.object, "property").value(1);
 
             assert.equal(this.object.property, 1);
         });
 
         it("restores number property", function () {
-            this.collection.stub(this.object, "property", 1);
+            this.collection.stub(this.object, "property").value(1);
             this.collection.restore();
 
             assert.equal(this.object.property, 42);
@@ -141,7 +141,7 @@ describe("shani", "util", "__", "collection", () => {
                 const object = {};
 
                 assert.throws(() => {
-                    collection.stub(object, Symbol(), 1);
+                    collection.stub(object, Symbol());
                 }, "Cannot stub non-existent own property Symbol()");
             }
         });
