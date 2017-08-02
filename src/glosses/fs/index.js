@@ -1,19 +1,19 @@
 const { is, x, promise: { promisify }, std } = adone;
 
 const fs = adone.lazify({
-    readlink: () => promisify(adone.std.fs.readlink),
-    unlink: () => promisify(adone.std.fs.unlink),  // we have rm, should we have this one?
-    chmod: () => promisify(adone.std.fs.chmod),
-    chown: () => promisify(adone.std.fs.chown),
-    rmdir: () => promisify(adone.std.fs.rmdir),
-    readdir: () => promisify(adone.std.fs.readdir),
-    lstat: () => promisify(adone.std.fs.lstat),
-    stat: () => promisify(adone.std.fs.stat),
-    writeFile: () => promisify(adone.std.fs.writeFile),
-    appendFile: () => promisify(adone.std.fs.appendFile),
-    access: () => promisify(adone.std.fs.access),
-    symlink: () => promisify(adone.std.fs.symlink),
-    // realpath: () => promisify(adone.std.fs.realpath),
+    readlink: () => promisify(std.fs.readlink),
+    unlink: () => promisify(std.fs.unlink), // we have rm, should we have this one?
+    chmod: () => promisify(std.fs.chmod),
+    chown: () => promisify(std.fs.chown),
+    rmdir: () => promisify(std.fs.rmdir),
+    readdir: () => promisify(std.fs.readdir),
+    lstat: () => promisify(std.fs.lstat),
+    stat: () => promisify(std.fs.stat),
+    writeFile: () => promisify(std.fs.writeFile),
+    appendFile: () => promisify(std.fs.appendFile),
+    access: () => promisify(std.fs.access),
+    symlink: () => promisify(std.fs.symlink),
+    // realpath: () => promisify(std.fs.realpath),
     rm: "./rm",
     File: "./file",
     Directory: "./directory",
@@ -71,24 +71,24 @@ const stringToFlockFlags = (flag) => {
 };
 
 export const fd = {
-    open: promisify(adone.std.fs.open),
-    openSync: adone.std.fs.openSync,
-    close: promisify(adone.std.fs.close),
-    closeSync: adone.std.fs.closeSync,
-    utimes: promisify(adone.std.fs.futimes),
-    utimesSync: adone.std.fs.futimesSync,
-    stat: promisify(adone.std.fs.fstat),
-    statSync: adone.std.fs.fstat,
-    truncate: promisify(adone.std.fs.ftruncate),
-    truncateSync: adone.std.fs.ftruncateSync,
-    read: promisify(adone.std.fs.read),
-    readSync: adone.std.fs.readSync,
-    write: promisify(adone.std.fs.write),
-    writeSync: adone.std.fs.writeSync,
-    sync: promisify(adone.std.fs.fsync),
-    syncSync: adone.std.fs.fsyncSync,
-    chown: promisify(adone.std.fs.fchown),
-    chmod: promisify(adone.std.fs.fchmod),
+    open: promisify(std.fs.open),
+    openSync: std.fs.openSync,
+    close: promisify(std.fs.close),
+    closeSync: std.fs.closeSync,
+    utimes: promisify(std.fs.futimes),
+    utimesSync: std.fs.futimesSync,
+    stat: promisify(std.fs.fstat),
+    statSync: std.fs.fstat,
+    truncate: promisify(std.fs.ftruncate),
+    truncateSync: std.fs.ftruncateSync,
+    read: promisify(std.fs.read),
+    readSync: std.fs.readSync,
+    write: promisify(std.fs.write),
+    writeSync: std.fs.writeSync,
+    sync: promisify(std.fs.fsync),
+    syncSync: std.fs.fsyncSync,
+    chown: promisify(std.fs.fchown),
+    chmod: promisify(std.fs.fchmod),
 
     seek: (fd, offset, whence) => {
         return new Promise((resolve, reject) => {
@@ -138,7 +138,7 @@ if (is.windows) {
 export const realpath = (p, cache) => {
     if (ok) {
         return new Promise((resolve, reject) => {
-            adone.std.fs.realpath(p, cache, (err, resolvedPath) => {
+            std.fs.realpath(p, cache, (err, resolvedPath) => {
                 if (err) {
                     return reject(err);
                 }
@@ -148,10 +148,10 @@ export const realpath = (p, cache) => {
     }
 
     return new Promise((resolve, reject) => {
-        adone.std.fs.realpath(p, cache, (err, result) => {
+        std.fs.realpath(p, cache, (err, result) => {
             if (newError(err)) {
                 // make p is absolute
-                p = adone.std.path.resolve(p);
+                p = std.path.resolve(p);
 
                 if (cache && Object.prototype.hasOwnProperty.call(cache, p)) {
                     return process.nextTick(resolve, cache[p]);
@@ -175,7 +175,7 @@ export const realpath = (p, cache) => {
 
                 const gotResolvedLink = (resolvedLink) => {
                     // resolve the link, then start over
-                    p = adone.std.path.resolve(resolvedLink, p.slice(pos));
+                    p = std.path.resolve(resolvedLink, p.slice(pos));
                     start();
                 };
 
@@ -184,7 +184,7 @@ export const realpath = (p, cache) => {
                         return reject(err);
                     }
 
-                    const resolvedLink = adone.std.path.resolve(previous, target);
+                    const resolvedLink = std.path.resolve(previous, target);
                     if (cache) {
                         cache[base] = resolvedLink;
                     }
@@ -295,14 +295,14 @@ export const realpath = (p, cache) => {
 
 export const realpathSync = (p, cache) => {
     if (ok) {
-        return adone.std.fs.realpathSync(p, cache);
+        return std.fs.realpathSync(p, cache);
     }
 
     try {
-        return adone.std.fs.realpathSync(p, cache);
+        return std.fs.realpathSync(p, cache);
     } catch (err) {
         if (newError(err)) {
-            p = adone.std.path.resolve(p);
+            p = std.path.resolve(p);
 
             if (cache && Object.prototype.hasOwnProperty.call(cache, p)) {
                 return cache[p];
@@ -378,11 +378,11 @@ export const realpathSync = (p, cache) => {
                             linkTarget = seenLinks[id];
                         }
                     }
-                    if (linkTarget === null) {
+                    if (is.null(linkTarget)) {
                         fs.statSync(base);
                         linkTarget = fs.readlinkSync(base);
                     }
-                    resolvedLink = adone.std.path.resolve(previous, linkTarget);
+                    resolvedLink = std.path.resolve(previous, linkTarget);
                     // track this, if given a cache.
                     if (cache) {
                         cache[base] = resolvedLink;
@@ -393,7 +393,7 @@ export const realpathSync = (p, cache) => {
                 }
 
                 // resolve the link, then start over
-                p = adone.std.path.resolve(resolvedLink, p.slice(pos));
+                p = std.path.resolve(resolvedLink, p.slice(pos));
                 start();
             }
 
@@ -408,10 +408,10 @@ export const realpathSync = (p, cache) => {
     }
 };
 
-export const lstatSync = adone.std.fs.lstatSync;
-export const statSync = adone.std.fs.statSync;
-export const writeFileSync = adone.std.fs.writeFileSync;
-export const readdirSync = adone.std.fs.readdirSync;
+export const lstatSync = std.fs.lstatSync;
+export const statSync = std.fs.statSync;
+export const writeFileSync = std.fs.writeFileSync;
+export const readdirSync = std.fs.readdirSync;
 
 export const readFile = async (filepath, { check = false, encoding = null } = {}) => {
     if (check) {
@@ -420,7 +420,7 @@ export const readFile = async (filepath, { check = false, encoding = null } = {}
         }
     }
     return new Promise((resolve, reject) => {
-        return adone.std.fs.readFile(filepath, { encoding }, (err, data) => {
+        return std.fs.readFile(filepath, { encoding }, (err, data) => {
             if (err) {
                 return reject(err);
             }
@@ -436,7 +436,7 @@ export const readFileSync = (filepath, { check = false, encoding = null } = {}) 
         }
     }
     try {
-        return adone.std.fs.readFileSync(filepath, { encoding });
+        return std.fs.readFileSync(filepath, { encoding });
     } catch (err) {
         return null;
     }
@@ -475,8 +475,8 @@ export const readWordsSync = (filepath, { check = false } = {}) => {
     return content.toString().split(new RegExp("\\s+", "g"));
 };
 
-export const constants = adone.std.fs.constants;
-export const accessSync = adone.std.fs.accessSync;
+export const constants = std.fs.constants;
+export const accessSync = std.fs.accessSync;
 
 export const exists = (path) => adone.fs.access(path, constants.F_OK).then(() => true, (err) => {
     if (err.code === "ENOENT") {
@@ -498,7 +498,7 @@ export const existsSync = (path) => {
 };
 
 export const mkdirp = (path, mode, fn, made) => {
-    const xfs = adone.std.fs;
+    const xfs = std.fs;
     if (is.nil(mode)) {
         mode = 0o777 & (~process.umask());
     }
@@ -507,7 +507,7 @@ export const mkdirp = (path, mode, fn, made) => {
     }
 
     const cb = fn || (adone.noop);
-    path = adone.std.path.resolve(path);
+    path = std.path.resolve(path);
 
     xfs.mkdir(path, mode, (err) => {
         if (!err) {
@@ -516,7 +516,7 @@ export const mkdirp = (path, mode, fn, made) => {
         }
         switch (err.code) {
             case "ENOENT":
-                mkdirp(adone.std.path.dirname(path), mode, (err2, made) => {
+                mkdirp(std.path.dirname(path), mode, (err2, made) => {
                     if (err2) {
                         cb(err2, made);
                     } else {
@@ -551,35 +551,38 @@ export const mkdir = (path, mode) => {
     });
 };
 
-export const copy = async (srcPath, dstPath, { recursively = true, ignoreExisting = false } = {}) => {
+export const copy = async (srcPath, dstPath, { ignoreExisting = false, cwd = undefined } = {}) => {
     const baseSrcPath = adone.util.globParent(srcPath);
-    await fs.glob(srcPath).map(async (p) => {
-        const relPath = adone.std.path.relative(baseSrcPath, p);
-        const dstFilePath = adone.std.path.resolve(dstPath, relPath);
-        if (ignoreExisting) {
-            if (await exists(dstFilePath)) {
-                return [dstFilePath, null];
-            }
+    if (is.string(cwd)) {
+        if (!std.path.isAbsolute(dstPath)) {
+            dstPath = std.path.resolve(cwd, dstPath);
         }
-        const content = await readFile(p, { check: true });
-        if (is.null(content)) {
+    }
+
+    await fs.glob(srcPath, { cwd }).map(async (p) => {
+        const relPath = std.path.relative(baseSrcPath, p);
+        const dstFilePath = std.path.resolve(dstPath, relPath);
+
+        if (ignoreExisting && await exists(dstFilePath)) {
             return [dstFilePath, null];
         }
-        return [dstFilePath, content];
+        
+        const srcAbsPath = (is.string(cwd) && !std.path.isAbsolute(p)) ? std.path.resolve(cwd, p) : p;
+        return [dstFilePath, await readFile(srcAbsPath, { check: true })];
     }).map(async (fData) => {
         const content = fData[1];
         if (is.null(content)) {
             return;
         }
-        const destFilePath = fData[0];
-        await mkdir(adone.std.path.dirname(destFilePath));
-        return adone.fs.writeFile(destFilePath, content);
+        const dstFilePath = fData[0];
+        await mkdir(std.path.dirname(dstFilePath));
+        return adone.fs.writeFile(dstFilePath, content);
     });
 };
 
 export const rename = (oldPath, newPath, { retries = 10, delay = 100 } = {}) => {
     return new Promise((resolve, reject) => {
-        adone.std.fs.rename(oldPath, newPath, (err) => {
+        std.fs.rename(oldPath, newPath, (err) => {
             if (err) {
                 if (!is.windows || !retries) {
                     return reject(err);
@@ -624,7 +627,7 @@ export const tail = async (path, n = 10, { separator = is.windows ? "\r\n" : "\n
             t = buffer.slice(i + separator.length);
             if (first) {
                 first = false;
-                if (!t.length) {  // ends with the sep
+                if (!t.length) { // ends with the sep
                     buffer = buffer.slice(0, i);
                     continue;
                 }
@@ -652,12 +655,12 @@ export const statVFS = (path) => {
     });
 };
 
-export const unlinkSync = adone.std.fs.unlinkSync;
-export const createReadStream = adone.std.fs.createReadStream;
-export const createWriteStream = adone.std.fs.createWriteStream;
+export const unlinkSync = std.fs.unlinkSync;
+export const createReadStream = std.fs.createReadStream;
+export const createWriteStream = std.fs.createWriteStream;
 
 const TEMPLATE_PATTERN = /XXXXXX/;
-const osTmpDir = adone.std.os.tmpdir();
+const osTmpDir = std.os.tmpdir();
 export const tmpName = async ({ name = null, tries = 3, template = null, dir = osTmpDir, prefix = "tmp-", ext = "" } = {}) => {
     if (is.nan(tries) || tries < 0) {
         throw new Error("Invalid tries");
@@ -669,14 +672,14 @@ export const tmpName = async ({ name = null, tries = 3, template = null, dir = o
 
     for (let i = 0; i < tries; i++) {
         if (!is.null(name)) {
-            return adone.std.path.join(dir, name);
+            return std.path.join(dir, name);
         }
 
         if (!is.null(template)) {
             return template.replace(TEMPLATE_PATTERN, adone.text.random(6));
         }
 
-        const path = adone.std.path.join(dir, `${prefix}${process.pid}${adone.text.random(12)}${ext}`);
+        const path = std.path.join(dir, `${prefix}${process.pid}${adone.text.random(12)}${ext}`);
 
         try {
             await adone.fs.stat(path);
@@ -694,7 +697,7 @@ export const lookup = async (path) => {
     try {
         let st = await fs.stat(path);
         if (st.isDirectory()) {
-            path = adone.std.path.join(path, "index");
+            path = std.path.join(path, "index");
             st = await fs.stat(path);
             return path;
         }

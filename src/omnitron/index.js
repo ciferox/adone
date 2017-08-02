@@ -88,8 +88,8 @@ export default class Omnitron extends adone.application.Application {
             adone.info(`peer '${peer.getRemoteAddress().full}' (uid: ${peer.uid}) disconnected`);
         });
 
-        this._.configurator.gates.setNetron(this._.netron);
-        return this._.configurator.gates.bindAll();
+        this._.configurator.gateManager.setNetron(this._.netron);
+        return this._.configurator.gateManager.bindAll();
     }
 
     async uninitializeNetron() {
@@ -98,11 +98,11 @@ export default class Omnitron extends adone.application.Application {
                 await this._.netron.disconnect();
                 await this._.netron.unbind();
 
-                const gates = this._.configurator.gates;
+                const gateManager = this._.configurator.gateManager;
                 // this way is not reliable
-                for (const gate of gates.list()) {
+                for (const gate of gateManager.list()) {
                     if (gate.status === ACTIVE) {
-                        gates.setStatus(gate, ENABLED);
+                        gateManager.setStatus(gate, ENABLED);
                     }
                 }
             }

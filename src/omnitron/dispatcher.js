@@ -1,5 +1,7 @@
-const { is } = adone;
-const { STATUSES } = adone.omnitron.const;
+const {
+    is,
+    omnitron: { const: { STATUSES } }
+} = adone;
 
 export default class Dispatcher {
     constructor(app, { noisily = true, configurator = null, omnitron = null } = {}) {
@@ -39,8 +41,8 @@ export default class Dispatcher {
         let status = 0;
         if (!this.connected) {
             const configurator = await this.configurator();
-            const gates = configurator.gates;
-            const localGate = gates.getGate({ id: (is.plainObject(options) && is.string(options.gateId) ? options.gateId : "local") });
+            const gateManager = configurator.gateManager;
+            const localGate = gateManager.getGate({ id: (is.plainObject(options) && is.string(options.gateId) ? options.gateId : "local") });
             if (is.nil(localGate)) {
                 throw new adone.x.NotExists("Configuration for gate 'local' is not found");
             }

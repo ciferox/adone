@@ -1,4 +1,4 @@
-const { is, noop, collection } = adone;
+const { is, std, noop, collection } = adone;
 
 const irregularPlurals = {
     addendum: "addenda",
@@ -180,7 +180,7 @@ export const normalizePath = (str, stripTrailing = false) => {
 };
 
 export const unixifyPath = (filePath, unescape = false) => {
-    if (is.windows || adone.std.path.sep === "\\") {
+    if (is.windows || std.path.sep === "\\") {
         return normalizePath(filePath);
     }
     if (unescape) {
@@ -475,7 +475,7 @@ export const globParent = (str) => {
 
     // remove path parts that are globby
     do {
-        str = adone.std.path.dirname(str);
+        str = std.path.dirname(str);
     } while (is.glob(str) || /(^|[^\\])([{[]|\([^)]+$)/.test(str));
 
     // remove escape chars and return result
@@ -524,14 +524,14 @@ export const readdir = (root, {
     const source = adone.core().through(async function ([path, depth]) {
         --pending;
         const realPath = await adone.fs.realpath(path);
-        const relativePath = adone.std.path.relative(realPath, resolvedRoot);
+        const relativePath = std.path.relative(realPath, resolvedRoot);
 
         const files = await adone.fs.readdir(path);
         const statMethod = lstat ? "lstat" : "stat";
 
         await Promise.all(files.map((name) => {
-            const fullPath = adone.std.path.join(realPath, name);
-            const path = adone.std.path.join(relativePath, name);
+            const fullPath = std.path.join(realPath, name);
+            const path = std.path.join(relativePath, name);
             const parentDir = relativePath;
             const fullParentDir = realPath;
             return adone.fs[statMethod](fullPath).then((stat) => {
@@ -613,11 +613,11 @@ export const sortKeys = (object, { deep = false, compare } = {}) => {
 };
 
 export const globize = (path, { exts = "", recursively = false } = {}) => {
-    const stars = recursively ? `**${adone.std.path.sep}*${exts}` : `*${exts}`;
+    const stars = recursively ? `**${std.path.sep}*${exts}` : `*${exts}`;
     if (path.endsWith("/") || path.endsWith("\\")) {
         path += stars;
     } else {
-        path += `${adone.std.path.sep}${stars}`;
+        path += `${std.path.sep}${stars}`;
     }
     return path;
 };

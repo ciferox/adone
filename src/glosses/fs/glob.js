@@ -1,4 +1,3 @@
-
 const {
     std: { fs, path },
     util: { GlobExp },
@@ -81,11 +80,11 @@ class Glob extends adone.EventEmitter {
 
         this.changedCwd = false;
         const cwd = process.cwd();
-        if (!is.propertyOwned(options, "cwd")) {
-            this.cwd = cwd;
-        } else {
+        if (is.exist(options.cwd)) {
             this.cwd = path.resolve(options.cwd);
             this.changedCwd = this.cwd !== cwd;
+        } else {
+            this.cwd = cwd;
         }
 
         this.root = options.root || path.resolve("/");
@@ -349,7 +348,7 @@ class Glob extends adone.EventEmitter {
 
         // get the list of entries.
         let read;
-        if (prefix === null) {
+        if (is.null(prefix)) {
             read = ".";
         } else if (is.pathAbsolute(prefix) || is.pathAbsolute(pattern.join("/"))) {
             if (!prefix || !is.pathAbsolute(prefix)) {
@@ -475,7 +474,7 @@ class Glob extends adone.EventEmitter {
 
         if (this.nodir) {
             const c = this.cache.get(e) || this.cache.get(abs);
-            if (c === "DIR" || Array.isArray(c)) {
+            if (c === "DIR" || is.array(c)) {
                 return;
             }
         }
@@ -574,7 +573,7 @@ class Glob extends adone.EventEmitter {
                 return cb();
             }
 
-            if (Array.isArray(c)) {
+            if (is.array(c)) {
                 return cb(null, c);
             }
         }
@@ -747,7 +746,7 @@ class Glob extends adone.EventEmitter {
         if (!this.stat && this.cache.has(abs)) {
             let c = this.cache.get(abs);
 
-            if (Array.isArray(c)) {
+            if (is.array(c)) {
                 c = "DIR";
             }
 
@@ -765,7 +764,7 @@ class Glob extends adone.EventEmitter {
         }
 
         const stat = this.statCache.get(abs);
-        if (stat !== undefined) {
+        if (!is.undefined(stat)) {
             if (stat === false) {
                 return cb(null, stat);
             }
@@ -830,7 +829,7 @@ class Glob extends adone.EventEmitter {
 }
 
 const isNegative = (pattern) => {
-    if (typeof pattern === "string") {
+    if (is.string(pattern)) {
         return pattern[0] === "!";
     }
     if (pattern instanceof RegExp) {

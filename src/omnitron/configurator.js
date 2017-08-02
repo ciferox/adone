@@ -1,5 +1,8 @@
-const { is, std } = adone;
-const { ENABLED } = adone.omnitron.const;
+const {
+    is,
+    std,
+    omnitron: { const: { ENABLED } }
+} = adone;
 
 export default class Configurator {
     constructor(app, { inMemory = false } = {}) {
@@ -12,7 +15,7 @@ export default class Configurator {
         return this.config.omnitron;
     }
 
-    get gates() {
+    get gateManager() {
         if (is.null(this._gateManager)) {
             this._gateManager = new adone.omnitron.GateManager(this.config.omnitron.gates);
         }
@@ -22,23 +25,27 @@ export default class Configurator {
     async loadAll() {
         this.config = this.app.config;
 
-        if (is.undefined(this.config.omnitron)) {
-            await this.app.loadConfig("omnitron", { ext: "js", defaults: true, userConfig: true });
+        // Force create home directory
+        await adone.fs.mkdir(this.app.config.adone.home);
+
+        if (!is.exist(this.config.omnitron)) {
+            await this.app.loadConfig("omnitron", { ext: "js", defaults: true });
             // Subconfiguration for services...
             this.config.omnitron.services = {};
 
-            // Load configurations of core services.
-            const coreServicesPath = std.path.resolve(__dirname, "services");
-            if (await adone.fs.exists(coreServicesPath)) {
-                await adone.fs.glob(`${coreServicesPath}/*/meta.json`).map(async (configPath) => {
-                    const servicePath = std.path.dirname(configPath);
-                    const serviceName = std.path.basename(servicePath);
-                    await this.config.load(configPath, `omnitron.services.${serviceName}`);
-                    const config = this.config.omnitron.services[serviceName];
-                    delete config.name;
-                    config.path = servicePath;
-                });
-            }
+            // !!!!!!!!!!!!THIS SHOULD BE REIMPLEMENTED IN A GENERIC WAY!!!!!!!!!!!!!!
+            // // Load configurations of core services.
+            // const coreServicesPath = std.path.resolve(__dirname, "services");
+            // if (await adone.fs.exists(coreServicesPath)) {
+            //     await adone.fs.glob(`${coreServicesPath}/*/meta.json`).map(async (configPath) => {
+            //         const servicePath = std.path.dirname(configPath);
+            //         const serviceName = std.path.basename(servicePath);
+            //         await this.config.load(configPath, `omnitron.services.${serviceName}`);
+            //         const config = this.config.omnitron.services[serviceName];
+            //         delete config.name;
+            //         config.path = servicePath;
+            //     });
+            // }
 
             // Merge with user-defined configuration.
             try {
@@ -61,6 +68,7 @@ export default class Configurator {
                     }
                 ]
             };
+
             // Load configuration of gates.
             try {
                 await this.app.loadConfig("gates", { path: "omnitron.gates", userConfig: true });
@@ -71,7 +79,7 @@ export default class Configurator {
                             id: "local",
                             type: "socket",
                             status: ENABLED,
-                            port: (is.windows ? "\\\\.\\pipe\\omnitron.sock" : adone.std.path.join(this.config.adone.home, "omnitron.sock"))
+                            port: (is.windows ? "\\\\.\\pipe\\omnitron.sock" : std.path.join(this.config.adone.home, "omnitron.sock"))
                         }
                     ];
                 } else {
