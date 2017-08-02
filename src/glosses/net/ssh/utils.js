@@ -423,14 +423,7 @@ export const convertPPKPrivate = (keyInfo) => {
     }
 
     const b64key = asnWriter.buffer.toString("base64").replace(RE_KEY_LEN, "$1\n");
-    const fullkey = `-----BEGIN ${
-        keyInfo.type === "rsa" ? "RSA" : "DSA"
-        } PRIVATE KEY-----\n${
-        b64key
-        }${b64key[b64key.length - 1] === "\n" ? "" : "\n"
-        }-----END ${
-        keyInfo.type === "rsa" ? "RSA" : "DSA"
-        } PRIVATE KEY-----`;
+    const fullkey = `-----BEGIN ${keyInfo.type === "rsa" ? "RSA" : "DSA"} PRIVATE KEY-----\n${b64key}${b64key[b64key.length - 1] === "\n" ? "" : "\n"}-----END ${keyInfo.type === "rsa" ? "RSA" : "DSA"} PRIVATE KEY-----`;
 
     keyInfo.private = asnWriter.buffer;
     keyInfo.privateOrig = Buffer.from(fullkey);
@@ -1108,10 +1101,7 @@ export const genPublicKey = (keyInfo) => {
     }
 
     const b64key = asn1KeyBuf.toString("base64").replace(RE_KEY_LEN, "$1\n");
-    const fullkey = `-----BEGIN PUBLIC KEY-----\n${
-        b64key
-        }${b64key[b64key.length - 1] === "\n" ? "" : "\n"
-        }-----END PUBLIC KEY-----`;
+    const fullkey = `-----BEGIN PUBLIC KEY-----\n${b64key}${b64key[b64key.length - 1] === "\n" ? "" : "\n"}-----END PUBLIC KEY-----`;
 
     return {
         type: keyInfo.type,

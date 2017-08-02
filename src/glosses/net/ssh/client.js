@@ -376,9 +376,7 @@ const onCHANNEL_OPEN = (self, info) => {
         if (localChan !== false) {
             if (info.type === "forwarded-tcpip") {
                 if (info.data.destPort === 0) {
-                    info.data.destPort = self._forwarding[`${info.data.destIP
-                        }:${
-                        info.data.destPort}`];
+                    info.data.destPort = self._forwarding[`${info.data.destIP}:${info.data.destPort}`];
                 }
                 self.emit("tcp connection", info.data, accept, reject);
             } else if (info.type === "x11") {
@@ -1036,12 +1034,7 @@ export default class Client extends adone.EventEmitter {
             const forceIPv4 = this.config.forceIPv4;
             const forceIPv6 = this.config.forceIPv6;
 
-            debug(`DEBUG: Client: Trying ${
-                host
-                } on port ${
-                this.config.port
-                } ...`
-            );
+            debug(`DEBUG: Client: Trying ${host} on port ${this.config.port} ...`);
 
             const doConnect = () => {
                 startTimeout();
@@ -1056,11 +1049,7 @@ export default class Client extends adone.EventEmitter {
             } else {
                 dnsLookup(host, (forceIPv4 ? 4 : 6), (err, address, family) => {
                     if (err) {
-                        const error = new Error(`Error while looking up ${
-                            forceIPv4 ? "IPv4" : "IPv6"
-                            } address for host ${
-                            host
-                            }: ${err}`);
+                        const error = new Error(`Error while looking up ${forceIPv4 ? "IPv4" : "IPv6"} address for host ${host}: ${err}`);
                         clearTimeout(this._readyTimeout);
                         error.level = "client-dns";
                         this.emit("error", error);

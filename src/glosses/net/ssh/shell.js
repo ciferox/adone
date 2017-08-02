@@ -44,7 +44,7 @@ export default class Shell extends adone.EventEmitter {
         this.on("msg", this.options.msg.send);
 
         this.on("error", is.function(this.options.onError) ? this.options.onError : (err, type, close, callback) => {
-            if (close == null) {
+            if (is.nil(close)) {
                 close = false;
             }
             if (this.options.debug) {
@@ -686,7 +686,7 @@ export default class Shell extends adone.EventEmitter {
             this.options.disableASCIIFilter = false;
         }
         if (!is.string(this.options.textColorFilter)) {
-            this.options.textColorFilter = "(\[{1}[0-9;]+m{1})";
+            this.options.textColorFilter = "([{1}[0-9;]+m{1})";
         }
         if (!is.array(this.options.exitCommands)) {
             this.options.exitCommands = [];

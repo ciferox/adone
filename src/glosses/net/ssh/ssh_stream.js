@@ -344,7 +344,9 @@ const check_KEXINIT = (self, init, firstFollows) => {
         clientList = kexList;
     }
     // Check for agreeable key exchange algorithm
-    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1; ++i) { }
+    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1; ++i) {
+        //
+    }
     if (i === len) {
         // No suitable match found!
         const err = new Error("Handshake failed: no matching key exchange algorithm");
@@ -369,7 +371,9 @@ const check_KEXINIT = (self, init, firstFollows) => {
         clientList = algos.serverHostKey;
     }
     // Check for agreeable server host key format
-    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1; ++i) { }
+    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1; ++i) {
+        //
+    }
     if (i === len) {
         // No suitable match found!
         const err = new Error("Handshake failed: no matching host key format");
@@ -388,7 +392,9 @@ const check_KEXINIT = (self, init, firstFollows) => {
         clientList = algos.cipher;
     }
     // Check for agreeable client->server cipher
-    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1; ++i) { }
+    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1; ++i) {
+        //
+    }
     if (i === len) {
         // No suitable match found!
         const err = new Error("Handshake failed: no matching client->server cipher");
@@ -414,7 +420,9 @@ const check_KEXINIT = (self, init, firstFollows) => {
         clientList = algos.cipher;
     }
     // Check for agreeable server->client cipher
-    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1; ++i) { }
+    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1; ++i) {
+        //
+    }
     if (i === len) {
         // No suitable match found!
         const err = new Error("Handshake failed: no matching server->client cipher");
@@ -439,7 +447,9 @@ const check_KEXINIT = (self, init, firstFollows) => {
         clientList = algos.hmac;
     }
     // Check for agreeable client->server hmac algorithm
-    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1; ++i) { }
+    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1; ++i) {
+        //
+    }
     if (i === len) {
         // No suitable match found!
         const err = new Error("Handshake failed: no matching client->server HMAC");
@@ -462,7 +472,9 @@ const check_KEXINIT = (self, init, firstFollows) => {
         clientList = algos.hmac;
     }
     // Check for agreeable server->client hmac algorithm
-    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1; ++i) { }
+    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1; ++i) {
+        //
+    }
     if (i === len) {
         // No suitable match found!
         const err = new Error("Handshake failed: no matching server->client HMAC");
@@ -485,7 +497,9 @@ const check_KEXINIT = (self, init, firstFollows) => {
         clientList = algos.compress;
     }
     // Check for agreeable client->server compression algorithm
-    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1; ++i) { }
+    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1; ++i) {
+        //
+    }
     if (i === len) {
         // No suitable match found!
         const err = new Error("Handshake failed: no matching client->server compression algorithm");
@@ -509,7 +523,9 @@ const check_KEXINIT = (self, init, firstFollows) => {
         clientList = algos.compress;
     }
     // Check for agreeable server->client compression algorithm
-    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1; ++i) { }
+    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1; ++i) {
+        //
+    }
     if (i === len) {
         // No suitable match found!
         const err = new Error("Handshake failed: no matching server->client compression algorithm");
@@ -1824,10 +1840,7 @@ const onKEXDH_REPLY = (self, info, verifiedHost) => { // Client
     }
 
     const b64key = asn1KeyBuf.toString("base64").replace(/(.{64})/g, "$1\n");
-    const fullkey = `-----BEGIN PUBLIC KEY-----\n${
-        b64key
-        }${b64key[b64key.length - 1] === "\n" ? "" : "\n"
-        }-----END PUBLIC KEY-----`;
+    const fullkey = `-----BEGIN PUBLIC KEY-----\n${b64key}${b64key[b64key.length - 1] === "\n" ? "" : "\n"}-----END PUBLIC KEY-----`;
 
     const verified = verifier.verify(fullkey, rawsig);
 

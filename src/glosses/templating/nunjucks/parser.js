@@ -253,7 +253,7 @@ export class Parser {
             withContext = false;
         }
 
-        if (withContext !== null) {
+        if (!is.null(withContext)) {
             if (!this.skipSymbol("context")) {
                 this.fail("parseFrom: expected context after with/without", tok.lineno, tok.colno);
             }
@@ -304,13 +304,13 @@ export class Parser {
         const names = new nodes.NodeList();
         let withContext;
 
-        while (true) {  // eslint-disable-line no-constant-condition
+        while (true) { // eslint-disable-line no-constant-condition
             const nextTok = this.peekToken();
             if (nextTok.type === lexer.TOKEN_BLOCK_END) {
                 if (!names.children.length) {
                     this.fail("parseFrom: Expected at least one import name",
-                              fromTok.lineno,
-                              fromTok.colno);
+                        fromTok.lineno,
+                        fromTok.colno);
                 }
 
                 // Since we are manually advancing past the block end,
@@ -331,8 +331,8 @@ export class Parser {
             const name = this.parsePrimary();
             if (name.value[0] === "_") {
                 this.fail("parseFrom: names starting with an underscore cannot be imported",
-                          name.lineno,
-                          name.colno);
+                    name.lineno,
+                    name.colno);
             }
 
             if (this.skipSymbol("as")) {
@@ -474,8 +474,8 @@ export class Parser {
                 this.fail("parseSet: expected = or block end in set tag", tag.lineno, tag.colno);
             } else {
                 node.body = new nodes.Capture(tag.lineno,
-                                              tag.colno,
-                                              this.parseUntilBlocks("endset"));
+                    tag.colno,
+                    this.parseUntilBlocks("endset"));
                 node.value = null;
                 this.advanceAfterBlockEnd();
             }
@@ -688,7 +688,7 @@ export class Parser {
 
     parseIn() {
         let node = this.parseCompare();
-        while (true) {  // eslint-disable-line no-constant-condition
+        while (true) { // eslint-disable-line no-constant-condition
             // check if the next token is 'not'
             const tok = this.nextToken();
             if (!tok) {
@@ -721,7 +721,7 @@ export class Parser {
         const expr = this.parseConcat();
         const ops = [];
 
-        while (true) {  // eslint-disable-line no-constant-condition
+        while (true) { // eslint-disable-line no-constant-condition
             const tok = this.nextToken();
 
             if (!tok) {
@@ -738,9 +738,9 @@ export class Parser {
 
         if (ops.length) {
             return new nodes.Compare(ops[0].lineno, ops[0].colno, expr, ops);
-        } 
+        }
         return expr;
-        
+
     }
 
     // finds the '~' for string concatenation
@@ -862,7 +862,7 @@ export class Parser {
             val = new RegExp(tok.value.body, tok.value.flags);
         }
 
-        if (val !== undefined) {
+        if (!is.undefined(val)) {
             node = new nodes.Literal(tok.lineno, tok.colno, val);
         } else if (tok.type === lexer.TOKEN_SYMBOL) {
             node = new nodes.Symbol(tok.lineno, tok.colno, tok.value);
@@ -934,8 +934,8 @@ export class Parser {
 
         this.advanceAfterBlockEnd(filterTok.value);
         const body = new nodes.Capture(name.lineno,
-                                       name.colno,
-                                       this.parseUntilBlocks("endfilter"));
+            name.colno,
+            this.parseUntilBlocks("endfilter"));
         this.advanceAfterBlockEnd();
 
         const node = new nodes.Filter(
@@ -970,7 +970,7 @@ export class Parser {
             }
         }
 
-        while (true) {  // eslint-disable-line no-constant-condition
+        while (true) { // eslint-disable-line no-constant-condition
             const { type } = this.peekToken();
             if (type === lexer.TOKEN_RIGHT_PAREN ||
                 type === lexer.TOKEN_RIGHT_BRACKET ||
@@ -982,8 +982,8 @@ export class Parser {
             if (node.children.length > 0) {
                 if (!this.skip(lexer.TOKEN_COMMA)) {
                     this.fail("parseAggregate: expected comma after expression",
-                              tok.lineno,
-                              tok.colno);
+                        tok.lineno,
+                        tok.colno);
                 }
             }
 
@@ -995,8 +995,8 @@ export class Parser {
                 // colon
                 if (!this.skip(lexer.TOKEN_COLON)) {
                     this.fail("parseAggregate: expected colon after dict key",
-                               tok.lineno,
-                               tok.colno);
+                        tok.lineno,
+                        tok.colno);
                 }
 
                 // TODO: check for errors
@@ -1017,9 +1017,9 @@ export class Parser {
         if (!noParens && tok.type !== lexer.TOKEN_LEFT_PAREN) {
             if (tolerant) {
                 return null;
-            } 
+            }
             this.fail("expected arguments", tok.lineno, tok.colno);
-            
+
         }
 
         if (tok.type === lexer.TOKEN_LEFT_PAREN) {
@@ -1030,7 +1030,7 @@ export class Parser {
         const kwargs = new nodes.KeywordArgs(tok.lineno, tok.colno);
         let checkComma = false;
 
-        while (true) {  // eslint-disable-line no-constant-condition
+        while (true) { // eslint-disable-line no-constant-condition
             tok = this.peekToken();
             if (!noParens && tok.type === lexer.TOKEN_RIGHT_PAREN) {
                 this.nextToken();
@@ -1102,11 +1102,11 @@ export class Parser {
                 // Same for the succeeding block start token
                 if (nextToken &&
                     ((nextToken.type === lexer.TOKEN_BLOCK_START &&
-                      nextVal[nextVal.length - 1] === "-") ||
-                    (nextToken.type === lexer.TOKEN_VARIABLE_START &&
-                     nextVal[this.tokens.tags.VARIABLE_START.length] === "-") ||
-                    (nextToken.type === lexer.TOKEN_COMMENT &&
-                     nextVal[this.tokens.tags.COMMENT_START.length] === "-"))) {
+                        nextVal[nextVal.length - 1] === "-") ||
+                        (nextToken.type === lexer.TOKEN_VARIABLE_START &&
+                            nextVal[this.tokens.tags.VARIABLE_START.length] === "-") ||
+                        (nextToken.type === lexer.TOKEN_COMMENT &&
+                            nextVal[this.tokens.tags.COMMENT_START.length] === "-"))) {
                     // TODO: this could be optimized (don't use regex)
                     data = data.replace(/\s*$/, "");
                 }

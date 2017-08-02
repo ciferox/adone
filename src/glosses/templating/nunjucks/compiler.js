@@ -482,7 +482,7 @@ export class Compiler {
             const { value: name } = targets[i];
             let id = frame.lookup(name);
 
-            if (id === null || id === undefined) {
+            if (is.null(id) || is.undefined(id)) {
                 id = this.tmpid();
 
                 // Note: This relies on js allowing scope across blocks,

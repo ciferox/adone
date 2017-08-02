@@ -10,7 +10,7 @@ const runtime = adone.lazify({
             case "linux": fileName = "linux"; break;
             case "darwin": fileName = "macos"; break;
         }
-        return require(`../svc/${fileName}`);
+        return require(`../../omnitron/svc/${fileName}`);
     }
 });
 

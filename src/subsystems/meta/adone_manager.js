@@ -88,6 +88,8 @@ export default class AdoneManager {
 
     async installScript(name) {
         const scriptPath = this.getScriptPath(name);
+        // Configure nunjacks for render from any path.
+        adone.templating.nunjucks.configure("/");
         const data = await adone.templating.nunjucks.render(std.path.join(this.app.adoneEtcPath, "scripts", (is.windows ? "adone.cmd" : "adone")), {
             targetPath: this.destAdoneDir.resolve("bin", "adone.js")
         });

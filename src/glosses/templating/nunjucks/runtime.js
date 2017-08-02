@@ -194,10 +194,8 @@ export const suppressValue = (val, autoescape) => {
 };
 
 export const ensureDefined = (val, lineno, colno) => {
-    if (val === null || val === undefined) {
-        throw new TemplateError("attempted to output null or undefined value",
-            lineno + 1,
-            colno + 1);
+    if (is.nil(val)) {
+        throw new TemplateError("attempted to output null or undefined value", lineno + 1, colno + 1);
     }
     return val;
 };
@@ -213,7 +211,7 @@ export const memberLookup = (obj = {}, val) => {
 export const callWrap = (obj, name, context, args) => {
     if (!obj) {
         throw new x.InvalidArgument(`Unable to call \`${name}\`, which is undefined or falsey`);
-    } else if (typeof obj !== "function") {
+    } else if (!is.function(obj)) {
         throw new x.InvalidArgument(`Unable to call \`${name}\`, which is not a function`);
     }
 

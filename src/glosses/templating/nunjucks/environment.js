@@ -9,7 +9,7 @@ const { Frame } = runtime;
 
 class Context {
     constructor(ctx, blocks, env) {
-        this.env = env || new Environment();  // eslint-disable-line no-use-before-define
+        this.env = env || new Environment(); // eslint-disable-line no-use-before-define
 
         this.ctx = util.clone(ctx, { deep: false });
 
@@ -78,7 +78,7 @@ class Context {
 
 export class Template {
     constructor(src, env, path, eagerCompile) {
-        this.env = env || new Environment();  // eslint-disable-line no-use-before-define
+        this.env = env || new Environment(); // eslint-disable-line no-use-before-define
 
         if (is.object(src)) {
             switch (src.type) {
@@ -103,7 +103,7 @@ export class Template {
             try {
                 this._compile();
             } catch (err) {
-                throw prettifyError(this.path, this.env.opts.dev, err);  // remove?
+                throw prettifyError(this.path, this.env.opts.dev, err); // remove?
             }
         } else {
             this.compiled = false;
@@ -129,13 +129,13 @@ export class Template {
         try {
             this.compile();
         } catch (_err) {
-            const err = prettifyError(this.path, this.env.opts.dev, _err);  // remove?
+            const err = prettifyError(this.path, this.env.opts.dev, _err); // remove?
             if (cb) {
                 process.nextTick(cb, err);
                 return;
-            } 
+            }
             throw err;
-            
+
         }
 
         const context = new Context(ctx || {}, this.blocks, this.env);
@@ -150,7 +150,7 @@ export class Template {
             runtime,
             (err, res) => {
                 if (err) {
-                    err = prettifyError(this.path, this.env.opts.dev, err);  // remove?
+                    err = prettifyError(this.path, this.env.opts.dev, err); // remove?
                 }
 
                 if (cb) {
@@ -187,9 +187,9 @@ export class Template {
         } catch (e) {
             if (cb) {
                 return cb(e);
-            } 
+            }
             throw e;
-            
+
         }
 
         const frame = parentFrame ? parentFrame.push() : new Frame();

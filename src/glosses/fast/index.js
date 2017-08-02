@@ -1,7 +1,7 @@
 const { lazify, std, util, is, x, core: { Core } } = adone;
 
 const fast = lazify({
-    File: "./file",
+    File: "./file"
 }, exports, require);
 
 fast.__ = lazify({
@@ -138,7 +138,7 @@ export class Fast extends Core {
             gz: "gz",
             xz: "xz",
             brotli: "br",
-            deflate: "deflate"  // ?
+            deflate: "deflate" // ?
         }[compressorType];
 
         return this.through(async function compressor(file) {
@@ -243,7 +243,7 @@ export class Fast extends Core {
                             this.push(entryFile);
                             next();
                         }).catch((err) => {
-                            next(err);  // will destroy the stream and emit the error
+                            next(err); // will destroy the stream and emit the error
                         });
                     } else {
                         entryFile.contents = stream;
@@ -393,7 +393,7 @@ const globSource = (globs, { cwd = process.cwd(), base = null, dot = true, links
                 base: _base,
                 path,
                 contents: null,
-                stat,  // TODO, it should be handled by the glob
+                stat, // TODO, it should be handled by the glob
                 symlink: stat.isSymbolicLink() ? await adone.fs.readlink(path) : null
             }));
         });
@@ -429,13 +429,13 @@ class FastFSMapper extends FastFS {
             const sourcePath = file.history[0];
             for (let i = 0; i < this._matchers.length; ++i) {
                 if (this._matchers[i](sourcePath)) {
-                    if (match !== null) {
+                    if (!is.null(match)) {
                         throw new adone.x.Exception(`Ambiguity. This file "${sourcePath}" has more than one possible source: "${this._mappings[match].from}" or "${this._mappings[i].from}"`);
                     }
                     match = i;
                 }
             }
-            if (match === null) {
+            if (is.null(match)) {
                 throw new adone.x.Exception(`Invalid file: "${sourcePath}". There is no matching source`);
             }
 

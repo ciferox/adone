@@ -10,7 +10,7 @@ const SIGN_REQUEST = 13;
 const SIGN_RESPONSE = 14;
 const FAILURE = 5;
 
-const RE_CYGWIN_SOCK = /^\!<socket >(\d+) s ([A-Z0-9]{8}\-[A-Z0-9]{8}\-[A-Z0-9]{8}\-[A-Z0-9]{8})/;
+const RE_CYGWIN_SOCK = /^!<socket >(\d+) s ([A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8})/;
 
 module.exports = (sockPath, key, keyType, data, cb) => {
     let sock;
@@ -206,7 +206,7 @@ module.exports = (sockPath, key, keyType, data, cb) => {
                     sock.destroy();
                     isDone = true;
                 };
-        
+
                 chan.once("end", onDone)
                     .once("close", onDone)
                     .on("data", (data) => {
@@ -350,7 +350,7 @@ module.exports = (sockPath, key, keyType, data, cb) => {
 
                     // parse cygwin unix socket file contents
                     const port = parseInt(m[1], 10);
-                    const secret = m[2].replace(/\-/g, "");
+                    const secret = m[2].replace(/-/g, "");
                     const secretbuf = Buffer.allocUnsfae(16);
                     for (i = 0, j = 0; j < 32; ++i, j += 2) {
                         secretbuf[i] = parseInt(secret.substring(j, j + 2), 16);

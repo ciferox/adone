@@ -237,7 +237,7 @@ export default class BasePrompt {
         let message = `${terminal.green("?")} ${terminal.bold(this.opt.message)}${terminal.reset(" ")}`;
 
         // Append the default if available, and if question isn't answered
-        if (this.opt.default != null && this.status !== "answered") {
+        if (is.exist(this.opt.default) && this.status !== "answered") {
             message += terminal.dim(`(${this.opt.default}) `);
         }
 

@@ -1,4 +1,4 @@
-const { x } = adone;
+const { x, is } = adone;
 
 const whitespaceChars = " \n\t\r\u00A0";
 const delimChars = "()[]{}%*-+~/#,:|.<>=!";
@@ -255,9 +255,9 @@ class Tokenizer {
         // delimiters because we need to look for block/variable start
         // tags (don't use the full delimChars for optimization)
         const beginChars = this.tags.BLOCK_START[0] +
-                           this.tags.VARIABLE_START[0] +
-                           this.tags.COMMENT_START[0] +
-                           this.tags.COMMENT_END[0];
+            this.tags.VARIABLE_START[0] +
+            this.tags.COMMENT_START[0] +
+            this.tags.COMMENT_END[0];
 
         if (this.isFinished()) {
             return null;
@@ -290,7 +290,7 @@ class Tokenizer {
         // We could hit the end of the template in the middle of
         // our looping, so check for the null return value from
         // _extractUntil
-        while ((data = this._extractUntil(beginChars)) !== null) {
+        while (!is.null(data = this._extractUntil(beginChars))) {
             tok += data;
 
             if ((this._matches(this.tags.BLOCK_START) ||
@@ -328,7 +328,7 @@ class Tokenizer {
             }
         }
 
-        if (data === null && inComment) {
+        if (is.null(data) && inComment) {
             throw new x.IllegalState("expected end of comment, got end of file");
         }
 
@@ -411,8 +411,8 @@ class Tokenizer {
             let idx = charString.indexOf(this.current());
 
             while (((breakOnMatch && idx === -1) ||
-                    (!breakOnMatch && idx !== -1)) &&
-                   !this.isFinished()) {
+                (!breakOnMatch && idx !== -1)) &&
+                !this.isFinished()) {
                 t += this.current();
                 this.forward();
 

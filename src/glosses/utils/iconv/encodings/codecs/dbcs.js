@@ -15,7 +15,7 @@ const findIdx = (table, val) => {
     }
 
     let [l = 0, r] = [0, table.length];
-    while (l < r - 1) {  // always table[l] <= val < table[r]
+    while (l < r - 1) { // always table[l] <= val < table[r]
         const mid = l + Math.floor((r - l + 1) / 2);
         if (table[mid] <= val) {
             l = mid;
@@ -46,7 +46,7 @@ class DBCSEncoder {
         let i = 0;
         let j = 0;
 
-        while (true) {  // eslint-disable-line no-constant-condition
+        while (true) { // eslint-disable-line no-constant-condition
             let uCode;
             // 0. Get next character.
             if (nextChar === -1) {
@@ -60,8 +60,8 @@ class DBCSEncoder {
             }
 
             // 1. Handle surrogates.
-            if (uCode >= 0xD800 && uCode < 0xE000) {  // Char is one of surrogates.
-                if (uCode < 0xDC00) {  // We've got lead surrogate.
+            if (uCode >= 0xD800 && uCode < 0xE000) { // Char is one of surrogates.
+                if (uCode < 0xDC00) { // We've got lead surrogate.
                     if (leadSurrogate === -1) {
                         leadSurrogate = uCode;
                         continue;
@@ -70,7 +70,7 @@ class DBCSEncoder {
                         // Double lead surrogate found.
                         uCode = UNASSIGNED;
                     }
-                } else {  // We've got trail surrogate.
+                } else { // We've got trail surrogate.
                     if (leadSurrogate !== -1) {
                         uCode = 0x10000 + (leadSurrogate - 0xD800) * 0x400 + (uCode - 0xDC00);
                         leadSurrogate = -1;
@@ -81,25 +81,25 @@ class DBCSEncoder {
                 }
             } else if (leadSurrogate !== -1) {
                 // Incomplete surrogate pair - only lead surrogate found.
-                nextChar = uCode; uCode = UNASSIGNED;  // Write an error, then current char.
+                nextChar = uCode; uCode = UNASSIGNED; // Write an error, then current char.
                 leadSurrogate = -1;
             }
 
             // 2. Convert uCode character.
             let dbcsCode = UNASSIGNED;
-            if (!is.undefined(seqObj) && uCode !== UNASSIGNED) {  // We are in the middle of the sequence
+            if (!is.undefined(seqObj) && uCode !== UNASSIGNED) { // We are in the middle of the sequence
                 let resCode = seqObj[uCode];
-                if (is.object(resCode)) {  // Sequence continues.
+                if (is.object(resCode)) { // Sequence continues.
                     seqObj = resCode;
                     continue;
-                } else if (is.number(resCode)) {  // Sequence finished. Write it.
+                } else if (is.number(resCode)) { // Sequence finished. Write it.
                     dbcsCode = resCode;
-                } else if (is.undefined(resCode)) {  // Current character is not part of the sequence.
+                } else if (is.undefined(resCode)) { // Current character is not part of the sequence.
                     // Try default character for this sequence
                     resCode = seqObj[DEF_CHAR];
                     if (!is.undefined(resCode)) {
-                        dbcsCode = resCode;  // Found. Write it.
-                        nextChar = uCode;  // Current character will be written too in the next iteration.
+                        dbcsCode = resCode; // Found. Write it.
+                        nextChar = uCode; // Current character will be written too in the next iteration.
 
                     } else {
                         // TODO: What if we have no default? (resCode == undefined)
@@ -109,13 +109,13 @@ class DBCSEncoder {
                     }
                 }
                 seqObj = undefined;
-            } else if (uCode >= 0) {  // Regular character
+            } else if (uCode >= 0) { // Regular character
                 const subtable = this.encodeTable[uCode >> 8];
                 if (!is.undefined(subtable)) {
                     dbcsCode = subtable[uCode & 0xFF];
                 }
 
-                if (dbcsCode <= SEQ_START) {  // Sequence start
+                if (dbcsCode <= SEQ_START) { // Sequence start
                     seqObj = this.encodeTableSeq[SEQ_START - dbcsCode];
                     continue;
                 }
@@ -142,8 +142,8 @@ class DBCSEncoder {
             if (dbcsCode < 0x100) {
                 newBuf[j++] = dbcsCode;
             } else if (dbcsCode < 0x10000) {
-                newBuf[j++] = dbcsCode >> 8;  // high byte
-                newBuf[j++] = dbcsCode & 0xFF;  // low byte
+                newBuf[j++] = dbcsCode >> 8; // high byte
+                newBuf[j++] = dbcsCode & 0xFF; // low byte
             } else {
                 newBuf[j++] = dbcsCode >> 16;
                 newBuf[j++] = (dbcsCode >> 8) & 0xFF;
@@ -165,14 +165,14 @@ class DBCSEncoder {
         const newBuf = Buffer.alloc(10);
         let j = 0;
 
-        if (this.seqObj) {  // We're in the sequence.
+        if (this.seqObj) { // We're in the sequence.
             const dbcsCode = this.seqObj[DEF_CHAR];
-            if (!is.undefined(dbcsCode)) {  // Write beginning of the sequence.
+            if (!is.undefined(dbcsCode)) { // Write beginning of the sequence.
                 if (dbcsCode < 0x100) {
                     newBuf[j++] = dbcsCode;
                 } else {
-                    newBuf[j++] = dbcsCode >> 8;  // high byte
-                    newBuf[j++] = dbcsCode & 0xFF;  // low byte
+                    newBuf[j++] = dbcsCode >> 8; // high byte
+                    newBuf[j++] = dbcsCode & 0xFF; // low byte
                 }
             } else {
                 // See todo above.
@@ -211,9 +211,9 @@ class DBCSDecoder {
         let nodeIdx = this.nodeIdx;
         let prevBuf = this.prevBuf;
         const prevBufOffset = this.prevBuf.length;
-        let seqStart = -this.prevBuf.length;  // idx of the start of current parsed sequence.
+        let seqStart = -this.prevBuf.length; // idx of the start of current parsed sequence.
 
-        if (prevBufOffset > 0) {  // Make prev buf overlap a little to make it easier to slice later.
+        if (prevBufOffset > 0) { // Make prev buf overlap a little to make it easier to slice later.
             prevBuf = Buffer.concat([prevBuf, buf.slice(0, 10)]);
         }
 
@@ -227,10 +227,10 @@ class DBCSDecoder {
 
             if (uCode >= 0) {
                 // Normal character, just use it.
-            } else if (uCode === UNASSIGNED) {  // Unknown char.
+            } else if (uCode === UNASSIGNED) { // Unknown char.
                 // TODO: Callback with seq.
                 // var curSeq = (seqStart >= 0) ? buf.slice(seqStart, i+1) : prevBuf.slice(seqStart + prevBufOffset, i+1 + prevBufOffset);
-                i = seqStart;  // Try to parse again, after skipping first byte of the sequence ('i' will be incremented by 'for' cycle).
+                i = seqStart; // Try to parse again, after skipping first byte of the sequence ('i' will be incremented by 'for' cycle).
                 uCode = this.defaultCharUnicode.charCodeAt(0);
             } else if (uCode === GB18030_CODE) {
                 const curSeq = (seqStart >= 0) ?
@@ -242,10 +242,10 @@ class DBCSDecoder {
                     (curSeq[3] - 0x30);
                 const idx = findIdx(this.gb18030.gbChars, ptr);
                 uCode = this.gb18030.uChars[idx] + ptr - this.gb18030.gbChars[idx];
-            } else if (uCode <= NODE_START) {  // Go to next trie node.
+            } else if (uCode <= NODE_START) { // Go to next trie node.
                 nodeIdx = NODE_START - uCode;
                 continue;
-            } else if (uCode <= SEQ_START) {  // Output a sequence of chars.
+            } else if (uCode <= SEQ_START) { // Output a sequence of chars.
                 const seq = this.decodeTableSeq[SEQ_START - uCode];
                 for (let k = 0; k < seq.length - 1; k++) {
                     uCode = seq[k];
@@ -326,7 +326,7 @@ export default class DBCSCodec {
         //         <= NODE_START -> index of the next node in our trie to process next byte.
         //         <= SEQ_START  -> index of the start of a character code sequence, in decodeTableSeq.
         this.decodeTables = [];
-        this.decodeTables[0] = UNASSIGNED_NODE.slice(0);  // Create root node.
+        this.decodeTables[0] = UNASSIGNED_NODE.slice(0); // Create root node.
 
         // Sometimes a MBCS char corresponds to a sequence of unicode chars. We store them as arrays of integers here.
         this.decodeTableSeq = [];
@@ -392,7 +392,7 @@ export default class DBCSCodec {
 
         // Load & create GB18030 tables when needed.
         if (is.function(codecOptions.gb18030)) {
-            this.gb18030 = codecOptions.gb18030();  // Load GB18030 ranges.
+            this.gb18030 = codecOptions.gb18030(); // Load GB18030 ranges.
 
             // Add GB18030 decode tables.
             const thirdByteNodeIdx = this.decodeTables.length;
@@ -427,14 +427,14 @@ export default class DBCSCodec {
         }
 
         let node = this.decodeTables[0];
-        for (let i = bytes.length - 1; i > 0; i--) {  // Traverse nodes deeper into the trie.
+        for (let i = bytes.length - 1; i > 0; i--) { // Traverse nodes deeper into the trie.
             const val = node[bytes[i]];
 
-            if (val === UNASSIGNED) {  // Create new node.
+            if (val === UNASSIGNED) { // Create new node.
                 node[bytes[i]] = NODE_START - this.decodeTables.length;
                 node = UNASSIGNED_NODE.slice(0);
                 this.decodeTables.push(node);
-            } else if (val <= NODE_START) {  // Existing node.
+            } else if (val <= NODE_START) { // Existing node.
                 node = this.decodeTables[NODE_START - val];
             } else {
                 throw new x.IllegalState(`Overwrite byte in ${this.encodingName}, addr: ${addr.toString(16)}`);
@@ -454,30 +454,30 @@ export default class DBCSCodec {
         // Write all other elements of the chunk to the table.
         for (let k = 1; k < chunk.length; k++) {
             const part = chunk[k];
-            if (is.string(part)) {  // String, write as-is.
+            if (is.string(part)) { // String, write as-is.
                 for (let l = 0; l < part.length;) {
                     const code = part.charCodeAt(l++);
-                    if (code >= 0xD800 && code < 0xDC00) {  // Decode surrogate
+                    if (code >= 0xD800 && code < 0xDC00) { // Decode surrogate
                         const codeTrail = part.charCodeAt(l++);
                         if (codeTrail >= 0xDC00 && codeTrail < 0xE000) {
                             writeTable[curAddr++] = 0x10000 + (code - 0xD800) * 0x400 + (codeTrail - 0xDC00);
                         } else {
                             throw new x.IllegalState(`Incorrect surrogate pair in ${this.encodingName} at chunk ${chunk[0]}`);
                         }
-                    } else if (code > 0x0FF0 && code <= 0x0FFF) {  // Character sequence (our own encoding used)
+                    } else if (code > 0x0FF0 && code <= 0x0FFF) { // Character sequence (our own encoding used)
                         const len = 0xFFF - code + 2;
                         const seq = [];
                         for (let m = 0; m < len; m++) {
                             seq.push(part.charCodeAt(l++));
-                        }  // Simple variation: don't support surrogates or subsequences in seq.
+                        } // Simple variation: don't support surrogates or subsequences in seq.
 
                         writeTable[curAddr++] = SEQ_START - this.decodeTableSeq.length;
                         this.decodeTableSeq.push(seq);
                     } else {
                         writeTable[curAddr++] = code;
-                    }  // Basic char
+                    } // Basic char
                 }
-            } else if (is.number(part)) {  // Integer, meaning increasing sequence starting with prev character.
+            } else if (is.number(part)) { // Integer, meaning increasing sequence starting with prev character.
                 let charCode = writeTable[curAddr - 1] + 1;
                 for (let l = 0; l < part; l++) {
                     writeTable[curAddr++] = charCode++;
@@ -492,10 +492,10 @@ export default class DBCSCodec {
     }
 
     _getEncodeBucket(uCode) {
-        const high = uCode >> 8;  // This could be > 0xFF because of astral characters.
+        const high = uCode >> 8; // This could be > 0xFF because of astral characters.
         if (is.undefined(this.encodeTable[high])) {
             this.encodeTable[high] = UNASSIGNED_NODE.slice(0);
-        }  // Create bucket on demand.
+        } // Create bucket on demand.
         return this.encodeTable[high];
     }
 
@@ -524,7 +524,7 @@ export default class DBCSCodec {
             node = {};
             if (bucket[low] !== UNASSIGNED) {
                 node[DEF_CHAR] = bucket[low];
-            }  // If a char was set before - make it a single-char subsequence.
+            } // If a char was set before - make it a single-char subsequence.
             bucket[low] = SEQ_START - this.encodeTableSeq.length;
             this.encodeTableSeq.push(node);
         }

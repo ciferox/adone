@@ -245,7 +245,7 @@ export default class Client extends adone.EventEmitter {
             // A custom agent is required for these options.
             //
             if (
-                options.rejectUnauthorized != null ||
+                is.exist(options.rejectUnauthorized) ||
                 options.checkServerIdentity ||
                 options.passphrase ||
                 options.ciphers ||

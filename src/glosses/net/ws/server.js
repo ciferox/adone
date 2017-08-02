@@ -30,8 +30,7 @@ const abortConnection = (socket, code, message) => {
             "Connection: close\r\n" +
             "Content-type: text/html\r\n" +
             `Content-Length: ${Buffer.byteLength(message)}\r\n` +
-            "\r\n"}${
-            message}`
+            "\r\n"}${message}`
         );
     }
 

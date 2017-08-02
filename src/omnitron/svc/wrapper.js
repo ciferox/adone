@@ -1,4 +1,4 @@
-const adone = require("adone").default;
+const adone = require("../..").default;
 
 const { is } = adone;
 

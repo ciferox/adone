@@ -228,7 +228,7 @@ export default function installCompat() {
             }
             return output;
         },
-        has_key(key) {  // eslint-disable-line camelcase
+        has_key(key) { // eslint-disable-line camelcase
             return this.hasOwnProperty(key);
         },
         pop(key, def) {
@@ -265,7 +265,7 @@ export default function installCompat() {
             for (const k in kwargs) {
                 this[k] = kwargs[k];
             }
-            return null;  // Always returns None
+            return null; // Always returns None
         }
     };
     OBJECT_MEMBERS.iteritems = OBJECT_MEMBERS.items;

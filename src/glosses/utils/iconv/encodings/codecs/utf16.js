@@ -5,17 +5,17 @@ const detectEncoding = (buf, defaultEncoding = "utf-16le") => {
 
     if (buf.length >= 2) {
         // Check BOM.
-        if (buf[0] === 0xFE && buf[1] === 0xFF) {  // UTF-16BE BOM
+        if (buf[0] === 0xFE && buf[1] === 0xFF) { // UTF-16BE BOM
             enc = "utf-16be";
-        } else if (buf[0] === 0xFF && buf[1] === 0xFE) {  // UTF-16LE BOM
+        } else if (buf[0] === 0xFF && buf[1] === 0xFE) { // UTF-16LE BOM
             enc = "utf-16le";
         } else {
             // No BOM found. Try to deduce encoding from initial content.
             // Most of the time, the content has ASCII chars (U+00**), but the opposite (U+**00) is uncommon.
             // So, we count ASCII as if it was LE or BE, and decide from that.
             let asciiCharsLE = 0;
-            let asciiCharsBE = 0;  // Counts of chars in both positions
-            const _len = Math.min(buf.length - (buf.length % 2), 64);  // Len is always even.
+            let asciiCharsBE = 0; // Counts of chars in both positions
+            const _len = Math.min(buf.length - (buf.length % 2), 64); // Len is always even.
 
             for (let i = 0; i < _len; i += 2) {
                 if (buf[i] === 0 && buf[i + 1] !== 0) {
@@ -77,7 +77,7 @@ class Utf16Decoder {
             this.initialBytes.push(buf);
             this.initialBytesLen += buf.length;
 
-            if (this.initialBytesLen < 16) {  // We need more bytes to use space heuristic (see below)
+            if (this.initialBytesLen < 16) { // We need more bytes to use space heuristic (see below)
                 return "";
             }
 

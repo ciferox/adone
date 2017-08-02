@@ -68,7 +68,7 @@ export const getCodec = (encoding) => {
 
     // Traverse iconv.encodings to find actual codec.
     const codecOptions = {};
-    while (true) {  // eslint-disable-line no-constant-condition
+    while (true) { // eslint-disable-line no-constant-condition
         let codec = _codecDataCache.get(enc);
         if (codec) {
             return codec;
@@ -77,11 +77,11 @@ export const getCodec = (encoding) => {
         const CodecDef = iconv.encodings[enc];
 
         switch (typeof CodecDef) {
-            case "string": {  // Direct alias to other encoding.
+            case "string": { // Direct alias to other encoding.
                 enc = CodecDef;
                 break;
             }
-            case "object": {  // Alias with options. Can be layered.
+            case "object": { // Alias with options. Can be layered.
                 for (const key in CodecDef) {
                     codecOptions[key] = CodecDef[key];
                 }
@@ -93,7 +93,7 @@ export const getCodec = (encoding) => {
                 enc = CodecDef.type;
                 break;
             }
-            case "function": {  // Codec itself.
+            case "function": { // Codec itself.
                 if (!codecOptions.encodingName) {
                     codecOptions.encodingName = enc;
                 }
@@ -102,7 +102,7 @@ export const getCodec = (encoding) => {
                 // It'll be called only once (for each different options object).
                 codec = new CodecDef(codecOptions, iconv);
 
-                _codecDataCache.set(codecOptions.encodingName, codec);  // Save it to be reused later.
+                _codecDataCache.set(codecOptions.encodingName, codec); // Save it to be reused later.
                 return codec;
             }
             default: {
@@ -148,7 +148,7 @@ export const encode = (str, encoding, options) => {
 
 export const decode = (buf, encoding, options) => {
     if (is.string(buf)) {
-        buf = Buffer.from(buf, "binary");  // Ensure buffer.
+        buf = Buffer.from(buf, "binary"); // Ensure buffer.
     }
 
     const decoder = getDecoder(encoding, options);

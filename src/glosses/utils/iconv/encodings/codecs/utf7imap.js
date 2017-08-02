@@ -9,7 +9,7 @@
 //  * String must end in non-shifted position.
 //  * "-&" while in base64 is not allowed.
 
-const base64Regex = /[A-Za-z0-9\/+]/;
+const base64Regex = /[A-Za-z0-9/+]/;
 const base64Chars = [];
 for (let i = 0; i < 256; i++) {
     base64Chars[i] = base64Regex.test(String.fromCharCode(i));
@@ -35,25 +35,25 @@ class Utf7IMAPEncoder {
 
         for (let i = 0; i < str.length; i++) {
             const uChar = str.charCodeAt(i);
-            if (uChar >= 0x20 && uChar <= 0x7E) {  // Direct character or '&'.
+            if (uChar >= 0x20 && uChar <= 0x7E) { // Direct character or '&'.
                 if (inBase64) {
                     if (base64AccumIdx > 0) {
                         bufIdx += buf.write(base64Accum.slice(0, base64AccumIdx).toString("base64").replace(/\//g, ",").replace(/=+$/, ""), bufIdx);
                         base64AccumIdx = 0;
                     }
-                    buf[bufIdx++] = minusChar;  // Write '-', then go to direct mode.
+                    buf[bufIdx++] = minusChar; // Write '-', then go to direct mode.
                     inBase64 = false;
                 }
                 if (!inBase64) {
-                    buf[bufIdx++] = uChar;  // Write direct character
+                    buf[bufIdx++] = uChar; // Write direct character
 
-                    if (uChar === andChar) {  // Ampersand -> '&-'
+                    if (uChar === andChar) { // Ampersand -> '&-'
                         buf[bufIdx++] = minusChar;
                     }
                 }
-            } else {  // Non-direct character
+            } else { // Non-direct character
                 if (!inBase64) {
-                    buf[bufIdx++] = andChar;  // Write '&', then go to base64 mode.
+                    buf[bufIdx++] = andChar; // Write '&', then go to base64 mode.
                     inBase64 = true;
                 }
                 if (inBase64) {
@@ -82,7 +82,7 @@ class Utf7IMAPEncoder {
                 bufIdx += buf.write(this.base64Accum.slice(0, this.base64AccumIdx).toString("base64").replace(/\//g, ",").replace(/=+$/, ""), bufIdx);
                 this.base64AccumIdx = 0;
             }
-            buf[bufIdx++] = minusChar;  // Write '-', then go to direct mode.
+            buf[bufIdx++] = minusChar; // Write '-', then go to direct mode.
             this.inBase64 = false;
         }
 
@@ -109,22 +109,22 @@ class Utf7IMAPDecoder {
         // The decoder is more involved as we must handle chunks in stream.
         // It is forgiving, closer to standard UTF-7 (for example, '-' is optional at the end).
         for (let i = 0; i < buf.length; i++) {
-            if (!inBase64) {  // We're in direct mode.
+            if (!inBase64) { // We're in direct mode.
                 // Write direct chars until '&'
                 if (buf[i] === andChar) {
-                    res += this.iconv.decode(buf.slice(lastI, i), "ascii");  // Write direct chars.
+                    res += this.iconv.decode(buf.slice(lastI, i), "ascii"); // Write direct chars.
                     lastI = i + 1;
                     inBase64 = true;
                 }
-            } else {  // We decode base64.
-                if (!base64IMAPChars[buf[i]]) {  // Base64 ended.
-                    if (i === lastI && buf[i] === minusChar) {  // "&-" -> "&"
+            } else { // We decode base64.
+                if (!base64IMAPChars[buf[i]]) { // Base64 ended.
+                    if (i === lastI && buf[i] === minusChar) { // "&-" -> "&"
                         res += "&";
                     } else {
                         const b64str = base64Accum + buf.slice(lastI, i).toString().replace(/,/g, "/");
                         res += this.iconv.decode(Buffer.from(b64str, "base64"), "utf16-be");
                     }
-                    if (buf[i] !== minusChar) {  // Minus may be absorbed after base64.
+                    if (buf[i] !== minusChar) { // Minus may be absorbed after base64.
                         i--;
                     }
                     lastI = i + 1;
@@ -135,12 +135,12 @@ class Utf7IMAPDecoder {
         }
 
         if (!inBase64) {
-            res += this.iconv.decode(buf.slice(lastI), "ascii");  // Write direct chars.
+            res += this.iconv.decode(buf.slice(lastI), "ascii"); // Write direct chars.
         } else {
             let b64str = base64Accum + buf.slice(lastI).toString().replace(/,/g, "/");
 
-            const canBeDecoded = b64str.length - (b64str.length % 8);  // Minimal chunk: 2 quads -> 2x3 bytes -> 3 chars.
-            base64Accum = b64str.slice(canBeDecoded);  // The rest will be decoded in future.
+            const canBeDecoded = b64str.length - (b64str.length % 8); // Minimal chunk: 2 quads -> 2x3 bytes -> 3 chars.
+            base64Accum = b64str.slice(canBeDecoded); // The rest will be decoded in future.
             b64str = b64str.slice(0, canBeDecoded);
 
             res += this.iconv.decode(Buffer.from(b64str, "base64"), "utf16-be");

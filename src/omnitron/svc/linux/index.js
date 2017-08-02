@@ -1,4 +1,4 @@
-const { std: { path, fs } } = adone;
+const { std: { path, fs }, templating: { nunjucks } } = adone;
 
 const supportedos = ["debian", "centos", "redhat", "fedora", "ubuntu"];
 
@@ -26,7 +26,7 @@ const getLinuxFlavor = () => {
 };
 
 export default class Service {
-    constructor(config = {}) { 
+    constructor(config = {}) {
         this.config = Object.assign({
             mode: "sysv",
             user: adone.util.userid.username()
@@ -38,7 +38,7 @@ export default class Service {
         }
 
         this.scriptPath = path.join(__dirname, "..", "wrapper.js");
-        this.templateRoot = path.join(adone.appinstance.adoneRootPath, "etc", "scripts", "omnitron");
+        this.templateRoot = path.join(adone.appinstance.adoneEtcPath, "scripts", "omnitron");
 
         switch (this.config.mode) {
             case "sysv":
@@ -59,6 +59,9 @@ export default class Service {
                 user: this.config.user
             };
 
+            // Configure nunjacks for render from any path.
+            nunjucks.configure("/");
+
             if (this.config.mode === "sysv") {
                 const osFamily = getLinuxFlavor();
 
@@ -72,7 +75,7 @@ export default class Service {
                     templatePath = path.join(this.templateRoot, "sysd");
                 }
 
-                const script = await adone.templating.nunjucks.render(templatePath, context);
+                const script = await nunjucks.render(templatePath, context);
                 await adone.fs.writeFile(filePath, script);
                 adone.info(`Startup script '${filePath}' created`);
                 await adone.fs.chmod(filePath, "755");
@@ -85,13 +88,13 @@ export default class Service {
                 adone.info("System startup enabled");
             } else if (this.config.mode === "sysd") {
                 context.execPath = process.execPath;
-                
+
                 let pathPrefix;
                 if (adone.util.userid.uid(context.user) === 0) {
                     pathPrefix = "/root";
                 } else {
                     pathPrefix = adone.std.path.join("/home", context.user);
-                } 
+                }
                 const adoneHomePath = adone.std.path.join(pathPrefix, adone.appinstance.config.adone.dirName);
                 if (!(await adone.fs.exists(adoneHomePath))) {
                     throw new adone.x.NotExists(`Adone home directory '${adoneHomePath}' not exists`);
@@ -99,7 +102,7 @@ export default class Service {
 
                 context.pidPath = adone.std.path.join(adoneHomePath, "omnitron.pid");
 
-                const script = await adone.templating.nunjucks.render(path.join(this.templateRoot, "sysd"), context);
+                const script = await nunjucks.render(path.join(this.templateRoot, "sysd"), context);
                 await adone.fs.writeFile(filePath, script);
                 adone.info(`Startup script '${filePath}' created`);
                 await adone.system.process.exec("systemctl", ["daemon-reload"]);

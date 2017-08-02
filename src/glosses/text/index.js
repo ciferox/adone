@@ -5,14 +5,14 @@ const { is } = adone;
 const escapeControlMap = { "\r": "\\r", "\n": "\\n", "\t": "\\t", "\x7f": "\\x7f" };
 const escapeHtmlMap = { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" };
 export const escape = {
-    regExpPattern: (str) => str.replace(/([.*+?^${}()|\[\]\/\\])/g, "\\$1"),
+    regExpPattern: (str) => str.replace(/([.*+?^${}()|[\]/\\])/g, "\\$1"),
     regExpReplacement: (str) => str.replace(/\$/g, "$$$$"), // This replace any single $ by a double $$
     format: (str) => str.replace(/%/g, "%%"), // This replace any single % by a double %%
-    shellArg: (str) => (`'${str.replace(/\'/g, "'\\''")}'`),
+    shellArg: (str) => (`'${str.replace(/'/g, "'\\''")}'`),
     // Escape \r \n \t so they become readable again, escape all ASCII control character as well, using \x syntaxe
     control: (str) => {
         return str.replace(/[\x00-\x1f\x7f]/g, (match) => {
-            if (escapeControlMap[match] !== undefined) {
+            if (!is.undefined(escapeControlMap[match])) {
                 return escapeControlMap[match];
             }
             let hex = match.charCodeAt(0).toString(16);
@@ -47,7 +47,7 @@ export const ansi = {
     stripEscapeCodes: (str) => (is.string(str) ? str.replace(ansi.escapeCodesRegexp(), "") : str)
 };
 export const escapeStringRegexp = (str) => {
-    if (typeof str !== "string") {
+    if (!is.string(str)) {
         throw new TypeError("Expected a string");
     }
 
@@ -126,7 +126,7 @@ export const regExpLastIndexOf = (str, regex, index) => {
  * The probability of a collision is extremely small (need 3*10^12 documents to have one chance in a million of a collision)
  * See http://en.wikipedia.org/wiki/Birthday_problem
  */
-export const random = (len) => adone.std.crypto.randomBytes(Math.ceil(Math.max(8, len * 2))).toString("base64").replace(/[+\/]/g, "").slice(0, len);
+export const random = (len) => adone.std.crypto.randomBytes(Math.ceil(Math.max(8, len * 2))).toString("base64").replace(/[+/]/g, "").slice(0, len);
 
 export const detectNewline = (str) => {
     const newlines = (str.match(/(?:\r?\n)/g) || []);
@@ -233,7 +233,7 @@ export const capitalize = (str) => {
 };
 
 export const width = (str) => {
-    if (typeof str !== "string" || str.length === 0) {
+    if (!is.string(str) || str.length === 0) {
         return 0;
     }
 

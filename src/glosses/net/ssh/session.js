@@ -153,13 +153,17 @@ export default class Session {
                     for (let i = 0; i < length; i++) {
                         stream.write("\x03");
                     }
-                } catch (ex) { }
+                } catch (ex) {
+                    //
+                }
                 // openssh@centos
                 try {
                     for (let i = 0; i < length; i++) {
                         stream.signal("SIGINT");
                     }
-                } catch (ex) { }
+                } catch (ex) {
+                    //
+                }
             };
             // manage process termination with open handle
             stream.on("close", () => {
@@ -204,12 +208,16 @@ export default class Session {
                 client.on("close", () => {
                     try {
                         process.removeListener("SIGINT", sigIntSent);
-                    } catch (ex) { }
+                    } catch (ex) {
+                        //
+                    }
                 });
                 client.on("end", () => {
                     try {
                         process.removeListener("SIGINT", sigIntSent);
-                    } catch (ex) { }
+                    } catch (ex) {
+                        //
+                    }
                 });
             } catch (ex) {
                 reject(ex);

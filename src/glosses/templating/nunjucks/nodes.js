@@ -5,7 +5,7 @@ const traverseAndCheck = (obj, type, results) => {
         results.push(obj);
     }
 
-    if (obj instanceof Node) {  // eslint-disable-line no-use-before-define
+    if (obj instanceof Node) { // eslint-disable-line no-use-before-define
         obj.findAll(type, results);
     }
 };
@@ -30,7 +30,7 @@ export class Node {
     }
 
     findAll(type, results = []) {
-        if (this instanceof NodeList) {  // eslint-disable-line no-use-before-define
+        if (this instanceof NodeList) { // eslint-disable-line no-use-before-define
             const { children } = this;
 
             for (let i = 0; i < children.length; i++) {

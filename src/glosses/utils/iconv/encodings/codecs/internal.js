@@ -14,25 +14,25 @@ class InternalDecoderCesu8 {
         let res = "";
         for (let i = 0; i < buf.length; i++) {
             const curByte = buf[i];
-            if ((curByte & 0xC0) !== 0x80) {  // Leading byte
-                if (contBytes > 0) {  // Previous code is invalid
+            if ((curByte & 0xC0) !== 0x80) { // Leading byte
+                if (contBytes > 0) { // Previous code is invalid
                     res += this.defaultCharUnicode;
                     contBytes = 0;
                 }
 
-                if (curByte < 0x80) {  // Single-byte code
+                if (curByte < 0x80) { // Single-byte code
                     res += String.fromCharCode(curByte);
-                } else if (curByte < 0xE0) {  // Two-byte code
+                } else if (curByte < 0xE0) { // Two-byte code
                     acc = curByte & 0x1F;
                     contBytes = 1; accBytes = 1;
-                } else if (curByte < 0xF0) {  // Three-byte code
+                } else if (curByte < 0xF0) { // Three-byte code
                     acc = curByte & 0x0F;
                     contBytes = 2; accBytes = 1;
-                } else {  // Four or more are not supported for CESU-8.
+                } else { // Four or more are not supported for CESU-8.
                     res += this.defaultCharUnicode;
                 }
-            } else {  // Continuation byte
-                if (contBytes > 0) {  // We're waiting for it.
+            } else { // Continuation byte
+                if (contBytes > 0) { // We're waiting for it.
                     acc = (acc << 6) | (curByte & 0x3f);
                     contBytes--; accBytes++;
                     if (contBytes === 0) {
@@ -41,11 +41,11 @@ class InternalDecoderCesu8 {
                             res += this.defaultCharUnicode;
                         } else if (accBytes === 3 && acc < 0x800) {
                             res += this.defaultCharUnicode;
-                        } else {  //  // Actually add character.
+                        } else { //  // Actually add character.
                             res += String.fromCharCode(acc);
                         }
                     }
-                } else {  // Unexpected continuation byte
+                } else { // Unexpected continuation byte
                     res += this.defaultCharUnicode;
                 }
             }
@@ -78,7 +78,7 @@ class InternalEncoderCesu8 {
             } else if (charCode < 0x800) {
                 buf[bufIdx++] = 0xC0 + (charCode >>> 6);
                 buf[bufIdx++] = 0x80 + (charCode & 0x3f);
-            } else {  // charCode will always be < 0x10000 in javascript.
+            } else { // charCode will always be < 0x10000 in javascript.
                 buf[bufIdx++] = 0xE0 + (charCode >>> 12);
                 buf[bufIdx++] = 0x80 + ((charCode >>> 6) & 0x3f);
                 buf[bufIdx++] = 0x80 + (charCode & 0x3f);
@@ -139,7 +139,7 @@ export default class InternalCodec {
         if (this.enc === "base64") {
             this.encoder = InternalEncoderBase64;
         } else if (this.enc === "cesu8") {
-            this.enc = "utf8";  // Use utf8 for decoding.
+            this.enc = "utf8"; // Use utf8 for decoding.
             this.encoder = InternalEncoderCesu8;
 
             // Add decoder for versions of Node not supporting CESU-8

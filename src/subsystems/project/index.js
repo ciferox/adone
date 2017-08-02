@@ -30,7 +30,7 @@ const parseRestArgs = (args) => {
 export default class extends adone.application.Subsystem {
     initialize() {
         this.defineCommand({
-            name: "app",
+            name: "project",
             group: "subsystem",
             help: "cli interface for adone project management",
             arguments: [
@@ -98,7 +98,7 @@ export default class extends adone.application.Subsystem {
                 throw new adone.x.Exists(`Directory '${name}' already exists`);
             }
 
-            terminal.print(`{white-fg}Generating {bold}${type}{/} project {green-fg}{bold}${name}{/}:\n`);
+            terminal.print(`{white-fg}Generating {bold}${type}{/bold} project{/}:\n`);
 
             await adone.fs.mkdir(appPath);
 
@@ -144,7 +144,7 @@ export default class extends adone.application.Subsystem {
                 terminal.print("{white-fg}{bold}OK{/}\n");
             }
 
-            terminal.print("{white-fg}Done!{/}\n");
+            terminal.print(`{white-fg}Project {bold}'${name}'{/bold} successfully created.{/}\n`);
             return 0;
         } catch (err) {
             adone.log(err);

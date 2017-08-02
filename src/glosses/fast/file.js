@@ -131,7 +131,7 @@ export default class File {
     }
 
     set path(value) {
-        const path = std.path.normalize(value);  // todo trailing sep
+        const path = std.path.normalize(value); // todo trailing sep
         if (path && path !== this.path) {
             this.history.push(path);
         }
