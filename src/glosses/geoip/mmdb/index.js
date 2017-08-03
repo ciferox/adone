@@ -7,6 +7,11 @@ export const __ = adone.lazify({
     Metadata: "./metadata"
 }, null, require);
 
+adone.lazify({
+    Generator: "./generator"
+}, exports, require);
+
+
 export const open = async (filepath, opts) => {
     const database = await adone.fs.readFile(filepath);
     return new __.Reader(database, opts);

@@ -88,6 +88,41 @@ export default class Reader {
         return pointer ? this.resolveDataPointer(pointer) : null;
     }
 
+    scan(callback) {
+        const { nodeByteSize, nodeCount } = this.metadata;
+        const toip = (address, subnet) => {
+            if (this.metadata.ipVersion === 4) {
+                return adone.net.address.IP4.fromBitSet(address, subnet);
+            }
+            return adone.net.address.IP6.fromBitSet(address, subnet);
+        };
+        const maxBit = this.metadata.ipVersion === 4 ? 32 : 128;
+        const scanner = (address, bit, nodeNumber) => {
+            if (bit === maxBit) {
+                return;
+            }
+            const offset = nodeNumber * nodeByteSize;
+
+            const left = this.readNodeLeft(offset);
+            address = address.clone();
+            if (left < nodeCount) {
+                scanner(address, bit + 1, left);
+            } else if (left > nodeCount) {
+                callback(toip(address, bit + 1), this.resolveDataPointer(left));
+            }
+
+            const right = this.readNodeRight(offset);
+            address = address.clone();
+            address.set(31 - bit);
+            if (right < nodeCount) {
+                scanner(address, bit + 1, right);
+            } else if (right > nodeCount) {
+                callback(toip(address, bit + 1), this.resolveDataPointer(right));
+            }
+        };
+        scanner(new adone.math.BitSet(maxBit), 0, this.metadata.ipVersion === 6 ? 128 - 32 : 0);
+    }
+
     findAddressInTree(ipAddress) {
         const rawAddress = ipUtil.parse(ipAddress);
         const nodeCount = this.metadata.nodeCount;

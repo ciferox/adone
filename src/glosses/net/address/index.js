@@ -2,7 +2,6 @@ const helpers = require("./v6helpers.js");
 const { BigNumber } = adone.math;
 const { repeat, padStart, max, find } = adone.vendor.lodash;
 
-
 const constants4 = adone.o({
     BITS: 32,
     GROUPS: 4,
@@ -392,6 +391,17 @@ export class IP4 {
         }).join(""), 16);
     }
 
+    toBitSet() {
+        if (!this.valid) {
+            return null;
+        }
+        const bitset = new adone.math.BitSet(32);
+        for (let i = 0; i < 4; ++i) {
+            bitset.writeUInt(Number(this.parsedAddress[i]), 8, 24 - 8 * i);
+        }
+        return bitset;
+    }
+
     /**
      * The first address in the range given by this address' subnet.
      * Often referred to as the Network Address.
@@ -493,6 +503,14 @@ export class IP4 {
      */
     static fromBigNumber(bigNumber) {
         return IP4.fromInteger(parseInt(bigNumber.toString(), 10));
+    }
+
+    static fromBitSet(bitset, subnet = 32) {
+        const groups = [];
+        for (let i = 0; i < 4; ++i) {
+            groups.push(bitset.readUInt(8, 24 - 8 * i));
+        }
+        return new IP4(`${groups.join(".")}/${subnet}`);
     }
 }
 
@@ -1017,6 +1035,17 @@ export class IP6 {
         return new BigNumber(this.parsedAddress.map(paddedHex).join(""), 16);
     }
 
+    toBitSet() {
+        if (!this.valid) {
+            return null;
+        }
+        const bitset = new adone.math.BitSet(128);
+        for (let i = 0; i < 8; ++i) {
+            bitset.writeUInt(parseInt(this.parsedAddress[i], 16), 16, 112 - 16 * i);
+        }
+        return bitset;
+    }
+
     /**
      * Return the last two groups of this address as an IPv4 address string
      * @memberof IP6
@@ -1374,6 +1403,14 @@ export class IP6 {
         return new IP6(groups.join(":"));
     }
 
+    static fromBitSet(bitset, subnet = 128) {
+        const groups = [];
+        for (let i = 0; i < 8; ++i) {
+            groups.push(bitset.readUInt(16, 112 - 16 * i).toString(16));
+        }
+        return new IP6(`${groups.join(":")}/${subnet}`);
+    }
+
     /**
      * Convert a URL (with optional port number) to an address object
      * @memberof IP6
@@ -1464,7 +1501,7 @@ export class IP6 {
      * Return an address from ip6.arpa form
      * @memberof Address6
      * @static
-     * @param {string} arpaFormAddress - an 'ip6.arpa' form address 
+     * @param {string} arpaFormAddress - an 'ip6.arpa' form address
      * @returns {Adress6}
      * @example
      * var address = Address6.fromArpa(e.f.f.f.3.c.2.6.f.f.f.e.6.6.8.e.1.0.6.7.9.4.e.c.0.0.0.0.1.0.0.2.ip6.arpa.)
