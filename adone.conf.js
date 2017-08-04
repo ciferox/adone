@@ -251,7 +251,9 @@ export default {
                 $watchOpts,
                 $transform: (stream) => {
                     stream.sourcemapsInit();
-                    transpile(stream);
+                    transpile(stream, importAdoneReplacer(({ filename }) => {
+                        return path.relative(path.dirname(filename), "lib");
+                    }));
                     stream.sourcemapsWrite(".", {
                         destPath: "lib/subsystems"
                     });

@@ -6,6 +6,8 @@ const shani = lazify({
 
 const SET_TIMEOUT_MAX = 2 ** 31 - 1;
 
+const callGc = typeof gc === "undefined" ? adone.noop : gc; // eslint-disable-line
+
 class Hook {
     constructor(description, callback, runtimeContext) {
         this.description = description;
@@ -546,12 +548,14 @@ export class Engine {
         defaultTimeout = 5000,
         firstFailExit = false,
         transpilerOptions = {},
+        callGc = false,
         watch = false
     } = {}) {
         this._paths = []; // path can be a glob or a path
         this.defaultTimeout = defaultTimeout;
         this.firstFailExit = firstFailExit;
         this.transpilerOptions = transpilerOptions;
+        this.callGc = callGc;
         this.watch = watch;
     }
 
@@ -1123,6 +1127,9 @@ export class Engine {
                     emitter.emit("error", err);
                 } finally {
                     m.cache.delete(path);
+                    if (this.callGc) {
+                        callGc();
+                    }
                 }
             }
 

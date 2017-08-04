@@ -1,4 +1,4 @@
-const { shani: { Engine, consoleReporter, simpleReporter, minimalReporter }, is, std: { path } } = adone;
+const { shani: { Engine, consoleReporter, simpleReporter, minimalReporter }, is, std: { path, child_process: cp } } = adone;
 
 export default class ShaniCLI extends adone.application.Subsystem {
     initialize() {
@@ -19,6 +19,7 @@ export default class ShaniCLI extends adone.application.Subsystem {
                 { name: "--first", help: "exit if some test fails", group: "flow" },
                 { name: "--timeout", help: "default timeout for all tests", nargs: 1, type: Number, default: 5000, group: "flow" },
                 { name: "--skip", help: "tests to skip", nargs: 1, default: "", group: "flow" },
+                { name: "--call-gc", help: "call gc after file processing", group: "flow" },
 
                 { name: "--config", help: "a config path", nargs: 1, default: "shanifile.js", group: "config" },
                 { name: "--tests", help: "tests path", nargs: 1, default: "tests/**/*.js", group: "config" },
@@ -35,89 +36,48 @@ export default class ShaniCLI extends adone.application.Subsystem {
                 { name: ["--minimal", "-m"], help: "Use minimal console reporter", group: "output" },
 
                 { name: "--print-cover-stats", nargs: "?", holder: "FILTER", help: "Print cover stats if exists", group: "coverage" },
-                { name: "--start-cover-server", nargs: "?", holder: "PORT", default: 9111, type: Number, help: "Start http server to analyse coverage if exists", group: "coverage" }
+                { name: "--start-cover-server", nargs: "?", holder: "PORT", default: 9111, type: Number, help: "Start http server to analyse coverage if exists", group: "coverage" },
             ],
             handler: this.main,
             commands: [
                 { name: "itself", help: "test itself", handler: this.testItself }
             ]
         });
-        this.success = false;
-        this.started = false;
     }
 
     async main(args, opts) {
-        this.app._uncaughtException = (err) => {
-            // adone.log("Uncaught exception", err.stack);
-        };
-        this.app._unhandledRejection = (err) => {
-            // adone.log("Unhandled rejection", err.stack);
-        };
-        this.app.__rejectionHandled = adone.noop;
-
         const configPath = path.resolve(opts.get("config"));
-        this.showHandles = opts.get("showHandles");
         const useConfig = !opts.get("dontUseConfig");
-        let config = {};
-        if (useConfig && await adone.fs.exists(configPath)) {
-            config = adone.require(configPath);
-            if (config.__esModule) {  // TODO: fix?
-                config = config.default;
-            }
-        }
 
-        config.options = config.options || {};
+        const configOptions = {};
 
         for (const name of [
             "tests", "first", "timeout",
             "showHandles", "dontUseMap", "allTimings",
             "skip", "timers", "showHooks",
             "dontKeepHooks", "noTicks", "simple",
-            "minimal"
+            "minimal", "callGc"
         ]) {
             if (opts.has(name)) {
-                config.options[name] = opts.get(name);
+                configOptions[name] = opts.get(name);
             }
         }
-        const shaniOptions = {
-            defaultTimeout: config.options.timeout,
-            transpilerOptions: config.transpiler
-        };
-        const engine = new Engine(shaniOptions);
         const inclusive = args.get("tests");
-        const exclusive = config.options.skip ? config.options.skip.split(",") : [];
-        if (inclusive.length || exclusive.length) {
-            let mapping;
-            if (!config.options.dontUseMap && config.mapping) {
-                mapping = async (x) => {
-                    let res = await config.mapping(x);
-                    if (!is.array(res)) {
-                        res = [res];
-                    }
-                    return res;
-                };
-            } else {
-                mapping = (x) => [path.resolve(x)];
-            }
-            for (const x of inclusive) {
-                engine.include(...(await mapping(x)));
-            }
-            for (const x of exclusive) {
-                engine.exclude(...(await mapping(x)));
-            }
-        }
-        if (!inclusive.length) {
-            let tests = is.array(config.options.tests) ? config.options.tests : [config.options.tests];
-            const configDir = path.dirname(configPath);
-            tests = tests.map((x) => path.resolve(configDir, x));
-            engine.include(...tests);
-        }
 
-        adone.sourcemap.support(Error).install();
+        const proc = cp.fork(path.resolve(__dirname, "runner.js"), {
+            stdio: ["inherit", "inherit", "inherit", "ipc"],
+            execArgv: ["--expose-gc"]
+        });
 
-        const emitter = engine.start();
-
-        let { options: { simple } } = config;
+        await new Promise((resolve) => proc.once("message", resolve));
+        proc.send({
+            useConfig,
+            configPath,
+            configOptions,
+            inclusive,
+            startCoverServer: opts.has("start-cover-server") && opts.get("start-cover-server"),
+            printCoverStats: opts.has("print-cover-stats") && opts.get("print-cover-stats")
+        });
 
         if (process.stdin.isTTY && process.stdout.isTTY) {
             // TODO: fix this
@@ -129,99 +89,30 @@ export default class ShaniCLI extends adone.application.Subsystem {
                 switch (key.full) {
                     case "C-q": {
                         // stop testing
-                        emitter.stop();
+                        proc.send("stop");
                         break;
                     }
                     case "C-c": {
                         // immediate exit
-                        process.exit(1);
+                        proc.kill("SIGKILL");
                         break;
                     }
                 }
             });
-        } else {
-            simple = true;
         }
 
-        let reporter;
 
-        const { options: { minimal } } = config;
+        const [code, signal] = await new Promise((resolve) => proc.once("exit", (code, signal) => {
+            resolve([code, signal]);
+        }));
 
-        if (simple) {
-            reporter = simpleReporter;
-        } else if (minimal) {
-            reporter = minimalReporter;
-        } else {
-            reporter = consoleReporter;
-        }
-
-        reporter({
-            allTimings: config.options.allTimings,
-            timers: config.options.timers,
-            showHooks: config.options.showHooks,
-            keepHooks: !config.options.dontKeepHooks,
-            ticks: !config.options.noTicks
-        })(emitter);
-
-        let failed = false;
-        const hookListener = (type) => ({ block, test = null, hook, meta: { err } = {} }) => {
-            if (err) {
-                failed = true;
-                let msg = block.chain();
-                if (test) {
-                    msg = `${msg} - ${test.description}`;
-                }
-                adone.error(`${type}(${hook.description}) - ${msg}\n${err.message}\n${err.stack}`);
-                emitter.stop();
+        if (code !== 0) {
+            if (signal) {
+                adone.info(`Died due to ${signal}`);
             }
-        };
-        emitter
-            .on("end test", ({ meta: { err } }) => {
-                if (err) {
-                    failed = true;
-                    if (config.options.first) {
-                        emitter.stop();
-                    }
-                }
-            })
-            .on("end before hook", hookListener("before"))
-            .on("end after hook", hookListener("after"))
-            .on("end before each hook", hookListener("beforeEach"))
-            .on("end before test hook", hookListener("beforeTest"))
-            .on("end after each hook", hookListener("afterEach"))
-            .on("end after test hook", hookListener("afterTest"))
-            .on("error", () => {
-                failed = true;
-            })
-            .on("reporterError", (err) => {
-                adone.error("Reporter failed");
-                adone.error(err);
-                process.exit(1);
-            });
-
-        await new Promise((resolve) => emitter.once("done", resolve));
-        if (opts.has("print-cover-stats")) {
-            if (adone.js.coverage.hasStats()) {
-                const filter = opts.get("print-cover-stats");
-                adone.js.coverage.printTable(filter && new RegExp(filter));
-            } else {
-                adone.info("[coverage] no data can be shown");
-            }
-        }
-        if (opts.has("start-cover-server")) {
-            if (adone.js.coverage.hasStats()) {
-                const port = opts.get("start-cover-server");
-                adone.info(`start http server with coverage stats at 127.0.0.1:${port}`);
-                await adone.js.coverage.startHTTPServer(port);
-                return;
-            } else if (!opts.has("print-cover-stats")) {
-                adone.info("[coverage] no data can be shown");
-            }
-        }
-        if (failed) {
             return 1;
         }
-        this.success = true;
+
         return 0;
     }
 

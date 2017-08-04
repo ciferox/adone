@@ -15,7 +15,8 @@ export default {
         showHooks: false,
         keepHooks: false,
         simple: false,
-        minimal: false
+        minimal: true,
+        callGc: true
     },
     transpiler: {
         plugins: [
