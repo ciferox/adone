@@ -1,4 +1,4 @@
-const { is, x, text, lazify, util } = adone;
+const { is, x, text, lazify, util, terminal } = adone;
 
 const lazy = lazify({
     report: "./report"
@@ -9,34 +9,34 @@ const noStyleLength = (x) => text.ansi.stripEscapeCodes(x).length;
 const hasColorsSupport = Boolean(process.stdout.isTTY);
 
 const defaultColors = {
-    commandName: (x) => adone.terminal.parse(`{#4CAF50-fg}${x}{/}`),
-    commandHelpMessage: (x) => adone.terminal.italic.italic(x),
+    commandName: (x) => terminal.parse(`{#4CAF50-fg}${x}{/}`),
+    commandHelpMessage: (x) => terminal.italic.italic(x),
     commandSeparator: (x) => x,
-    optionName: (x) => adone.terminal.parse(`{#00B0FF-fg}${x}{/}`),
+    optionName: (x) => terminal.parse(`{#00B0FF-fg}${x}{/}`),
     optionVariable: (x) => x,
-    optionHelpMessage: (x) => adone.terminal.italic.italic(x),
+    optionHelpMessage: (x) => terminal.italic.italic(x),
     // argumentName: (x) => x,
-    argumentName: (x) => adone.terminal.parse(`{#F44336-fg}${x}{/}`),
-    argumentHelpMessage: (x) => adone.terminal.italic(x),
-    default: (x) => adone.terminal.grey(x),
-    // angleBracket: (x) => adone.terminal.green(x),
-    angleBracket: (x) => adone.terminal.parse(`{#F44336-fg}${x}{/}`),
-    squareBracket: (x) => adone.terminal.yellow(x),
-    curlyBracket: (x) => adone.terminal.yellow(x),
-    ellipsis: (x) => adone.terminal.dim(x),
-    usage: (x) => adone.terminal.underline(x),
-    commandGroupHeading: (x) => adone.terminal.underline(x),
-    argumentGroupHeading: (x) => adone.terminal.underline(x),
-    optionGroupHeading: (x) => adone.terminal.underline(x),
+    argumentName: (x) => terminal.parse(`{#F44336-fg}${x}{/}`),
+    argumentHelpMessage: (x) => terminal.italic(x),
+    default: (x) => terminal.grey(x),
+    // angleBracket: (x) => terminal.green(x),
+    angleBracket: (x) => terminal.parse(`{#F44336-fg}${x}{/}`),
+    squareBracket: (x) => terminal.yellow(x),
+    curlyBracket: (x) => terminal.yellow(x),
+    ellipsis: (x) => terminal.dim(x),
+    usage: (x) => terminal.underline(x),
+    commandGroupHeading: (x) => terminal.underline(x),
+    argumentGroupHeading: (x) => terminal.underline(x),
+    optionGroupHeading: (x) => terminal.underline(x),
     value: {
-        string: (x) => adone.terminal.green(x),
-        null: (x) => adone.terminal.yellow(x),
-        number: (x) => adone.terminal.yellow(x),
-        undefined: (x) => adone.terminal.yellow(x),
-        boolean: (x) => adone.terminal.yellow(x),
+        string: (x) => terminal.green(x),
+        null: (x) => terminal.yellow(x),
+        number: (x) => terminal.yellow(x),
+        undefined: (x) => terminal.yellow(x),
+        boolean: (x) => terminal.yellow(x),
         object: {
             key: (x) => x,
-            separator: (x) => adone.terminal.cyan(x)
+            separator: (x) => terminal.cyan(x)
         }
     }
 };
@@ -1033,7 +1033,7 @@ class Command {
 
     getUsageMessage() {
         const chain = this.getCommandChain();
-        const argumentsLength = adone.terminal.cols - chain.length - 1 - 4;
+        const argumentsLength = terminal.cols - chain.length - 1 - 4;
         const table = new text.table.BorderlessTable({
             colWidths: [4, chain.length + 1, argumentsLength]
         });
@@ -1092,7 +1092,7 @@ class Command {
     getHelpMessage() {
         const helpMessage = [this.getUsageMessage()];
 
-        const totalWidth = adone.terminal.cols;
+        const totalWidth = terminal.cols;
 
         if (this.description) {
             helpMessage.push("", text.wordwrap(this.description, totalWidth));
@@ -1263,7 +1263,7 @@ const mergeGroupsLists = (a, b) => {
 export class Application extends Subsystem {
     constructor({
         name = adone.std.path.basename(process.argv[1], adone.std.path.extname(process.argv[1])),
-        main,
+        interactive = true,
         argv = process.argv.slice(2),
         commandRequired = false } = {}) {
 
@@ -1277,21 +1277,18 @@ export class Application extends Subsystem {
         this._commandRequired = commandRequired;
 
         this._exiting = false;
-        this.isMain = main;
+        this.isMain = false;
         this._mainCommand = null;
         this._errorScope = false;
         this._version = null;
         this.config = null;
         this.report = null;
+        this.interactive = interactive;
 
         this._subsystems = [];
         this.adoneRootPath = adone.std.path.resolve(__dirname, "../../..");
         this.adoneEtcPath = adone.std.path.resolve(this.adoneRootPath, "etc");
         this.defaultConfigsPath = adone.std.path.resolve(this.adoneEtcPath, "configs");
-
-        if (main) {
-            this._setupMain();
-        }
 
         this.setMaxListeners(Infinity);
         this.defineMainCommand();
@@ -1327,6 +1324,11 @@ export class Application extends Subsystem {
         process.on("rejectionHandled", rejectionHandled);
         process.on("beforeExit", beforeExit);
         this.isMain = true;
+
+        // Track cursor if interactive application (by default) and if tty mode
+        if (this.interactive && terminal.output.isTTY) {
+            return new Promise((resolve) => terminal.trackCursor(resolve));
+        }
     }
 
     enableReport({
@@ -1359,8 +1361,8 @@ export class Application extends Subsystem {
 
     async run({ ignoreArgs = false } = {}) {
         try {
-            if (is.nil(adone.appinstance) && this.isMain !== false) {
-                this._setupMain();
+            if (is.nil(adone.appinstance)) {
+                await this._setupMain();
             }
 
             if (is.null(this.config)) {
@@ -1387,8 +1389,8 @@ export class Application extends Subsystem {
             }
 
             if (errors.length) {
-                adone.log(escape(command.getUsageMessage()));
-                adone.log();
+                adone.log(`${escape(command.getUsageMessage())}\n`);
+                // adone.log();
                 for (const error of errors) {
                     adone.log(escape(error.message));
                 }
@@ -1479,7 +1481,7 @@ export class Application extends Subsystem {
         this.removeProcessHandlers();
 
         if (this.isMain) {
-            adone.terminal.destroy();
+            terminal.destroy();
         }
 
         await new Promise((resolve) => {

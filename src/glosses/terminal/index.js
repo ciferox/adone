@@ -13,10 +13,6 @@ const { is, std: { fs, string_decoder } } = adone;
 // - Possibly switch to other method of finding the
 //   extended data string table: i += h.symOffsetCount * 2;
 
-/**
- * Helpers
- */
-
 function noop() {
     return "";
 }
@@ -1440,7 +1436,7 @@ class Terminfo {
                 // Are we supposed to store the result on the stack?
                 expr(`(stack.push(v = (stack.pop() ${
                     ch === "A" ? "&&" : "||"
-                } stack.pop())), v)`);
+                    } stack.pop())), v)`);
                 continue;
             }
 
@@ -4275,26 +4271,49 @@ export default class Terminal extends adone.EventEmitter {
         }
     }
 
-    trackCursor() {
+    trackCursor(done) {
         if (is.undefined(this._trackCursor)) {
             this._trackCursor = true;
-            const current = this.getCursorPos();
-            this.x = current.col - 1;
-            this.y = current.row - 1;
-
-            const newlineHandler = (count) => {
-                let newY = this.y + count;
-                if (newY >= this.rows) {
-                    newY = this.rows - 1;
+            const curPosHandler = (err, event) => {
+                if (this.input.isRaw) {
+                    this.input.setRawMode(false);
+                    this.input.pause();
                 }
-                this.y = newY;
+                
+                this.x = event.x - 1;
+                this.y = event.y - 1;
+
+                const newlineHandler = (count) => {
+                    let newY = this.y + count;
+                    if (newY >= this.rows) {
+                        newY = this.rows - 1;
+                    }
+                    this.y = newY;
+                };
+
+                adone.stream.newlineCounter.install(this.output);
+                adone.stream.newlineCounter.install(process.stderr);
+
+                this.output.on("newlines:after", newlineHandler);
+                process.stderr.on("newlines:after", newlineHandler);
+                
+                done();
             };
 
-            adone.stream.newlineCounter.install(this.output);
-            adone.stream.newlineCounter.install(process.stderr);
-
-            this.output.on("newlines:after", newlineHandler);
-            process.stderr.on("newlines:after", newlineHandler);
+            if (is.function(done)) {
+                this.input.once("data", (data) => {
+                    this.emit("data", data);
+                });
+                if (is.function(this.input.setRawMode) && !this.input.isRaw) {
+                    this.input.setRawMode(true);
+                }
+                if (is.function(this.input.resume)) {
+                    this.input.resume();
+                }
+                this.getCursorPos(curPosHandler);
+            } else {
+                curPosHandler(null, this.getCursorPos());
+            }
         }
     }
 
@@ -6006,10 +6025,10 @@ export default class Terminal extends adone.EventEmitter {
 
         this.once(name, onresponse);
 
-        timeout = setTimeout(() => {
-            this.removeListener(name, onresponse);
-            return callback(new Error("Timeout."));
-        }, 2000);
+        // timeout = setTimeout(() => {
+        //     this.removeListener(name, onresponse);
+        //     return callback(new Error("Timeout."));
+        // }, 2000);
 
         return this.write(text);
     }
@@ -7566,14 +7585,14 @@ conversions.rgb.hcg = function (rgb) {
     if (chroma <= 0) {
         hue = 0;
     } else
-    if (max === r) {
-        hue = ((g - b) / chroma) % 6;
-    } else
-    if (max === g) {
-        hue = 2 + (b - r) / chroma;
-    } else {
-        hue = 4 + (r - g) / chroma + 4;
-    }
+        if (max === r) {
+            hue = ((g - b) / chroma) % 6;
+        } else
+            if (max === g) {
+                hue = 2 + (b - r) / chroma;
+            } else {
+                hue = 4 + (r - g) / chroma + 4;
+            }
 
     hue /= 6;
     hue %= 1;
@@ -7677,9 +7696,9 @@ conversions.hcg.hsl = function (hcg) {
     if (l > 0.0 && l < 0.5) {
         s = c / (2 * l);
     } else
-    if (l >= 0.5 && l < 1.0) {
-        s = c / (2 * (1 - l));
-    }
+        if (l >= 0.5 && l < 1.0) {
+            s = c / (2 * (1 - l));
+        }
 
     return [hcg[0], s * 100, l * 100];
 };

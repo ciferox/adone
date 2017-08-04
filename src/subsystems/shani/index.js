@@ -80,10 +80,6 @@ export default class ShaniCLI extends adone.application.Subsystem {
         });
 
         if (process.stdin.isTTY && process.stdout.isTTY) {
-            // TODO: fix this
-            // trackCursor must not be called there,
-            // but it doesnt work after enabling stdin raw mode (on("keypress") enables it)
-            adone.terminal.trackCursor();
             adone.terminal.listen();
             adone.terminal.on("keypress", (ch, key) => {
                 switch (key.full) {

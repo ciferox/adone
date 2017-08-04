@@ -526,8 +526,8 @@ class Terminal : public node::ObjectWrap
         }
 
         v8::Local<v8::Object> result = Nan::New<Object>();
-        result->Set(NanStr("row"), Nan::New<Integer>(row));
-        result->Set(NanStr("col"), Nan::New<Integer>(col));
+        result->Set(NanStr("y"), Nan::New<Integer>(row));
+        result->Set(NanStr("x"), Nan::New<Integer>(col));
         info.GetReturnValue().Set(result);
     }
 };

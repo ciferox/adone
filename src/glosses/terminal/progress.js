@@ -137,8 +137,6 @@ export default class ProgressBar {
         // callback on completed
         this.callback = callback;
 
-        terminal.trackCursor();
-
         this.setSchema(schema);
         this.snoop();
 
