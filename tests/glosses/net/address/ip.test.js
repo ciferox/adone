@@ -2511,10 +2511,54 @@ describe("net", "address", () => {
                     });
                 });
             });
+
+            describe("iterating", () => {
+                it("should be only one address", () => {
+                    const res = [...new IP4("192.168.1.1")];
+                    expect(res).to.have.lengthOf(1);
+                    expect(res[0]).to.be.instanceOf(IP4);
+                    expect(res[0].address).to.be.equal("192.168.1.1");
+                });
+
+                it("should iterate over subnet", () => {
+                    const res = [...new IP4("192.168.1.0/24")];
+                    expect(res).to.have.lengthOf(256);
+                    for (let i = 0; i < 255; ++i) {
+                        expect(res[i]).to.be.instanceOf(IP4);
+                        expect(res[i].address).to.be.equal(`192.168.1.${i}`);
+                    }
+                });
+            });
+
+            describe("equal", () => {
+                it("should be true for equal addresses", () => {
+                    const a = new IP4("192.168.1.1");
+                    const b = new IP4("192.168.1.1");
+                    expect(a.equal(b)).to.be.true;
+                });
+
+                it("should be false for non ip4 things", () => {
+                    const a = new IP4("192.168.1.0");
+                    const b = new IP6("::192.168.1.0");
+                    expect(a.equal(b)).to.be.false;
+                });
+
+                it("should be false for different subnets", () => {
+                    const a = new IP4("192.168.1.0/24");
+                    const b = new IP4("192.168.1.0/25");
+                    expect(a.equal(b)).to.be.false;
+                });
+
+                it("should be false for different addresses", () => {
+                    const a = new IP4("192.168.1.1");
+                    const b = new IP4("192.168.1.2");
+                    expect(a.equal(b)).to.be.false;
+                });
+            });
         });
     });
 
-    describe("Functionality IPv4", () => {
+    describe("Functionality IPv6", () => {
         // A convenience function to convert a list of IPv6 address notations to IP6 instances
         const notationsToAddresseses = (notations) => {
             return notations.map((notation) => {
@@ -3057,6 +3101,52 @@ describe("net", "address", () => {
                             "<span class=\"digit value-0 position-6\">" +
                             "<span class=\"zero\">0</span></span>");
                     });
+                });
+            });
+
+            describe("iterating", () => {
+                it("should be only one address", () => {
+                    const res = [...new IP6("::192.168.1.1")];
+                    expect(res).to.have.lengthOf(1);
+                    expect(res[0]).to.be.instanceOf(IP6);
+                    expect(res[0].address).to.be.equal("0000:0000:0000:0000:0000:0000:c0a8:0101");
+                    expect(res[0].to4().address).to.be.equal("192.168.1.1");
+                });
+
+                it("should iterate over subnet", () => {
+                    const res = [...new IP6("::192.168.1.0/120")];
+                    expect(res).to.have.lengthOf(256);
+                    for (let i = 0; i < 255; ++i) {
+                        expect(res[i]).to.be.instanceOf(IP6);
+                        expect(res[i].address).to.be.equal(`0000:0000:0000:0000:0000:0000:c0a8:01${i.toString(16).padStart(2, "0")}`);
+                        expect(res[i].to4().address).to.be.equal(`192.168.1.${i}`);
+                    }
+                });
+            });
+
+            describe("equal", () => {
+                it("should be true for equal addresses", () => {
+                    const a = new IP6("::192.168.1.1");
+                    const b = new IP6("::192.168.1.1");
+                    expect(a.equal(b)).to.be.true;
+                });
+
+                it("should be false for non ip6 things", () => {
+                    const a = new IP6("::192.168.1.0");
+                    const b = new IP4("192.168.1.0");
+                    expect(a.equal(b)).to.be.false;
+                });
+
+                it("should be false for different subnets", () => {
+                    const a = new IP6("::192.168.1.0/120");
+                    const b = new IP6("::192.168.1.0/121");
+                    expect(a.equal(b)).to.be.false;
+                });
+
+                it("should be false for different addresses", () => {
+                    const a = new IP6("::192.168.1.1");
+                    const b = new IP6("::192.168.1.2");
+                    expect(a.equal(b)).to.be.false;
                 });
             });
         });

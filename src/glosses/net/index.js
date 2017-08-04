@@ -7,6 +7,7 @@ adone.lazify({
     address: () => adone.lazify({
         IP4: ["./address", (mod) => mod.IP4],
         IP6: ["./address", (mod) => mod.IP6],
+        IPRange: ["./address", (mod) => mod.IPRange],
         v6helpers: "./address/v6helpers",
         lookup: () => adone.promise.promisify(adone.std.dns.lookup),
         splitRange: "./address/split_range"

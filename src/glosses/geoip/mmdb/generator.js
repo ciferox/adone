@@ -326,8 +326,9 @@ export default class Generator {
     }
 
     insertSubnet(address, subnet, data) {
-        if (net.isIPv4(address) && this.metadata.ipVersion === 6) {
+        if (this.metadata.ipVersion === 6 && net.isIPv4(address)) {
             address = `::${address}`;
+            subnet += 96;
         }
         const netaddr = this.metadata.ipVersion === 4
             ? new adone.net.address.IP4(address)
@@ -349,6 +350,9 @@ export default class Generator {
     }
 
     insertOne(address, data) {
+        if (this.metadata.ipVersion === 6 && net.isIPv4(address)) {
+            address = `::${address}`;
+        }
         this.insertSubnet(address, this.metadata.ipVersion === 4 ? 32 : 128, data);
     }
 

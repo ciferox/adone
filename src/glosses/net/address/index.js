@@ -1,6 +1,8 @@
 const helpers = require("./v6helpers.js");
 const { BigNumber } = adone.math;
 const { repeat, padStart, max, find } = adone.vendor.lodash;
+const { address } = adone.net;
+const { is, std, x } = adone;
 
 const constants4 = adone.o({
     BITS: 32,
@@ -296,6 +298,21 @@ export class IP4 {
         this.parsedAddress = this.parse(address);
     }
 
+    equal(other) {
+        if (!(other instanceof IP4)) {
+            return false;
+        }
+        if (this.subnetMask !== other.subnetMask) {
+            return false;
+        }
+        for (let i = 0; i < 4; ++i) {
+            if (this.parsedAddress[i] !== other.parsedAddress[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /*
     * Parses a v4 address
     */
@@ -463,6 +480,15 @@ export class IP4 {
         return padStart(this.toBigNumber().toString(2), constants4.BITS, "0");
     }
 
+    *[Symbol.iterator]() {
+        // TODO: optimize
+        const start = this.startAddress().toBigNumber();
+        const end = this.endAddress().toBigNumber();
+        for (let i = start; end.ge(i); i = i.add(1)) {
+            yield IP4.fromBigNumber(i);
+        }
+    }
+
     /**
      * Converts a hex string to an IPv4 address object
      * @memberof IP4
@@ -590,6 +616,21 @@ export class IP6 {
         this.addressMinusSuffix = address;
 
         this.parsedAddress = this.parse(this.addressMinusSuffix);
+    }
+
+    equal(other) {
+        if (!(other instanceof IP6)) {
+            return false;
+        }
+        if (this.subnetMask !== other.subnetMask) {
+            return false;
+        }
+        for (let i = 0; i < 8; ++i) {
+            if (this.parsedAddress[i] !== other.parsedAddress[i]) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -1380,6 +1421,14 @@ export class IP6 {
         return output.join(":");
     }
 
+    *[Symbol.iterator]() {
+        // TODO: optimize
+        const start = this.startAddress().toBigNumber();
+        const end = this.endAddress().toBigNumber();
+        for (let i = start; end.ge(i); i = i.add(1)) {
+            yield IP6.fromBigNumber(i);
+        }
+    }
 
     /**
      * Convert a BigNumber to a v6 address object
@@ -1653,3 +1702,49 @@ IP6.prototype.is6to4 = common.falseIfInvalid(function () {
 IP6.prototype.isLoopback = common.falseIfInvalid(function () {
     return this.getType() === "Loopback";
 });
+
+export class IPRange {
+    constructor(start, end) {
+        if (is.string(start) && is.string(end)) {
+            const t = std.net.isIP(start);
+            if (!t) {
+                throw new x.InvalidArgument("invalid start address");
+            }
+            if (std.net.isIP(end) !== t) {
+                throw new x.InvalidArgument("invalid end address");
+            }
+            this.type = t;
+            if (t === 4) {
+                start = new IP4(start);
+                end = new IP4(end);
+            } else {
+                start = new IP6(start);
+                end = new IP6(end);
+            }
+        } else if (start instanceof IP4 && end instanceof IP4) {
+            this.type = 4;
+        } else if (start instanceof IP4 && end instanceof IP6) {
+            this.type = 6;
+        }
+        if (!start.valid) {
+            throw new x.InvalidArgument(`invalid start address: ${start.error}`);
+        }
+        if (!end.valid) {
+            throw new x.InvalidArgument(`invalid end address: ${end.error}`);
+        }
+        this.ranges = address.splitRange(start, end);
+    }
+
+    sort() {
+        this.ranges = this.ranges.sort((a, b) => {
+            return a.startAddress().toBigNumber().cmp(b.startAddress().toBigNumber());
+        });
+        return this;
+    }
+
+    *[Symbol.iterator]() {
+        for (const range of this.ranges) {
+            yield* range;
+        }
+    }
+}

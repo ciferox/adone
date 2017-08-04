@@ -1,23 +1,39 @@
 const { net: { address }, std: { net } } = adone;
 
 export default function splitRange(startAddress, endAddress) {
-    const Cls = net.isIPv4(startAddress) ? address.IP4 : address.IP6;
-    startAddress = new Cls(startAddress);
-    endAddress = new Cls(endAddress);
+    let Cls;
+    if (startAddress instanceof address.IP4) {
+        Cls = address.IP4;
+    } else if (startAddress instanceof address.IP6) {
+        Cls = address.IP6;
+    } else if (net.isIPv4(startAddress)) {
+        Cls = address.IP4;
+        startAddress = new Cls(startAddress);
+        endAddress = new Cls(endAddress);
+    } else {
+        Cls = address.IP6;
+        startAddress = new Cls(startAddress);
+        endAddress = new Cls(endAddress);
+    }
+
     const startBitset = startAddress.toBitSet();
     const endBitset = endAddress.toBitSet();
     const { MAX_BIT } = startBitset;
     let common = MAX_BIT;
-    while (common > 0 && startBitset.get(common) === endBitset.get(common)) {
+    while (common >= 0 && startBitset.get(common) === endBitset.get(common)) {
         --common;
     }
-    if (common === 0) {
+    if (common === -1) {
+        // identical
         return [Cls.fromBitSet(startBitset, MAX_BIT + 1)];
     }
-    if (common === 1) {
+    if (common === 0) {
+        // 1 bit difference
         return [Cls.fromBitSet(startBitset, MAX_BIT)];
     }
-    if (startBitset.previousSetBit(common) === -1 && endBitset.previousUnsetBit(common) === -1) {
+    if (endBitset.previousUnsetBit(common) === -1 && startBitset.previousSetBit(common) === -1) {
+        // AAAA11111
+        // AAAA00000
         return [Cls.fromBitSet(startBitset, MAX_BIT - common)];
     }
     const ranges = [];
