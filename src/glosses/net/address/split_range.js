@@ -12,7 +12,7 @@ export default function splitRange(startAddress, endAddress) {
         --common;
     }
     if (common === 0) {
-        return [startAddress];
+        return [Cls.fromBitSet(startBitset, MAX_BIT + 1)];
     }
     if (common === 1) {
         return [Cls.fromBitSet(startBitset, MAX_BIT)];
@@ -31,14 +31,17 @@ export default function splitRange(startAddress, endAddress) {
             break;
         }
         if (!startBitset.get(i)) {
-            startBitset.set(i);
-            ranges.push(Cls.fromBitSet(startBitset, MAX_BIT - i + 1));
-            startBitset.unset(i);
+            const t = startBitset.clone();
+            t.set(i);
+            t.unsetRange(i - 1, 0);
+            ranges.push(Cls.fromBitSet(t, MAX_BIT - i + 1));
         }
     }
     for (let i = common - 1; i >= 0; --i) {
         if (endBitset.previousUnsetBit(i) === -1) {
-            ranges.push(Cls.fromBitSet(endBitset, MAX_BIT - i));
+            const t = endBitset.clone();
+            t.unsetRange(i, 0);
+            ranges.push(Cls.fromBitSet(t, MAX_BIT - i));
             break;
         }
         if (i === 0) {
@@ -46,9 +49,9 @@ export default function splitRange(startAddress, endAddress) {
             break;
         }
         if (endBitset.get(i)) {
-            endBitset.unset(i);
-            ranges.push(Cls.fromBitSet(endBitset, MAX_BIT - i + 1));
-            endBitset.set(i);
+            const t = endBitset.clone();
+            t.unsetRange(i, 0);
+            ranges.push(Cls.fromBitSet(t, MAX_BIT - i + 1));
         }
     }
     return ranges;

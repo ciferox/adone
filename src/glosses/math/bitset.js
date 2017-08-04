@@ -431,7 +431,7 @@ export default class BitSet {
 
     readUInt(bits = 1, offset = 0) {
         let val = 0 >>> 0;
-        const maxOffset = (offset + bits > 64 ? 64 : offset + bits);
+        const maxOffset = offset + bits;
         for (let i = offset; i < maxOffset; ++i) {
             if (this.get(i)) {
                 val |= (1 << (i - offset));
@@ -442,7 +442,7 @@ export default class BitSet {
 
     writeUInt(val = 1, bits = 1, offset = 0) {
         val >>>= 0;
-        const maxOffset = (offset + bits > 64 ? 64 : offset + bits);
+        const maxOffset = offset + bits;
         for (let i = offset; i < maxOffset; ++i) {
             if (val & (1 << (i - offset))) {
                 this.set(i);
