@@ -1557,7 +1557,7 @@ export const minimalReporter = () => {
 
         emitter
             .on("enter block", reportOnThrow(({ block }) => {
-                path.push(block.name);
+                path.push(`{escape}${block.name}{/escape}`);
                 updatePath();
             }))
             .on("exit block", () => {
@@ -1565,7 +1565,7 @@ export const minimalReporter = () => {
                 updatePath();
             })
             .on("start test", reportOnThrow(({ test }) => {
-                path.push(test.description);
+                path.push(`{escape}${test.description}{/escape}`);
                 updatePath();
             }))
             .on("end test", reportOnThrow(({ test, meta: { err, skipped } }) => {

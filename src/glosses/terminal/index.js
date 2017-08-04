@@ -389,7 +389,7 @@ class Terminfo {
     /*
         getPath( [stdin] )
             * stdin: a stream that is the current STDIN of the terminal
-        
+
         Returns an object, where:
             * ttyPath: the path of the tty
             * ttyIndex: the index number of the tty, only if it is a /dev/tty*, /dev/pts/* return null
@@ -4279,7 +4279,7 @@ export default class Terminal extends adone.EventEmitter {
                     this.input.setRawMode(false);
                     this.input.pause();
                 }
-                
+
                 this.x = event.x - 1;
                 this.y = event.y - 1;
 
@@ -4296,7 +4296,7 @@ export default class Terminal extends adone.EventEmitter {
 
                 this.output.on("newlines:after", newlineHandler);
                 process.stderr.on("newlines:after", newlineHandler);
-                
+
                 done();
             };
 
@@ -4314,6 +4314,8 @@ export default class Terminal extends adone.EventEmitter {
             } else {
                 curPosHandler(null, this.getCursorPos());
             }
+        } else if (is.function(done)) {
+            process.nextTick(done);
         }
     }
 
@@ -6399,7 +6401,7 @@ export default class Terminal extends adone.EventEmitter {
     // put(...args) {
     //     args = slice.call(args);
     //     const cap = args.shift();
-    //     const tput = this.terminfo; 
+    //     const tput = this.terminfo;
     //     if (tput[cap]) {
     //         return this.write(tput[cap].apply(tput, args));
     //     }
