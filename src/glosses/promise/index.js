@@ -112,6 +112,10 @@ export const promisify = (fn, { context = null } = {}) => {
 
 
 export const promisifyAll = (source, { suffix = "Async", filter = () => true, context } = {}) => {
+    if (is.function(source)) {
+        return promisify(source, context);
+    }
+
     const target = adone.o(source);
     for (const [key, value] of adone.util.entries(source)) {
         if (is.function(value) && filter(key)) {
@@ -119,6 +123,7 @@ export const promisifyAll = (source, { suffix = "Async", filter = () => true, co
         }
     }
     return target;
+
 };
 
 module.exports.finally = (promise, onFinally) => {

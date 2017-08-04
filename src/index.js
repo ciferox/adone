@@ -339,6 +339,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         schema: "./glosses/schema",
         geoip: "./glosses/geoip",
         notifier: "./glosses/notifier",
+        vcs: "./glosses/vcs",
 
         // Omnitron
         omnitron: () => adone.lazify({

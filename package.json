@@ -105,5 +105,7 @@
   "bin": {
     "adone": "./bin/adone.js"
   },
-  "dependencies": {}
+  "dependencies": {
+    "promisify-node": "^0.3.0"
+  }
 }

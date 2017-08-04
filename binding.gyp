@@ -545,6 +545,27 @@
       ]
     },
     {
+      "target_name": "copy_liblzma",
+      "dependencies" : [ "lzma" ],
+      "conditions": [
+        [ 'OS=="win"', {
+          "copies": [
+            {
+              "conditions": [
+                [ 'target_arch=="x64"', {
+                    "files": [ "<(module_root_dir)\\src\\native\\compressors\\lzma\\deps\\win\\bin_x86-64\\liblzma.dll" ]
+                  }, 'OS=="win"', {
+                    "files": ["<(module_root_dir)\\src\\native\\compressors\\lzma\\deps\\win\\bin_i686\\liblzma.dll" ]
+                  }
+                ]
+              ],
+              "destination": "<(module_root_dir)/lib/native"
+            }
+          ]
+        }]
+      ]
+    },
+    {
 		"target_name": "libmasscan",
 		"type": "shared_library",
     "variables": {
@@ -741,6 +762,239 @@
         ]
     },
     {
+      "target_name": "git",
+      "dependencies": [
+        "src/native/vcs/git/deps/libgit2.gyp:libgit2"
+      ],
+      "variables": {
+        "coverage%": 0
+      },
+      "sources": [
+        "src/native/vcs/git/src/async_baton.cc",
+        "src/native/vcs/git/src/lock_master.cc",
+        "src/native/vcs/git/src/nodegit.cc",
+        "src/native/vcs/git/src/init_ssh2.cc",
+        "src/native/vcs/git/src/promise_completion.cc",
+        "src/native/vcs/git/src/wrapper.cc",
+        "src/native/vcs/git/src/functions/copy.cc",
+        "src/native/vcs/git/src/functions/free.cc",
+        "src/native/vcs/git/src/convenient_patch.cc",
+        "src/native/vcs/git/src/convenient_hunk.cc",
+        "src/native/vcs/git/src/filter_registry.cc",
+        "src/native/vcs/git/src/str_array_converter.cc",
+        "src/native/vcs/git/src/thread_pool.cc",
+        "src/native/vcs/git/src/annotated_commit.cc",
+        "src/native/vcs/git/src/attr.cc",
+        "src/native/vcs/git/src/blame.cc",
+        "src/native/vcs/git/src/blame_hunk.cc",
+        "src/native/vcs/git/src/blame_options.cc",
+        "src/native/vcs/git/src/blob.cc",
+        "src/native/vcs/git/src/branch.cc",
+        "src/native/vcs/git/src/branch_iterator.cc",
+        "src/native/vcs/git/src/buf.cc",
+        "src/native/vcs/git/src/cert.cc",
+        "src/native/vcs/git/src/cert_hostkey.cc",
+        "src/native/vcs/git/src/cert_x509.cc",
+        "src/native/vcs/git/src/checkout.cc",
+        "src/native/vcs/git/src/checkout_options.cc",
+        "src/native/vcs/git/src/cherrypick.cc",
+        "src/native/vcs/git/src/cherrypick_options.cc",
+        "src/native/vcs/git/src/clone.cc",
+        "src/native/vcs/git/src/clone_options.cc",
+        "src/native/vcs/git/src/commit.cc",
+        "src/native/vcs/git/src/config.cc",
+        "src/native/vcs/git/src/config_entry.cc",
+        "src/native/vcs/git/src/config_entry.cc",
+        "src/native/vcs/git/src/cred.cc",
+        "src/native/vcs/git/src/cred_default.cc",
+        "src/native/vcs/git/src/cred_username.cc",
+        "src/native/vcs/git/src/cred_userpass_payload.cc",
+        "src/native/vcs/git/src/cvar_map.cc",
+        "src/native/vcs/git/src/describe_format_options.cc",
+        "src/native/vcs/git/src/describe_options.cc",
+        "src/native/vcs/git/src/describe_result.cc",
+        "src/native/vcs/git/src/diff.cc",
+        "src/native/vcs/git/src/diff_binary.cc",
+        "src/native/vcs/git/src/diff_binary_file.cc",
+        "src/native/vcs/git/src/diff_delta.cc",
+        "src/native/vcs/git/src/diff_file.cc",
+        "src/native/vcs/git/src/diff_find_options.cc",
+        "src/native/vcs/git/src/diff_hunk.cc",
+        "src/native/vcs/git/src/diff_line.cc",
+        "src/native/vcs/git/src/diff_options.cc",
+        "src/native/vcs/git/src/diff_perfdata.cc",
+        "src/native/vcs/git/src/diff_perfdata.cc",
+        "src/native/vcs/git/src/diff_stats.cc",
+        "src/native/vcs/git/src/error.cc",
+        "src/native/vcs/git/src/fetch.cc",
+        "src/native/vcs/git/src/fetch_options.cc",
+        "src/native/vcs/git/src/fetch_options.cc",
+        "src/native/vcs/git/src/filter.cc",
+        "src/native/vcs/git/src/filter.cc",
+        "src/native/vcs/git/src/filter_list.cc",
+        "src/native/vcs/git/src/filter_source.cc",
+        "src/native/vcs/git/src/giterr.cc",
+        "src/native/vcs/git/src/graph.cc",
+        "src/native/vcs/git/src/hashsig.cc",
+        "src/native/vcs/git/src/ignore.cc",
+        "src/native/vcs/git/src/index.cc",
+        "src/native/vcs/git/src/index_conflict_iterator.cc",
+        "src/native/vcs/git/src/index_entry.cc",
+        "src/native/vcs/git/src/index_time.cc",
+        "src/native/vcs/git/src/indexer.cc",
+        "src/native/vcs/git/src/libgit2.cc",
+        "src/native/vcs/git/src/mempack.cc",
+        "src/native/vcs/git/src/merge.cc",
+        "src/native/vcs/git/src/merge_driver_source.cc",
+        "src/native/vcs/git/src/merge_file_input.cc",
+        "src/native/vcs/git/src/merge_file_options.cc",
+        "src/native/vcs/git/src/merge_file_result.cc",
+        "src/native/vcs/git/src/merge_options.cc",
+        "src/native/vcs/git/src/merge_result.cc",
+        "src/native/vcs/git/src/message.cc",
+        "src/native/vcs/git/src/note.cc",
+        "src/native/vcs/git/src/note_iterator.cc",
+        "src/native/vcs/git/src/object.cc",
+        "src/native/vcs/git/src/odb.cc",
+        "src/native/vcs/git/src/odb_expand_id.cc",
+        "src/native/vcs/git/src/odb_object.cc",
+        "src/native/vcs/git/src/oid.cc",
+        "src/native/vcs/git/src/oid_shorten.cc",
+        "src/native/vcs/git/src/oidarray.cc",
+        "src/native/vcs/git/src/openssl.cc",
+        "src/native/vcs/git/src/packbuilder.cc",
+        "src/native/vcs/git/src/patch.cc",
+        "src/native/vcs/git/src/pathspec.cc",
+        "src/native/vcs/git/src/pathspec_match_list.cc",
+        "src/native/vcs/git/src/proxy.cc",
+        "src/native/vcs/git/src/proxy_options.cc",
+        "src/native/vcs/git/src/push.cc",
+        "src/native/vcs/git/src/push_options.cc",
+        "src/native/vcs/git/src/push_update.cc",
+        "src/native/vcs/git/src/rebase.cc",
+        "src/native/vcs/git/src/rebase_operation.cc",
+        "src/native/vcs/git/src/rebase_options.cc",
+        "src/native/vcs/git/src/refdb.cc",
+        "src/native/vcs/git/src/reference.cc",
+        "src/native/vcs/git/src/reflog.cc",
+        "src/native/vcs/git/src/reflog_entry.cc",
+        "src/native/vcs/git/src/refspec.cc",
+        "src/native/vcs/git/src/remote.cc",
+        "src/native/vcs/git/src/remote_callbacks.cc",
+        "src/native/vcs/git/src/remote_callbacks.cc",
+        "src/native/vcs/git/src/remote_head.cc",
+        "src/native/vcs/git/src/remote_head.cc",
+        "src/native/vcs/git/src/repository.cc",
+        "src/native/vcs/git/src/repository_init_options.cc",
+        "src/native/vcs/git/src/reset.cc",
+        "src/native/vcs/git/src/revert.cc",
+        "src/native/vcs/git/src/revert_options.cc",
+        "src/native/vcs/git/src/revparse.cc",
+        "src/native/vcs/git/src/revwalk.cc",
+        "src/native/vcs/git/src/signature.cc",
+        "src/native/vcs/git/src/smart.cc",
+        "src/native/vcs/git/src/stash.cc",
+        "src/native/vcs/git/src/stash_apply_options.cc",
+        "src/native/vcs/git/src/status.cc",
+        "src/native/vcs/git/src/status_entry.cc",
+        "src/native/vcs/git/src/status_list.cc",
+        "src/native/vcs/git/src/status_options.cc",
+        "src/native/vcs/git/src/strarray.cc",
+        "src/native/vcs/git/src/submodule.cc",
+        "src/native/vcs/git/src/submodule_update_options.cc",
+        "src/native/vcs/git/src/tag.cc",
+        "src/native/vcs/git/src/time.cc",
+        "src/native/vcs/git/src/trace.cc",
+        "src/native/vcs/git/src/transaction.cc",
+        "src/native/vcs/git/src/transfer_progress.cc",
+        "src/native/vcs/git/src/transport.cc",
+        "src/native/vcs/git/src/tree.cc",
+        "src/native/vcs/git/src/tree_entry.cc",
+        "src/native/vcs/git/src/tree_update.cc",
+        "src/native/vcs/git/src/treebuilder.cc",
+        "src/native/vcs/git/src/writestream.cc",
+      ],
+      "include_dirs": [
+        "src/native/vcs/git/deps/libv8-convert",
+        "src/native/vcs/git/deps/libssh2/include",
+        "src/native/vcs/git/deps/openssl/openssl/include",
+        "nan"
+      ],
+      "cflags": [
+        "-Wall"
+      ],
+      "conditions": [
+        [
+            "coverage==1", {
+            "cflags": [
+                "-ftest-coverage",
+                "-fprofile-arcs"
+            ],
+            "link_settings": {
+                "libraries": [
+                "-lgcov"
+                ]
+            },
+            }
+        ],
+        [
+            "OS=='mac'", {
+            "xcode_settings": {
+                "GCC_ENABLE_CPP_EXCEPTIONS": "YES",
+                "MACOSX_DEPLOYMENT_TARGET": "10.7",
+
+                "WARNING_CFLAGS": [
+                "-Wno-unused-variable",
+                "-Wint-conversions",
+                "-Wmissing-field-initializers",
+                "-Wno-c++11-extensions"
+                ]
+            }
+            }
+        ],
+        [
+            "OS=='win'", {
+            "defines": [
+                "_HAS_EXCEPTIONS=1"
+            ],
+            "msvs_settings": {
+                "VCCLCompilerTool": {
+                "AdditionalOptions": [
+                    "/EHsc"
+                ]
+                },
+                "VCLinkerTool": {
+                "AdditionalOptions": [
+                    "/FORCE:MULTIPLE"
+                ]
+                }
+            }
+            }
+        ],
+        [
+            "OS=='linux' or OS=='mac'", {
+            "libraries": [
+                "-lcurl"
+            ]
+            }
+        ],
+        [
+            "OS=='linux' and '<!(echo \"$CXX\")'=='clang++'", {
+            "cflags": [
+                "-Wno-c++11-extensions"
+            ]
+            }
+        ],
+        [
+            "OS=='linux' and '<!(echo \"$CXX\")'!='clang++'", {
+            "cflags": [
+                "-std=c++0x"
+            ]
+            }
+        ]
+      ]
+    },
+    {
       "target_name": "copy_modules",
       "variables": {
         "srcpath%": "<(module_root_dir)/build/Release",
@@ -760,7 +1014,8 @@
         "serial",
         "report",
         "rpigpio",
-        "i2c"
+        "i2c",
+        "git"
       ],
       "copies": [
         {
@@ -779,31 +1034,11 @@
             "<(srcpath)/serial.node",
             "<(srcpath)/report.node",
             "<(srcpath)/rpigpio.node",
-            "<(srcpath)/i2c.node"
+            "<(srcpath)/i2c.node",
+            "<(srcpath)/git.node"
           ],
           "destination": "<(module_root_dir)/lib/native"
-        },
-      ]
-    },
-    {
-      "target_name": "copy_liblzma",
-      "dependencies" : [ "lzma" ],
-      "conditions": [
-        [ 'OS=="win"', {
-          "copies": [
-            {
-              "conditions": [
-                [ 'target_arch=="x64"', {
-                    "files": [ "<(module_root_dir)\\src\\native\\compressors\\lzma\\deps\\win\\bin_x86-64\\liblzma.dll" ]
-                  }, 'OS=="win"', {
-                    "files": ["<(module_root_dir)\\src\\native\\compressors\\lzma\\deps\\win\\bin_i686\\liblzma.dll" ]
-                  }
-                ]
-              ],
-              "destination": "<(module_root_dir)/lib/native"
-            }
-          ]
-        }]
+        }
       ]
     }
   ]

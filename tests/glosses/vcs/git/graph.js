@@ -1,0 +1,43 @@
+const {
+    std: { path },
+    vcs: { git: { Repository, Graph } }
+} = adone;
+
+const local = path.join.bind(path, __dirname, "fixtures");
+
+describe("Graph", () => {
+    const reposPath = local("repos/workdir");
+
+    beforeEach(function () {
+        const test = this;
+
+        return Repository.open(reposPath).then((repository) => {
+            test.repository = repository;
+        });
+    });
+
+    it("can get commits ahead/behind for 2 different commits", function () {
+        return Graph.aheadBehind(this.repository, "32789a79e71fbc9e04d3eff7425e1771eb595150", "1729c73906bb8467f4095c2f4044083016b4dfde").then((result) => {
+            assert.equal(result.ahead, 1);
+            assert.equal(result.behind, 1);
+        });
+    });
+
+    it("can tell if a commit is a descendant of another", function () {
+        return Graph.descendantOf(this.repository, "32789a79e71fbc9e04d3eff7425e1771eb595150", "e0aeedcff0584ebe00aed2c03c8ecd10839df908").then((result) => {
+            assert.equal(result, 1);
+        });
+    });
+
+    it("can tell if a commit is not a descendant of another", function () {
+        return Graph.descendantOf(this.repository, "1528a019c504c9b5a68dc7d83bb2a887eb2473af", "32789a79e71fbc9e04d3eff7425e1771eb595150").then((result) => {
+            assert.equal(result, 0);
+        });
+    });
+
+    it("descendantOf will error if provided bad commits", function () {
+        return Graph.descendantOf(this.repository, "81b06facd90fe7a6e9bbd9cee59736a79105b7be", "26744fc697849d370246749b67ac43b792a4af0c").catch((result) => {
+            assert(~result.message.indexOf("81b06fac"));
+        });
+    });
+});
