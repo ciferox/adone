@@ -58,7 +58,7 @@ export class Generator {
 
             await fs.writeFile(path.join(appPath, "src", `${type}.js`), appContent);
             files.push(path.join("src", `${type}.js`));
-            this._logFileCreation("src/${type}.js");
+            this._logFileCreation(`src/${type}.js`);
 
             // package.json
             const packageJson = new adone.configuration.FileConfiguration();
