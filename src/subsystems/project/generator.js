@@ -96,14 +96,13 @@ export class Generator {
             const repository = await git.Repository.init(appPath, 0);
             const index = await repository.refreshIndex();
             for (const file of files) {
-                // adone.log(path.relative(appPath, file));
                 await index.addByPath(path.relative(appPath, file));
             }
             await index.write();
             const oid = await index.writeTree();
-            const author = git.Signature.create("ADONE", "adone@ciferox.com", time, zoneOffset);
-            const committer = git.Signature.create("ADONE", "adone@ciferox.com", time, zoneOffset);
-            await repository.createCommit("HEAD", author, committer, `initial commit from adone/cli\n${logoContent}`, oid, []);
+            const author = git.Signature.create("ADONE", "info@adone.io", time, zoneOffset);
+            const committer = git.Signature.create("ADONE", "info@adone.io", time, zoneOffset);
+            await repository.createCommit("HEAD", author, committer, `initial commit from adone/cli\n\n${logoContent}`, oid, []);
             terminal.print("{white-fg}Successfully initialized git.{/}\n");
 
             terminal.print(`{white-fg}Project {bold}'${name}'{/bold} successfully created.{/}\n`);
