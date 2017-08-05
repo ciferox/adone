@@ -5,5 +5,11 @@
   "private": true,
   "main": "./bin/app.js",
   "dependencies": {
+  },
+  "devDependencies": {
+      "eslint": "^4.4.0",
+      "babel-eslint": "^7.2.3",
+      "eslint-plugin-adone": "*",
+      "eslint-plugin-babel": "^4.1.2"
   }
 }

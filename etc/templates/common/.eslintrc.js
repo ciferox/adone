@@ -158,31 +158,9 @@ module.exports = {
     },
     "plugins": [
         "adone",
-        "babel",
-        "import"
+        "babel"
     ],
     "globals": {
         "adone": true,
-        "describe": true,
-        "it": true,
-        "before": true,
-        "after": true,
-        "beforeEach": true,
-        "afterEach": true,
-        "expect": true,
-        "assert": true,
-        "specify": true,
-        "context": true,
-        "spy": true,
-        "stub": true,
-        "mock": true,
-        "match": true,
-        "FS": true,
-        "skip": true,
-        "fakeClock": true,
-        "$": true,  // only for tests...
-        "request": true,
-        "specter": true,
-        "include": true
     }
 };

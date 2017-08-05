@@ -58,6 +58,12 @@ export default class extends adone.application.Subsystem {
                         }
                     ],
                     options: [
+                        {
+                            name: ["--editor", "-e"],
+                            type: String,
+                            nargs: "?",
+                            help: "open file immediately in the editor"
+                        }
                     ],
                     handler: this.newCommand
                 },
@@ -118,11 +124,16 @@ export default class extends adone.application.Subsystem {
     }
 
     async newCommand(args, opts) {
-        return lazy.Generator.new().createProject(args.get("name"), args.get("type"));
+        return lazy.Generator.new().createProject(args.get("name"), args.get("type"), {
+            editor: opts.has("editor") ? opts.get("editor") : null
+        });
     }
 
     async generateCommand(args, opts) {
-        return lazy.Generator.new().generate(args.get("name"), args.get("type"), { dir: opts.has("dir"), editor: opts.get("editor") });
+        return lazy.Generator.new().generate(args.get("name"), args.get("type"), {
+            dir: opts.has("dir"),
+            editor: opts.has("editor") ? opts.get("editor") : null
+        });
     }
 
     async loadAdoneConfig() {

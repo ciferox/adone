@@ -13,7 +13,7 @@ export default class AdoneCLI extends adone.application.Application {
         });
 
         for (const ss of this.config.subsystems) {
-            this.loadSubsystem(adone.std.path.isAbsolute(ss.path) ? ss.path : adone.std.path.join(this.adoneRootPath, ss.path)); 
+            this.loadSubsystem(adone.std.path.isAbsolute(ss.path) ? ss.path : adone.std.path.join(this.adoneRootPath, ss.path));
         }
 
         this.defineArguments({
@@ -21,17 +21,20 @@ export default class AdoneCLI extends adone.application.Application {
                 {
                     name: "subsystem",
                     description: "Core subsystems"
-                },
-                {
-                    name: "service_cli",
-                    description: "Omnitron interaction"
                 }
             ],
             arguments: [
-                { name: "expr", help: "run script or inspect adone-object", default: "index.js" },
+                {
+                    name: "path",
+                    default: "index.js",
+                    help: "run [es6] script/adone compact application"
+                }
             ],
             options: [
-                { name: "--sourcemaps", help: "force enable sourcemaps support" }
+                {
+                    name: "--sourcemaps",
+                    help: "force enable sourcemaps support"
+                }
             ],
             commands: [
                 {
