@@ -11,6 +11,6 @@
         // "tests",
         "benchmarks",
         "examples",
-        "adone.d.ts"
+        "typings/**/*.d.ts"
     ]
 }
