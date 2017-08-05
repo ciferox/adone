@@ -8,6 +8,7 @@
     "argsarray": "0.0.1",
     "array-from": "^2.1.1",
     "ascoltatori": "^3.0.0",
+    "babel-eslint": "^7.2.3",
     "babel-helper-fixtures": "^6.20.0",
     "babel-plugin-transform-async-to-generator": "^6.8.0",
     "babel-plugin-transform-class-properties": "^6.11.5",
@@ -32,6 +33,10 @@
     "dot": "^1.1.1",
     "double-ended-queue": "2.1.0-0",
     "email-templates": "^2.5.4",
+    "eslint": "^4.4.0",
+    "eslint-plugin-adone": "^0.6.52-0",
+    "eslint-plugin-babel": "^4.1.2",
+    "eslint-plugin-import": "^2.7.0",
     "express": "^4.14.1",
     "extend": "^3.0.0",
     "group-array": "0.3.1",
@@ -94,18 +99,9 @@
   "engines": {
     "node": ">=7.0.0"
   },
-  "scripts": {
-    "test": "node --require ./lib/glosses/sourcemap/support/register bin/adone.js shani",
-    "metatests": "node bin/adone.js shani ./metatests/index.js --dont-use-map",
-    "build": "gulp build",
-    "watch": "gulp watch"
-  },
   "main": "lib",
   "repository": "https://github.com/ciferox/adone",
   "bin": {
     "adone": "./bin/adone.js"
-  },
-  "dependencies": {
-    "promisify-node": "^0.3.0"
   }
 }
