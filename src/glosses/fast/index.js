@@ -330,12 +330,12 @@ export class FastFS extends Fast {
             if (file.isNull()) {
                 file.contents = Buffer.alloc(0);
             }
-            const destPath = isDirFunction ? dir(file) : std.path.resolve(dir, file.relative);
+            const destBase = isDirFunction ? dir(file) : dir;
+            const destPath = std.path.resolve(destBase, file.relative);
             const dirname = std.path.dirname(destPath);
 
             file.stat = file.stat || new std.fs.Stats();
             file.stat.mode = file.stat.mode || mode;
-
 
             await adone.fs.mkdir(dirname);
 
@@ -354,7 +354,7 @@ export class FastFS extends Fast {
                 }
                 file.flag = flag;
                 file.cwd = cwd;
-                file.base = dirname;
+                file.base = destBase;
                 file.path = destPath;
                 await fast.__.helper.updateMetadata(fd, file);
             } finally {
@@ -439,8 +439,7 @@ class FastFSMapper extends FastFS {
                 throw new adone.x.Exception(`Invalid file: "${sourcePath}". There is no matching source`);
             }
 
-            const resolvedDir = std.path.resolve(cwd, this._mappings[match].to);
-            return std.path.resolve(resolvedDir, file.relative);
+            return std.path.resolve(cwd, this._mappings[match].to);
         }, options);
     }
 }

@@ -40,6 +40,19 @@ describe("fast", () => {
         expect(files[0].extname).to.be.equal(".js");
     });
 
+    it("should set correct base", async () => {
+        await root.addFile("in", "nested", "transpile.js");
+        const out = root.getVirtualDirectory("out");
+        const files = await fast
+            .src(root.getVirtualFile("in", "**", "*").path(), { base: root.getVirtualDirectory("in").path() })
+            .dest(out.path(), { produceFiles: true });
+        const file = out.getVirtualFile("nested", "transpile.js");
+        expect(files).to.have.lengthOf(1);
+        expect(files[0].path).to.be.equal(file.path());
+        expect(files[0].base).to.be.equal(out.path());
+        expect(files[0].relative).to.be.equal(file.relativePath(out));
+    });
+
     it("should be a core stream", () => {
         expect(is.coreStream(fast.src())).to.be.true;
     });
@@ -101,7 +114,7 @@ describe("fast", () => {
                 .through((f) => files.push(f));
 
             try {
-                await adone.promise.delay(100);  // time to init the watcher
+                await adone.promise.delay(100); // time to init the watcher
                 const src1 = root.getVirtualDirectory("src1");
                 const dest1 = root.getVirtualDirectory("dest1");
 
@@ -132,7 +145,7 @@ describe("fast", () => {
                 { from: "src1/**/*", to: "dest1" },
                 { from: "src2/**/*", to: "dest2" }
             ], { cwd: root.path() }).dest();
-            await adone.promise.delay(100);  // the watcher init
+            await adone.promise.delay(100); // the watcher init
             const src1 = root.getVirtualDirectory("src1");
             const src2 = root.getVirtualDirectory("src2");
             const dest1 = root.getVirtualDirectory("dest1");
@@ -176,7 +189,7 @@ describe("fast", () => {
                 { from: "src1/**/*", to: "dest1" },
                 { from: "src2/**/*", to: "dest2" }
             ], { cwd: root.path(), unlink: false }).dest();
-            await adone.promise.delay(100);  // the watcher init
+            await adone.promise.delay(100); // the watcher init
             try {
                 await root.getVirtualFile("src1", "test1").unlink();
                 await root.getVirtualFile("src2", "test4").unlink();
@@ -201,7 +214,7 @@ describe("fast", () => {
                 { from: "src1/**/*", to: "dest1" },
                 { from: "src2/**/*", to: "dest2" }
             ], { cwd: root.path(), unlink: () => true }).dest();
-            await adone.promise.delay(100);  // the watcher init
+            await adone.promise.delay(100); // the watcher init
             try {
                 await root.getVirtualFile("src1", "test1").unlink();
                 await root.getVirtualFile("src2", "test4").unlink();
@@ -226,7 +239,7 @@ describe("fast", () => {
                 { from: "src1/**/*", to: "dest1" },
                 { from: "src2/**/*", to: "dest2" }
             ], { cwd: root.path(), unlink: () => false }).dest();
-            await adone.promise.delay(100);  // the watcher init
+            await adone.promise.delay(100); // the watcher init
             try {
                 await root.getVirtualFile("src1", "test1").unlink();
                 await root.getVirtualFile("src2", "test4").unlink();
@@ -251,7 +264,7 @@ describe("fast", () => {
                 { from: "src1/**/*", to: "dest1" },
                 { from: "src2/**/*", to: "dest2" }
             ], { cwd: root.path(), unlink: async () => true }).dest();
-            await adone.promise.delay(100);  // the watcher init
+            await adone.promise.delay(100); // the watcher init
             try {
                 await root.getVirtualFile("src1", "test1").unlink();
                 await root.getVirtualFile("src2", "test4").unlink();
@@ -276,7 +289,7 @@ describe("fast", () => {
                 { from: "src1/**/*", to: "dest1" },
                 { from: "src2/**/*", to: "dest2" }
             ], { cwd: root.path(), unlink: async () => false }).dest();
-            await adone.promise.delay(100);  // the watcher init
+            await adone.promise.delay(100); // the watcher init
             try {
                 await root.getVirtualFile("src1", "test1").unlink();
                 await root.getVirtualFile("src2", "test4").unlink();
@@ -307,7 +320,7 @@ describe("fast", () => {
                     return true;
                 }
             }).dest();
-            await adone.promise.delay(100);  // the watcher init
+            await adone.promise.delay(100); // the watcher init
             try {
                 const test1 = root.getVirtualFile("src1", "hello", "test1");
                 await test1.unlink();
@@ -349,7 +362,7 @@ describe("fast", () => {
                     throw new Error("wtf");
                 }
             }).dest());
-            await adone.promise.delay(100);  // the watcher init
+            await adone.promise.delay(100); // the watcher init
             await root.getVirtualFile("src1", "test1").unlink();
             await result.then(() => {
                 throw new Error("Nothing was thrown");
@@ -376,7 +389,7 @@ describe("fast", () => {
                     throw new Error("wtf");
                 }
             }).dest());
-            await adone.promise.delay(100);  // the watcher init
+            await adone.promise.delay(100); // the watcher init
             await root.getVirtualFile("src1", "test1").unlink();
             await result.then(() => {
                 throw new Error("Nothing was thrown");
@@ -409,7 +422,7 @@ describe("fast", () => {
                 { from: "src1/**/*", to: "dest1" },
                 { from: "src2/**/*", to: "dest2" }
             ], { cwd: root.path() }).dest({ produceFiles: true }).through((f) => files.push(f));
-            await adone.promise.delay(100);  // time to init the watcher
+            await adone.promise.delay(100); // time to init the watcher
             const src1 = root.getVirtualDirectory("src1");
             const src2 = root.getVirtualDirectory("src2");
             const dest1 = root.getVirtualDirectory("dest1");
