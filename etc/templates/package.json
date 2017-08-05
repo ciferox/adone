@@ -3,12 +3,13 @@
   "version": "0.0.0",
   "license": "MIT",
   "private": true,
-  "main": "./bin/app.js",
   "dependencies": {
   },
   "devDependencies": {
       "eslint": "^4.4.0",
       "babel-eslint": "^7.2.3",
-      "eslint-plugin-babel": "^4.1.2"
+      "eslint-plugin-adone": ">=0.6.52-0",
+      "eslint-plugin-babel": "^4.1.2",
+      "eslint-plugin-import": "^2.7.0"
   }
 }

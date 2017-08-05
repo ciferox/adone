@@ -41,6 +41,10 @@ export class Generator {
 
             await fs.mkdir(appPath);
 
+            const packageJson = new adone.configuration.FileConfiguration();
+            await packageJson.load(path.join(this.templatesPath, "package.json"));
+            packageJson.name = name;
+
             // 'src' directory
             await fs.mkdir(path.join(appPath, "src"));
 
@@ -49,26 +53,21 @@ export class Generator {
             switch (type) {
                 case "app":
                     appContent = await this.getApplicationContent(name, false);
+                    packageJson.main = "./bin/app.js";
                     break;
                 default:
                     throw new adone.x.NotSupported(`Unsupported project type: ${type}`);
             }
+
+            // package.json
+            await packageJson.save(path.join(appPath, "package.json"), null, { space: "  " });
+            this._logFileCreation("package.json");
 
             const files = ["package.json", "adone.conf.js"];
 
             await fs.writeFile(path.join(appPath, "src", `${type}.js`), appContent);
             files.push(path.join("src", `${type}.js`));
             this._logFileCreation(`src/${type}.js`);
-
-            // package.json
-            const packageJson = new adone.configuration.FileConfiguration();
-            await packageJson.load(path.join(this.templatesPath, type, "package.json"));
-            packageJson.name = name;
-            const pkgVersion = `>=${adone.package.version}-0`;
-            // packageJson.devDependencies["@types/adone"] = pkgVersion;
-            packageJson.devDependencies["eslint-plugin-adone"] = pkgVersion;
-            await packageJson.save(path.join(appPath, "package.json"), null, { space: "  " });
-            this._logFileCreation("package.json");
 
             // adone.conf.js
             let adoneConfJs = await fs.readFile(path.join(this.templatesPath, type, "adone.conf.js"), { encoding: "utf8" });
@@ -136,7 +135,7 @@ export class Generator {
             this.spawnEditor(appPath, editor);
             return 0;
         } catch (err) {
-            terminal.print(`{red-fg}${err.message}{/}`);
+            terminal.print(`{red-fg}${err.message}{/}\n`);
             if (!(err instanceof adone.x.Exists)) {
                 await fs.rm(appPath);
             }

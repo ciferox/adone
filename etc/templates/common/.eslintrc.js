@@ -159,7 +159,8 @@ module.exports = {
     },
     "plugins": [
         "adone",
-        "babel"
+        "babel",
+        "import"
     ],
     "globals": {
         "adone": true,
