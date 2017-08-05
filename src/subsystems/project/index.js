@@ -1,7 +1,8 @@
-const { std: { path }, lazify, fs, terminal } = adone;
+const { std: { path }, lazify, fs } = adone;
 
 const lazy = lazify({
-    Builder: ["./builder", (x) => x.Builder]
+    Builder: ["./builder", (x) => x.Builder],
+    Generator: ["./generator", (x) => x.Generator]
 }, null, require);
 
 const parseRestArgs = (args) => {
@@ -43,6 +44,13 @@ export default class extends adone.application.Subsystem {
                     help: "Create new directory and initialize project",
                     arguments: [
                         {
+                            name: "type",
+                            type: String,
+                            choices: ["application", "app", "subsystem", "service"],
+                            required: true,
+                            help: "skeleton variant"
+                        },
+                        {
                             name: "name",
                             type: String,
                             required: true,
@@ -50,18 +58,40 @@ export default class extends adone.application.Subsystem {
                         }
                     ],
                     options: [
-                        {
-                            name: ["--type", "-t"],
-                            choices: ["app", "subsystem", "service"],
-                            default: "app",
-                            help: "Type of adone project"
-                        },
-                        {
-                            name: "--compact",
-                            help: "Generate compact version of application entry point"
-                        }
                     ],
                     handler: this.newCommand
+                },
+                {
+                    name: "generate",
+                    help: "Generates adone-specific skeletons",
+                    arguments: [
+                        {
+                            name: "type",
+                            type: String,
+                            choices: ["application", "app", "subsystem"],
+                            required: true,
+                            help: "skeleton variant"
+                        },
+                        {
+                            name: "name",
+                            type: String,
+                            required: true,
+                            help: "name of skeleton"
+                        }
+                    ],
+                    options: [
+                        {
+                            name: "--dir",
+                            help: "Create directory instead of a file"
+                        },
+                        {
+                            name: ["--editor", "-e"],
+                            type: String,
+                            nargs: "?",
+                            help: "open file immediately in the editor"
+                        }
+                    ],
+                    handler: this.generateCommand
                 },
                 {
                     name: "build",
@@ -88,72 +118,11 @@ export default class extends adone.application.Subsystem {
     }
 
     async newCommand(args, opts) {
-        const name = args.get("name");
-        const type = opts.get("type");
-        const appPath = path.join(process.cwd(), name);
-        const templateBasePath = adone.std.path.join(this.app.adoneEtcPath, "templates", type);
+        return lazy.Generator.new().createProject(args.get("name"), args.get("type"));
+    }
 
-        try {
-            if ((await adone.fs.exists(appPath))) {
-                throw new adone.x.Exists(`Directory '${name}' already exists`);
-            }
-
-            terminal.print(`{white-fg}Generating {bold}${type}{/bold} project{/}:\n`);
-
-            await adone.fs.mkdir(appPath);
-
-            // 'src' directory
-            terminal.print(`  {green-fg}src/${type}.js{/}...`);
-            await adone.fs.mkdir(adone.std.path.join(appPath, "src"));
-
-            let appContent;
-
-            if (type === "app") {
-                const isCompact = opts.has("compact");
-                appContent = await adone.fs.readFile(adone.std.path.join(templateBasePath, "src", `${isCompact ? "compact." : ""}${type}.js`), { encoding: "utf8" });
-
-                if (!opts.has("compact")) {
-                    appContent = appContent.replace(/\$App/gi, `${adone.text.capitalize(name)}Application`);
-                }
-            } else {
-                //
-            }
-            await adone.fs.writeFile(adone.std.path.join(appPath, "src", `${type}.js`), appContent);
-            terminal.print("{white-fg}{bold}OK{/}\n");
-
-            // package.json
-            terminal.print("  {green-fg}package.json{/}...");
-            const packageJson = new adone.configuration.FileConfiguration();
-            await packageJson.load(adone.std.path.join(templateBasePath, `${type}.package.json`));
-            packageJson.name = name;
-            await packageJson.save(adone.std.path.join(appPath, "package.json"), null, { space: "  " });
-            terminal.print("{white-fg}{bold}OK{/}\n");
-
-            // adone.conf.js
-            terminal.print("  {green-fg}adone.conf.js{/}...");
-            let adoneConfJs = await adone.fs.readFile(adone.std.path.join(templateBasePath, `${type}.adone.conf.js`), { encoding: "utf8" });
-            adoneConfJs = adoneConfJs.replace(/\$app/gi, name);
-            await adone.fs.writeFile(adone.std.path.join(appPath, "adone.conf.js"), adoneConfJs);
-            terminal.print("{white-fg}{bold}OK{/}\n");
-            
-            const asIsFiles = [".eslintrc.js"];
-
-            for (const name of asIsFiles) {
-                terminal.print(`  {green-fg}${name}{/}...`);
-                await adone.fs.copy(adone.std.path.join(templateBasePath, name), appPath);
-                terminal.print("{white-fg}{bold}OK{/}\n");
-            }
-
-            terminal.print(`{white-fg}Project {bold}'${name}'{/bold} successfully created.{/}\n`);
-            return 0;
-        } catch (err) {
-            adone.log(err);
-            if (!(err instanceof adone.x.Exists)) {
-                await adone.fs.rm(appPath);
-            }
-
-            return 1;
-        }
+    async generateCommand(args, opts) {
+        return lazy.Generator.new().generate(args.get("name"), args.get("type"), { dir: opts.has("dir"), editor: opts.get("editor") });
     }
 
     async loadAdoneConfig() {

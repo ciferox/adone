@@ -8,10 +8,16 @@ export default class Editor {
             path += ext;
         }
         this.ext = ext;
-        const ed = editor || process.env.VISUAL || process.env.EDITOR || (/^win/.test(process.platform) ? "notepad" : "vim");
+        const ed = editor || Editor.DEFAULT;
         const args = ed.split(/\s+/);
         this.bin = args.shift();
         this.args = args;
+    }
+
+    async spawn() {
+        return std.child_process.spawn(this.bin, this.args.concat([this.path]), {
+            stdio: "inherit"
+        });
     }
 
     async run() {
@@ -19,9 +25,7 @@ export default class Editor {
             this.path = await fs.tmpName({ ext: this.ext });
         }
         await fs.writeFile(this.path, this.text);
-        const childProcess = std.child_process.spawn(this.bin, this.args.concat([this.path]), {
-            stdio: "inherit"
-        });
+        const childProcess = this.spawn();
         await new Promise((resolve) => {
             childProcess.on("exit", () => {
                 resolve();
@@ -42,4 +46,6 @@ export default class Editor {
         await editor.cleanup();
         return response;
     }
+
+    static DEFAULT = process.env.VISUAL || process.env.EDITOR || (/^win/.test(process.platform) ? "notepad" : "vim");
 }
