@@ -2,7 +2,7 @@ const { std: { path } } = adone;
 
 export default {
     project: {
-        name: "$app",
+        name: "{{ name }}",
         structure: {
             bin: {
                 $before: ({ watch }) => !watch && adone.fs.rm("bin"),

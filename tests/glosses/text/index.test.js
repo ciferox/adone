@@ -1,6 +1,5 @@
-const { width } = adone.text;
-const { escapeCodesRegexp, stripEscapeCodes } = adone.text.ansi;
-const { isFullWidthCodePoint } = adone.text.unicode;
+const { text } = adone;
+const { width, ansi: { escapeCodesRegexp, stripEscapeCodes }, unicode: { isFullWidthCodePoint } } = text;
 
 const ansiCodes = require(adone.std.path.join(__dirname, "fixtures/ansi-codes"));
 const consumptionChars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+1234567890-=[]{};\':"./>?,<\\|';
@@ -149,5 +148,66 @@ describe("text", () => {
             assert.equal(stripEof(Buffer.from("foo\r")).toString(), "foo");
             assert.equal(stripEof(Buffer.from("foo\n\r\n")).toString(), "foo\n");
         });
+    });
+
+    it("toCamelCase", () => {
+        assert.equal(text.toCamelCase("foo"), "foo");
+        assert.equal(text.toCamelCase("foo-bar"), "fooBar");
+        assert.equal(text.toCamelCase("foo-bar-baz"), "fooBarBaz");
+        assert.equal(text.toCamelCase("foo--bar"), "fooBar");
+        assert.equal(text.toCamelCase("--foo-bar"), "fooBar");
+        assert.equal(text.toCamelCase("--foo--bar"), "fooBar");
+        assert.equal(text.toCamelCase("FOO-BAR"), "fooBar");
+        assert.equal(text.toCamelCase("FOÈ-BAR"), "foèBar");
+        assert.equal(text.toCamelCase("-foo-bar-"), "fooBar");
+        assert.equal(text.toCamelCase("--foo--bar--"), "fooBar");
+        assert.equal(text.toCamelCase("foo.bar"), "fooBar");
+        assert.equal(text.toCamelCase("foo..bar"), "fooBar");
+        assert.equal(text.toCamelCase("..foo..bar.."), "fooBar");
+        assert.equal(text.toCamelCase("foo_bar"), "fooBar");
+        assert.equal(text.toCamelCase("__foo__bar__"), "fooBar");
+        assert.equal(text.toCamelCase("__foo__bar__"), "fooBar");
+        assert.equal(text.toCamelCase("foo bar"), "fooBar");
+        assert.equal(text.toCamelCase("  foo  bar  "), "fooBar");
+        assert.equal(text.toCamelCase("-"), "-");
+        assert.equal(text.toCamelCase(" - "), "-");
+        assert.equal(text.toCamelCase("fooBar"), "fooBar");
+        assert.equal(text.toCamelCase("fooBar-baz"), "fooBarBaz");
+        assert.equal(text.toCamelCase("foìBar-baz"), "foìBarBaz");
+        assert.equal(text.toCamelCase("fooBarBaz-bazzy"), "fooBarBazBazzy");
+        assert.equal(text.toCamelCase("FBBazzy"), "fbBazzy");
+        assert.equal(text.toCamelCase("F"), "f");
+        assert.equal(text.toCamelCase("FooBar"), "fooBar");
+        assert.equal(text.toCamelCase("Foo"), "foo");
+        assert.equal(text.toCamelCase("FOO"), "foo");
+        assert.equal(text.toCamelCase("foo", "bar"), "fooBar");
+        assert.equal(text.toCamelCase("foo", "-bar"), "fooBar");
+        assert.equal(text.toCamelCase("foo", "-bar", "baz"), "fooBarBaz");
+        assert.equal(text.toCamelCase("", ""), "");
+        assert.equal(text.toCamelCase("--"), "");
+        assert.equal(text.toCamelCase(""), "");
+        assert.equal(text.toCamelCase("--__--_--_"), "");
+        assert.equal(text.toCamelCase("---_", "--", "", "-_- "), "");
+        assert.equal(text.toCamelCase("foo bar?"), "fooBar?");
+        assert.equal(text.toCamelCase("foo bar!"), "fooBar!");
+        assert.equal(text.toCamelCase("foo bar$"), "fooBar$");
+        assert.equal(text.toCamelCase("foo-bar#"), "fooBar#");
+        assert.equal(text.toCamelCase("XMLHttpRequest"), "xmlHttpRequest");
+        assert.equal(text.toCamelCase("AjaxXMLHttpRequest"), "ajaxXmlHttpRequest");
+        assert.equal(text.toCamelCase("Ajax-XMLHttpRequest"), "ajaxXmlHttpRequest");
+    });
+
+    it("capitalize", () => {
+        assert.equal(text.capitalize(""), "");
+        assert.equal(text.capitalize("foobar"), "Foobar");
+        assert.equal(text.capitalize("foo bar"), "Foo bar");
+    });
+
+    it("capitalizeWords", () => {
+        assert.equal(text.capitalizeWords(""), "");
+        assert.equal(text.capitalizeWords("foobar"), "Foobar");
+        assert.equal(text.capitalizeWords("foo bar"), "Foo Bar");
+        assert.equal(text.capitalizeWords("everything-happens"), "Everything-Happens");
+        assert.equal(text.capitalizeWords("it's a nice day"), "It's A Nice Day");
     });
 });

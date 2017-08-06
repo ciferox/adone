@@ -2,6 +2,7 @@ const {
     is,
     fs,
     regex,
+    text,
     std: { path },
     vcs: { git },
     terminal,
@@ -100,12 +101,14 @@ export class Generator {
                 sourceDir = path.normalize(sourceDir);
             }
 
+            const projectName = text.capitalize(text.toCamelCase(name));
+
             switch (type) {
                 case "app":
-                    await this._createApp(name, projectPath, { sourceDir, skipGit });
+                    await this._createApp(name, projectName, projectPath, { sourceDir, skipGit });
                     break;
                 case "webapp":
-                    await this._createWebApp(name, projectPath, { sourceDir, skipGit, frontend });
+                    await this._createWebApp(name, projectName, projectPath, { sourceDir, skipGit, frontend });
                     break;
             }
 
@@ -123,10 +126,10 @@ export class Generator {
         }
     }
 
-    async _createApp(name, projectPath, { sourceDir, skipGit }) {
+    async _createApp(name, projectName, projectPath, { sourceDir, skipGit }) {
         const files = ["package-lock.json"];
 
-        const appRelPath = path.join(sourceDir, `${name}.js`);
+        const appRelPath = path.join(sourceDir, "app.js");
 
         await fast.src(["skeletons/app.js", "common/**/*"], {
             cwd: this.templatesPath
@@ -138,7 +141,7 @@ export class Generator {
         }).mapIf((x) => x.basename === "app.js", async (x) => {
             x.relative = appRelPath;
             x.contents = Buffer.from(await nunjucks.renderString(x.contents.toString(), {
-                name: `${adone.text.capitalize(name)}Application`
+                name: `${projectName}Application`
             }));
             return x;
         }).mapIf((x) => x.basename === "package.json", (x) => {
@@ -149,6 +152,7 @@ export class Generator {
             return x;
         }).mapIf((x) => x.basename === "adone.conf.js", async (x) => {
             x.contents = Buffer.from(await nunjucks.renderString(x.contents.toString(), {
+                name,
                 from: appRelPath
             }));
             return x;
@@ -168,9 +172,9 @@ export class Generator {
         }
     }
 
-    async _createWebApp(name, projectPath, { sourceDir, skipGit, frontend }) {
+    async _createWebApp(name, projectName, projectPath, { sourceDir, skipGit, frontend }) {
         const withFrontend = is.string(frontend);
-        const appRelPath = path.join(sourceDir, `${name}.js`);
+        const appRelPath = path.join(sourceDir, "app.js");
         const backendPath = withFrontend ? path.join(projectPath, "backend") : projectPath;
         const files = [path.join(withFrontend ? "backend" : "", "package-lock.json")];
 
@@ -184,7 +188,7 @@ export class Generator {
         }).mapIf((x) => x.basename === "webapp.js", async (x) => {
             x.relative = appRelPath;
             x.contents = Buffer.from(await nunjucks.renderString(x.contents.toString(), {
-                name: `${adone.text.capitalize(name)}Application`
+                name: `${projectName}Application`
             }));
             return x;
         }).mapIf((x) => x.basename === "package.json", (x) => {
@@ -195,6 +199,7 @@ export class Generator {
             return x;
         }).mapIf((x) => x.basename === "adone.conf.js", async (x) => {
             x.contents = Buffer.from(await nunjucks.renderString(x.contents.toString(), {
+                name,
                 from: appRelPath
             }));
             return x;
