@@ -81,7 +81,7 @@ export default class Sender {
 
     close(code, data, mask, cb) {
         if (!is.undefined(code) && (!is.number(code) || !adone.net.ws.errorCodes.isValidErrorCode(code))) {
-            throw new Error("first argument must be a valid error code number");
+            throw new Error("First argument must be a valid error code number");
         }
 
         const buf = Buffer.allocUnsafe(2 + (data ? Buffer.byteLength(data) : 0));
@@ -239,11 +239,9 @@ export default class Sender {
         perMessageDeflate.compress(data, options.fin, (err, buf) => {
             if (err) {
                 if (cb) {
-                    cb(err);
-                } else {
-                    this.onerror(err);
+                    return cb(err);
                 }
-                return;
+                this.onerror(err);
             }
 
             options.readOnly = false;

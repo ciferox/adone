@@ -174,14 +174,14 @@ export default class Receiver {
             }
 
             if (!this._fragmented) {
-                this.error(new Error(`invalid opcode: ${this._opcode}`), 1002);
+                this.error(new Error(`Invalid opcode: ${this._opcode}`), 1002);
                 return;
             }
             this._opcode = this._fragmented;
 
         } else if (this._opcode === 0x01 || this._opcode === 0x02) {
             if (this._fragmented) {
-                this.error(new Error(`invalid opcode: ${this._opcode}`), 1002);
+                this.error(new Error(`Invalid opcode: ${this._opcode}`), 1002);
                 return;
             }
 
@@ -198,11 +198,11 @@ export default class Receiver {
             }
 
             if (this._payloadLength > 0x7d) {
-                this.error(new Error("invalid payload length"), 1002);
+                this.error(new Error("Invalid payload length"), 1002);
                 return;
             }
         } else {
-            this.error(new Error(`invalid opcode: ${this._opcode}`), 1002);
+            this.error(new Error(`Invalid opcode: ${this._opcode}`), 1002);
             return;
         }
 
@@ -243,7 +243,7 @@ export default class Receiver {
         // if payload length is greater than this number.
         //
         if (num > Math.pow(2, 53 - 32) - 1) {
-            this.error(new Error("max payload size exceeded"), 1009);
+            this.error(new Error("Max payload size exceeded"), 1009);
             return;
         }
 
@@ -338,7 +338,7 @@ export default class Receiver {
                 const buf = toBuffer(fragments, messageLength);
 
                 if (!adone.is.validUTF8(buf)) {
-                    this.error(new Error("invalid utf8 sequence"), 1007);
+                    this.error(new Error("Invalid utf8 sequence"), 1007);
                     return;
                 }
 
@@ -356,19 +356,19 @@ export default class Receiver {
                 this._loop = false;
                 this.cleanup(this._cleanupCallback);
             } else if (data.length === 1) {
-                this.error(new Error("invalid payload length"), 1002);
+                this.error(new Error("Invalid payload length"), 1002);
             } else {
                 const code = data.readUInt16BE(0, true);
 
                 if (!adone.net.ws.errorCodes.isValidErrorCode(code)) {
-                    this.error(new Error(`invalid status code: ${code}`), 1002);
+                    this.error(new Error(`Invalid status code: ${code}`), 1002);
                     return;
                 }
 
                 const buf = data.slice(2);
 
                 if (!adone.is.validUTF8(buf)) {
-                    this.error(new Error("invalid utf8 sequence"), 1007);
+                    this.error(new Error("Invalid utf8 sequence"), 1007);
                     return;
                 }
 
@@ -408,7 +408,7 @@ export default class Receiver {
             return false;
         }
 
-        this.error(new Error("max payload size exceeded"), 1009);
+        this.error(new Error("Max payload size exceeded"), 1009);
         return true;
     }
 
@@ -425,7 +425,7 @@ export default class Receiver {
             return true;
         }
 
-        this.error(new Error("max payload size exceeded"), 1009);
+        this.error(new Error("Max payload size exceeded"), 1009);
         return false;
     }
 
@@ -448,7 +448,7 @@ export default class Receiver {
             this.onpong = null;
 
             if (cb) {
-                cb();
+                return cb();
             }
         }
     }

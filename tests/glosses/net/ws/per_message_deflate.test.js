@@ -7,7 +7,9 @@ describe("PerMessageDeflate", () => {
 
             assert.deepStrictEqual(
                 perMessageDeflate.offer(),
-                { client_max_window_bits: true }
+                {
+                    client_max_window_bits: true
+                }
             );
         });
 
@@ -388,7 +390,7 @@ describe("PerMessageDeflate", () => {
                 perMessageDeflate._inflate.flush(() => {
                     assert.strictEqual(errors.length, 1);
                     assert.ok(errors[0] instanceof Error);
-                    assert.strictEqual(errors[0].message, "max payload size exceeded");
+                    assert.strictEqual(errors[0].message, "Max payload size exceeded");
                     done();
                 });
             });

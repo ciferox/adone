@@ -142,7 +142,7 @@ export default class PerMessageDeflate {
                     case "server_no_context_takeover":
                     case "client_no_context_takeover":
                         if (value !== true) {
-                            throw new Error(`invalid extension parameter value for ${key} (${value})`);
+                            throw new Error(`Invalid extension parameter value for ${key} (${value})`);
                         }
                         params[key] = true;
                         break;
@@ -151,7 +151,7 @@ export default class PerMessageDeflate {
                         if (is.string(value)) {
                             value = parseInt(value, 10);
                             if (is.nan(value) || value < zlib.Z_MIN_WINDOWBITS || value > zlib.Z_MAX_WINDOWBITS) {
-                                throw new Error(`invalid extension parameter value for ${key} (${value})`);
+                                throw new Error(`Invalid extension parameter value for ${key} (${value})`);
                             }
                         }
                         if (!this._isServer && value === true) {
@@ -188,7 +188,7 @@ export default class PerMessageDeflate {
                 return buffers.push(data);
             }
 
-            err = new Error("max payload size exceeded");
+            err = new Error("Max payload size exceeded");
             err.closeCode = 1009;
             this._inflate.reset();
         };
@@ -226,10 +226,9 @@ export default class PerMessageDeflate {
         this._inflate.flush(() => {
             cleanup();
             if (err) {
-                callback(err);
-            } else {
-                callback(null, adone.util.buffer.concat(buffers, totalLength));
-            }
+                return callback(err);
+            } 
+            return callback(null, adone.util.buffer.concat(buffers, totalLength));
         });
     }
 

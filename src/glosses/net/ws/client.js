@@ -128,6 +128,7 @@ export default class Client extends adone.EventEmitter {
                 protocolVersion: protocolVersions[1],
                 protocol: protocols.join(","),
                 perMessageDeflate: true,
+                handshakeTimeout: null,
                 localAddress: null,
                 headers: null,
                 family: null,
@@ -148,11 +149,8 @@ export default class Client extends adone.EventEmitter {
                 ca: null
             }, options);
 
-            if (protocolVersions.indexOf(options.protocolVersion) === -1) {
-                throw new Error(
-                    `unsupported protocol version: ${options.protocolVersion} ` +
-                    `(supported versions: ${protocolVersions.join(", ")})`
-                );
+            if (!protocolVersions.includes(options.protocolVersion)) {
+                throw new Error(`Unsupported protocol version: ${options.protocolVersion} (supported versions: ${protocolVersions.join(", ")})`);
             }
 
             this.protocolVersion = options.protocolVersion;
@@ -289,6 +287,13 @@ export default class Client extends adone.EventEmitter {
             }
 
             this._req = httpObj.get(requestOptions);
+            if (options.handshakeTimeout) {
+                this._req.setTimeout(options.handshakeTimeout, () => {
+                    this._req.abort();
+                    this.emit("error", new Error("Opening handshake has timed out"));
+                    this.finalize(true);
+                });
+            }
 
             this._req.on("error", (error) => {
                 if (this._req.aborted) {
@@ -303,7 +308,7 @@ export default class Client extends adone.EventEmitter {
             this._req.on("response", (res) => {
                 if (!this.emit("unexpected-response", this._req, res)) {
                     this._req.abort();
-                    this.emit("error", new Error(`unexpected server response (${res.statusCode})`));
+                    this.emit("error", new Error(`Unexpected server response (${res.statusCode})`));
                     this.finalize(true);
                 }
             });
@@ -336,11 +341,11 @@ export default class Client extends adone.EventEmitter {
                 let protError;
 
                 if (!options.protocol && serverProt) {
-                    protError = "server sent a subprotocol even though none requested";
+                    protError = "Server sent a subprotocol even though none requested";
                 } else if (options.protocol && !serverProt) {
-                    protError = "server sent no subprotocol even though requested";
-                } else if (serverProt && protList.indexOf(serverProt) === -1) {
-                    protError = "server responded with an invalid protocol";
+                    protError = "Server sent no subprotocol even though requested";
+                } else if (serverProt && !protList.includes(serverProt)) {
+                    protError = "Server responded with an invalid protocol";
                 }
 
                 if (protError) {
@@ -360,7 +365,7 @@ export default class Client extends adone.EventEmitter {
                         perMessageDeflate.accept(serverExtensions[adone.net.ws.PerMessageDeflate.extensionName]);
                     } catch (err) {
                         socket.destroy();
-                        this.emit("error", new Error("invalid extension parameter"));
+                        this.emit("error", new Error("Invalid extension parameter"));
                         return this.finalize(true);
                     }
 
@@ -400,7 +405,7 @@ export default class Client extends adone.EventEmitter {
     }
 
     set binaryType(type) {
-        if (adone.net.ws.constants.BINARY_TYPES.indexOf(type) < 0) {
+        if (!adone.net.ws.constants.BINARY_TYPES.includes(type)) {
             return;
         }
 
@@ -552,7 +557,7 @@ export default class Client extends adone.EventEmitter {
         if (this.readyState === Client.CONNECTING) {
             if (this._req && !this._req.aborted) {
                 this._req.abort();
-                this.emit("error", new Error("closed before the connection is established"));
+                this.emit("error", new Error("Closed before the connection is established"));
                 this.finalize(true);
             }
             return;
@@ -627,11 +632,9 @@ export default class Client extends adone.EventEmitter {
 
         if (this.readyState !== Client.OPEN) {
             if (cb) {
-                cb(new Error("not opened"));
-            } else {
-                throw new Error("not opened");
+                return cb(new Error("not opened"));
             }
-            return;
+            throw new Error("not opened");
         }
 
         if (is.number(data)) {
@@ -658,7 +661,7 @@ export default class Client extends adone.EventEmitter {
         if (this.readyState === Client.CONNECTING) {
             if (this._req && !this._req.aborted) {
                 this._req.abort();
-                this.emit("error", new Error("closed before the connection is established"));
+                this.emit("error", new Error("Closed before the connection is established"));
                 this.finalize(true);
             }
             return;

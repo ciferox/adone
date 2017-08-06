@@ -241,7 +241,7 @@ describe("net", "ws", "stream", () => {
         const server = adone.std.http.createServer();
 
         let str = "";
-        const wss = adone.net.ws.stream.createServer({
+        adone.net.ws.stream.createServer({
             server
         }, (stream) => {
             stream.once("data", (data) => {
@@ -281,7 +281,7 @@ describe("net", "ws", "stream", () => {
         const server = adone.std.http.createServer();
 
         let str = "";
-        const wss = adone.net.ws.stream.createServer({
+        adone.net.ws.stream.createServer({
             server,
             objectMode: false
         }, (stream) => {

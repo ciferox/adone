@@ -1,4 +1,4 @@
-const { net: { ws: { Sender, Receiver, PerMessageDeflate } }, std: { crypto } } = adone;
+const { is, net: { ws: { Sender, Receiver, PerMessageDeflate } }, std: { crypto } } = adone;
 const util = require("./hybi-util");
 
 describe("net", "ws", "Receiver", () => {
@@ -41,8 +41,7 @@ describe("net", "ws", "Receiver", () => {
         const msg = "A".repeat(200);
 
         const mask = "3483a868";
-        const frame = Buffer.from(`81FE${util.pack(4, msg.length)}${mask
-            }${util.mask(msg, mask).toString("hex")}`, "hex");
+        const frame = Buffer.from(`81FE${util.pack(4, msg.length)}${mask}${util.mask(msg, mask).toString("hex")}`, "hex");
 
         p.onmessage = function (data) {
             assert.strictEqual(data, msg);
@@ -58,8 +57,7 @@ describe("net", "ws", "Receiver", () => {
         const msg = "A".repeat(64 * 1024);
 
         const mask = "3483a868";
-        const frame = `81FF${util.pack(16, msg.length)}${mask
-            }${util.mask(msg, mask).toString("hex")}`;
+        const frame = `81FF${util.pack(16, msg.length)}${mask}${util.mask(msg, mask).toString("hex")}`;
 
         p.onmessage = function (data) {
             assert.strictEqual(data, msg);
@@ -77,10 +75,8 @@ describe("net", "ws", "Receiver", () => {
         const fragment2 = msg.substr(150);
 
         const mask = "3483a868";
-        const frame1 = `01FE${util.pack(4, fragment1.length)}${mask
-            }${util.mask(fragment1, mask).toString("hex")}`;
-        const frame2 = `80FE${util.pack(4, fragment2.length)}${mask
-            }${util.mask(fragment2, mask).toString("hex")}`;
+        const frame1 = `01FE${util.pack(4, fragment1.length)}${mask}${util.mask(fragment1, mask).toString("hex")}`;
+        const frame2 = `80FE${util.pack(4, fragment2.length)}${mask}${util.mask(fragment2, mask).toString("hex")}`;
 
         p.onmessage = function (data) {
             assert.strictEqual(data, msg);
@@ -96,8 +92,7 @@ describe("net", "ws", "Receiver", () => {
         const msg = "Hello";
 
         const mask = "3483a868";
-        const frame = `89${util.getHybiLengthAsHexString(msg.length, true)}${mask
-            }${util.mask(msg, mask).toString("hex")}`;
+        const frame = `89${util.getHybiLengthAsHexString(msg.length, true)}${mask}${util.mask(msg, mask).toString("hex")}`;
 
         p.onping = function (data) {
             assert.strictEqual(data.toString(), msg);
@@ -127,12 +122,9 @@ describe("net", "ws", "Receiver", () => {
         const fragment2 = msg.substr(150);
 
         const mask = "3483a868";
-        const frame1 = `01FE${util.pack(4, fragment1.length)}${mask
-            }${util.mask(fragment1, mask).toString("hex")}`;
-        const frame2 = `89${util.getHybiLengthAsHexString(pingMessage.length, true)}${mask
-            }${util.mask(pingMessage, mask).toString("hex")}`;
-        const frame3 = `80FE${util.pack(4, fragment2.length)}${mask
-            }${util.mask(fragment2, mask).toString("hex")}`;
+        const frame1 = `01FE${util.pack(4, fragment1.length)}${mask}${util.mask(fragment1, mask).toString("hex")}`;
+        const frame2 = `89${util.getHybiLengthAsHexString(pingMessage.length, true)}${mask}${util.mask(pingMessage, mask).toString("hex")}`;
+        const frame3 = `80FE${util.pack(4, fragment2.length)}${mask}${util.mask(fragment2, mask).toString("hex")}`;
 
         let gotPing = false;
 
@@ -160,12 +152,9 @@ describe("net", "ws", "Receiver", () => {
         const fragment2 = msg.substr(150);
 
         const mask = "3483a868";
-        const frame1 = `01FE${util.pack(4, fragment1.length)}${mask
-            }${util.mask(fragment1, mask).toString("hex")}`;
-        const frame2 = `89${util.getHybiLengthAsHexString(pingMessage.length, true)}${mask
-            }${util.mask(pingMessage, mask).toString("hex")}`;
-        const frame3 = `80FE${util.pack(4, fragment2.length)}${mask
-            }${util.mask(fragment2, mask).toString("hex")}`;
+        const frame1 = `01FE${util.pack(4, fragment1.length)}${mask}${util.mask(fragment1, mask).toString("hex")}`;
+        const frame2 = `89${util.getHybiLengthAsHexString(pingMessage.length, true)}${mask}${util.mask(pingMessage, mask).toString("hex")}`;
+        const frame3 = `80FE${util.pack(4, fragment2.length)}${mask}${util.mask(fragment2, mask).toString("hex")}`;
 
         let buffers = [];
 
@@ -195,8 +184,7 @@ describe("net", "ws", "Receiver", () => {
         const msg = crypto.randomBytes(100);
 
         const mask = "3483a868";
-        const frame = `82${util.getHybiLengthAsHexString(msg.length, true)}${mask
-            }${util.mask(msg, mask).toString("hex")}`;
+        const frame = `82${util.getHybiLengthAsHexString(msg.length, true)}${mask}${util.mask(msg, mask).toString("hex")}`;
 
         p.onmessage = function (data) {
             assert.ok(data.equals(msg));
@@ -211,8 +199,7 @@ describe("net", "ws", "Receiver", () => {
         const msg = crypto.randomBytes(256);
 
         const mask = "3483a868";
-        const frame = `82${util.getHybiLengthAsHexString(msg.length, true)}${mask
-            }${util.mask(msg, mask).toString("hex")}`;
+        const frame = `82${util.getHybiLengthAsHexString(msg.length, true)}${mask}${util.mask(msg, mask).toString("hex")}`;
 
         p.onmessage = function (data) {
             assert.ok(data.equals(msg));
@@ -227,8 +214,7 @@ describe("net", "ws", "Receiver", () => {
         const msg = crypto.randomBytes(200 * 1024);
 
         const mask = "3483a868";
-        const frame = `82${util.getHybiLengthAsHexString(msg.length, true)}${mask
-            }${util.mask(msg, mask).toString("hex")}`;
+        const frame = `82${util.getHybiLengthAsHexString(msg.length, true)}${mask}${util.mask(msg, mask).toString("hex")}`;
 
         p.onmessage = function (data) {
             assert.ok(data.equals(msg));
@@ -242,8 +228,7 @@ describe("net", "ws", "Receiver", () => {
         const p = new Receiver();
         const msg = crypto.randomBytes(200 * 1024);
 
-        const frame = `82${util.getHybiLengthAsHexString(msg.length, false)
-            }${msg.toString("hex")}`;
+        const frame = `82${util.getHybiLengthAsHexString(msg.length, false)}${msg.toString("hex")}`;
 
         p.onmessage = function (data) {
             assert.ok(data.equals(msg));
@@ -436,7 +421,7 @@ describe("net", "ws", "Receiver", () => {
 
         p.onerror = function (err, code) {
             assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "invalid opcode: 0");
+            assert.strictEqual(err.message, "Invalid opcode: 0");
             assert.strictEqual(code, 1002);
             done();
         };
@@ -449,7 +434,7 @@ describe("net", "ws", "Receiver", () => {
 
         p.onerror = function (err, code) {
             assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "invalid opcode: 1");
+            assert.strictEqual(err.message, "Invalid opcode: 1");
             assert.strictEqual(code, 1002);
             done();
         };
@@ -463,7 +448,7 @@ describe("net", "ws", "Receiver", () => {
 
         p.onerror = function (err, code) {
             assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "invalid opcode: 2");
+            assert.strictEqual(err.message, "Invalid opcode: 2");
             assert.strictEqual(code, 1002);
             done();
         };
@@ -519,7 +504,7 @@ describe("net", "ws", "Receiver", () => {
 
         p.onerror = function (err, code) {
             assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "invalid payload length");
+            assert.strictEqual(err.message, "Invalid payload length");
             assert.strictEqual(code, 1002);
             done();
         };
@@ -532,7 +517,7 @@ describe("net", "ws", "Receiver", () => {
 
         p.onerror = function (err, code) {
             assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "max payload size exceeded");
+            assert.strictEqual(err.message, "Max payload size exceeded");
             assert.strictEqual(code, 1009);
             done();
         };
@@ -549,7 +534,7 @@ describe("net", "ws", "Receiver", () => {
 
         p.onerror = function (err, code) {
             assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "invalid utf8 sequence");
+            assert.strictEqual(err.message, "Invalid utf8 sequence");
             assert.strictEqual(code, 1007);
             done();
         };
@@ -562,7 +547,7 @@ describe("net", "ws", "Receiver", () => {
 
         p.onerror = function (err, code) {
             assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "invalid payload length");
+            assert.strictEqual(err.message, "Invalid payload length");
             assert.strictEqual(code, 1002);
             done();
         };
@@ -575,7 +560,7 @@ describe("net", "ws", "Receiver", () => {
 
         p.onerror = function (err, code) {
             assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "invalid status code: 0");
+            assert.strictEqual(err.message, "Invalid status code: 0");
             assert.strictEqual(code, 1002);
             done();
         };
@@ -588,7 +573,7 @@ describe("net", "ws", "Receiver", () => {
 
         p.onerror = function (err, code) {
             assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "invalid utf8 sequence");
+            assert.strictEqual(err.message, "Invalid utf8 sequence");
             assert.strictEqual(code, 1007);
             done();
         };
@@ -601,12 +586,11 @@ describe("net", "ws", "Receiver", () => {
         const msg = crypto.randomBytes(200 * 1024);
 
         const mask = "3483a868";
-        const frame = `82${util.getHybiLengthAsHexString(msg.length, true)}${mask
-            }${util.mask(msg, mask).toString("hex")}`;
+        const frame = `82${util.getHybiLengthAsHexString(msg.length, true)}${mask}${util.mask(msg, mask).toString("hex")}`;
 
         p.onerror = function (err, code) {
             assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "max payload size exceeded");
+            assert.strictEqual(err.message, "Max payload size exceeded");
             assert.strictEqual(code, 1009);
             done();
         };
@@ -618,12 +602,11 @@ describe("net", "ws", "Receiver", () => {
         const p = new Receiver({}, 20 * 1024);
         const msg = crypto.randomBytes(200 * 1024);
 
-        const frame = `82${util.getHybiLengthAsHexString(msg.length, false)
-            }${msg.toString("hex")}`;
+        const frame = `82${util.getHybiLengthAsHexString(msg.length, false)}${msg.toString("hex")}`;
 
         p.onerror = function (err, code) {
             assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "max payload size exceeded");
+            assert.strictEqual(err.message, "Max payload size exceeded");
             assert.strictEqual(code, 1009);
             done();
         };
@@ -640,7 +623,7 @@ describe("net", "ws", "Receiver", () => {
 
         p.onerror = function (err, code) {
             assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "max payload size exceeded");
+            assert.strictEqual(err.message, "Max payload size exceeded");
             assert.strictEqual(code, 1009);
             done();
         };
@@ -664,7 +647,7 @@ describe("net", "ws", "Receiver", () => {
 
         p.onerror = function (err, code) {
             assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "max payload size exceeded");
+            assert.strictEqual(err.message, "Max payload size exceeded");
             assert.strictEqual(code, 1009);
             done();
         };
@@ -855,7 +838,7 @@ describe("net", "ws", "Receiver", () => {
 
         p._binaryType = "nodebuffer";
         p.onmessage = (data) => {
-            assert.ok(Buffer.isBuffer(data));
+            assert.ok(is.buffer(data));
             assert.ok(data.equals(Buffer.concat(frags)));
             done();
         };

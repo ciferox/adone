@@ -71,34 +71,35 @@ export class Generator {
     }
 
     async createProject(name, type, { sourceDir, skipGit, editor, frontend }) {
-        if (!regex.filename.test(name)) {
-            throw new adone.x.Incorrect(`Incorrect name of project: ${name}`);
-        }
-
-        const projectPath = path.join(process.cwd(), name);
-
-        if ((await fs.exists(projectPath))) {
-            throw new adone.x.Exists(`Directory '${name}' already exists`);
-        }
-
-        await fs.mkdir(projectPath);
-
-        if (type === "application") {
-            type = "app";
-        } else if (type === "webapplication") {
-            type = "webapp";
-        }
-
-        if (is.nil(sourceDir)) {
-            sourceDir = "src";
-        } else {
-            if (path.isAbsolute(sourceDir)) {
-                throw new adone.x.NotValid(`Invalid source directory: ${sourceDir}`);
-            }
-            sourceDir = path.normalize(sourceDir);
-        }
-
+        let projectPath = null;
         try {
+            if (!regex.filename.test(name)) {
+                throw new adone.x.Incorrect(`Incorrect name of project: ${name}`);
+            }
+
+            projectPath = path.join(process.cwd(), name);
+
+            if ((await fs.exists(projectPath))) {
+                throw new adone.x.Exists(`Directory '${name}' already exists`);
+            }
+
+            await fs.mkdir(projectPath);
+
+            if (type === "application") {
+                type = "app";
+            } else if (type === "webapplication") {
+                type = "webapp";
+            }
+
+            if (is.nil(sourceDir)) {
+                sourceDir = "src";
+            } else {
+                if (path.isAbsolute(sourceDir)) {
+                    throw new adone.x.NotValid(`Invalid source directory: ${sourceDir}`);
+                }
+                sourceDir = path.normalize(sourceDir);
+            }
+
             switch (type) {
                 case "app":
                     await this._createApp(name, projectPath, { sourceDir, skipGit });
@@ -114,7 +115,7 @@ export class Generator {
             return 0;
         } catch (err) {
             terminal.print(`{red-fg}${err.message}{/}\n`);
-            if (!(err instanceof adone.x.Exists)) {
+            if (!(err instanceof adone.x.Exists) && !is.null(projectPath)) {
                 await fs.rm(projectPath);
             }
 
@@ -328,16 +329,6 @@ export class Generator {
             bar.complete(false);
             throw err;
         }
-    }
-
-    async _getApplicationContent(name, compact) {
-        let appContent = await fs.readFile(path.join(this.templateAppPath, "src", `${compact ? "compact." : ""}app.js`), { encoding: "utf8" });
-
-        if (!compact) {
-            appContent = appContent.replace(/\$App/gi, `${adone.text.capitalize(name)}Application`);
-        }
-
-        return appContent;
     }
 
     _logFileCreation(name) {

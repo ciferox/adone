@@ -1,7 +1,7 @@
 /**
  * Performs hybi07+ type masking.
  */
-function mask(buf, maskString) {
+export const mask = (buf, maskString) => {
     const _mask = Buffer.from(maskString || "3483a868", "hex");
 
     buf = Buffer.from(buf);
@@ -11,26 +11,22 @@ function mask(buf, maskString) {
     }
 
     return buf;
-}
+};
 
 /**
  * Left pads the string `s` to a total length of `n` with char `c`.
  */
-function padl(s, n, c) {
-    return c.repeat(n - s.length) + s;
-}
+const padl = (s, n, c) => c.repeat(n - s.length) + s;
 
 /**
  * Returns a hex string, representing a specific byte count `length`, from a number.
  */
-function pack(length, number) {
-    return padl(number.toString(16), length, "0");
-}
+export const pack = (length, number) => padl(number.toString(16), length, "0");
 
 /**
  * Returns a hex string representing the length of a message.
  */
-function getHybiLengthAsHexString(len, masked) {
+export const getHybiLengthAsHexString = (len, masked) => {
     let s;
 
     masked = masked ? 0x80 : 0;
@@ -44,19 +40,12 @@ function getHybiLengthAsHexString(len, masked) {
     }
 
     return s;
-}
+};
 
 /**
  * Split a buffer in two.
  */
-function splitBuffer(buf) {
+export const splitBuffer = (buf) => {
     const i = Math.floor(buf.length / 2);
     return [buf.slice(0, i), buf.slice(i)];
-}
-
-module.exports = {
-    getHybiLengthAsHexString,
-    splitBuffer,
-    mask,
-    pack
 };

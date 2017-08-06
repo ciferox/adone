@@ -38,7 +38,7 @@ describe("net", "ws", "WebSocket", () => {
 
         it("throws an error when using an invalid `protocolVersion`", () => {
             const options = { agent: new CustomAgent(), protocolVersion: 1000 };
-            assert.throws(() => new Client("ws://localhost", options), /^unsupported protocol version: 1000 \(supported versions: 8, 13\)$/);
+            assert.throws(() => new Client("ws://localhost", options), /^Unsupported protocol version: 1000 \(supported versions: 8, 13\)$/);
         });
 
         it("accepts the localAddress option", (done) => {
@@ -153,6 +153,7 @@ describe("net", "ws", "WebSocket", () => {
                 });
 
                 wss.on("connection", (ws) => {
+                    // eslint-disable-next-line
                     while (true) {
                         if (ws._socket.bufferSize > 0) {
                             assert.strictEqual(ws.bufferedAmount, ws._socket.bufferSize);
@@ -177,10 +178,7 @@ describe("net", "ws", "WebSocket", () => {
 
                 server.once("upgrade", (req, socket, head) => {
                     assert.ok(req.headers.authorization);
-                    assert.strictEqual(
-                        req.headers.authorization,
-                        `Basic ${Buffer.from(auth).toString("base64")}`
-                    );
+                    assert.strictEqual(req.headers.authorization, `Basic ${Buffer.from(auth).toString("base64")}`);
 
                     wss.close(done);
                 });
@@ -377,7 +375,7 @@ describe("net", "ws", "WebSocket", () => {
             ws.on("open", () => assert.fail(null, null, "connect shouldnt be raised here"));
             ws.on("error", (err) => {
                 assert.ok(err instanceof Error);
-                assert.strictEqual(err.message, "unexpected server response (401)");
+                assert.strictEqual(err.message, "Unexpected server response (401)");
                 done();
             });
         });
@@ -435,6 +433,21 @@ describe("net", "ws", "WebSocket", () => {
 
                 res.on("end", done);
                 req.abort();
+            });
+        });
+
+        it("emits an error if the opening handshake timeout expires", (done) => {
+            server.once("upgrade", (req, socket) => socket.on("end", socket.end));
+
+            const ws = new Client(`ws://localhost:${port}`, null, {
+                handshakeTimeout: 100
+            });
+
+            ws.on("open", () => assert.fail(null, null, "connect shouldn't be raised here"));
+            ws.on("error", (err) => {
+                assert.ok(err instanceof Error);
+                assert.strictEqual(err.message, "Opening handshake has timed out");
+                done();
             });
         });
     });
@@ -929,7 +942,7 @@ describe("net", "ws", "WebSocket", () => {
                 ws.on("open", () => assert.fail(null, null, "connect shouldnt be raised here"));
                 ws.on("error", (err) => {
                     assert.ok(err instanceof Error);
-                    assert.strictEqual(err.message, "closed before the connection is established");
+                    assert.strictEqual(err.message, "Closed before the connection is established");
                     ws.on("close", () => wss.close(done));
                 });
                 ws.close(1001);
@@ -946,7 +959,7 @@ describe("net", "ws", "WebSocket", () => {
                 ws.on("open", () => assert.fail(null, null, "connect shouldnt be raised here"));
                 ws.on("error", (err) => {
                     assert.ok(err instanceof Error);
-                    assert.strictEqual(err.message, "closed before the connection is established");
+                    assert.strictEqual(err.message, "Closed before the connection is established");
                     ws.on("close", () => wss.close(done));
                 });
                 setTimeout(() => ws.close(1001), 150);
@@ -972,7 +985,7 @@ describe("net", "ws", "WebSocket", () => {
                 ws.on("open", () => assert.fail(null, null, "connect shouldnt be raised here"));
                 ws.on("error", (err) => {
                     assert.ok(err instanceof Error);
-                    assert.strictEqual(err.message, "closed before the connection is established");
+                    assert.strictEqual(err.message, "Closed before the connection is established");
                     ws.on("close", () => wss.close(done));
                 });
                 ws.on("headers", () => ws.close());
@@ -984,7 +997,7 @@ describe("net", "ws", "WebSocket", () => {
                 const ws = new Client(`ws://localhost:${port}`);
 
                 ws.on("open", () => {
-                    assert.throws(() => ws.close("error"), /^first argument must be a valid error code number$/
+                    assert.throws(() => ws.close("error"), /^First argument must be a valid error code number$/
                     );
 
                     wss.close(done);
@@ -997,7 +1010,7 @@ describe("net", "ws", "WebSocket", () => {
                 const ws = new Client(`ws://localhost:${port}`);
 
                 ws.on("open", () => {
-                    assert.throws(() => ws.close(1004), /^first argument must be a valid error code number$/
+                    assert.throws(() => ws.close(1004), /^First argument must be a valid error code number$/
                     );
 
                     wss.close(done);
@@ -1149,7 +1162,7 @@ describe("net", "ws", "WebSocket", () => {
                 ws.on("open", () => assert.fail(null, null, "connect shouldnt be raised here"));
                 ws.on("error", (err) => {
                     assert.ok(err instanceof Error);
-                    assert.strictEqual(err.message, "closed before the connection is established");
+                    assert.strictEqual(err.message, "Closed before the connection is established");
                     ws.on("close", () => wss.close(done));
                 });
                 ws.terminate();
@@ -1166,7 +1179,7 @@ describe("net", "ws", "WebSocket", () => {
                 ws.on("open", () => assert.fail(null, null, "connect shouldnt be raised here"));
                 ws.on("error", (err) => {
                     assert.ok(err instanceof Error);
-                    assert.strictEqual(err.message, "closed before the connection is established");
+                    assert.strictEqual(err.message, "Closed before the connection is established");
                     ws.on("close", () => wss.close(done));
                 });
                 setTimeout(() => ws.terminate(), 150);
@@ -1192,7 +1205,7 @@ describe("net", "ws", "WebSocket", () => {
                 ws.on("open", () => assert.fail(null, null, "connect shouldnt be raised here"));
                 ws.on("error", (err) => {
                     assert.ok(err instanceof Error);
-                    assert.strictEqual(err.message, "closed before the connection is established");
+                    assert.strictEqual(err.message, "Closed before the connection is established");
                     ws.on("close", () => wss.close(done));
                 });
                 ws.on("headers", () => ws.terminate());

@@ -57,7 +57,7 @@ export default class Server extends adone.EventEmitter {
         }, options);
 
         if (is.nil(options.port) && !options.server && !options.noServer) {
-            throw new TypeError("missing or invalid options");
+            throw new TypeError("Missing or invalid options");
         }
 
         if (is.exist(options.port)) {
@@ -124,7 +124,7 @@ export default class Server extends adone.EventEmitter {
         }
 
         if (cb) {
-            cb();
+            return cb();
         }
     }
 
