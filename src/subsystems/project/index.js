@@ -46,18 +46,34 @@ export default class extends adone.application.Subsystem {
                         {
                             name: "type",
                             type: String,
-                            choices: ["application", "app", "subsystem", "service"],
+                            choices: ["app", "application", "webapp", "webapplication", "subsystem", "service"],
                             required: true,
-                            help: "skeleton variant"
+                            help: "type of project"
                         },
                         {
                             name: "name",
                             type: String,
                             required: true,
-                            help: "Name of project"
+                            help: "name of project"
                         }
                     ],
                     options: [
+                        {
+                            name: "--frontend",
+                            choices: ["ng"],
+                            default: "ng",
+                            nargs: "?",
+                            help: "name of frontend library"
+                        },
+                        {
+                            name: "--source-dir",
+                            type: String,
+                            help: "relative path to source directory"
+                        },
+                        {
+                            name: "--skip-git",
+                            help: "skip initializing git repository"
+                        },
                         {
                             name: ["--editor", "-e"],
                             type: String,
@@ -73,22 +89,21 @@ export default class extends adone.application.Subsystem {
                     arguments: [
                         {
                             name: "type",
-                            type: String,
-                            choices: ["application", "app", "subsystem"],
+                            choices: ["app", "miniapp", "subsystem"],
                             required: true,
-                            help: "skeleton variant"
+                            help: "type of script"
                         },
                         {
                             name: "name",
                             type: String,
                             required: true,
-                            help: "name of skeleton"
+                            help: "name of script"
                         }
                     ],
                     options: [
                         {
                             name: "--dir",
-                            help: "Create directory instead of a file"
+                            help: "Create directory instead of a file and index.js inside it"
                         },
                         {
                             name: ["--editor", "-e"],
@@ -124,8 +139,12 @@ export default class extends adone.application.Subsystem {
     }
 
     async newCommand(args, opts) {
-        return lazy.Generator.new().createProject(args.get("name"), args.get("type"), {
-            editor: opts.has("editor") ? opts.get("editor") : null
+        const type = args.get("type");
+        return lazy.Generator.new().createProject(args.get("name"), type, {
+            sourceDir: opts.has("sourceDir") ? opts.get("sourceDir") : null,
+            skipGit: opts.has("skipGit"),
+            editor: opts.has("editor") ? opts.get("editor") : null,
+            frontend: opts.has("frontend") && ["webapp", "webapplication"].includes(type) ? opts.get("frontend") : null
         });
     }
 

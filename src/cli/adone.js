@@ -99,18 +99,18 @@ export default class AdoneCLI extends adone.application.Application {
     }
 
     async main(args, opts, { rest }) {
-        let expr = args.get("expr");
-        if (!std.path.isAbsolute(expr)) {
-            expr = std.path.resolve(process.cwd(), expr);
+        let scriptPath = args.get("path");
+        if (!std.path.isAbsolute(scriptPath)) {
+            scriptPath = std.path.resolve(process.cwd(), scriptPath);
         }
 
-        adone.__argv__ = [process.argv[0], expr, ...rest];
+        adone.__argv__ = [process.argv[0], scriptPath, ...rest];
 
         if (opts.get("sourcemaps")) {
             adone.sourcemap.support(Error).install();
         }
 
-        adone.require(expr);
+        adone.require(scriptPath);
     }
 
     async configCommand(args, opts) {

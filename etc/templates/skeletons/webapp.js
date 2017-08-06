@@ -2,7 +2,7 @@
 
 import adone from "adone";
 
-class $App extends adone.application.Application {
+class {{ name }} extends adone.application.Application {
     initialize() {
         // NOTE: application initialization logic
         // NOTE: define application command line interface
@@ -10,8 +10,6 @@ class $App extends adone.application.Application {
 
     main() {
         // NOTE: application main logic
-
-        adone.log("My awesome application");
 
         return adone.application.Application.SUCCESS; // exit code
     }
@@ -21,4 +19,4 @@ class $App extends adone.application.Application {
     }
 }
 
-adone.run($App);
+adone.run({{ name }});

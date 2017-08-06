@@ -85,7 +85,7 @@ class Core extends adone.EventEmitter {
                 get: () => this._chain[0]._writableState
             },
             _transformState: {
-                get: () => this._chain[0]._transformState  // correct?
+                get: () => this._chain[0]._transformState // correct?
             }
         });
 
@@ -99,7 +99,7 @@ class Core extends adone.EventEmitter {
             }
             this.end();
         } else if (is.transformStream(source) || is.netronStream(source)) {
-            source.pipe(this, { spreadErrors: false });  // should not emit errors from "this" to source
+            source.pipe(this, { spreadErrors: false }); // should not emit errors from "this" to source
             source.on("error", (err) => this.emit("error", err, source));
             if (source.paused) {
                 source.resume();
@@ -172,7 +172,7 @@ class Core extends adone.EventEmitter {
 
     each(callback) {
         if (!is.function(callback)) {
-            throw new x.InvalidArgument('"callback" must be a function');
+            throw new x.InvalidArgument("'callback' must be a function");
         }
         this.on("data", (x) => {
             callback(x);
@@ -185,7 +185,7 @@ class Core extends adone.EventEmitter {
 
     toArray(callback) {
         if (!is.function(callback)) {
-            throw new x.InvalidArgument('"callback" must be a function');
+            throw new x.InvalidArgument("'callback' must be a function");
         }
         if (this.ended) {
             process.nextTick(() => callback([]));
@@ -203,7 +203,7 @@ class Core extends adone.EventEmitter {
 
     map(callback) {
         if (!is.function(callback)) {
-            throw new x.InvalidArgument('"callback" must be a function');
+            throw new x.InvalidArgument("'callback' must be a function");
         }
         return this.through(function (x) {
             const res = callback(x);
@@ -214,9 +214,29 @@ class Core extends adone.EventEmitter {
         });
     }
 
+    mapIf(condition, callback) {
+        if (!is.function(callback)) {
+            throw new x.InvalidArgument("'callback' must be a function");
+        }
+
+        return this.through(function (x) {
+            let res;
+            if (condition(x)) {
+                res = callback(x);
+                if (is.promise(res)) {
+                    return res.then((y) => this.push(y));
+                }
+            } else {
+                res = x;
+            }
+
+            this.push(res);
+        });
+    }
+
     filter(callback) {
         if (!is.function(callback)) {
-            throw new x.InvalidArgument('"callback" must be a function');
+            throw new x.InvalidArgument("'callback' must be a function");
         }
         return this.through(function (x) {
             const res = callback(x);
@@ -251,6 +271,7 @@ class Core extends adone.EventEmitter {
             if (end) {
                 stream.once("end", onStreamEnd);
             }
+            // eslint-disable-next-line
             stream.on("data", (x) => {
                 if (!src.write(x)) {
                     stream.pause();
@@ -283,7 +304,7 @@ class Core extends adone.EventEmitter {
 
     done(callback, { current = false } = {}) {
         if (!is.function(callback)) {
-            throw new x.InvalidArgument('"callback" must be a function');
+            throw new x.InvalidArgument("'callback' must be a function");
         }
         if (current) {
             this._lastStream.once("end", callback);
@@ -393,7 +414,6 @@ class Core extends adone.EventEmitter {
     }
 
     // promise api
-
     then(onResolve, onReject) {
         return new Promise((resolve, reject) => {
             this.toArray(resolve).once("error", (err) => {

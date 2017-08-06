@@ -145,6 +145,10 @@ export default class File {
         return std.path.relative(this.base, path);
     }
 
+    set relative(newRelative) {
+        this.path = std.path.join(this.base, newRelative);
+    }
+
     get dirname() {
         const { path } = this;
         if (!path) {

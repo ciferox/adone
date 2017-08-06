@@ -6,7 +6,7 @@ export default {
         structure: {
             bin: {
                 $before: ({ watch }) => !watch && adone.fs.rm("bin"),
-                $from: "src/app.js",
+                $from: "{{ from }}",
                 $to: "bin",
                 $transform: (stream) => stream
                     .sourcemapsInit()

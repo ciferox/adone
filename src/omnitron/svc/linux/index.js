@@ -59,7 +59,7 @@ export default class Service {
                 user: this.config.user
             };
 
-            // Configure nunjacks for render from any path.
+            // Configure nunjucks for render from any path.
             nunjucks.configure("/");
 
             if (this.config.mode === "sysv") {
