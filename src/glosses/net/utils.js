@@ -33,6 +33,9 @@ export const humanizeAddr = (protocol, port, host) => {
         protocol += ":";
     }
     if (is.number(port)) {
+        if (is.nil(host)) {
+            host = "0.0.0.0";
+        }
         addr = adone.sprintf("%s//%s:%d", protocol, host, port);
     } else {
         addr = adone.sprintf("%s//%s", protocol, port);

@@ -1,0 +1,30 @@
+lib: {
+                $progress: ({ watch }) => !watch,
+                $from: ["{{ fromLib }}", "!{{ fromBin }}"],
+                $to: "lib",
+                $transform: (stream) => stream
+                    .sourcemapsInit()
+                    .transpile({
+                        sourceMap: true,
+                        plugins: [
+                            "transform.ESModules"
+                        ]
+                    })
+                    .sourcemapsWrite(".", {
+                        destPath: "lib"
+                    }).chmod({
+                        owner: { read: true, write: true, execute: true },
+                        group: { read: true, write: false, execute: true },
+                        others: { read: true, write: false, execute: true }
+                    }),
+                $notify: ({ watch }) => ({
+                    onLast: !watch,
+                    title: "lib",
+                    filter: watch ? (file) => file.extname !== ".map" : null,
+                    message: watch ? (file) => path.relative(process.cwd(), file.path) : "Done"
+                }),
+                $onError: adone.fast.transform.notify.onError({
+                    title: "lib",
+                    message: (error) => error.message
+                })
+            },

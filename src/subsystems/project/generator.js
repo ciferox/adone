@@ -15,7 +15,13 @@ const {
 export class Generator {
     constructor() {
         this.templatesPath = path.join(adone.appinstance.adoneEtcPath, "templates");
-        this.templateAppPath = path.join(this.templatesPath, "app");
+        this.adoneConfPath = path.join(this.templatesPath, "adone.conf");
+
+        this.gitFiles = [];
+
+        nunjucks.configure("/", {
+            autoescape: false
+        });
     }
 
     async generate(name, type, { cwd, dir, editor }) {
@@ -127,7 +133,7 @@ export class Generator {
     }
 
     async _createApp(name, projectName, projectPath, { sourceDir, skipGit }) {
-        const files = ["package-lock.json"];
+        this.gitFiles.push("package-lock.json");
 
         const appRelPath = path.join(sourceDir, "app.js");
 
@@ -159,8 +165,7 @@ export class Generator {
         }).dest(projectPath, {
             produceFiles: true
         }).through((x) => {
-            files.push(x.relative);
-            this._logFileCreation(x.relative);
+            this._addFileToGit(x.relative);
         });
 
         // npm
@@ -168,29 +173,29 @@ export class Generator {
 
         // git
         if (!skipGit) {
-            await this._initializeGit(projectPath, files);
+            await this._initializeGit(projectPath);
         }
+    }
+
+    _addFileToGit(filePath) {
+        this.gitFiles.push(filePath);
+        this._logFileCreation(filePath);
     }
 
     async _createWebApp(name, projectName, projectPath, { sourceDir, skipGit, frontend }) {
         const withFrontend = is.string(frontend);
         const appRelPath = path.join(sourceDir, "app.js");
         const backendPath = withFrontend ? path.join(projectPath, "backend") : projectPath;
-        const files = [path.join(withFrontend ? "backend" : "", "package-lock.json")];
+        this.gitFiles.push(path.join(withFrontend ? "backend" : "", "package-lock.json"));
 
-        await fast.src(["skeletons/webapp.js", "common/**/*"], {
+        // common
+        await fast.src("common/**/*", {
             cwd: this.templatesPath
         }).filter((x) => {
             if (x.basename === ".gitignore" && skipGit) {
                 return false;
             }
             return true;
-        }).mapIf((x) => x.basename === "webapp.js", async (x) => {
-            x.relative = appRelPath;
-            x.contents = Buffer.from(await nunjucks.renderString(x.contents.toString(), {
-                name: `${projectName}Application`
-            }));
-            return x;
         }).mapIf((x) => x.basename === "package.json", (x) => {
             const packageJson = JSON.parse(x.contents.toString());
             packageJson.name = name;
@@ -198,7 +203,17 @@ export class Generator {
             x.contents = Buffer.from(JSON.stringify(packageJson, null, "  "));
             return x;
         }).mapIf((x) => x.basename === "adone.conf.js", async (x) => {
+            const bin = await nunjucks.renderString(await fs.readFile(path.join(this.adoneConfPath, "bin.nunjucks"), { encoding: "utf8" }), {
+                fromBin: appRelPath
+            });
+            const lib = await nunjucks.renderString(await fs.readFile(path.join(this.adoneConfPath, "lib.nunjucks"), { encoding: "utf8" }), {
+                fromBin: appRelPath,
+                fromLib: path.join(sourceDir, "**", "*")
+            });
+
             x.contents = Buffer.from(await nunjucks.renderString(x.contents.toString(), {
+                bin,
+                lib,
                 name,
                 from: appRelPath
             }));
@@ -206,12 +221,49 @@ export class Generator {
         }).dest(backendPath, {
             produceFiles: true
         }).through((x) => {
-            if (withFrontend) {
-                files.push(path.join("backend", x.relative));
-            } else {
-                files.push(x.relative);
-            }
-            this._logFileCreation(x.relative);
+            this._addFileToGit(withFrontend ? path.join("backend", x.relative) : x.relative);
+        });
+
+        // src
+        await fast.src(`skeletons/webapp/${frontend}/**/*`, {
+            cwd: this.templatesPath
+        }).map((x) => {
+            x.relative = path.join(sourceDir, x.relative);
+            return x;
+        }).mapIf((x) => x.basename === "app.js", async (x) => {
+            x.contents = Buffer.from(await nunjucks.renderString(x.contents.toString(), {
+                name: `${projectName}Application`
+            }));
+            return x;
+        }).dest(backendPath, {
+            produceFiles: true
+        }).through((x) => {
+            this._addFileToGit(withFrontend ? path.join("backend", x.relative) : x.relative);
+        });
+
+        // configs
+        await fast.src(`configs/webapp/${frontend}/**/*`, {
+            cwd: this.templatesPath
+        }).dest(backendPath, {
+            produceFiles: true
+        }).through((x) => {
+            this._addFileToGit(withFrontend ? path.join("backend", x.relative) : x.relative);
+        });
+
+        // readme
+        await fast.src(`readme/webapp/${frontend}/**/*`, {
+            cwd: this.templatesPath
+        }).map(async (x) => {
+            x.contents = Buffer.from(await nunjucks.renderString(x.contents.toString(), {
+                name,
+                adoneVersion: adone.package.version
+            }));
+
+            return x;
+        }).dest(projectPath, {
+            produceFiles: true
+        }).through((x) => {
+            this._addFileToGit(x.relative);
         });
 
         // npm
@@ -219,12 +271,12 @@ export class Generator {
 
         // frontend
         if (withFrontend) {
-            await this._installFrontend(name, projectPath, { frontend, files });
+            await this._installFrontend(name, projectPath, { frontend });
         }
 
         // git
         if (!skipGit) {
-            await this._initializeGit(projectPath, files);
+            await this._initializeGit(projectPath);
         }
     }
 
@@ -234,7 +286,7 @@ export class Generator {
         }
     }
 
-    async _installFrontend(name, projectPath, { frontend, files }) {
+    async _installFrontend(name, projectPath, { frontend }) {
         const bar = adone.terminal.progress({
             schema: " :spinner installing frontend"
         });
@@ -243,7 +295,7 @@ export class Generator {
         try {
             switch (frontend) {
                 case "ng":
-                    await this._initNgFrontend(name, projectPath, files);
+                    await this._initNgFrontend(name, projectPath);
                     break;
             }
 
@@ -256,7 +308,7 @@ export class Generator {
         }
     }
 
-    async _initNgFrontend(name, projectPath, files) {
+    async _initNgFrontend(name, projectPath) {
         await exec("ng", ["new", name, "--directory", "frontend"], {
             cwd: projectPath
         });
@@ -272,7 +324,7 @@ export class Generator {
             const walker = tree.walk();
 
             walker.on("entry", (entry) => {
-                files.push(path.join("frontend", entry.path()));
+                this.gitFiles.push(path.join("frontend", entry.path()));
             });
             walker.on("end", (/*entries*/) => {
                 resolve();
@@ -306,7 +358,7 @@ export class Generator {
         }
     }
 
-    async _initializeGit(projectPath, files) {
+    async _initializeGit(projectPath) {
         const time = adone.datetime.now() / 1000;
         const zoneOffset = adone.datetime().utcOffset();
 
@@ -319,7 +371,7 @@ export class Generator {
             const logoContent = await fs.readFile(path.join(adone.appinstance.adoneEtcPath, "media", "adone.txt"), { encoding: "utf8" });
             const repository = await git.Repository.init(projectPath, 0);
             const index = await repository.refreshIndex();
-            for (const file of files) {
+            for (const file of this.gitFiles) {
                 await index.addByPath(file); // eslint-disable-line
             }
             await index.write();

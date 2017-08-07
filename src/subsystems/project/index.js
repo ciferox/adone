@@ -66,6 +66,10 @@ export default class extends adone.application.Subsystem {
                             help: "name of frontend library"
                         },
                         {
+                            name: "--netron",
+                            help: "generate netron stuff (also on the frontend side if '--frontend' option is specified)"
+                        },
+                        {
                             name: "--source-dir",
                             type: String,
                             help: "relative path to source directory"
@@ -144,7 +148,8 @@ export default class extends adone.application.Subsystem {
             sourceDir: opts.has("sourceDir") ? opts.get("sourceDir") : null,
             skipGit: opts.has("skipGit"),
             editor: opts.has("editor") ? opts.get("editor") : null,
-            frontend: opts.has("frontend") && ["webapp", "webapplication"].includes(type) ? opts.get("frontend") : null
+            frontend: opts.has("frontend") && ["webapp", "webapplication"].includes(type) ? opts.get("frontend") : null,
+            netron: opts.has("netron")
         });
     }
 

@@ -246,6 +246,7 @@ class SequentalTasks extends AbstractTask {
     async _execute() {
         const results = [];
         for (const task of this.tasks) {
+            // eslint-disable-next-line
             results.push(await task.execute());
         }
         return results;
@@ -255,6 +256,9 @@ class SequentalTasks extends AbstractTask {
         return this.tasks[Symbol.iterator]();
     }
 }
+
+// declaration
+let parseValue = null;
 
 const parseComposition = (parent, rawStructure, key, options) => {
     const composition = new TasksComposition(parent, rawStructure, key, options);
@@ -282,7 +286,7 @@ const parseTask = (parent, descriptor, key, options) => {
     return new Task(parent, descriptor, key, options);
 };
 
-const parseValue = (parent, value, key, options) => {
+parseValue = (parent, value, key, options) => {
     if (isSequentalTasks(value)) {
         return parseSequence(parent, value, key, options);
     }
