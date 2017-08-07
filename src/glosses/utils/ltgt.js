@@ -21,9 +21,9 @@ export const lowerBoundKey = (range) => {
     return (hasKey(range, "gt") || hasKey(range, "gte") || hasKey(range, "min") || (range.reverse ? hasKey(range, "end") : hasKey(range, "start")) || undefined);
 };
 
-export const lowerBound = (range) => {
+export const lowerBound = (range, def) => {
     const k = lowerBoundKey(range);
-    return k && range[k];
+    return k ? range[k] : def;
 };
 
 export const lowerBoundInclusive = (range) => (is.propertyOwned(range, "gt") ? false : true);
@@ -85,7 +85,7 @@ export const toLtgt = (range, _range, map, lower, upper) => {
         _range.lte = map(upper, true);
     }
 
-    if (range.reverse != null) {
+    if (!is.nil(range.reverse)) {
         _range.reverse = Boolean(range.reverse);
     }
 

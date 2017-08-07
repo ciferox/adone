@@ -1,7 +1,7 @@
 const { is, fs, std } = adone;
 
 export default class Editor {
-    constructor({ text = "", editor = null, path = null, ext = "" }) {
+    constructor({ text = "", editor = null, path = null, ext = "" } = {}) {
         this.text = text;
         this.path = path;
         if (is.string(path) && ext.length > 0 && !path.endsWith(ext)) {
