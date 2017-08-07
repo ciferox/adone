@@ -1,4 +1,7 @@
-const { is } = adone;
+const {
+    is,
+    fs: { rm, mkdir, which, whichSync }
+} = adone;
 
 const fixture = adone.std.path.join(__dirname, "which_fixture");
 const isWindows = is.windows || process.env.OSTYPE === "cygwin" || process.env.OSTYPE === "msys";
@@ -6,41 +9,43 @@ const skip = isWindows ? "not relevant on windows" : false;
 
 describe("fs", "which", () => {
     before(async () => {
-        await adone.fs.rm(fixture);
-        await adone.fs.mkdir(fixture);
+        await rm(fixture);
+        await mkdir(fixture);
         adone.std.fs.writeFileSync(`${fixture}/foo.sh`, "echo foo\n");
     });
 
     after(async () => {
-        await adone.fs.rm(fixture);
+        await rm(fixture);
     });
 
     it("does not find missed", async () => {
-        let err = await assert.throws(async () => adone.fs.which(`${fixture}/foobar.sh`));
+        let err = await assert.throws(async () => which(`${fixture}/foobar.sh`));
         assert.instanceOf(err, Error);
         assert.equal(err.code, "ENOENT");
 
-        err = assert.throws(() => adone.fs.whichSync(`${fixture}/foobar.sh`));
+        err = assert.throws(() => whichSync(`${fixture}/foobar.sh`));
         assert.equal(err.code, "ENOENT");
+
+        assert.equal(whichSync(`${fixture}/foobar.sh`, { nothrow: true }), null);
     });
 
     if (!skip) {
         describe("does not find non-executable", () => {
             it("absolute", async () => {
-                let err = await assert.throws(async () => adone.fs.which(`${fixture}/foo.sh`));
+                let err = await assert.throws(async () => which(`${fixture}/foo.sh`));
                 assert.instanceOf(err, Error);
                 assert.equal(err.code, "ENOENT");
 
-                err = assert.throws(() => adone.fs.whichSync(`${fixture}/foo.sh`));
+                err = assert.throws(() => whichSync(`${fixture}/foo.sh`));
                 assert.equal(err.code, "ENOENT");
             });
 
             it("with path", async () => {
-                let err = await assert.throws(async () => adone.fs.which("foo.sh", { path: fixture }));
+                let err = await assert.throws(async () => which("foo.sh", { path: fixture }));
                 assert.instanceOf(err, Error);
                 assert.equal(err.code, "ENOENT");
 
-                err = assert.throws(() => adone.fs.whichSync("foo.sh", { path: fixture }));
+                err = assert.throws(() => whichSync("foo.sh", { path: fixture }));
                 assert.equal(err.code, "ENOENT");
             });
         });
@@ -60,10 +65,10 @@ describe("fs", "which", () => {
         });
 
         const runTest = async (exec) => {
-            let found = adone.fs.whichSync(exec, opt).toLowerCase();
+            let found = whichSync(exec, opt).toLowerCase();
             assert.equal(found, expect);
 
-            found = await adone.fs.which(exec, opt);
+            found = await which(exec, opt);
             assert.equal(found.toLowerCase(), expect);
             process.env.PATH = PATH;
         };
@@ -119,26 +124,26 @@ describe("fs", "which", () => {
             });
 
             it("no ./", async () => {
-                let actual = adone.fs.whichSync(adone.std.path.join(rel, "foo.sh"), opt);
+                let actual = whichSync(adone.std.path.join(rel, "foo.sh"), opt);
                 assert.equal(actual, expect);
-                actual = await adone.fs.which(adone.std.path.join(rel, "foo.sh"), opt);
+                actual = await which(adone.std.path.join(rel, "foo.sh"), opt);
                 assert.equal(actual, expect);
             });
 
             it("with ./", async () => {
                 expect = `./${expect}`;
-                let actual = adone.fs.whichSync(`./${expect}`, opt);
+                let actual = whichSync(`./${expect}`, opt);
                 assert.equal(actual, expect);
-                actual = await adone.fs.which(`./${expect}`, opt);
+                actual = await which(`./${expect}`, opt);
                 assert.equal(actual, expect);
             });
 
             it("with ../", async () => {
                 const dir = adone.std.path.basename(process.cwd());
                 expect = adone.std.path.join("..", dir, expect);
-                let actual = adone.fs.whichSync(expect, opt);
+                let actual = whichSync(expect, opt);
                 assert.equal(actual, expect);
-                actual = await adone.fs.which(expect, opt);
+                actual = await which(expect, opt);
                 assert.equal(actual, expect);
             });
         });

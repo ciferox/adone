@@ -176,7 +176,7 @@ export default class GenesisPeer extends AsyncEmitter {
     _setStatus(status) {
         if (status >= 0 && status < STATUS.MAX && status !== this._status) {
             if (this._status === STATUS.ONLINE && status === STATUS.OFFLINE) {
-                for (const awaiter of this._responseAwaiters.values()) {  // reject all the pending get requests
+                for (const awaiter of this._responseAwaiters.values()) { // reject all the pending get requests
                     awaiter([1, new x.NetronPeerDisconnected()]);
                 }
             }

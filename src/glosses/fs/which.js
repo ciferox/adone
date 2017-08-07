@@ -63,7 +63,9 @@ export const which = async (cmd, opt = {}) => {
             const cur = p + pathExt[j];
             let is;
             try {
-                is = await adone.fs.is.executable(cur, { pathExt: pathExtExe });
+                is = await adone.fs.is.executable(cur, {
+                    pathExt: pathExtExe
+                });
                 if (is) {
                     if (opt.all) {
                         found.push(cur);
@@ -71,7 +73,9 @@ export const which = async (cmd, opt = {}) => {
                         return cur;
                     }
                 }
-            } catch (ex) { }
+            } catch (ex) {
+                //
+            }
         }
     }
 
@@ -111,12 +115,18 @@ export const whichSync = (cmd, opt = {}) => {
                         return cur;
                     }
                 }
-            } catch (ex) { }
+            } catch (ex) {
+                //
+            }
         }
     }
 
     if (opt.all && found.length) {
         return found;
+    }
+
+    if (opt.nothrow) {
+        return null;
     }
 
     throw getNotFoundError(cmd);

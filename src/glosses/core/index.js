@@ -316,7 +316,7 @@ class Core extends adone.EventEmitter {
 
     unique(prop = null) {
         if (!is.null(prop) && !is.function(prop)) {
-            throw new x.InvalidArgument('"prop" must be a function or null');
+            throw new x.InvalidArgument("'prop' must be a function or null");
         }
         const cache = new Set();
         return this.filter((x) => {

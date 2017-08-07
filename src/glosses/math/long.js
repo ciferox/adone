@@ -314,7 +314,7 @@ export default class Long {
             // closure library as a whole.
             if (this.equals(this.constructor.MIN_VALUE)) {
                 if (divisor.equals(this.constructor.ONE) || divisor.equals(this.constructor.NEG_ONE)) {
-                    return this.constructor.MIN_VALUE;  // recall that -MIN_VALUE == MIN_VALUE
+                    return this.constructor.MIN_VALUE; // recall that -MIN_VALUE == MIN_VALUE
                 }
                 if (divisor.equals(this.constructor.MIN_VALUE)) {
                     return this.constructor.ONE;
@@ -637,12 +637,12 @@ export default class Long {
 }
 adone.tag.set(Long, adone.tag.LONG);
 
-Long.MIN_VALUE = Long.fromBits(0, 0x80000000 | 0, false);  // Minimum signed value
-Long.MAX_VALUE = Long.fromBits(0xFFFFFFFF | 0, 0x7FFFFFFF | 0, false);  // Maximum signed value
-Long.MAX_UNSIGNED_VALUE = Long.fromBits(0xFFFFFFFF | 0, 0xFFFFFFFF | 0, true);  // Maximum unsigned value
+Long.MIN_VALUE = Long.fromBits(0, 0x80000000 | 0, false); // Minimum signed value
+Long.MAX_VALUE = Long.fromBits(0xFFFFFFFF | 0, 0x7FFFFFFF | 0, false); // Maximum signed value
+Long.MAX_UNSIGNED_VALUE = Long.fromBits(0xFFFFFFFF | 0, 0xFFFFFFFF | 0, true); // Maximum unsigned value
 
-Long.ZERO = Long.fromInt(0);  // Signed zero
-Long.UZERO = Long.fromInt(0, true);  // Unsigned zero
-Long.ONE = Long.fromInt(1);  // Signed one
-Long.UONE = Long.fromInt(1, true);  // Unsigned one
-Long.NEG_ONE = Long.fromInt(-1);  // Signed negative one
+Long.ZERO = Long.fromInt(0); // Signed zero
+Long.UZERO = Long.fromInt(0, true); // Unsigned zero
+Long.ONE = Long.fromInt(1); // Signed one
+Long.UONE = Long.fromInt(1, true); // Unsigned one
+Long.NEG_ONE = Long.fromInt(-1); // Signed negative one

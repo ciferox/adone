@@ -15,7 +15,7 @@ const re = {
     key: /^([a-z_][a-z_\d]*)/i,
     keyAccess: /^\.([a-z_][a-z_\d]*)/i,
     indexAccess: /^\[(\d+)\]/,
-    sign: /^[\+\-]/
+    sign: /^[+-]/
 };
 
 let sprintfFormat = null;
@@ -42,7 +42,7 @@ sprintfFormat = (parseTree, argv) => {
     for (i = 0; i < treeLength; i++) {
         if (is.string(parseTree[i])) {
             output += parseTree[i];
-        } else if (typeof (parseTree[i]) === "object") {
+        } else if (is.object(parseTree[i])) {
             ph = parseTree[i]; // convenience purposes only
             if (ph.keys) { // keyword argument
                 arg = argv[cursor];

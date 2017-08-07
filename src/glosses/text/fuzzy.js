@@ -251,7 +251,7 @@ class Bitap {
         findAllMatches = false,
         // Minimum number of characters that must be matched before a result is considered a match
         minMatchCharLength = 1
-  } = {}) {
+    } = {}) {
         this.options = {
             location,
             distance,
@@ -318,7 +318,7 @@ const deepValue = (obj, path, list = []) => {
 
         const value = obj[firstSegment];
 
-        if (!is.null(value) && !is.undefined(value)) {
+        if (!is.nil(value)) {
             if (!remaining && (is.string(value) || is.number(value))) {
                 list.push(value);
             } else if (is.array(value)) {
@@ -381,7 +381,7 @@ export default class Fuzzy {
         matchAllTokens = false,
         includeMatches = false,
         includeScore = false
-      } = {}) {
+    } = {}) {
         this.options = {
             location,
             distance,
@@ -507,7 +507,7 @@ export default class Fuzzy {
 
     _analyze({ key, value, record, index }, { tokenSearchers = [], fullSearcher = [], resultMap = {}, results = [] } = {}) {
         // Check if the texvaluet can be searched
-        if (is.undefined(value) || is.null(value)) {
+        if (is.nil(value)) {
             return;
         }
 

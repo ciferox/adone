@@ -27,7 +27,9 @@ const baseGetTag = (value) => {
     try {
         value[symToStringTag] = undefined;
         unmasked = true;
-    } catch (e) { }
+    } catch (e) {
+        //
+    }
 
     const result = toString.call(value);
     if (unmasked) {
@@ -124,9 +126,6 @@ const binaryExtensions = new Set([
 ]);
 
 const callbackNames = ["callback", "callback_", "cb", "cb_", "done", "next"];
-
-const ip4Regex = /^(\d{1,3}\.){3,3}\d{1,3}$/;
-const ip6Regex = /^(::)?(((\d{1,3}\.){3}(\d{1,3}){1})?([0-9a-f]){0,4}:{0,2}){1,8}(::)?$/i;
 
 const posixPathAbsolute = (path) => path.charAt(0) === "/";
 const win32PathAbsolute = (path) => {
@@ -809,12 +808,8 @@ const is = {
     },
     binaryExtension: (x) => binaryExtensions.has(x),
     binaryPath: (x) => binaryExtensions.has(adone.std.path.extname(x).slice(1).toLowerCase()),
-    ip4: (ip) => {
-        return ip4Regex.test(ip);
-    },
-    ip6: (ip) => {
-        return ip6Regex.test(ip);
-    },
+    ip4: (ip) => adone.regex.ip4.test(ip),
+    ip6: (ip) => adone.regex.ip4.test(ip),
     arrayBuffer: (x) => objectProto.toString.call(x) === "[object ArrayBuffer]",
     arrayBufferView: (x) => ArrayBuffer.isView(x),
     date: (value) => (getTag(value) === "date"),

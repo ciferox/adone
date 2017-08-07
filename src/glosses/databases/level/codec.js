@@ -1,6 +1,6 @@
 const { is } = adone;
 
-const isBinary = (data) => (is.undefined(data) || is.null(data) || is.buffer(data));
+const isBinary = (data) => (is.nil(data) || is.buffer(data));
 
 const encodings = {
     utf8: {
@@ -166,9 +166,9 @@ export default class Codec {
             return function (_, value) {
                 return self.decodeValue(value, opts);
             };
-        } 
+        }
         return function () { };
-        
+
     }
 
     keyAsBuffer(opts) {

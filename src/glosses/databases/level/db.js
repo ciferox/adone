@@ -43,7 +43,7 @@ class IteratorStream extends adone.std.stream.Readable {
         });
     }
 
-    _cleanup = function () {
+    _cleanup() {
         if (this._destroyed) {
             return;
         }

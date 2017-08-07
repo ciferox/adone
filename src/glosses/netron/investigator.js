@@ -118,20 +118,20 @@ export default class Investigator {
             classDef += "\n// Methods\n";
         }
         if (this.numberOfPublicMethods()) {
-            classDef += `\npublic:\n${this._listOfEntriesByType(this._methodMap, false, false, this::this.getMethodSignature)}`;
+            classDef += `\npublic:\n${this._listOfEntriesByType(this._methodMap, false, false, this.getMethodSignature.bind(this))}`;
         }
         if (this.numberOfPrivateMethods()) {
-            classDef += `\nprivate:\n${this._listOfEntriesByType(this._methodMap, false, true, this::this.getMethodSignature)}`;
+            classDef += `\nprivate:\n${this._listOfEntriesByType(this._methodMap, false, true, this.getMethodSignature.bind(this))}`;
 
         }
         if (this.numberOfProperties() > 0) {
             classDef += "\n// Properties\n";
         }
         if (this.numberOfPublicProperties()) {
-            classDef += `\npublic:\n${this._listOfEntriesByType(this._propMap, true, false, this::this.getPropertySignature)}`;
+            classDef += `\npublic:\n${this._listOfEntriesByType(this._propMap, true, false, this.getPropertySignature.bind(this))}`;
         }
         if (this.numberOfPrivateProperties()) {
-            classDef += `\nprivate:\n${this._listOfEntriesByType(this._propMap, true, true, this::this.getPropertySignature)}`;
+            classDef += `\nprivate:\n${this._listOfEntriesByType(this._propMap, true, true, this.getPropertySignature.bind(this))}`;
         }
         classDef += "}";
         return classDef;

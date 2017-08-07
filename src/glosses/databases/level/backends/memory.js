@@ -128,7 +128,7 @@ export default class Memory extends AbstractBackend {
     }
 
     _put(key, value, options, callback) {
-        if (is.undefined(value) || is.null(value)) {
+        if (is.nil(value)) {
             value = "";
         }
 

@@ -300,7 +300,7 @@ export class AbstractBackend {
 
     //TODO: remove from here, not a necessary primitive
     approximateSize(start, end, callback) {
-        if (start == null || end == null || is.function(start) || is.function(end)) {
+        if (is.nil(start) || is.nil(end) || is.function(start) || is.function(end)) {
             throw new Error("approximateSize() requires valid `start`, `end` and `callback` arguments");
         }
 
@@ -348,11 +348,11 @@ export class AbstractBackend {
     }
 
     _serializeValue(value) {
-        return is.buffer(value) || process.browser || value == null ? value : String(value);
+        return is.buffer(value) || process.browser || is.nil(value) ? value : String(value);
     }
 
     _checkKey(obj, type) {
-        if (is.null(obj) || is.undefined(obj)) {
+        if (is.nil(obj)) {
             throw new Error(`${type} cannot be \`null\` or \`undefined\``);
         }
         if (is.buffer(obj) && obj.length === 0) {
