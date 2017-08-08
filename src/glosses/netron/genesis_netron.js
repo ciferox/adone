@@ -1,5 +1,5 @@
 const { is, x, util, net, data: { mpak: { serializer } }, configuration: { Configuration }, AsyncEmitter } = adone;
-const { DEFAULT_PORT, ACTION, STATUS, Reference, Interface, Stub, Investigator, Definition, Definitions, SequenceId, Identity } = adone.netron;
+const { DEFAULT_PORT, ACTION, STATUS, Reference, Interface, Stub, Investigator, Definition, Definitions, SequenceId } = adone.netron;
 
 const MAGIC_FLAG = 0x80000000 >>> 0;
 
@@ -41,13 +41,7 @@ class Flags {
 }
 
 // Netron specific encoders/decoders
-serializer.register(109, Identity, (obj, buf) => {
-    serializer.encode(obj.uid, buf);
-}, (buf) => {
-    const uid = serializer.decode(buf);
-    const identity = new Identity(uid);
-    return identity;
-}).register(108, Definition, (obj, buf) => {
+serializer.register(109, Definition, (obj, buf) => {
     buf.writeUInt32BE(obj.id);
     buf.writeUInt32BE(obj.parentId);
     serializer.encode(obj.name, buf);
@@ -63,13 +57,13 @@ serializer.register(109, Identity, (obj, buf) => {
     def.$ = serializer.decode(buf);
     def.twin = serializer.decode(buf);
     return def;
-}).register(107, Reference, (obj, buf) => {
+}).register(108, Reference, (obj, buf) => {
     buf.writeUInt32BE(obj.defId);
 }, (buf) => {
     const ref = new Reference();
     ref.defId = buf.readUInt32BE();
     return ref;
-}).register(106, Definitions, (obj, buf) => {
+}).register(107, Definitions, (obj, buf) => {
     const len = obj.length;
     buf.writeUInt32BE(len);
     for (let i = 0; i < obj.length; i++) {
@@ -87,11 +81,12 @@ serializer.register(109, Identity, (obj, buf) => {
 });
 
 export default class GenesisNetron extends AsyncEmitter {
-    constructor(options) {
+    constructor(options, uid = util.uuid.v4()) {
         super();
 
-        this.option = new Configuration();
-        this.option.assign({
+        this.uid = uid;
+        this.options = new Configuration();
+        this.options.assign({
             protocol: "netron:",
             defaultPort: DEFAULT_PORT,
             reconnects: 3,
@@ -106,8 +101,6 @@ export default class GenesisNetron extends AsyncEmitter {
                 compact: false
             }
         }, options);
-
-        this.identity = new Identity();
 
         const sn = this.statusNames = new Map();
         sn.set(STATUS.OFFLINE, "OFFLINE");
@@ -132,13 +125,9 @@ export default class GenesisNetron extends AsyncEmitter {
         this.setMaxListeners(Infinity);
     }
 
-    get uid() {
-        return this.identity.uid;
-    }
-
     connect(options = {}) {
-        const [port, host] = net.util.normalizeAddr(options.port, options.host, this.option.defaultPort);
-        const addr = net.util.humanizeAddr(this.option.protocol, options.port, options.host);
+        const [port, host] = net.util.normalizeAddr(options.port, options.host, this.options.defaultPort);
+        const addr = net.util.humanizeAddr(this.options.protocol, port, host);
         const peer = this._svrNetronAddrs.get(addr);
         if (!is.undefined(peer)) {
             return Promise.resolve(peer);
@@ -531,7 +520,7 @@ export default class GenesisNetron extends AsyncEmitter {
 
     onSendHandshake(/*peer*/) {
         return {
-            identity: this.identity
+            uid: this.uid
         };
     }
 
@@ -541,7 +530,7 @@ export default class GenesisNetron extends AsyncEmitter {
             peer._attachedContexts = new Map();
         }
         peer.identity = data.identity;
-        peer.uid = data.identity.uid;
+        peer.uid = data.uid;
         if (is.propertyDefined(data, "defs")) {
             peer._updateStrongDefinitions(data.defs);
         }
@@ -750,7 +739,7 @@ export default class GenesisNetron extends AsyncEmitter {
                 if (flags.get(GenesisNetron.FLAG_IMPULSE)) {
                     const eventName = packet[GenesisNetron._DATA];
                     const fn = (...args) => {
-                        if (this.option.isSuper) {
+                        if (this.options.isSuper) {
                             if (!is.undefined(peer._ownDefIds)) {
                                 if (peer._ownDefIds.includes(args[0].defId)) {
                                     return;
@@ -930,7 +919,7 @@ export default class GenesisNetron extends AsyncEmitter {
                         return ${twinCode};
                     })();`;
 
-                const taskClassScript = adone.std.vm.createScript(adone.js.compiler.core.transform(wrappedCode, this.option.transpiler).code, { filename: def.name, displayErrors: true });
+                const taskClassScript = adone.std.vm.createScript(adone.js.compiler.core.transform(wrappedCode, this.options.transpiler).code, { filename: def.name, displayErrors: true });
                 const scriptOptions = {
                     displayErrors: true,
                     breakOnSigint: false
@@ -1043,6 +1032,7 @@ export default class GenesisNetron extends AsyncEmitter {
         while (events.length > 0) {
             event = events[0];
             try {
+                // eslint-disable-next-line
                 await this.emitParallel(event, ctxData);
             } catch (err) {
                 adone.error(err);
@@ -1072,6 +1062,7 @@ export default class GenesisNetron extends AsyncEmitter {
         while (events.length > 0) {
             event = events[0];
             try {
+                // eslint-disable-next-line
                 await this.emitParallel(event, peer);
             } catch (err) {
                 adone.error(err);

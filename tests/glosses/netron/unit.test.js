@@ -39,7 +39,6 @@ describe("netron", "native", "unit test", () => {
         });
 
         describe("Connect", () => {
-
             it("connect with defaults", async () => {
                 await superNetron.bind();
                 await exNetron.connect();
@@ -1606,7 +1605,7 @@ describe("netron", "native", "unit test", () => {
             it("local interface twin - basic access", async () => {
                 superNetron.attachContext(new A(), "a");
                 await superNetron.bind();
-                exNetron.option.acceptTwins = false;
+                exNetron.options.acceptTwins = false;
                 exNetron.setInterfaceTwin("A", TwinA);
 
                 const peer = await exNetron.connect();

@@ -1,35 +1,143 @@
-const { is, x, net, netron: { DEFAULT_PORT, ACTION, STATUS, PEER_TYPE, GenesisNetron, Peer, RemoteStub } } = adone;
+const {
+    is,
+    x,
+    net,
+    netron: { DEFAULT_PORT, ACTION, STATUS, PEER_TYPE, GenesisNetron, Peer, RemoteStub }
+} = adone;
 
 const IP_POLICY_NONE = 0;
 const IP_POLICY_ALLOW = 1;
 const IP_POLICY_DENY = 2;
 
+// Access object:
+// ips - list of ips
+// policy - "allow" | "deny" - ips access oplicy
+// contexts - list of available context through gate
+
+class Gate {
+    constructor(netron, { adapter = null, port = netron.options.defaultPort, host = null, access = null } = {}) {
+        this.netron = netron;
+        this.ipPolicy = IP_POLICY_NONE;
+        this.ips = null;
+        this.contexts = null;
+        this.server = null;
+
+        [this.port, this.host] = net.util.normalizeAddr(port, host, netron.options.defaultPort);
+        this.id = net.util.humanizeAddr(netron.options.protocol, port, host);
+
+        if (is.string(adapter)) {
+            if (netron.adapters.has(adapter)) {
+                const Adapter = netron.adapters.get(adapter);
+                this.server = new Adapter({ id: this.id, port, host });
+            } else {
+                throw new adone.x.NotSupported(`Unsupported adapter: ${adapter}`);
+            }
+        }
+
+        if (is.plainObject(access)) {
+            // Allowed context
+
+            if (is.array(access.contexts)) {
+                this.contexts = access.contexts;
+            }
+
+            if (is.array(access.ips)) {
+                this.ips = [];
+                for (const addr of access.ips) {
+                    let ipAddr;
+                    if (is.ip4(addr)) {
+                        ipAddr = new net.address.IP4(addr).toBigNumber();
+                    } else if (is.ip6(addr)) {
+                        ipAddr = new net.address.IP6(addr).toBigNumber();
+                    } else {
+                        throw new x.NotValid(`Address or subnet '${addr}' is not valid`);
+                    }
+
+                    this.ips.push(ipAddr);
+                }
+                if (is.string(access.policy)) {
+                    this.ipPolicy = (access.policy === "allow" ? IP_POLICY_ALLOW : (access.policy === "deny" ? IP_POLICY_DENY : IP_POLICY_NONE));
+                }
+
+                if (this.ipPolicy === IP_POLICY_ALLOW) {
+                    // eslint-disable-next-line
+                    this.applyPolicy = new Function("peerIp,ips", `
+                        return !ips.findIndex((ipBn) => {
+                            return peerIpBn.eq(ipBn);
+                        });
+                    `);
+                } else {
+                    // eslint-disable-next-line
+                    this.applyPolicy = new Function("peerIpBn,ips", `
+                        return ips.findIndex((ipBn) => {
+                            return peerIpBn.eq(ipBn);
+                        });
+                    `);
+                }
+            }
+        }
+    }
+
+    bind() {
+        if (this.netron.gates.has(this.id)) {
+            throw new x.Exists(`Already bound to '${this.id}'`);
+        }
+
+        // Add gate to netron gates map
+        this.netron.gates.set(this.id, this);
+
+        if (!is.null(this.server)) {
+            return this.server.bind(this.netron);
+        }
+
+        this.server = new net.Server(this.netron.options);
+        this.server.options.id = this.id;
+
+        if (!this.netron.options.refGates) {
+            this.server.unref();
+        }
+
+        return this.server.bind({ port: this.port, host: this.host });
+    }
+}
+
 export default class Netron extends GenesisNetron {
-    constructor(uid = null, options = {}) {
-        super(uid, {
+    constructor(options = {}, uid) {
+        super({
             isSuper: false
-        });
-        this.option.assign({
-            refGates: true,
-            refPeers: true
-        }, options, {
-            peerFactory: (socket, gate) => {
-                const peer = this._createPeer(socket, gate, PEER_TYPE.ACTIVE);
-                this._emitPeerEvent("peer create", peer);
-                return peer;
+        }, uid);
+        this.options.assign(
+            {
+                refGates: true,
+                refPeers: true
             },
-            сonnectionHandler: this.onNewConnection.bind(this)
-        });
+            options,
+            {
+                peerFactory: (socket, server) => {
+                    const peer = this._createPeer(socket, server, PEER_TYPE.ACTIVE);
+                    this._emitPeerEvent("peer create", peer);
+                    return peer;
+                },
+                сonnectionHandler: this.onNewConnection.bind(this)
+            }
+        );
 
         this._nonauthPeers = [];
-        this._gates = new Map();
-        this._adapters = new Map();
+        this.gates = new Map();
+        this.adapters = new Map();
 
         this.on("peer online", (peer) => {
-            if (!this.option.refPeers) {
+            if (!this.options.refPeers) {
                 peer.unref();
             }
         });
+    }
+
+    registerAdapter(id, AdapterClass) {
+        if (this.adapters.has(id)) {
+            throw new adone.x.Exists(`Adapter '${id}' already registerd`);
+        }
+        this.adapters.set(is, AdapterClass);
     }
 
     disconnect(uid) {
@@ -44,68 +152,39 @@ export default class Netron extends GenesisNetron {
     }
 
     async bind(options) {
-        if (is.nil(options)) {
-            await this._bindSocket({});
-            for (const name of this._adapters.keys()) {
-                await this.bind({ port: name });
-            }
-        } else if (is.string(options)) {
+        if (is.string(options)) {
             return this.bind({ port: options });
-        } else if (is.object(options)) {
-            if (is.string(options.port) && !options.port.includes("/") && !options.port.endsWith(".sock") && !options.port.startsWith("\\\\.\\pipe\\")) {
-                const adapter = this._adapters.get(options.port);
-                if (is.undefined(adapter)) {
-                    throw new x.Unknown(`unknown gate '${options.port}'`);
-                }
-
-                if (this._gates.has(options.port)) {
-                    throw new x.Exists(`already bound to '${options.port}'`);
-                }
-                this._setGate(options.port, adapter, adapter.option);
-                await adapter.bind(this);
-            } else {
-                await this._bindSocket(options);
-            }
         }
+
+        const gate = new Gate(this, options);
+        return gate.bind();
     }
 
     async unbind(options) {
         if (is.nil(options)) {
-            for (const gate of this._gates.values()) {
+            for (const gate of this.gates.values()) {
+                // eslint-disable-next-line
                 await gate.server.unbind();
             }
-            this._gates.clear();
+            this.gates.clear();
         } else if (is.string(options.port) && !options.port.includes("/") && !options.port.endsWith(".sock")) {
-            const gate = this._gates.get(options.port);
+            const gate = this.gates.get(options.port);
             if (is.undefined(gate)) {
-                throw new x.Unknown(`unknown gate '${options.port}'`);
+                throw new x.Unknown(`Unknown gate '${options.port}'`);
             }
 
             await gate.server.unbind();
-            this._gates.delete(options.port);
+            this.gates.delete(options.port);
         } else {
-            const [port, host] = net.util.normalizeAddr(options.port, options.host, this.option.defaultPort);
-            const addr = net.util.humanizeAddr(this.option.protocol, port, host);
-            const gate = this._gates.get(addr);
+            const [port, host] = net.util.normalizeAddr(options.port, options.host, this.options.defaultPort);
+            const addr = net.util.humanizeAddr(this.options.protocol, port, host);
+            const gate = this.gates.get(addr);
             if (is.undefined(gate)) {
-                throw new x.Unknown(`unknown gate '${options.port}'`);
+                throw new x.Unknown(`Unknown gate '${options.port}'`);
             }
             await gate.server.unbind();
-            this._gates.delete(addr);
+            this.gates.delete(addr);
         }
-    }
-
-    async attachAdapter(adapter) {
-        const id = adapter.option.id;
-        if (!is.string(id)) {
-            throw new x.InvalidArgument("adapter without id");
-        }
-
-        if (this._adapters.has(id)) {
-            throw new x.Exists(`adapter '${id}' already attached`);
-        }
-
-        this._adapters.set(id, adapter);
     }
 
     async onConfirmConnection(peer) {
@@ -118,8 +197,9 @@ export default class Netron extends GenesisNetron {
 
     async onNewConnection(peer) {
         let isConfirmed = true;
-        const gateData = this._gates.get(peer.option.gateId);
-        if (gateData.ipPolicy !== IP_POLICY_NONE) {
+
+        const gate = this.gates.get(peer.options.gateId);
+        if (gate.ipPolicy !== IP_POLICY_NONE) {
             const peerAddress = peer.getRemoteAddress().address;
             let peerIpBn;
             if (is.ip4(peerAddress)) {
@@ -129,7 +209,7 @@ export default class Netron extends GenesisNetron {
             } else {
                 throw new x.Unknown(`unknown address: ${peerAddress}`);
             }
-            if (gateData.applyPolicy(peerIpBn, gateData.ipList)) {
+            if (gate.applyPolicy(peerIpBn, gate.ips)) {
                 return peer.disconnect();
             }
         }
@@ -148,16 +228,15 @@ export default class Netron extends GenesisNetron {
 
     onSendHandshake(peer) {
         const data = super.onSendHandshake(peer);
-        data.isSuper = this.option.isSuper;
+        data.isSuper = this.options.isSuper;
 
         let allowedContexts = null;
 
-        const gateId = peer.option.gateId;
+        const gateId = peer.options.gateId;
         if (!is.undefined(gateId)) {
-            const gate = this._gates.get(gateId);
-            const access = gate.option.access;
-            if (!is.undefined(access) && is.array(access.contexts) && access.contexts.length > 0) {
-                allowedContexts = access.contexts;
+            const gate = this.gates.get(gateId);
+            if (is.array(gate.contexts) && gate.contexts.length > 0) {
+                allowedContexts = gate.contexts;
             }
         }
 
@@ -181,7 +260,7 @@ export default class Netron extends GenesisNetron {
     async _onReceiveHandshake(peer, packet) {
         const data = packet[GenesisNetron._DATA];
 
-        const uid = data.identity.uid;
+        const uid = data.uid;
         if (this.nuidPeerMap.has(uid)) {
             throw new x.Exists(`peer '${uid}' already connected`);
         }
@@ -281,23 +360,23 @@ export default class Netron extends GenesisNetron {
         return false;
     }
 
-    _createPeer(socket, gate, peerType = PEER_TYPE.PASSIVE) {
+    _createPeer(socket, server, peerType = PEER_TYPE.PASSIVE) {
         const peer = new Peer({
             netron: this,
             socket,
             packetHandler: this._processPacket,
             handlerThisArg: this,
-            protocol: this.option.protocol,
-            retryTimeout: this.option.retryTimeout,
-            retryMaxTimeout: this.option.retryMaxTimeout,
-            reconnects: this.option.reconnects,
+            protocol: this.options.protocol,
+            retryTimeout: this.options.retryTimeout,
+            retryMaxTimeout: this.options.retryMaxTimeout,
+            reconnects: this.options.reconnects,
             defaultPort: DEFAULT_PORT,
-            responseTimeout: this.option.responseTimeout
+            responseTimeout: this.options.responseTimeout
         });
-        if (!is.undefined(gate)) {
-            const gateId = gate.option.get("id");
-            if (!is.undefined(gateId)) {
-                peer.option.gateId = gateId;
+        if (!is.undefined(server)) {
+            const gateId = server.options.id;
+            if (!is.nil(gateId)) {
+                peer.options.gateId = gateId;
             }
         }
         peer._type = peerType;
@@ -306,7 +385,7 @@ export default class Netron extends GenesisNetron {
 
     _peerDisconnected(peer) {
         this._removePeerFromNonauthList(peer);
-        if (this.option.isSuper) {
+        if (this.options.isSuper) {
             // Check strong contextes attached remotely by disconnectered peer and remove them.
             for (const [ctxId, stub] of this.contexts.entries()) {
                 if (is.netronRemoteStub(stub) && stub.iInstance.$uid === peer.uid) {
@@ -328,98 +407,27 @@ export default class Netron extends GenesisNetron {
         return super._peerDisconnected(peer);
     }
 
-    _bindSocket(options) {
-        let id = options.id;
-        if (is.undefined(id)) {
-            [options.port, options.host] = net.util.normalizeAddr(options.port, options.host, this.option.defaultPort);
-            id = net.util.humanizeAddr(this.option.protocol, options.port, options.host);
-        }
-        if (this._gates.has(id)) {
-            throw new x.Exists(`Already bound to '${id}'`);
-        }
-
-        const server = new net.Server(this.option);
-        this._setGate(id, server, options);
-        if (!this.option.refGates) {
-            server.unref();
-        }
-        return server.bind(options);
-    }
-
-    _setGate(id, server, option) {
-        const gateData = {
-            server,
-            option
-        };
-
-        if (is.undefined(server.option.id)) {
-            server.option.id = id;
-        }
-
-        gateData.ipPolicy = IP_POLICY_NONE;
-        if (is.propertyOwned(option, "access")) {
-            const ipList = option.access.ip_list;
-            if (!is.undefined(ipList)) {
-                gateData.ipList = [];
-                for (const addr of ipList) {
-                    let ipAddr;
-                    if (is.ip4(addr)) {
-                        ipAddr = new net.address.IP4(addr).toBigNumber();
-                    } else if (is.ip6(addr)) {
-                        ipAddr = new net.address.IP6(addr).toBigNumber();
-                    } else {
-                        throw new x.NotValid(`address or subnet '${addr}' is not valid`);
-                    }
-
-                    gateData.ipList.push(ipAddr);
-                }
-                if (gateData.deny && gateData.deny.length > 0) {
-                    const ipPolicy = is.string(option.access.ip_policy) ? option.access.ip_policy : "";
-                    gateData.ipPolicy = (ipPolicy === "allow" ? IP_POLICY_ALLOW : (ipPolicy === "deny" ? IP_POLICY_DENY : IP_POLICY_NONE));
-                }
-                if (gateData.deny && gateData.deny.length === 0 || gateData.ipPolicy === IP_POLICY_NONE) {
-                    delete gateData.ipList;
-                } else {
-                    if (gateData.ipPolicy === IP_POLICY_ALLOW) {
-                        gateData.applyPolicy = new Function("peerIp,ipList", `
-                            return !ipList.findIndex((ipBn) => {
-                                return peerIpBn.eq(ipBn);
-                            });
-                        `);
-                    } else {
-                        gateData.applyPolicy = new Function("peerIpBn,ipList", `
-                            return ipList.findIndex((ipBn) => {
-                                return peerIpBn.eq(ipBn);
-                            });
-                        `);
-                    }
-                }
-            }
-        }
-        this._gates.set(id, gateData);
-    }
-
     refGates() {
-        for (const { server } of this._gates.values()) {
+        for (const { server } of this.gates.values()) {
             server.ref();
         }
     }
 
     unrefGates() {
-        for (const { server } of this._gates.values()) {
+        for (const { server } of this.gates.values()) {
             server.unref();
         }
     }
 
     refPeers() {
-        this.option.refPeers = true;
+        this.options.refPeers = true;
         for (const peer of this.getPeers().values()) {
             peer.ref();
         }
     }
 
     unrefPeers() {
-        this.option.refPeers = false;
+        this.options.refPeers = false;
         for (const peer of this.getPeers().values()) {
             peer.unref();
         }

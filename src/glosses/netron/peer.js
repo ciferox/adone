@@ -3,8 +3,8 @@ const { GenesisPeer } = adone.netron;
 export default class Peer extends GenesisPeer {
     constructor(options = { }) {
         super(options);
-        this.option.packetOwner = this;
-        this._socket = new adone.net.Socket(this.option);
+        this.options.packetOwner = this;
+        this._socket = new adone.net.Socket(this.options);
         this._socket.on("error", (err) => {
             this.emit("error", err);
         }).on("connect", () => {

@@ -345,9 +345,8 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         // Omnitron
         omnitron: () => adone.lazify({
             const: "./omnitron/consts",
-            GateManager: "./omnitron/gate_manager",
             HostManager: "./omnitron/host_manager",
-            Configurator: "./omnitron/configurator",
+            Configuration: "./omnitron/configuration",
             Omnitron: "./omnitron",
             Dispatcher: "./omnitron/dispatcher"
         }),

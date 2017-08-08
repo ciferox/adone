@@ -3,19 +3,19 @@ const { is, net } = adone;
 export default class Server extends adone.EventEmitter {
     constructor(options = {}) {
         super();
-        this.option = new adone.configuration.Configuration();
-        this.option.assign({
+        this.options = new adone.configuration.Configuration();
+        this.options.assign({
             backlog: 511,
             protocol: "tcp:",
             defaultPort: 1024
         }, options);
         this.server = null;
         this._sockets = [];
-        this._peerFactory = this.option.peerFactory;
+        this._peerFactory = this.options.peerFactory;
         if (!is.function(this._peerFactory)) {
             this._peerFactory = (socket, param) => new net.Socket(Object.assign({ socket }, param));
         }
-        const onNewConn = this.option.сonnectionHandler;
+        const onNewConn = this.options.сonnectionHandler;
         if (is.function(onNewConn)) {
             this.onNewConnection = onNewConn;
         }
@@ -24,7 +24,7 @@ export default class Server extends adone.EventEmitter {
     address() {
         if (!is.null(this.server) && is.nil(this._address)) {
             const addr = this.server.address();
-            let protocol = this.option.protocol;
+            let protocol = this.options.protocol;
             if (!protocol.endsWith(":")) {
                 protocol += ":";
             }
@@ -42,7 +42,7 @@ export default class Server extends adone.EventEmitter {
 
     bind(options = {}) {
         if (is.null(this.server)) {
-            [options.port, options.host] = adone.net.util.normalizeAddr(options.port, options.host, this.option.defaultPort);
+            [options.port, options.host] = adone.net.util.normalizeAddr(options.port, options.host, this.options.defaultPort);
 
             const onConnect = (nodeSocket) => {
                 const socket = this._peerFactory(nodeSocket, this);
@@ -81,7 +81,7 @@ export default class Server extends adone.EventEmitter {
 
             this.server.on("listening", () => this.emit("bind"));
 
-            const backlog = this.option.backlog;
+            const backlog = this.options.backlog;
             return new Promise((resolve, reject) => {
                 this.server.on("error", (e) => {
                     const unixSocket = is.string(options.port);
@@ -92,7 +92,9 @@ export default class Server extends adone.EventEmitter {
                                 if (e2.code === "ECONNREFUSED" || e2.code === "ENOENT") {
                                     try {
                                         adone.std.fs.unlinkSync(options.port);
-                                    } catch (e) { }
+                                    } catch (e) {
+                                        //
+                                    }
                                     this.server.listen(options.port, options.host, backlog, resolve);
                                 }
                             });
@@ -106,7 +108,9 @@ export default class Server extends adone.EventEmitter {
                     } else {
                         try {
                             unixSocket && adone.std.fs.unlinkSync(options.port);
-                        } catch (e) { }
+                        } catch (e) {
+                            //
+                        }
                         this.server.listen(options.port, options.host, backlog, resolve);
                     }
                 });

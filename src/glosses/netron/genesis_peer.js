@@ -5,19 +5,19 @@ const { STATUS, ACTION, RemoteStub, GenesisNetron, SequenceId, Stream } = adone.
 export default class GenesisPeer extends AsyncEmitter {
     constructor(options = {}) {
         super();
-        this.option = new Configuration();
-        this.option.assign({
+        this.options = new Configuration();
+        this.options.assign({
             protocol: "netron:",
             retryTimeout: 100,
             retryMaxTimeout: 10000,
             reconnects: 3
         }, options);
 
-        this.netron = this.option.netron;
+        this.netron = this.options.netron;
         this.streamId = new SequenceId();
-        this._responseAwaiters = new TimedoutMap(this.option.responseTimeout, (streamId) => {
+        this._responseAwaiters = new TimedoutMap(this.options.responseTimeout, (streamId) => {
             const awaiter = this._removeAwaiter(streamId);
-            awaiter([1, new x.NetronTimeout(`Response timeout ${this.option.responseTimeout}ms exceeded`)]);
+            awaiter([1, new x.NetronTimeout(`Response timeout ${this.options.responseTimeout}ms exceeded`)]);
         });
         this._type = null;
         this._status = STATUS.OFFLINE;
@@ -32,7 +32,6 @@ export default class GenesisPeer extends AsyncEmitter {
         // IDs of remote awaiting streams.
         this._awaitingStreamIds = new Set();
 
-        this.identity = null;
         this.uid = null;
 
         this._onRemoteContextAttach = (peer, ctxData) => {
@@ -153,12 +152,8 @@ export default class GenesisPeer extends AsyncEmitter {
         return this._ctxidDefs.get(ctxId);
     }
 
-    getInterfaceById(defId) {
-        const def = this._defs.get(defId);
-        if (is.undefined(def)) {
-            throw new x.Unknown(`Unknown definition '${defId}'`);
-        }
-        return this.netron._createInterface(def, this.uid);
+    getInterface(ctxId) {
+        return this.getInterfaceByName(ctxId);
     }
 
     getInterfaceByName(ctxId) {
@@ -167,6 +162,14 @@ export default class GenesisPeer extends AsyncEmitter {
             throw new x.Unknown(`Unknown context '${ctxId}'`);
         }
         return this.getInterfaceById(def.id);
+    }
+
+    getInterfaceById(defId) {
+        const def = this._defs.get(defId);
+        if (is.undefined(def)) {
+            throw new x.Unknown(`Unknown definition '${defId}'`);
+        }
+        return this.netron._createInterface(def, this.uid);
     }
 
     getNumberOfAwaiters() {
@@ -200,7 +203,7 @@ export default class GenesisPeer extends AsyncEmitter {
 
     _updateDefinitions(defs) {
         for (const [, def] of util.entries(defs, { all: true })) {
-            if (this.netron.option.acceptTwins === false) {
+            if (this.netron.options.acceptTwins === false) {
                 delete def.twin;
             }
             this._defs.set(def.id, def);

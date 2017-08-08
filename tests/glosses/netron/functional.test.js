@@ -1304,6 +1304,7 @@ describe("netron", "native", "functional tests", () => {
             });
 
             for (const contexts of [undefined, null, []]) {
+                // eslint-disable-next-line
                 it(`all contextes should be accessible if context = ${contexts}`, async () => {
                     superNetron.attachContext(new A(), "a");
                     superNetron.attachContext(new B(), "b");

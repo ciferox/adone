@@ -24,11 +24,11 @@ process.env.ADONE_DIRNAME = dirName;
 export class WeakOmnitron extends adone.omnitron.Omnitron {
     constructor(options) {
         super(options);
-        this._.configurator = new adone.omnitron.Configurator(this, { inMemory: true });
+        this._.configuration = new adone.omnitron.Configuration(this, { inMemory: true });
     }
 
     async initialize() {
-        await this._.configurator.loadAll();
+        await this._.configuration.load();
         this.config.omnitron = {
             servicesPath: adone.std.path.join(process.env.ADONE_HOME, "services"),
             gates: [
@@ -55,7 +55,7 @@ export class WeakOmnitron extends adone.omnitron.Omnitron {
             },
             getServicePath(serviceName, dirName) {
                 let fullPath;
-                if (typeof dirName === "string") {
+                if (is.string(dirName)) {
                     fullPath = adone.std.path.join(this.servicesPath, serviceName, dirName);
                 } else {
                     fullPath = adone.std.path.join(this.servicesPath, serviceName);
@@ -75,14 +75,13 @@ export class WeakOmnitron extends adone.omnitron.Omnitron {
         
         await this.attachServices();
 
-        // await this._.configurator.saveServicesConfig();
-        // await this._.configurator.saveGatesConfig();
+        // await this._.configuration.saveServicesConfig();
     }
 
     async uninitialize() {
         await this.detachServices();
 
-        // await this._.configurator.saveServicesConfig();
+        // await this._.configuration.saveServicesConfig();
 
         // Let netron gracefully complete all disconnects
         await adone.promise.delay(500);
@@ -115,7 +114,7 @@ export default class OmnitronRunner extends adone.application.Application {
         if (!adone.is.null(omnitron)) {
             this.omnitron = omnitron;
             options.omnitron = omnitron;
-            options.configurator = this.omnitron._.configurator;
+            options.configuration = this.omnitron._.configuration;
         }
         return this.dispatcher = new adone.omnitron.Dispatcher(this, options);
     }

@@ -4,34 +4,22 @@ const {
     omnitron: { const: { ENABLED } }
 } = adone;
 
-export default class Configurator {
+export default class Configuration {
     constructor(app, { inMemory = false } = {}) {
         this.app = app;
         this.inMemory = inMemory;
-        this._gateManager = null;
+        this.services = null;
+        this.gates = null;
     }
 
-    get omnitron() {
-        return this.config.omnitron;
-    }
-
-    get gateManager() {
-        if (is.null(this._gateManager)) {
-            this._gateManager = new adone.omnitron.GateManager(this.config.omnitron.gates);
-        }
-        return this._gateManager;
-    }
-
-    async loadAll() {
-        this.config = this.app.config;
-
+    async load() {
         // Force create home directory
         await adone.fs.mkdir(this.app.config.adone.home);
 
-        if (!is.exist(this.config.omnitron)) {
+        if (!is.exist(this.app.config.omnitron)) {
             await this.app.loadConfig("omnitron", { ext: "js", defaults: true });
             // Subconfiguration for services...
-            this.config.omnitron.services = {};
+            this.services = this.app.config.omnitron.services = {};
 
             // !!!!!!!!!!!!THIS SHOULD BE REIMPLEMENTED IN A GENERIC WAY!!!!!!!!!!!!!!
             // // Load configurations of core services.
@@ -40,8 +28,8 @@ export default class Configurator {
             //     await adone.fs.glob(`${coreServicesPath}/*/meta.json`).map(async (configPath) => {
             //         const servicePath = std.path.dirname(configPath);
             //         const serviceName = std.path.basename(servicePath);
-            //         await this.config.load(configPath, `omnitron.services.${serviceName}`);
-            //         const config = this.config.omnitron.services[serviceName];
+            //         await this.app.config.load(configPath, `omnitron.services.${serviceName}`);
+            //         const config = this.app.config.omnitron.services[serviceName];
             //         delete config.name;
             //         config.path = servicePath;
             //     });
@@ -56,7 +44,7 @@ export default class Configurator {
                 }
             }
 
-            this.config.omnitron.services.omnitron = {
+            this.app.config.omnitron.services.omnitron = {
                 description: "Omnitron service",
                 path: __dirname,
                 status: ENABLED,
@@ -74,28 +62,23 @@ export default class Configurator {
                 await this.app.loadConfig("gates", { path: "omnitron.gates", userConfig: true });
             } catch (err) {
                 if (err instanceof adone.x.NotFound) {
-                    this.config.omnitron.gates = [
+                    this.app.config.omnitron.gates = [
                         {
-                            id: "local",
-                            type: "socket",
-                            status: ENABLED,
-                            port: (is.windows ? "\\\\.\\pipe\\omnitron.sock" : std.path.join(this.config.adone.home, "omnitron.sock"))
+                            port: (is.windows ? "\\\\.\\pipe\\omnitron.sock" : std.path.join(this.app.config.adone.home, "omnitron.sock"))
                         }
                     ];
+                    await this._saveConfig("gates");
                 } else {
                     adone.error(err);
                 }
             }
+            this.gates = this.app.config.omnitron.gates;
         }
         return this;
     }
 
     saveServicesConfig() {
         return this._saveConfig("services");
-    }
-
-    saveGatesConfig() {
-        return this._saveConfig("gates");
     }
 
     async _saveConfig(name) {

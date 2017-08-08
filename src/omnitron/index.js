@@ -4,9 +4,13 @@ import Contexts from "./contexts";
 
 const startedAt = adone.timing.now();
 
-const { is, std } = adone;
-const { Contextable, Public, Private, Description, Type } = adone.netron.decorator;
-const { DISABLED, ENABLED, INITIALIZING, ACTIVE, UNINITIALIZING, STATUSES } = adone.omnitron.const;
+const {
+    is,
+    std,
+    netron: { decorator: { Contextable, Public, Private, Description, Type } },
+    omnitron
+} = adone;
+const { const: { DISABLED, ENABLED, INITIALIZING, ACTIVE, UNINITIALIZING, STATUSES } } = omnitron;
 
 @Contextable
 @Private
@@ -14,8 +18,9 @@ export default class Omnitron extends adone.application.Application {
     async initialize() {
         this._.netron = null;
 
-        this._.configurator = new adone.omnitron.Configurator(this);
-        await this._.configurator.loadAll();
+        // Load omnitron configuration
+        this._.configuration = new omnitron.Configuration(this);
+        await this._.configuration.load();
 
         this.exitOnSignal("SIGQUIT", "SIGTERM", "SIGINT");
         process.on("SIGILL", () => {
@@ -31,14 +36,12 @@ export default class Omnitron extends adone.application.Application {
         await this.initializeNetron({ isSuper: true });
 
         // Save services config for pm-service-container.
-        await this._.configurator.saveServicesConfig();
+        await this._.configuration.saveServicesConfig();
 
         // this._.services = new Services(this);
         // await this._.services.initialize();
 
         await this.attachServices();
-
-        await this._.configurator.saveGatesConfig();
 
         await this.createPidFile();
 
@@ -52,7 +55,7 @@ export default class Omnitron extends adone.application.Application {
 
     async uninitialize() {
         await this.detachServices();
-        await this._.configurator.saveServicesConfig();
+        await this._.configuration.saveServicesConfig();
 
         // Let netron gracefully complete all disconnects
         await adone.promise.delay(500);
@@ -61,9 +64,34 @@ export default class Omnitron extends adone.application.Application {
 
         await this._.contexts.uninitialize();
 
-        await this._.configurator.saveGatesConfig();
-
         return this.deletePidFile();
+    }
+
+    async initializeNetron(options) {
+        // Initialize netron and bind its gates.
+        this._.netron = new adone.netron.Netron(options);
+        this._.netron.on("peer online", (peer) => {
+            adone.info(`Peer '${peer.getRemoteAddress().full}' (uid: ${peer.uid}) connected`);
+        }).on("peer offline", (peer) => {
+            adone.info(`Peer '${peer.getRemoteAddress().full}' (uid: ${peer.uid}) disconnected`);
+        });
+
+        // Bind all gates.
+        for (const gate of this._.configuration.gates) {
+            // eslint-disable-next-line
+            await this._.netron.bind(gate);
+        }
+    }
+
+    async uninitializeNetron() {
+        try {
+            if (!is.null(this._.netron)) {
+                await this._.netron.disconnect();
+                await this._.netron.unbind();
+            }
+        } catch (err) {
+            adone.error(err);
+        }
     }
 
     async createPidFile() {
@@ -77,38 +105,6 @@ export default class Omnitron extends adone.application.Application {
 
     deletePidFile() {
         return adone.fs.rm(this.config.omnitron.pidFilePath);
-    }
-
-    initializeNetron(options) {
-        // Initialize netron and bind its gates.
-        this._.netron = new adone.netron.Netron(options);
-        this._.netron.on("peer online", (peer) => {
-            adone.info(`peer '${peer.getRemoteAddress().full}' (uid: ${peer.uid}) connected`);
-        }).on("peer offline", (peer) => {
-            adone.info(`peer '${peer.getRemoteAddress().full}' (uid: ${peer.uid}) disconnected`);
-        });
-
-        this._.configurator.gateManager.setNetron(this._.netron);
-        return this._.configurator.gateManager.bindAll();
-    }
-
-    async uninitializeNetron() {
-        try {
-            if (!is.null(this._.netron)) {
-                await this._.netron.disconnect();
-                await this._.netron.unbind();
-
-                const gateManager = this._.configurator.gateManager;
-                // this way is not reliable
-                for (const gate of gateManager.list()) {
-                    if (gate.status === ACTIVE) {
-                        gateManager.setStatus(gate, ENABLED);
-                    }
-                }
-            }
-        } catch (err) {
-            adone.error(err);
-        }
     }
 
     async attachServices() {
@@ -438,10 +434,10 @@ export default class Omnitron extends adone.application.Application {
             if (service.config.status === DISABLED) {
                 await this._checkDependencies(service, (depName) => this.enable(depName, needEnabled, { enableDeps }), { checkDisabled: !enableDeps });
                 service.config.status = ENABLED;
-                return this._.configurator.saveServicesConfig();
-            } 
+                return this._.configuration.saveServicesConfig();
+            }
             throw new adone.x.IllegalState("Service is not disabled");
-            
+
         } else {
             if (service.config.status !== DISABLED) {
                 if (service.config.status === ACTIVE) {
@@ -450,7 +446,7 @@ export default class Omnitron extends adone.application.Application {
                     throw new adone.x.IllegalState(`Cannot disable service with '${service.config.status}' status`);
                 }
                 service.config.status = DISABLED;
-                return this._.configurator.saveServicesConfig();
+                return this._.configuration.saveServicesConfig();
             }
         }
     }

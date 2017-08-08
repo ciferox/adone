@@ -3,14 +3,14 @@ const { is, x, ExBuffer, netron: { GenesisPeer }, net, std } = adone;
 export default class Peer extends GenesisPeer {
     constructor(options) {
         super(options);
-        this.option.protocol = "ws+netron:";
-        this._handlerThisArg = this.option.handlerThisArg;
-        this._handler = this.option.packetHandler;
-        this._ws = this.option.socket || null;
+        this.options.protocol = "ws+netron:";
+        this._handlerThisArg = this.options.handlerThisArg;
+        this._handler = this.options.packetHandler;
+        this._ws = this.options.socket || null;
     }
 
     connect(options) {
-        [options.port, options.host] = net.util.normalizeAddr(options.port, options.host, this.option.defaultPort);
+        [options.port, options.host] = net.util.normalizeAddr(options.port, options.host, this.options.defaultPort);
         const addr = net.util.humanizeAddr((options.useTls ? "wss:" : "ws:"), options.port, options.host);
 
         if (is.nil(this._ws)) {
@@ -59,7 +59,7 @@ export default class Peer extends GenesisPeer {
         if (is.nil(this._remoteAddr) && !is.nil(this._ws)) {
             const socket = this._ws._socket;
             if (!is.nil(socket)) {
-                let protocol = this.option.protocol;
+                let protocol = this.options.protocol;
                 if (!protocol.endsWith(":")) {
                     protocol += ":";
                 }

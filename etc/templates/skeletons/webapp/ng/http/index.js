@@ -1,1 +1,1 @@
-export { HttpServerDispatcher } from "./server_dispatcher";
+export { HttpDispatcher } from "./dispatcher";

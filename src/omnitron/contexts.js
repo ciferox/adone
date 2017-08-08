@@ -26,6 +26,7 @@ export default class Contexts {
     async uninitialize() {
         for (const ctx of this._cache.values()) {
             if (is.function(ctx.uninitialize)) {
+                // eslint-disable-next-line
                 await ctx.uninitialize();
             }
         }

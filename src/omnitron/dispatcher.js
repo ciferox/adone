@@ -1,15 +1,32 @@
 const {
     is,
-    omnitron: { const: { STATUSES } }
+    x,
+    std,
+    netron,
+    omnitron
 } = adone;
 
+const {
+    Configuration,
+    const: { STATUSES }
+} = omnitron;
+
+// NOTE: local gate always be first in list of gates in gates.json
+
 export default class Dispatcher {
-    constructor(app, { noisily = true, configurator = null, omnitron = null } = {}) {
+    constructor(app, { noisily = false, configuration = null, omnitron = null, netronOptions = {} } = {}) {
         this.app = app;
         this.noisily = noisily;
-        this._configurator = configurator;
+        this._configuration = configuration;
         this.omnitron = omnitron;
-        this.netron = null;
+        this.netron = new netron.Netron(null, netronOptions);
+
+        this.netron.on("peer online", (peer) => {
+            noisily && adone.info(`Peer '${peer.getRemoteAddress().full}' (${peer.uid}) connected`);
+        }).on("peer offline", (peer) => {
+            noisily && adone.info(`Peer '${peer.getRemoteAddress().full}' (${peer.uid}) disconnected`);
+        });
+
         this.peer = null;
         this.descriptors = {
             stodut: null,
@@ -17,48 +34,45 @@ export default class Dispatcher {
         };
     }
 
+    bind(options) {
+        return this.netron.bind(options);
+    }
+
     get connected() {
         return !is.null(this.peer);
     }
 
-    configurator() {
-        if (is.null(this._configurator)) {
-            this._configurator = new adone.omnitron.Configurator(this.app);
+    configuration() {
+        if (is.null(this._configuration)) {
+            this._configuration = new Configuration(this.app);
         }
-        return this._configurator.loadAll();
+        return this._configuration.load();
     }
 
-    async connect(gate = null, options = {}) {
+    async connect(gate = null) {
         if (is.nil(gate) || is.nil(gate.port)) {
-            return this.connectLocal(options);
+            return this.connectLocal();
         }
 
-        this.netron = new adone.netron.Netron(null, options);
         this.peer = await this.netron.connect(gate);
+        return this.peer;
     }
 
     async connectLocal(options, forceStart = true, _counter = 0) {
         let status = 0;
         if (!this.connected) {
-            const configurator = await this.configurator();
-            const gateManager = configurator.gateManager;
-            const localGate = gateManager.getGate({ id: (is.plainObject(options) && is.string(options.gateId) ? options.gateId : "local") });
+            const configuration = await this.configuration();
+            const localGate = configuration.gates[0];
             if (is.nil(localGate)) {
-                throw new adone.x.NotExists("Configuration for gate 'local' is not found");
+                throw new x.NotExists("Configuration for gate 'local' is not found");
             }
-            if (localGate.status === adone.omnitron.const.DISABLED) {
-                throw new adone.x.IllegalState("Gate 'local' is disabled");
+            if (localGate.status === omnitron.const.DISABLED) {
+                throw new x.IllegalState("Gate 'local' is disabled");
             }
 
-            let netron = null;
             let peer = null;
             try {
-                if (is.netron(options)) {
-                    netron = options;
-                } else {
-                    netron = new adone.netron.Netron(null, options);
-                }
-                peer = await netron.connect(localGate);
+                peer = await this.netron.connect(localGate);
                 status = _counter >= 1 ? 0 : 1;
             } catch (err) {
                 if (!forceStart || _counter >= 3) {
@@ -70,7 +84,6 @@ export default class Dispatcher {
                     return this.connectLocal(options, forceStart, ++_counter);
                 }
             }
-            this.netron = netron;
             this.peer = peer;
         }
 
@@ -81,20 +94,18 @@ export default class Dispatcher {
         if (this.connected) {
             await this.netron.disconnect();
             await this.netron.unbind();
-            this.netron = null;
             this.peer = null;
         }
     }
 
     spawn(spiritualWay = true) {
-        const omnitronPath = adone.std.path.resolve(adone.appinstance.adoneRootPath, "lib/omnitron/index.js");
         if (spiritualWay) {
             return new Promise((resolve, reject) => {
-                this.configurator().then((configurator) => {
-                    const omnitronConfig = configurator.omnitron;
-                    this.descriptors.stdout = adone.std.fs.openSync(omnitronConfig.logFilePath, "a");
-                    this.descriptors.stderr = adone.std.fs.openSync(omnitronConfig.errorLogFilePath, "a");
-                    const child = adone.std.child_process.spawn(process.execPath || "node", [omnitronPath], {
+                this.configuration().then((/*configuration*/) => {
+                    const omnitronConfig = this.app.config.omnitron;
+                    this.descriptors.stdout = std.fs.openSync(omnitronConfig.logFilePath, "a");
+                    this.descriptors.stderr = std.fs.openSync(omnitronConfig.errorLogFilePath, "a");
+                    const child = std.child_process.spawn(process.execPath || "node", [std.path.resolve(adone.appinstance.adoneRootPath, "lib/omnitron/index.js")], {
                         detached: true,
                         cwd: process.cwd(),
                         stdio: ["ipc", this.descriptors.stdout, this.descriptors.stderr]
@@ -112,7 +123,7 @@ export default class Dispatcher {
         }
         let omnitron;
         if (is.null(this.omnitron)) {
-            omnitron = new adone.omnitron.Omnitron();
+            omnitron = new omnitron.Omnitron();
         } else {
             omnitron = this.omnitron;
         }
@@ -125,7 +136,7 @@ export default class Dispatcher {
             // Can be used in test environment.
             if (is.string(this.app.config.omnitron.pidFilePath)) {
                 try {
-                    const pid = parseInt(adone.std.fs.readFileSync(this.app.config.omnitron.pidFilePath).toString());
+                    const pid = parseInt(std.fs.readFileSync(this.app.config.omnitron.pidFilePath).toString());
                     if (is.windows) {
                         try {
                             await this.killSelf();
@@ -136,11 +147,10 @@ export default class Dispatcher {
                         }
                     } else {
                         this.netron && await this.netron.disconnect();
-                        this.netron = null;
                         this.peer = null;
 
                         try {
-                            const pid = parseInt(adone.std.fs.readFileSync(this.app.config.omnitron.pidFilePath).toString());
+                            const pid = parseInt(std.fs.readFileSync(this.app.config.omnitron.pidFilePath).toString());
                             if (killChildren) {
                                 await this._killProcessChildren(pid);
                             }
@@ -177,17 +187,16 @@ export default class Dispatcher {
     }
 
     async isOnline(options, checkAttempts = 1) {
-        const n = new adone.netron.Netron(null, { checkAttempts });
+        const n = new netron.Netron(null, { checkAttempts });
         let isOK = false;
         try {
             if (is.nil(options) || !options.port) {
-                const gates = (await this.configurator()).gates;
-                const localGate = gates.getGate({ id: "local" });
+                const localGate = (await this.configuration()).gates[0];
                 if (is.nil(localGate)) {
-                    throw new adone.x.NotExists("Configuration for gate 'local' is not found");
+                    throw new x.NotExists("Configuration for gate 'local' is not found");
                 }
-                if (localGate.status === adone.omnitron.const.DISABLED) {
-                    throw new adone.x.IllegalState("Gate 'local' is disabled");
+                if (localGate.status === omnitron.const.DISABLED) {
+                    throw new x.IllegalState("Gate 'local' is disabled");
                 }
                 await n.connect(localGate);
                 await n.disconnect();
@@ -276,7 +285,7 @@ export default class Dispatcher {
 
     async list(status) {
         if (!STATUSES.includes(status)) {
-            throw new adone.x.NotValid(`Not valid status: ${status}`);
+            throw new x.NotValid(`Not valid status: ${status}`);
         }
 
         return (await this.getService("omnitron")).list({
@@ -300,6 +309,7 @@ export default class Dispatcher {
                 for (let i = 0; i < n && exists; ++i) {
                     try {
                         process.kill(pid, 0); // check the existence
+                        // eslint-disable-next-line
                         await adone.promise.delay(100);
                     } catch (err) {
                         exists = false;

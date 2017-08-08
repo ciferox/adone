@@ -63,7 +63,7 @@ describe("net", "Socket", function () {
         server = new ServerSocket();
         server.defaults();
         client.defaults();
-        defaultPort = server.option.defaultPort;
+        defaultPort = server.options.defaultPort;
         is.null(SERVER_PORT) && (SERVER_PORT = await adone.net.util.getFreePort());
     });
 
@@ -262,21 +262,21 @@ describe("net", "Socket", function () {
             const s = new adone.net.Server();
             const c = new adone.net.Socket();
 
-            assert.equal(s.option.protocol, "tcp:");
-            assert.equal(c.option.protocol, "tcp:");
-            assert.isNotOk(s.option.does_not_exit);
-            assert.isNotOk(c.option.does_not_exit);
+            assert.equal(s.options.protocol, "tcp:");
+            assert.equal(c.options.protocol, "tcp:");
+            assert.isNotOk(s.options.does_not_exit);
+            assert.isNotOk(c.options.does_not_exit);
         });
 
         it("set()", () => {
             const s = new adone.net.Server();
             const c = new adone.net.Socket();
 
-            s.option.hello = "world";
-            c.option.hello = "world";
+            s.options.hello = "world";
+            c.options.hello = "world";
 
-            assert.equal(s.option.hello, "world");
-            assert.equal(c.option.hello, "world");
+            assert.equal(s.options.hello, "world");
+            assert.equal(c.options.hello, "world");
         });
 
         it("assign()", () => {
@@ -288,26 +288,26 @@ describe("net", "Socket", function () {
                 b: "bb"
             };
 
-            s.option.assign(options);
-            c.option.assign(options);
+            s.options.assign(options);
+            c.options.assign(options);
 
-            assert.equal(s.option.a, "aa");
-            assert.equal(s.option.b, "bb");
-            assert.equal(c.option.a, "aa");
-            assert.equal(c.option.b, "bb");
+            assert.equal(s.options.a, "aa");
+            assert.equal(s.options.b, "bb");
+            assert.equal(c.options.a, "aa");
+            assert.equal(c.options.b, "bb");
         });
 
         it("has()", () => {
             const s = new adone.net.Server();
             const c = new adone.net.Socket();
 
-            s.option.a = "aa";
-            c.option.a = "aa";
+            s.options.a = "aa";
+            c.options.a = "aa";
 
-            assert.isOk(s.option.has("a"));
-            assert.isOk(c.option.has("a"));
-            assert.isNotOk(s.option.has("b"));
-            assert.isNotOk(c.option.has("b"));
+            assert.isOk(s.options.has("a"));
+            assert.isOk(c.options.has("a"));
+            assert.isNotOk(s.options.has("b"));
+            assert.isNotOk(c.options.has("b"));
         });
     });
 

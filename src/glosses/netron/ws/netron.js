@@ -52,15 +52,15 @@ export default class Netron extends GenesisNetron {
         }
     }
 
-    _createPeer(socket, gate, peerType = PEER_TYPE.PASSIVE) {
+    _createPeer(socket, server, peerType = PEER_TYPE.PASSIVE) {
         const peer = new Peer({
             netron: this,
             socket,
             packetHandler: this._processPacket,
             handlerThisArg: this,
-            protocol: this.option.protocol,
+            protocol: this.options.protocol,
             defaultPort: DEFAULT_PORT,
-            responseTimeout: this.option.responseTimeout
+            responseTimeout: this.options.responseTimeout
         });
         peer._type = peerType;
         return peer;

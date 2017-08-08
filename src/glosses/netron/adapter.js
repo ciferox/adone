@@ -1,14 +1,19 @@
-const { is, x } = adone;
+const {
+    is,
+    x,
+    configuration,
+    tag
+} = adone;
 
 export default class Adapter {
     constructor(options) {
-        this.option = new adone.configuration.Configuration();
-        this.option.assign(options);
+        this.options = new configuration.Configuration();
+        this.options.assign(options);
         this.server = null;
     }
 
     isBound() {
-        return !is.null(this.server); 
+        return !is.null(this.server);
     }
 
     bind(netron) {
@@ -19,4 +24,4 @@ export default class Adapter {
         throw new x.NotImplemented("method unbind() should be implemented");
     }
 }
-adone.tag.set(Adapter, adone.tag.NETRON_ADAPTER);
+tag.set(Adapter, tag.NETRON_ADAPTER);

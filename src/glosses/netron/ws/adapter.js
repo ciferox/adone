@@ -11,24 +11,24 @@ export default class Adapter extends adone.netron.Adapter {
     async bind(netron) {
         this.netron = netron;
 
-        const option = this.option;
-        if (option.secure) {
+        const options = this.options;
+        if (options.secure) {
             let cert;
             let key;
-            if (is.buffer(option.cert)) {
-                cert = option.cert;
-            } else if (is.string(option.cert)) {
-                cert = adone.std.fs.readFileSync(option.cert);
+            if (is.buffer(options.cert)) {
+                cert = options.cert;
+            } else if (is.string(options.cert)) {
+                cert = adone.std.fs.readFileSync(options.cert);
             } else {
-                throw new x.NotValid("parameter 'option.cert' is not valid (should be buffer or string)");
+                throw new x.NotValid("parameter 'options.cert' is not valid (should be buffer or string)");
             }
 
-            if (is.buffer(option.key)) {
-                key = option.key;
-            } else if (is.string(option.key)) {
-                key = adone.std.fs.readFileSync(option.key);
+            if (is.buffer(options.key)) {
+                key = options.key;
+            } else if (is.string(options.key)) {
+                key = adone.std.fs.readFileSync(options.key);
             } else {
-                throw new x.NotValid("parameter 'option.key' is not valid (should be buffer or string)");
+                throw new x.NotValid("parameter 'options.key' is not valid (should be buffer or string)");
             }
 
             this.server = adone.std.https.createServer({ cert, key });
@@ -36,7 +36,7 @@ export default class Adapter extends adone.netron.Adapter {
             this.server = adone.std.http.createServer();
         }
 
-        const [port, host] = adone.net.util.normalizeAddr(option.port, option.host, 4040);
+        const [port, host] = adone.net.util.normalizeAddr(options.port, options.host, 4040);
         await new Promise((resolve, reject) => {
             this.server.on("error", (e) => {
                 const unixSocket = is.string(port);
@@ -47,8 +47,10 @@ export default class Adapter extends adone.netron.Adapter {
                             if (e2.code === "ECONNREFUSED" || e2.code === "ENOENT") {
                                 try {
                                     adone.std.fs.unlinkSync(port);
-                                } catch (e) { }
-                                this.server.listen(port, host, option.backlog, resolve);
+                                } catch (e) {
+                                    //
+                                }
+                                this.server.listen(port, host, options.backlog, resolve);
                             }
                         });
                         clientSocket.connect({ path: port }, () => {
@@ -61,14 +63,16 @@ export default class Adapter extends adone.netron.Adapter {
                 } else {
                     try {
                         unixSocket && adone.std.fs.unlinkSync(port);
-                    } catch (e) { }
-                    this.server.listen(port, host, option.backlog, resolve);
+                    } catch (e) {
+                        //
+                    }
+                    this.server.listen(port, host, options.backlog, resolve);
                 }
             });
-            this.server.listen(port, host, option.backlog, resolve);
+            this.server.listen(port, host, options.backlog, resolve);
         });
 
-        const connHandler = netron.option.сonnectionHandler;
+        const connHandler = netron.options.сonnectionHandler;
 
         this._wss = new adone.net.ws.Server({ server: this.server });
         this._wss.on("connection", (ws) => {
@@ -77,14 +81,14 @@ export default class Adapter extends adone.netron.Adapter {
                 socket: ws,
                 packetHandler: netron._processPacket,
                 handlerThisArg: netron,
-                protocol: netron.option.protocol,
+                protocol: netron.options.protocol,
                 defaultPort: adone.netron.DEFAULT_PORT,
-                responseTimeout: netron.option.responseTimeout
+                responseTimeout: netron.options.responseTimeout
             });
             peer._type = adone.netron.PEER_TYPE.ACTIVE;
-            const gateId = option.id;
+            const gateId = options.id;
             if (!is.undefined(gateId)) {
-                peer.option.gateId = gateId;
+                peer.options.gateId = gateId;
             }
             netron._emitPeerEvent("peer create", peer);
             connHandler(peer).then(() => {

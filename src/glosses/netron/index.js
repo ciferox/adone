@@ -84,15 +84,6 @@ export class Interface {
 }
 adone.tag.set(Interface, adone.tag.NETRON_INTERFACE);
 
-const { util: { uuid } } = adone;
-
-export class Identity {
-    constructor(uid = uuid.v4()) {
-        this.uid = uid;
-
-    }
-}
-
 adone.lazify({
     decorator: "./decorators",
     Investigator: "./investigator",

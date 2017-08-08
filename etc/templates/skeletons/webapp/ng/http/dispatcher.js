@@ -7,13 +7,13 @@ const {
     server: { middleware }
 } = http;
 
-export class HttpServerDispatcher {
+export class HttpDispatcher {
     constructor(config) {
         this.config = config;
         this.server = null;
     }
 
-    async initialize() {
+    async initializeServer() {
         // create http server and attach common middlewares
         this.server = new http.server.Server();
         await this.server.use(middleware.logger())
@@ -25,7 +25,7 @@ export class HttpServerDispatcher {
         adone.info(`http server started at ${util.humanizeAddr("http", this.config.port, this.config.host)}`);
     }
 
-    async uninitialize() {
+    async uninitializeServer() {
         if (!is.null(this.server)) {
             await this.server.unbind();
             adone.info("http server stopped");

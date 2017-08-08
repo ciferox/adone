@@ -3,8 +3,8 @@ const { is, net } = adone;
 export default class Socket extends adone.EventEmitter {
     constructor(options = { }) {
         super();
-        this.option = new adone.configuration.Configuration();
-        this.option.assign({
+        this.options = new adone.configuration.Configuration();
+        this.options.assign({
             protocol: "tcp:",
             defaultPort: 1024,
             retryTimeout: 100,
@@ -13,11 +13,11 @@ export default class Socket extends adone.EventEmitter {
         }, options);
         this._localAddr = null;
         this._remoteAddr = null;
-        this.nodeSocket = this.option.socket;
+        this.nodeSocket = this.options.socket;
         this._buf = null;
-        this._handlerThisArg = this.option.handlerThisArg;
-        this._packetOwner = this.option.packetOwner || this;
-        const packetHandler = this.option.packetHandler;
+        this._handlerThisArg = this.options.handlerThisArg;
+        this._packetOwner = this.options.packetOwner || this;
+        const packetHandler = this.options.packetHandler;
         if (is.function(packetHandler)) {
             this.onPacketHandler = (() => packetHandler);
         }
@@ -27,7 +27,7 @@ export default class Socket extends adone.EventEmitter {
         if (is.null(this._localAddr)) {
             const nodeSocket = this.nodeSocket;
             if (!is.nil(nodeSocket)) {
-                const protocol = this.option.protocol;
+                const protocol = this.options.protocol;
                 if (!is.nil(nodeSocket.localAddress) && is.number(nodeSocket.localPort)) {
                     this._localAddr = adone.o({ port: nodeSocket.localPort, address: nodeSocket.localAddress });
                     this._localAddr.full = net.util.humanizeAddr(protocol, nodeSocket.localPort, nodeSocket.localAddress);
@@ -45,7 +45,7 @@ export default class Socket extends adone.EventEmitter {
         if (is.null(this._remoteAddr)) {
             const nodeSocket = this.nodeSocket;
             if (!is.nil(nodeSocket)) {
-                let protocol = this.option.protocol;
+                let protocol = this.options.protocol;
                 if (!protocol.endsWith(":")) {
                     protocol += ":";
                 }
@@ -113,12 +113,12 @@ export default class Socket extends adone.EventEmitter {
 
     connect(options = { }) {
         return new Promise((resolve, reject) => {
-            [options.port, options.host] = adone.net.util.normalizeAddr(options.port, options.host, this.option.defaultPort);
+            [options.port, options.host] = adone.net.util.normalizeAddr(options.port, options.host, this.options.defaultPort);
             let connected = false;
             let attempts = 0;
-            const reconnects = this.option.reconnects;
-            let retry = this.option.retryTimeout;
-            const max = this.option.retryMaxTimeout;
+            const reconnects = this.options.reconnects;
+            let retry = this.options.retryTimeout;
+            const max = this.options.retryMaxTimeout;
             let connectEvent;
             let nodeSocket;
 
@@ -169,9 +169,9 @@ export default class Socket extends adone.EventEmitter {
                 } else {
                     this.nodeSocket = null;
                     if (options.port === 0) {
-                        reject(new adone.x.Connect(`Host ${net.util.humanizeAddr(this.option.protocol, options.path)} is unreachable`));
+                        reject(new adone.x.Connect(`Host ${net.util.humanizeAddr(this.options.protocol, options.path)} is unreachable`));
                     } else {
-                        reject(new adone.x.Connect(`Host ${net.util.humanizeAddr(this.option.protocol, options.port, options.host)} is unreachable`));
+                        reject(new adone.x.Connect(`Host ${net.util.humanizeAddr(this.options.protocol, options.port, options.host)} is unreachable`));
                     }
                 }
             });

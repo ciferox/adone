@@ -10,17 +10,17 @@ export const normalizeAddr = (port, host, defaultPort) => {
             host = null;
             port = port.pathname;
         } else {
-            host = port.hostname || "localhost";
+            host = port.hostname || "0.0.0.0";
             port = Number.parseInt(port.port, 10);
         }
     } else if (is.object(port)) {
-        host = port.host || "localhost";
+        host = port.host || "0.0.0.0";
         port = port.port || 1024;
     } else {
         if (is.nil(port)) {
             port = defaultPort || 1024;
         }
-        host = host || "localhost";
+        host = host || "0.0.0.0";
     }
 
     return [port, host];
