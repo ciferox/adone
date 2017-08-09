@@ -529,7 +529,6 @@ export default class GenesisNetron extends AsyncEmitter {
         if (peer.isSuper) {
             peer._attachedContexts = new Map();
         }
-        peer.identity = data.identity;
         peer.uid = data.uid;
         if (is.propertyDefined(data, "defs")) {
             peer._updateStrongDefinitions(data.defs);

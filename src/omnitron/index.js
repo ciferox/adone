@@ -70,6 +70,9 @@ export default class Omnitron extends adone.application.Application {
     async initializeNetron(options) {
         // Initialize netron and bind its gates.
         this._.netron = new adone.netron.Netron(options);
+        
+        this._.netron.registerAdapter("ws", adone.netron.ws.Adapter);
+        
         this._.netron.on("peer online", (peer) => {
             adone.info(`Peer '${peer.getRemoteAddress().full}' (uid: ${peer.uid}) connected`);
         }).on("peer offline", (peer) => {

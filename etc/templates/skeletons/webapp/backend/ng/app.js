@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import adone from "adone";
-import { HttpServerDispatcher } from "../lib/http";
+import { HttpDispatcher } from "../lib/http";
 
 const {
     is,
@@ -35,7 +35,7 @@ class {{ name }} extends adone.application.Application {
         this._.config = this.config.app.envs[env];
 
         if (is.plainObject(this._.config.http)) {
-            this._.httpDispatcher = new HttpServerDispatcher(this._.config.http);
+            this._.httpDispatcher = new HttpDispatcher(this, this._.config.http);
             await this._.httpDispatcher.initialize();
         }
     }
