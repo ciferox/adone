@@ -3,6 +3,18 @@ const { is } = adone;
 const PROMISIFIED = Symbol.for("adone:promise:promisified");
 const PROMISIFY_SOURCE = Symbol.for("adone:promise:promisify_source");
 
+/**
+ * @typedef Deferred
+ * @property {Function} resolve
+ * @property {Function} reject
+ * @property {Promise} promise
+ */
+
+/**
+ * Creates a promise and returns an interface to control the state
+ *
+ * @returns {Deferred}
+ */
 export const defer = () => {
     const defer = {
         resolve: null,
@@ -16,15 +28,30 @@ export const defer = () => {
     return defer;
 };
 
-
+/**
+ * Returns a promise that will be resolved after given milliseconds
+ *
+ * @template T
+ * @param {number} ms delay in milliseconds
+ * @param {T} [value] resolving value
+ * @returns {Promise<T>}
+ */
 export const delay = (ms, value) => {
     return new Promise((resolve) => {
         adone.setTimeout(resolve, ms, value);
     });
 };
 
+/**
+ * Creates a promise that will be rejected after given milliseconds if the given promise is not fulfilled
+ *
+ * @template T
+ * @param {Promise<T>} promise promise to wrap
+ * @param {number} ms timeout in milliseconds
+ * @returns {Promise<T>}
+ */
 export const timeout = (promise, ms) => {
-    if (!adone.is.promise(promise)) {
+    if (!is.promise(promise)) {
         throw new adone.x.InvalidArgument("The first argument must be a promise");
     }
     return new Promise((resolve, reject) => {
@@ -52,11 +79,17 @@ export const timeout = (promise, ms) => {
     });
 };
 
+/**
+ * Converts a promise to node.js style callback
+ *
+ * @param {Promise} promise
+ * @param {Function} cb
+ */
 export const nodeify = (promise, cb) => {
-    if (!adone.is.promise(promise)) {
+    if (!is.promise(promise)) {
         throw new adone.x.InvalidArgument("The first argument must be a promise");
     }
-    if (!adone.is.function(cb)) {
+    if (!is.function(cb)) {
         return promise;
     }
     promise.then((x) => {
@@ -67,6 +100,13 @@ export const nodeify = (promise, cb) => {
     return promise;
 };
 
+/**
+ * Converts a callback function to a promise-based function
+ *
+ * @param {Function} fn
+ * @param {object} [context] Context to bind to new function
+ * @returns {Function}
+ */
 export const promisify = (fn, { context = null } = {}) => {
     if (!is.function(fn)) {
         throw new adone.x.InvalidArgument("The first argument must be a function");
@@ -110,7 +150,15 @@ export const promisify = (fn, { context = null } = {}) => {
     return res[name];
 };
 
-
+/**
+ * Promisifies entire object
+ *
+ * @param {object} source
+ * @param {string} [suffix] Suffix to use for keys
+ * @param {Function} [filter] Function to filter keys
+ * @param {object} [context] Context to bind to new functions
+ * @returns {object} object with promisified functions
+ */
 export const promisifyAll = (source, { suffix = "Async", filter = () => true, context } = {}) => {
     if (is.function(source)) {
         return promisify(source, context);
@@ -126,7 +174,14 @@ export const promisifyAll = (source, { suffix = "Async", filter = () => true, co
 
 };
 
-module.exports.finally = (promise, onFinally) => {
+/**
+ * Executes function after promise fulfillment
+ *
+ * @param {Promise} promise promise to wrap
+ * @param {Function} onFinally callback to call
+ * @returns {Promise} a promise that will be fulfilled using the original value
+ */
+const _finally = (promise, onFinally) => {
     onFinally = onFinally || adone.noop;
 
     return promise.then((val) => new Promise((resolve) => {
@@ -137,3 +192,5 @@ module.exports.finally = (promise, onFinally) => {
         throw err;
     }));
 };
+
+export { _finally as finally };
