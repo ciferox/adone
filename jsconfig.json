@@ -8,9 +8,8 @@
     ],
     "include": [
         "src",
-        // "tests",
+        "tests",
         "benchmarks",
-        "examples",
-        "typings/**/*.d.ts"
+        "examples"
     ]
 }
