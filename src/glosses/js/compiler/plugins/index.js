@@ -8,7 +8,8 @@ const plugins = {
         decorators: "./syntax/decorators",
         flow: "./syntax/flow",
         functionBind: "./syntax/function_bind",
-        objectRestSpread: "./syntax/object_rest_spread"
+        objectRestSpread: "./syntax/object_rest_spread",
+        exponentiationOperator: "./syntax/exponentiation_operator"
     }, null, require),
     transform: lazify({
         asyncToGenerator: "./transform/async_to_generator",
@@ -19,7 +20,19 @@ const plugins = {
         functionBind: "./transform/function_bind",
         objectRestSpread: "./transform/object_rest_spread",
         strictMode: "./transform/strict_mode",
-        importReplace: "./transform/import_replace"
+        importReplace: "./transform/import_replace",
+        arrowFunctions: "./transform/arrow_functions",
+        parameters: "./transform/parameters",
+        blockScoping: "./transform/block_scoping",
+        destructuring: "./transform/destructuring",
+        exponentiationOperator: "./transform/exponentiation_operator",
+        classes: "./transform/classes",
+        shorthandProperties: "./transform/shorthand_properties",
+        forOf: "./transform/for_of",
+        spread: "./transform/spread",
+        templateLiterals: "./transform/template_literals",
+        runtime: "./transform/runtime",
+        regenerator: "./transform/regenerator"
     }, null, require)
 };
 

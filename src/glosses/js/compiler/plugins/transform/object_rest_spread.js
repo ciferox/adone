@@ -87,24 +87,24 @@ export default function ({ types: t }) {
                 path.get("id").traverse({
                     RestProperty(path) {
                         if (
-                      // skip single-property case, e.g.
-                      // const { ...x } = foo();
-                      // since the RHS will not be duplicated
-                      this.originalPath.node.id.properties.length > 1 &&
-                      !t.isIdentifier(this.originalPath.node.init)
-                    ) {
-                      // const { a, ...b } = foo();
-                      // to avoid calling foo() twice, as a first step convert it to:
-                      // const _foo = foo(),
-                      //       { a, ...b } = _foo;
+                            // skip single-property case, e.g.
+                            // const { ...x } = foo();
+                            // since the RHS will not be duplicated
+                            this.originalPath.node.id.properties.length > 1 &&
+                            !t.isIdentifier(this.originalPath.node.init)
+                        ) {
+                            // const { a, ...b } = foo();
+                            // to avoid calling foo() twice, as a first step convert it to:
+                            // const _foo = foo(),
+                            //       { a, ...b } = _foo;
                             const initRef = path.scope.generateUidIdentifierBasedOnNode(
-                        this.originalPath.node.init, "ref");
-                      // insert _foo = foo()
+                                this.originalPath.node.init, "ref");
+                            // insert _foo = foo()
                             this.originalPath.insertBefore(t.variableDeclarator(initRef,
-                        this.originalPath.node.init));
-                      // replace foo() with _foo
+                                this.originalPath.node.init));
+                            // replace foo() with _foo
                             this.originalPath.replaceWith(t.variableDeclarator(
-                        this.originalPath.node.id, initRef));
+                                this.originalPath.node.id, initRef));
 
                             return;
                         }
@@ -120,24 +120,24 @@ export default function ({ types: t }) {
                         });
 
                         const [argument, callExpression] = createObjectSpread(
-                      file,
-                      path.parentPath.node.properties,
-                      ref
-                    );
+                            file,
+                            path.parentPath.node.properties,
+                            ref
+                        );
 
                         insertionPath.insertAfter(
-                      t.variableDeclarator(
-                        argument,
-                        callExpression
-                      )
-                    );
+                            t.variableDeclarator(
+                                argument,
+                                callExpression
+                            )
+                        );
 
                         insertionPath = insertionPath.getSibling(insertionPath.key + 1);
 
                         if (path.parentPath.node.properties.length === 0) {
                             path.findParent(
-                        (path) => path.isObjectProperty() || path.isVariableDeclarator()
-                      ).remove();
+                                (path) => path.isObjectProperty() || path.isVariableDeclarator()
+                            ).remove();
                         }
                     }
                 }, {

@@ -13,11 +13,15 @@ const {
 } = adone;
 
 
-const NG_ADDITIONAL_NPM_PACKAGES = {
-    "netron": "^0.1.3",
-    "@angular/flex-layout": "^2.0.0-beta.8"
+const NETRON_PACKAGES = {
+    "adone": "^0.6.54-3", // eslint-disable-line
+    "lodash": "^4.17.4", // eslint-disable-line
+    "ng-netron": "^0.1.7"
 };
 
+const NG_ADDITIONAL_NPM_PACKAGES = {
+    "@angular/flex-layout": "^2.0.0-beta.8"
+};
 
 export class Generator {
     constructor() {
@@ -157,8 +161,15 @@ export class Generator {
         const backendPath = withFrontend ? path.join(projectPath, "backend") : projectPath;
         this.gitFiles.push(path.join(withFrontend ? "backend" : "", "package-lock.json"));
 
+        let bundleDir;
+        if (netron) {
+            bundleDir = `${frontend}_netron`;
+        } else {
+            bundleDir = frontend;
+        }
+
         // backend files
-        await this._installWebappFiles(name, projectName, projectPath, { sourceDir, skipGit, frontend, withFrontend, backendPath });
+        await this._installWebappBackend(name, projectName, projectPath, { sourceDir, skipGit, frontend, netron, bundleDir, withFrontend, backendPath });
 
         // backend npms
         await this._installNpms(backendPath);
@@ -167,7 +178,7 @@ export class Generator {
         if (withFrontend) {
             const frotnendPath = path.join(projectPath, "frontend");
 
-            await this._installFrontend(name, projectPath, frotnendPath, { frontend, netron });
+            await this._installWebappFrontend(name, projectPath, frotnendPath, { frontend, netron, bundleDir });
 
             // frontend npms
             await this._installNpms(frotnendPath);
@@ -228,7 +239,7 @@ export class Generator {
         }
     }
 
-    async _installWebappFiles(name, projectName, projectPath, { sourceDir, skipGit, frontend, withFrontend, backendPath }) {
+    async _installWebappBackend(name, projectName, projectPath, { sourceDir, skipGit, frontend, netron, bundleDir, withFrontend, backendPath }) {
         const bar = adone.terminal.progress({
             schema: " :spinner installing backend files"
         });
@@ -275,7 +286,7 @@ export class Generator {
             });
 
             // src
-            await fast.src(`skeletons/webapp/backend/${frontend}/**/*`, {
+            await fast.src(`skeletons/webapp/backend/${bundleDir}/**/*`, {
                 cwd: this.templatesPath
             }).map((x) => {
                 x.relative = path.join(sourceDir, x.relative);
@@ -292,7 +303,7 @@ export class Generator {
             });
 
             // configs
-            await fast.src(`configs/webapp/${frontend}/**/*`, {
+            await fast.src(`configs/webapp/${bundleDir}/**/*`, {
                 cwd: this.templatesPath
             }).dest(backendPath, {
                 produceFiles: true
@@ -325,7 +336,7 @@ export class Generator {
         }
     }
 
-    async _installFrontend(name, projectPath, frotnendPath, { frontend, netron }) {
+    async _installWebappFrontend(name, projectPath, frotnendPath, { frontend, netron, bundleDir }) {
         const bar = adone.terminal.progress({
             schema: " :spinner installing frontend"
         });
@@ -333,31 +344,43 @@ export class Generator {
 
         try {
             const packageJsonPath = path.join(frotnendPath, "package.json");
+            const packageJson = new configuration.FileConfiguration();
 
             switch (frontend) {
                 case "ng": {
                     await this._initNgFrontend(name, projectPath, frotnendPath);
 
-                    await fast.src(`skeletons/webapp/frontend/${frontend}/**/*`, {
+                    // add additional packages
+                    await packageJson.load(packageJsonPath);
+                    for (const [name, version] of Object.entries(NG_ADDITIONAL_NPM_PACKAGES)) {
+                        packageJson.dependencies[name] = version;
+                    }
+
+                    // rewrite files
+                    await fast.src(`skeletons/webapp/frontend/${bundleDir}/**/*`, {
                         cwd: this.templatesPath
                     }).dest(frotnendPath, {
                         produceFiles: true
                     });
+
+                    // added lodash script
+                    const ngCliJson = new configuration.FileConfiguration();
+                    const ngCliJsonPath = path.join(frotnendPath, ".angular-cli.json");
+                    await ngCliJson.load(ngCliJsonPath);
+                    ngCliJson.apps[0].scripts.push("../node_modules/lodash/lodash.min.js");
+                    await ngCliJson.save(ngCliJsonPath, null, { space: "  " });
 
                     break;
                 }
             }
 
             if (netron) {
-                const packageJson = new configuration.FileConfiguration();
-                await packageJson.load(packageJsonPath);
-
-                for (const [name, version] of Object.entries(NG_ADDITIONAL_NPM_PACKAGES)) {
+                for (const [name, version] of Object.entries(NETRON_PACKAGES)) {
                     packageJson.dependencies[name] = version;
                 }
-
-                await packageJson.save(packageJsonPath, null, { space: "  " });
             }
+            
+            await packageJson.save(packageJsonPath, null, { space: "  " });
 
             bar.setSchema(" :spinner frontend installed");
             bar.complete(true);

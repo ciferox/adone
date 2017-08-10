@@ -81,10 +81,10 @@ serializer.register(109, Definition, (obj, buf) => {
 });
 
 export default class GenesisNetron extends AsyncEmitter {
-    constructor(options, uid = util.uuid.v4()) {
+    constructor(options, uid) {
         super();
 
-        this.uid = uid;
+        this.uid = is.nil(uid) ? util.uuid.v4() : uid;
         this.options = new Configuration();
         this.options.assign({
             protocol: "netron:",

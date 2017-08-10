@@ -7,6 +7,8 @@ lib: {
                     .transpile({
                         sourceMap: true,
                         plugins: [
+                            "syntax.decorators",
+                            "transform.decoratorsLegacy",
                             "transform.ESModules"
                         ]
                     })

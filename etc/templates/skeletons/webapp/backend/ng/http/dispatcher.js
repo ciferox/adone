@@ -14,10 +14,13 @@ export class HttpDispatcher {
     }
 
     async initialize() {
+        // const router = new http.server.middleware.router.Router();
+
         // create http server and attach common middlewares
         this.server = new http.server.Server();
         await this.server.use(middleware.logger())
             .use(middleware.favicon(`${this.config.publicDir}/favicon.ico`))
+            // .use(router.routes())
             .use(middleware.rewrite(/^(?!^\/[^\\]*\.(\w+)$).*$/, "/index.html"))
             .use(middleware.serve(this.config.publicDir))
             .bind(this.config);

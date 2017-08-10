@@ -19,7 +19,7 @@ export default class Dispatcher {
         this.noisily = noisily;
         this._configuration = configuration;
         this.omnitron = omnitron;
-        this.netron = new netron.Netron(null, netronOptions);
+        this.netron = new netron.Netron(netronOptions);
 
         this.netron.on("peer online", (peer) => {
             noisily && adone.info(`Peer '${peer.getRemoteAddress().full}' (${peer.uid}) connected`);
@@ -36,6 +36,19 @@ export default class Dispatcher {
 
     bind(options) {
         return this.netron.bind(options);
+    }
+
+    async bindGates(gates, { adapters = null } = {}) {
+        if (is.plainObject(adapters)) {
+            for (const [name, AdapterClass] of Object.entries(adapters)) {
+                this.netron.registerAdapter(name, AdapterClass);
+            }
+        }
+
+        for (const gate of gates) {
+            // eslint-disable-next-line
+            await this.bind(gate);
+        }
     }
 
     get connected() {
@@ -187,7 +200,7 @@ export default class Dispatcher {
     }
 
     async isOnline(options, checkAttempts = 1) {
-        const n = new netron.Netron(null, { checkAttempts });
+        const n = new netron.Netron({ checkAttempts });
         let isOK = false;
         try {
             if (is.nil(options) || !options.port) {

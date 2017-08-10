@@ -47,15 +47,19 @@ export default class GenesisPeer extends AsyncEmitter {
     }
 
     connect(/*options*/) {
-        throw new x.NotImplemented("method connect() should be implemented");
+        throw new x.NotImplemented("Method connect() should be implemented");
+    }
+
+    disconnect() {
+        throw new x.NotImplemented("Method disconnect() should be implemented");
     }
 
     isConnected() {
-        throw new x.NotImplemented("method isConnected() should be implemented");
+        throw new x.NotImplemented("Method isConnected() should be implemented");
     }
 
     write(/*data*/) {
-        throw new x.NotImplemented("method write() should be implemented");
+        throw new x.NotImplemented("Method write() should be implemented");
     }
 
     getType() {
@@ -102,25 +106,25 @@ export default class GenesisPeer extends AsyncEmitter {
     set(defId, name, data) {
         const ctxDef = this._defs.get(defId);
         if (is.undefined(ctxDef)) {
-            return Promise.reject(new x.Unknown(`unknown definition '${defId}'`));
+            return Promise.reject(new x.Unknown(`Unknown definition '${defId}'`));
         }
 
         let $ = ctxDef.$;
         if (name in $) {
             $ = $[name];
             if (!$.method && $.readonly) {
-                return Promise.reject(new x.InvalidAccess(`${name} is not writable`));
+                return Promise.reject(new x.InvalidAccess(`'${name}' is not writable`));
             }
             data = this._processArgs(ctxDef, $, data);
             return this.netron.send(this, 1, this.streamId.next(), 1, ACTION.SET, [defId, name, data]);
         }
-        return Promise.reject(new x.NotExists(`${name} not exists`));
+        return Promise.reject(new x.NotExists(`'${name}' not exists`));
     }
 
     get(defId, name, defaultData) {
         const ctxDef = this._defs.get(defId);
         if (is.undefined(ctxDef)) {
-            return Promise.reject(new x.Unknown(`unknown definition '${defId}'`));
+            return Promise.reject(new x.Unknown(`Unknown definition '${defId}'`));
         }
 
         let $ = ctxDef.$;
@@ -137,7 +141,7 @@ export default class GenesisPeer extends AsyncEmitter {
                 }).catch(reject);
             });
         }
-        return Promise.reject(new x.NotExists(`${name} not exists`));
+        return Promise.reject(new x.NotExists(`'${name}' not exists`));
     }
 
     ping() {

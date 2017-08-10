@@ -137,7 +137,7 @@ export default class Netron extends GenesisNetron {
         if (this.adapters.has(id)) {
             throw new adone.x.Exists(`Adapter '${id}' already registerd`);
         }
-        this.adapters.set(is, AdapterClass);
+        this.adapters.set(id, AdapterClass);
     }
 
     disconnect(uid) {

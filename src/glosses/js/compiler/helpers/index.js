@@ -21,7 +21,14 @@ export default helpers;
 lazify({
     remapAsyncToGenerator: "./remap_async_to_generator",
     functionName: "./function_name",
-    getFunctionArity: "./get_function_arity"
+    getFunctionArity: "./get_function_arity",
+    callDelegate: "./call_delegate",
+    hoistVariables: "./hoist_variables",
+    explodeAssignableExpression: "./explode_assignable_expression",
+    builderBinaryAssignmentOperatorVisitor: "./builder_binary_assignment_operator_visitor",
+    optimiseCallExpression: "./optimise_call_expression",
+    ReplaceSupers: "./replace_supers",
+    defineMap: "./define_map"
 }, helpers, require);
 
 
