@@ -3,669 +3,1061 @@ export default function (lib, util) {
     const { flag } = util;
     const { is } = adone;
 
-    const assert = lib.assert = (express, errmsg) => {
+    const assert = lib.assert = (value, mesasge) => {
         const test = getAssertion(null, null, lib.assert, true);
-        test.assert(express, errmsg, "[ negation message unavailable ]");
+        test.assert(value, mesasge, "[ negation m unavailable ]");
     };
 
+    /**
+     * Throws an exception, like node.js
+     */
     assert.fail = (actual, expected, message = "assert.fail()", operator) => {
         throw new AssertionError(message, { actual, expected, operator }, assert.fail);
     };
 
-    assert.isOk = (val, msg) => {
-        getAssertion(val, msg, assert.isOk, true).is.ok;
+    /**
+     * Asserts that value is truthy
+     */
+    assert.isOk = (value, message) => {
+        getAssertion(value, message, assert.isOk, true).is.ok;
     };
 
-    assert.isNotOk = (val, msg) => {
-        getAssertion(val, msg, assert.isNotOk, true).is.not.ok;
+    /**
+     * Asserts that value is not truthy
+     */
+    assert.isNotOk = (value, message) => {
+        getAssertion(value, message, assert.isNotOk, true).is.not.ok;
     };
 
-    assert.equal = function (act, exp, msg) {
-        const test = getAssertion(act, msg, assert.equal, true);
+    /**
+     * Asserts non-strict equality (==)
+     */
+    assert.equal = (actual, expected, message) => {
+        const test = getAssertion(actual, message, assert.equal, true);
         test.assert(
-            exp == flag(test, "object"),  // eslint-disable-line eqeqeq
+            expected == flag(test, "object"), // eslint-disable-line eqeqeq
             "expected #{this} to equal #{exp}",
             "expected #{this} to not equal #{act}",
-            exp,
-            act,
+            expected,
+            actual,
             true
         );
     };
 
-    assert.notEqual = function (act, exp, msg) {
-        const test = getAssertion(act, msg, assert.notEqual, true);
+    /**
+     * Asserts non-struct inequality (!=)
+     */
+    assert.notEqual = (actual, expected, message) => {
+        const test = getAssertion(actual, message, assert.notEqual, true);
         test.assert(
-            exp !== flag(test, "object"),
+            expected != flag(test, "object"), // eslint-disable-line eqeqeq
             "expected #{this} to not equal #{exp}",
             "expected #{this} to equal #{act}",
-            exp,
-            act,
+            expected,
+            actual,
             true
         );
     };
 
-    assert.strictEqual = (act, exp, msg) => {
-        getAssertion(act, msg, assert.strictEqual, true).to.equal(exp);
+    /**
+     * Asserts strict equality (==)
+     */
+    assert.strictEqual = (actual, expected, message) => {
+        getAssertion(actual, message, assert.strictEqual, true).to.equal(expected);
     };
 
-    assert.notStrictEqual = (act, exp, msg) => {
-        getAssertion(act, msg, assert.notStrictEqual, true).to.not.equal(exp);
+    /**
+     * Asserts strict inequality (!==)
+     */
+    assert.notStrictEqual = (actual, expected, message) => {
+        getAssertion(actual, message, assert.notStrictEqual, true).to.not.equal(expected);
     };
 
-    assert.deepEqual = assert.deepStrictEqual = (act, exp, msg) => {
-        getAssertion(act, msg, assert.deepEqual, true).to.eql(exp);
+    /**
+     * Asserts that actual is deeply equal to expected
+     */
+    assert.deepEqual = assert.deepStrictEqual = (actual, expected, message) => {
+        getAssertion(actual, message, assert.deepEqual, true).to.eql(expected);
     };
 
-    assert.equalArrays = (act, exp, msg) => {
-        getAssertion(act, msg, assert.equalArrays, true).to.eqlArray(exp);
+    /**
+     * Asserts that actual and expected have the same length and the same members (===)
+     */
+    assert.equalArrays = (actual, expected, message) => {
+        getAssertion(actual, message, assert.equalArrays, true).to.eqlArray(expected);
     };
 
-    assert.notDeepEqual = (act, exp, msg) => {
-        getAssertion(act, msg, assert.notDeepEqual, true).to.not.eql(exp);
+    /**
+     * Asserts that actual is not deeply equal to expected
+     */
+    assert.notDeepEqual = (actual, expected, message) => {
+        getAssertion(actual, message, assert.notDeepEqual, true).to.not.eql(expected);
     };
 
-    assert.isAbove = (val, abv, msg) => {
-        getAssertion(val, msg, assert.isAbove, true).to.be.above(abv);
+    /**
+     * Asserts that value > above
+     */
+    assert.isAbove = (value, above, message) => {
+        getAssertion(value, message, assert.isAbove, true).to.be.above(above);
     };
 
-    assert.isAtLeast = (val, atlst, msg) => {
-        getAssertion(val, msg, assert.isAtLeast, true).to.be.least(atlst);
+    /**
+     * Asserts that value >= atLeast
+     */
+    assert.isAtLeast = (value, atLeast, message) => {
+        getAssertion(value, message, assert.isAtLeast, true).to.be.least(atLeast);
     };
 
-    assert.isBelow = (val, blw, msg) => {
-        getAssertion(val, msg, assert.isBelow, true).to.be.below(blw);
+    /**
+     * Asserts that value < below
+     */
+    assert.isBelow = (value, below, message) => {
+        getAssertion(value, message, assert.isBelow, true).to.be.below(below);
     };
 
-    assert.isAtMost = (val, atmst, msg) => {
-        getAssertion(val, msg, assert.isAtMost, true).to.be.most(atmst);
+    /**
+     * Asserts that value <= atMost
+     */
+    assert.isAtMost = (value, atMost, message) => {
+        getAssertion(value, message, assert.isAtMost, true).to.be.most(atMost);
     };
 
-    assert.isTrue = (val, msg) => {
-        getAssertion(val, msg, assert.isTrue, true).is.true;
+    /**
+     * Asserts that value is true
+     */
+    assert.isTrue = (value, message) => {
+        getAssertion(value, message, assert.isTrue, true).is.true;
     };
 
-    assert.isNotTrue = (val, msg) => {
-        getAssertion(val, msg, assert.isNotTrue, true).to.not.equal(true);
+    /**
+     * Asserts that value is not true
+     */
+    assert.isNotTrue = (value, message) => {
+        getAssertion(value, message, assert.isNotTrue, true).to.not.equal(true);
     };
 
-    assert.isFalse = (val, msg) => {
-        getAssertion(val, msg, assert.isFalse, true).is.false;
+    /**
+     * Asserts that value is false
+     */
+    assert.isFalse = (value, message) => {
+        getAssertion(value, message, assert.isFalse, true).is.false;
     };
 
-    assert.isNotFalse = (val, msg) => {
-        getAssertion(val, msg, assert.isNotFalse, true).to.not.equal(false);
+    /**
+     * Asserts that value is not false
+     */
+    assert.isNotFalse = (value, message) => {
+        getAssertion(value, message, assert.isNotFalse, true).to.not.equal(false);
     };
 
-    assert.isNull = (val, msg) => {
-        getAssertion(val, msg, assert.isNull, true).to.equal(null);
+    /**
+     * Asserts that value is null
+     */
+    assert.isNull = (value, message) => {
+        getAssertion(value, message, assert.isNull, true).to.equal(null);
     };
 
-    assert.isNotNull = (val, msg) => {
-        getAssertion(val, msg, assert.isNotNull, true).to.not.equal(null);
+    /**
+     * Asserts that value is not null
+     */
+    assert.isNotNull = (value, message) => {
+        getAssertion(value, message, assert.isNotNull, true).to.not.equal(null);
     };
 
-    assert.isNaN = (val, msg) => {
-        getAssertion(val, msg, assert.isNaN, true).to.be.NaN;
+    /**
+     * Asserts that value is NaN
+     */
+    assert.isNaN = (value, message) => {
+        getAssertion(value, message, assert.isNaN, true).to.be.NaN;
     };
 
-    assert.isNotNaN = (val, msg) => {
-        getAssertion(val, msg, assert.isNotNaN, true).not.to.be.NaN;
+    /**
+     * Asserts that value is not NaN
+     */
+    assert.isNotNaN = (value, message) => {
+        getAssertion(value, message, assert.isNotNaN, true).not.to.be.NaN;
     };
 
-    assert.exists = (val, msg) => {
-        getAssertion(val, msg, assert.exists, true).to.exist;
+    /**
+     * Asserts that value neither null nor undefined
+     */
+    assert.exists = (value, message) => {
+        getAssertion(value, message, assert.exists, true).to.exist;
     };
 
-    assert.notExists = (val, msg) => {
-        getAssertion(val, msg, assert.notExists, true).to.not.exist;
+    /**
+     * Asserts that value either null or undefined
+     */
+    assert.notExists = (value, message) => {
+        getAssertion(value, message, assert.notExists, true).to.not.exist;
     };
 
-    assert.isUndefined = (val, msg) => {
-        getAssertion(val, msg, assert.isUndefined, true).to.equal(undefined);
+    /**
+     * Asserts that value is undefined
+     */
+    assert.isUndefined = (value, message) => {
+        getAssertion(value, message, assert.isUndefined, true).to.equal(undefined);
     };
 
-    assert.isDefined = (val, msg) => {
-        getAssertion(val, msg, assert.isDefined, true).to.not.equal(undefined);
+    /**
+     * Asserts that value is not undefined
+     */
+    assert.isDefined = (value, message) => {
+        getAssertion(value, message, assert.isDefined, true).to.not.equal(undefined);
     };
 
-    assert.isFunction = (val, msg) => {
-        getAssertion(val, msg, assert.isFunction, true).to.be.a("function");
+    /**
+     * Asserts that value is a function
+     */
+    assert.isFunction = (value, message) => {
+        getAssertion(value, message, assert.isFunction, true).to.be.a("function");
     };
 
-    assert.isNotFunction = (val, msg) => {
-        getAssertion(val, msg, assert.isNotFunction, true).to.not.be.a("function");
+    /**
+     * Asserts that value is not a function
+     */
+    assert.isNotFunction = (value, message) => {
+        getAssertion(value, message, assert.isNotFunction, true).to.not.be.a("function");
     };
 
-    assert.isObject = (val, msg) => {
-        getAssertion(val, msg, assert.isObject, true).to.be.a("object");
+    /**
+     * Asserts that value is an object of type Object
+     */
+    assert.isObject = (value, message) => {
+        getAssertion(value, message, assert.isObject, true).to.be.a("object");
     };
 
-    assert.isNotObject = (val, msg) => {
-        getAssertion(val, msg, assert.isNotObject, true).to.not.be.a("object");
+    /**
+     * Asserts that value is not an object of type Object
+     */
+    assert.isNotObject = (value, message) => {
+        getAssertion(value, message, assert.isNotObject, true).to.not.be.a("object");
     };
 
-    assert.isArray = (val, msg) => {
-        getAssertion(val, msg, assert.isArray, true).to.be.an("array");
+    /**
+     * Asserts that value is an array
+     */
+    assert.isArray = (value, message) => {
+        getAssertion(value, message, assert.isArray, true).to.be.an("array");
     };
 
-    assert.isNotArray = (val, msg) => {
-        getAssertion(val, msg, assert.isNotArray, true).to.not.be.an("array");
+    /**
+     * Asserts that value is not an array
+     */
+    assert.isNotArray = (value, message) => {
+        getAssertion(value, message, assert.isNotArray, true).to.not.be.an("array");
     };
 
-    assert.isString = (val, msg) => {
-        getAssertion(val, msg, assert.isString, true).to.be.a("string");
+    /**
+     * Asserts that value is a string
+     */
+    assert.isString = (value, message) => {
+        getAssertion(value, message, assert.isString, true).to.be.a("string");
     };
 
-    assert.isNotString = (val, msg) => {
-        getAssertion(val, msg, assert.isNotString, true).to.not.be.a("string");
+    /**
+     * Asserts that value is not a string
+     */
+    assert.isNotString = (value, message) => {
+        getAssertion(value, message, assert.isNotString, true).to.not.be.a("string");
     };
 
-    assert.isNumber = (val, msg) => {
-        getAssertion(val, msg, assert.isNumber, true).to.be.a("number");
+    /**
+     * Asserts that value is a number
+     */
+    assert.isNumber = (value, message) => {
+        getAssertion(value, message, assert.isNumber, true).to.be.a("number");
     };
 
-    assert.isNotNumber = (val, msg) => {
-        getAssertion(val, msg, assert.isNotNumber, true).to.not.be.a("number");
+    /**
+     * Asserts that value is not a number
+     */
+    assert.isNotNumber = (value, message) => {
+        getAssertion(value, message, assert.isNotNumber, true).to.not.be.a("number");
     };
 
-    assert.isFinite = (val, msg) => {
-        getAssertion(val, msg, assert.isFinite, true).to.be.finite;
+    /**
+     * Asserts that value is a finite number
+     */
+    assert.isFinite = (value, message) => {
+        getAssertion(value, message, assert.isFinite, true).to.be.finite;
     };
 
-    assert.isBoolean = (val, msg) => {
-        getAssertion(val, msg, assert.isBoolean, true).to.be.a("boolean");
+    /**
+     * Asserts that value is a boolean
+     */
+    assert.isBoolean = (value, message) => {
+        getAssertion(value, message, assert.isBoolean, true).to.be.a("boolean");
     };
 
-    assert.isNotBoolean = (val, msg) => {
-        getAssertion(val, msg, assert.isNotBoolean, true).to.not.be.a("boolean");
+    /**
+     * Asserts that value is not a boolean
+     */
+    assert.isNotBoolean = (value, message) => {
+        getAssertion(value, message, assert.isNotBoolean, true).to.not.be.a("boolean");
     };
 
-    assert.typeOf = (val, type, msg) => {
-        getAssertion(val, msg, assert.typeOf, true).to.be.a(type);
+    /**
+     * Asserts that value's type is `type`
+     */
+    assert.typeOf = (value, type, message) => {
+        getAssertion(value, message, assert.typeOf, true).to.be.a(type);
     };
 
-    assert.notTypeOf = (val, type, msg) => {
-        getAssertion(val, msg, assert.notTypeOf, true).to.not.be.a(type);
+    /**
+     * Assert that value's type is not `type`
+     */
+    assert.notTypeOf = (value, type, message) => {
+        getAssertion(value, message, assert.notTypeOf, true).to.not.be.a(type);
     };
 
-    assert.instanceOf = (val, type, msg) => {
-        getAssertion(val, msg, assert.instanceOf, true).to.be.instanceOf(type);
+    /**
+     * Asserts that value is an instance of constructor
+     */
+    assert.instanceOf = (value, type, message) => {
+        getAssertion(value, message, assert.instanceOf, true).to.be.instanceOf(type);
     };
 
-    assert.notInstanceOf = (val, type, msg) => {
-        getAssertion(val, msg, assert.notInstanceOf, true).to.not.be.instanceOf(type);
+    /**
+     * Asserts that value is not an instance of constructor
+     */
+    assert.notInstanceOf = (value, type, message) => {
+        getAssertion(value, message, assert.notInstanceOf, true).to.not.be.instanceOf(type);
     };
 
-    assert.include = (exp, inc, msg) => {
-        getAssertion(exp, msg, assert.include, true).include(inc);
+    /**
+     * Asserts that expected includes value
+     */
+    assert.include = (expected, value, message) => {
+        getAssertion(expected, message, assert.include, true).include(value);
     };
 
-    assert.notInclude = (exp, inc, msg) => {
-        getAssertion(exp, msg, assert.notInclude, true).not.include(inc);
+    /**
+     * Asserts that expected does not include value
+     */
+    assert.notInclude = (expected, value, message) => {
+        getAssertion(expected, message, assert.notInclude, true).not.include(value);
     };
 
-    assert.deepInclude = (exp, inc, msg) => {
-        getAssertion(exp, msg, assert.deepInclude, true).deep.include(inc);
+    /**
+     * Asserts that expected includes value
+     */
+    assert.deepInclude = (expected, value, message) => {
+        getAssertion(expected, message, assert.deepInclude, true).deep.include(value);
     };
 
-    assert.notDeepInclude = (exp, inc, msg) => {
-        getAssertion(exp, msg, assert.notDeepInclude, true).not.deep.include(inc);
+    /**
+     * Asserts that expected does not include value
+     */
+    assert.notDeepInclude = (expecte, include, message) => {
+        getAssertion(expecte, message, assert.notDeepInclude, true).not.deep.include(include);
     };
 
-    assert.nestedInclude = function (exp, inc, msg) {
-        getAssertion(exp, msg, assert.nestedInclude, true).nested.include(inc);
+    /**
+     * Asserts that expected includes value
+     * Enables the use of dot- and bracket-notation for referencing nested properties
+     */
+    assert.nestedInclude = (expected, value, message) => {
+        getAssertion(expected, message, assert.nestedInclude, true).nested.include(value);
     };
 
-    assert.notNestedInclude = function (exp, inc, msg) {
-        getAssertion(exp, msg, assert.notNestedInclude, true).not.nested.include(inc);
+    /**
+     * Asserts that expected does not include inc
+     * Enables the use of dot- and bracket-notation for referencing nested properties
+     */
+    assert.notNestedInclude = (expected, value, message) => {
+        getAssertion(expected, message, assert.notNestedInclude, true).not.nested.include(value);
     };
 
-    assert.deepNestedInclude = function (exp, inc, msg) {
-        getAssertion(exp, msg, assert.deepNestedInclude, true).deep.nested.include(inc);
+    /**
+     * Assert that expected includes value
+     */
+    assert.deepNestedInclude = (expected, value, message) => {
+        getAssertion(expected, message, assert.deepNestedInclude, true).deep.nested.include(value);
     };
 
-    assert.notDeepNestedInclude = function (exp, inc, msg) {
-        getAssertion(exp, msg, assert.notDeepNestedInclude, true).not.deep.nested.include(inc);
+    /**
+     * Assert that expected includes value
+     */
+    assert.notDeepNestedInclude = (expected, value, message) => {
+        getAssertion(expected, message, assert.notDeepNestedInclude, true).not.deep.nested.include(value);
     };
 
-    assert.ownInclude = function (exp, inc, msg) {
-        getAssertion(exp, msg, assert.ownInclude, true).own.include(inc);
+    /**
+     * Assert that expected includes value
+     */
+    assert.ownInclude = (expected, value, message) => {
+        getAssertion(expected, message, assert.ownInclude, true).own.include(value);
     };
 
-    assert.notOwnInclude = function (exp, inc, msg) {
-        getAssertion(exp, msg, assert.notOwnInclude, true).not.own.include(inc);
+    /**
+     * Assert that expected does not include value
+     */
+    assert.notOwnInclude = (expected, value, message) => {
+        getAssertion(expected, message, assert.notOwnInclude, true).not.own.include(value);
     };
 
-    assert.deepOwnInclude = function (exp, inc, msg) {
-        getAssertion(exp, msg, assert.deepOwnInclude, true).deep.own.include(inc);
+    /**
+     * Assert that expected includes value
+     */
+    assert.deepOwnInclude = (expected, value, message) => {
+        getAssertion(expected, message, assert.deepOwnInclude, true).deep.own.include(value);
     };
 
-    assert.notDeepOwnInclude = function (exp, inc, msg) {
-        getAssertion(exp, msg, assert.notDeepOwnInclude, true).not.deep.own.include(inc);
+    /**
+     * Assert that expected does not include value
+     */
+    assert.notDeepOwnInclude = (expected, value, message) => {
+        getAssertion(expected, message, assert.notDeepOwnInclude, true).not.deep.own.include(value);
     };
 
-    assert.match = (exp, re, msg) => {
-        getAssertion(exp, msg, assert.match, true).to.match(re);
+    /**
+     * Asserts that expected matches the regular expression regExp
+     */
+    assert.match = (expected, regExp, message) => {
+        getAssertion(expected, message, assert.match, true).to.match(regExp);
     };
 
-    assert.notMatch = (exp, re, msg) => {
-        getAssertion(exp, msg, assert.notMatch, true).to.not.match(re);
+    /**
+     * Asserts that expected does not match the regular expression regExp
+     */
+    assert.notMatch = (expected, regExp, message) => {
+        getAssertion(expected, message, assert.notMatch, true).to.not.match(regExp);
     };
 
-    assert.property = (obj, prop, msg) => {
-        getAssertion(obj, msg, assert.property, true).to.have.property(prop);
+    /**
+     * Asserts that object has a property named `property`
+     */
+    assert.property = (object, property, message) => {
+        getAssertion(object, message, assert.property, true).to.have.property(property);
     };
 
-    assert.notProperty = (obj, prop, msg) => {
-        getAssertion(obj, msg, assert.notProperty, true).to.not.have.property(prop);
+    /**
+     * Asserts that object does not have a property named `property`
+     */
+    assert.notProperty = (object, property, message) => {
+        getAssertion(object, message, assert.notProperty, true).to.not.have.property(property);
     };
 
-    assert.propertyVal = (obj, prop, val, msg) => {
-        getAssertion(obj, msg, assert.propertyVal, true).to.have.property(prop, val);
+    /**
+     * Asserts that object has a property named `property` with value `value` (===)
+     */
+    assert.propertyVal = (object, property, value, message) => {
+        getAssertion(object, message, assert.propertyVal, true).to.have.property(property, value);
     };
 
-    assert.notPropertyVal = (obj, prop, val, msg) => {
-        getAssertion(obj, msg, assert.notPropertyVal, true).to.not.have.property(prop, val);
+    /**
+     * Asserts that object does not have a property named `property` with value `value` (===)
+     */
+    assert.notPropertyVal = (object, property, value, message) => {
+        getAssertion(object, message, assert.notPropertyVal, true).to.not.have.property(property, value);
     };
 
-    assert.deepPropertyVal = (obj, prop, val, msg) => {
-        getAssertion(obj, msg, assert.deepPropertyVal, true).to.have.deep.property(prop, val);
+    /**
+     * Asserts that object has a property named `property` with a value `value`
+     */
+    assert.deepPropertyVal = (object, property, value, message) => {
+        getAssertion(object, message, assert.deepPropertyVal, true).to.have.deep.property(property, value);
     };
 
-    assert.notDeepPropertyVal = (obj, prop, val, msg) => {
-        getAssertion(obj, msg, assert.notDeepPropertyVal, true).to.not.have.deep.property(prop, val);
+    /**
+     * Asserts that object does not have a property named `property` with value `value`
+     */
+    assert.notDeepPropertyVal = (object, property, value, message) => {
+        getAssertion(object, message, assert.notDeepPropertyVal, true).to.not.have.deep.property(property, value);
     };
 
-    assert.ownProperty = (obj, prop, msg) => {
-        getAssertion(obj, msg, assert.ownProperty, true).to.have.own.property(prop);
+    /**
+     * Asserts that object has an owned property named `property`
+     */
+    assert.ownProperty = (object, proeprty, message) => {
+        getAssertion(object, message, assert.ownProperty, true).to.have.own.property(proeprty);
     };
 
-    assert.notOwnProperty = (obj, prop, msg) => {
-        getAssertion(obj, msg, assert.notOwnProperty, true).to.not.have.own.property(prop);
+    /**
+     * Asserts that object does not have an owned property named `property`
+     */
+    assert.notOwnProperty = (object, property, message) => {
+        getAssertion(object, message, assert.notOwnProperty, true).to.not.have.own.property(property);
     };
 
-    assert.ownPropertyVal = (obj, prop, value, msg) => {
-        getAssertion(obj, msg, assert.ownPropertyVal, true).to.have.own.property(prop, value);
+    /**
+     * Asserts that object has an owned property named `property` with value `value`(===)
+     */
+    assert.ownPropertyVal = (object, property, value, message) => {
+        getAssertion(object, message, assert.ownPropertyVal, true).to.have.own.property(property, value);
     };
 
-    assert.notOwnPropertyVal = (obj, prop, value, msg) => {
-        getAssertion(obj, msg, assert.notOwnPropertyVal, true).to.not.have.own.property(prop, value);
+    /**
+     * Asserts that object does not have an owned property named `property` with value `value`(===)
+     */
+    assert.notOwnPropertyVal = (object, property, value, message) => {
+        getAssertion(object, message, assert.notOwnPropertyVal, true).to.not.have.own.property(property, value);
     };
 
-    assert.deepOwnPropertyVal = (obj, prop, value, msg) => {
-        getAssertion(obj, msg, assert.deepOwnPropertyVal, true).to.have.deep.own.property(prop, value);
+    /**
+     * Asserts that object has an owned property named `property` with value `value`
+     */
+    assert.deepOwnPropertyVal = (object, property, value, message) => {
+        getAssertion(object, message, assert.deepOwnPropertyVal, true).to.have.deep.own.property(property, value);
     };
 
-    assert.notDeepOwnPropertyVal = (obj, prop, value, msg) => {
-        getAssertion(obj, msg, assert.notDeepOwnPropertyVal, true).to.not.have.deep.own.property(prop, value);
+    /**
+     * Asserts that object does not have an owned property named `property` with value `value`(===)
+     */
+    assert.notDeepOwnPropertyVal = (object, property, value, message) => {
+        getAssertion(object, message, assert.notDeepOwnPropertyVal, true).to.not.have.deep.own.property(property, value);
     };
 
-    assert.nestedProperty = (obj, prop, msg) => {
-        getAssertion(obj, msg, assert.nestedProperty, true).to.have.nested.property(prop);
+    /**
+     * Asserts that object has a property named `property`
+     */
+    assert.nestedProperty = (object, property, message) => {
+        getAssertion(object, message, assert.nestedProperty, true).to.have.nested.property(property);
     };
 
-    assert.notNestedProperty = (obj, prop, msg) => {
-        getAssertion(obj, msg, assert.notNestedProperty, true).to.not.have.nested.property(prop);
+    /**
+     * Asserts that object does not have a property named `property`
+     */
+    assert.notNestedProperty = (object, property, message) => {
+        getAssertion(object, message, assert.notNestedProperty, true).to.not.have.nested.property(property);
     };
 
-    assert.nestedPropertyVal = (obj, prop, val, msg) => {
-        getAssertion(obj, msg, assert.nestedPropertyVal, true).to.have.nested.property(prop, val);
+    /**
+     * Asserts that object has a property named `property` with value `value`(===)
+     */
+    assert.nestedPropertyVal = (object, property, value, message) => {
+        getAssertion(object, message, assert.nestedPropertyVal, true).to.have.nested.property(property, value);
     };
 
-    assert.notNestedPropertyVal = (obj, prop, val, msg) => {
-        getAssertion(obj, msg, assert.notNestedPropertyVal, true).to.not.have.nested.property(prop, val);
+    /**
+     * Asserts that object does not have a property named `property` with value `value`(===)
+     */
+    assert.notNestedPropertyVal = (object, property, value, message) => {
+        getAssertion(object, message, assert.notNestedPropertyVal, true).to.not.have.nested.property(property, value);
     };
 
-    assert.deepNestedPropertyVal = (obj, prop, val, msg) => {
-        getAssertion(obj, msg, assert.deepNestedPropertyVal, true).to.have.deep.nested.property(prop, val);
+    /**
+     * Asserts that object has a property named `property` with value `value`
+     */
+    assert.deepNestedPropertyVal = (object, property, value, message) => {
+        getAssertion(object, message, assert.deepNestedPropertyVal, true).to.have.deep.nested.property(property, value);
     };
 
-    assert.notDeepNestedPropertyVal = (obj, prop, val, msg) => {
-        getAssertion(obj, msg, assert.notDeepNestedPropertyVal, true).to.not.have.deep.nested.property(prop, val);
+    /**
+     * Asserts that object does not have a property named `property` with value `value`
+     */
+    assert.notDeepNestedPropertyVal = (object, property, value, message) => {
+        getAssertion(object, message, assert.notDeepNestedPropertyVal, true).to.not.have.deep.nested.property(property, value);
     };
 
-    assert.lengthOf = (exp, len, msg) => {
-        getAssertion(exp, msg, assert.lengthOf, true).to.have.lengthOf(len);
+    /**
+     * Asserts that expected has a length property with value `length`
+     */
+    assert.lengthOf = (expected, length, message) => {
+        getAssertion(expected, message, assert.lengthOf, true).to.have.lengthOf(length);
     };
 
-    assert.hasAnyKeys = (obj, keys, msg) => {
-        getAssertion(obj, msg, assert.hasAnyKeys, true).to.have.any.keys(keys);
+    /**
+     * Asserts that object has at least one key from `keys`
+     */
+    assert.hasAnyKeys = (object, keys, message) => {
+        getAssertion(object, message, assert.hasAnyKeys, true).to.have.any.keys(keys);
     };
 
-    assert.hasAllKeys = (obj, keys, msg) => {
-        getAssertion(obj, msg, assert.hasAllKeys, true).to.have.all.keys(keys);
+    /**
+     * Asserts that object has all and only all of the keys provided
+     */
+    assert.hasAllKeys = (object, keys, message) => {
+        getAssertion(object, message, assert.hasAllKeys, true).to.have.all.keys(keys);
     };
 
-    assert.containsAllKeys = (obj, keys, msg) => {
-        getAssertion(obj, msg, assert.containsAllKeys, true).to.contain.all.keys(keys);
+    /**
+     * Asserts that object has all the keys provided but maybe more
+     */
+    assert.containsAllKeys = (object, keys, message) => {
+        getAssertion(object, message, assert.containsAllKeys, true).to.contain.all.keys(keys);
     };
 
-    assert.doesNotHaveAnyKeys = (obj, keys, msg) => {
-        getAssertion(obj, msg, assert.doesNotHaveAnyKeys, true).to.not.have.any.keys(keys);
+    /**
+     * Asserts that object does not have any provided key
+     */
+    assert.doesNotHaveAnyKeys = (object, keys, message) => {
+        getAssertion(object, message, assert.doesNotHaveAnyKeys, true).to.not.have.any.keys(keys);
     };
 
-    assert.doesNotHaveAllKeys = (obj, keys, msg) => {
-        getAssertion(obj, msg, assert.doesNotHaveAllKeys, true).to.not.have.all.keys(keys);
+    /**
+     * Asserts that object does not have all the keys provided
+     */
+    assert.doesNotHaveAllKeys = (object, keys, message) => {
+        getAssertion(object, message, assert.doesNotHaveAllKeys, true).to.not.have.all.keys(keys);
     };
 
-    assert.hasAnyDeepKeys = (obj, keys, msg) => {
-        getAssertion(obj, msg, assert.hasAnyDeepKeys, true).to.have.any.deep.keys(keys);
+    /**
+     * Asserts that object has at least one of the keys provided
+     */
+    assert.hasAnyDeepKeys = (object, keys, message) => {
+        getAssertion(object, message, assert.hasAnyDeepKeys, true).to.have.any.deep.keys(keys);
     };
 
-    assert.hasAllDeepKeys = (obj, keys, msg) => {
-        getAssertion(obj, msg, assert.hasAllDeepKeys, true).to.have.all.deep.keys(keys);
+    /**
+     * Asserts that object has all and only all of the keys provided
+     */
+    assert.hasAllDeepKeys = (object, keys, message) => {
+        getAssertion(object, message, assert.hasAllDeepKeys, true).to.have.all.deep.keys(keys);
     };
 
-    assert.containsAllDeepKeys = (obj, keys, msg) => {
-        getAssertion(obj, msg, assert.containsAllDeepKeys, true).to.contain.all.deep.keys(keys);
+    /**
+     * Asserts that object has all the keys provided but maybe more
+     */
+    assert.containsAllDeepKeys = (object, keys, message) => {
+        getAssertion(object, message, assert.containsAllDeepKeys, true).to.contain.all.deep.keys(keys);
     };
 
-    assert.doesNotHaveAnyDeepKeys = (obj, keys, msg) => {
-        getAssertion(obj, msg, assert.doesNotHaveAnyDeepKeys, true).to.not.have.any.deep.keys(keys);
+    /**
+     * Asserts that object does not have any provided key
+     */
+    assert.doesNotHaveAnyDeepKeys = (object, keys, message) => {
+        getAssertion(object, message, assert.doesNotHaveAnyDeepKeys, true).to.not.have.any.deep.keys(keys);
     };
 
-    assert.doesNotHaveAllDeepKeys = (obj, keys, msg) => {
-        getAssertion(obj, msg, assert.doesNotHaveAllDeepKeys, true).to.not.have.all.deep.keys(keys);
+    /**
+     * Asserts that object does not have all the keys provided
+     */
+    assert.doesNotHaveAllDeepKeys = (object, keys, message) => {
+        getAssertion(object, message, assert.doesNotHaveAllDeepKeys, true).to.not.have.all.deep.keys(keys);
     };
 
-    assert.throws = (fn, errorLike, errMsgMatcher, msg) => {
+    /**
+     * Asserts that a function or an async functions throws an error
+     */
+    assert.throws = (fn, errorLike, errMsgMatcher, message) => {
         if (is.string(errorLike) || is.regexp(errorLike)) {
             errMsgMatcher = errorLike;
             errorLike = null;
         }
-        const assertErr = getAssertion(fn, msg, assert.throws, true).to.throw(errorLike, errMsgMatcher);
-        return flag(assertErr, "object");  // maybe promise
+        const assertErr = getAssertion(fn, message, assert.throws, true).to.throw(errorLike, errMsgMatcher);
+        return flag(assertErr, "object"); // maybe promise
     };
 
-    assert.doesNotThrow = (fn, errorLike, errMsgMatcher, msg) => {
+    /**
+     * Asserts that a function or an async function does not throw an error
+     */
+    assert.doesNotThrow = (fn, errorLike, errMsgMatcher, message) => {
         if (is.string(errorLike) || is.regexp(errorLike)) {
             errMsgMatcher = errorLike;
             errorLike = null;
         }
-        const _assert = getAssertion(fn, msg, assert.doesNotThrow, true).to.not.throw(errorLike, errMsgMatcher);
-        return flag(_assert, "object");  // maybe promise
+        const _assert = getAssertion(fn, message, assert.doesNotThrow, true).to.not.throw(errorLike, errMsgMatcher);
+        return flag(_assert, "object"); // maybe promise
     };
 
-    assert.operator = (val, operator, val2, msg) => {
+    /**
+     * Compares two values using operator
+     */
+    assert.operator = (a, operator, b, message) => {
         let ok;
         switch (operator) {
             case "==": {
-                ok = val == val2;  // eslint-disable-line eqeqeq
+                ok = a == b; // eslint-disable-line eqeqeq
                 break;
             }
             case "===": {
-                ok = val === val2;
+                ok = a === b;
                 break;
             }
             case ">": {
-                ok = val > val2;
+                ok = a > b;
                 break;
             }
             case ">=": {
-                ok = val >= val2;
+                ok = a >= b;
                 break;
             }
             case "<": {
-                ok = val < val2;
+                ok = a < b;
                 break;
             }
             case "<=": {
-                ok = val <= val2;
+                ok = a <= b;
                 break;
             }
             case "!=": {
-                ok = val !== val2;
+                ok = a !== b;
                 break;
             }
             case "!==": {
-                ok = val !== val2;
+                ok = a !== b;
                 break;
             }
             default: {
-                msg = msg ? `${msg}: ` : msg;
-                throw new AssertionError(`${msg}Invalid operator "${operator}"`, undefined, assert.operator);
+                message = message ? `${message}: ` : message;
+                throw new AssertionError(`${message}Invalid operator "${operator}"`, undefined, assert.operator);
             }
         }
-        const test = getAssertion(ok, msg, assert.operator, true);
+        const test = getAssertion(ok, message, assert.operator, true);
         test.assert(
             flag(test, "object") === true,
-            `expected ${util.inspect(val)} to be ${operator} ${util.inspect(val2)}`,
-            `expected ${util.inspect(val)} to not be ${operator} ${util.inspect(val2)}`
+            `expected ${util.inspect(a)} to be ${operator} ${util.inspect(b)}`,
+            `expected ${util.inspect(a)} to not be ${operator} ${util.inspect(b)}`
         );
     };
 
-    assert.closeTo = (act, exp, delta, msg) => {
-        getAssertion(act, msg, assert.closeTo, true).to.be.closeTo(exp, delta);
+    /**
+     * Asserts that actual is expected +/- delta
+     */
+    assert.closeTo = (actual, expected, delta, message) => {
+        getAssertion(actual, message, assert.closeTo, true).to.be.closeTo(expected, delta);
     };
 
-    assert.approximately = (act, exp, delta, msg) => {
-        getAssertion(act, msg, assert.approximately, true).to.be.approximately(exp, delta);
+    /**
+     * Asserts that actual is expect +/- delta
+     */
+    assert.approximately = (actual, expected, delta, message) => {
+        getAssertion(actual, message, assert.approximately, true).to.be.approximately(expected, delta);
     };
 
-    assert.sameMembers = (set1, set2, msg) => {
-        getAssertion(set1, msg, assert.sameMembers, true).to.have.same.members(set2);
+    /**
+     * Asserts that arrays have the same members in any order (===)
+     */
+    assert.sameMembers = (set1, set2, message) => {
+        getAssertion(set1, message, assert.sameMembers, true).to.have.same.members(set2);
     };
 
-    assert.notSameMembers = (set1, set2, msg) => {
-        getAssertion(set1, msg, assert.notSameMembers, true).to.not.have.same.members(set2);
+    /**
+     * Asserts that arrays do not have the same members in any order (===)
+     */
+    assert.notSameMembers = (set1, set2, message) => {
+        getAssertion(set1, message, assert.notSameMembers, true).to.not.have.same.members(set2);
     };
 
-    assert.sameDeepMembers = (set1, set2, msg) => {
-        getAssertion(set1, msg, assert.sameDeepMembers, true).to.have.same.deep.members(set2);
+    /**
+     * Asserts that arrays have the same members in any order
+     */
+    assert.sameDeepMembers = (set1, set2, message) => {
+        getAssertion(set1, message, assert.sameDeepMembers, true).to.have.same.deep.members(set2);
     };
 
-    assert.notSameDeepMembers = (set1, set2, msg) => {
-        getAssertion(set1, msg, assert.notSameDeepMembers, true).to.not.have.same.deep.members(set2);
+    /**
+     * Asserts that arrays do not have the same members in any order
+     */
+    assert.notSameDeepMembers = (set1, set2, message) => {
+        getAssertion(set1, message, assert.notSameDeepMembers, true).to.not.have.same.deep.members(set2);
     };
 
-    assert.sameOrderedMembers = (set1, set2, msg) => {
-        getAssertion(set1, msg, assert.sameOrderedMembers, true).to.have.same.ordered.members(set2);
+    /**
+     * Asserts that arrays have the same members in the same order (===)
+     */
+    assert.sameOrderedMembers = (set1, set2, message) => {
+        getAssertion(set1, message, assert.sameOrderedMembers, true).to.have.same.ordered.members(set2);
     };
 
-    assert.notSameOrderedMembers = (set1, set2, msg) => {
-        getAssertion(set1, msg, assert.notSameOrderedMembers, true).to.not.have.same.ordered.members(set2);
+    /**
+     * Asserts that arrays do not have the same members in the same order (===)
+     */
+    assert.notSameOrderedMembers = (set1, set2, message) => {
+        getAssertion(set1, message, assert.notSameOrderedMembers, true).to.not.have.same.ordered.members(set2);
     };
 
-    assert.sameDeepOrderedMembers = (set1, set2, msg) => {
-        getAssertion(set1, msg, assert.sameDeepOrderedMembers, true).to.have.same.deep.ordered.members(set2);
+    /**
+     * Asserts that arrays have the same members in the same order
+     */
+    assert.sameDeepOrderedMembers = (set1, set2, message) => {
+        getAssertion(set1, message, assert.sameDeepOrderedMembers, true).to.have.same.deep.ordered.members(set2);
     };
 
-    assert.notSameDeepOrderedMembers = (set1, set2, msg) => {
-        getAssertion(set1, msg, assert.notSameDeepOrderedMembers, true).to.not.have.same.deep.ordered.members(set2);
+    /**
+     * Asserts that arrays do not have the same members in the same order
+     */
+    assert.notSameDeepOrderedMembers = (set1, set2, message) => {
+        getAssertion(set1, message, assert.notSameDeepOrderedMembers, true).to.not.have.same.deep.ordered.members(set2);
     };
 
-    assert.includeMembers = (superset, subset, msg) => {
-        getAssertion(superset, msg, assert.includeMembers, true).to.include.members(subset);
+    /**
+     * Asserts that subset is included in superset in any order (===)
+     */
+    assert.includeMembers = (superset, subset, message) => {
+        getAssertion(superset, message, assert.includeMembers, true).to.include.members(subset);
     };
 
-    assert.notIncludeMembers = (superset, subset, msg) => {
-        getAssertion(superset, msg, assert.notIncludeMembers, true).to.not.include.members(subset);
+    /**
+     * Asserts that subset is not included in superset in any order (===)
+     */
+    assert.notIncludeMembers = (superset, subset, message) => {
+        getAssertion(superset, message, assert.notIncludeMembers, true).to.not.include.members(subset);
     };
 
-    assert.includeDeepMembers = (superset, subset, msg) => {
-        getAssertion(superset, msg, assert.includeDeepMembers, true).to.include.deep.members(subset);
+    /**
+     * Asserts that subset is included in superset in any order
+     */
+    assert.includeDeepMembers = (superset, subset, message) => {
+        getAssertion(superset, message, assert.includeDeepMembers, true).to.include.deep.members(subset);
     };
 
-    assert.notIncludeDeepMembers = (superset, subset, msg) => {
-        getAssertion(superset, msg, assert.notIncludeDeepMembers, true).to.not.include.deep.members(subset);
+    /**
+     * Asserts that subset is not included in superset in any order
+     */
+    assert.notIncludeDeepMembers = (superset, subset, message) => {
+        getAssertion(superset, message, assert.notIncludeDeepMembers, true).to.not.include.deep.members(subset);
     };
 
-    assert.includeOrderedMembers = (superset, subset, msg) => {
-        getAssertion(superset, msg, assert.includeOrderedMembers, true).to.include.ordered.members(subset);
+    /**
+     * Asserts that subset is included in superset in the same order (===)
+     */
+    assert.includeOrderedMembers = (superset, subset, message) => {
+        getAssertion(superset, message, assert.includeOrderedMembers, true).to.include.ordered.members(subset);
     };
 
-    assert.notIncludeOrderedMembers = (superset, subset, msg) => {
-        getAssertion(superset, msg, assert.notIncludeOrderedMembers, true).to.not.include.ordered.members(subset);
+    /**
+     * Asserts that subset is not included in superset in the same order (===)
+     */
+    assert.notIncludeOrderedMembers = (superset, subset, message) => {
+        getAssertion(superset, message, assert.notIncludeOrderedMembers, true).to.not.include.ordered.members(subset);
     };
 
-    assert.includeDeepOrderedMembers = (superset, subset, msg) => {
-        getAssertion(superset, msg, assert.includeDeepOrderedMembers, true).to.include.deep.ordered.members(subset);
+    /**
+     * Asserts that subset is included in superset in the same order
+     */
+    assert.includeDeepOrderedMembers = (superset, subset, message) => {
+        getAssertion(superset, message, assert.includeDeepOrderedMembers, true).to.include.deep.ordered.members(subset);
     };
 
-    assert.notIncludeDeepOrderedMembers = (superset, subset, msg) => {
-        getAssertion(superset, msg, assert.notIncludeDeepOrderedMembers, true).
+    /**
+     * Asserts that subset is not included in superset in the same order
+     */
+    assert.notIncludeDeepOrderedMembers = (superset, subset, message) => {
+        getAssertion(superset, message, assert.notIncludeDeepOrderedMembers, true).
             to.not.include.deep.ordered.members(subset);
     };
 
-    assert.oneOf = (inList, list, msg) => {
-        getAssertion(inList, msg, assert.oneOf, true).to.be.oneOf(list);
+    /**
+     * Asserts that list includes value
+     */
+    assert.oneOf = (value, list, message) => {
+        getAssertion(value, message, assert.oneOf, true).to.be.oneOf(list);
     };
 
-    assert.changes = function (fn, obj, prop, msg = adone.null) {
-        if (msg === adone.null && is.function(obj)) {
-            [msg, prop] = [prop, null];
+    /**
+     * Asserts that a function changes the value of a property
+     */
+    assert.changes = (fn, object, property, message = adone.null) => {
+        if (message === adone.null && is.function(object)) {
+            [message, property] = [property, null];
         }
-        getAssertion(fn, msg, assert.changes, true).to.change(obj, prop);
+        getAssertion(fn, message, assert.changes, true).to.change(object, property);
     };
 
-    assert.changesBy = (fn, obj, prop, delta = adone.null, msg = adone.null) => {
+    /**
+     * Asserts that a function changes the value of a property by delta
+     */
+    assert.changesBy = (fn, object, property, delta = adone.null, message = adone.null) => {
         if (delta === adone.null) {
-            if (msg === adone.null) {
-                [delta, prop] = [prop, null];
-            } else if (is.function(obj)) {
-                [delta, prop] = [prop, delta];
+            if (message === adone.null) {
+                [delta, property] = [property, null];
+            } else if (is.function(object)) {
+                [delta, property] = [property, delta];
             }
         }
-        getAssertion(fn, msg, assert.changesBy, true).to.change(obj, prop).by(delta);
+        getAssertion(fn, message, assert.changesBy, true).to.change(object, property).by(delta);
     };
 
-    assert.doesNotChange = (fn, obj, prop, msg = adone.null) => {
-        if (msg === adone.null && is.function(obj)) {
-            [msg, prop] = [prop, null];
+    /**
+     * Asserts that a function does not changes the value of a property
+     */
+    assert.doesNotChange = (fn, object, property, message = adone.null) => {
+        if (message === adone.null && is.function(object)) {
+            [message, property] = [property, null];
         }
-        return getAssertion(fn, msg, assert.doesNotChange, true).to.not.change(obj, prop);
+        getAssertion(fn, message, assert.doesNotChange, true).to.not.change(object, property);
     };
 
-    assert.changesButNotBy = function (fn, obj, prop, delta = adone.null, msg = adone.null) {
+    /**
+     * Asserts that a function does not change the value of a property or of a function’s return value by delta
+     */
+    assert.changesButNotBy = (fn, object, property, delta = adone.null, message = adone.null) => {
         if (delta === adone.null) {
-            if (msg === adone.null) {
-                [delta, prop] = [prop, null];
-            } else if (is.function(obj)) {
-                [delta, prop] = [prop, delta];
+            if (message === adone.null) {
+                [delta, property] = [property, null];
+            } else if (is.function(object)) {
+                [delta, property] = [property, delta];
             }
         }
-        getAssertion(fn, msg, assert.changesButNotBy, true).to.change(obj, prop).but.not.by(delta);
+        getAssertion(fn, message, assert.changesButNotBy, true).to.change(object, property).but.not.by(delta);
     };
 
-    assert.increases = (fn, obj, prop, msg = adone.null) => {
-        if (msg === adone.null && is.function(obj)) {
-            [msg, prop] = [prop, null];
+    /**
+     * Asserts that a function increases a numeric object property
+     */
+    assert.increases = (fn, object, property, message = adone.null) => {
+        if (message === adone.null && is.function(object)) {
+            [message, property] = [property, null];
         }
-        return getAssertion(fn, msg, assert.increases, true).to.increase(obj, prop);
+        getAssertion(fn, message, assert.increases, true).to.increase(object, property);
     };
 
-    assert.increasesBy = (fn, obj, prop, delta = adone.null, msg = adone.null) => {
+    /**
+     * Asserts that a function increases a numeric object property or a function’s return value by delta
+     */
+    assert.increasesBy = (fn, object, property, delta = adone.null, message = adone.null) => {
         if (delta === adone.null) {
-            if (msg === adone.null) {
-                [delta, prop] = [prop, null];
-            } else if (is.function(obj)) {
-                [delta, prop] = [prop, delta];
+            if (message === adone.null) {
+                [delta, property] = [property, null];
+            } else if (is.function(object)) {
+                [delta, property] = [property, delta];
             }
         }
-        getAssertion(fn, msg, assert.increasesBy, true).to.increase(obj, prop).by(delta);
+        getAssertion(fn, message, assert.increasesBy, true).to.increase(object, property).by(delta);
     };
 
-    assert.doesNotIncrease = (fn, obj, prop, msg) => {
-        if (msg === adone.null && is.function(obj)) {
-            [msg, prop] = [prop, null];
+    /**
+     * Asserts that a function does not increase a numeric object property
+     */
+    assert.doesNotIncrease = (fn, object, property, message) => {
+        if (message === adone.null && is.function(object)) {
+            [message, property] = [property, null];
         }
-        return getAssertion(fn, msg, assert.doesNotIncrease, true).to.not.increase(obj, prop);
+        getAssertion(fn, message, assert.doesNotIncrease, true).to.not.increase(object, property);
     };
 
-    assert.increasesButNotBy = (fn, obj, prop, delta = adone.null, msg = adone.null) => {
+    /**
+     * Asserts that a function does not increase a numeric object property or function’s return value by delta
+     */
+    assert.increasesButNotBy = (fn, object, property, delta = adone.null, message = adone.null) => {
         if (delta === adone.null) {
-            if (msg === adone.null) {
-                [delta, prop] = [prop, null];
-            } else if (is.function(obj)) {
-                [delta, prop] = [prop, delta];
+            if (message === adone.null) {
+                [delta, property] = [property, null];
+            } else if (is.function(object)) {
+                [delta, property] = [property, delta];
             }
         }
-        getAssertion(fn, msg, assert.increasesButNotBy, true).to.increase(obj, prop).but.not.by(delta);
+        getAssertion(fn, message, assert.increasesButNotBy, true).to.increase(object, property).but.not.by(delta);
     };
 
-    assert.decreases = (fn, obj, prop, msg = adone.null) => {
-        if (msg === adone.null && is.function(obj)) {
-            [msg, prop] = [prop, null];
+    /**
+     * Asserts that a function decreases the value of a property
+     */
+    assert.decreases = (fn, object, property, message = adone.null) => {
+        if (message === adone.null && is.function(object)) {
+            [message, property] = [property, null];
         }
-        return getAssertion(fn, msg, assert.decreases, true).to.decrease(obj, prop);
+        getAssertion(fn, message, assert.decreases, true).to.decrease(object, property);
     };
 
-    assert.decreasesBy = (fn, obj, prop, delta = adone.null, msg = adone.null) => {
+    /**
+     * Asserts that a function decreases the value of a property by delta
+     */
+    assert.decreasesBy = (fn, object, property, delta = adone.null, message = adone.null) => {
         if (delta === adone.null) {
-            if (msg === adone.null) {
-                [delta, prop] = [prop, null];
-            } else if (is.function(obj)) {
-                [delta, prop] = [prop, delta];
+            if (message === adone.null) {
+                [delta, property] = [property, null];
+            } else if (is.function(object)) {
+                [delta, property] = [property, delta];
             }
         }
-        getAssertion(fn, msg, assert.decreases, true).to.decrease(obj, prop).by(delta);
+        getAssertion(fn, message, assert.decreases, true).to.decrease(object, property).by(delta);
     };
 
-    assert.doesNotDecrease = (fn, obj, prop, msg = adone.null) => {
-        if (msg === adone.null && is.function(obj)) {
-            [msg, prop] = [prop, null];
+    /**
+     * Asserts that a function does not decrease the value of a property
+     */
+    assert.doesNotDecrease = (fn, object, property, message = adone.null) => {
+        if (message === adone.null && is.function(object)) {
+            [message, property] = [property, null];
         }
-        return getAssertion(fn, msg, assert.doesNotDecrease, true).to.not.decrease(obj, prop);
+        getAssertion(fn, message, assert.doesNotDecrease, true).to.not.decrease(object, property);
     };
 
-    assert.doesNotDecreaseBy = (fn, obj, prop, delta = adone.null, msg = adone.null) => {
+    /**
+     * Asserts that a function does not decrease the value of a property or a function's return value by delta
+     */
+    assert.doesNotDecreaseBy = (fn, object, property, delta = adone.null, message = adone.null) => {
         if (delta === adone.null) {
-            if (msg === adone.null) {
-                [delta, prop] = [prop, null];
-            } else if (is.function(obj)) {
-                [delta, prop] = [prop, delta];
+            if (message === adone.null) {
+                [delta, property] = [property, null];
+            } else if (is.function(object)) {
+                [delta, property] = [property, delta];
             }
         }
-        return getAssertion(fn, msg, assert.doesNotDecreaseBy, true).to.not.decrease(obj, prop).by(delta);
+        getAssertion(fn, message, assert.doesNotDecreaseBy, true).to.not.decrease(object, property).by(delta);
     };
 
-    assert.decreasesButNotBy = (fn, obj, prop, delta = adone.null, msg = adone.null) => {
+    /**
+     * Asserts that a function does not decreases a numeric object property or a function’s return value by delta
+     */
+    assert.decreasesButNotBy = (fn, object, property, delta = adone.null, message = adone.null) => {
         if (delta === adone.null) {
-            if (msg === adone.null) {
-                [delta, prop] = [prop, null];
-            } else if (is.function(obj)) {
-                [delta, prop] = [prop, delta];
+            if (message === adone.null) {
+                [delta, property] = [property, null];
+            } else if (is.function(object)) {
+                [delta, property] = [property, delta];
             }
         }
-        getAssertion(fn, msg, assert.decreasesButNotBy, true).to.decrease(obj, prop).but.not.by(delta);
+        getAssertion(fn, message, assert.decreasesButNotBy, true).to.decrease(object, property).but.not.by(delta);
     };
 
-    assert.ifError = (val) => {
-        if (val) {
-            throw (val);
+    /**
+     * Throws an error if value is truthy
+     */
+    assert.ifError = (value) => {
+        if (value) {
+            throw (value);
         }
     };
 
-    assert.isExtensible = (obj, msg) => {
-        getAssertion(obj, msg, assert.isExtensible, true).to.be.extensible;
+    /**
+     * Asserts that object is extensible
+     */
+    assert.isExtensible = (object, message) => {
+        getAssertion(object, message, assert.isExtensible, true).to.be.extensible;
     };
 
-    assert.isNotExtensible = (obj, msg) => {
-        getAssertion(obj, msg, assert.isNotExtensible, true).to.not.be.extensible;
+    /**
+     * Asserts that object is not extensible
+     */
+    assert.isNotExtensible = (object, message) => {
+        getAssertion(object, message, assert.isNotExtensible, true).to.not.be.extensible;
     };
 
-    assert.isSealed = (obj, msg) => {
-        getAssertion(obj, msg, assert.isSealed, true).to.be.sealed;
+    /**
+     * Asserts that object is sealed
+     */
+    assert.isSealed = (object, message) => {
+        getAssertion(object, message, assert.isSealed, true).to.be.sealed;
     };
 
-    assert.isNotSealed = (obj, msg) => {
-        getAssertion(obj, msg, assert.isNotSealed, true).to.not.be.sealed;
+    /**
+     * Asserts that object is not sealed
+     */
+    assert.isNotSealed = (object, message) => {
+        getAssertion(object, message, assert.isNotSealed, true).to.not.be.sealed;
     };
 
-    assert.isFrozen = (obj, msg) => {
-        getAssertion(obj, msg, assert.isFrozen, true).to.be.frozen;
+    /**
+     * Asserts that object is frozen
+     */
+    assert.isFrozen = (object, message) => {
+        getAssertion(object, message, assert.isFrozen, true).to.be.frozen;
     };
 
-    assert.isNotFrozen = (obj, msg) => {
-        getAssertion(obj, msg, assert.isNotFrozen, true).to.not.be.frozen;
+    /**
+     * Asserts that object is not frozen
+     */
+    assert.isNotFrozen = (object, message) => {
+        getAssertion(object, message, assert.isNotFrozen, true).to.not.be.frozen;
     };
 
-    assert.isEmpty = (val, msg) => {
-        getAssertion(val, msg, assert.isEmpty, true).to.be.empty;
+    /**
+     * Asserts that value is empty
+     */
+    assert.isEmpty = (value, message) => {
+        getAssertion(value, message, assert.isEmpty, true).to.be.empty;
     };
 
-    assert.isNotEmpty = (val, msg) => {
-        getAssertion(val, msg, assert.isNotEmpty, true).to.not.be.empty;
+    /**
+     * Asserts that value is not empty
+     */
+    assert.isNotEmpty = (value, message) => {
+        getAssertion(value, message, assert.isNotEmpty, true).to.not.be.empty;
     };
 
     for (const [name, alias] of [
