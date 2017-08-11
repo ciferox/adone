@@ -121,7 +121,11 @@ const isOwner = (fsStat) => {
     return true;
 };
 
-export const updateMetadata = async (fd, file) => {
+export const updateMetadata = async (fd, file, { originMode, originTimes, originOwner }) => {
+    if (!originMode && !originTimes && !originOwner) {
+        return;
+    }
+
     const stat = await adone.fs.fd.stat(fd);
     const modeDiff = getModeDiff(stat.mode, file.stat.mode);
     const timesDiff = getTimesDiff(stat, file.stat);
@@ -133,18 +137,18 @@ export const updateMetadata = async (fd, file) => {
     if (!isOwner(stat)) {
         return;
     }
-    if (modeDiff) {
+    if (originMode && modeDiff) {
         const mode = stat.mode ^ modeDiff;
         await adone.fs.fd.chmod(fd, mode);
         file.stat.mode = mode;
 
     }
-    if (timesDiff) {
+    if (originTimes && timesDiff) {
         await adone.fs.fd.utimes(fd, timesDiff.atime, timesDiff.mtime);
         file.stat.atime = timesDiff.atime;
         file.stat.mtime = timesDiff.mtime;
     }
-    if (ownerDiff) {
+    if (originOwner && ownerDiff) {
         await adone.fs.fd.chown(fd, ownerDiff.uid, ownerDiff.gid);
         file.stat.uid = ownerDiff.uid;
         file.stat.gid = ownerDiff.gid;

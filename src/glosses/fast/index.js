@@ -320,7 +320,10 @@ export class FastFS extends Fast {
         mode = 0o644,
         flag = "w",
         cwd = this._cwd || process.cwd(),
-        produceFiles = false
+        produceFiles = false,
+        originMode = true,
+        originTimes = true,
+        originOwner = true
     } = {}) {
         const isDirFunction = is.function(dir);
         if (!isDirFunction) {
@@ -356,7 +359,7 @@ export class FastFS extends Fast {
                 file.cwd = cwd;
                 file.base = destBase;
                 file.path = destPath;
-                await fast.__.helper.updateMetadata(fd, file);
+                await fast.__.helper.updateMetadata(fd, file, { originMode, originTimes, originOwner });
             } finally {
                 await adone.fs.fd.close(fd);
             }

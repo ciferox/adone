@@ -24,10 +24,16 @@ const NG_ADDITIONAL_NPM_PACKAGES = {
 };
 const BACKEND_NAME = "backend";
 const FRONTEND_NAME = "frontend";
+const DEST_OPTIONS = {
+    produceFiles: true,
+    originTimes: false,
+    originMode: false,
+    originOwner: false
+};
 
 export class Generator {
     constructor() {
-        this.templatesPath = path.join(adone.appinstance.adoneEtcPath, "templates");
+        this.templatesPath = path.join(adone.appinstance.adoneEtcPath, "subsystems", "project", "templates");
         this.adoneConfPath = path.join(this.templatesPath, "adone.conf");
 
         this.gitFiles = [];
@@ -73,9 +79,7 @@ export class Generator {
             }).mapIf((x) => x.basename === "miniapp.js", async (x) => {
                 x.relative = appRelPath;
                 return x;
-            }).dest(basePath, {
-                produceFiles: true
-            });
+            }).dest(basePath, DEST_OPTIONS);
 
             terminal.print(`{green-fg}Script {bold}'${name}'{/bold} successfully created.{/}\n`);
 
@@ -229,9 +233,7 @@ export class Generator {
                     from: appRelPath
                 }));
                 return x;
-            }).dest(projectPath, {
-                produceFiles: true
-            }).through((x) => {
+            }).dest(projectPath, DEST_OPTIONS).through((x) => {
                 this._addFileToGit(x.relative);
             });
 
@@ -284,9 +286,7 @@ export class Generator {
                     from: appRelPath
                 }));
                 return x;
-            }).dest(backendPath, {
-                produceFiles: true
-            }).through((x) => {
+            }).dest(backendPath, DEST_OPTIONS).through((x) => {
                 this._addFileToGit(withFrontend ? path.join(BACKEND_NAME, x.relative) : x.relative);
             });
 
@@ -301,18 +301,14 @@ export class Generator {
                     name: `${projectName}Application`
                 }));
                 return x;
-            }).dest(backendPath, {
-                produceFiles: true
-            }).through((x) => {
+            }).dest(backendPath, DEST_OPTIONS).through((x) => {
                 this._addFileToGit(withFrontend ? path.join(BACKEND_NAME, x.relative) : x.relative);
             });
 
             // configs
             await fast.src(`configs/webapp/${bundleDir}/**/*`, {
                 cwd: this.templatesPath
-            }).dest(backendPath, {
-                produceFiles: true
-            }).through((x) => {
+            }).dest(backendPath, DEST_OPTIONS).through((x) => {
                 this._addFileToGit(withFrontend ? path.join(BACKEND_NAME, x.relative) : x.relative);
             });
 
@@ -326,9 +322,7 @@ export class Generator {
                 }));
 
                 return x;
-            }).dest(projectPath, {
-                produceFiles: true
-            }).through((x) => {
+            }).dest(projectPath, DEST_OPTIONS).through((x) => {
                 this._addFileToGit(x.relative);
             });
 
@@ -369,9 +363,7 @@ export class Generator {
                             this._addFileToGit(path.join(FRONTEND_NAME, x.relative));
                         }
                         return x;
-                    }).dest(frotnendPath, {
-                        produceFiles: true
-                    });
+                    }).dest(frotnendPath, DEST_OPTIONS);
 
                     // added lodash script
                     const ngCliJson = new configuration.FileConfiguration();

@@ -2,7 +2,7 @@
 
 This project was generated with [ADONE CLI](https://github.com/ciferox/adone) version {{ adoneVersion }}.
 
-## Frontend development
+## Development
 
 Backend:
 
