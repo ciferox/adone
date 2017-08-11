@@ -30,8 +30,10 @@ class AbstractTask {
             $notify: this.notify = false,
             $depends: this.dependencies = [],
             $before: this.before = noop,
-            $after: this.after = noop
+            $after: this.after = noop,
+            $clean: this.cleanHandler = noop
         } = descriptor);
+        this.descriptor = descriptor;
         this.options = options;
         this.dependencies = util.arrify(
             is.function(this.dependencies)
@@ -80,10 +82,25 @@ class AbstractTask {
         return `${parentDescription}["${key}"]`;
     }
 
+    async _clean() {
+        await this.cleanHandler.call(this.descriptor);
+    }
+
+    async clean() {
+        await this._clean();
+    }
+
     @onlyOnce()
-    async execute() {
+    async execute(path) {
+        if (path) {
+            if (path.length === 0) {
+                path = null;
+            } else {
+                return this._execute(path);
+            }
+        }
         await Promise.all(this.dependencies.map((dep) => dep.execute()));
-        await this.before(this.options);
+        await this.before.call(this.descriptor, this.options);
         let bar;
         if (this.progress) {
             bar = terminal.progress({
@@ -98,7 +115,7 @@ class AbstractTask {
         if (this.options.watch) {
             return;
         }
-        await this.after(this.options);
+        await this.after.call(this.descriptor, this.options);
         return res;
     }
 }
@@ -214,9 +231,19 @@ class TasksComposition extends AbstractTask {
         return this.tasks[id];
     }
 
-    _execute() {
+    async _clean() {
+        await Promise.all(util.values(this.tasks).map(async (task) => {
+            await task.clean();
+        }));
+        await super._clean();
+    }
+
+    _execute(path) {
         return Promise.all(util.entries(this.tasks).map(async ([id, task]) => {
-            return [id, await task.execute()];
+            if (path && path[0] !== task.key) {
+                return null;
+            }
+            return [id, await task.execute(path ? path.slice(1) : null)];
         }));
     }
 
@@ -241,6 +268,13 @@ class SequentalTasks extends AbstractTask {
 
     addTask(task) {
         this.tasks.push(task);
+    }
+
+    async _clean() {
+        await Promise.all(this.tasks.map(async (task) => {
+            await task.clean();
+        }));
+        await super._clean();
     }
 
     async _execute() {
@@ -367,7 +401,21 @@ export class Builder {
         resolveDependencies(this.schema);
     }
 
-    async execute(options) {
-        await this.schema.execute(options);
+    async clean(path) {
+        // if it is like a.b.c.d.e
+        if (path && /^\w+(\.\w+)*$/.test(path)) {
+            // a.b.c => ["", "a", "b", "c"]
+            path = ["", ...path.split(".")];
+        }
+        await this.schema.clean(path);
+    }
+
+    async execute(path) {
+        // if it is like a.b.c.d.e
+        if (path && /^\w+(\.\w+)*$/.test(path)) {
+            // a.b.c => ["", "a", "b", "c"]
+            path = ["", ...path.split(".")];
+        }
+        await this.schema.execute(path);
     }
 }

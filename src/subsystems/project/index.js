@@ -131,6 +131,13 @@ export default class extends adone.application.Subsystem {
                             help: "Build before watching"
                         }
                     ],
+                    arguments: [
+                        {
+                            nargs: "?",
+                            name: "path",
+                            help: "Execute a certain task"
+                        }
+                    ],
                     handler: this.buildCommand
                 },
                 {
@@ -147,7 +154,14 @@ export default class extends adone.application.Subsystem {
                 {
                     name: "clean",
                     help: "Clean project",
-                    handler: this.cleanCommand
+                    handler: this.cleanCommand,
+                    arguments: [
+                        {
+                            nargs: "?",
+                            name: "path",
+                            help: "Clean a certain task"
+                        }
+                    ],
                 }
             ]
         });
@@ -179,7 +193,7 @@ export default class extends adone.application.Subsystem {
             const builder = new lazy.Builder(conf.project.structure, {
                 ...parsedRest
             });
-            await builder.execute();
+            await builder.execute(args.has("path") ? args.get("path") : null);
         } catch (err) {
             terminal.print(`{red-fg}${err.message}{/}`);
         }
@@ -207,16 +221,14 @@ export default class extends adone.application.Subsystem {
         }
     }
 
-    async cleanCommand() {
-        // try {
-        //     const conf = await this._loadAdoneConf();
-        //     const builder = new lazy.Builder(conf.project.structure, {
-        //         clean: true
-        //     });
-        //     await builder.execute();
-        // } catch (err) {
-        //     terminal.print(`{red-fg}${err.message}{/}`);
-        // }
+    async cleanCommand(args) {
+        try {
+            const conf = await this._loadAdoneConf();
+            const builder = new lazy.Builder(conf.project.structure);
+            await builder.clean(args.has("path") ? args.get("path") : null);
+        } catch (err) {
+            terminal.print(`{red-fg}${err.message}{/}`);
+        }
     }
 
     async _loadAdoneConf() {

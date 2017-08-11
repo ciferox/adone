@@ -56,9 +56,12 @@ export default {
         structure: {
             bin: {
                 $progress: ({ watch }) => !watch,
+                async $clean() {
+                    await fs.rm("bin");
+                },
                 async $before({ watch }) {
                     if (!watch) {
-                        await fs.rm("bin");
+                        await this.$clean();
                     } else {
                         adone.info("watch bin");
                     }
@@ -84,9 +87,12 @@ export default {
                 $onError: errorHandlerFor("bin")
             },
             glosses: {
+                async $clean() {
+                    await fs.rm("lib/glosses");
+                },
                 async $before({ watch }) {
                     if (!watch) {
-                        await fs.rm("lib/glosses");
+                        await this.$clean();
                     } else {
                         adone.info("watch glosses");
                     }
@@ -179,9 +185,12 @@ export default {
             },
             vendor: {
                 $progress: ({ watch }) => !watch,
+                async $clean() {
+                    await fs.rm("lib/vendor");
+                },
                 async $before({ watch }) {
                     if (!watch) {
-                        await fs.rm("lib/vendor");
+                        await this.$clean();
                     } else {
                         adone.info("watch vendor");
                     }
@@ -193,9 +202,12 @@ export default {
             },
             index: {
                 $progress: ({ watch }) => !watch,
+                async $clean() {
+                    await fs.rm("lib/@(index.js|index.js.map)");
+                },
                 async $before({ watch }) {
                     if (!watch) {
-                        await fs.rm("lib/@(index.js|index.js.map)");
+                        await this.$clean();
                     } else {
                         adone.info("watch index");
                     }
@@ -215,9 +227,12 @@ export default {
             },
             omnitron: {
                 $progress: ({ watch }) => !watch,
+                async $clean() {
+                    await fs.rm("lib/omnitron");
+                },
                 async $before({ watch }) {
                     if (!watch) {
-                        await fs.rm("lib/omnitron");
+                        await this.$clean();
                     } else {
                         adone.info("watch omnitron");
                     }
@@ -239,9 +254,12 @@ export default {
             },
             subsystems: {
                 $progress: ({ watch }) => !watch,
+                async $clean() {
+                    await fs.rm("lib/subsystems");
+                },
                 async $before({ watch }) {
                     if (!watch) {
-                        await fs.rm("lib/subsystems");
+                        await this.$clean();
                     } else {
                         adone.info("watch subsystems");
                     }
