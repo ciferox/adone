@@ -2,7 +2,7 @@ const {
     vcs: { git: { StatusFile, Status } }
 } = adone;
 
-describe("StatusFile", function () {
+describe("StatusFile", () => {
     const pathName = "README.md";
 
     const testStatusFile = (status) => {
@@ -30,7 +30,7 @@ describe("StatusFile", function () {
         testStatusFile("CURRENT");
     });
 
-    it.skip("identifies the proper statuses for WT_UNREADABLE", function () {
+    it.skip("identifies the proper statuses for WT_UNREADABLE", () => {
         testStatusFile("WT_UNREADABLE");
     });
 
@@ -42,39 +42,39 @@ describe("StatusFile", function () {
         testStatusFile("WT_MODIFIED");
     });
 
-    it("identifies the proper statuses for WT_DELETED", function () {
+    it("identifies the proper statuses for WT_DELETED", () => {
         testStatusFile("WT_DELETED");
     });
 
-    it("identifies the proper statuses for WT_TYPECHANGE", function () {
+    it("identifies the proper statuses for WT_TYPECHANGE", () => {
         testStatusFile("WT_TYPECHANGE");
     });
 
-    it("identifies the proper statuses for WT_RENAMED", function () {
+    it("identifies the proper statuses for WT_RENAMED", () => {
         testStatusFile("WT_RENAMED");
     });
 
-    it("identifies the proper statuses for IGNORED", function () {
+    it("identifies the proper statuses for IGNORED", () => {
         testStatusFile("IGNORED");
     });
 
-    it("identifies the proper statuses for INDEX_NEW", function () {
+    it("identifies the proper statuses for INDEX_NEW", () => {
         testStatusFile("INDEX_NEW");
     });
 
-    it("identifies the proper statuses for INDEX_MODIFIED", function () {
+    it("identifies the proper statuses for INDEX_MODIFIED", () => {
         testStatusFile("INDEX_MODIFIED");
     });
 
-    it("identifies the proper statuses for INDEX_DELETED", function () {
+    it("identifies the proper statuses for INDEX_DELETED", () => {
         testStatusFile("INDEX_DELETED");
     });
 
-    it("identifies the proper statuses for INDEX_TYPECHANGE", function () {
+    it("identifies the proper statuses for INDEX_TYPECHANGE", () => {
         testStatusFile("INDEX_TYPECHANGE");
     });
 
-    it("identifies the proper statuses for INDEX_RENAMED", function () {
+    it("identifies the proper statuses for INDEX_RENAMED", () => {
         testStatusFile("INDEX_RENAMED");
     });
 });

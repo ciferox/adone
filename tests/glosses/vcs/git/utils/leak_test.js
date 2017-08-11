@@ -1,33 +1,29 @@
-var assert = require("assert");
+import { garbageCollect } from "./garbage_collect.js";
 
-var garbageCollect = require("./garbage_collect");
+export const leakTest = (Type, getInstance) => {
+    garbageCollect();
+    const startSelfFreeingCount = Type.getSelfFreeingInstanceCount();
+    const startNonSelfFreeingCount = Type.getNonSelfFreeingConstructedCount();
 
-function leakTest(Type, getInstance) {
-  garbageCollect();
-  var startSelfFreeingCount = Type.getSelfFreeingInstanceCount();
-  var startNonSelfFreeingCount = Type.getNonSelfFreeingConstructedCount();
+    let resolve;
+    const promise = new Promise(((_resolve) => {
+        resolve = _resolve;
+    }));
 
-  var resolve;
-  var promise = new Promise(function(_resolve) { resolve = _resolve; });
-
-  getInstance()
-    .then(function() {
-      var selfFreeingCount = Type.getSelfFreeingInstanceCount();
-      assert.equal(startSelfFreeingCount + 1, selfFreeingCount);
-      // get out of this promise chain to help GC get rid of the commit
-      setTimeout(resolve, 0);
+    getInstance().then(() => {
+        const selfFreeingCount = Type.getSelfFreeingInstanceCount();
+        assert.equal(startSelfFreeingCount + 1, selfFreeingCount);
+        // get out of this promise chain to help GC get rid of the commit
+        setTimeout(resolve, 0);
     });
 
-  return promise
-    .then(function() {
-      garbageCollect();
-      var endSelfFreeingCount = Type.getSelfFreeingInstanceCount();
-      var endNonSelfFreeingCount = Type.getNonSelfFreeingConstructedCount();
-      // any new self-freeing commits should have been freed
-      assert.equal(startSelfFreeingCount, endSelfFreeingCount);
-      // no new non-self-freeing commits should have been constructed
-      assert.equal(startNonSelfFreeingCount, endNonSelfFreeingCount);
+    return promise.then(() => {
+        garbageCollect();
+        const endSelfFreeingCount = Type.getSelfFreeingInstanceCount();
+        const endNonSelfFreeingCount = Type.getNonSelfFreeingConstructedCount();
+        // any new self-freeing commits should have been freed
+        assert.equal(startSelfFreeingCount, endSelfFreeingCount);
+        // no new non-self-freeing commits should have been constructed
+        assert.equal(startNonSelfFreeingCount, endNonSelfFreeingCount);
     });
-}
-
-module.exports = leakTest;
+};

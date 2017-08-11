@@ -6,8 +6,6 @@ const {
     system: { process: { shell } }
 } = adone;
 
-// var exec = require("../../utils/execPromise");
-
 describe("Stage", () => {
     let test;
 

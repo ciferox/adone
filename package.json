@@ -104,5 +104,8 @@
   "repository": "https://github.com/ciferox/adone",
   "bin": {
     "adone": "./bin/adone.js"
+  },
+  "dependencies": {
+    "lodash": "^4.17.4"
   }
 }

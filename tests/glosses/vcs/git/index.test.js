@@ -46,12 +46,12 @@ describe("vcs", "git", () => {
     });
 
     afterEach((done) => {
-    //     process.nextTick(() => {
-    //         if (global.gc) {
-    //             global.gc();
-    //         }
-    //         done();
-    //     });
+        process.nextTick(() => {
+            if (global.gc) {
+                global.gc();
+            }
+            done();
+        });
         done();
     });
 
@@ -67,8 +67,8 @@ describe("vcs", "git", () => {
     include("./config");
     include("./convenient_line");
     include("./cred");
-    // include("./diff");
-    // include("./filter");
+    include("./diff");
+    include("./filter");
     include("./graph");
     include("./ignore");
     include("./index");
@@ -81,10 +81,10 @@ describe("vcs", "git", () => {
     include("./pathspec");
     include("./rebase");
     include("./refs");
-    // include("./remote");
+    include("./remote");
     include("./repository");
     include("./reset");
-    // include("./revert");
+    include("./revert");
     include("./revparse");
     include("./revwalk");
     include("./signature");

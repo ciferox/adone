@@ -1,11 +1,11 @@
+import { leakTest } from "./utils/leak_test";
+
 const {
     std: { path },
     vcs: { git: { Commit, Repository, Revwalk, Oid } }
 } = adone;
 
 const local = path.join.bind(path, __dirname, "fixtures");
-
-// const leakTest = require("../utils/leak_test");
 
 describe("Oid", () => {
     const oid = "fce88902e66c72b5b93e75bdb5ae717038b221f6";

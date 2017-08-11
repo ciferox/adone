@@ -17,7 +17,6 @@ const native = adone.bind("git.node");
 // const _Refspec = rawApi.Refspec;
 
 // const _Strarray = rawApi.Strarray;
-// const _Time = rawApi.Time;
 // const _Transport = rawApi.Transport;
 
 // const _Transport_sshWithPaths = _Transport.sshWithPaths;
@@ -264,6 +263,7 @@ adone.lazify({
 }, exports, require);
 
 // additional api
+exports.Time = native.Time;
 exports.Treebuilder = native.Treebuilder;
 exports.FilterSource = native.FilterSource;
 exports.Giterr = native.Giterr;

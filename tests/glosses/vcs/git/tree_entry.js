@@ -1,11 +1,11 @@
+import { leakTest } from "./utils/leak_test";
+
 const {
     std: { path },
-    vcs: { git: { Repository, Tree } }
+    vcs: { git: { Repository, Tree, TreeEntry } }
 } = adone;
 
 const local = path.join.bind(path, __dirname, "fixtures");
-
-// const leakTest = require("../utils/leak_test");
 
 describe("TreeEntry", () => {
     const reposPath = local("repos/workdir");
@@ -156,10 +156,10 @@ describe("TreeEntry", () => {
         });
     });
 
-    it.skip("does not leak", function () {
+    it("does not leak", function () {
         const test = this;
 
-        return leakTest(NodeGit.TreeEntry, () => {
+        return leakTest(TreeEntry, () => {
             return test.commit.getTree()
                 .then((tree) => {
                     return tree.entryByPath("example");

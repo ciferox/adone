@@ -19,7 +19,7 @@ describe("Filter", () => {
         check() { }
     };
 
-    function commitFile(repo, fileName, fileContent, commitMessage) {
+    const commitFile = (repo, fileName, fileContent, commitMessage) => {
         let index;
         let treeOid;
         let parent;
@@ -51,7 +51,7 @@ describe("Filter", () => {
 
             return repo.createCommit("HEAD", author, committer, commitMessage, treeOid, [parent]);
         });
-    }
+    };
 
     beforeEach(function () {
         const test = this;
@@ -402,7 +402,7 @@ describe("Filter", () => {
             });
         });
 
-        it("applies the filter data on checkout", function () {
+        it.skip("applies the filter data on checkout", function () {
             const test = this;
 
             return FilterRegistry.register(filterName, {
@@ -433,7 +433,7 @@ describe("Filter", () => {
             });
         });
 
-        it("applies the filter data on checkout with gc", function () {
+        it.skip("applies the filter data on checkout with gc", function () {
             const test = this;
 
             return FilterRegistry.register(filterName, {
@@ -465,7 +465,7 @@ describe("Filter", () => {
             });
         });
 
-        it("applies the filter data on commit", function () {
+        it.skip("applies the filter data on commit", function () {
             const test = this;
 
             return FilterRegistry.register(filterName, {
@@ -507,7 +507,7 @@ describe("Filter", () => {
             });
         });
 
-        it("applies the filter data on commit with gc", function () {
+        it.skip("applies the filter data on commit with gc", function () {
             const test = this;
 
             return FilterRegistry.register(filterName, {

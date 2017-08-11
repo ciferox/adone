@@ -1,12 +1,12 @@
+import { garbageCollect } from "./utils/garbage_collect.js";
+
 const {
     std: { path },
-    vcs: { git: { Repository, Signature } },
+    vcs: { git: { Time, Repository, Signature } },
     system: { process: { shell, execStdout } }
 } = adone;
 
 const local = path.join.bind(path, __dirname, "fixtures");
-
-// const garbageCollect = require("../utils/garbage_collect.js");
 
 describe("Signature", () => {
     const reposPath = local("repos/workdir");
@@ -74,9 +74,8 @@ describe("Signature", () => {
         });
     });
 
-    it.skip("duplicates time", () => {
+    it("duplicates time", () => {
         garbageCollect();
-        const Time = NodeGit.Time;
         const startSelfFreeingCount = Time.getSelfFreeingInstanceCount();
         const startNonSelfFreeingCount = Time.getNonSelfFreeingConstructedCount();
         let time = Signature.now(name, email).when();

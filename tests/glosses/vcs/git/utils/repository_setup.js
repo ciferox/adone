@@ -4,7 +4,7 @@ const {
     vcs: { git: { Reset, Repository, Signature, Checkout } }
 } = adone;
 
-const RepositorySetup = {
+const repositorySetup = {
     addFileToIndex: function addFileToIndex(repository, fileName) {
         return repository.refreshIndex().then((index) => {
             return index.addByPath(fileName).then(() => {
@@ -32,7 +32,7 @@ const RepositorySetup = {
             //
         }
         await fs.writeFile(filePath, fileContent);
-        const oid = await RepositorySetup.addFileToIndex(repository, fileName);
+        const oid = await repositorySetup.addFileToIndex(repository, fileName);
         const commitOid = await repository.createCommit("HEAD", signature, signature, "initial commit", oid, parents);
         return repository.getCommit(commitOid);
     },
@@ -89,7 +89,7 @@ const RepositorySetup = {
             fs.writeFile(path.join(repoWorkDir, ourFileName), ourFileContent),
             fs.writeFile(path.join(repoWorkDir, theirFileName), theirFileContent)
         ]).then(() => {
-            return RepositorySetup.addFileToIndex(repository, baseFileName);
+            return repositorySetup.addFileToIndex(repository, baseFileName);
         }).then((oid) => {
             assert.equal(oid.toString(), "b5cdc109d437c4541a13fb7509116b5f03d5039a");
 
@@ -112,7 +112,7 @@ const RepositorySetup = {
             ret.ourBranch = ourBranch = branches[0];
             ret.theirBranch = theirBranch = branches[1];
 
-            return RepositorySetup.addFileToIndex(repository, ourFileName);
+            return repositorySetup.addFileToIndex(repository, ourFileName);
         }).then((oid) => {
             assert.equal(oid.toString(), "77867fc0bfeb3f80ab18a78c8d53aa3a06207047");
 
@@ -123,7 +123,7 @@ const RepositorySetup = {
             ret.ourCommit = commit;
             return Reset.default(repository, initialCommit, ourFileName);
         }).then(() => {
-            return RepositorySetup.addFileToIndex(repository, theirFileName);
+            return repositorySetup.addFileToIndex(repository, theirFileName);
         }).then((oid) => {
             assert.equal(oid.toString(), "be5f0fd38a39a67135ad68921c93cd5c17fefb3d");
 
@@ -152,4 +152,4 @@ const RepositorySetup = {
     }
 };
 
-export default RepositorySetup;
+export default repositorySetup;

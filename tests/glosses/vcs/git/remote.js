@@ -1,3 +1,5 @@
+import { garbageCollect } from "./utils/garbage_collect.js";
+
 const {
     std: { path },
     vcs: { git: { Repository, Remote, Enums, Cred } },
@@ -6,8 +8,6 @@ const {
 
 const local = path.join.bind(path, __dirname, "fixtures");
 const fp = require("lodash/fp");
-
-// const garbageCollect = require("../utils/garbage_collect.js");
 
 describe("Remote", () => {
     const reposPath = local("repos/workdir");
@@ -196,7 +196,7 @@ describe("Remote", () => {
         });
     });
 
-    it("can reject fetching from private repository without valid credentials", function () {
+    it.skip("can reject fetching from private repository without valid credentials", function () {
         const repo = this.repository;
         let firstPass = true;
         const fetchOptions = {
@@ -241,7 +241,7 @@ describe("Remote", () => {
         });
     });
 
-    it("will reject if credentials promise rejects", function () {
+    it.skip("will reject if credentials promise rejects", function () {
         const repo = this.repository;
         const branch = "should-not-exist";
         return Remote.lookup(repo, "origin").then((remote) => {
@@ -306,7 +306,7 @@ describe("Remote", () => {
         });
     });
 
-    it("cannot push to a repository with invalid credentials", function () {
+    it.skip("cannot push to a repository with invalid credentials", function () {
         const repo = this.repository;
         const branch = "should-not-exist";
         return Remote.lookup(repo, "origin").then((remote) => {
@@ -360,7 +360,7 @@ describe("Remote", () => {
             });
     });
 
-    it.skip("is kept alive by refspec", function () {
+    it("is kept alive by refspec", function () {
         const repo = this.repository;
 
         garbageCollect();

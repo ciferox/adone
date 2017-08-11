@@ -219,11 +219,13 @@ export default class AutocompletePrompt extends terminal.BasePrompt {
         const keyName = (e.key && e.key.name) || undefined;
 
         if (keyName === "tab" && this.opt.suggestOnly) {
-            this.rl.write(terminal.terminfo.cursorLeft());
-            const autoCompleted = this.currentChoices.getChoice(this.selected).value;
-            this.rl.write(ansiEscapes.cursorForward(autoCompleted.length));
-            this.rl.line = autoCompleted;
-            this.render();
+            if (this.currentChoices.getChoice(this.selected)) {
+                this.rl.write(ansiEscapes.cursorLeft);
+                const autoCompleted = this.currentChoices.getChoice(this.selected).value;
+                this.rl.write(ansiEscapes.cursorForward(autoCompleted.length));
+                this.rl.line = autoCompleted;
+                this.render();
+            }
         } else if (keyName === "down") {
             len = this.currentChoices.length;
             this.selected = (this.selected < len - 1) ? this.selected + 1 : 0;

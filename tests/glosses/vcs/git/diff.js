@@ -338,7 +338,7 @@ describe("Diff", () => {
         });
     });
 
-    describe("merge between commit diff and workdir and index diff", () => {
+    describe.skip("merge between commit diff and workdir and index diff", () => {
         beforeEach(function () {
             const test = this;
             const diffOptions = new DiffOptions();

@@ -1,4 +1,6 @@
 import RepoUtils from "./utils/repository_setup";
+import { leakTest } from "./utils/leak_test";
+
 const {
     fs,
     std: { path },
@@ -7,13 +9,30 @@ const {
 
 const local = path.join.bind(path, __dirname, "fixtures");
 
-// const leakTest = require("../utils/leak_test");
-
 describe("Revwalk", function () {
     const reposPath = local("repos/workdir");
 
     // Set a reasonable timeout here now that our repository has grown.
     this.timeout(120000);
+
+    const next = (walker, count) => {
+        let promise = null;
+        const getNext = () => walker.next();
+
+        for (let i = 0; i < count; i++) {
+            if (!promise) {
+                promise = walker.next();
+            } else {
+                promise = promise.then(getNext);
+            }
+        }
+        return promise.catch((error) => {
+            if (error && error.errno === adone.vcs.git.Error.CODE.ITEROVER) {
+                return Promise.resolve();
+            }
+            throw error;
+        });
+    };
 
     beforeEach(function () {
         const test = this;
@@ -92,10 +111,10 @@ describe("Revwalk", function () {
     it("can get the largest number of commits within a specified range",
         function () {
             const test = this;
-            let storedCommits;
+            // let storedCommits;
             return test.walker.getCommits(991).then((commits) => {
                 assert.equal(commits.length, 990);
-                storedCommits = commits;
+                // storedCommits = commits;
                 test.walker = test.repository.createRevWalk();
                 test.walker.push(test.commit.id());
             });
@@ -258,7 +277,7 @@ describe("Revwalk", function () {
         });
     });
 
-    it.skip("does not leak", function () {
+    it("does not leak", function () {
         const test = this;
 
         return leakTest(Revwalk, () => {
@@ -271,7 +290,7 @@ describe("Revwalk", function () {
     // [testglob]`
     const testGC = global.gc ? it : it.skip;
 
-    testGC("doesnt segfault when accessing .author() twice", (done) => {
+    /*testGC*/it.skip("doesnt segfault when accessing .author() twice", (done) => {
         Repository.open(reposPath).then((repository) => {
             const walker = repository.createRevWalk();
 
@@ -293,23 +312,4 @@ describe("Revwalk", function () {
             });
         });
     });
-
-    const next = (walker, count) => {
-        let promise = null;
-        const getNext = () => walker.next();
-
-        for (let i = 0; i < count; i++) {
-            if (!promise) {
-                promise = walker.next();
-            } else {
-                promise = promise.then(getNext);
-            }
-        }
-        return promise.catch((error) => {
-            if (error && error.errno === adone.vcs.git.Error.CODE.ITEROVER) {
-                return Promise.resolve();
-            }
-            throw error;
-        });
-    };
 });

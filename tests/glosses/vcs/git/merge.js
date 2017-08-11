@@ -8,8 +8,6 @@ const {
 
 const local = path.join.bind(path, __dirname, "fixtures");
 
-// fse.ensureDir = promisify(fse.ensureDir);
-
 describe("Merge", () => {
     const reposPath = local("repos/merge");
     const ourBranchName = "ours";

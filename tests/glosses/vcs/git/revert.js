@@ -38,8 +38,8 @@ describe("Revert", () => {
         });
     });
 
-    it("revert modifies the index", () => {
-        Revert.revert(test.repository, test.firstCommit, new RevertOptions()).then(() => {
+    it.skip("revert modifies the index", () => {
+        return Revert.revert(test.repository, test.firstCommit, new RevertOptions()).then(() => {
             return test.repository.index();
         }).then((index) => {
             const entries = index.entries;

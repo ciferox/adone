@@ -1,3 +1,6 @@
+import { garbageCollect } from "./utils/garbage_collect.js";
+import { leakTest } from "./utils/leak_test";
+
 const {
     is,
     fs,
@@ -6,8 +9,6 @@ const {
 } = adone;
 const exec = adone.system.process.shell;
 
-// const garbageCollect = require("../utils/garbage_collect.js");
-// const leakTest = require("../utils/leak_test");
 
 const local = path.join.bind(path, __dirname, "fixtures");
 
@@ -426,7 +427,7 @@ describe("Commit", () => {
         }).then((wsCommit) => {
             return wsCommit.getDiffWithOptions(options);
         }).then((diff) => {
-            
+
             assert.equal(diff.length, 1);
             return diff[0].patches();
         }).then((patches) => {
@@ -549,7 +550,7 @@ describe("Commit", () => {
         });
     });
 
-    it.skip("does not leak", function () {
+    it("does not leak", function () {
         const test = this;
 
         return leakTest(Commit, () => {
@@ -557,7 +558,7 @@ describe("Commit", () => {
         });
     });
 
-    it.skip("duplicates signature", function () {
+    it("duplicates signature", function () {
         garbageCollect();
         const startSelfFreeingCount = Signature.getSelfFreeingInstanceCount();
         const startNonSelfFreeingCount = Signature.getNonSelfFreeingConstructedCount();
