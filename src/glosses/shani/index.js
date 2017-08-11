@@ -112,7 +112,6 @@ class Block {
         this._skip = false;
         this._only = false;
         this._watch = false;
-        this._retries = null;
         this._options = options;
     }
 
@@ -231,6 +230,7 @@ class Block {
                 ms = SET_TIMEOUT_MAX;
             }
             this._timeout = ms;
+            return this;
         }
         if (this._timeout !== adone.null) {
             return this._timeout;
@@ -241,22 +241,10 @@ class Block {
         return null;
     }
 
-    retries(n) {
-        if (n) {
-            this._retries = n;
-        }
-        if (this._retries) {
-            return this._retries;
-        }
-        if (this.parent) {
-            return this.parent.retries();
-        }
-        return null;
-    }
-
     level(level) {
         if (!is.undefined(level)) {
             this._level = level;
+            return this;
         } else if (is.null(this._level)) {
             this._level = this.parent ? this.parent.level() + 1 : 0;
         }
@@ -293,7 +281,7 @@ class TestModule extends adone.js.Module {
 }
 
 class Test {
-    constructor(description, callback, block, runtimeContext, options = {}) {
+    constructor(description, callback, block, runtimeContext, engineOptions = {}, options = {}) {
         this.description = description;
         this.callback = callback;
         this.block = block;
@@ -305,6 +293,7 @@ class Test {
         this._afterHooks = [];
         this._beforeHooksFired = false;
         this._afterHooksFired = false;
+        this._engineOptions = engineOptions;
         this._options = options;
     }
 
@@ -493,6 +482,7 @@ class Test {
                 ms = SET_TIMEOUT_MAX;
             }
             this._timeout = ms;
+            return this;
         }
 
         if (this._timeout !== adone.null) {
@@ -502,36 +492,28 @@ class Test {
         return this.block.timeout();
     }
 
-    retries(n) {
-        if (n) {
-            this._retries = n;
+    after(description, callback) {
+        if (adone.is.function(description)) {
+            [description, callback] = ["", description];
         }
-        return this._retries || this.block.retries();
-    }
-
-    chain() {
-        return `${this.block.chain()} : ${this.description}`;
+        const hook = new Hook(description, callback, this.runtimeContext);
+        hook.timeout(this._engineOptions.defaultHookTimeout);
+        this._afterHooks.push(hook);
+        return this;
     }
 
     before(description, callback) {
         if (adone.is.function(description)) {
             [description, callback] = ["", description];
         }
-        this._beforeHooks.push(new Hook(description, callback, this.runtimeContext));
+        const hook = new Hook(description, callback, this.runtimeContext);
+        hook.timeout(this._engineOptions.defaultHookTimeout);
+        this._beforeHooks.push(hook);
         return this;
     }
 
-    after(description, callback) {
-        if (adone.is.function(description)) {
-            [description, callback] = ["", description];
-        }
-        this._afterHooks.push(new Hook(description, callback, this.runtimeContext));
-        return this;
-    }
-
-    test(callback) {
-        this.callback = callback;
-        return this;
+    chain() {
+        return `${this.block.chain()} : ${this.description}`;
     }
 
     *beforeHooks() {
@@ -546,14 +528,14 @@ class Test {
 export class Engine {
     constructor({
         defaultTimeout = 5000,
-        firstFailExit = false,
+        defaultHookTimeout = 5000,
         transpilerOptions = {},
         callGc = false,
         watch = false
     } = {}) {
         this._paths = []; // path can be a glob or a path
         this.defaultTimeout = defaultTimeout;
-        this.firstFailExit = firstFailExit;
+        this.defaultHookTimeout = defaultHookTimeout;
         this.transpilerOptions = transpilerOptions;
         this.callGc = callGc;
         this.watch = watch;
@@ -571,12 +553,11 @@ export class Engine {
         const root = new Block(null);
         root.level(-1); // take care of the nested blocks
         root.timeout(this.defaultTimeout);
-        root.retries(1);
         const stack = new adone.collection.Stack([root]);
 
         const runtimeContext = {};
 
-        const describe = function (...args) {
+        const describe = (...args) => {
             const callback = args.pop();
 
             if (!is.function(callback)) {
@@ -616,11 +597,13 @@ export class Engine {
         describe.skip = (...args) => describe(...args).skip();
         describe.only = (...args) => describe(...args).only();
 
-        const it = function (description, options, callback) {
+        const it = (description, options, callback) => {
             if (is.function(options)) {
                 [options, callback] = [null, options];
             }
-            const test = new Test(description, callback, stack.top, runtimeContext, options);
+            const test = new Test(description, callback, stack.top, runtimeContext, {
+                defaultHookTimeout: this.defaultHookTimeout
+            }, options);
             stack.top.addChild(test);
             return test;
         };
@@ -628,32 +611,40 @@ export class Engine {
         it.skip = (...args) => it(...args).skip();
         it.only = (...args) => it(...args).only();
 
-        const before = function (description, callback) {
+        const before = (description, callback) => {
             if (adone.is.function(description)) {
                 [description, callback] = ["", description];
             }
-            stack.top.hooks.before.push(new Hook(description, callback, runtimeContext));
+            const hook = new Hook(description, callback, runtimeContext);
+            hook.timeout(this.defaultHookTimeout);
+            stack.top.hooks.before.push(hook);
         };
 
-        const after = function (description, callback) {
+        const after = (description, callback) => {
             if (adone.is.function(description)) {
                 [description, callback] = ["", description];
             }
-            stack.top.hooks.after.push(new Hook(description, callback, runtimeContext));
+            const hook = new Hook(description, callback, runtimeContext);
+            hook.timeout(this.defaultHookTimeout);
+            stack.top.hooks.after.push(hook);
         };
 
-        const beforeEach = function (description, callback) {
+        const beforeEach = (description, callback) => {
             if (adone.is.function(description)) {
                 [description, callback] = ["", description];
             }
-            stack.top.hooks.beforeEach.push(new Hook(description, callback, runtimeContext));
+            const hook = new Hook(description, callback, runtimeContext);
+            hook.timeout(this.defaultHookTimeout);
+            stack.top.hooks.beforeEach.push(hook);
         };
 
-        const afterEach = function (description, callback) {
+        const afterEach = (description, callback) => {
             if (adone.is.function(description)) {
                 [description, callback] = ["", description];
             }
-            stack.top.hooks.afterEach.push(new Hook(description, callback, runtimeContext));
+            const hook = new Hook(description, callback, runtimeContext);
+            hook.timeout(this.defaultHookTimeout);
+            stack.top.hooks.afterEach.push(hook);
         };
 
         const skip = function (callback) {

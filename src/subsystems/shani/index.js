@@ -113,7 +113,7 @@ export default class ShaniCLI extends adone.application.Subsystem {
     }
 
     async testItself() {
-        const proc = adone.std.child_process.fork("libTests/glosses/shani/test.js", {
+        const proc = adone.std.child_process.fork("tests/glosses/shani/test.js", {
             stdio: "inherit"
         });
         const code = await new Promise((resolve) => {
