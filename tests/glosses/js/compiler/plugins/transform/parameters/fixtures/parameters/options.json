@@ -1,0 +1,15 @@
+{
+  "plugins": [
+    "transform.classProperties",
+    "externalHelpers",
+    "syntax.flow",
+    "transform.parameters",
+    "transform.blockScoping",
+    "transform.spread",
+    "transform.classes",
+    "transform.destructuring",
+    "transform.arrowFunctions",
+    "syntax.asyncFunctions",
+    "transform.forOf"
+  ]
+}

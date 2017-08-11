@@ -28,7 +28,8 @@ lazify({
     builderBinaryAssignmentOperatorVisitor: "./builder_binary_assignment_operator_visitor",
     optimiseCallExpression: "./optimise_call_expression",
     ReplaceSupers: "./replace_supers",
-    defineMap: "./define_map"
+    defineMap: "./define_map",
+    builderReactJsx: "./builder_react_jsx"
 }, helpers, require);
 
 

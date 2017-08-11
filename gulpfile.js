@@ -82,7 +82,7 @@ const transform = () => babel({
         "transform-flow-strip-types",
         "transform-decorators-legacy",
         "transform-class-properties",
-        "transform-es2015-modules-commonjs",
+        "transform.ESModules",
         "transform-function-bind",
         "transform-object-rest-spread",
         [importReplace, {

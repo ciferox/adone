@@ -1,0 +1,3 @@
+{
+  "plugins": ["externalHelpers", ["transform.arrowFunctions", { "spec": true }]]
+}
