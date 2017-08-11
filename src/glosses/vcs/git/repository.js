@@ -1,10 +1,11 @@
 const native = adone.bind("git.node");
-const fp = require("lodash/fp");
+const { vendor: { lodash: _ } } = adone;
+
 const {
     is,
     std: { path },
     vcs: { git: {
-        Error,
+        Error, // force load in case of indirect instantiation
         Index, // force load in case of indirect instantiation
         ConvenientPatch, // force load in case of indirect instantiation
         ConvenientHunk, // force load in case of indirect instantiation
@@ -247,7 +248,7 @@ const getPathHunks = (repo, index, filePath, isStaged, additionalDiffOptions) =>
 const performRebase = (repository, rebase, signature, beforeNextFn, beforeFinishFn) => {
     let beforeNextFnResult;
 
-    const readRebaseMetadataFile = (fileName) => adone.fs.readFile(path.join(repository.path(), "rebase-merge", fileName), { encoding: "utf8" }).then(fp.trim);
+    const readRebaseMetadataFile = (fileName) => adone.fs.readFile(path.join(repository.path(), "rebase-merge", fileName), { encoding: "utf8" }).then(_.trim);
 
     const calcHeadName = (input) => input.replace(/refs\/heads\/(.*)/, "$1");
 
@@ -264,10 +265,7 @@ const performRebase = (repository, rebase, signature, beforeNextFn, beforeFinish
             });
         }, (error) => {
             if (error && error.errno === adone.vcs.git.Error.CODE.ITEROVER) {
-                const calcRewritten = fp.flow([
-                    fp.split("\n"),
-                    fp.map(fp.split(" "))
-                ]);
+                const calcRewritten = (x) => _.map(_.split(x, "\n"), (xx) => _.split(xx, " "));
 
                 const beforeFinishFnPromise = !beforeFinishFn ? Promise.resolve() :
                     Promise.all([

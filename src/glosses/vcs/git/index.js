@@ -1,79 +1,106 @@
 const native = adone.bind("git.node");
 
-// const _Indexer = rawApi.Indexer;
-// const _Libgit2 = rawApi.Libgit2;
+export const Time = native.Time;
+export const Treebuilder = native.Treebuilder;
+export const FilterSource = native.FilterSource;
+export const Giterr = native.Giterr;
+export const PushOptions = native.PushOptions;
+export const MergeOptions = native.MergeOptions;
+export const FetchOptions = native.FetchOptions;
+export const RemoteCallbacks = native.RemoteCallbacks;
+export const ProxyOptions = native.ProxyOptions;
+export const CloneOptions = native.CloneOptions;
+export const DiffOptions = native.DiffOptions;
+export const DiffFindOptions = native.DiffFindOptions;
+export const CheckoutOptions = native.CheckoutOptions;
+export const CherrypickOptions = native.CherrypickOptions;
+export const RepositoryInitOptions = native.RepositoryInitOptions;
+export const StatusOptions = native.StatusOptions;
+export const BlameOptions = native.BlameOptions;
+export const StashApplyOptions = native.StashApplyOptions;
+export const RebaseOptions = native.RebaseOptions;
+export const RevertOptions = native.RevertOptions;
+export const SubmoduleUpdateOptions = native.SubmoduleUpdateOptions;
+export const getThreadSafetyStatus = native.getThreadSafetyStatus;
+export const enableThreadSafety = native.enableThreadSafety;
+export const setThreadSafetyStatus = native.setThreadSafetyStatus;
+export const getThreadSafetyDiagnostics = native.getThreadSafetyDiagnostics;
+export const THREAD_SAFETY = native.THREAD_SAFETY;
+export const Indexer = native.Indexer;
+export const Libgit2 = native.Libgit2;
+Libgit2.OPT = {
+    GET_MWINDOW_SIZE: 0,
+    SET_MWINDOW_SIZE: 1,
+    GET_MWINDOW_MAPPED_LIMIT: 2,
+    SET_MWINDOW_MAPPED_LIMIT: 3,
+    GET_SEARCH_PATH: 4,
+    SET_SEARCH_PATH: 5,
+    SET_CACHE_OBJECT_LIMIT: 6,
+    SET_CACHE_MAX_SIZE: 7,
+    ENABLE_CACHING: 8,
+    GET_CACHED_MEMORY: 9,
+    GET_TEMPLATE_PATH: 10,
+    SET_TEMPLATE_PATH: 11,
+    SET_SSL_CERT_LOCATIONS: 12,
+    SET_USER_AGENT: 13,
+    ENABLE_STRICT_OBJECT_CREATION: 14,
+    ENABLE_STRICT_SYMBOLIC_REF_CREATION: 15,
+    SET_SSL_CIPHERS: 16,
+    GET_USER_AGENT: 17
+};
 
-// const _Oidarray = rawApi.Oidarray;
-// const _Openssl = rawApi.Openssl;
+export const Oidarray = native.Oidarray;
+export const Openssl = native.Openssl;
 
-// const _Proxy = rawApi.Proxy;
-// const _Push = rawApi.Push;
-// const _Refdb = rawApi.Refdb;
+exports.Proxy = native.Proxy;
+exports.Proxy.PROXY = {
+    NONE: 0,
+    AUTO: 1,
+    SPECIFIED: 2
+};
 
-// const _Refdb_open = _Refdb.open;
-// _Refdb.open = adone.promise.promisifyAll(_Refdb_open);
+export const Push = native.Push;
 
-// const _ReflogEntry = rawApi.ReflogEntry;
-// const _Refspec = rawApi.Refspec;
+export const Refdb = native.Refdb;
+Refdb.open = adone.promise.promisifyAll(native.Refdb.open);
 
-// const _Strarray = rawApi.Strarray;
-// const _Transport = rawApi.Transport;
+export const ReflogEntry = native.ReflogEntry;
+export const Refspec = native.Refspec;
+export const Strarray = native.Strarray;
+export const Transport = native.Transport;
+Transport.sshWithPaths = adone.promise.promisifyAll(native.Transport.sshWithPaths);
+Transport.FLAGS = {
+    NONE: 0
+};
 
-// const _Transport_sshWithPaths = _Transport.sshWithPaths;
-// _Transport.sshWithPaths = adone.promise.promisifyAll(_Transport_sshWithPaths);
+export const DiffBinary = native.DiffBinary;
+DiffBinary.DIFF_BINARY = {
+    NONE: 0,
+    LITERAL: 1,
+    DELTA: 2
+};
+
+export const Hashsig = native.Hashsig;
+Hashsig.OPTION = {
+    NORMAL: 0,
+    IGNORE_WHITESPACE: 1,
+    SMART_WHITESPACE: 2,
+    ALLOW_SMALL_FILES: 4
+};
+
+export const Trace = native.Trace;
+Trace.LEVEL = {
+    NONE: 0,
+    FATAL: 1,
+    ERROR: 2,
+    WARN: 3,
+    INFO: 4,
+    DEBUG: 5,
+    TRACE: 6
+};
 
 
-// rawApi.DiffBinary.DIFF_BINARY = {
-//     NONE: 0,
-//     LITERAL: 1,
-//     DELTA: 2
-// };
-
-// rawApi.Hashsig.OPTION = {
-//     NORMAL: 0,
-//     IGNORE_WHITESPACE: 1,
-//     SMART_WHITESPACE: 2,
-//     ALLOW_SMALL_FILES: 4
-// };
-// rawApi.Libgit2.OPT = {
-//     GET_MWINDOW_SIZE: 0,
-//     SET_MWINDOW_SIZE: 1,
-//     GET_MWINDOW_MAPPED_LIMIT: 2,
-//     SET_MWINDOW_MAPPED_LIMIT: 3,
-//     GET_SEARCH_PATH: 4,
-//     SET_SEARCH_PATH: 5,
-//     SET_CACHE_OBJECT_LIMIT: 6,
-//     SET_CACHE_MAX_SIZE: 7,
-//     ENABLE_CACHING: 8,
-//     GET_CACHED_MEMORY: 9,
-//     GET_TEMPLATE_PATH: 10,
-//     SET_TEMPLATE_PATH: 11,
-//     SET_SSL_CERT_LOCATIONS: 12,
-//     SET_USER_AGENT: 13,
-//     ENABLE_STRICT_OBJECT_CREATION: 14,
-//     ENABLE_STRICT_SYMBOLIC_REF_CREATION: 15,
-//     SET_SSL_CIPHERS: 16,
-//     GET_USER_AGENT: 17
-// };
-// rawApi.Proxy.PROXY = {
-//     NONE: 0,
-//     AUTO: 1,
-//     SPECIFIED: 2
-// };
-// rawApi.Trace.LEVEL = {
-//     NONE: 0,
-//     FATAL: 1,
-//     ERROR: 2,
-//     WARN: 3,
-//     INFO: 4,
-//     DEBUG: 5,
-//     TRACE: 6
-// };
-// rawApi.Transport.FLAGS = {
-//     NONE: 0
-// };
-
-exports.Enums = {
+export const Enums = {
     CVAR: {
         FALSE: 0,
         TRUE: 1,
@@ -112,7 +139,7 @@ exports.Enums = {
     }
 };
 
-exports.Cert = {
+export const Cert = {
     TYPE: {
         NONE: 0,
         X509: 1,
@@ -125,7 +152,7 @@ exports.Cert = {
     }
 };
 
-exports.RebaseOperation = {
+export const RebaseOperation = {
     REBASE_OPERATION: {
         PICK: 0,
         REWORD: 1,
@@ -136,7 +163,7 @@ exports.RebaseOperation = {
     }
 };
 
-exports.Error = {
+export const Error = {
     ERROR: {
         GITERR_NONE: 0,
         GITERR_NOMEMORY: 1,
@@ -261,31 +288,3 @@ adone.lazify({
         normalizeFetchOptions: "./utils/normalize_fetch_options"
     }, null, require)
 }, exports, require);
-
-// additional api
-exports.Time = native.Time;
-exports.Treebuilder = native.Treebuilder;
-exports.FilterSource = native.FilterSource;
-exports.Giterr = native.Giterr;
-exports.PushOptions = native.PushOptions;
-exports.MergeOptions = native.MergeOptions;
-exports.FetchOptions = native.FetchOptions;
-exports.RemoteCallbacks = native.RemoteCallbacks;
-exports.ProxyOptions = native.ProxyOptions;
-exports.CloneOptions = native.CloneOptions;
-exports.DiffOptions = native.DiffOptions;
-exports.DiffFindOptions = native.DiffFindOptions;
-exports.CheckoutOptions = native.CheckoutOptions;
-exports.CherrypickOptions = native.CherrypickOptions;
-exports.RepositoryInitOptions = native.RepositoryInitOptions;
-exports.StatusOptions = native.StatusOptions;
-exports.BlameOptions = native.BlameOptions;
-exports.StashApplyOptions = native.StashApplyOptions;
-exports.RebaseOptions = native.RebaseOptions;
-exports.RevertOptions = native.RevertOptions;
-exports.SubmoduleUpdateOptions = native.SubmoduleUpdateOptions;
-exports.getThreadSafetyStatus = native.getThreadSafetyStatus;
-exports.enableThreadSafety = native.enableThreadSafety;
-exports.setThreadSafetyStatus = native.setThreadSafetyStatus;
-exports.getThreadSafetyDiagnostics = native.getThreadSafetyDiagnostics;
-exports.THREAD_SAFETY = native.THREAD_SAFETY;

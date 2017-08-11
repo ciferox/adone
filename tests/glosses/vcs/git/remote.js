@@ -7,7 +7,6 @@ const {
 } = adone;
 
 const local = path.join.bind(path, __dirname, "fixtures");
-const fp = require("lodash/fp");
 
 describe("Remote", () => {
     const reposPath = local("repos/workdir");
@@ -465,25 +464,19 @@ describe("Remote", () => {
         }).then((results) => {
             const remote = results[0];
             const remoteHeads = results[1];
-            const remoteHeadsBySha = fp.flow([
-                fp.map((remoteHead) => {
-                    return {
-                        local: remoteHead.local(),
-                        oid: remoteHead.oid().toString(),
-                        loid: remoteHead.loid().toString(),
-                        name: remoteHead.name(),
-                        symrefTarget: remoteHead.symrefTarget()
-                    };
-                }),
-                fp.keyBy("name")
-            ])(remoteHeads);
+            const remoteHeadsBySha = _.keyBy(_.map(remoteHeads, (remoteHead) => {
+                return {
+                    local: remoteHead.local(),
+                    oid: remoteHead.oid().toString(),
+                    loid: remoteHead.loid().toString(),
+                    name: remoteHead.name(),
+                    symrefTarget: remoteHead.symrefTarget()
+                };
+            }), "name");            
 
-            fp.flow([
-                fp.keys,
-                fp.forEach((remoteHeadName) => {
-                    assert(fp.isEqual(expectedRemoteHeads[remoteHeadName], remoteHeadsBySha[remoteHeadName]), `Expectations for head ${remoteHeadName} were not met.`);
-                })
-            ])(expectedRemoteHeads);
+            _.forEach(_.keys(expectedRemoteHeads), (remoteHeadName) => {
+                assert.isTrue(_.isEqual(expectedRemoteHeads[remoteHeadName], remoteHeadsBySha[remoteHeadName]), `Expectations for head ${remoteHeadName} were not met.`);
+            });
 
             return remote.disconnect();
         });
