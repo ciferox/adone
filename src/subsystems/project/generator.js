@@ -12,16 +12,18 @@ const {
     configuration
 } = adone;
 
+// Constants 
 
 const NETRON_PACKAGES = {
     "adone": "^0.6.54-3", // eslint-disable-line
     "lodash": "^4.17.4", // eslint-disable-line
     "ng-netron": "^0.1.7"
 };
-
 const NG_ADDITIONAL_NPM_PACKAGES = {
     "@angular/flex-layout": "^2.0.0-beta.8"
 };
+const BACKEND_NAME = "backend";
+const FRONTEND_NAME = "frontend";
 
 export class Generator {
     constructor() {
@@ -145,7 +147,7 @@ export class Generator {
         this.gitFiles.push("package-lock.json");
 
         // backend files
-        await this._installAppFiles(name, projectName, projectPath, { sourceDir, skipGit });
+        await this._installApp(name, projectName, projectPath, { sourceDir, skipGit });
 
         // npm
         await this._installNpms(projectPath);
@@ -158,8 +160,11 @@ export class Generator {
 
     async _createWebApp(name, projectName, projectPath, { sourceDir, skipGit, frontend, netron }) {
         const withFrontend = is.string(frontend);
-        const backendPath = withFrontend ? path.join(projectPath, "backend") : projectPath;
-        this.gitFiles.push(path.join(withFrontend ? "backend" : "", "package-lock.json"));
+        const backendPath = withFrontend ? path.join(projectPath, BACKEND_NAME) : projectPath;
+        this.gitFiles.push(path.join(withFrontend ? BACKEND_NAME : "", "package-lock.json"));
+        if (withFrontend) {
+            this.gitFiles.push(path.join(FRONTEND_NAME, "package-lock.json"));
+        }
 
         let bundleDir;
         if (netron) {
@@ -176,7 +181,7 @@ export class Generator {
 
         // frontend
         if (withFrontend) {
-            const frotnendPath = path.join(projectPath, "frontend");
+            const frotnendPath = path.join(projectPath, FRONTEND_NAME);
 
             await this._installWebappFrontend(name, projectPath, frotnendPath, { frontend, netron, bundleDir });
 
@@ -190,7 +195,7 @@ export class Generator {
         }
     }
 
-    async _installAppFiles(name, projectName, projectPath, { sourceDir, skipGit }) {
+    async _installApp(name, projectName, projectPath, { sourceDir, skipGit }) {
         const bar = adone.terminal.progress({
             schema: " :spinner installing files"
         });
@@ -282,11 +287,11 @@ export class Generator {
             }).dest(backendPath, {
                 produceFiles: true
             }).through((x) => {
-                this._addFileToGit(withFrontend ? path.join("backend", x.relative) : x.relative);
+                this._addFileToGit(withFrontend ? path.join(BACKEND_NAME, x.relative) : x.relative);
             });
 
             // src
-            await fast.src(`skeletons/webapp/backend/${bundleDir}/**/*`, {
+            await fast.src(`skeletons/webapp/backend/${bundleDir}/src/**/*`, {
                 cwd: this.templatesPath
             }).map((x) => {
                 x.relative = path.join(sourceDir, x.relative);
@@ -299,7 +304,7 @@ export class Generator {
             }).dest(backendPath, {
                 produceFiles: true
             }).through((x) => {
-                this._addFileToGit(withFrontend ? path.join("backend", x.relative) : x.relative);
+                this._addFileToGit(withFrontend ? path.join(BACKEND_NAME, x.relative) : x.relative);
             });
 
             // configs
@@ -308,7 +313,7 @@ export class Generator {
             }).dest(backendPath, {
                 produceFiles: true
             }).through((x) => {
-                this._addFileToGit(withFrontend ? path.join("backend", x.relative) : x.relative);
+                this._addFileToGit(withFrontend ? path.join(BACKEND_NAME, x.relative) : x.relative);
             });
 
             // readme
@@ -338,7 +343,7 @@ export class Generator {
 
     async _installWebappFrontend(name, projectPath, frotnendPath, { frontend, netron, bundleDir }) {
         const bar = adone.terminal.progress({
-            schema: " :spinner installing frontend"
+            schema: " :spinner installing frontend files"
         });
         bar.update(0);
 
@@ -359,6 +364,11 @@ export class Generator {
                     // rewrite files
                     await fast.src(`skeletons/webapp/frontend/${bundleDir}/**/*`, {
                         cwd: this.templatesPath
+                    }).map((x) => {
+                        if (x.relative === "proxy.conf.js") {
+                            this._addFileToGit(path.join(FRONTEND_NAME, x.relative));
+                        }
+                        return x;
                     }).dest(frotnendPath, {
                         produceFiles: true
                     });
@@ -382,17 +392,17 @@ export class Generator {
             
             await packageJson.save(packageJsonPath, null, { space: "  " });
 
-            bar.setSchema(" :spinner frontend installed");
+            bar.setSchema(" :spinner frontend files installed");
             bar.complete(true);
         } catch (err) {
-            bar.setSchema(" :spinner frontend installation failed");
+            bar.setSchema(" :spinner frontend files installation failed");
             bar.complete(false);
             throw err;
         }
     }
 
     async _initNgFrontend(name, projectPath, frotnendPath) {
-        await exec("ng", ["new", name, "--directory", "frontend", "--skip-install"], {
+        await exec("ng", ["new", name, "--directory", FRONTEND_NAME, "--skip-install"], {
             cwd: projectPath
         });
 
@@ -405,7 +415,7 @@ export class Generator {
             const walker = tree.walk();
 
             walker.on("entry", (entry) => {
-                this.gitFiles.push(path.join("frontend", entry.path()));
+                this.gitFiles.push(path.join(FRONTEND_NAME, entry.path()));
             });
             walker.on("end", (/*entries*/) => {
                 resolve();
@@ -459,7 +469,7 @@ export class Generator {
             const oid = await index.writeTree();
             const author = git.Signature.create("ADONE", "info@adone.io", time, zoneOffset);
             const committer = git.Signature.create("ADONE", "info@adone.io", time, zoneOffset);
-            await repository.createCommit("HEAD", author, committer, `initial commit from adone/cli\n\n${logoContent}`, oid, []);
+            await repository.createCommit("HEAD", author, committer, `initial commit from adone/cli:\n\n  $ adone ${adone.appinstance.argv.join(" ")}\n\n${logoContent}`, oid, []);
             bar.setSchema(" :spinner git initialized");
             bar.complete(true);
         } catch (err) {

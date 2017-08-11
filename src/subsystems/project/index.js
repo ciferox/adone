@@ -1,4 +1,4 @@
-const { std: { path }, lazify, fs } = adone;
+const { std: { path }, lazify, fs, terminal } = adone;
 
 const lazy = lazify({
     Builder: ["./builder", (x) => x.Builder],
@@ -134,6 +134,17 @@ export default class extends adone.application.Subsystem {
                     handler: this.buildCommand
                 },
                 {
+                    name: "watch",
+                    help: "Watch project",
+                    options: [
+                        {
+                            name: "--build",
+                            help: "Build before watching"
+                        }
+                    ],
+                    handler: this.watchCommand
+                },
+                {
                     name: "clean",
                     help: "Clean project",
                     handler: this.cleanCommand
@@ -160,7 +171,55 @@ export default class extends adone.application.Subsystem {
         });
     }
 
-    async loadAdoneConfig() {
+    async buildCommand(args, opts, { rest }) {
+        try {
+            const conf = await this._loadAdoneConf();
+
+            const parsedRest = parseRestArgs(rest);
+            const builder = new lazy.Builder(conf.project.structure, {
+                ...parsedRest
+            });
+            await builder.execute();
+        } catch (err) {
+            terminal.print(`{red-fg}${err.message}{/}`);
+        }
+    }
+
+    async watchCommand(args, opts, { rest }) {
+        try {
+            const conf = await this._loadAdoneConf();
+
+            const parsedRest = parseRestArgs(rest);
+            const build = opts.has("build");
+            if (build) {
+                const builder = new lazy.Builder(conf.project.structure, {
+                    ...parsedRest
+                });
+                await builder.execute();
+            }
+            const builder = new lazy.Builder(conf.project.structure, {
+                watch: true,
+                ...parsedRest
+            });
+            await builder.execute();
+        } catch (err) {
+            terminal.print(`{red-fg}${err.message}{/}`);
+        }
+    }
+
+    async cleanCommand() {
+        // try {
+        //     const conf = await this._loadAdoneConf();
+        //     const builder = new lazy.Builder(conf.project.structure, {
+        //         clean: true
+        //     });
+        //     await builder.execute();
+        // } catch (err) {
+        //     terminal.print(`{red-fg}${err.message}{/}`);
+        // }
+    }
+
+    async _loadAdoneConf() {
         const confPath = path.resolve("adone.conf.js");
         try {
             const stat = await fs.stat(confPath);
@@ -173,44 +232,16 @@ export default class extends adone.application.Subsystem {
             }
             throw new Error(`adone.conf.js not found: ${err.message}`);
         }
+        let conf;
         try {
-            const conf = adone.require(confPath);
-            return conf.default || conf;
+            conf = adone.require(confPath);
         } catch (err) {
             throw new Error(`Failed to load adone.conf.js: ${err.message}`);
         }
-    }
-
-    async buildCommand(args, opts, { rest }) {
-        let conf;
-        try {
-            conf = await this.loadAdoneConfig();
-        } catch (err) {
-            adone.error(err.message);
-            return 1;
-        }
+        conf = conf.default || conf;
         if (!conf.project.structure) {
-            adone.error("Project structure is not defined");
-            return 1;
+            throw new adone.x.NotValid("Project structure is not defined");
         }
-        const parsedRest = parseRestArgs(rest);
-        const watch = opts.get("watch");
-        const build = opts.get("build");
-        if (!watch || build) {
-            const builder = new lazy.Builder(conf.project.structure, {
-                ...parsedRest
-            });
-            await builder.execute();
-        }
-        if (watch) {
-            const builder = new lazy.Builder(conf.project.structure, {
-                watch, ...parsedRest
-            });
-            await builder.execute();
-        }
-    }
-
-    async cleanCommand() {
-
+        return conf;
     }
 }
