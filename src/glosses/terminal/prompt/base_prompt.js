@@ -1,5 +1,4 @@
 const { is, vendor: { lodash: _ }, Terminal } = adone;
-import runAsync from "./runasync";
 
 const height = (content) => content.split("\n").length;
 const lastLine = (content) => _.last(content.split("\n"));
@@ -200,19 +199,16 @@ export default class BasePrompt {
      * @return {Object}        Object containing two observables: `success` and `error`
      */
     handleSubmitEvents(submit) {
-        const self = this;
-        const validate = runAsync(this.opt.validate);
-        const filter = runAsync(this.opt.filter);
-        const validation = submit.flatMap((value) => {
-            return filter(value, this.answers).then((filteredValue) => {
-                return validate(filteredValue, self.answers).then((isValid) => {
-                    return { isValid, value: filteredValue };
-                }, (err) => {
-                    return { isValid: err };
-                });
-            }, (err) => {
+        const validate = this.opt.validate;
+        const filter = this.opt.filter;
+        const validation = submit.flatMap(async (value) => {
+            try {
+                const filteredValue = await filter(value, this.answers);
+                const isValid = await validate(filteredValue, this.answers);
+                return { isValid, value: filteredValue };
+            } catch (err) {
                 return { isValid: err };
-            });
+            }
         }).share();
 
         const success = validation

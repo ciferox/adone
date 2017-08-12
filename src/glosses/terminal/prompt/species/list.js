@@ -1,4 +1,3 @@
-import runAsync from "../runasync";
 const { is, Terminal } = adone;
 const observe = require("../events");
 
@@ -76,10 +75,13 @@ export default class ListPrompt extends Terminal.BasePrompt {
         events.normalizedUpKey.takeUntil(events.line).forEach(this.onUpKey.bind(this));
         events.normalizedDownKey.takeUntil(events.line).forEach(this.onDownKey.bind(this));
         events.numberKey.takeUntil(events.line).forEach(this.onNumberKey.bind(this));
-        events.line.take(1).map(this.getCurrentValue.bind(this)).flatMap((value) => {
-            return runAsync(self.opt.filter)(value).catch((err) => {
+        events.line.take(1).map(this.getCurrentValue.bind(this)).flatMap(async (value) => {
+            try {
+                const res = await self.opt.filter(value);
+                return res;
+            } catch (err) {
                 return err;
-            });
+            }
         }).forEach(this.onSubmit.bind(this));
 
         // Init the prompt
