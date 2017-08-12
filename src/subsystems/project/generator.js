@@ -27,7 +27,7 @@ const FRONTEND_NAME = "frontend";
 const DEST_OPTIONS = {
     produceFiles: true,
     originTimes: false,
-    originMode: false,
+    originMode: true,
     originOwner: false
 };
 
