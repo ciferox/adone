@@ -1,15 +1,15 @@
-const { vendor: { lodash: _ }, terminal } = adone;
+const { is, vendor: { lodash: _ }, Terminal } = adone;
 const observe = require("../events");
 
-export default class ConfirmPrompt extends terminal.BasePrompt {
-    constructor(question, answers) {
-        super(question, answers);
+export default class ConfirmPrompt extends Terminal.BasePrompt {
+    constructor(terminal, question, answers) {
+        super(terminal, question, answers);
         let rawDefault = true;
 
         _.extend(this.opt, {
             filter(input) {
                 let value = rawDefault;
-                if (input != null && input !== "") {
+                if (!is.nil(input) && input !== "") {
                     value = /^y(es)?/i.test(input);
                 }
                 return value;
@@ -33,13 +33,13 @@ export default class ConfirmPrompt extends terminal.BasePrompt {
     _run(cb) {
         this.done = cb;
 
-    // Once user confirm (enter key)
-        const events = observe();
+        // Once user confirm (enter key)
+        const events = observe(this.terminal);
         events.keypress.takeUntil(events.line).forEach(this.onKeypress.bind(this));
 
         events.line.take(1).forEach(this.onEnd.bind(this));
 
-    // Init
+        // Init
         this.render();
 
         return this;
@@ -52,10 +52,10 @@ export default class ConfirmPrompt extends terminal.BasePrompt {
     render(answer) {
         let message = this.getQuestion();
 
-        if (typeof answer === "boolean") {
-            message += terminal.cyan(answer ? "Yes" : "No");
+        if (is.boolean(answer)) {
+            message += this.terminal.cyan(answer ? "Yes" : "No");
         } else {
-            message += terminal.readline.line;
+            message += this.terminal.readline.line;
         }
 
         this.screen.render(message);

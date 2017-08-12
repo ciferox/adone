@@ -8,7 +8,7 @@ adone.run({
                 choices: [
                     "Order a pizza",
                     "Make a reservation",
-                    new adone.terminal.Separator(),
+                    adone.terminal.separator(),
                     "Ask for opening hours",
                     {
                         name: "Contact support",

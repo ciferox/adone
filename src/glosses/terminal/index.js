@@ -147,20 +147,7 @@ class Terminfo {
         this._cachedGetPath = "";
         this._input = null;
         this._output = null;
-
-        this.generic = (process.env.COLORTERM === "truecolor" ? "xterm-256color" : ((process.env.TERM && process.env.TERM) || (is.windows ? "windows-ansi" : "xterm")).toLowerCase());
-
-        if (this.generic === "screen") {
-            this.generic = "xterm";
-        } else if (this.generic === "cygwin") {
-            this.generic = "windows-ansi";
-        }
-
-        // For some reason, starting from node v4, once process.stdin getter is triggered, the 'tty' command does not work.
-        // This 'hack' cache the result of the command 'tty' if we are in the linux console, so 'gpm' can work.
-        if (this.generic === "linux") {
-            this.getTTYPath();
-        }
+        this.generic = null;
 
         this.setup();
     }
@@ -488,6 +475,19 @@ class Terminfo {
     }
 
     setup() {
+        this.generic = (process.env.COLORTERM === "truecolor" ? "xterm-256color" : ((process.env.TERM && process.env.TERM) || (is.windows ? "windows-ansi" : "xterm")).toLowerCase());
+
+        if (this.generic === "screen") {
+            this.generic = "xterm";
+        } else if (this.generic === "cygwin") {
+            this.generic = "windows-ansi";
+        }
+
+        // For some reason, starting from node v4, once process.stdin getter is triggered, the 'tty' command does not work.
+        // This 'hack' cache the result of the command 'tty' if we are in the linux console, so 'gpm' can work.
+        if (this.generic === "linux") {
+            this.getTTYPath();
+        }
         this.error = null;
         try {
             if (this.termcap) {
@@ -4119,6 +4119,14 @@ export default class Terminal extends adone.EventEmitter {
         this.scrollTop = 0;
         this.scrollBottom = this.rows - 1;
 
+        this.styles = ansiStyles;
+        this._buf = "";
+        this._flush = this.flush.bind(this);
+
+        this.initialize();
+    }
+
+    initialize() {
         // OSX
         this.isOSXTerm = process.env.TERM_PROGRAM === "Apple_Terminal";
         this.isiTerm2 = process.env.TERM_PROGRAM === "iTerm.app" || Boolean(process.env.ITERM_SESSION_ID);
@@ -4182,11 +4190,6 @@ export default class Terminal extends adone.EventEmitter {
         this.hasBasic = level > 0;
         this.has256 = level >= 2;
         this.has16m = level >= 3;
-        this.styles = ansiStyles;
-
-
-        this._buf = "";
-        this._flush = this.flush.bind(this);
 
         this.terminfo = new Terminfo();
         try {
@@ -6775,25 +6778,31 @@ export default class Terminal extends adone.EventEmitter {
     }
 
     prompt(questions) {
-        const p = new this.Prompt();
+        const p = new Terminal.Prompt(this);
         this.activePrompt = p;
         return p;
     }
 
     progress(options) {
-        return new this.Progress(options);
+        return new Terminal.Progress(options);
+    }
+
+    separator(value) {
+        return new Terminal.Separator(this, value);
     }
 }
 Terminal.prototype.type = "program";
 
+Terminal.Terminfo = Terminfo;
+
 adone.lazify({
-    Prompt: "./prompt",
     BasePrompt: "./prompt/base_prompt",
+    Prompt: "./prompt",
     Separator: "./prompt/separator",
     Paginator: "./prompt/paginator",
     Choices: "./prompt/choices",
     Progress: "./progress"
-}, Terminal.prototype, require);
+}, Terminal, require);
 
 
 const cssKeywords = {

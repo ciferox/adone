@@ -1,4 +1,4 @@
-const { terminal } = adone;
+const { is, Terminal } = adone;
 const observe = require("../events");
 
 const mask = (input, maskChar) => {
@@ -11,7 +11,7 @@ const mask = (input, maskChar) => {
     return new Array(input.length + 1).join(maskChar);
 };
 
-export default class PasswordPrompt extends terminal.BasePrompt {
+export default class PasswordPrompt extends Terminal.BasePrompt {
     /**
      * Start the Inquiry session
      * @param  {Function} cb      Callback when prompt is done
@@ -20,7 +20,7 @@ export default class PasswordPrompt extends terminal.BasePrompt {
     _run(cb) {
         this.done = cb;
 
-        const events = observe();
+        const events = observe(this.terminal);
 
         // Once user confirm (enter key)
         const submit = events.line.map(this.filterInput.bind(this));
@@ -48,15 +48,15 @@ export default class PasswordPrompt extends terminal.BasePrompt {
         let bottomContent = "";
 
         if (this.status === "answered") {
-            message += this.opt.mask ? terminal.cyan(mask(this.answer, this.opt.mask)) : terminal.italic.dim("[hidden]");
+            message += this.opt.mask ? this.terminal.cyan(mask(this.answer, this.opt.mask)) : this.terminal.italic.dim("[hidden]");
         } else if (this.opt.mask) {
-            message += mask(terminal.readline.line || "", this.opt.mask);
+            message += mask(this.terminal.readline.line || "", this.opt.mask);
         } else {
-            message += terminal.italic.dim("[input is hidden] ");
+            message += this.terminal.italic.dim("[input is hidden] ");
         }
 
         if (error) {
-            bottomContent = `\n${terminal.red(">> ")}${error}`;
+            bottomContent = `\n${this.terminal.red(">> ")}${error}`;
         }
 
         this.screen.render(message, bottomContent);
@@ -67,7 +67,7 @@ export default class PasswordPrompt extends terminal.BasePrompt {
      */
     filterInput(input) {
         if (!input) {
-            return this.opt.default == null ? "" : this.opt.default;
+            return is.nil(this.opt.default) ? "" : this.opt.default;
         }
         return input;
     }

@@ -1,8 +1,8 @@
-const { terminal } = adone;
+const { Terminal } = adone;
 const observe = require("../events");
 const rx = require("rx");
 
-export default class EditorPrompt extends terminal.BasePrompt {
+export default class EditorPrompt extends Terminal.BasePrompt {
     /**
      * Start the Inquiry session
      * @param  {Function} cb      Callback when prompt is done
@@ -14,8 +14,18 @@ export default class EditorPrompt extends terminal.BasePrompt {
         this.editorResult = new rx.Subject();
 
         // Open Editor on "line" (Enter Key)
-        const events = observe();
-        this.lineSubscription = events.line.forEach(this.startExternalEditor.bind(this));
+        const events = observe(this.terminal);
+        this.lineSubscription = events.line.forEach(() => {
+            // Pause Readline to prevent stdin and stdout from being modified while the editor is showing
+            this.terminal.readline.pause();
+            this.startExternalEditor().then((result) => {
+                this.terminal.readline.resume();
+                this.editorResult.onNext(result);
+            }, (err) => {
+                this.terminal.readline.resume();
+                this.editorResult.onError(err);
+            });
+        });
 
         // Trigger Validation when editor closes
         const validation = this.handleSubmitEvents(this.editorResult);
@@ -41,28 +51,20 @@ export default class EditorPrompt extends terminal.BasePrompt {
         let message = this.getQuestion();
 
         if (this.status === "answered") {
-            message += terminal.dim("Received");
+            message += this.terminal.dim("Received");
         } else {
-            message += terminal.dim("Press <enter> to launch your preferred editor.");
+            message += this.terminal.dim("Press <enter> to launch your preferred editor.");
         }
 
         if (error) {
-            bottomContent = terminal.red(">> ") + error;
+            bottomContent = this.terminal.red(">> ") + error;
         }
 
         this.screen.render(message, bottomContent);
     }
 
-    startExternalEditor() {
-        // Pause Readline to prevent stdin and stdout from being modified while the editor is showing
-        terminal.readline.pause();
-        adone.util.Editor.edit({ text: this.currentText }).catch((err) => {
-            terminal.readline.resume();
-            this.editorResult.onError(err);
-        }).then((result) => {
-            terminal.readline.resume();
-            this.editorResult.onNext(result);
-        });
+    async startExternalEditor() {
+        return adone.util.Editor.edit({ text: this.currentText });
     }
 
     onEnd(state) {

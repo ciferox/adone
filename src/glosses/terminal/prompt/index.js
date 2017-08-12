@@ -1,22 +1,10 @@
-const { is, vendor: { lodash: _ }, terminal } = adone;
+const { is, vendor: { lodash: _ } } = adone;
 
 export default class Prompt {
-    constructor() {
+    constructor(terminal) {
+        this.terminal = terminal;
         this.rl = terminal.readline;
         this.rl.resume();
-
-        this.prompts = adone.lazify({
-            list: "./species/list",
-            input: "./species/input",
-            confirm: "./species/confirm",
-            rawlist: "./species/rawlist",
-            expand: "./species/expand",
-            checkbox: "./species/checkbox",
-            password: "./species/password",
-            editor: "./species/editor",
-            autocomplete: "./species/autocomplete",
-            directory: "./species/directory"
-        }, null, require);
         this.answers = {};
     }
 
@@ -31,7 +19,7 @@ export default class Prompt {
         for (const q of questions) {
             const question = _.clone(q);
             // Default type to input
-            if (!this.prompts[question.type]) {
+            if (!Prompt.prompts[question.type]) {
                 question.type = "input";
             }
 
@@ -54,8 +42,8 @@ export default class Prompt {
                 question.choices = await question.choices(answers);
             }
 
-            const Prompt = this.prompts[question.type];
-            this.activePrompt = new Prompt(question, answers);
+            const Cls = Prompt.prompts[question.type];
+            this.activePrompt = new Cls(this.terminal, question, answers);
             const answer = await this.activePrompt.run();
             _.set(answers, question.name, answer);
         }
@@ -75,8 +63,8 @@ export default class Prompt {
             this.activePrompt.close();
         }
 
-        terminal.resetReadline();
-        terminal.activePrompt = null;
+        this.terminal.resetReadline();
+        this.terminal.activePrompt = null;
     }
 
     onCompletion(answers) {
@@ -85,3 +73,16 @@ export default class Prompt {
         return answers;
     }
 }
+
+Prompt.prompts = adone.lazify({
+    list: "./species/list",
+    input: "./species/input",
+    confirm: "./species/confirm",
+    rawlist: "./species/rawlist",
+    expand: "./species/expand",
+    checkbox: "./species/checkbox",
+    password: "./species/password",
+    editor: "./species/editor",
+    autocomplete: "./species/autocomplete",
+    directory: "./species/directory"
+}, null, require);

@@ -1,4 +1,4 @@
-const { terminal } = adone;
+const { Terminal } = adone;
 const rx = require("rx");
 const observe = require("../events");
 
@@ -24,7 +24,7 @@ const findIndex = (term) => {
  * @param  {Number} pointer Position of the pointer
  * @return {String}         Rendered content
  */
-const listRender = (choices, pointer) => {
+const listRender = (terminal, choices, pointer) => {
     let output = "";
     let separatorOffset = 0;
 
@@ -66,7 +66,7 @@ const getDirectories = (basePath) => {
         .sort();
 };
 
-export default class Prompt extends terminal.BasePrompt {
+export default class Prompt extends Terminal.BasePrompt {
     constructor(question, answers) {
         super(question, answers);
 
@@ -75,8 +75,10 @@ export default class Prompt extends terminal.BasePrompt {
         }
 
         this.depth = 0;
-        this.currentPath = adone.std.path.isAbsolute(this.opt.basePath) ? adone.std.path.resolve(this.opt.basePath) : adone.std.path.resolve(process.cwd(), this.opt.basePath);
-        this.opt.choices = new terminal.Choices(this.createChoices(this.currentPath), this.answers);
+        this.currentPath = adone.std.path.isAbsolute(this.opt.basePath)
+            ? adone.std.path.resolve(this.opt.basePath)
+            : adone.std.path.resolve(process.cwd(), this.opt.basePath);
+        this.opt.choices = new Terminal.Choices(this.terminal, this.createChoices(this.currentPath), this.answers);
         this.selected = 0;
 
         this.firstRender = true;
@@ -86,7 +88,7 @@ export default class Prompt extends terminal.BasePrompt {
 
         this.searchTerm = "";
 
-        this.paginator = new terminal.Paginator();
+        this.paginator = new Terminal.Paginator(this.terminal);
     }
 
     /**
@@ -99,7 +101,7 @@ export default class Prompt extends terminal.BasePrompt {
         self.searchMode = false;
         this.done = cb;
         const alphaNumericRegex = /\w|\.|\-/i;
-        const events = observe();
+        const events = observe(this.terminal);
 
         const keyUps = events.keypress.filter((e) => {
             return e.key.name === "up" || (!self.searchMode && e.key.name === "k");
@@ -157,7 +159,7 @@ export default class Prompt extends terminal.BasePrompt {
         outcome.done.forEach(this.onSubmit.bind(this));
 
         // Init the prompt
-        terminal.hideCursor();
+        this.terminal.hideCursor();
         this.render();
 
         return this;
@@ -172,16 +174,16 @@ export default class Prompt extends terminal.BasePrompt {
         let message = this.getQuestion();
 
         if (this.firstRender) {
-            message += terminal.dim("(Use arrow keys)");
+            message += this.terminal.dim("(Use arrow keys)");
         }
 
 
         // Render choices or answer depending on the state
         if (this.status === "answered") {
-            message += terminal.cyan(adone.std.path.relative(this.opt.basePath, this.currentPath));
+            message += this.terminal.cyan(adone.std.path.relative(this.opt.basePath, this.currentPath));
         } else {
-            message += `${terminal.bold("\n Current directory: ") + this.opt.basePath}/${terminal.cyan(adone.std.path.relative(this.opt.basePath, this.currentPath))}`;
-            const choicesStr = listRender(this.opt.choices, this.selected);
+            message += `${this.terminal.bold("\n Current directory: ") + this.opt.basePath}/${this.terminal.cyan(adone.std.path.relative(this.opt.basePath, this.currentPath))}`;
+            const choicesStr = listRender(this.terminal, this.opt.choices, this.selected);
             message += `\n${this.paginator.paginate(choicesStr, this.selected, this.opt.pageSize)}`;
         }
         if (this.searchMode) {
@@ -230,7 +232,7 @@ export default class Prompt extends terminal.BasePrompt {
         const choice = this.opt.choices.getChoice(this.selected);
         this.depth++;
         this.currentPath = adone.std.path.join(this.currentPath, choice.value);
-        this.opt.choices = new terminal.Choices(this.createChoices(this.currentPath), this.answers);
+        this.opt.choices = new Terminal.Choices(this.terminal, this.createChoices(this.currentPath), this.answers);
         this.selected = 0;
         this.render();
     }
@@ -243,7 +245,7 @@ export default class Prompt extends terminal.BasePrompt {
             const choice = this.opt.choices.getChoice(this.selected);
             this.depth--;
             this.currentPath = adone.std.path.dirname(this.currentPath);
-            this.opt.choices = new terminal.Choices(this.createChoices(this.currentPath), this.answers);
+            this.opt.choices = new Terminal.Choices(this.terminal, this.createChoices(this.currentPath), this.answers);
             this.selected = 0;
             this.render();
         }
@@ -259,7 +261,7 @@ export default class Prompt extends terminal.BasePrompt {
         this.render();
 
         this.screen.done();
-        terminal.showCursor();
+        this.terminal.showCursor();
         this.done(adone.std.path.relative(this.opt.basePath, this.currentPath));
     }
 
@@ -302,13 +304,13 @@ export default class Prompt extends terminal.BasePrompt {
     createChoices(basePath) {
         const choices = getDirectories(basePath);
         if (choices.length > 0) {
-            choices.push(new terminal.Separator());
+            choices.push(new Terminal.Separator(this.terminal));
         }
         choices.push(CHOOSE);
         if (this.depth > 0) {
-            choices.push(new terminal.Separator());
+            choices.push(new Terminal.Separator(this.terminal));
             choices.push(BACK);
-            choices.push(new terminal.Separator());
+            choices.push(new Terminal.Separator(this.terminal));
         }
         return choices;
     }

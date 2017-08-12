@@ -1,4 +1,4 @@
-const { is, vendor: { lodash: _ }, terminal } = adone;
+const { is, vendor: { lodash: _ }, Terminal } = adone;
 const observe = require("../events");
 
 /**
@@ -6,7 +6,7 @@ const observe = require("../events");
  * @param  {String} pointer Selected key
  * @return {String}         Rendered content
  */
-const renderChoices = (choices, pointer) => {
+const renderChoices = (terminal, choices, pointer) => {
     let output = "";
 
     choices.forEach((choice) => {
@@ -27,9 +27,9 @@ const renderChoices = (choices, pointer) => {
     return output;
 };
 
-export default class ExpandPrompt extends terminal.BasePrompt {
-    constructor(question, answers) {
-        super(question, answers);
+export default class ExpandPrompt extends Terminal.BasePrompt {
+    constructor(terminal, question, answers) {
+        super(terminal, question, answers);
         if (!this.opt.choices) {
             this.throwParamError("choices");
         }
@@ -44,7 +44,7 @@ export default class ExpandPrompt extends terminal.BasePrompt {
         });
 
         this.opt.validate = (choice) => {
-            if (choice == null) {
+            if (is.nil(choice)) {
                 return "Please enter a valid command";
             }
 
@@ -54,7 +54,7 @@ export default class ExpandPrompt extends terminal.BasePrompt {
         // Setup the default string (capitalize the default key)
         this.opt.default = this.generateChoicesString(this.opt.choices, this.opt.default);
 
-        this.paginator = new terminal.Paginator();
+        this.paginator = new Terminal.Paginator(this.terminal);
     }
 
     /**
@@ -66,7 +66,7 @@ export default class ExpandPrompt extends terminal.BasePrompt {
         this.done = cb;
 
         // Save user answer and update prompt to show selected option.
-        const events = observe();
+        const events = observe(this.terminal);
         const validation = this.handleSubmitEvents(
             events.line.map(this.getCurrentValue.bind(this))
         );
@@ -90,21 +90,21 @@ export default class ExpandPrompt extends terminal.BasePrompt {
         let bottomContent = "";
 
         if (this.status === "answered") {
-            message += terminal.cyan(this.answer);
+            message += this.terminal.cyan(this.answer);
         } else if (this.status === "expanded") {
-            const choicesStr = renderChoices(this.opt.choices, this.selectedKey);
+            const choicesStr = renderChoices(this.terminal, this.opt.choices, this.selectedKey);
             message += this.paginator.paginate(choicesStr, this.selectedKey, this.opt.pageSize);
             message += "\n  Answer: ";
         }
 
-        message += terminal.readline.line;
+        message += this.terminal.readline.line;
 
         if (error) {
-            bottomContent = terminal.red(">> ") + error;
+            bottomContent = this.terminal.red(">> ") + error;
         }
 
         if (hint) {
-            bottomContent = terminal.cyan(">> ") + hint;
+            bottomContent = this.terminal.cyan(">> ") + hint;
         }
 
         this.screen.render(message, bottomContent);
@@ -139,7 +139,7 @@ export default class ExpandPrompt extends terminal.BasePrompt {
 
             let choiceStr = `${choice.key}) ${choice.name}`;
             if (this.selectedKey === choice.key) {
-                choiceStr = terminal.cyan(choiceStr);
+                choiceStr = this.terminal.cyan(choiceStr);
             }
             output += choiceStr;
         });
@@ -175,7 +175,7 @@ export default class ExpandPrompt extends terminal.BasePrompt {
      * When user press a key
      */
     onKeypress() {
-        this.selectedKey = terminal.readline.line.toLowerCase();
+        this.selectedKey = this.terminal.readline.line.toLowerCase();
         const selected = this.opt.choices.where({ key: this.selectedKey })[0];
         if (this.status === "expanded") {
             this.render();
@@ -192,7 +192,7 @@ export default class ExpandPrompt extends terminal.BasePrompt {
         let formatError;
         const errors = [];
         const keymap = {};
-        choices.filter(terminal.Separator.exclude).forEach((choice) => {
+        choices.filter(Terminal.Separator.exclude).forEach((choice) => {
             if (!choice.key || choice.key.length !== 1) {
                 formatError = true;
             }

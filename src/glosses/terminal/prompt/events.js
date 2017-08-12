@@ -4,14 +4,14 @@ const normalizeKeypressEvents = (value, key) => {
     return { value, key: key || {} };
 };
 
-module.exports = () => {
-    const keypress = rx.Observable.fromEvent(adone.terminal.readline.input, "keypress", normalizeKeypressEvents).filter((e) => {
+module.exports = (terminal) => {
+    const keypress = rx.Observable.fromEvent(terminal.readline.input, "keypress", normalizeKeypressEvents).filter((e) => {
         // Ignore `enter` key. On the readline, we only care about the `line` event.
         return e.key.name !== "enter" && e.key.name !== "return";
     });
 
     return {
-        line: rx.Observable.fromEvent(adone.terminal.readline, "line"),
+        line: rx.Observable.fromEvent(terminal.readline, "line"),
         keypress,
 
         normalizedUpKey: keypress.filter((e) => {

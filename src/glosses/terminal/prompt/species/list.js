@@ -1,5 +1,5 @@
 import runAsync from "../runasync";
-const { is, terminal } = adone;
+const { is, Terminal } = adone;
 const observe = require("../events");
 
 /**
@@ -7,7 +7,7 @@ const observe = require("../events");
  * @param  {Number} pointer Position of the pointer
  * @return {String}         Rendered content
  */
-const listRender = (choices, pointer) => {
+const listRender = (terminal, choices, pointer) => {
     let output = "";
     let separatorOffset = 0;
 
@@ -37,9 +37,9 @@ const listRender = (choices, pointer) => {
     return output.replace(/\n$/, "");
 };
 
-export default class ListPrompt extends terminal.BasePrompt {
-    constructor(question, answers) {
-        super(question, answers);
+export default class ListPrompt extends Terminal.BasePrompt {
+    constructor(terminal, question, answers) {
+        super(terminal, question, answers);
         if (!this.opt.choices) {
             this.throwParamError("choices");
         }
@@ -59,7 +59,7 @@ export default class ListPrompt extends terminal.BasePrompt {
         // Make sure no default is set (so it won't be printed)
         this.opt.default = null;
 
-        this.paginator = new terminal.Paginator();
+        this.paginator = new Terminal.Paginator(this.terminal);
     }
 
     /**
@@ -72,7 +72,7 @@ export default class ListPrompt extends terminal.BasePrompt {
 
         const self = this;
 
-        const events = observe();
+        const events = observe(this.terminal);
         events.normalizedUpKey.takeUntil(events.line).forEach(this.onUpKey.bind(this));
         events.normalizedDownKey.takeUntil(events.line).forEach(this.onDownKey.bind(this));
         events.numberKey.takeUntil(events.line).forEach(this.onNumberKey.bind(this));
@@ -83,7 +83,7 @@ export default class ListPrompt extends terminal.BasePrompt {
         }).forEach(this.onSubmit.bind(this));
 
         // Init the prompt
-        terminal.hideCursor();
+        this.terminal.hideCursor();
         this.render();
 
         return this;
@@ -98,14 +98,14 @@ export default class ListPrompt extends terminal.BasePrompt {
         let message = this.getQuestion();
 
         if (this.firstRender) {
-            message += terminal.dim("(Use arrow keys)");
+            message += this.terminal.dim("(Use arrow keys)");
         }
 
         // Render choices or answer depending on the state
         if (this.status === "answered") {
-            message += terminal.cyan(this.opt.choices.getChoice(this.selected).short);
+            message += this.terminal.cyan(this.opt.choices.getChoice(this.selected).short);
         } else {
-            const choicesStr = listRender(this.opt.choices, this.selected);
+            const choicesStr = listRender(this.terminal, this.opt.choices, this.selected);
             const indexPosition = this.opt.choices.indexOf(this.opt.choices.getChoice(this.selected));
             message += `\n${this.paginator.paginate(choicesStr, indexPosition, this.opt.pageSize)}`;
         }
@@ -125,7 +125,7 @@ export default class ListPrompt extends terminal.BasePrompt {
         this.render();
 
         this.screen.done();
-        terminal.showCursor();
+        this.terminal.showCursor();
         this.done(value);
     }
 

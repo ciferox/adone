@@ -1,4 +1,4 @@
-const { is, vendor: { lodash: _ }, terminal } = adone;
+const { is, vendor: { lodash: _ }, Terminal } = adone;
 const assert = require("assert");
 
 /**
@@ -42,18 +42,19 @@ class Choice {
  * @param {Array} choices  All `choice` to keep in the collection
  */
 export default class Choices {
-    constructor(choices, answers) {
+    constructor(terminal, choices, answers) {
+        this.terminal = terminal;
         this.choices = choices.map((val) => {
             if (val.type === "separator") {
-                if (!(val instanceof terminal.Separator)) {
-                    val = new terminal.Separator(val.line);
+                if (!(val instanceof Terminal.Separator)) {
+                    val = new Terminal.Separator(this.terminal, val.line);
                 }
                 return val;
             }
             return new Choice(val, answers);
         });
 
-        this.realChoices = this.choices.filter(terminal.Separator.exclude).filter((item) => {
+        this.realChoices = this.choices.filter(Terminal.Separator.exclude).filter((item) => {
             return !item.disabled;
         });
     }
@@ -134,7 +135,9 @@ export default class Choices {
             return new Choice(val);
         });
         this.choices.push.apply(this.choices, objs);
-        this.realChoices = this.choices.filter(terminal.Separator.exclude);
+        this.realChoices = this.choices.filter(Terminal.Separator.exclude);
         return this.choices;
     }
 }
+
+Choices.Choice = Choice;

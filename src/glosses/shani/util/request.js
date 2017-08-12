@@ -32,7 +32,7 @@ class Request extends EventEmitter {
         return this;
     }
 
-    attach(name, buffer, { type, filename = "" } = {}) {
+    attach(name, buffer, { type = "", filename = "" } = {}) {
         this.attachments.push([name, buffer, type, filename]);
         return this;
     }
@@ -130,7 +130,7 @@ class Request extends EventEmitter {
 
     expectEmptyBody() {
         return this.expect((response) => {
-            expect(response.body.length === 0);
+            assert.equal(response.body.length, 0);
         });
     }
 
@@ -212,7 +212,7 @@ class Request extends EventEmitter {
 
             response = await new Promise((resolve, reject) => {
                 const req = std.http.request({
-                    protocol,  // https?
+                    protocol, // https?
                     hostname: address.address,
                     port: address.port,
                     method: this.method,

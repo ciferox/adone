@@ -1,7 +1,7 @@
-const { terminal } = adone;
+const { is, Terminal } = adone;
 const observe = require("../events");
 
-export default class InputPrompt extends terminal.BasePrompt {
+export default class InputPrompt extends Terminal.BasePrompt {
     /**
      * Start the Inquiry session
      * @param  {Function} cb      Callback when prompt is done
@@ -10,8 +10,8 @@ export default class InputPrompt extends terminal.BasePrompt {
     _run(cb) {
         this.done = cb;
 
-    // Once user confirm (enter key)
-        const events = observe();
+        // Once user confirm (enter key)
+        const events = observe(this.terminal);
         const submit = events.line.map(this.filterInput.bind(this));
 
         const validation = this.handleSubmitEvents(submit);
@@ -20,7 +20,7 @@ export default class InputPrompt extends terminal.BasePrompt {
 
         events.keypress.takeUntil(validation.success).forEach(this.onKeypress.bind(this));
 
-    // Init
+        // Init
         this.render();
 
         return this;
@@ -35,13 +35,13 @@ export default class InputPrompt extends terminal.BasePrompt {
         let message = this.getQuestion();
 
         if (this.status === "answered") {
-            message += terminal.cyan(this.answer);
+            message += this.terminal.cyan(this.answer);
         } else {
-            message += terminal.readline.line;
+            message += this.terminal.readline.line;
         }
 
         if (error) {
-            bottomContent = terminal.red(">> ") + error;
+            bottomContent = this.terminal.red(">> ") + error;
         }
 
         this.screen.render(message, bottomContent);
@@ -52,7 +52,7 @@ export default class InputPrompt extends terminal.BasePrompt {
      */
     filterInput(input) {
         if (!input) {
-            return this.opt.default == null ? "" : this.opt.default;
+            return is.nil(this.opt.default) ? "" : this.opt.default;
         }
         return input;
     }
@@ -61,7 +61,7 @@ export default class InputPrompt extends terminal.BasePrompt {
         this.answer = state.value;
         this.status = "answered";
 
-    // Re-render prompt
+        // Re-render prompt
         this.render();
 
         this.screen.done();

@@ -1,4 +1,4 @@
-const { vendor: { lodash: _ }, terminal } = adone;
+const { is, vendor: { lodash: _ }, Terminal } = adone;
 const observe = require("../events");
 
 /**
@@ -6,7 +6,7 @@ const observe = require("../events");
  * @param  {Number} pointer Position of the pointer
  * @return {String}         Rendered content
  */
-const renderChoices = (choices, pointer) => {
+const renderChoices = (terminal, choices, pointer) => {
     let output = "";
     let separatorOffset = 0;
 
@@ -30,21 +30,21 @@ const renderChoices = (choices, pointer) => {
     return output;
 };
 
-export default class RawlistPrompt extends terminal.BasePrompt {
-    constructor(question, answers) {
-        super(question, answers);
+export default class RawlistPrompt extends Terminal.BasePrompt {
+    constructor(terminal, question, answers) {
+        super(terminal, question, answers);
         if (!this.opt.choices) {
             this.throwParamError("choices");
         }
 
-        this.opt.validChoices = this.opt.choices.filter(terminal.Separator.exclude);
+        this.opt.validChoices = this.opt.choices.filter(Terminal.Separator.exclude);
 
         this.selected = 0;
         this.rawDefault = 0;
 
         _.extend(this.opt, {
             validate(val) {
-                return val != null;
+                return !is.nil(val);
             }
         });
 
@@ -53,10 +53,10 @@ export default class RawlistPrompt extends terminal.BasePrompt {
             this.selected = this.rawDefault = def;
         }
 
-    // Make sure no default is set (so it won't be printed)
+        // Make sure no default is set (so it won't be printed)
         this.opt.default = null;
 
-        this.paginator = new terminal.Paginator();
+        this.paginator = new Terminal.Paginator(this.terminal);
     }
 
     /**
@@ -67,8 +67,8 @@ export default class RawlistPrompt extends terminal.BasePrompt {
     _run(cb) {
         this.done = cb;
 
-    // Once user confirm (enter key)
-        const events = observe();
+        // Once user confirm (enter key)
+        const events = observe(this.terminal);
         const submit = events.line.map(this.getCurrentValue.bind(this));
 
         const validation = this.handleSubmitEvents(submit);
@@ -77,7 +77,7 @@ export default class RawlistPrompt extends terminal.BasePrompt {
 
         events.keypress.takeUntil(validation.success).forEach(this.onKeypress.bind(this));
 
-    // Init the prompt
+        // Init the prompt
         this.render();
 
         return this;
@@ -88,22 +88,22 @@ export default class RawlistPrompt extends terminal.BasePrompt {
      * @return {Prompt} self
      */
     render(error) {
-    // Render question
+        // Render question
         let message = this.getQuestion();
         let bottomContent = "";
 
         if (this.status === "answered") {
-            message += terminal.cyan(this.answer);
+            message += this.terminal.cyan(this.answer);
         } else {
-            const choicesStr = renderChoices(this.opt.choices, this.selected);
+            const choicesStr = renderChoices(this.terminal, this.opt.choices, this.selected);
             message += this.paginator.paginate(choicesStr, this.selected, this.opt.pageSize);
             message += "\n  Answer: ";
         }
 
-        message += terminal.readline.line;
+        message += this.terminal.readline.line;
 
         if (error) {
-            bottomContent = `\n${terminal.red(">> ")}${error}`;
+            bottomContent = `\n${this.terminal.red(">> ")}${error}`;
         }
 
         this.screen.render(message, bottomContent);
@@ -113,7 +113,7 @@ export default class RawlistPrompt extends terminal.BasePrompt {
      * When user press `enter` key
      */
     getCurrentValue(index) {
-        if (index == null || index === "") {
+        if (is.nil(index) || index === "") {
             index = this.rawDefault;
         } else {
             index -= 1;
@@ -127,7 +127,7 @@ export default class RawlistPrompt extends terminal.BasePrompt {
         this.status = "answered";
         this.answer = state.value;
 
-    // Re-render prompt
+        // Re-render prompt
         this.render();
 
         this.screen.done();
@@ -142,7 +142,7 @@ export default class RawlistPrompt extends terminal.BasePrompt {
      * When user press a key
      */
     onKeypress() {
-        const index = terminal.readline.line.length ? Number(terminal.readline.line) - 1 : 0;
+        const index = this.terminal.readline.line.length ? Number(this.terminal.readline.line) - 1 : 0;
 
         if (this.opt.choices.getChoice(index)) {
             this.selected = index;

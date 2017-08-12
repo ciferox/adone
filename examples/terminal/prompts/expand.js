@@ -21,7 +21,7 @@ adone.run({
                         name: "Show diff",
                         value: "diff"
                     },
-                    new adone.terminal.Separator(),
+                    adone.terminal.separator(),
                     {
                         key: "x",
                         name: "Abort",

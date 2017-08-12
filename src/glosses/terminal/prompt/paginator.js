@@ -1,11 +1,12 @@
-const { vendor: { lodash: _ }, terminal } = adone;
+const { vendor: { lodash: _ } } = adone;
 
 /**
  * The paginator keep trakcs of a pointer index in a list and return
  * a subset of the choices if the list is too long.
  */
 export default class Paginator {
-    constructor() {
+    constructor(terminal) {
+        this.terminal = terminal;
         this.pointer = 0;
         this.lastIndex = 0;
     }
@@ -31,6 +32,6 @@ export default class Paginator {
         const topIndex = Math.max(0, active + lines.length - this.pointer);
 
         const section = infinite.splice(topIndex, pageSize).join("\n");
-        return `${section}\n${terminal.dim("(Move up and down to reveal more choices)")}`;
+        return `${section}\n${this.terminal.dim("(Move up and down to reveal more choices)")}`;
     }
 }

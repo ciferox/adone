@@ -1,4 +1,4 @@
-const { is, terminal } = adone;
+const { is, Terminal } = adone;
 const observe = require("../events");
 const ansiEscapes = require("ansi-escapes");
 
@@ -7,7 +7,7 @@ const ansiEscapes = require("ansi-escapes");
  * @param  {Number} pointer Position of the pointer
  * @return {String}         Rendered content
  */
-const listRender = (choices, pointer) => {
+const listRender = (terminal, choices, pointer) => {
     let output = "";
     let separatorOffset = 0;
 
@@ -30,9 +30,9 @@ const listRender = (choices, pointer) => {
     return output.replace(/\n$/, "");
 };
 
-export default class AutocompletePrompt extends terminal.BasePrompt {
-    constructor(question, answers) {
-        super(question, answers);
+export default class AutocompletePrompt extends Terminal.BasePrompt {
+    constructor(terminal, question, answers) {
+        super(terminal, question, answers);
 
         if (!this.opt.source) {
             this.throwParamError("source");
@@ -46,8 +46,8 @@ export default class AutocompletePrompt extends terminal.BasePrompt {
         // Make sure no default is set (so it won't be printed)
         this.opt.default = null;
 
-        this.paginator = new terminal.Paginator();
-        this.rl = terminal.readline;
+        this.paginator = new Terminal.Paginator(this.terminal);
+        this.rl = this.terminal.readline;
     }
 
     /**
@@ -62,7 +62,7 @@ export default class AutocompletePrompt extends terminal.BasePrompt {
             this.rl.history = [];
         }
 
-        const events = observe();
+        const events = observe(this.terminal);
         const dontHaveAnswer = () => !this.answer;
 
         events.line.takeWhile(dontHaveAnswer).forEach(this.onSubmit.bind(this));
@@ -85,25 +85,25 @@ export default class AutocompletePrompt extends terminal.BasePrompt {
 
         if (this.firstRender) {
             const suggestText = this.opt.suggestOnly ? ", tab to autocomplete" : "";
-            content += terminal.dim(`(Use arrow keys or type to search${suggestText})`);
+            content += this.terminal.dim(`(Use arrow keys or type to search${suggestText})`);
         }
         // Render choices or answer depending on the state
         if (this.status === "answered") {
-            content += terminal.cyan(this.shortAnswer || this.answerName || this.answer);
+            content += this.terminal.cyan(this.shortAnswer || this.answerName || this.answer);
         } else if (this.searching) {
             content += this.rl.line;
-            bottomContent += `  ${terminal.dim("Searching...")}`;
+            bottomContent += `  ${this.terminal.dim("Searching...")}`;
         } else if (this.currentChoices.length) {
-            const choicesStr = listRender(this.currentChoices, this.selected);
+            const choicesStr = listRender(this.terminal, this.currentChoices, this.selected);
             content += this.rl.line;
             bottomContent += this.paginator.paginate(choicesStr, this.selected, this.opt.pageSize);
         } else {
             content += this.rl.line;
-            bottomContent += `  ${terminal.yellow("No results...")}`;
+            bottomContent += `  ${this.terminal.yellow("No results...")}`;
         }
 
         if (error) {
-            bottomContent += `\n${terminal.red(">> ")}${error}`;
+            bottomContent += `\n${this.terminal.red(">> ")}${error}`;
         }
 
         this.firstRender = false;
@@ -178,7 +178,7 @@ export default class AutocompletePrompt extends terminal.BasePrompt {
         //only render searching state after first time
         if (self.searchedOnce) {
             self.searching = true;
-            self.currentChoices = new terminal.Choices([]);
+            self.currentChoices = new Terminal.Choices(this.terminal, []);
             self.render(); //now render current searching state
         } else {
             self.searchedOnce = true;
@@ -190,13 +190,13 @@ export default class AutocompletePrompt extends terminal.BasePrompt {
         //store this promise for check in the callback
         self.lastPromise = thisPromise;
 
-        return thisPromise.then(function inner(choices) {
+        return thisPromise.then((choices) => {
             //if another search is triggered before the current search finishes, don't set results
             if (thisPromise !== self.lastPromise) {
                 return;
             }
 
-            choices = new terminal.Choices(choices.filter((choice) => {
+            choices = new Terminal.Choices(this.terminal, choices.filter((choice) => {
                 return choice.type !== "separator";
             }));
 
@@ -231,7 +231,7 @@ export default class AutocompletePrompt extends terminal.BasePrompt {
             this.selected = (this.selected < len - 1) ? this.selected + 1 : 0;
             this.ensureSelectedInRange();
             this.render();
-            this.rl.output.write(terminal.terminfo.up(2));
+            this.rl.output.write(this.terminal.terminfo.up(2));
         } else if (keyName === "up") {
             len = this.currentChoices.length;
             this.selected = (this.selected > 0) ? this.selected - 1 : len - 1;

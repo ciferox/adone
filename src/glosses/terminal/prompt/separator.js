@@ -1,5 +1,3 @@
-const { terminal } = adone;
-
 /**
  * Separator object
  * Used to space/separate choices group
@@ -7,7 +5,7 @@ const { terminal } = adone;
  * @param {String} line   Separation line content (facultative)
  */
 export default class Separator {
-    constructor(line) {
+    constructor(terminal, line) {
         this.type = "separator";
         this.line = terminal.dim(line || new Array(15).join(adone.text.unicode.symbol.line));
     }
