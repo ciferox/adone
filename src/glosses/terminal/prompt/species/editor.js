@@ -1,6 +1,4 @@
-const { Terminal } = adone;
-const observe = require("../events");
-const rx = require("rx");
+const { Terminal, promise } = adone;
 
 export default class EditorPrompt extends Terminal.BasePrompt {
     /**
@@ -11,26 +9,29 @@ export default class EditorPrompt extends Terminal.BasePrompt {
     _run(cb) {
         this.done = cb;
 
-        this.editorResult = new rx.Subject();
-
         // Open Editor on "line" (Enter Key)
-        const events = observe(this.terminal);
-        this.lineSubscription = events.line.forEach(() => {
-            // Pause Readline to prevent stdin and stdout from being modified while the editor is showing
-            this.terminal.readline.pause();
-            this.startExternalEditor().then((result) => {
-                this.terminal.readline.resume();
-                this.editorResult.onNext(result);
-            }, (err) => {
-                this.terminal.readline.resume();
-                this.editorResult.onError(err);
-            });
-        });
+        const events = this.observe();
 
-        // Trigger Validation when editor closes
-        const validation = this.handleSubmitEvents(this.editorResult);
-        validation.success.forEach(this.onEnd.bind(this));
-        validation.error.forEach(this.onError.bind(this));
+        events.on("line", async () => {
+            this.terminal.readline.pause();
+            try {
+                const result = await this.startExternalEditor();
+                this.terminal.readline.resume();
+                // resume required some delay o_O
+                // Without a delay it requires a new line when I use vim or nano
+                await promise.delay(10);
+                const state = await this.validate(result);
+                if (state.isValid === true) {
+                    events.destroy();
+                    return this.onEnd(state);
+                }
+                return this.onError(state);
+            } catch (err) {
+                this.terminal.readline.resume();
+                // ?
+                return this.onError({ isValid: err.message });
+            }
+        });
 
         // Prevents default from being printed on screen (can look weird with multiple lines)
         this.currentText = this.opt.default;
@@ -68,8 +69,6 @@ export default class EditorPrompt extends Terminal.BasePrompt {
     }
 
     onEnd(state) {
-        this.editorResult.dispose();
-        this.lineSubscription.dispose();
         this.answer = state.value;
         this.status = "answered";
         // Re-render prompt

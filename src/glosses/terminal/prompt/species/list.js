@@ -1,5 +1,4 @@
 const { is, Terminal } = adone;
-const observe = require("../events");
 
 /**
  * Function for rendering list choices
@@ -69,20 +68,26 @@ export default class ListPrompt extends Terminal.BasePrompt {
     _run(cb) {
         this.done = cb;
 
-        const self = this;
+        const events = this.observe();
 
-        const events = observe(this.terminal);
-        events.normalizedUpKey.takeUntil(events.line).forEach(this.onUpKey.bind(this));
-        events.normalizedDownKey.takeUntil(events.line).forEach(this.onDownKey.bind(this));
-        events.numberKey.takeUntil(events.line).forEach(this.onNumberKey.bind(this));
-        events.line.take(1).map(this.getCurrentValue.bind(this)).flatMap(async (value) => {
+        events.on("normalizedUpKey", (event) => {
+            this.onUpKey(event);
+        }).on("normalizedDownKey", (event) => {
+            this.onDownKey(event);
+        }).on("numberKey", (event) => {
+            this.onNumberKey(event);
+        }).on("line", async () => {
+            events.destroy();
+
+            const value = this.getCurrentValue();
+            let res;
             try {
-                const res = await self.opt.filter(value);
-                return res;
+                res = await this.opt.filter(value);
             } catch (err) {
-                return err;
+                res = err;
             }
-        }).forEach(this.onSubmit.bind(this));
+            this.onSubmit(res);
+        });
 
         // Init the prompt
         this.terminal.hideCursor();

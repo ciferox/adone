@@ -566,7 +566,7 @@ export const copy = async (srcPath, dstPath, { ignoreExisting = false, cwd = und
         if (ignoreExisting && await exists(dstFilePath)) {
             return [dstFilePath, null];
         }
-        
+
         const srcAbsPath = (is.string(cwd) && !std.path.isAbsolute(p)) ? std.path.resolve(cwd, p) : p;
         return [dstFilePath, await readFile(srcAbsPath, { check: true })];
     }).map(async (fData) => {

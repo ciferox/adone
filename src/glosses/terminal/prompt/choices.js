@@ -1,5 +1,4 @@
-const { is, vendor: { lodash: _ }, Terminal } = adone;
-const assert = require("assert");
+const { is, x, vendor: { lodash: _ }, Terminal } = adone;
 
 /**
  * Choice object
@@ -81,7 +80,9 @@ export default class Choices {
      * @return {Choice|Undefined} Return the matched choice or undefined
      */
     getChoice(selector) {
-        assert(is.number(selector));
+        if (!is.number(selector)) {
+            throw new x.InvalidArgument("Selector must be a number");
+        }
         return this.realChoices[selector];
     }
 
@@ -91,7 +92,9 @@ export default class Choices {
      * @return {Choice|Undefined} Return the matched choice or undefined
      */
     get(selector) {
-        assert(is.number(selector));
+        if (!is.number(selector)) {
+            throw new x.InvalidArgument("Selector must be a number");
+        }
         return this.choices[selector];
     }
 
@@ -114,27 +117,24 @@ export default class Choices {
     }
 
     // Expose usual Array methods
-    indexOf() {
-        return this.choices.indexOf.apply(this.choices, arguments);
+    indexOf(element, position) {
+        return this.choices.indexOf(element, position);
     }
 
-    forEach() {
-        return this.choices.forEach.apply(this.choices, arguments);
+    forEach(callback, thisArg) {
+        return this.choices.forEach(callback, thisArg);
     }
 
-    filter() {
-        return this.choices.filter.apply(this.choices, arguments);
+    filter(callback, thisArg) {
+        return this.choices.filter(callback, thisArg);
     }
 
     find(func) {
         return _.find(this.choices, func);
     }
 
-    push() {
-        const objs = _.map(arguments, (val) => {
-            return new Choice(val);
-        });
-        this.choices.push.apply(this.choices, objs);
+    push(...args) {
+        this.choices.push(...args.map((x) => new Choice(x)));
         this.realChoices = this.choices.filter(Terminal.Separator.exclude);
         return this.choices;
     }

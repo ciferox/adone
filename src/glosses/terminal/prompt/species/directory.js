@@ -1,23 +1,10 @@
 const { Terminal } = adone;
-const rx = require("rx");
-const observe = require("../events");
 
 /**
  * Constants
  */
 const CHOOSE = "choose this directory";
 const BACK = "go back a directory";
-
-const findIndex = (term) => {
-    let item;
-    for (let i = 0; i < this.opt.choices.realLength; i++) {
-        item = this.opt.choices.realChoices[i].name.toLowerCase();
-        if (item.indexOf(term) === 0) {
-            return i;
-        }
-    }
-    return -1;
-};
 
 /**
  * Function for rendering list choices
@@ -100,63 +87,34 @@ export default class Prompt extends Terminal.BasePrompt {
         const self = this;
         self.searchMode = false;
         this.done = cb;
-        const alphaNumericRegex = /\w|\.|\-/i;
-        const events = observe(this.terminal);
 
-        const keyUps = events.keypress.filter((e) => {
-            return e.key.name === "up" || (!self.searchMode && e.key.name === "k");
-        }).share();
+        const events = this.observe();
 
-        const keyDowns = events.keypress.filter((e) => {
-            return e.key.name === "down" || (!self.searchMode && e.key.name === "j");
-        }).share();
-
-        const keySlash = events.keypress.filter((e) => {
-            return e.value === "/";
-        }).share();
-
-        const keyMinus = events.keypress.filter((e) => {
-            return e.value === "-";
-        }).share();
-
-        const alphaNumeric = events.keypress.filter((e) => {
-            return e.key.name === "backspace" || alphaNumericRegex.test(e.value);
-        }).share();
-
-        const searchTerm = keySlash.flatMap((md) => {
-            self.searchMode = true;
-            self.searchTerm = "";
-            self.render();
-            const end$ = new rx.Subject();
-            const done$ = rx.Observable.merge(events.line, end$);
-            return alphaNumeric.map((e) => {
-                if (e.key.name === "backspace" && self.searchTerm.length) {
-                    self.searchTerm = self.searchTerm.slice(0, -1);
-                } else if (e.value) {
-                    self.searchTerm += e.value;
-                }
-                if (self.searchTerm === "") {
-                    end$.onNext(true);
-                }
-                return self.searchTerm;
-            })
-                .takeUntil(done$)
-                .doOnCompleted(() => {
-                    self.searchMode = false;
-                    self.render();
-                    return false;
-                });
-        }).share();
-
-        const outcome = this.handleSubmit(events.line);
-        outcome.drill.forEach(this.handleDrill.bind(this));
-        outcome.back.forEach(this.handleBack.bind(this));
-        keyUps.takeUntil(outcome.done).forEach(this.onUpKey.bind(this));
-        keyDowns.takeUntil(outcome.done).forEach(this.onDownKey.bind(this));
-        keyMinus.takeUntil(outcome.done).forEach(this.handleBack.bind(this));
-        events.keypress.takeUntil(outcome.done).forEach(this.hideKeyPress.bind(this));
-        searchTerm.takeUntil(outcome.done).forEach(this.onKeyPress.bind(this));
-        outcome.done.forEach(this.onSubmit.bind(this));
+        events.on("keypress", (event) => {
+            this.hideKeyPress(event);
+            if (event.key.name === "up" || (!this.searchMode && event.key.name === "k")) {
+                return this.onUpKey(event);
+            }
+            if (event.key.name === "down" || (!self.searchMode && event.key.name === "j")) {
+                return this.onDownKey(event);
+            }
+            if (event.value === "/") {
+                return this.onSlashKey(events);
+            }
+            if (event.value === "-") {
+                return this.handleBack(event);
+            }
+        }).on("line", () => {
+            const choice = this.opt.choices.getChoice(self.selected).value;
+            if (choice === CHOOSE) {
+                events.destroy();
+                return this.onSubmit();
+            }
+            if (choice === BACK) {
+                return this.handleBack();
+            }
+            return this.handleDrill();
+        });
 
         // Init the prompt
         this.terminal.hideCursor();
@@ -177,7 +135,6 @@ export default class Prompt extends Terminal.BasePrompt {
             message += this.terminal.dim("(Use arrow keys)");
         }
 
-
         // Render choices or answer depending on the state
         if (this.status === "answered") {
             message += this.terminal.cyan(adone.std.path.relative(this.opt.basePath, this.currentPath));
@@ -185,44 +142,16 @@ export default class Prompt extends Terminal.BasePrompt {
             message += `${this.terminal.bold("\n Current directory: ") + this.opt.basePath}/${this.terminal.cyan(adone.std.path.relative(this.opt.basePath, this.currentPath))}`;
             const choicesStr = listRender(this.terminal, this.opt.choices, this.selected);
             message += `\n${this.paginator.paginate(choicesStr, this.selected, this.opt.pageSize)}`;
-        }
-        if (this.searchMode) {
-            message += (`\nSearch: ${this.searchTerm}`);
-        } else {
-            message += "\n(Use \"/\" key to search this directory)";
+            if (this.searchMode) {
+                message += (`\nSearch: ${this.searchTerm}`);
+            } else {
+                message += "\n(Use \"/\" key to search this directory)";
+            }
         }
 
         this.firstRender = false;
 
         this.screen.render(message);
-    }
-
-    /**
-     * When user press `enter` key
-     */
-    handleSubmit(e) {
-        const self = this;
-        const obx = e.map(() => {
-            return self.opt.choices.getChoice(self.selected).value;
-        }).share();
-
-        const done = obx.filter((choice) => {
-            return choice === CHOOSE;
-        }).take(1);
-
-        const back = obx.filter((choice) => {
-            return choice === BACK;
-        }).takeUntil(done);
-
-        const drill = obx.filter((choice) => {
-            return choice !== BACK && choice !== CHOOSE;
-        }).takeUntil(done);
-
-        return {
-            done,
-            back,
-            drill
-        };
     }
 
     /**
@@ -242,7 +171,6 @@ export default class Prompt extends Terminal.BasePrompt {
      */
     handleBack() {
         if (this.depth > 0) {
-            const choice = this.opt.choices.getChoice(this.selected);
             this.depth--;
             this.currentPath = adone.std.path.dirname(this.currentPath);
             this.opt.choices = new Terminal.Choices(this.terminal, this.createChoices(this.currentPath), this.answers);
@@ -254,7 +182,7 @@ export default class Prompt extends Terminal.BasePrompt {
     /**
      * when user selects "choose this folder"
      */
-    onSubmit(value) {
+    onSubmit() {
         this.status = "answered";
 
         // Rerender prompt
@@ -286,16 +214,60 @@ export default class Prompt extends Terminal.BasePrompt {
         this.render();
     }
 
-    onSlashKey(e) {
+    onSlashKey(events) {
+        this.searchMode = true;
+        this.searchTerm = "";
         this.render();
-    }
 
-    onKeyPress(e) {
-        const index = findIndex.call(this, this.searchTerm);
-        if (index >= 0) {
-            this.selected = index;
-        }
-        this.render();
+        const alphaNumericRegex = /\w|\.|-/i;
+
+        const endSeach = () => {
+            events.removeListener("keypress", keypressHandler); // eslint-disable-line no-use-before-define
+            events.removeListener("line", lineHandler); // eslint-disable-line no-use-before-define
+            this.searchMode = false;
+            this.render();
+        };
+
+        const lineHandler = () => {
+            let index = -1;
+            for (let i = 0; i < this.opt.choices.realLength; i++) {
+                const item = this.opt.choices.realChoices[i].name.toLowerCase();
+                if (item.indexOf(this.searchTerm) === 0) {
+                    index = i;
+                }
+            }
+            if (index >= 0) {
+                this.selected = index;
+            }
+            endSeach();
+        };
+
+        const keypressHandler = (event) => {
+            const isBackspace = event.key.name === "backspace";
+            const isAlphanumeric = alphaNumericRegex.test(event.value);
+            if (!isBackspace && !isAlphanumeric) {
+                return;
+            }
+            if (isBackspace && this.searchTerm.length > 0) {
+                this.searchTerm = this.searchTerm.slice(0, -1);
+            } else if (event.value) {
+                this.searchTerm += event.value;
+            }
+            if (this.searchTerm === "") {
+                endSeach();
+                return;
+            }
+            for (let index = 0; index < this.opt.choices.realLength; index++) {
+                const item = this.opt.choices.realChoices[index].name.toLowerCase();
+                if (item.indexOf(this.searchTerm) === 0) {
+                    this.selected = index;
+                    break;
+                }
+            }
+            this.render();
+        };
+
+        events.on("keypress", keypressHandler).on("line", lineHandler);
     }
 
     /**

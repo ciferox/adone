@@ -14,7 +14,7 @@ export default class Editor {
         this.args = args;
     }
 
-    async spawn() {
+    spawn() {
         return std.child_process.spawn(this.bin, this.args.concat([this.path]), {
             stdio: "inherit"
         });

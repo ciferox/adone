@@ -1,5 +1,4 @@
 const { is, vendor: { lodash: _ }, Terminal } = adone;
-const observe = require("../events");
 
 export default class ConfirmPrompt extends Terminal.BasePrompt {
     constructor(terminal, question, answers) {
@@ -34,10 +33,14 @@ export default class ConfirmPrompt extends Terminal.BasePrompt {
         this.done = cb;
 
         // Once user confirm (enter key)
-        const events = observe(this.terminal);
-        events.keypress.takeUntil(events.line).forEach(this.onKeypress.bind(this));
+        const events = this.observe();
 
-        events.line.take(1).forEach(this.onEnd.bind(this));
+        events.on("keypress", (event) => {
+            this.onKeypress(event);
+        }).on("line", (input) => {
+            events.destroy();
+            this.onEnd(input);
+        });
 
         // Init
         this.render();

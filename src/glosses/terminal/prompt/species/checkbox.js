@@ -1,5 +1,4 @@
 const { is, vendor: { lodash: _ }, Terminal } = adone;
-const observe = require("../events");
 
 /**
  * Get the checkbox
@@ -52,7 +51,7 @@ export default class CheckboxPrompt extends Terminal.BasePrompt {
 
         if (is.array(this.opt.default)) {
             this.opt.choices.forEach(function (choice) {
-                if (this.opt.default.indexOf(choice.value) >= 0) {
+                if (this.opt.default.includes(choice.value)) {
                     choice.checked = true;
                 }
             }, this);
@@ -75,18 +74,29 @@ export default class CheckboxPrompt extends Terminal.BasePrompt {
     _run(cb) {
         this.done = cb;
 
-        const events = observe(this.terminal);
+        const events = this.observe();
 
-        const validation = this.handleSubmitEvents(events.line.map(this.getCurrentValue.bind(this)));
-        validation.success.forEach(this.onEnd.bind(this));
-        validation.error.forEach(this.onError.bind(this));
-
-        events.normalizedUpKey.takeUntil(validation.success).forEach(this.onUpKey.bind(this));
-        events.normalizedDownKey.takeUntil(validation.success).forEach(this.onDownKey.bind(this));
-        events.numberKey.takeUntil(validation.success).forEach(this.onNumberKey.bind(this));
-        events.spaceKey.takeUntil(validation.success).forEach(this.onSpaceKey.bind(this));
-        events.aKey.takeUntil(validation.success).forEach(this.onAllKey.bind(this));
-        events.iKey.takeUntil(validation.success).forEach(this.onInverseKey.bind(this));
+        events.on("line", async () => {
+            const value = this.getCurrentValue();
+            const state = await this.validate(value);
+            if (state.isValid === true) {
+                events.destroy();
+                return this.onEnd(state);
+            }
+            return this.onError(state);
+        }).on("normalizedUpKey", (event) => {
+            this.onUpKey(event);
+        }).on("normalizedDownKey", (event) => {
+            this.onDownKey(event);
+        }).on("numberKey", (event) => {
+            this.onNumberKey(event);
+        }).on("spaceKey", (event) => {
+            this.onSpaceKey(event);
+        }).on("aKey", (event) => {
+            this.onAllKey(event);
+        }).on("iKey", (event) => {
+            this.onInverseKey(event);
+        });
 
         // Init the prompt
         this.terminal.hideCursor();

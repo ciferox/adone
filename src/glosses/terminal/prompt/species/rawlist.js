@@ -1,5 +1,4 @@
 const { is, vendor: { lodash: _ }, Terminal } = adone;
-const observe = require("../events");
 
 /**
  * Function for rendering list choices
@@ -68,14 +67,19 @@ export default class RawlistPrompt extends Terminal.BasePrompt {
         this.done = cb;
 
         // Once user confirm (enter key)
-        const events = observe(this.terminal);
-        const submit = events.line.map(this.getCurrentValue.bind(this));
+        const events = this.observe();
 
-        const validation = this.handleSubmitEvents(submit);
-        validation.success.forEach(this.onEnd.bind(this));
-        validation.error.forEach(this.onError.bind(this));
-
-        events.keypress.takeUntil(validation.success).forEach(this.onKeypress.bind(this));
+        events.on("line", async (input) => {
+            const value = this.getCurrentValue(input);
+            const state = await this.validate(value);
+            if (state.isValid === true) {
+                events.destroy();
+                return this.onEnd(state);
+            }
+            return this.onError(state);
+        }).on("keypress", (event) => {
+            this.onKeypress(event);
+        });
 
         // Init the prompt
         this.render();

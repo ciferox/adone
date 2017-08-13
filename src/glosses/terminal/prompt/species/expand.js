@@ -1,5 +1,4 @@
 const { is, vendor: { lodash: _ }, Terminal } = adone;
-const observe = require("../events");
 
 /**
  * Function for rendering checkbox choices
@@ -66,14 +65,19 @@ export default class ExpandPrompt extends Terminal.BasePrompt {
         this.done = cb;
 
         // Save user answer and update prompt to show selected option.
-        const events = observe(this.terminal);
-        const validation = this.handleSubmitEvents(
-            events.line.map(this.getCurrentValue.bind(this))
-        );
-        validation.success.forEach(this.onSubmit.bind(this));
-        validation.error.forEach(this.onError.bind(this));
-        this.keypressObs = events.keypress.takeUntil(validation.success)
-            .forEach(this.onKeypress.bind(this));
+        const events = this.observe();
+
+        events.on("line", async (input) => {
+            const value = this.getCurrentValue(input);
+            const state = await this.validate(value);
+            if (state.isValid === true) {
+                events.destroy();
+                return this.onSubmit(state);
+            }
+            return this.onError(state);
+        }).on("keypress", (event) => {
+            this.onKeypress(event);
+        });
 
         // Init the prompt
         this.render();

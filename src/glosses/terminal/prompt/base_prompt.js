@@ -1,4 +1,4 @@
-const { is, vendor: { lodash: _ }, Terminal } = adone;
+const { is, vendor: { lodash: _ }, Terminal, EventEmitter } = adone;
 
 const height = (content) => content.split("\n").length;
 const lastLine = (content) => _.last(content.split("\n"));
@@ -17,6 +17,54 @@ const breakLines = (lines, width) => {
 };
 
 const forceLineReturn = (content, width) => _.flatten(breakLines(content.split("\n"), width)).join("\n");
+
+class Observer extends EventEmitter {
+    constructor(terminal) {
+        super();
+        this.readline = terminal.readline;
+        this.keypressHandler = (value, key = {}) => {
+            // Ignore `enter` key. On the readline, we only care about the `line` event.
+            if (key.name === "enter" || key.name === "return") {
+                return;
+            }
+            const event = { value, key };
+
+            this.emit("keypress", event);
+
+            if (key.name === "up" || key.name === "k" || (key.name === "p" && key.ctrl)) {
+                this.emit("normalizedUpKey", event);
+            }
+            if (key.name === "down" || key.name === "j" || (key.name === "n" && key.ctrl)) {
+                this.emit("normalizedDownKey", event);
+            }
+            if (value && value.length === 1 && is.digits(value)) {
+                this.emit("numberKey", Number(value));
+            }
+            if (key.name === "space") {
+                this.emit("spaceKey", event);
+            }
+            if (key.name === "a") {
+                this.emit("aKey", event);
+            }
+            if (key.name === "i") {
+                this.emit("iKey", event);
+            }
+        };
+
+        this.lineHandler = (input) => {
+            this.emit("line", input);
+        };
+
+        this.readline.input.on("keypress", this.keypressHandler);
+        this.readline.on("line", this.lineHandler);
+    }
+
+    destroy() {
+        this.readline.input.removeListener("keypress", this.keypressHandler);
+        this.readline.removeListener("line", this.lineHandler);
+        this.removeAllListeners();
+    }
+}
 
 class ScreenManager {
     constructor(terminal) {
@@ -191,6 +239,20 @@ export default class BasePrompt {
      */
     close() {
         this.screen.releaseCursor();
+    }
+
+    async validate(value) {
+        try {
+            const filteredValue = await this.opt.filter(value, this.answers);
+            const isValid = await this.opt.validate(filteredValue, this.answers);
+            return { isValid, value: filteredValue };
+        } catch (err) {
+            return { isValid: err };
+        }
+    }
+
+    observe() {
+        return new Observer(this.terminal);
     }
 
     /**

@@ -1,6 +1,4 @@
 const { is, Terminal } = adone;
-const observe = require("../events");
-const ansiEscapes = require("ansi-escapes");
 
 /**
  * Function for rendering list choices
@@ -56,19 +54,29 @@ export default class AutocompletePrompt extends Terminal.BasePrompt {
      * @return {this}
      */
     _run(cb) {
-        this.done = cb;
+        this.done = (answer) => {
+            events.destroy(); // eslint-disable-line no-use-before-define
+            cb(answer);
+        };
 
         if (this.rl.history instanceof Array) {
             this.rl.history = [];
         }
 
-        const events = observe(this.terminal);
+        const events = this.observe();
         const dontHaveAnswer = () => !this.answer;
 
-        events.line.takeWhile(dontHaveAnswer).forEach(this.onSubmit.bind(this));
-        events.keypress.takeWhile(dontHaveAnswer).forEach(this.onKeypress.bind(this));
+        events.on("line", (event) => {
+            if (dontHaveAnswer()) {
+                return this.onSubmit(event);
+            }
+        }).on("keypress", (event) => {
+            if (dontHaveAnswer()) {
+                return this.onKeypress(event);
+            }
+        });
 
-        //call once at init
+        // call once at init
         this.search(null);
 
         return this;
@@ -211,21 +219,19 @@ export default class AutocompletePrompt extends Terminal.BasePrompt {
         this.selected = Math.max(selectedIndex, 0); //not below 0
     }
 
-    /**
-     * When user type
-     */
     onKeypress(e) {
         let len;
         const keyName = (e.key && e.key.name) || undefined;
-
-        if (keyName === "tab" && this.opt.suggestOnly) {
-            if (this.currentChoices.getChoice(this.selected)) {
-                this.rl.write(ansiEscapes.cursorLeft);
+        // log("got", keyName, this.opt.suggestOnly);
+        if (keyName === "tab") {
+            if (this.opt.suggestOnly && this.currentChoices.getChoice(this.selected)) {
                 const autoCompleted = this.currentChoices.getChoice(this.selected).value;
-                this.rl.write(ansiEscapes.cursorForward(autoCompleted.length));
-                this.rl.line = autoCompleted;
-                this.render();
+                this.rl.clearLine();
+                this.rl.write(autoCompleted);
+            } else {
+                this.rl.line = this.rl.line.replace(/\t/m, "");
             }
+            this.render();
         } else if (keyName === "down") {
             len = this.currentChoices.length;
             this.selected = (this.selected < len - 1) ? this.selected + 1 : 0;
@@ -238,7 +244,7 @@ export default class AutocompletePrompt extends Terminal.BasePrompt {
             this.ensureSelectedInRange();
             this.render();
         } else {
-            this.render(); //render input automatically
+            this.render(); // render input automatically
             //Only search if input have actually changed, not because of other keypresses
             if (this.lastSearchTerm !== this.rl.line) {
                 this.search(this.rl.line); //trigger new search

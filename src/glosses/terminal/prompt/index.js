@@ -28,22 +28,27 @@ export default class Prompt {
             }
 
             if (is.function(question.when)) {
+                // eslint-disable-next-line no-await-in-loop
                 if (!(await question.when(answers))) {
                     continue;
                 }
             }
             if (is.function(question.message)) {
+                // eslint-disable-next-line no-await-in-loop
                 question.message = await question.message(answers);
             }
             if (is.function(question.default)) {
+                // eslint-disable-next-line no-await-in-loop
                 question.default = await question.default(answers);
             }
             if (is.function(question.choices)) {
+                // eslint-disable-next-line no-await-in-loop
                 question.choices = await question.choices(answers);
             }
 
             const Cls = Prompt.prompts[question.type];
             this.activePrompt = new Cls(this.terminal, question, answers);
+            // eslint-disable-next-line no-await-in-loop
             const answer = await this.activePrompt.run();
             _.set(answers, question.name, answer);
         }

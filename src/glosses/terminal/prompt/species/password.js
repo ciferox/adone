@@ -1,5 +1,4 @@
 const { is, Terminal } = adone;
-const observe = require("../events");
 
 const mask = (input, maskChar) => {
     input = String(input);
@@ -20,17 +19,22 @@ export default class PasswordPrompt extends Terminal.BasePrompt {
     _run(cb) {
         this.done = cb;
 
-        const events = observe(this.terminal);
+        const events = this.observe();
 
-        // Once user confirm (enter key)
-        const submit = events.line.map(this.filterInput.bind(this));
-
-        const validation = this.handleSubmitEvents(submit);
-        validation.success.forEach(this.onEnd.bind(this));
-        validation.error.forEach(this.onError.bind(this));
+        events.on("line", async (input) => {
+            input = this.filterInput(input);
+            const state = await this.validate(input);
+            if (state.isValid === true) {
+                events.destroy();
+                return this.onEnd(state);
+            }
+            return this.onError(state);
+        });
 
         if (this.opt.mask) {
-            events.keypress.takeUntil(validation.success).forEach(this.onKeypress.bind(this));
+            events.on("keypress", (event) => {
+                this.onKeypress(event);
+            });
         }
 
         // Init
