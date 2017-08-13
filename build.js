@@ -1,6 +1,6 @@
 const { fast, std: { path }, js, fs, templating: { dot } } = adone;
 
-adone.run({
+adone.application.run({
     initialize() {
         this.defineArguments({
             help: "build adone",

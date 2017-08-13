@@ -1,4 +1,4 @@
-adone.run({
+adone.application.run({
     initialize() {
         this.defineArguments({
             commands: [

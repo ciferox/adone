@@ -1,6 +1,6 @@
 const { assert } = adone;
 
-adone.run({
+adone.application.run({
     main() {
         const screen = new adone.cui.Screen({
             dump: `${__dirname}/logs/pos.log`

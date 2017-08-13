@@ -38,7 +38,7 @@ export default class Service {
         }
 
         this.scriptPath = path.join(__dirname, "..", "wrapper.js");
-        this.templateRoot = path.join(adone.appinstance.adoneEtcPath, "scripts", "omnitron");
+        this.templateRoot = path.join(adone.application.instance.adoneEtcPath, "scripts", "omnitron");
 
         switch (this.config.mode) {
             case "sysv":
@@ -95,7 +95,7 @@ export default class Service {
                 } else {
                     pathPrefix = adone.std.path.join("/home", context.user);
                 }
-                const adoneHomePath = adone.std.path.join(pathPrefix, adone.appinstance.config.adone.dirName);
+                const adoneHomePath = adone.std.path.join(pathPrefix, adone.application.instance.config.adone.dirName);
                 if (!(await adone.fs.exists(adoneHomePath))) {
                     throw new adone.x.NotExists(`Adone home directory '${adoneHomePath}' not exists`);
                 }

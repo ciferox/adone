@@ -1,0 +1,52 @@
+{
+    "groups": [
+        {
+            "name": "subsystem",
+            "description": "Subsystems"
+        }
+    ],
+    "subsystems": [
+        {
+            "name": "project",
+            "description": "Cli interface for adone project management",
+            "version": "0.6.54",
+            "author": "Adone Core Team < info@adone.io",
+            "path": "./lib/subsystems/project"
+        },
+        {
+            "name": "omnitron",
+            "description": "Cli interface to omnitron",
+            "version": "0.6.54",
+            "author": "Adone Core Team < info@adone.io",
+            "path": "./lib/subsystems/omnitron"
+        },
+        {
+            "name": "bench",
+            "description": "Adone benchmarking utility",
+            "version": "0.6.54",
+            "author": "Adone Core Team < info@adone.io",
+            "path": "./lib/subsystems/bench"
+        },
+        {
+            "name": "shani",
+            "description": "Cli interface to 'shani' test framework",
+            "version": "0.6.54",
+            "author": "Adone Core Team < info@adone.io",
+            "path": "./lib/subsystems/shani"
+        },
+        {
+            "name": "meta",
+            "description": "Cli interface for adone meta management",
+            "version": "0.6.54",
+            "author": "Adone Core Team < info@adone.io",
+            "path": "./lib/subsystems/meta"
+        },
+        {
+            "name": "specter",
+            "description": "Cli interface for unified system management",
+            "version": "0.6.54",
+            "author": "Adone Core Team < info@adone.io",
+            "path": "./lib/subsystems/specter"
+        }
+    ]
+}

@@ -1,4 +1,4 @@
-adone.run({
+adone.application.run({
     main() {
         const requireLetterAndNumber = (value) => {
             if (/\w/.test(value) && /\d/.test(value)) {

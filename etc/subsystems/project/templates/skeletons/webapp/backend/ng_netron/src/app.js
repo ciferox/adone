@@ -53,4 +53,4 @@ class {{ name }} extends adone.application.Application {
     }
 }
 
-adone.run({{ name }});
+adone.application.run({{ name }});

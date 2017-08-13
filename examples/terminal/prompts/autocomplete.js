@@ -69,7 +69,7 @@ const foods = [
     "Grapefruit"
 ];
 
-adone.run({
+adone.application.run({
     initialize() {
         this.fuzzyStates = new adone.text.Fuzzy(states, {
             threshold: 0.3

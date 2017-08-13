@@ -1,4 +1,4 @@
-adone.run({
+adone.application.run({
     main() {
         const randomColor = () => {
             return [Math.random() * 255, Math.random() * 255, Math.random() * 255];

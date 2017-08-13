@@ -1,0 +1,6 @@
+{
+    "name": "{{ name }}",
+    "description": "useful subsystem description",
+    "version": "0.0.0",
+    "author": ""
+}

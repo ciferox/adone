@@ -25,7 +25,7 @@ const { is, x, EventEmitter, lazify, std: { path, os }, notifier: { __ } } = ado
 
 const lazy = lazify({
     notifier: () => path.resolve(
-        adone.appinstance.adoneEtcPath,
+        adone.application.instance.adoneEtcPath,
         "glosses",
         "notifier",
         "notifu",

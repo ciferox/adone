@@ -356,7 +356,7 @@ export default class Omnitron extends adone.application.Application {
     @Description("The environment under which the omnitron is running")
     @Type(String)
     environment() {
-        return adone.appinstance.config.adone.environment;
+        return adone.application.instance.config.adone.environment;
     }
 
     @Public

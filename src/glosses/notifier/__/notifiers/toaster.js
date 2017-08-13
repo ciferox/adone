@@ -1,7 +1,7 @@
 const { is, EventEmitter, notifier: { __ }, lazify, std: { path } } = adone;
 
 const lazy = lazify({
-    notifier: () => path.resolve(adone.appinstance.adoneEtcPath, "glosses", "notifier", "snoreToast", "SnoreToast.exe")
+    notifier: () => path.resolve(adone.application.instance.adoneEtcPath, "glosses", "notifier", "snoreToast", "SnoreToast.exe")
 });
 
 const timeoutMessage = "the toast has timed out";

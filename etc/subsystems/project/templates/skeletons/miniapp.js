@@ -2,7 +2,7 @@
 
 import adone from "adone";
 
-adone.run({
+adone.application.run({
     initialize() {
 
     },

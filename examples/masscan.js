@@ -43,4 +43,4 @@ class ScanApp extends adone.application.Application {
     }
 }
 
-adone.run(ScanApp, true);
+adone.application.run(ScanApp, true);

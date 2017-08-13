@@ -1260,6 +1260,8 @@ const mergeGroupsLists = (a, b) => {
     return result;
 };
 
+export let instance = null;
+
 export class Application extends Subsystem {
     constructor({
         name = adone.std.path.basename(process.argv[1], adone.std.path.extname(process.argv[1])),
@@ -1298,10 +1300,10 @@ export class Application extends Subsystem {
         // setup the main application
         // Prevent double initialization of global application instance
         // (for cases where two or more Applications run in-process, the first app will be common).
-        if (!is.nil(adone.appinstance)) {
+        if (!is.null(instance)) {
             throw new x.IllegalState("It is impossible to have several main applications");
         }
-        adone.appinstance = this;
+        instance = this;
 
         if (this.env.ADONE_REPORT) {
             this.enableReport();
@@ -1361,7 +1363,7 @@ export class Application extends Subsystem {
 
     async run({ ignoreArgs = false } = {}) {
         try {
-            if (is.nil(adone.appinstance)) {
+            if (is.null(instance)) {
                 await this._setupMain();
             }
 
@@ -1474,7 +1476,7 @@ export class Application extends Subsystem {
         await Promise.resolve(this.uninitialize());
 
         // Only main application instance can exit process.
-        if (this !== adone.appinstance) {
+        if (this !== instance) {
             return;
         }
 
@@ -1602,7 +1604,7 @@ export class Application extends Subsystem {
         if (options.addVersion !== false) {
             options.options.unshift({
                 name: "--version",
-                help: "show the version",
+                help: "Show the version",
                 handler: async () => {
                     adone.log(escape(await this.getVersion()));
                     return 0;
@@ -1653,7 +1655,7 @@ export class Application extends Subsystem {
         if (commandParams.addHelp) {
             options.unshift({
                 name: ["--help", "-h"],
-                help: "show this message",
+                help: "Show this message",
                 handler: (_, cmd) => {
                     adone.log(escape(cmd.getHelpMessage()));
                     return this.exit();
@@ -2216,3 +2218,49 @@ Application.Command = Command;
 adone.lazify({
     Logger: "./logger"
 }, exports, require);
+
+export const run = async (App, ignoreArgs = false) => {
+    if (adone.is.plainObject(App)) {
+        const app = instance;
+        if (adone.is.application(app)) {
+            instance = null;
+            // unintialize subsystems
+            await app.uninitializeSubsystems();
+
+            // set default public methods
+            app.main = adone.application.Application.prototype.main;
+            app.initialize = adone.application.Application.prototype.initialize;
+            app.uninitialize = adone.application.Application.prototype.uninitialize;
+            app.exception = null;
+
+            // redefine methods
+            for (const [name, method] of Object.entries(App)) {
+                app[name] = method;
+            }
+
+            // redefine argv
+            if (adone.is.array(adone.__argv__)) {
+                process.argv = adone.__argv__;
+                app.argv = process.argv.slice(2);
+                app._name = adone.std.path.basename(process.argv[1], adone.std.path.extname(process.argv[1]));
+                delete adone.__argv__;
+            }
+
+            // reset commands definitions
+            app.defineMainCommand();
+
+            // run again!
+            app.run({ ignoreArgs });
+        } else {
+            class XApplication extends adone.application.Application { }
+
+            for (const [name, method] of Object.entries(App)) {
+                XApplication.prototype[name] = method;
+            }
+
+            (new XApplication()).run({ ignoreArgs });
+        }
+    } else {
+        (new App()).run({ ignoreArgs });
+    }
+};

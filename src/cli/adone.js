@@ -2,27 +2,22 @@
 
 import adone from "adone";
 
-const { is, std } = adone;
+const { is, std, application } = adone;
 
-export default class AdoneCLI extends adone.application.Application {
+export default class AdoneCLI extends application.Application {
     async initialize() {
         // Loading subsystems
-        await this.loadConfig("subsystems", {
+        await this.loadConfig("cli", {
             defaults: true,
             userConfig: true
         });
 
-        for (const ss of this.config.subsystems) {
+        for (const ss of this.config.cli.subsystems) {
             this.loadSubsystem(adone.std.path.isAbsolute(ss.path) ? ss.path : adone.std.path.join(this.adoneRootPath, ss.path));
         }
 
         this.defineArguments({
-            commandsGroups: [
-                {
-                    name: "subsystem",
-                    description: "Core subsystems"
-                }
-            ],
+            commandsGroups: this.config.cli.groups,
             arguments: [
                 {
                     name: "path",
@@ -141,11 +136,13 @@ export default class AdoneCLI extends adone.application.Application {
         const oldPaths = paths;
         paths = [];
         for (let i = 0; i < oldPaths.length; ++i) {
+            // eslint-disable-next-line
             if (!await adone.fs.exists(oldPaths[i])) {
                 adone.error(`No such file or directory: '${oldPaths[i]}'`);
                 return this.exit(1);
             }
 
+            // eslint-disable-next-line
             if (await adone.fs.is.directory(oldPaths[i])) {
                 paths.push(adone.std.path.join(oldPaths[i], "**/*"));
             } else {
@@ -275,5 +272,5 @@ export default class AdoneCLI extends adone.application.Application {
 }
 
 if (require.main === module) {
-    adone.run(AdoneCLI);
+    application.run(AdoneCLI);
 }

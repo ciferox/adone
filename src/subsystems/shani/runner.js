@@ -2,7 +2,7 @@ import adone from "adone";
 
 const { is, std: { path }, shani: { Engine, consoleReporter, simpleReporter, minimalReporter } } = adone;
 
-adone.run({
+adone.application.run({
     async main() {
         this.app._uncaughtException = (err) => {
             // adone.log("Uncaught exception", err.stack);

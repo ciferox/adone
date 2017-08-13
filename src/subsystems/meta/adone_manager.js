@@ -4,7 +4,7 @@ const configRelativePath = "etc/configs/adone.js".replace(/\//g, std.path.sep);
 
 export default class AdoneManager {
     constructor() {
-        this.app = adone.appinstance;
+        this.app = adone.application.instance;
         this.nodePath = std.path.dirname(process.execPath);
         // this.nodeModulesDir = new fs.Directory(std.path.resolve(fs.homeDir(), ".node_modules"));
         this.nodeModulesDir = new fs.Directory("/usr/local/lib/node");

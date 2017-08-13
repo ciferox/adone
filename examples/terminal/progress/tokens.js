@@ -1,4 +1,4 @@
-adone.run({
+adone.application.run({
     main() {
         const list = [
             "image01.jpg", "image02.jpg", "image03.jpg", "image04.jpg", "image05.jpg",

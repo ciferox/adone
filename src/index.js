@@ -126,51 +126,6 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             FAST_FS_STREAM: Symbol(),
             FAST_FS_MAP_STREAM: Symbol()
         },
-        run: async (App, ignoreArgs = false) => {
-            if (adone.is.plainObject(App)) {
-                const app = adone.appinstance;
-                if (adone.is.application(app)) {
-                    adone.appinstance = null;
-                    // unintialize subsystems
-                    await app.uninitializeSubsystems();
-
-                    // set default public methods
-                    app.main = adone.application.Application.prototype.main;
-                    app.initialize = adone.application.Application.prototype.initialize;
-                    app.uninitialize = adone.application.Application.prototype.uninitialize;
-                    app.exception = null;
-
-                    // redefine methods
-                    for (const [name, method] of Object.entries(App)) {
-                        app[name] = method;
-                    }
-
-                    // redefine argv
-                    if (adone.is.array(adone.__argv__)) {
-                        process.argv = adone.__argv__;
-                        app.argv = process.argv.slice(2);
-                        app._name = adone.std.path.basename(process.argv[1], adone.std.path.extname(process.argv[1]));
-                        delete adone.__argv__;
-                    }
-
-                    // reset commands definitions
-                    app.defineMainCommand();
-
-                    // run again!
-                    app.run({ ignoreArgs });
-                } else {
-                    class XApplication extends adone.application.Application { }
-
-                    for (const [name, method] of Object.entries(App)) {
-                        XApplication.prototype[name] = method;
-                    }
-
-                    (new XApplication()).run({ ignoreArgs });
-                }
-            } else {
-                (new App()).run({ ignoreArgs });
-            }
-        },
         bind: (libName) => require(adone.std.path.resolve(__dirname, "./native", libName)),
         getAssetAbsolutePath: (relPath) => adone.std.path.resolve(__dirname, "..", "etc", adone.std.path.normalize(relPath)),
         loadAsset: (relPath) => {

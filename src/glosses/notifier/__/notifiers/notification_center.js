@@ -6,7 +6,7 @@ const errorMessageOsX = "You need Mac OS X 10.8 or above to use NotificationCent
 
 const lazy = lazify({
     notifier: () => path.resolve(
-        adone.appinstance.adoneEtcPath,
+        adone.application.instance.adoneEtcPath,
         "glosses",
         "notifier",
         "terminal-notifier"

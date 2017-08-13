@@ -495,7 +495,7 @@ export const exec = (cmd, args, opts) => {
 
     let removeExitHandler;
     if (parsed.opts.cleanup) {
-        removeExitHandler = adone.appinstance.subscribe("exit", () => {
+        removeExitHandler = adone.application.instance.subscribe("exit", () => {
             spawned.kill();
         });
     }

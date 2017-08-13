@@ -50,7 +50,7 @@ export const getNamespaceInfo = (nsName) => {
     return namespace;
 };
 
-export const getNamespacePaths = async ({ name, relative = true, pathPrefix = std.path.join(adone.appinstance.adoneRootPath, "lib") }) => {
+export const getNamespacePaths = async ({ name, relative = true, pathPrefix = std.path.join(adone.application.instance.adoneRootPath, "lib") }) => {
     const { namespace } = parseName(name);
     if (namespace === "") {
         return [];

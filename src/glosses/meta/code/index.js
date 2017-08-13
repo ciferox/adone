@@ -2,7 +2,7 @@ const { is, std } = adone;
 
 export class Inspector {
     constructor() {
-        this.path = std.path.join(adone.appinstance.adoneRootPath, "src");
+        this.path = std.path.join(adone.application.instance.adoneRootPath, "src");
         this.namespaces = new Map();
     }
 

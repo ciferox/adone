@@ -1,4 +1,4 @@
-adone.run({
+adone.application.run({
     main() {
         const contentLength = 128 * 1024;
 

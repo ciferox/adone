@@ -1,4 +1,4 @@
-adone.run({
+adone.application.run({
     main() {
         // simulated download, passing the chunk lengths to tick()
 

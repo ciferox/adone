@@ -1,4 +1,4 @@
-adone.run({
+adone.application.run({
     main() {
         const likesFood = (aFood) => {
             return function (answers) {

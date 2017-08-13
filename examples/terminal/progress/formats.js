@@ -69,7 +69,7 @@ bar5 = () => {
     }, 300);
 };
 
-adone.run({
+adone.application.run({
     main() {
         bar = adone.terminal.progress({
             schema: " :bar :title",

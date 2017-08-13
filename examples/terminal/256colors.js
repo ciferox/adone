@@ -1,6 +1,6 @@
 const { terminal, vendor: { lodash: _ } } = adone;
 
-adone.run({
+adone.application.run({
     main() {
         const fromRange = (start, end, fn) => {
             _.range(start, end).forEach(fn);

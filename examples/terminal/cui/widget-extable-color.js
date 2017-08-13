@@ -1,4 +1,4 @@
-adone.run({
+adone.application.run({
     main() {
         const screen = new adone.cui.Screen();
         const colors = require("colors/safe");

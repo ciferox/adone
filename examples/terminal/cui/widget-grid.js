@@ -1,4 +1,4 @@
-adone.run({
+adone.application.run({
     main() {
         const screen = new adone.cui.Screen();
         const grid = new adone.cui.layout.Grid({ rows: 12, cols: 12, screen });

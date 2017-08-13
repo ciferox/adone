@@ -2,7 +2,7 @@ const adone = require("../..").default;
 
 const { is } = adone;
 
-adone.run({
+adone.application.run({
     initialize() {
         this.defineArguments({
             commands: [

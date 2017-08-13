@@ -1,4 +1,4 @@
-adone.run({
+adone.application.run({
     main() {
         this.directionsPrompt = {
             type: "list",

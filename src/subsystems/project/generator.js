@@ -33,7 +33,7 @@ const DEST_OPTIONS = {
 
 export class Generator {
     constructor() {
-        this.templatesPath = path.join(adone.appinstance.adoneEtcPath, "subsystems", "project", "templates");
+        this.templatesPath = path.join(adone.application.instance.adoneEtcPath, "subsystems", "project", "templates");
         this.adoneConfPath = path.join(this.templatesPath, "adone.conf");
 
         this.gitFiles = [];
@@ -451,7 +451,7 @@ export class Generator {
         bar.update(0);
 
         try {
-            const logoContent = await fs.readFile(path.join(adone.appinstance.adoneEtcPath, "media", "adone.txt"), { encoding: "utf8" });
+            const logoContent = await fs.readFile(path.join(adone.application.instance.adoneEtcPath, "media", "adone.txt"), { encoding: "utf8" });
             const repository = await git.Repository.init(projectPath, 0);
             const index = await repository.refreshIndex();
             for (const file of this.gitFiles) {
@@ -461,7 +461,7 @@ export class Generator {
             const oid = await index.writeTree();
             const author = git.Signature.create("ADONE", "info@adone.io", time, zoneOffset);
             const committer = git.Signature.create("ADONE", "info@adone.io", time, zoneOffset);
-            await repository.createCommit("HEAD", author, committer, `initial commit from adone/cli:\n\n  $ adone ${adone.appinstance.argv.join(" ")}\n\n${logoContent}`, oid, []);
+            await repository.createCommit("HEAD", author, committer, `initial commit from adone/cli:\n\n  $ adone ${adone.application.instance.argv.join(" ")}\n\n${logoContent}`, oid, []);
             bar.setSchema(" :spinner git initialized");
             bar.complete(true);
         } catch (err) {

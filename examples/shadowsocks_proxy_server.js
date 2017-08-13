@@ -1,4 +1,4 @@
-adone.run({
+adone.application.run({
     async main() {
         const server = new adone.net.proxy.shadowsocks.Server({
             password: "test"
