@@ -89,5 +89,6 @@ Prompt.prompts = adone.lazify({
     password: "./species/password",
     editor: "./species/editor",
     autocomplete: "./species/autocomplete",
-    directory: "./species/directory"
+    directory: "./species/directory",
+    datetime: "./species/datetime"
 }, null, require);

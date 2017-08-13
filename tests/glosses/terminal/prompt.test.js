@@ -58,6 +58,19 @@ describe("terminal", "prompt", () => {
         }
     };
 
+    const emitTab = () => emitKeypress("", { name: "tab" });
+    const emitDown = () => emitKeypress("", { name: "down" });
+    const emitUp = () => emitKeypress("", { name: "up" });
+    const emitEnter = () => emitLines(1);
+    const emitChars = async (word, _delay = 5) => {
+        for (const ch of word) {
+            // eslint-disable-next-line
+            await emitKeypress(ch, _delay);
+        }
+    };
+    const emitNonChar = () => emitKeypress("", { shift: true });
+
+
     describe("prompt", () => {
         it("should take a prompts array and return answers", async () => {
             const prompts = [{
@@ -449,6 +462,11 @@ describe("terminal", "prompt", () => {
                 message: "message",
                 name: "name",
                 default: "Inquirer"
+            },
+            autocomplete: {
+                message: "message",
+                name: "name",
+                source: async () => ["foo", terminal.separator(), "bar", "bum"]
             }
         };
     });
@@ -1553,6 +1571,296 @@ describe("terminal", "prompt", () => {
                 emitLines(1);
                 const answer = await promise;
                 expect(answer).to.be.equal("foo");
+            });
+        });
+
+        describe("autocomplete", () => {
+            const createAutocomplete = (fixture) => new Terminal.Prompt.prompts.autocomplete(terminal, fixture);
+
+            const runAutocomplete = async (prompt) => {
+                const promise = prompt.run();
+                await delay(10); // output choices
+                return promise;
+            };
+
+            const waitForChoices = () => delay(20);
+
+            beforeEach(function () {
+                this.fixture = adone.util.clone(fixtures.autocomplete);
+                this.prompt = createAutocomplete(this.fixture);
+            });
+
+            describe("suggestOnly = true", () => {
+                beforeEach(function () {
+                    this.fixture.suggestOnly = true;
+                    this.prompt = createAutocomplete(this.fixture);
+                });
+
+                it("applies filter", async function () {
+                    this.fixture.filter = (val) => val.slice(0, 2);
+                    this.prompt = createAutocomplete(this.fixture);
+                    const promise = runAutocomplete(this.prompt);
+                    emitLines(["banana"]);
+                    const answer = await promise;
+                    expect(answer).to.be.equal("ba");
+                });
+
+                it("applies filter async with promise", async function () {
+                    this.fixture.filter = async (val) => val.slice(0, 2);
+                    this.prompt = createAutocomplete(this.fixture);
+                    const promise = this.prompt.run();
+                    emitLines(["banana"]);
+                    const answer = await promise;
+                    expect(answer).to.be.equal("ba");
+                });
+
+                describe("when tab pressed", () => {
+                    it("autocompletes the value selected in the list", async function () {
+                        const promise = this.prompt.run();
+                        await waitForChoices();
+                        emitTab();
+                        emitLines(1);
+                        const answer = await promise;
+                        expect(answer).to.be.equal("foo");
+                    });
+
+                    it("accepts any input", async function () {
+                        const promise = this.prompt.run();
+                        emitLines(["banana"]);
+                        const answer = await promise;
+                        expect(answer).to.be.equal("banana");
+                    });
+
+                });
+            });
+
+            describe("suggestOnly = false", () => {
+                beforeEach(function () {
+                    this.fixture.suggestOnly = false;
+                    this.prompt = createAutocomplete(this.fixture);
+                });
+
+                it("applies filter", async function () {
+                    this.fixture.filter = (val) => val.slice(0, 2);
+                    this.prompt = createAutocomplete(this.fixture);
+                    const promise = this.prompt.run();
+                    await waitForChoices();
+                    await emitDown();
+                    await emitEnter();
+                    const answer = await promise;
+                    expect(answer).to.be.equal("ba");
+                });
+
+                it("applies filter async with promise", async function () {
+                    this.fixture.filter = async (val) => val.slice(0, 2);
+                    this.prompt = createAutocomplete(this.fixture);
+                    const promise = this.prompt.run();
+                    await waitForChoices();
+                    await emitDown();
+                    await emitEnter();
+                    const answer = await promise;
+                    expect(answer).to.be.equal("ba");
+                });
+
+                it("requires a name", () => {
+                    expect(() => {
+                        createAutocomplete({
+                            message: "foo",
+                            source: async () => []
+                        });
+                    }).to.throw(/name/);
+                });
+
+                it("requires a message", () => {
+                    expect(() => {
+                        createAutocomplete({
+                            name: "foo",
+                            source: async () => []
+                        });
+                    }).to.throw(/message/);
+                });
+
+                it("requires a source parameter", () => {
+                    expect(() => {
+                        createAutocomplete({
+                            name: "foo",
+                            message: "foo"
+                        });
+                    }).to.throw(/source/);
+                });
+
+                it("immediately calls source with null", async function () {
+                    this.fixture.source = stub().returns(Promise.resolve(["foo"]));
+                    this.prompt = createAutocomplete(this.fixture);
+                    this.prompt.run();
+                    await waitForChoices();
+                    expect(this.fixture.source).to.have.been.calledOnce;
+                    expect(this.fixture.source).to.have.been.calledWithExactly(undefined, null);
+                });
+
+                describe("when it has some results", () => {
+                    it("should move selected cursor on keypress", async function () {
+                        const promise = this.prompt.run();
+                        await waitForChoices();
+                        emitDown();
+                        emitEnter();
+                        const answer = await promise;
+                        expect(answer).to.be.equal("bar");
+                    });
+
+                    it("moves up and down", async function () {
+                        const promise = this.prompt.run();
+                        await waitForChoices();
+                        emitDown();
+                        emitDown();
+                        emitUp();
+                        emitEnter();
+                        const answer = await promise;
+                        expect(answer).to.be.equal("bar");
+                    });
+
+                    it("loops choices going down", async function () {
+                        const promise = this.prompt.run();
+                        await waitForChoices();
+                        emitDown();
+                        emitDown();
+                        emitDown();
+                        emitEnter();
+                        const answer = await promise;
+                        expect(answer).to.be.equal("foo");
+                    });
+
+                    it("loops choices going up", async function () {
+                        const promise = this.prompt.run();
+                        await waitForChoices();
+                        emitUp();
+                        emitEnter();
+                        const answer = await promise;
+                        expect(answer).to.be.equal("bum");
+                    });
+                });
+
+
+                describe("searching", () => {
+                    let source;
+
+                    beforeEach(function () {
+                        source = this.fixture.source = stub().returns(["foo", "bar"]);
+                        this.prompt = createAutocomplete(this.fixture);
+                    });
+
+                    it("searches after each char when user types", async function () {
+                        this.prompt.run();
+                        await waitForChoices();
+                        expect(source).to.have.been.called.calledWithExactly(undefined, null);
+                        await emitChars("a");
+                        expect(source).to.have.been.called.calledWithExactly(undefined, "a");
+                        await emitChars("bba");
+                        expect(source).to.have.been.called.calledWithExactly(undefined, "ab");
+                        expect(source).to.have.been.called.calledWithExactly(undefined, "abb");
+                        expect(source).to.have.been.called.calledWithExactly(undefined, "abba");
+                        expect(source).to.have.callCount(5);
+                    });
+
+                    it("does not search again if same searchterm (not input added)", async function () {
+                        this.prompt.run();
+                        await waitForChoices();
+                        await emitChars("ice");
+                        expect(source).to.have.callCount(4); // null + i + c + e
+                        emitNonChar();
+                        expect(source).to.have.callCount(4);
+                    });
+                });
+
+                describe("submit", () => {
+                    let source;
+
+                    describe("without choices", () => {
+                        beforeEach(function () {
+                            source = this.fixture.source = stub().returns([]);
+                            this.prompt = createAutocomplete(this.fixture);
+                        });
+
+                        it("searches again, since not possible to select something that does not exist", async function () {
+                            this.prompt.run();
+                            await waitForChoices;
+                            expect(source).to.have.been.calledOnce;
+                            await emitEnter();
+                            expect(source).to.have.been.calledTwice;
+                        });
+                    });
+
+                    describe("with suggestOnly", () => {
+                        const answerValue = {};
+
+                        beforeEach(function () {
+                            this.fixture.suggestOnly = true;
+                            source = this.fixture.source = stub().returns([{
+                                name: "foo",
+                                value: answerValue,
+                                short: "short"
+                            }]);
+                            this.prompt = createAutocomplete(this.fixture);
+                        });
+
+                        it("selects the actual value typed", async function () {
+                            const promise = this.prompt.run();
+                            await emitChars("foo2");
+                            await emitEnter();
+                            const answer = await promise;
+                            expect(answer).to.be.equal("foo2");
+                        });
+                    });
+
+                    describe("with choices", () => {
+                        let source;
+                        const answerValue = {};
+
+                        beforeEach(function () {
+                            source = this.fixture.source = stub().returns([{
+                                name: "foo",
+                                value: answerValue,
+                                short: "short"
+                            }]);
+                            this.prompt = createAutocomplete(this.fixture);
+                        });
+
+                        it("stores the value as the answer and status to answered", async function () {
+                            const promise = this.prompt.run();
+                            await waitForChoices();
+                            await emitEnter();
+                            const answer = await promise;
+                            expect(answer).to.be.equal(answerValue);
+                            expect(this.prompt.answer).to.be.equal(answerValue);
+                            expect(this.prompt.shortAnswer).to.be.equal("short");
+                            expect(this.prompt.answerName).to.be.equal("foo");
+                            expect(this.prompt.status).to.be.equal("answered");
+                        });
+
+                        describe("after selecting", () => {
+                            beforeEach(async function () {
+                                this.prompt.run();
+                                await waitForChoices();
+                                await emitEnter();
+                                source.reset();
+                            });
+
+                            it("stops searching on typing", async () => {
+                                await emitChars("test");
+                                expect(source).to.have.not.been.called;
+                            });
+
+                            it("does not change answer on enter", async function () {
+                                await emitEnter();
+                                expect(source).to.have.not.been.called;
+                                expect(this.prompt.answer).to.be.equal(answerValue);
+                                expect(this.prompt.status).to.be.equal("answered");
+                            });
+                        });
+                    });
+
+                });
+
             });
         });
     });

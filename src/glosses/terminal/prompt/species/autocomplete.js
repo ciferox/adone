@@ -1,4 +1,4 @@
-const { is, Terminal } = adone;
+const { x, is, Terminal } = adone;
 
 /**
  * Function for rendering list choices
@@ -193,7 +193,7 @@ export default class AutocompletePrompt extends Terminal.BasePrompt {
         }
 
         self.lastSearchTerm = searchTerm;
-        const thisPromise = self.opt.source(self.answers, searchTerm);
+        const thisPromise = new Promise((resolve) => resolve(self.opt.source(self.answers, searchTerm)));
 
         //store this promise for check in the callback
         self.lastPromise = thisPromise;
@@ -202,6 +202,10 @@ export default class AutocompletePrompt extends Terminal.BasePrompt {
             //if another search is triggered before the current search finishes, don't set results
             if (thisPromise !== self.lastPromise) {
                 return;
+            }
+
+            if (!is.array(choices)) {
+                throw new x.IllegalState("Source should return an array");
             }
 
             choices = new Terminal.Choices(this.terminal, choices.filter((choice) => {
