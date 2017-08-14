@@ -37,7 +37,7 @@ export default class Configuration {
 
             // Merge with user-defined configuration.
             try {
-                await this.app.loadConfig("services", { path: "omnitron.services", userConfig: true });
+                await this.app.loadConfig("services", { path: "omnitron.services", userDefined: true });
             } catch (err) {
                 if (!(err instanceof adone.x.NotFound)) {
                     adone.error(err);
@@ -59,7 +59,7 @@ export default class Configuration {
 
             // Load configuration of gates.
             try {
-                await this.app.loadConfig("gates", { path: "omnitron.gates", userConfig: true });
+                await this.app.loadConfig("gates", { path: "omnitron.gates", userDefined: true });
             } catch (err) {
                 if (err instanceof adone.x.NotFound) {
                     this.app.config.omnitron.gates = [

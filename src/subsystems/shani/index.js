@@ -1,11 +1,8 @@
-const { shani: { Engine, consoleReporter, simpleReporter, minimalReporter }, is, std: { path, child_process: cp } } = adone;
+const { std: { path, child_process: cp } } = adone;
 
 export default class ShaniCLI extends adone.application.Subsystem {
     initialize() {
         this.defineCommand({
-            name: "shani",
-            group: "subsystem",
-            help: "cli interface to 'shani' test framework",
             arguments: [
                 { name: "tests", holder: "test", help: "a test file", nargs: "*" }
             ],

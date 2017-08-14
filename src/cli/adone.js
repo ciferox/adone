@@ -2,19 +2,19 @@
 
 import adone from "adone";
 
-const { is, std, application } = adone;
+const {
+    is,
+    std,
+    application
+} = adone;
 
 export default class AdoneCLI extends application.Application {
     async initialize() {
-        // Loading subsystems
+        // Loading cli configuration
         await this.loadConfig("cli", {
             defaults: true,
-            userConfig: true
+            userDefined: true
         });
-
-        for (const ss of this.config.cli.subsystems) {
-            this.loadSubsystem(adone.std.path.isAbsolute(ss.path) ? ss.path : adone.std.path.join(this.adoneRootPath, ss.path));
-        }
 
         this.defineArguments({
             commandsGroups: this.config.cli.groups,
@@ -88,6 +88,10 @@ export default class AdoneCLI extends application.Application {
                 }
             ]
         });
+
+        for (const ss of this.config.cli.subsystems) {
+            this.lazyLoadSubsystem(ss);
+        }
     }
 
     uninitialize() {
@@ -115,7 +119,7 @@ export default class AdoneCLI extends application.Application {
 
         const outPath = opts.get("out");
         if (is.string(outPath)) {
-            const ext = adone.std.path.extname(outPath);
+            const ext = std.path.extname(outPath);
             const options = {
 
             };
@@ -144,10 +148,10 @@ export default class AdoneCLI extends application.Application {
 
             // eslint-disable-next-line
             if (await adone.fs.is.directory(oldPaths[i])) {
-                paths.push(adone.std.path.join(oldPaths[i], "**/*"));
+                paths.push(std.path.join(oldPaths[i], "**/*"));
             } else {
                 paths.push(oldPaths[i]);
-                const fileExt = adone.std.path.extname(oldPaths[i]).replace(".", "");
+                const fileExt = std.path.extname(oldPaths[i]).replace(".", "");
                 if (!exts.includes(fileExt)) {
                     exts.push(fileExt);
                 }
@@ -171,7 +175,7 @@ export default class AdoneCLI extends application.Application {
         let filesCount = 0;
 
         const search = adone.fs.glob(paths, { nodir: true }).map((path) => {
-            const fileExt = adone.std.path.extname(path).replace(".", "");
+            const fileExt = std.path.extname(path).replace(".", "");
             if (exts.includes(fileExt)) {
                 return {
                     ext: fileExt,

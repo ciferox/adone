@@ -17,9 +17,6 @@ const runtime = adone.lazify({
 export default class extends adone.application.Subsystem {
     initialize() {
         this.defineCommand({
-            name: ["omnitron", "om", "0"],
-            group: "subsystem",
-            help: "Omnitron common service",
             options: [
                 {
                     name: "--version",

@@ -12,12 +12,6 @@ adone.application.run({
         this.defineArguments({
             arguments: [
                 {
-                    name: "path",
-                    type: String,
-                    required: true,
-                    help: "path to 'package.json'"
-                },
-                {
                     name: "type",
                     choices: ["major", "minor", "patch", "premajor", "preminor", "prepatch", "prerelease"],
                     default: "patch",
@@ -38,7 +32,7 @@ adone.application.run({
     },
     async main(args, opts) {
         try {
-            const packageJsonPath = args.get("path");
+            const packageJsonPath = path.join(this.adoneRootPath, "package.json");
             const type = args.get("type");
             const identifier = opts.get("preid");
             const packageJson = await configuration.load(packageJsonPath);

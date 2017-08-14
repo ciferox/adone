@@ -1,4 +1,12 @@
-const { is, x, text, lazify, util, terminal } = adone;
+const {
+    is,
+    x,
+    std,
+    text,
+    lazify,
+    util,
+    terminal
+} = adone;
 
 const lazy = lazify({
     report: "./report"
@@ -65,6 +73,7 @@ adone.tag.set(Subsystem, adone.tag.SUBSYSTEM);
 const INTERNAL = Symbol.for("adone:application:internal");
 const UNNAMED = Symbol.for("adone:application:unnamed");
 const EMPTY_VALUE = Symbol.for("adone:application:emptyValue");
+const COMMAND = Symbol.for("adone:application:command");
 
 const escape = (x) => x.replace(/%/g, "%%");
 
@@ -757,6 +766,7 @@ class Command {
         this.names = options.name;
         this.help = options.help;
         this.description = options.description || options.help;
+        this.loader = options.loader;
         this.handler = options.handler;
         this.parent = null;
         this._subsystem = null;
@@ -1260,11 +1270,11 @@ const mergeGroupsLists = (a, b) => {
     return result;
 };
 
-export let instance = null;
+export let instance = null; // eslint-disable-line
 
 export class Application extends Subsystem {
     constructor({
-        name = adone.std.path.basename(process.argv[1], adone.std.path.extname(process.argv[1])),
+        name = std.path.basename(process.argv[1], std.path.extname(process.argv[1])),
         interactive = true,
         argv = process.argv.slice(2),
         commandRequired = false } = {}) {
@@ -1288,9 +1298,9 @@ export class Application extends Subsystem {
         this.interactive = interactive;
 
         this._subsystems = [];
-        this.adoneRootPath = adone.std.path.resolve(__dirname, "../../..");
-        this.adoneEtcPath = adone.std.path.resolve(this.adoneRootPath, "etc");
-        this.defaultConfigsPath = adone.std.path.resolve(this.adoneEtcPath, "configs");
+        this.adoneRootPath = std.path.resolve(__dirname, "../../..");
+        this.adoneEtcPath = std.path.resolve(this.adoneRootPath, "etc");
+        this.defaultConfigsPath = std.path.resolve(this.adoneEtcPath, "configs");
 
         this.setMaxListeners(Infinity);
         this.defineMainCommand();
@@ -1413,30 +1423,44 @@ export class Application extends Subsystem {
         }
     }
 
-    async loadConfig(name, { path = name, defaults = false, userConfig = false, ext = "json" } = {}) {
+    async loadConfig(name, { path = name, defaults = false, userDefined = false, ext = "json" } = {}) {
         const basename = `${name}.${ext}`;
         if (defaults) {
-            const defaultConfigPath = adone.std.path.join(this.defaultConfigsPath, basename);
+            const defaultConfigPath = std.path.join(this.defaultConfigsPath, basename);
             await this.config.load(defaultConfigPath, path);
-            if (userConfig) {
+            if (userDefined) {
                 await adone.fs.copy(defaultConfigPath, this.config.adone.configsPath);
             }
         }
-        if (userConfig) {
-            const configPath = adone.std.path.join(this.config.adone.configsPath, basename);
+        if (userDefined) {
+            const configPath = std.path.join(this.config.adone.configsPath, basename);
             await this.config.load(configPath, path);
         }
     }
 
     saveConfig(name, { path = name, ext = "json", space = 4 } = {}) {
-        return this.config.save(adone.std.path.join(this.config.adone.configsPath, `${name}.${ext}`), path, { space });
+        return this.config.save(std.path.join(this.config.adone.configsPath, `${name}.${ext}`), path, { space });
+    }
+
+    lazyLoadSubsystem(ssConfig) {
+        const ssCommand = {
+            name: ssConfig.name,
+            help: ssConfig.description,
+            group: "subsystem",
+            loader: () => {
+                const absPath = std.path.isAbsolute(ssConfig.path) ? ssConfig.path : std.path.join(this.adoneRootPath, ssConfig.path);
+                return this.loadSubsystem(absPath);
+            }
+        };
+        if (is.string(ssConfig.group)) {
+            ssCommand.group = ssConfig.group;
+        }
+
+        this.defineCommand(ssCommand);
     }
 
     loadSubsystem(subsystem) {
         if (is.string(subsystem)) {
-            if (!adone.std.path.isAbsolute(subsystem)) {
-                subsystem = adone.std.path.resolve(process.cwd(), subsystem);
-            }
             let Subsystem = require(subsystem);
             if (Subsystem.__esModule === true) {
                 Subsystem = Subsystem.default;
@@ -1446,6 +1470,8 @@ export class Application extends Subsystem {
         subsystem.app = this;
 
         this._subsystems.push(subsystem);
+
+        return subsystem;
     }
 
     exitOnSignal(...names) {
@@ -1548,7 +1574,7 @@ export class Application extends Subsystem {
         }
         let currentPath = __dirname;
         for (; ;) {
-            const packagePath = adone.std.path.join(currentPath, "package.json");
+            const packagePath = std.path.join(currentPath, "package.json");
             try {
                 // eslint-disable-next-line
                 const data = JSON.parse(await adone.fs.readFile(packagePath));
@@ -1556,7 +1582,7 @@ export class Application extends Subsystem {
             } catch (err) {
                 //
             }
-            const nextPath = adone.std.path.dirname(currentPath);
+            const nextPath = std.path.dirname(currentPath);
             if (currentPath === nextPath) { // that was the root
                 break;
             }
@@ -1612,23 +1638,17 @@ export class Application extends Subsystem {
                 [INTERNAL]: true
             });
         }
-        this._mainCommand = this._parseCommand(options, null);
+        this._mainCommand = this._createCommand(options, null);
         this._mainCommand._subsystem = this;
         return this;
     }
 
-    _parseCommand(schema, parent) {
-        const commandParams = adone.o({
-            addHelp: true
-        }, schema);
-        if (schema.handler) {
-            commandParams.handler = schema.handler;
-        }
-
-        const cmd = new Command({
+    _createCommand(schema, parent) {
+        const command = new Command({
             name: schema.name,
             help: schema.help,
             description: schema.description,
+            loader: schema.loader,
             handler: schema.handler,
             group: schema.group,
             match: schema.match,
@@ -1636,23 +1656,32 @@ export class Application extends Subsystem {
         });
 
         if (parent) {
-            parent.addCommand(cmd);
+            parent.addCommand(command);
+        }
+
+        this._initCommand(command, schema, true);
+        return command;
+    }
+
+    _initCommand(command, schema, addHelp) {
+        if (schema.handler) {
+            command.handler = schema.handler;
         }
 
         if (schema.arguments) {
             for (const arg of schema.arguments) {
-                cmd.addArgument(arg);
+                command.addArgument(arg);
             }
         }
 
         if (schema.optionsGroups) {
             for (const group of schema.optionsGroups) {
-                cmd.addOptionsGroup(group);
+                command.addOptionsGroup(group);
             }
         }
 
         const options = schema.options ? schema.options.slice() : [];
-        if (commandParams.addHelp) {
+        if (addHelp) {
             options.unshift({
                 name: ["--help", "-h"],
                 help: "Show this message",
@@ -1664,21 +1693,20 @@ export class Application extends Subsystem {
             });
         }
         for (const opts of options) {
-            cmd.addOption(opts);
+            command.addOption(opts);
         }
 
         if (schema.commandsGroups) {
             for (const group of schema.commandsGroups) {
-                cmd.addCommandsGroup(group);
+                command.addCommandsGroup(group);
             }
         }
 
         if (schema.commands) {
-            for (const cmdParams of schema.commands) {
-                this._parseCommand(cmdParams, cmd);
+            for (const subCmdParams of schema.commands) {
+                this._createCommand(subCmdParams, command);
             }
         }
-        return cmd;
     }
 
     _getCommand(chain, create = false) {
@@ -1694,7 +1722,7 @@ export class Application extends Subsystem {
             }
             if (!subcmd) {
                 if (create) {
-                    subcmd = this._parseCommand({ name }, cmd);
+                    subcmd = this._createCommand({ name }, cmd);
                 } else {
                     throw new x.NotExists(`No such command: ${chain.slice(0, i + 1).join(" ")}`);
                 }
@@ -1717,10 +1745,16 @@ export class Application extends Subsystem {
         let subsystem;
         if (is.subsystem(commandsChain[0])) {
             subsystem = commandsChain.shift();
+            const command = subsystem[COMMAND];
+            if (command instanceof Command) {
+                this._initCommand(command, cmdParams, false);
+                command._subsystem = subsystem;
+                return;
+            }
         }
 
         const cmd = this._getCommand(commandsChain, true);
-        const newCommand = this._parseCommand(cmdParams, cmd);
+        const newCommand = this._createCommand(cmdParams, cmd);
         newCommand._subsystem = subsystem;
     }
 
@@ -1884,6 +1918,12 @@ export class Application extends Subsystem {
                             if (commandMatch !== false) {
                                 match = commandMatch;
                                 command = commands[j];
+                                if (is.function(command.loader)) {
+                                    // We have lazy loaded subsystem, try load it and reinit command
+                                    const subsystem = command.loader();
+                                    subsystem[COMMAND] = command;
+                                    await subsystem.initialize();
+                                }
                                 state.push("start command");
                                 nextPart();
                                 continue next;
@@ -2242,7 +2282,7 @@ export const run = async (App, ignoreArgs = false) => {
             if (adone.is.array(adone.__argv__)) {
                 process.argv = adone.__argv__;
                 app.argv = process.argv.slice(2);
-                app._name = adone.std.path.basename(process.argv[1], adone.std.path.extname(process.argv[1]));
+                app._name = std.path.basename(process.argv[1], std.path.extname(process.argv[1]));
                 delete adone.__argv__;
             }
 

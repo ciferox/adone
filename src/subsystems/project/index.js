@@ -38,9 +38,6 @@ const parseRestArgs = (args) => {
 export default class extends adone.application.Subsystem {
     initialize() {
         this.defineCommand({
-            name: "project",
-            group: "subsystem",
-            help: "cli interface for adone project management",
             arguments: [
             ],
             options: [

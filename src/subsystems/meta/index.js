@@ -6,9 +6,6 @@ import Bundler from "./bundler";
 export default class extends adone.application.Subsystem {
     initialize() {
         this.defineCommand({
-            name: "meta",
-            group: "subsystem",
-            help: "cli interface for adone meta-management",
             handler: this.metaCommand,
             arguments: [
                 {

@@ -3,9 +3,6 @@ const { is, js: { compiler: { parse, traverse } } } = adone;
 export default class extends adone.application.Subsystem {
     initialize() {
         this.defineCommand({
-            name: "specter",
-            group: "subsystem",
-            help: "cli interface for unified system management",
             arguments: [
                 {
                     name: "host",
