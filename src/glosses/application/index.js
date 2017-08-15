@@ -1447,10 +1447,7 @@ export class Application extends Subsystem {
             name: ssConfig.name,
             help: ssConfig.description,
             group: "subsystem",
-            loader: () => {
-                const absPath = std.path.isAbsolute(ssConfig.path) ? ssConfig.path : std.path.join(this.adoneRootPath, ssConfig.path);
-                return this.loadSubsystem(absPath);
-            }
+            loader: () => this.loadSubsystem(std.path.isAbsolute(ssConfig.path) ? ssConfig.path : std.path.join(this.adoneRootPath, ssConfig.path));
         };
         if (is.string(ssConfig.group)) {
             ssCommand.group = ssConfig.group;

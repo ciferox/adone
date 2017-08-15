@@ -64,8 +64,8 @@ export default class extends adone.application.Subsystem {
                     options: [
                         {
                             name: "--frontend",
-                            choices: ["ng"],
-                            default: "ng",
+                            choices: ["generic", "ng"],
+                            default: "generic",
                             nargs: "?",
                             help: "name of frontend library"
                         },
@@ -200,7 +200,7 @@ export default class extends adone.application.Subsystem {
             sourceDir: opts.has("sourceDir") ? opts.get("sourceDir") : null,
             skipGit: opts.has("skipGit"),
             editor: opts.has("editor") ? opts.get("editor") : null,
-            frontend: opts.has("frontend") && ["webapp", "webapplication"].includes(type) ? opts.get("frontend") : null,
+            frontend: ["webapp", "webapplication"].includes(type) ? opts.get("frontend") : null,
             netron: opts.has("netron")
         });
     }

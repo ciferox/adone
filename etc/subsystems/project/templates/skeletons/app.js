@@ -2,7 +2,11 @@
 
 import adone from "adone";
 
-class {{ name }} extends adone.application.Application {
+const {
+    application
+} = adone;
+
+class {{ name }} extends application.Application {
     initialize() {
         // NOTE: application initialization logic
         // NOTE: define application command line interface
@@ -13,7 +17,7 @@ class {{ name }} extends adone.application.Application {
 
         adone.log("My awesome application");
 
-        return adone.application.Application.SUCCESS; // exit code
+        return application.Application.SUCCESS; // exit code
     }
 
     uninitialize() {
@@ -21,4 +25,4 @@ class {{ name }} extends adone.application.Application {
     }
 }
 
-adone.application.run({{ name }});
+application.run({{ name }});

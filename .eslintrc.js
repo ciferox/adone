@@ -114,7 +114,7 @@ module.exports = {
         "yoda": "error",
         "no-throw-literal": "error",
         "max-len": ["error", {
-            "code": 150,
+            "code": 200,
             "ignoreStrings": true,
             "ignoreRegExpLiterals": true,
             "ignoreTemplateLiterals": true,

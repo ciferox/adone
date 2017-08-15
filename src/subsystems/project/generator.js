@@ -126,10 +126,10 @@ export class Generator {
 
             switch (type) {
                 case "app":
-                    await this._createApp(name, projectName, projectPath, { sourceDir, skipGit });
+                    await this._createApp({ name, projectName, projectPath, sourceDir, skipGit });
                     break;
                 case "webapp":
-                    await this._createWebApp(name, projectName, projectPath, { sourceDir, skipGit, frontend, netron });
+                    await this._createWebApp({ name, projectName, projectPath, sourceDir, skipGit, frontend, netron });
                     break;
             }
 
@@ -147,11 +147,11 @@ export class Generator {
         }
     }
 
-    async _createApp(name, projectName, projectPath, { sourceDir, skipGit }) {
+    async _createApp({ name, projectName, projectPath, sourceDir, skipGit }) {
         this.gitFiles.push("package-lock.json");
 
         // backend files
-        await this._installApp(name, projectName, projectPath, { sourceDir, skipGit });
+        await this._installApp({ name, projectName, projectPath, sourceDir, skipGit });
 
         // npm
         await this._installNpms(projectPath);
@@ -162,13 +162,10 @@ export class Generator {
         }
     }
 
-    async _createWebApp(name, projectName, projectPath, { sourceDir, skipGit, frontend, netron }) {
+    async _createWebApp({ name, projectName, projectPath, sourceDir, skipGit, frontend, netron }) {
         const withFrontend = is.string(frontend);
         const backendPath = withFrontend ? path.join(projectPath, BACKEND_NAME) : projectPath;
         this.gitFiles.push(path.join(withFrontend ? BACKEND_NAME : "", "package-lock.json"));
-        if (withFrontend) {
-            this.gitFiles.push(path.join(FRONTEND_NAME, "package-lock.json"));
-        }
 
         let bundleDir;
         if (netron) {
@@ -178,7 +175,7 @@ export class Generator {
         }
 
         // backend files
-        await this._installWebappBackend(name, projectName, projectPath, { sourceDir, skipGit, frontend, netron, bundleDir, withFrontend, backendPath });
+        await this._installWebappBackend({ name, projectName, projectPath, sourceDir, skipGit, frontend, netron, bundleDir, withFrontend, backendPath });
 
         // backend npms
         await this._installNpms(backendPath);
@@ -195,11 +192,15 @@ export class Generator {
 
         // git
         if (!skipGit) {
+            const packageLockPath = path.join(FRONTEND_NAME, "package-lock.json");
+            if (withFrontend && await fs.exists(packageLockPath)) {
+                this.gitFiles.push(packageLockPath);
+            }
             await this._initializeGit(projectPath);
         }
     }
 
-    async _installApp(name, projectName, projectPath, { sourceDir, skipGit }) {
+    async _installApp({ name, projectName, projectPath, sourceDir, skipGit }) {
         const bar = adone.terminal.progress({
             schema: " :spinner installing files"
         });
@@ -208,34 +209,22 @@ export class Generator {
         try {
             const appRelPath = path.join(sourceDir, "app.js");
 
-            await fast.src(["skeletons/app.js", "common/**/*"], {
+            // common
+            await this._copyCommonFiles({ name, appRelPath, destPath: projectPath, sourceDir, skipGit, withFrontend: false });
+
+            // src
+            await fast.src("skeletons/app.js", {
                 cwd: this.templatesPath
-            }).filter((x) => {
-                if (x.basename === ".gitignore" && skipGit) {
-                    return false;
-                }
-                return true;
             }).mapIf((x) => x.basename === "app.js", async (x) => {
                 x.relative = appRelPath;
                 x.contents = Buffer.from(await nunjucks.renderString(x.contents.toString(), {
                     name: `${projectName}Application`
                 }));
                 return x;
-            }).mapIf((x) => x.basename === "package.json", (x) => {
-                const packageJson = JSON.parse(x.contents.toString());
-                packageJson.name = name;
-                packageJson.main = `"./bin/${name}.js"`;
-                x.contents = Buffer.from(JSON.stringify(packageJson, null, "  "));
-                return x;
-            }).mapIf((x) => x.basename === "adone.conf.js", async (x) => {
-                x.contents = Buffer.from(await nunjucks.renderString(x.contents.toString(), {
-                    name,
-                    from: appRelPath
-                }));
-                return x;
             }).dest(projectPath, DEST_OPTIONS).through((x) => {
                 this._addFileToGit(x.relative);
             });
+
 
             bar.setSchema(" :spinner files installed");
             bar.complete(true);
@@ -246,7 +235,7 @@ export class Generator {
         }
     }
 
-    async _installWebappBackend(name, projectName, projectPath, { sourceDir, skipGit, frontend, netron, bundleDir, withFrontend, backendPath }) {
+    async _installWebappBackend({ name, projectName, projectPath, sourceDir, skipGit, frontend, netron, bundleDir, withFrontend, backendPath }) {
         const bar = adone.terminal.progress({
             schema: " :spinner installing backend files"
         });
@@ -257,38 +246,7 @@ export class Generator {
             const appRelPath = path.join(sourceDir, "app.js");
 
             // common
-            await fast.src("common/**/*", {
-                cwd: this.templatesPath
-            }).filter((x) => {
-                if (x.basename === ".gitignore" && skipGit) {
-                    return false;
-                }
-                return true;
-            }).mapIf((x) => x.basename === "package.json", (x) => {
-                const packageJson = JSON.parse(x.contents.toString());
-                packageJson.name = name;
-                packageJson.main = `./bin/${name}.js`;
-                x.contents = Buffer.from(JSON.stringify(packageJson, null, "  "));
-                return x;
-            }).mapIf((x) => x.basename === "adone.conf.js", async (x) => {
-                const bin = await nunjucks.renderString(await fs.readFile(path.join(this.adoneConfPath, "bin.nunjucks"), { encoding: "utf8" }), {
-                    fromBin: appRelPath
-                });
-                const lib = await nunjucks.renderString(await fs.readFile(path.join(this.adoneConfPath, "lib.nunjucks"), { encoding: "utf8" }), {
-                    fromBin: appRelPath,
-                    fromLib: path.join(sourceDir, "**", "*")
-                });
-
-                x.contents = Buffer.from(await nunjucks.renderString(x.contents.toString(), {
-                    bin,
-                    lib,
-                    name,
-                    from: appRelPath
-                }));
-                return x;
-            }).dest(backendPath, DEST_OPTIONS).through((x) => {
-                this._addFileToGit(withFrontend ? path.join(BACKEND_NAME, x.relative) : x.relative);
-            });
+            await this._copyCommonFiles({ name, appRelPath, destPath: backendPath, sourceDir, skipGit, withFrontend });
 
             // src
             await fast.src(`skeletons/webapp/backend/${bundleDir}/src/**/*`, {
@@ -335,6 +293,41 @@ export class Generator {
         }
     }
 
+    _copyCommonFiles({ name, appRelPath, destPath, sourceDir, skipGit, withFrontend }) {
+        return fast.src("common/**/*", {
+            cwd: this.templatesPath
+        }).filter((x) => {
+            if (x.basename === ".gitignore" && skipGit) {
+                return false;
+            }
+            return true;
+        }).mapIf((x) => x.basename === "package.json", (x) => {
+            const packageJson = JSON.parse(x.contents.toString());
+            packageJson.name = name;
+            packageJson.main = `./bin/${name}.js`;
+            x.contents = Buffer.from(JSON.stringify(packageJson, null, "  "));
+            return x;
+        }).mapIf((x) => x.basename === "adone.conf.js", async (x) => {
+            const bin = await nunjucks.renderString(await fs.readFile(path.join(this.adoneConfPath, "bin.nunjucks"), { encoding: "utf8" }), {
+                fromBin: appRelPath
+            });
+            const lib = await nunjucks.renderString(await fs.readFile(path.join(this.adoneConfPath, "lib.nunjucks"), { encoding: "utf8" }), {
+                fromBin: appRelPath,
+                fromLib: path.join(sourceDir, "**", "*")
+            });
+
+            x.contents = Buffer.from(await nunjucks.renderString(x.contents.toString(), {
+                bin,
+                lib,
+                name,
+                from: appRelPath
+            }));
+            return x;
+        }).dest(destPath, DEST_OPTIONS).through((x) => {
+            this._addFileToGit(withFrontend ? path.join(BACKEND_NAME, x.relative) : x.relative);
+        });
+    }
+
     async _installWebappFrontend(name, projectPath, frotnendPath, { frontend, netron, bundleDir }) {
         const bar = adone.terminal.progress({
             schema: " :spinner installing frontend files"
@@ -343,16 +336,19 @@ export class Generator {
 
         try {
             const packageJsonPath = path.join(frotnendPath, "package.json");
-            const packageJson = new configuration.FileConfiguration();
+            let packageJson = null;
 
             switch (frontend) {
                 case "ng": {
                     await this._initNgFrontend(name, projectPath, frotnendPath);
 
-                    // add additional packages
-                    await packageJson.load(packageJsonPath);
-                    for (const [name, version] of Object.entries(NG_ADDITIONAL_NPM_PACKAGES)) {
-                        packageJson.dependencies[name] = version;
+                    if (fs.exists(packageJsonPath)) {
+                        // add additional packages
+                        packageJson = new configuration.FileConfiguration();
+                        await packageJson.load(packageJsonPath);
+                        for (const [name, version] of Object.entries(NG_ADDITIONAL_NPM_PACKAGES)) {
+                            packageJson.dependencies[name] = version;
+                        }
                     }
 
                     // rewrite files
@@ -376,13 +372,15 @@ export class Generator {
                 }
             }
 
-            if (netron) {
-                for (const [name, version] of Object.entries(NETRON_PACKAGES)) {
-                    packageJson.dependencies[name] = version;
+            if (!is.null(packageJson)) {
+                if (netron) {
+                    for (const [name, version] of Object.entries(NETRON_PACKAGES)) {
+                        packageJson.dependencies[name] = version;
+                    }
                 }
+
+                await packageJson.save(packageJsonPath, null, { space: "  " });
             }
-            
-            await packageJson.save(packageJsonPath, null, { space: "  " });
 
             bar.setSchema(" :spinner frontend files installed");
             bar.complete(true);
@@ -422,22 +420,24 @@ export class Generator {
     }
 
     async _installNpms(projectPath) {
-        const bar = adone.terminal.progress({
-            schema: " :spinner installing npm packages"
-        });
-        bar.update(0);
-
-        try {
-            await exec("npm", ["i", "--save-dev"], {
-                cwd: projectPath
+        if (await fs.exists(path.join(projectPath, "package.json"))) {
+            const bar = adone.terminal.progress({
+                schema: " :spinner installing npm packages"
             });
+            bar.update(0);
 
-            bar.setSchema(" :spinner npm packages installed");
-            bar.complete(true);
-        } catch (err) {
-            bar.setSchema(" :spinner npm packages installation failed");
-            bar.complete(false);
-            throw err;
+            try {
+                await exec("npm", ["i", "--save-dev"], {
+                    cwd: projectPath
+                });
+
+                bar.setSchema(" :spinner npm packages installed");
+                bar.complete(true);
+            } catch (err) {
+                bar.setSchema(" :spinner npm packages installation failed");
+                bar.complete(false);
+                throw err;
+            }
         }
     }
 

@@ -1,6 +1,6 @@
 {
   "name": "adone",
-  "description": "The generalized core of 'hyper-fractal systems' infrastructure.",
+  "description": "The generalized core of 'cyber-fractal systems' infrastructure.",
   "version": "0.6.55",
   "author": "Adone Core Team <info@adone.io>",
   "license": "Apache-2.0",
@@ -81,7 +81,6 @@
     "qlobber": "~0.7.0",
     "retimer": "^1.0.1",
     "rimraf": "^2.2.8",
-    "rx": "^4.1.0",
     "seedrandom": "2.4.3",
     "self-path": "^1.0.0",
     "shortid": "^2.2.4",
