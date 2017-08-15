@@ -15,6 +15,8 @@ export default class LinkedList {
         if (!maxLength || !is.finite(maxLength)) {
             maxLength = LinkedList.DEFAULT_LENGTH;
             this.autoresize = true;
+        } else {
+            this.autoresize = false;
         }
 
         this.head = new Node();
@@ -51,7 +53,7 @@ export default class LinkedList {
 
     resize(newLength) {
         if (newLength === this.maxLength) {
-            return;
+            return this;
         }
         if (newLength < this.maxLength) {
             if (newLength > this.length) {
@@ -83,6 +85,7 @@ export default class LinkedList {
             this.head.prev = cursor;
         }
         this.maxLength = newLength;
+        return this;
     }
 
     push(value) {
@@ -247,11 +250,19 @@ export default class LinkedList {
         return null;
     }
 
+    forEach(callback) {
+        let cursor = this.head;
+        for (let i = 0; i < this.length; ++i) {
+            callback(cursor.value, i); // eslint-disable-line callback-return
+            cursor = cursor.next;
+        }
+    }
+
     map(fn) {
         const res = new LinkedList();
-        for (const value of this) {
-            res.push(fn(value));
-        }
+        this.forEach((value, idx) => {
+            res.push(fn(value, idx));
+        });
         return res;
     }
 }

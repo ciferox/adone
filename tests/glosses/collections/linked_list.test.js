@@ -373,14 +373,14 @@ describe("collection", "LinkedList", () => {
         describe("autoresize", () => {
             it("should do autoresizing if the size is not provided", () => {
                 const list = new LinkedList();
-                expect(list.maxLength).to.be.equal(16);  // the default value
+                expect(list.maxLength).to.be.equal(16); // the default value
                 for (let i = 0; i < 16; ++i) {
                     list.push(i);
                 }
                 expect(list.full).to.be.true;
                 list.push(16);
                 expect(list.length).to.be.equal(17);
-                expect(list.maxLength).to.be.equal(32);  // x2
+                expect(list.maxLength).to.be.equal(32); // x2
                 rolling(list, [...new Array(list.maxLength)].map((_, i) => i > 16 ? empty : i));
                 for (let i = 0; i < 15; ++i) {
                     list.push(17 + i);
@@ -388,7 +388,7 @@ describe("collection", "LinkedList", () => {
                 expect(list.full).to.be.true;
                 list.push(32);
                 expect(list.length).to.be.equal(33);
-                expect(list.maxLength).to.be.equal(64);  // x2
+                expect(list.maxLength).to.be.equal(64); // x2
                 rolling(list, [...new Array(list.maxLength)].map((_, i) => i > 32 ? empty : i));
             });
 
@@ -608,6 +608,64 @@ describe("collection", "LinkedList", () => {
         it("should return null there are no elements", () => {
             const list = new LinkedList();
             expect(list.nextNode()).to.be.null;
+        });
+    });
+
+    describe("forEach", () => {
+        it("should invoke a callback for each element", () => {
+            const t = [];
+            const a = new LinkedList();
+            a.push(1);
+            a.push(2);
+            a.push(3);
+            a.forEach((e) => t.push(e));
+            expect(t).to.be.deep.equal([1, 2, 3]);
+        });
+
+        it("should pass the index as the second argument", () => {
+            const t = [];
+            const a = new LinkedList();
+            a.push(1);
+            a.push(2);
+            a.push(3);
+            a.forEach((...args) => t.push(args));
+            expect(t).to.be.deep.equal([[1, 0], [2, 1], [3, 2]]);
+        });
+
+        it("should not call the callback for an empty list", () => {
+            const s = spy();
+            new LinkedList().forEach(s);
+            expect(s).to.have.not.been.called;
+        });
+    });
+
+    describe("map", () => {
+        it("should map a list", () => {
+            const a = new LinkedList();
+            a.push(1);
+            a.push(2);
+            a.push(3);
+            expect(a.map((e) => e + 1).toArray()).to.be.deep.equal([2, 3, 4]);
+        });
+
+        it("should pass the index as the second element", () => {
+            const a = new LinkedList();
+            a.push(1);
+            a.push(2);
+            a.push(3);
+            let i = 0;
+            const b = a.map((e, idx) => {
+                expect(idx).to.be.equal(i++);
+                return e + 1;
+            });
+            expect(b.toArray()).to.be.deep.equal([2, 3, 4]);
+            expect(i).to.be.equal(3);
+        });
+
+        it("should not call the callback for an empty list", () => {
+            const s = spy();
+            new LinkedList().map(s);
+            expect(s).to.have.not.been.called;
         });
     });
 });
