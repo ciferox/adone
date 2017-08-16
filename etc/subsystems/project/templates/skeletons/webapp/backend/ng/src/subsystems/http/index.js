@@ -1,5 +1,6 @@
 const {
     is,
+    application,
     net: { util, http }
 } = adone;
 
@@ -7,14 +8,17 @@ const {
     server: { middleware }
 } = http;
 
-export class HttpDispatcher {
-    constructor(app, config) {
-        this.app = app;
-        this.config = config;
+export default class extends application.Subsystem {
+    constructor() {
+        super();
+
+        this.config = null;
         this.server = null;
     }
 
     async initialize() {
+        this.config = this.app._.config;
+        
         const router = new http.server.middleware.router.Router();
 
         // Netron configuration handler
@@ -35,7 +39,7 @@ export class HttpDispatcher {
             .use(middleware.rewrite(/^(?!^\/[^\\]*\.(\w+)$).*$/, "/index.html"))
             .use(middleware.serve(this.config.http.publicDir))
             .bind(this.config.http);
-        
+
         adone.info(`http server started at ${util.humanizeAddr("http", this.config.http.port, this.config.http.host)}`);
     }
 

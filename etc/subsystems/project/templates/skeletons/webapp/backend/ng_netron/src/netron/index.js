@@ -1,1 +1,0 @@
-export { NetronDispatcher } from "./dispatcher";

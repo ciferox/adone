@@ -1,5 +1,6 @@
 const {
     is,
+    application,
     net: { util, http }
 } = adone;
 
@@ -7,13 +8,17 @@ const {
     server: { middleware }
 } = http;
 
-export class HttpDispatcher {
-    constructor(app, config) {
-        this.config = config;
+export default class extends application.Subsystem {
+    constructor() {
+        super();
+
+        this.config = null;
         this.server = null;
     }
 
     async initialize() {
+        this.config = this.app._.config;
+        
         // const router = new http.server.middleware.router.Router();
 
         // create http server and attach common middlewares

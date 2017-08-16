@@ -1,15 +1,14 @@
 #!/usr/bin/env node
 
 import adone from "adone";
-import { HttpDispatcher } from "../lib/http";
-import { NetronDispatcher } from "../lib/netron";
 
 const {
     is,
+    application,
     std: { path }
 } = adone;
 
-class {{ name }} extends adone.application.Application {
+class AdoneIoApplication extends application.Application {
     async initialize() {
         // register signals for application graceful shutdown
         this.exitOnSignal("SIGQUIT", "SIGTERM", "SIGINT");
@@ -28,29 +27,27 @@ class {{ name }} extends adone.application.Application {
         // load application default configuration available as 'this.config.app.*'.
         await this.config.load(path.join(__dirname, "..", "etc", "config.js"), "app");
 
-        adone.info("initialized");
+        adone.info("application initialized");
     }
 
     async main(args, opts) {
         const env = opts.get("env");
         this._.config = this.config.app.envs[env];
 
-        if (is.plainObject(this._.config.http)) {
-            this._.httpDispatcher = new HttpDispatcher(this, this._.config);
-            await this._.httpDispatcher.initialize();
-        }
-
-        this._.netronDispatcher = new NetronDispatcher(this, this._.config);
-        await this._.netronDispatcher.initialize();
+        // load and initialize subsystems
+        await this.loadSubsystemsFrom(path.join(__dirname, "..", "lib", "subsystems"), (name) => {
+            switch (name) {
+                case "http":
+                    return is.plainObject(this._.config.http);
+                default:
+                    return true;
+            }
+        });
     }
 
     async uninitialize() {
-        if (is.plainObject(this._.config.http)) {
-            await this._.httpDispatcher.uninitialize();
-        }
-
-        adone.info("uninitialized");
+        adone.info("application uninitialized");
     }
 }
 
-adone.application.run({{ name }});
+application.run(AdoneIoApplication);

@@ -1,6 +1,7 @@
 const {
     is,
     x,
+    fs,
     std,
     text,
     lazify,
@@ -1141,16 +1142,16 @@ class Command {
                         message: arg.getShortHelpMessage()
                     };
                 }), {
-                    model: [
-                        { id: "left-spacing", width: 4 },
-                        { id: "names", maxWidth: 40, wordwrap: true },
-                        { id: "between-cells", width: 2 },
-                        { id: "message", wordwrap: false }
-                    ],
-                    width: "100%",
-                    borderless: true,
-                    noHeader: true
-                }));
+                        model: [
+                            { id: "left-spacing", width: 4 },
+                            { id: "names", maxWidth: 40, wordwrap: true },
+                            { id: "between-cells", width: 2 },
+                            { id: "message", wordwrap: false }
+                        ],
+                        width: "100%",
+                        borderless: true,
+                        noHeader: true
+                    }));
             }
             if (options.length) {
                 if (this.arguments.length) {
@@ -1181,16 +1182,16 @@ class Command {
                             message: opt.getShortHelpMessage()
                         };
                     }), {
-                        model: [
-                            { id: "left-spacing", width: 4 },
-                            { id: "names", maxWidth: 40, wordwrap: true },
-                            { id: "between-cells", width: 2 },
-                            { id: "message", wordwrap: false }
-                        ],
-                        width: "100%",
-                        borderless: true,
-                        noHeader: true
-                    }));
+                            model: [
+                                { id: "left-spacing", width: 4 },
+                                { id: "names", maxWidth: 40, wordwrap: true },
+                                { id: "between-cells", width: 2 },
+                                { id: "message", wordwrap: false }
+                            ],
+                            width: "100%",
+                            borderless: true,
+                            noHeader: true
+                        }));
                 }
             }
             if (commands.length) {
@@ -1222,16 +1223,16 @@ class Command {
                             message: cmd.getShortHelpMessage()
                         };
                     }), {
-                        model: [
-                            { id: "left-spacing", width: 4 },
-                            { id: "names", maxWidth: 40, wordwrap: true },
-                            { id: "between-cells", width: 2 },
-                            { id: "message", wordwrap: true }
-                        ],
-                        width: "100%",
-                        borderless: true,
-                        noHeader: true
-                    }));
+                            model: [
+                                { id: "left-spacing", width: 4 },
+                                { id: "names", maxWidth: 40, wordwrap: true },
+                                { id: "between-cells", width: 2 },
+                                { id: "message", wordwrap: true }
+                            ],
+                            width: "100%",
+                            borderless: true,
+                            noHeader: true
+                        }));
                 }
             }
         }
@@ -1442,12 +1443,18 @@ export class Application extends Subsystem {
         return this.config.save(std.path.join(this.config.adone.configsPath, `${name}.${ext}`), path, { space });
     }
 
+    /**
+     * Lazily loads subsystems from specified path.
+     * 
+     * @param {object} ssConfig Subsystem object.
+     * @returns {void}
+     */
     lazyLoadSubsystem(ssConfig) {
         const ssCommand = {
             name: ssConfig.name,
             help: ssConfig.description,
             group: "subsystem",
-            loader: () => this.loadSubsystem(std.path.isAbsolute(ssConfig.path) ? ssConfig.path : std.path.join(this.adoneRootPath, ssConfig.path));
+            loader: () => this.loadSubsystem(std.path.isAbsolute(ssConfig.path) ? ssConfig.path : std.path.join(this.adoneRootPath, ssConfig.path))
         };
         if (is.string(ssConfig.group)) {
             ssCommand.group = ssConfig.group;
@@ -1456,6 +1463,12 @@ export class Application extends Subsystem {
         this.defineCommand(ssCommand);
     }
 
+    /**
+     * Loads subsystems from specified path.
+     * 
+     * @param {string|adone.application.Subsystem} subsystem Subsystem instance or absolute path.
+     * @returns {adone.application.Subsystem}
+     */
     loadSubsystem(subsystem) {
         if (is.string(subsystem)) {
             let Subsystem = require(subsystem);
@@ -1469,6 +1482,33 @@ export class Application extends Subsystem {
         this._subsystems.push(subsystem);
 
         return subsystem;
+    }
+
+    /**
+     * Loads subsystems from specified path.
+     * 
+     * @param {string} path Subsystems path.
+     * @param {array|function} filter Array of subsystem names or filter [async] function '(name) => true | false'.
+     * @param {boolean} [initialize = true] Whether subsystems should be initialized.
+     * @returns {Promise<void>}
+     */
+    async loadSubsystemsFrom(path, filter, { initialize = true } = {}) {
+        const names = await fs.readdir(path);
+
+        if (is.array(filter)) {
+            const targetNames = filter;
+            filter = (name) => targetNames.includes(name);
+        }
+
+        for (const name of names) {
+            // eslint-disable-next-line
+            if (await filter(name)) {
+                const subsystem = this.loadSubsystem(std.path.join(path, name));
+                if (initialize) {
+                    await subsystem.initialize(); // eslint-disable-line
+                }
+            }
+        }
     }
 
     exitOnSignal(...names) {

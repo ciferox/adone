@@ -1,5 +1,6 @@
 const {
     is,
+    application,
     net,
     netron,
     omnitron
@@ -10,16 +11,19 @@ const contexts = adone.lazify({
     info: "./contexts/info"
 }, null, require);
 
-export class NetronDispatcher {
-    constructor(app, config) {
-        this.app = app;
-        this.config = config;
+export default class extends application.Subsystem {
+    constructor() {
+        super();
+
+        this.config = null;
         this.omniDispatcher = null;
         this.omnitronPeer = null;
         this.gateManager = null;
     }
 
     async initialize() {
+        this.config = this.app._.config;
+
         if (is.plainObject(this.config.netron.omnitronGate) && is.exist(this.config.netron.omnitronGate.port)) {
             const gate = this.config.netron.omnitronGate;
             // Connect to omnitron
