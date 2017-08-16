@@ -743,13 +743,13 @@ export const parseSize = (str) => {
     return Math.floor(value * units.get(unit.toLowerCase()));
 };
 
-export const clone = (obj, { deep = true } = {}) => {
+export const clone = (obj, { deep = true, nonPlainObjects = false, onlyEnumerable = true } = {}) => {
     if (!is.object(obj)) {
         return obj;
     }
     if (is.array(obj)) {
         if (deep) {
-            return obj.map((x) => clone(x, { deep }));
+            return obj.map((x) => clone(x, { deep, nonPlainObjects, onlyEnumerable }));
         }
         return obj.slice(0);
     }
@@ -759,9 +759,18 @@ export const clone = (obj, { deep = true } = {}) => {
     if (is.regexp(obj)) {
         return new RegExp(obj.source, obj.flags);
     }
+    if (is.buffer(obj)) {
+        return Buffer.from(obj);
+    }
+    if (is.date(obj)) {
+        return new Date(obj.getTime());
+    }
+    if (!nonPlainObjects && !is.plainObject(obj)) {
+        return obj;
+    }
     const res = {};
-    for (const key of keys(obj)) {
-        res[key] = deep ? clone(obj[key], { deep }) : obj[key];
+    for (const key of keys(obj, { onlyEnumerable })) {
+        res[key] = deep ? clone(obj[key], { deep, nonPlainObjects, onlyEnumerable }) : obj[key];
     }
     return res;
 };

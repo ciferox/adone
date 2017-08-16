@@ -1038,6 +1038,71 @@ describe("util", () => {
             t.a.b.d = 2;
             expect(t).not.to.be.deep.equal(s);
         });
+
+        it("should clone a date object", () => {
+            const d = new Date();
+            const s = { a: d };
+            const t = clone(s);
+            expect(t.a).to.be.a("date");
+            expect(t.a.getTime()).to.be.equal(d.getTime());
+            d.setHours(22);
+            expect(t.a.getTime()).not.to.be.equal(d.getTime());
+        });
+
+        it("should clone a buffer object", () => {
+            const b = Buffer.from("hello");
+            const s = { a: b };
+            const t = clone(s);
+            expect(t.a).to.be.deep.equal(b);
+            b.writeInt32LE(100500, 0);
+            expect(t.a).not.to.be.deep.equal(b);
+        });
+
+        it("should not clone non-enumerable properies when onlyEnumerable = false", () => {
+            const s = {};
+            Object.defineProperty(s, "a", {
+                enumerable: false,
+                value: 42
+            });
+            const t = clone(s);
+            expect(t).to.be.empty;
+        });
+
+        it("should clone non-enumerable properies when onlyEnumerable = true", () => {
+            const s = {};
+            Object.defineProperty(s, "a", {
+                enumerable: false,
+                value: 42
+            });
+            const t = clone(s, { onlyEnumerable: false });
+            expect(t).to.be.deep.equal({ a: 42 });
+        });
+
+        it("should not touch non-plain objects", () => {
+            class Thing {
+                say() {
+                    console.log("hello");
+                }
+            }
+            const thing = new Thing();
+            const s = { a: { b: [thing] } };
+            const t = clone(s);
+            expect(t.a.b[0]).to.be.equal(thing);
+        });
+
+        it("should try to clone non-plain objects when nonPlainObject = true", () => {
+            class Thing {
+                constructor() {
+                    this.property = 42;
+                }
+            }
+            const thing = new Thing();
+            const s = { a: { b: [thing] } };
+            const t = clone(s, { onlyEnumerable: false, nonPlainObjects: true });
+            expect(t.a.b[0]).to.exist;
+            expect(t.a.b[0]).not.to.be.equal(thing);
+            expect(t.a.b[0]).to.be.deep.equal({ property: 42 });
+        });
     });
 
     describe("zip", () => {
