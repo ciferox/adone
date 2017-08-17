@@ -9,7 +9,11 @@ export default class AdoneManager {
         // this.nodeModulesDir = new fs.Directory(std.path.resolve(fs.homeDir(), ".node_modules"));
         this.nodeModulesDir = new fs.Directory("/usr/local/lib/node");
         this.adoneVersion = adone.package.version;
-        this.name = `adone-v${this.adoneVersion}-${this.os}-${this.arch}.tar`;
+        this.name = `adone-v${this.adoneVersion}-${this.os}-${this.arch}-node-v${this.nodeVersion}.tar`;
+    }
+
+    get nodeVersion() {
+        return `${process.version.match(/^v(\d+)\./)[1]}.x`;
     }
 
     get arch() {

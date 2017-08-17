@@ -199,6 +199,12 @@ export default class extends adone.application.Subsystem {
                             type: String,
                             default: "latest",
                             help: "Build name: latest, stable, 'X.Y.Z'"
+                        },
+                        {
+                            name: "--url",
+                            type: String,
+                            default: "https://adone.io/dist",
+                            help: "Upload to"
                         }
                     ],
                     handler: this.publishCommand
@@ -459,7 +465,16 @@ export default class extends adone.application.Subsystem {
                 bar.total = st.size;
                 bar.setSchema(`:spinner Uploading {bold}${fileName}{/} {green-fg}:filled{/}{gray-fg}:blank{/} :current/:total :elapsed`);
 
-                return adone.net.http.client.request.post(`https://adone.io/dist?subject=adone&build=${build}&version=${builder.adoneVersion}&type=${type}&os=${builder.os}&arch=${builder.arch}`, std.fs.createReadStream(filePath), {
+                return adone.net.http.client.request.post(opts.get("url"), std.fs.createReadStream(filePath), {
+                    params: {
+                        subject: "adone",
+                        build,
+                        version: builder.adoneVersion,
+                        type,
+                        os: builder.os,
+                        arch: builder.arch,
+                        node: builder.nodeVersion
+                    },
                     headers: {
                         "Content-Type": "application/octet-stream",
                         "Content-Length": st.size
