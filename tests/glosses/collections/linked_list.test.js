@@ -637,6 +637,40 @@ describe("collection", "LinkedList", () => {
             new LinkedList().forEach(s);
             expect(s).to.have.not.been.called;
         });
+
+        it("should stop iterating if the given function returns false", () => {
+            const t = [];
+            const a = new LinkedList();
+            a.push(1);
+            a.push(2);
+            a.push(3);
+            a.push(4);
+            a.push(5);
+            a.forEach((e) => {
+                t.push(e);
+                return e !== 2;
+            });
+            expect(t).to.be.deep.equal([1, 2]);
+        });
+
+        it("should not stop iterating if the given function returns falsy value but not false", () => {
+            const t = [];
+            const a = new LinkedList();
+            a.push(1);
+            a.push(2);
+            a.push(3);
+            a.push(4);
+            a.push(5);
+            a.push(6);
+            a.push(7);
+            const returnValues = [null, undefined, 0, "", false];
+            a.forEach((e) => {
+                t.push(e);
+                return returnValues.shift();
+
+            });
+            expect(t).to.be.deep.equal([1, 2, 3, 4, 5]);
+        });
     });
 
     describe("map", () => {

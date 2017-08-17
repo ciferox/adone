@@ -253,7 +253,10 @@ export default class LinkedList {
     forEach(callback) {
         let cursor = this.head;
         for (let i = 0; i < this.length; ++i) {
-            callback(cursor.value, i); // eslint-disable-line callback-return
+            // eslint-disable-next-line callback-return
+            if (callback(cursor.value, i) === false) {
+                break;
+            }
             cursor = cursor.next;
         }
     }
