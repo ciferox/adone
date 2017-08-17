@@ -41,7 +41,7 @@ You can read more at [avm](https://github.com/ciferox/avm) page.
 
 ## What about ADONE codebase and third-party code?
 
-One of the primary goal of **ADONE** is self-sufficiency and full support of JavaScript `async/await` feature. We want **ADONE** to be the most complete codebase, using which you can develop absolutely any projects We abandoned third-party dependencies and the use of npm-ecosystem for the following reasons:
+One of the primary goal of **ADONE** is self-sufficiency and full support of JavaScript `async/await` and other ES-features. We want **ADONE** to be the most complete and strongest codebase, using which you can develop absolutely any projects. We abandoned third-party dependencies and the use of npm-ecosystem for the following reasons:
 - Lack of a common coding standard in different modules.
 - Most of the code is written using old JavaScript features.
 - Many projects are not supported by the authors properly and in accordance with the requirements that we constantly improve.
