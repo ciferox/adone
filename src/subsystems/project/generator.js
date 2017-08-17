@@ -3,7 +3,7 @@ const {
     fs,
     regex,
     text,
-    std: { path },
+    std,
     vcs: { git },
     terminal,
     fast,
@@ -33,8 +33,8 @@ const DEST_OPTIONS = {
 
 export class Generator {
     constructor() {
-        this.templatesPath = path.join(adone.application.instance.adoneEtcPath, "subsystems", "project", "templates");
-        this.adoneConfPath = path.join(this.templatesPath, "adone.conf");
+        this.templatesPath = std.path.join(adone.application.instance.adoneEtcPath, "subsystems", "project", "templates");
+        this.adoneConfPath = std.path.join(this.templatesPath, "adone.conf");
 
         this.gitFiles = [];
 
@@ -51,16 +51,16 @@ export class Generator {
 
             let basePath;
             if (is.string(cwd)) {
-                basePath = path.resolve(cwd);
+                basePath = std.path.resolve(cwd);
             } else {
                 basePath = process.cwd();
             }
-            const fullPath = dir ? path.join(basePath, name, "index.js") : path.join(basePath, `${name}.js`);
-            const appRelPath = dir ? path.join(name, "index.js") : `${name}.js`;
+            const fullPath = dir ? std.path.join(basePath, name, "index.js") : std.path.join(basePath, `${name}.js`);
+            const appRelPath = dir ? std.path.join(name, "index.js") : `${name}.js`;
 
             if (dir) {
-                if ((await fs.exists(path.dirname(fullPath)))) {
-                    throw new adone.x.Exists(`Directory '${path.dirname(fullPath)}' already exists\n`);
+                if ((await fs.exists(std.path.dirname(fullPath)))) {
+                    throw new adone.x.Exists(`Directory '${std.path.dirname(fullPath)}' already exists\n`);
                 }
             } else {
                 if ((await fs.exists(fullPath))) {
@@ -99,7 +99,7 @@ export class Generator {
                 throw new adone.x.Incorrect(`Incorrect name of project: ${name}`);
             }
 
-            projectPath = path.join(process.cwd(), name);
+            projectPath = std.path.join(process.cwd(), name);
 
             if ((await fs.exists(projectPath))) {
                 throw new adone.x.Exists(`Directory '${name}' already exists`);
@@ -116,10 +116,10 @@ export class Generator {
             if (is.nil(sourceDir)) {
                 sourceDir = "src";
             } else {
-                if (path.isAbsolute(sourceDir)) {
+                if (std.path.isAbsolute(sourceDir)) {
                     throw new adone.x.NotValid(`Invalid source directory: ${sourceDir}`);
                 }
-                sourceDir = path.normalize(sourceDir);
+                sourceDir = std.path.normalize(sourceDir);
             }
 
             const projectName = text.capitalize(text.toCamelCase(name));
@@ -164,8 +164,7 @@ export class Generator {
 
     async _createWebApp({ name, projectName, projectPath, sourceDir, skipGit, frontend, netron }) {
         const withFrontend = is.string(frontend);
-        const backendPath = withFrontend ? path.join(projectPath, BACKEND_NAME) : projectPath;
-        this.gitFiles.push(path.join(withFrontend ? BACKEND_NAME : "", "package-lock.json"));
+        const backendPath = withFrontend ? std.path.join(projectPath, BACKEND_NAME) : projectPath;
 
         let bundleDir;
         if (netron) {
@@ -182,7 +181,7 @@ export class Generator {
 
         // frontend
         if (withFrontend) {
-            const frotnendPath = path.join(projectPath, FRONTEND_NAME);
+            const frotnendPath = std.path.join(projectPath, FRONTEND_NAME);
 
             await this._installWebappFrontend(name, projectPath, frotnendPath, { frontend, netron, bundleDir });
 
@@ -192,7 +191,7 @@ export class Generator {
 
         // git
         if (!skipGit) {
-            const packageLockPath = path.join(FRONTEND_NAME, "package-lock.json");
+            const packageLockPath = std.path.join(FRONTEND_NAME, "package-lock.json");
             if (withFrontend && await fs.exists(packageLockPath)) {
                 this.gitFiles.push(packageLockPath);
             }
@@ -207,7 +206,7 @@ export class Generator {
         bar.update(0);
 
         try {
-            const appRelPath = path.join(sourceDir, "app.js");
+            const appRelPath = std.path.join(sourceDir, "app.js");
 
             // common
             await this._copyCommonFiles({ name, appRelPath, destPath: projectPath, sourceDir, skipGit, withFrontend: false });
@@ -243,7 +242,7 @@ export class Generator {
 
         try {
 
-            const appRelPath = path.join(sourceDir, "app.js");
+            const appRelPath = std.path.join(sourceDir, "app.js");
 
             // common
             await this._copyCommonFiles({ name, appRelPath, destPath: backendPath, sourceDir, skipGit, withFrontend });
@@ -252,7 +251,7 @@ export class Generator {
             await fast.src(`skeletons/webapp/backend/${bundleDir}/src/**/*`, {
                 cwd: this.templatesPath
             }).map((x) => {
-                x.relative = path.join(sourceDir, x.relative);
+                x.relative = std.path.join(sourceDir, x.relative);
                 return x;
             }).mapIf((x) => x.basename === "app.js", async (x) => {
                 x.contents = Buffer.from(await nunjucks.renderString(x.contents.toString(), {
@@ -260,14 +259,14 @@ export class Generator {
                 }));
                 return x;
             }).dest(backendPath, DEST_OPTIONS).through((x) => {
-                this._addFileToGit(withFrontend ? path.join(BACKEND_NAME, x.relative) : x.relative);
+                this._addFileToGit(withFrontend ? std.path.join(BACKEND_NAME, x.relative) : x.relative);
             });
 
             // configs
             await fast.src(`configs/webapp/${bundleDir}/**/*`, {
                 cwd: this.templatesPath
             }).dest(backendPath, DEST_OPTIONS).through((x) => {
-                this._addFileToGit(withFrontend ? path.join(BACKEND_NAME, x.relative) : x.relative);
+                this._addFileToGit(withFrontend ? std.path.join(BACKEND_NAME, x.relative) : x.relative);
             });
 
             // readme
@@ -308,12 +307,12 @@ export class Generator {
             x.contents = Buffer.from(JSON.stringify(packageJson, null, "  "));
             return x;
         }).mapIf((x) => x.basename === "adone.conf.js", async (x) => {
-            const bin = await nunjucks.renderString(await fs.readFile(path.join(this.adoneConfPath, "bin.nunjucks"), { encoding: "utf8" }), {
+            const bin = await nunjucks.renderString(await fs.readFile(std.path.join(this.adoneConfPath, "bin.nunjucks"), { encoding: "utf8" }), {
                 fromBin: appRelPath
             });
-            const lib = await nunjucks.renderString(await fs.readFile(path.join(this.adoneConfPath, "lib.nunjucks"), { encoding: "utf8" }), {
+            const lib = await nunjucks.renderString(await fs.readFile(std.path.join(this.adoneConfPath, "lib.nunjucks"), { encoding: "utf8" }), {
                 fromBin: appRelPath,
-                fromLib: path.join(sourceDir, "**", "*")
+                fromLib: std.path.join(sourceDir, "**", "*")
             });
 
             x.contents = Buffer.from(await nunjucks.renderString(x.contents.toString(), {
@@ -324,7 +323,7 @@ export class Generator {
             }));
             return x;
         }).dest(destPath, DEST_OPTIONS).through((x) => {
-            this._addFileToGit(withFrontend ? path.join(BACKEND_NAME, x.relative) : x.relative);
+            this._addFileToGit(withFrontend ? std.path.join(BACKEND_NAME, x.relative) : x.relative);
         });
     }
 
@@ -335,7 +334,7 @@ export class Generator {
         bar.update(0);
 
         try {
-            const packageJsonPath = path.join(frotnendPath, "package.json");
+            const packageJsonPath = std.path.join(frotnendPath, "package.json");
             let packageJson = null;
 
             switch (frontend) {
@@ -356,14 +355,14 @@ export class Generator {
                         cwd: this.templatesPath
                     }).map((x) => {
                         if (x.relative === "proxy.conf.js") {
-                            this._addFileToGit(path.join(FRONTEND_NAME, x.relative));
+                            this._addFileToGit(std.path.join(FRONTEND_NAME, x.relative));
                         }
                         return x;
                     }).dest(frotnendPath, DEST_OPTIONS);
 
                     // added lodash script
                     const ngCliJson = new configuration.FileConfiguration();
-                    const ngCliJsonPath = path.join(frotnendPath, ".angular-cli.json");
+                    const ngCliJsonPath = std.path.join(frotnendPath, ".angular-cli.json");
                     await ngCliJson.load(ngCliJsonPath);
                     ngCliJson.apps[0].scripts.push("../node_modules/lodash/lodash.min.js");
                     await ngCliJson.save(ngCliJsonPath, null, { space: "  " });
@@ -405,7 +404,7 @@ export class Generator {
             const walker = tree.walk();
 
             walker.on("entry", (entry) => {
-                this.gitFiles.push(path.join(FRONTEND_NAME, entry.path()));
+                this.gitFiles.push(std.path.join(FRONTEND_NAME, entry.path()));
             });
             walker.on("end", (/*entries*/) => {
                 resolve();
@@ -416,11 +415,11 @@ export class Generator {
         }));
 
         // Remove frontend .git
-        await fs.rm(path.join(frotnendPath, ".git"));
+        await fs.rm(std.path.join(frotnendPath, ".git"));
     }
 
     async _installNpms(projectPath) {
-        if (await fs.exists(path.join(projectPath, "package.json"))) {
+        if (await fs.exists(std.path.join(projectPath, "package.json"))) {
             const bar = adone.terminal.progress({
                 schema: " :spinner installing npm packages"
             });
@@ -430,6 +429,9 @@ export class Generator {
                 await exec("npm", ["i", "--save-dev"], {
                     cwd: projectPath
                 });
+
+                adone.log(std.path.join(std.path.basename(projectPath), "package-lock.json"));
+                this.gitFiles.push(std.path.join(std.path.basename(projectPath), "package-lock.json"));
 
                 bar.setSchema(" :spinner npm packages installed");
                 bar.complete(true);
@@ -451,7 +453,7 @@ export class Generator {
         bar.update(0);
 
         try {
-            const logoContent = await fs.readFile(path.join(adone.application.instance.adoneEtcPath, "media", "adone.txt"), { encoding: "utf8" });
+            const logoContent = await fs.readFile(std.path.join(adone.application.instance.adoneEtcPath, "media", "adone.txt"), { encoding: "utf8" });
             const repository = await git.Repository.init(projectPath, 0);
             const index = await repository.refreshIndex();
             for (const file of this.gitFiles) {

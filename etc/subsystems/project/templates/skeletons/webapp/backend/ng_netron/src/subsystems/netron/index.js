@@ -40,7 +40,7 @@ export default class extends application.Subsystem {
                 await ctx.initialize();
             }
             this.omniDispatcher.netron.attachContext(ctx, name);
-            adone.info(`context ${name} attached`);
+            adone.info(`context '${name}' attached`);
         }
 
         this.omniDispatcher.bindGates(this.config.netron.gates, {

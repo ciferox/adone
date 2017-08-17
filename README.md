@@ -1,11 +1,11 @@
 # ADONE: the generalized core of 'cyber-fractal systems' infrastructure
 
-_Note: Project now is in active development and not production ready._
+_Note: Project is in active development and not production ready yet._
 
 <p align="center"><a href="https://adone.io/dist"><img src="https://adone.io/logo.svg" width="150px" align="center"></a></p>
 
 **ADONE** (**AllDONE**) is a multpurpose Node.js-platform, consisting of:
-- **Glosses** - constantly developing library code, divided into namespaces, which provides a complete multi-purpose Node.js-framework.
+- **Glosses** - constantly developing library code, divided into namespaces.
 - **FAST** (Filesystem Automation Streaming Templates/Transforms) - gulp-like streaming system, extended through transfroms (vinyl-streams).
 - **Shani** - A full-featured BDD/TDD testing framework.
 - **Omnitron** - service-oriented execution environment, with [netron](https://github.com/ciferox/adone-npm) as the core.
@@ -19,15 +19,62 @@ _Note: Project now is in active development and not production ready._
 
 ## Installation
 
+### Linux, MacOS, FreeBSD
+
 Download and install `avm`:
 
     $ curl -L https://adone.io/dist/avm.sh | sudo bash -s install
     
 Install **ADONE**:
     
-    $ amv adone install latest
+    $ sudo avm adone install latest
+
+Update existing **ADONE**:
+
+    $ sudo avm adone update
 
 You can read more at [avm](https://github.com/ciferox/avm) page.
+
+### Windows
+
+Not ready yet.
+
+## Usage
+
+**ADONE CLI** is a built-in command-line utility, the functionality of which extended through subsystems. **ADONE** comes with following subsystems:
+
+- **project** - command interface for initializing, building and deploying projects.
+- **shani** - command interface for running tests.
+- **bench** - command interface for benchmarking.
+- **omnitron** - command interface for Omnitron.
+
+**ADONE CLI** has detailed help for each subsystem and sub-commands:
+
+    $ adone --help
+    $ adone <command> --help
+    $ adone <command> <subcommand> [<subsubcommand>, ...] --help
+
+To create a simple adone-script run:
+
+    $ adone project generate miniapp <name>
+
+If you want the script immediately open in your favorite editor, then you can use the `--editor` option:
+
+    $ adone project generate miniapp <filename> --editor 'code -n'
+
+This will create adone mini-appliation, run it using:
+
+    $ adone ./<filename>
+
+_Note: You can use any ES6/ES7 features, adone automatically transpile code and run it._
+
+To initialize adone web-application with **angular4** as frontend and **netron** as backend communication engine, use:
+
+    $ sudo npm i -g @angular/cli@latest
+    $ adone project new webapplication <project_name> --frontend ng --netron --editor 'code -n'
+    $ cd <project_name>
+
+Read instructions in the generated project's README.md.
 
 ## Features
 
@@ -61,56 +108,56 @@ We are not crazy - we are perfectionists.
 | Namespace | Description | Status | Docs |
 | - | - | - | - |
 adone | Common namespace | Ready | - |
-application | Reusable application framework (adone-applications entry point) | In-progress | - |
-archive | Implementation of archivers | In-progress | - |
-assertion | Implementation of assertion utilites | In-progress | - |
-collection | Implementation of common collections | In-progress | - |
-compressor | Implementation of different compressors | In-progress | - |
-configuration | Implementation of configurations | In-progress | - |
-core | Implementation of async streaming system and common transforms | In-progress | - |
+application | Reusable application framework (adone-applications entry point) | Ready (maintenance, need feedback) | - |
+archive | Implementation of archivers | Ready (maintenance, need feedback) | - |
+assertion | Implementation of assertion utilites | Stable | - |
+collection | Implementation of common collections | Ready (maintenance, need feedback) | - |
+compressor | Implementation of different compressors | Ready (maintenance, need feedback) | - |
+configuration | Implementation of configurations | Ready (maintenance, need feedback) | - |
+core | Implementation of async streaming system and common transforms | Ready (maintenance, need feedback) | - |
 crypto | Cryptography stuff | In-progress | - |
 cui | Console UI | In-progress | - |
-data | Implementation of common data serializers | In-progress | - |
-database | Databases stuff | In-progress | - |
-datetime | Datetime stuff | In-progress | - |
-diff | Diff stuff | In-progress | - |
-fast | Implementation of Filesystem Automation Streaming Templates/Transforms | In-progress | - |
-fs | Fily system stuff | In-progress | - |
-geoip | Geoip stuff | In-progress | - |
+data | Implementation of common data serializers | Ready (maintenance, need feedback) | - |
+database | Databases stuff | Ready (maintenance, need feedback) | - |
+datetime | Datetime stuff | Stable | - |
+diff | Diff stuff | Stable | - |
+fast | Implementation of Filesystem Automation Streaming Templates/Transforms | Ready (maintenance, need feedback) | - |
+fs | Fily system stuff | Stable | - |
+geoip | Geoip stuff | Ready (maintenance, need feedback) | - |
 hardware | Hardware (IoT) stuff | In-progress | - |
-is | Implementation of predicates | In-progress | - |
-js | JS compiler (babel) | In-progress | - |
+is | Implementation of predicates | Stable | - |
+js | JS compiler (babel) | Stable | - |
 math | Math stuff | In-progress | - |
 meta | Meta stuff (most of code for internal purposes) | In-progress | - |
 metrics | Utilites for obtaining different system & hardware metrics | In-progress | - |
-native | Node.js C++ addons | In-progress | - |
-net | Network stuff | In-progress | - |
-netron | Implementation of Netron | In-progress | - |
+native | Node.js C++ addons | Ready (need refactoring) | - |
+net | Network stuff | Ready (maintenance, need feedback) | - |
+netron | Implementation of Netron | Ready (maintenance, need feedback) | - |
 netscan | Network scanning stuff | In-progress | - |
-notifier | System notifier | In-progress | - |
+notifier | System notifier | Ready (maintenance, need feedback) | - |
 omnitron | Implementation of Omnitron | In-progress | - |
-promise | Useful promise utilites | In-progress | - |
-punycode | Implementation of Punycode | In-progress | - |
-regex | Coomon regular expressions | In-progress | - |
-schema | JSON schema validation | In-progress | - |
-semver | Implementation of semver | In-progress | - |
-shani | Implementation of a full-featured BDD/TDD testing framework | In-progress | - |
+promise | Useful promise utilites | Stable | - |
+punycode | Implementation of Punycode | Stable | - |
+regex | Coomon regular expressions | Stable | - |
+schema | JSON schema validation | Ready (maintenance, need feedback) | - |
+semver | Implementation of semver | Ready (need refactoring) | - |
+shani | Implementation of a full-featured BDD/TDD testing framework | Stable | - |
 shell | Shell-utilites | In-progress | - |
-sourcemap | Implementation of sourcemaps | In-progress | - |
+sourcemap | Implementation of sourcemaps | Stable | - |
 specter | Unified system for IT automation | In-progress | - |
-std | Assigned Node.JS standard modules | In-progress | - |
+std | Assigned Node.JS standard modules | Stable | - |
 stream | Streams stuff | In-progress | - |
 system | Some system utilites (exec, shell, ...) | In-progress | - |
-templating | Templating engines | In-progress | - |
-terminal | Common terminal stuff | In-progress | - |
-text | Implementation of common text-transformation utilites | In-progress | - |
+templating | Templating engines | Ready (maintenance, need feedback) | - |
+terminal | Common terminal stuff | Ready (need refactoring & feedback) | - |
+text | Implementation of common text-transformation utilites | Ready (maintenance, need feedback) | - |
 timing | Timings and perfomance counting  | In-progress | - |
-util | Implementation of common utilites | In-progress | - |
-vault | Implementation of vaults | In-progress | - |
-vcs | VCS clients (git, ...) | In-progress | - |
-vendor | Third-party libraries (lodash, banchmark.js, ...) | In-progress | - |
+util | Implementation of common utilites | Ready (maintenance, need feedback) | - |
+vault | Implementation of vaults | Ready (maintenance, need feedback) | - |
+vcs | VCS clients (git, ...) | Ready (maintenance, need feedback) | - |
+vendor | Third-party libraries (lodash, banchmark.js, ...) | Stable | - |
 virt | Virtualization stuff | In-progress | - |
-x | Common exceptions | In-progress | - |
+x | Common exceptions | Stable | - |
 
 ### Omnitron
 
@@ -124,3 +171,13 @@ x | Common exceptions | In-progress | - |
 | hardware | Hardware metrics | In-progress | - |
 | system | System metrics | In-progress | - |
 | vaults | Vaults management | In-progress | - |
+
+
+### Cli
+
+| Subsystem | Description | Status | Docs |
+| - | - | - | - |
+| project | Command line interface for project managent | In-progress | - |
+| omnitron | Command line interface for Omnitron | In-progress | - |
+| shani | Command line interface for Shani | Ready (maintenance, need feedback) | - |
+| bench | Command line interface for benchmarking | Ready (maintenance, need feedback) | - | - |
