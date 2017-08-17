@@ -463,7 +463,7 @@ const calculateFinalSize = (self) => {
         pretendOutputCursor >= 0xffffffff) {
         // use zip64 end of central directory stuff
         endOfCentralDirectorySize += ZIP64_END_OF_CENTRAL_DIRECTORY_RECORD_SIZE +
-                                     ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR_SIZE;
+            ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR_SIZE;
     }
     endOfCentralDirectorySize += END_OF_CENTRAL_DIRECTORY_RECORD_SIZE;
     return pretendOutputCursor + centralDirectorySize + endOfCentralDirectorySize;

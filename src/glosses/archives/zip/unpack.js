@@ -303,6 +303,7 @@ export const fromRandomAccessReader = async (reader, totalSize, options) => {
         const zip64EocdlBuffer = Buffer.alloc(20);
         const zip64EocdlOffset = bufferReadStart + i - zip64EocdlBuffer.length;
 
+        // eslint-disable-next-line
         await readAndAssertNoEof(reader, zip64EocdlBuffer, 0, zip64EocdlBuffer.length, zip64EocdlOffset);
 
         // 0 - zip64 end of central dir locator signature = 0x07064b50
@@ -317,6 +318,7 @@ export const fromRandomAccessReader = async (reader, totalSize, options) => {
         // ZIP64 end of central directory record
         const zip64EocdrBuffer = Buffer.alloc(56);
 
+        // eslint-disable-next-line
         await readAndAssertNoEof(reader, zip64EocdrBuffer, 0, zip64EocdrBuffer.length, zip64EocdrOffset);
         // 0 - zip64 end of central dir signature                           4 bytes  (0x06064b50)
         if (zip64EocdrBuffer.readUInt32LE(0) !== 0x06064b50) {
