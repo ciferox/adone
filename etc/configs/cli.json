@@ -11,6 +11,13 @@
     ],
     "subsystems": [
         {
+            "name": "dev",
+            "description": "Cli interface for adone development stuff",
+            "version": "0.6.55",
+            "author": "Adone Core Team <info@adone.io>",
+            "path": "./lib/subsystems/dev"
+        },
+        {
             "name": "project",
             "description": "Cli interface for adone project management",
             "version": "0.6.55",

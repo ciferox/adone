@@ -1,4 +1,9 @@
-const { is, std, fs, util } = adone;
+const {
+    is,
+    std,
+    fs,
+    util
+} = adone;
 
 const configRelativePath = "etc/configs/adone.js".replace(/\//g, std.path.sep);
 
