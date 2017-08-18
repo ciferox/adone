@@ -938,6 +938,16 @@ export const assignDeep = (target, ...sources) => {
     return target;
 };
 
+export const pick = (obj, props) => {
+    const newObj = {};
+    for (const prop of props) {
+        if (prop in obj) {
+            newObj[prop] = obj[prop];
+        }
+    }
+    return newObj;
+};
+
 adone.lazify({
     match: "./match",
     toposort: "./toposort",

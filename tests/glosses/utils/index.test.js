@@ -1430,4 +1430,27 @@ describe("util", () => {
             });
         });
     });
+
+    describe("pick", () => {
+        const { pick } = util;
+
+        it("should return a new object with only the given properties", () => {
+            const a = { a: 1, b: 2, c: 3 };
+            const b = pick(a, ["a", "b"]);
+            expect(b).to.be.deep.equal({ a: 1, b: 2 });
+        });
+
+        it("should consider inherited properties", () => {
+            const a = Object.create({ a: 1, b: 2, c: 3 });
+            a.d = 4;
+            const b = pick(a, ["a", "b", "d"]);
+            expect(b).to.be.deep.equal({ a: 1, b: 2, d: 4 });
+        });
+
+        it("should not fail if the given property does not exist", () => {
+            const a = { a: 1, b: 2, c: 3 };
+            const b = pick(a, ["a", "b", "d"]);
+            expect(b).to.be.deep.equal({ a: 1, b: 2 });
+        });
+    });
 });
