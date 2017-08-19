@@ -1,6 +1,7 @@
 const native = adone.bind("git.node");
 
 const {
+    promise: { promisifyAll },
     vcs: { git: { MergeOptions, CheckoutOptions, Utils: { normalizeOptions } } }
 } = adone;
 
@@ -46,10 +47,11 @@ Merge.PREFERENCE = {
     FASTFORWARD_ONLY: 2
 };
 
-Merge.base = adone.promise.promisifyAll(Merge.base);
-Merge.bases = adone.promise.promisifyAll(Merge.bases);
-Merge.commits = adone.promise.promisifyAll(Merge.commits);
-Merge.trees = adone.promise.promisifyAll(Merge.trees);
+Merge.merge = promisifyAll(Merge.merge);
+Merge.base = promisifyAll(Merge.base);
+Merge.bases = promisifyAll(Merge.bases);
+Merge.commits = promisifyAll(Merge.commits);
+Merge.trees = promisifyAll(Merge.trees);
 
 const _commits = Merge.commits;
 const _merge = Merge.merge;

@@ -19,6 +19,7 @@ extern "C" {
   #include "../include/oid.h"
   #include "../include/repository.h"
   #include "../include/writestream.h"
+  #include "../include/buf.h"
  
 #include <iostream>
 
@@ -30,7 +31,7 @@ using namespace node;
     // this will cause an error if you have a non-self-freeing object that also needs
     // to save values. Since the object that will eventually free the object has no
     // way of knowing to free these values.
-                                                             }
+                                                                   }
 
   void GitBlob::InitializeComponent(v8::Local<v8::Object> target) {
     Nan::HandleScope scope;
@@ -46,6 +47,7 @@ using namespace node;
              Nan::SetMethod(tpl, "createFromstreamCommit", CreateFromstreamCommit);
              Nan::SetMethod(tpl, "createFromWorkdir", CreateFromworkdir);
             Nan::SetPrototypeMethod(tpl, "dup", Dup);
+             Nan::SetMethod(tpl, "filteredContent", FilteredContent);
             Nan::SetPrototypeMethod(tpl, "free", Free);
             Nan::SetPrototypeMethod(tpl, "id", Id);
             Nan::SetPrototypeMethod(tpl, "isBinary", IsBinary);
@@ -62,14 +64,14 @@ using namespace node;
     Nan::Set(target, Nan::New("Blob").ToLocalChecked(), _constructor_template);
   }
 
-  
+ 
 /*
   * @param Repository repo
    * @param Buffer buffer
    * @param Number len
-     * @return Oid id    */
+    * @param Oid callback
+   */
 NAN_METHOD(GitBlob::CreateFrombuffer) {
-  Nan::EscapableHandleScope scope;
 
   if (info.Length() == 0 || !info[0]->IsObject()) {
     return Nan::ThrowError("Repository repo is required.");
@@ -83,103 +85,195 @@ NAN_METHOD(GitBlob::CreateFrombuffer) {
     return Nan::ThrowError("Number len is required.");
   }
 
-  git_oid *id = (git_oid *)malloc(sizeof(git_oid));
+  if (info.Length() == 3 || !info[3]->IsFunction()) {
+    return Nan::ThrowError("Callback is required and must be a Function.");
+  }
+
+  CreateFrombufferBaton* baton = new CreateFrombufferBaton;
+
+  baton->error_code = GIT_OK;
+  baton->error = NULL;
+
+        baton->id = (git_oid *)malloc(sizeof(git_oid ));
 // start convert_from_v8 block
   git_repository * from_repo = NULL;
 from_repo = Nan::ObjectWrap::Unwrap<GitRepository>(info[0]->ToObject())->GetValue();
 // end convert_from_v8 block
+  baton->repo = from_repo;
 // start convert_from_v8 block
   const void * from_buffer = NULL;
 
   from_buffer = Buffer::Data(info[1]->ToObject());
 // end convert_from_v8 block
+  baton->buffer = from_buffer;
 // start convert_from_v8 block
   size_t from_len;
   from_len = (size_t)   info[2]->ToNumber()->Value();
 // end convert_from_v8 block
- 
+  baton->len = from_len;
+
+  Nan::Callback *callback = new Nan::Callback(v8::Local<Function>::Cast(info[3]));
+  CreateFrombufferWorker *worker = new CreateFrombufferWorker(baton, callback);
+  if (!info[0]->IsUndefined() && !info[0]->IsNull())
+    worker->SaveToPersistent("repo", info[0]->ToObject());
+  if (!info[1]->IsUndefined() && !info[1]->IsNull())
+    worker->SaveToPersistent("buffer", info[1]->ToObject());
+  if (!info[2]->IsUndefined() && !info[2]->IsNull())
+    worker->SaveToPersistent("len", info[2]->ToObject());
+
+  AsyncLibgit2QueueWorker(worker);
+  return;
+}
+
+void GitBlob::CreateFrombufferWorker::Execute() {
   giterr_clear();
 
   {
-    LockMaster lockMaster(/*asyncAction: */false        ,    from_repo
-        ,    from_buffer
+    LockMaster lockMaster(/*asyncAction: */true        ,baton->id
+        ,baton->repo
+        ,baton->buffer
 );
 
-    int result = git_blob_create_frombuffer(
-  id
-,  from_repo
-,  from_buffer
-,  from_len
-    );
+  int result = git_blob_create_frombuffer(
+baton->id,baton->repo,baton->buffer,baton->len    );
 
- 
+  }
+}
+
+void GitBlob::CreateFrombufferWorker::HandleOKCallback() {
+  if (baton->error_code == GIT_OK) {
     v8::Local<v8::Value> to;
 // start convert_to_v8 block
   
-  if (id != NULL) {
-    // GitOid id
-       to = GitOid::New(id, true  );
+  if (baton->id != NULL) {
+    // GitOid baton->id
+       to = GitOid::New(baton->id, true  );
    }
   else {
     to = Nan::Null();
   }
 
  // end convert_to_v8 block
-    return info.GetReturnValue().Set(scope.Escape(to));
-  }
-}
-   
-/*
- * @param Oid id
-   * @param Repository repo
-   * @param String path
-     * @return Number  result    */
-NAN_METHOD(GitBlob::CreateFromdisk) {
-  Nan::EscapableHandleScope scope;
+    v8::Local<v8::Value> result = to;
+    v8::Local<v8::Value> argv[2] = {
+      Nan::Null(),
+      result
+    };
+    callback->Call(2, argv);
+  } else {
+    if (baton->error) {
+      v8::Local<v8::Object> err;
+      if (baton->error->message) {
+        err = Nan::Error(baton->error->message)->ToObject();
+      } else {
+        err = Nan::Error("Method createFromBuffer has thrown an error.")->ToObject();
+      }
+      err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      v8::Local<v8::Value> argv[1] = {
+        err
+      };
+      callback->Call(1, argv);
+      if (baton->error->message)
+        free((void *)baton->error->message);
+      free((void *)baton->error);
+    } else if (baton->error_code < 0) {
+      std::queue< v8::Local<v8::Value> > workerArguments;
+      workerArguments.push(GetFromPersistent("repo"));
+      workerArguments.push(GetFromPersistent("buffer"));
+      workerArguments.push(GetFromPersistent("len"));
+      bool callbackFired = false;
+      while(!workerArguments.empty()) {
+        v8::Local<v8::Value> node = workerArguments.front();
+        workerArguments.pop();
 
-  if (info.Length() == 0
-    || (!info[0]->IsObject() && !info[0]->IsString())) {
-    return Nan::ThrowError("Oid id is required.");
+        if (
+          !node->IsObject()
+          || node->IsArray()
+          || node->IsBooleanObject()
+          || node->IsDate()
+          || node->IsFunction()
+          || node->IsNumberObject()
+          || node->IsRegExp()
+          || node->IsStringObject()
+        ) {
+          continue;
+        }
+
+        v8::Local<v8::Object> nodeObj = node->ToObject();
+        v8::Local<v8::Value> checkValue = GetPrivate(nodeObj, Nan::New("NodeGitPromiseError").ToLocalChecked());
+
+        if (!checkValue.IsEmpty() && !checkValue->IsNull() && !checkValue->IsUndefined()) {
+          v8::Local<v8::Value> argv[1] = {
+            checkValue->ToObject()
+          };
+          callback->Call(1, argv);
+          callbackFired = true;
+          break;
+        }
+
+        v8::Local<v8::Array> properties = nodeObj->GetPropertyNames();
+        for (unsigned int propIndex = 0; propIndex < properties->Length(); ++propIndex) {
+          v8::Local<v8::String> propName = properties->Get(propIndex)->ToString();
+          v8::Local<v8::Value> nodeToQueue = nodeObj->Get(propName);
+          if (!nodeToQueue->IsUndefined()) {
+            workerArguments.push(nodeToQueue);
+          }
+        }
+      }
+
+      if (!callbackFired) {
+        v8::Local<v8::Object> err = Nan::Error("Method createFromBuffer has thrown an error.")->ToObject();
+        err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        v8::Local<v8::Value> argv[1] = {
+          err
+        };
+        callback->Call(1, argv);
+      }
+    } else {
+      callback->Call(0, NULL);
+    }
+
   }
-  if (info.Length() == 1 || !info[1]->IsObject()) {
+
+
+  delete baton;
+}
+
+  
+/*
+  * @param Repository repo
+   * @param String path
+    * @param Oid callback
+   */
+NAN_METHOD(GitBlob::CreateFromdisk) {
+
+  if (info.Length() == 0 || !info[0]->IsObject()) {
     return Nan::ThrowError("Repository repo is required.");
   }
 
-  if (info.Length() == 2 || !info[2]->IsString()) {
+  if (info.Length() == 1 || !info[1]->IsString()) {
     return Nan::ThrowError("String path is required.");
   }
 
-// start convert_from_v8 block
-  git_oid * from_id = NULL;
-  if (info[0]->IsString()) {
-    // Try and parse in a string to a git_oid
-    String::Utf8Value oidString(info[0]->ToString());
-    git_oid *oidOut = (git_oid *)malloc(sizeof(git_oid));
-
-    if (git_oid_fromstr(oidOut, (const char *) strdup(*oidString)) != GIT_OK) {
-      free(oidOut);
-
-      if (giterr_last()) {
-        return Nan::ThrowError(giterr_last()->message);
-      } else {
-        return Nan::ThrowError("Unknown Error");
-      }
-    }
-
-    from_id = oidOut;
+  if (info.Length() == 2 || !info[2]->IsFunction()) {
+    return Nan::ThrowError("Callback is required and must be a Function.");
   }
-  else {
-from_id = Nan::ObjectWrap::Unwrap<GitOid>(info[0]->ToObject())->GetValue();
-  }
-// end convert_from_v8 block
+
+  CreateFromdiskBaton* baton = new CreateFromdiskBaton;
+
+  baton->error_code = GIT_OK;
+  baton->error = NULL;
+
+        baton->id = (git_oid *)malloc(sizeof(git_oid ));
 // start convert_from_v8 block
   git_repository * from_repo = NULL;
-from_repo = Nan::ObjectWrap::Unwrap<GitRepository>(info[1]->ToObject())->GetValue();
+from_repo = Nan::ObjectWrap::Unwrap<GitRepository>(info[0]->ToObject())->GetValue();
 // end convert_from_v8 block
+  baton->repo = from_repo;
 // start convert_from_v8 block
   const char * from_path = NULL;
 
-  String::Utf8Value path(info[2]->ToString());
+  String::Utf8Value path(info[1]->ToString());
   // malloc with one extra byte so we can add the terminating null character C-strings expect:
   from_path = (const char *) malloc(path.length() + 1);
   // copy the characters from the nodejs string into our C-string (used instead of strdup or strcpy because nulls in
@@ -189,32 +283,138 @@ from_repo = Nan::ObjectWrap::Unwrap<GitRepository>(info[1]->ToObject())->GetValu
   // used in the nodejs binding generation:
   memset((void *)(((char *)from_path) + path.length()), 0, 1);
 // end convert_from_v8 block
- 
+  baton->path = from_path;
+
+  Nan::Callback *callback = new Nan::Callback(v8::Local<Function>::Cast(info[2]));
+  CreateFromdiskWorker *worker = new CreateFromdiskWorker(baton, callback);
+  if (!info[0]->IsUndefined() && !info[0]->IsNull())
+    worker->SaveToPersistent("repo", info[0]->ToObject());
+  if (!info[1]->IsUndefined() && !info[1]->IsNull())
+    worker->SaveToPersistent("path", info[1]->ToObject());
+
+  AsyncLibgit2QueueWorker(worker);
+  return;
+}
+
+void GitBlob::CreateFromdiskWorker::Execute() {
   giterr_clear();
 
   {
-    LockMaster lockMaster(/*asyncAction: */false        ,    from_id
-        ,    from_repo
-        ,    from_path
+    LockMaster lockMaster(/*asyncAction: */true        ,baton->id
+        ,baton->repo
+        ,baton->path
 );
 
-    int result = git_blob_create_fromdisk(
-  from_id
-,  from_repo
-,  from_path
-    );
+  int result = git_blob_create_fromdisk(
+baton->id,baton->repo,baton->path    );
 
-     if (info[0]->IsString()) {
-      free((void *)from_id);
+    baton->error_code = result;
+
+    if (result != GIT_OK && giterr_last() != NULL) {
+      baton->error = git_error_dup(giterr_last());
     }
 
-    v8::Local<v8::Value> to;
-// start convert_to_v8 block
-     to = Nan::New<Number>( result);
-  // end convert_to_v8 block
-    return info.GetReturnValue().Set(scope.Escape(to));
   }
 }
+
+void GitBlob::CreateFromdiskWorker::HandleOKCallback() {
+  if (baton->error_code == GIT_OK) {
+    v8::Local<v8::Value> to;
+// start convert_to_v8 block
+  
+  if (baton->id != NULL) {
+    // GitOid baton->id
+       to = GitOid::New(baton->id, true  );
+   }
+  else {
+    to = Nan::Null();
+  }
+
+ // end convert_to_v8 block
+    v8::Local<v8::Value> result = to;
+    v8::Local<v8::Value> argv[2] = {
+      Nan::Null(),
+      result
+    };
+    callback->Call(2, argv);
+  } else {
+    if (baton->error) {
+      v8::Local<v8::Object> err;
+      if (baton->error->message) {
+        err = Nan::Error(baton->error->message)->ToObject();
+      } else {
+        err = Nan::Error("Method createFromDisk has thrown an error.")->ToObject();
+      }
+      err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      v8::Local<v8::Value> argv[1] = {
+        err
+      };
+      callback->Call(1, argv);
+      if (baton->error->message)
+        free((void *)baton->error->message);
+      free((void *)baton->error);
+    } else if (baton->error_code < 0) {
+      std::queue< v8::Local<v8::Value> > workerArguments;
+      workerArguments.push(GetFromPersistent("repo"));
+      workerArguments.push(GetFromPersistent("path"));
+      bool callbackFired = false;
+      while(!workerArguments.empty()) {
+        v8::Local<v8::Value> node = workerArguments.front();
+        workerArguments.pop();
+
+        if (
+          !node->IsObject()
+          || node->IsArray()
+          || node->IsBooleanObject()
+          || node->IsDate()
+          || node->IsFunction()
+          || node->IsNumberObject()
+          || node->IsRegExp()
+          || node->IsStringObject()
+        ) {
+          continue;
+        }
+
+        v8::Local<v8::Object> nodeObj = node->ToObject();
+        v8::Local<v8::Value> checkValue = GetPrivate(nodeObj, Nan::New("NodeGitPromiseError").ToLocalChecked());
+
+        if (!checkValue.IsEmpty() && !checkValue->IsNull() && !checkValue->IsUndefined()) {
+          v8::Local<v8::Value> argv[1] = {
+            checkValue->ToObject()
+          };
+          callback->Call(1, argv);
+          callbackFired = true;
+          break;
+        }
+
+        v8::Local<v8::Array> properties = nodeObj->GetPropertyNames();
+        for (unsigned int propIndex = 0; propIndex < properties->Length(); ++propIndex) {
+          v8::Local<v8::String> propName = properties->Get(propIndex)->ToString();
+          v8::Local<v8::Value> nodeToQueue = nodeObj->Get(propName);
+          if (!nodeToQueue->IsUndefined()) {
+            workerArguments.push(nodeToQueue);
+          }
+        }
+      }
+
+      if (!callbackFired) {
+        v8::Local<v8::Object> err = Nan::Error("Method createFromDisk has thrown an error.")->ToObject();
+        err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        v8::Local<v8::Value> argv[1] = {
+          err
+        };
+        callback->Call(1, argv);
+      }
+    } else {
+      callback->Call(0, NULL);
+    }
+
+  }
+
+
+  delete baton;
+}
+
   
 /*
   * @param Repository repo
@@ -542,58 +742,41 @@ void GitBlob::CreateFromstreamCommitWorker::HandleOKCallback() {
   delete baton;
 }
 
-   
+  
 /*
- * @param Oid id
-   * @param Repository repo
+  * @param Repository repo
    * @param String relative_path
-     * @return Number  result    */
+    * @param Oid callback
+   */
 NAN_METHOD(GitBlob::CreateFromworkdir) {
-  Nan::EscapableHandleScope scope;
 
-  if (info.Length() == 0
-    || (!info[0]->IsObject() && !info[0]->IsString())) {
-    return Nan::ThrowError("Oid id is required.");
-  }
-  if (info.Length() == 1 || !info[1]->IsObject()) {
+  if (info.Length() == 0 || !info[0]->IsObject()) {
     return Nan::ThrowError("Repository repo is required.");
   }
 
-  if (info.Length() == 2 || !info[2]->IsString()) {
+  if (info.Length() == 1 || !info[1]->IsString()) {
     return Nan::ThrowError("String relative_path is required.");
   }
 
-// start convert_from_v8 block
-  git_oid * from_id = NULL;
-  if (info[0]->IsString()) {
-    // Try and parse in a string to a git_oid
-    String::Utf8Value oidString(info[0]->ToString());
-    git_oid *oidOut = (git_oid *)malloc(sizeof(git_oid));
-
-    if (git_oid_fromstr(oidOut, (const char *) strdup(*oidString)) != GIT_OK) {
-      free(oidOut);
-
-      if (giterr_last()) {
-        return Nan::ThrowError(giterr_last()->message);
-      } else {
-        return Nan::ThrowError("Unknown Error");
-      }
-    }
-
-    from_id = oidOut;
+  if (info.Length() == 2 || !info[2]->IsFunction()) {
+    return Nan::ThrowError("Callback is required and must be a Function.");
   }
-  else {
-from_id = Nan::ObjectWrap::Unwrap<GitOid>(info[0]->ToObject())->GetValue();
-  }
-// end convert_from_v8 block
+
+  CreateFromworkdirBaton* baton = new CreateFromworkdirBaton;
+
+  baton->error_code = GIT_OK;
+  baton->error = NULL;
+
+        baton->id = (git_oid *)malloc(sizeof(git_oid ));
 // start convert_from_v8 block
   git_repository * from_repo = NULL;
-from_repo = Nan::ObjectWrap::Unwrap<GitRepository>(info[1]->ToObject())->GetValue();
+from_repo = Nan::ObjectWrap::Unwrap<GitRepository>(info[0]->ToObject())->GetValue();
 // end convert_from_v8 block
+  baton->repo = from_repo;
 // start convert_from_v8 block
   const char * from_relative_path = NULL;
 
-  String::Utf8Value relative_path(info[2]->ToString());
+  String::Utf8Value relative_path(info[1]->ToString());
   // malloc with one extra byte so we can add the terminating null character C-strings expect:
   from_relative_path = (const char *) malloc(relative_path.length() + 1);
   // copy the characters from the nodejs string into our C-string (used instead of strdup or strcpy because nulls in
@@ -603,32 +786,138 @@ from_repo = Nan::ObjectWrap::Unwrap<GitRepository>(info[1]->ToObject())->GetValu
   // used in the nodejs binding generation:
   memset((void *)(((char *)from_relative_path) + relative_path.length()), 0, 1);
 // end convert_from_v8 block
- 
+  baton->relative_path = from_relative_path;
+
+  Nan::Callback *callback = new Nan::Callback(v8::Local<Function>::Cast(info[2]));
+  CreateFromworkdirWorker *worker = new CreateFromworkdirWorker(baton, callback);
+  if (!info[0]->IsUndefined() && !info[0]->IsNull())
+    worker->SaveToPersistent("repo", info[0]->ToObject());
+  if (!info[1]->IsUndefined() && !info[1]->IsNull())
+    worker->SaveToPersistent("relative_path", info[1]->ToObject());
+
+  AsyncLibgit2QueueWorker(worker);
+  return;
+}
+
+void GitBlob::CreateFromworkdirWorker::Execute() {
   giterr_clear();
 
   {
-    LockMaster lockMaster(/*asyncAction: */false        ,    from_id
-        ,    from_repo
-        ,    from_relative_path
+    LockMaster lockMaster(/*asyncAction: */true        ,baton->id
+        ,baton->repo
+        ,baton->relative_path
 );
 
-    int result = git_blob_create_fromworkdir(
-  from_id
-,  from_repo
-,  from_relative_path
-    );
+  int result = git_blob_create_fromworkdir(
+baton->id,baton->repo,baton->relative_path    );
 
-     if (info[0]->IsString()) {
-      free((void *)from_id);
+    baton->error_code = result;
+
+    if (result != GIT_OK && giterr_last() != NULL) {
+      baton->error = git_error_dup(giterr_last());
     }
 
-    v8::Local<v8::Value> to;
-// start convert_to_v8 block
-     to = Nan::New<Number>( result);
-  // end convert_to_v8 block
-    return info.GetReturnValue().Set(scope.Escape(to));
   }
 }
+
+void GitBlob::CreateFromworkdirWorker::HandleOKCallback() {
+  if (baton->error_code == GIT_OK) {
+    v8::Local<v8::Value> to;
+// start convert_to_v8 block
+  
+  if (baton->id != NULL) {
+    // GitOid baton->id
+       to = GitOid::New(baton->id, true  );
+   }
+  else {
+    to = Nan::Null();
+  }
+
+ // end convert_to_v8 block
+    v8::Local<v8::Value> result = to;
+    v8::Local<v8::Value> argv[2] = {
+      Nan::Null(),
+      result
+    };
+    callback->Call(2, argv);
+  } else {
+    if (baton->error) {
+      v8::Local<v8::Object> err;
+      if (baton->error->message) {
+        err = Nan::Error(baton->error->message)->ToObject();
+      } else {
+        err = Nan::Error("Method createFromWorkdir has thrown an error.")->ToObject();
+      }
+      err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      v8::Local<v8::Value> argv[1] = {
+        err
+      };
+      callback->Call(1, argv);
+      if (baton->error->message)
+        free((void *)baton->error->message);
+      free((void *)baton->error);
+    } else if (baton->error_code < 0) {
+      std::queue< v8::Local<v8::Value> > workerArguments;
+      workerArguments.push(GetFromPersistent("repo"));
+      workerArguments.push(GetFromPersistent("relative_path"));
+      bool callbackFired = false;
+      while(!workerArguments.empty()) {
+        v8::Local<v8::Value> node = workerArguments.front();
+        workerArguments.pop();
+
+        if (
+          !node->IsObject()
+          || node->IsArray()
+          || node->IsBooleanObject()
+          || node->IsDate()
+          || node->IsFunction()
+          || node->IsNumberObject()
+          || node->IsRegExp()
+          || node->IsStringObject()
+        ) {
+          continue;
+        }
+
+        v8::Local<v8::Object> nodeObj = node->ToObject();
+        v8::Local<v8::Value> checkValue = GetPrivate(nodeObj, Nan::New("NodeGitPromiseError").ToLocalChecked());
+
+        if (!checkValue.IsEmpty() && !checkValue->IsNull() && !checkValue->IsUndefined()) {
+          v8::Local<v8::Value> argv[1] = {
+            checkValue->ToObject()
+          };
+          callback->Call(1, argv);
+          callbackFired = true;
+          break;
+        }
+
+        v8::Local<v8::Array> properties = nodeObj->GetPropertyNames();
+        for (unsigned int propIndex = 0; propIndex < properties->Length(); ++propIndex) {
+          v8::Local<v8::String> propName = properties->Get(propIndex)->ToString();
+          v8::Local<v8::Value> nodeToQueue = nodeObj->Get(propName);
+          if (!nodeToQueue->IsUndefined()) {
+            workerArguments.push(nodeToQueue);
+          }
+        }
+      }
+
+      if (!callbackFired) {
+        v8::Local<v8::Object> err = Nan::Error("Method createFromWorkdir has thrown an error.")->ToObject();
+        err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        v8::Local<v8::Value> argv[1] = {
+          err
+        };
+        callback->Call(1, argv);
+      }
+    } else {
+      callback->Call(0, NULL);
+    }
+
+  }
+
+
+  delete baton;
+}
+
   
 /*
      * @param Blob callback
@@ -765,6 +1054,196 @@ void GitBlob::DupWorker::HandleOKCallback() {
 
   }
 
+
+  delete baton;
+}
+
+  
+/*
+  * @param Blob blob
+   * @param String as_path
+   * @param Number check_for_binary_data
+    * @param Buffer callback
+   */
+NAN_METHOD(GitBlob::FilteredContent) {
+
+  if (info.Length() == 0 || !info[0]->IsObject()) {
+    return Nan::ThrowError("Blob blob is required.");
+  }
+
+  if (info.Length() == 1 || !info[1]->IsString()) {
+    return Nan::ThrowError("String as_path is required.");
+  }
+
+  if (info.Length() == 2 || !info[2]->IsNumber()) {
+    return Nan::ThrowError("Number check_for_binary_data is required.");
+  }
+
+  if (info.Length() == 3 || !info[3]->IsFunction()) {
+    return Nan::ThrowError("Callback is required and must be a Function.");
+  }
+
+  FilteredContentBaton* baton = new FilteredContentBaton;
+
+  baton->error_code = GIT_OK;
+  baton->error = NULL;
+
+        baton->out = (git_buf *)malloc(sizeof(git_buf ));
+        baton->out->ptr = NULL;
+        baton->out->size = baton->out->asize = 0;
+// start convert_from_v8 block
+  git_blob * from_blob = NULL;
+from_blob = Nan::ObjectWrap::Unwrap<GitBlob>(info[0]->ToObject())->GetValue();
+// end convert_from_v8 block
+  baton->blob = from_blob;
+// start convert_from_v8 block
+  const char * from_as_path = NULL;
+
+  String::Utf8Value as_path(info[1]->ToString());
+  // malloc with one extra byte so we can add the terminating null character C-strings expect:
+  from_as_path = (const char *) malloc(as_path.length() + 1);
+  // copy the characters from the nodejs string into our C-string (used instead of strdup or strcpy because nulls in
+  // the middle of strings are valid coming from nodejs):
+  memcpy((void *)from_as_path, *as_path, as_path.length());
+  // ensure the final byte of our new string is null, extra casts added to ensure compatibility with various C types
+  // used in the nodejs binding generation:
+  memset((void *)(((char *)from_as_path) + as_path.length()), 0, 1);
+// end convert_from_v8 block
+  baton->as_path = from_as_path;
+// start convert_from_v8 block
+  int from_check_for_binary_data;
+  from_check_for_binary_data = (int)   info[2]->ToNumber()->Value();
+// end convert_from_v8 block
+  baton->check_for_binary_data = from_check_for_binary_data;
+
+  Nan::Callback *callback = new Nan::Callback(v8::Local<Function>::Cast(info[3]));
+  FilteredContentWorker *worker = new FilteredContentWorker(baton, callback);
+  if (!info[0]->IsUndefined() && !info[0]->IsNull())
+    worker->SaveToPersistent("blob", info[0]->ToObject());
+  if (!info[1]->IsUndefined() && !info[1]->IsNull())
+    worker->SaveToPersistent("as_path", info[1]->ToObject());
+  if (!info[2]->IsUndefined() && !info[2]->IsNull())
+    worker->SaveToPersistent("check_for_binary_data", info[2]->ToObject());
+
+  AsyncLibgit2QueueWorker(worker);
+  return;
+}
+
+void GitBlob::FilteredContentWorker::Execute() {
+  giterr_clear();
+
+  {
+    LockMaster lockMaster(/*asyncAction: */true        ,baton->out
+        ,baton->blob
+        ,baton->as_path
+);
+
+  int result = git_blob_filtered_content(
+baton->out,baton->blob,baton->as_path,baton->check_for_binary_data    );
+
+    baton->error_code = result;
+
+    if (result != GIT_OK && giterr_last() != NULL) {
+      baton->error = git_error_dup(giterr_last());
+    }
+
+  }
+}
+
+void GitBlob::FilteredContentWorker::HandleOKCallback() {
+  if (baton->error_code == GIT_OK) {
+    v8::Local<v8::Value> to;
+// start convert_to_v8 block
+  if (baton->out) {
+    to = Nan::New<String>(baton->out->ptr, baton->out->size).ToLocalChecked();
+  }
+  else {
+    to = Nan::Null();
+  }
+ // end convert_to_v8 block
+    v8::Local<v8::Value> result = to;
+    v8::Local<v8::Value> argv[2] = {
+      Nan::Null(),
+      result
+    };
+    callback->Call(2, argv);
+  } else {
+    if (baton->error) {
+      v8::Local<v8::Object> err;
+      if (baton->error->message) {
+        err = Nan::Error(baton->error->message)->ToObject();
+      } else {
+        err = Nan::Error("Method filteredContent has thrown an error.")->ToObject();
+      }
+      err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      v8::Local<v8::Value> argv[1] = {
+        err
+      };
+      callback->Call(1, argv);
+      if (baton->error->message)
+        free((void *)baton->error->message);
+      free((void *)baton->error);
+    } else if (baton->error_code < 0) {
+      std::queue< v8::Local<v8::Value> > workerArguments;
+      workerArguments.push(GetFromPersistent("blob"));
+      workerArguments.push(GetFromPersistent("as_path"));
+      workerArguments.push(GetFromPersistent("check_for_binary_data"));
+      bool callbackFired = false;
+      while(!workerArguments.empty()) {
+        v8::Local<v8::Value> node = workerArguments.front();
+        workerArguments.pop();
+
+        if (
+          !node->IsObject()
+          || node->IsArray()
+          || node->IsBooleanObject()
+          || node->IsDate()
+          || node->IsFunction()
+          || node->IsNumberObject()
+          || node->IsRegExp()
+          || node->IsStringObject()
+        ) {
+          continue;
+        }
+
+        v8::Local<v8::Object> nodeObj = node->ToObject();
+        v8::Local<v8::Value> checkValue = GetPrivate(nodeObj, Nan::New("NodeGitPromiseError").ToLocalChecked());
+
+        if (!checkValue.IsEmpty() && !checkValue->IsNull() && !checkValue->IsUndefined()) {
+          v8::Local<v8::Value> argv[1] = {
+            checkValue->ToObject()
+          };
+          callback->Call(1, argv);
+          callbackFired = true;
+          break;
+        }
+
+        v8::Local<v8::Array> properties = nodeObj->GetPropertyNames();
+        for (unsigned int propIndex = 0; propIndex < properties->Length(); ++propIndex) {
+          v8::Local<v8::String> propName = properties->Get(propIndex)->ToString();
+          v8::Local<v8::Value> nodeToQueue = nodeObj->Get(propName);
+          if (!nodeToQueue->IsUndefined()) {
+            workerArguments.push(nodeToQueue);
+          }
+        }
+      }
+
+      if (!callbackFired) {
+        v8::Local<v8::Object> err = Nan::Error("Method filteredContent has thrown an error.")->ToObject();
+        err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        v8::Local<v8::Value> argv[1] = {
+          err
+        };
+        callback->Call(1, argv);
+      }
+    } else {
+      callback->Call(0, NULL);
+    }
+
+  }
+
+        git_buf_free(baton->out);
+        free((void *)baton->out);
 
   delete baton;
 }

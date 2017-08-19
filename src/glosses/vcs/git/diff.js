@@ -1,6 +1,7 @@
 const native = adone.bind("git.node");
 
 const {
+    promise: { promisifyAll },
     vcs: { git: {
         DiffFile, // force load in case of indirect instantiation
         DiffLine, // force load in case of indirect instantiation
@@ -117,18 +118,18 @@ Diff.STATS_FORMAT = {
     STATS_INCLUDE_SUMMARY: 8
 };
 
-Diff.blobToBuffer = adone.promise.promisifyAll(Diff.blobToBuffer);
-Diff.prototype.findSimilar = adone.promise.promisifyAll(Diff.prototype.findSimilar);
-Diff.fromBuffer = adone.promise.promisifyAll(Diff.fromBuffer);
-Diff.prototype.getPerfdata = adone.promise.promisifyAll(Diff.prototype.getPerfdata);
-Diff.indexToIndex = adone.promise.promisifyAll(Diff.indexToIndex);
-Diff.indexToWorkdir = adone.promise.promisifyAll(Diff.indexToWorkdir);
-Diff.prototype.merge = adone.promise.promisifyAll(Diff.prototype.merge);
-Diff.prototype.toBuf = adone.promise.promisifyAll(Diff.prototype.toBuf);
-Diff.treeToIndex = adone.promise.promisifyAll(Diff.treeToIndex);
-Diff.treeToTree = adone.promise.promisifyAll(Diff.treeToTree);
-Diff.treeToWorkdir = adone.promise.promisifyAll(Diff.treeToWorkdir);
-Diff.treeToWorkdirWithIndex = adone.promise.promisifyAll(Diff.treeToWorkdirWithIndex);
+Diff.blobToBuffer = promisifyAll(Diff.blobToBuffer);
+Diff.prototype.findSimilar = promisifyAll(Diff.prototype.findSimilar);
+Diff.fromBuffer = promisifyAll(Diff.fromBuffer);
+Diff.prototype.getPerfdata = promisifyAll(Diff.prototype.getPerfdata);
+Diff.indexToIndex = promisifyAll(Diff.indexToIndex);
+Diff.indexToWorkdir = promisifyAll(Diff.indexToWorkdir);
+Diff.prototype.merge = promisifyAll(Diff.prototype.merge);
+Diff.prototype.toBuf = promisifyAll(Diff.prototype.toBuf);
+Diff.treeToIndex = promisifyAll(Diff.treeToIndex);
+Diff.treeToTree = promisifyAll(Diff.treeToTree);
+Diff.treeToWorkdir = promisifyAll(Diff.treeToWorkdir);
+Diff.treeToWorkdirWithIndex = promisifyAll(Diff.treeToWorkdirWithIndex);
 
 
 const _blobToBuffer = Diff.blobToBuffer;

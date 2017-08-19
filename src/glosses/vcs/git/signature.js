@@ -1,9 +1,13 @@
 const native = adone.bind("git.node");
 
+const {
+    promise: { promisifyAll }
+} = adone;
+
 const Signature = native.Signature;
 
-Signature.prototype.dup = adone.promise.promisifyAll(Signature.prototype.dup);
-Signature.fromBuffer = adone.promise.promisifyAll(Signature.fromBuffer);
+Signature.prototype.dup = promisifyAll(Signature.prototype.dup);
+Signature.fromBuffer = promisifyAll(Signature.fromBuffer);
 
 /**
  * Standard string representation of an author.

@@ -430,7 +430,6 @@ export class Generator {
                     cwd: projectPath
                 });
 
-                adone.log(std.path.join(std.path.basename(projectPath), "package-lock.json"));
                 this.gitFiles.push(std.path.join(std.path.basename(projectPath), "package-lock.json"));
 
                 bar.setSchema(" :spinner npm packages installed");

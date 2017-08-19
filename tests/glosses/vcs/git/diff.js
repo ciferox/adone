@@ -191,25 +191,14 @@ describe("Diff", () => {
             return _entry.getBlob();
         }).then((blob) => {
             const buffer = "New Text";
-            return Diff.blobToBuffer(
-                blob,
-                null,
-                buffer,
-                null,
-                null,
-                null,
-                null,
-                (delta, hunk, payload) => {
-                    assert.equal(hunk.oldStart(), 1);
-                    assert.equal(hunk.oldLines(), 19);
-                    assert.equal(hunk.newStart(), 1);
-                    assert.equal(hunk.newLines(), 1);
-                    assert.equal(
-                        hunk.header().substring(0, hunk.headerLen() - 1),
-                        "@@ -1,19 +1 @@"
-                    );
-                    done();
-                });
+            return Diff.blobToBuffer(blob, null, buffer, null, null, null, null, (delta, hunk, payload) => {
+                assert.equal(hunk.oldStart(), 1);
+                assert.equal(hunk.oldLines(), 19);
+                assert.equal(hunk.newStart(), 1);
+                assert.equal(hunk.newLines(), 1);
+                assert.equal(hunk.header().substring(0, hunk.headerLen() - 1), "@@ -1,19 +1 @@");
+                done();
+            });
         });
     });
 
@@ -217,22 +206,14 @@ describe("Diff", () => {
         const test = this;
         const evilString = "Unicode’s fun!\nAnd it’s good for you!\n";
         const buffer = Buffer.from(evilString);
-        const oid = Blob.createFromBuffer(this.repository, buffer, buffer.length);
-        Blob.lookup(this.repository, oid).then(function (blob) {
+        Blob.createFromBuffer(test.repository, buffer, buffer.length).then((oid) => {
+            return Blob.lookup(test.repository, oid);
+        }).then((blob) => {
             blob.repo = test.repository;
-            return Diff.blobToBuffer(
-                blob,
-                null,
-                evilString,
-                null,
-                null,
-                null,
-                null,
-                (delta, hunk, payload) => {
-                    assert.fail(
-                        "There aren't any changes so this shouldn't be called.");
-                    done();
-                });
+            return Diff.blobToBuffer(blob, null, evilString, null, null, null, null, (delta, hunk, payload) => {
+                assert.fail("There aren't any changes so this shouldn't be called.");
+                done();
+            });
         }).then(() => {
             done();
         });

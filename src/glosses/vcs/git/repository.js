@@ -1,8 +1,8 @@
 const native = adone.bind("git.node");
-const { vendor: { lodash: _ } } = adone;
 
 const {
     is,
+    promise: { promisifyAll },
     std: { path },
     vcs: { git: {
         Error, // force load in case of indirect instantiation
@@ -32,7 +32,8 @@ const {
         Rebase,
         Signature,
         Utils: { normalizeOptions, shallowClone } }
-    }
+    },
+    vendor: { lodash: _ }
 } = adone;
 
 const Repository = native.Repository;
@@ -73,22 +74,22 @@ Repository.STATE = {
     APPLY_MAILBOX_OR_REBASE: 11
 };
 
-Repository.prototype.config = adone.promise.promisifyAll(Repository.prototype.config);
-Repository.prototype.configSnapshot = adone.promise.promisifyAll(Repository.prototype.configSnapshot);
-Repository.discover = adone.promise.promisifyAll(Repository.discover);
-Repository.prototype.fetchheadForeach = adone.promise.promisifyAll(Repository.prototype.fetchheadForeach);
-Repository.prototype.head = adone.promise.promisifyAll(Repository.prototype.head);
-Repository.prototype.index = adone.promise.promisifyAll(Repository.prototype.index);
-Repository.init = adone.promise.promisifyAll(Repository.init);
-Repository.initExt = adone.promise.promisifyAll(Repository.initExt);
-Repository.prototype.mergeheadForeach = adone.promise.promisifyAll(Repository.prototype.mergeheadForeach);
-Repository.prototype.odb = adone.promise.promisifyAll(Repository.prototype.odb);
-Repository.open = adone.promise.promisifyAll(Repository.open);
-Repository.openBare = adone.promise.promisifyAll(Repository.openBare);
-Repository.openExt = adone.promise.promisifyAll(Repository.openExt);
-Repository.prototype.refdb = adone.promise.promisifyAll(Repository.prototype.refdb);
-Repository.prototype.setHead = adone.promise.promisifyAll(Repository.prototype.setHead);
-Repository.wrapOdb = adone.promise.promisifyAll(Repository.wrapOdb);
+Repository.prototype.config = promisifyAll(Repository.prototype.config);
+Repository.prototype.configSnapshot = promisifyAll(Repository.prototype.configSnapshot);
+Repository.discover = promisifyAll(Repository.discover);
+Repository.prototype.fetchheadForeach = promisifyAll(Repository.prototype.fetchheadForeach);
+Repository.prototype.head = promisifyAll(Repository.prototype.head);
+Repository.prototype.index = promisifyAll(Repository.prototype.index);
+Repository.init = promisifyAll(Repository.init);
+Repository.initExt = promisifyAll(Repository.initExt);
+Repository.prototype.mergeheadForeach = promisifyAll(Repository.prototype.mergeheadForeach);
+Repository.prototype.odb = promisifyAll(Repository.prototype.odb);
+Repository.open = promisifyAll(Repository.open);
+Repository.openBare = promisifyAll(Repository.openBare);
+Repository.openExt = promisifyAll(Repository.openExt);
+Repository.prototype.refdb = promisifyAll(Repository.prototype.refdb);
+Repository.prototype.setHead = promisifyAll(Repository.prototype.setHead);
+Repository.wrapOdb = promisifyAll(Repository.wrapOdb);
 
 const _discover = Repository.discover;
 const _initExt = Repository.initExt;
@@ -207,11 +208,12 @@ const getPathHunks = (repo, index, filePath, isStaged, additionalDiffOptions) =>
             flags: Diff.OPTION.SHOW_UNTRACKED_CONTENT | Diff.OPTION.RECURSE_UNTRACKED_DIRS | (additionalDiffOptions || 0)
         });
     }).then((diff) => {
-        if (!(Status.file(repo, filePath) & Status.STATUS.WT_MODIFIED) && !(Status.file(repo, filePath) & Status.STATUS.INDEX_MODIFIED)) {
-            return Promise.reject("Selected staging is only available on modified files.");
-        }
-
-        return diff.patches();
+        return Status.file(repo, filePath).then((status) => {
+            if (!(status & Status.STATUS.WT_MODIFIED) && !(status & Status.STATUS.INDEX_MODIFIED)) {
+                return Promise.reject("Selected staging is only available on modified files.");
+            }
+            return diff.patches();
+        });
     }).then((patches) => {
         const pathPatch = patches.filter((patch) => {
             return patch.newFile().path() === filePath;
@@ -254,16 +256,16 @@ const performRebase = (repository, rebase, signature, beforeNextFn, beforeFinish
 
     const getPromise = () => {
         return rebase.next().then(() => {
-            return repository.refreshIndex().then((index) => {
-                if (index.hasConflicts()) {
-                    throw index;
-                }
+            return repository.refreshIndex();
+        }).then((index) => {
+            if (index.hasConflicts()) {
+                throw index;
+            }
 
-                rebase.commit(null, signature);
-
-                return performRebase(repository, rebase, signature, beforeNextFn, beforeFinishFn);
-            });
-        }, (error) => {
+            return rebase.commit(null, signature);
+        }).then(() => {
+            return performRebase(repository, rebase, signature, beforeNextFn, beforeFinishFn);
+        }).catch((error) => {
             if (error && error.errno === adone.vcs.git.Error.CODE.ITEROVER) {
                 const calcRewritten = (x) => _.map(_.split(x, "\n"), (xx) => _.split(xx, " "));
 
@@ -442,15 +444,22 @@ Repository.prototype.continueRebase = function (signature, beforeNextFn, beforeF
 
     signature = signature || repo.defaultSignature();
 
+    let rebase;
     return repo.refreshIndex().then((index) => {
         if (index.hasConflicts()) {
             throw index;
         }
 
         return Rebase.open(repo);
-    }).then((rebase) => {
-        rebase.commit(null, signature);
-
+    }).then((_rebase) => {
+        rebase = _rebase;
+        return rebase.commit(null, signature).catch(() => {
+            // Ignore all errors to prevent
+            // this routine from choking now
+            // that we made rebase.commit
+            // asynchronous
+        });
+    }).then(() => {
         return performRebase(repo, rebase, signature, beforeNextFn, beforeFinishFn);
     }).then((error) => {
         if (error) {
@@ -488,8 +497,8 @@ Repository.prototype.createBranch = function (name, commit, force) {
  * @param {Buffer} buffer
  * @return {Oid}
  */
-Repository.prototype.createBlobFromBuffer = function (buffer, callback) {
-    return Blob.createFromBuffer(this, buffer, buffer.length, callback);
+Repository.prototype.createBlobFromBuffer = function (buffer) {
+    return Blob.createFromBuffer(this, buffer, buffer.length);
 };
 
 /**
@@ -1475,7 +1484,7 @@ Repository.prototype.stageFilemode = function (filePath, stageNew, additionalDif
     }).then(function getDiffFromTree(tree) {
         return Diff.treeToIndex(repo, tree, index, diffOptions);
     });
-    let filePaths = (filePath instanceof Array) ? filePath : [filePath];
+    let filePaths = filePath instanceof Array ? filePath : [filePath];
 
     const indexLock = `${repo.path().replace(".git/", "")}.git/index.lock`;
 
@@ -1487,16 +1496,23 @@ Repository.prototype.stageFilemode = function (filePath, stageNew, additionalDif
         return diffPromise;
     }).then((diff) => {
         const origLength = filePaths.length;
-        filePaths = filePaths.filter((p) => {
-            return (
-                (Status.file(repo, p) & Status.STATUS.WT_MODIFIED) ||
-                (Status.file(repo, p) & Status.STATUS.INDEX_MODIFIED)
-            );
+        const fileFilterPromises = filePaths.map((p) => {
+            return Status.file(repo, p).then((status) => {
+                return {
+                    path: p,
+                    filter: status & Status.STATUS.WT_MODIFIED || status & Status.STATUS.INDEX_MODIFIED
+                };
+            });
         });
-        if (filePaths.length === 0 && origLength > 0) {
-            return Promise.reject("Selected staging is only available on modified files.");
-        }
-        return diff.patches();
+
+        return Promise.all(fileFilterPromises).then((results) => {
+            filePaths = results.filter((filterResult) => filterResult.filter).map((filterResult) => filterResult.path);
+
+            if (filePaths.length === 0 && origLength > 0) {
+                return Promise.reject("Selected staging is only available on modified files.");
+            }
+            return diff.patches();
+        });
     }).then((patches) => {
         const pathPatches = patches.filter((patch) => {
             return ~filePaths.indexOf(patch.newFile().path());
@@ -1508,8 +1524,7 @@ Repository.prototype.stageFilemode = function (filePath, stageNew, additionalDif
         return pathPatches.reduce((lastIndexAddPromise, pathPatch) => {
             const entry = index.getByPath(pathPatch.newFile().path(), 0);
 
-            entry.mode = stageNew ?
-                pathPatch.newFile().mode() : pathPatch.oldFile().mode();
+            entry.mode = stageNew ? pathPatch.newFile().mode() : pathPatch.oldFile().mode();
 
             return lastIndexAddPromise.then(() => {
                 return index.add(entry);
@@ -1585,7 +1600,8 @@ Repository.prototype.stageLines = function (filePath, selectedLines, isSelection
     }).then((newContent) => {
         const newContentBuffer = Buffer.from(newContent);
 
-        const newOid = repo.createBlobFromBuffer(newContentBuffer);
+        return repo.createBlobFromBuffer(newContentBuffer);
+    }).then((newOid) => {
         return repo.getBlob(newOid);
     }).then((newBlob) => {
         const entry = index.getByPath(filePath, 0);

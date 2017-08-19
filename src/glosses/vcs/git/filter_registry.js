@@ -1,13 +1,14 @@
 const native = adone.bind("git.node");
 const {
     is,
+    promise: { promisifyAll },
     vcs: { git }
 } = adone;
 
 const FilterRegistry = native.FilterRegistry;
 
-const asyncRegister = adone.promise.promisifyAll(FilterRegistry.register);
-const asyncUnregister = adone.promise.promisifyAll(FilterRegistry.unregister);
+const asyncRegister = promisifyAll(FilterRegistry.register);
+const asyncUnregister = promisifyAll(FilterRegistry.unregister);
 
 // register should add filter by name to dict and return
 // Override FilterRegistry.register to normalize Filter

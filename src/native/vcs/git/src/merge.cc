@@ -48,19 +48,18 @@ using namespace node;
     Nan::Set(target, Nan::New<String>("Merge").ToLocalChecked(), object);
   }
 
-  
+ 
 /*
- * @param Repository repo
+ * @param Repo repo
    * @param Array their_heads
    * @param Number their_heads_len
    * @param MergeOptions merge_opts
    * @param CheckoutOptions checkout_opts
-     * @return Number  result    */
+     */
 NAN_METHOD(GitMerge::Merge) {
-  Nan::EscapableHandleScope scope;
 
   if (info.Length() == 0 || !info[0]->IsObject()) {
-    return Nan::ThrowError("Repository repo is required.");
+    return Nan::ThrowError("Repo repo is required.");
   }
 
   if (info.Length() == 1 || !info[1]->IsObject()) {
@@ -79,10 +78,20 @@ NAN_METHOD(GitMerge::Merge) {
     return Nan::ThrowError("CheckoutOptions checkout_opts is required.");
   }
 
+  if (info.Length() == 5 || !info[5]->IsFunction()) {
+    return Nan::ThrowError("Callback is required and must be a Function.");
+  }
+
+  MergeBaton* baton = new MergeBaton;
+
+  baton->error_code = GIT_OK;
+  baton->error = NULL;
+
 // start convert_from_v8 block
   git_repository * from_repo = NULL;
 from_repo = Nan::ObjectWrap::Unwrap<GitRepository>(info[0]->ToObject())->GetValue();
 // end convert_from_v8 block
+  baton->repo = from_repo;
 // start convert_from_v8 block
   const git_annotated_commit ** from_their_heads = NULL;
 
@@ -92,44 +101,150 @@ from_repo = Nan::ObjectWrap::Unwrap<GitRepository>(info[0]->ToObject())->GetValu
       from_their_heads[i] = Nan::ObjectWrap::Unwrap<GitAnnotatedCommit>(tmp_their_heads->Get(Nan::New(static_cast<double>(i)))->ToObject())->GetValue();
       }
 // end convert_from_v8 block
+  baton->their_heads = from_their_heads;
 // start convert_from_v8 block
   size_t from_their_heads_len;
   from_their_heads_len = (size_t)   info[2]->ToNumber()->Value();
 // end convert_from_v8 block
+  baton->their_heads_len = from_their_heads_len;
 // start convert_from_v8 block
-  const git_merge_options * from_merge_opts = NULL;
+  git_merge_options * from_merge_opts = NULL;
 from_merge_opts = Nan::ObjectWrap::Unwrap<GitMergeOptions>(info[3]->ToObject())->GetValue();
 // end convert_from_v8 block
+  baton->merge_opts = from_merge_opts;
 // start convert_from_v8 block
-  const git_checkout_options * from_checkout_opts = NULL;
+  git_checkout_options * from_checkout_opts = NULL;
 from_checkout_opts = Nan::ObjectWrap::Unwrap<GitCheckoutOptions>(info[4]->ToObject())->GetValue();
 // end convert_from_v8 block
- 
+  baton->checkout_opts = from_checkout_opts;
+
+  Nan::Callback *callback = new Nan::Callback(v8::Local<Function>::Cast(info[5]));
+  MergeWorker *worker = new MergeWorker(baton, callback);
+  if (!info[0]->IsUndefined() && !info[0]->IsNull())
+    worker->SaveToPersistent("repo", info[0]->ToObject());
+  if (!info[1]->IsUndefined() && !info[1]->IsNull())
+    worker->SaveToPersistent("their_heads", info[1]->ToObject());
+  if (!info[2]->IsUndefined() && !info[2]->IsNull())
+    worker->SaveToPersistent("their_heads_len", info[2]->ToObject());
+  if (!info[3]->IsUndefined() && !info[3]->IsNull())
+    worker->SaveToPersistent("merge_opts", info[3]->ToObject());
+  if (!info[4]->IsUndefined() && !info[4]->IsNull())
+    worker->SaveToPersistent("checkout_opts", info[4]->ToObject());
+
+  AsyncLibgit2QueueWorker(worker);
+  return;
+}
+
+void GitMerge::MergeWorker::Execute() {
   giterr_clear();
 
   {
-    LockMaster lockMaster(/*asyncAction: */false        ,    from_repo
-        ,    from_their_heads
-        ,    from_merge_opts
-        ,    from_checkout_opts
+    LockMaster lockMaster(/*asyncAction: */true        ,baton->repo
+        ,baton->merge_opts
+        ,baton->checkout_opts
 );
 
-    int result = git_merge(
-  from_repo
-,  from_their_heads
-,  from_their_heads_len
-,  from_merge_opts
-,  from_checkout_opts
-    );
+  int result = git_merge(
+baton->repo,baton->their_heads,baton->their_heads_len,baton->merge_opts,baton->checkout_opts    );
 
- 
-    v8::Local<v8::Value> to;
-// start convert_to_v8 block
-     to = Nan::New<Number>( result);
-  // end convert_to_v8 block
-    return info.GetReturnValue().Set(scope.Escape(to));
+    baton->error_code = result;
+
+    if (result != GIT_OK && giterr_last() != NULL) {
+      baton->error = git_error_dup(giterr_last());
+    }
+
   }
 }
+
+void GitMerge::MergeWorker::HandleOKCallback() {
+  if (baton->error_code == GIT_OK) {
+    v8::Local<v8::Value> result = Nan::Undefined();
+    v8::Local<v8::Value> argv[2] = {
+      Nan::Null(),
+      result
+    };
+    callback->Call(2, argv);
+  } else {
+    if (baton->error) {
+      v8::Local<v8::Object> err;
+      if (baton->error->message) {
+        err = Nan::Error(baton->error->message)->ToObject();
+      } else {
+        err = Nan::Error("Method merge has thrown an error.")->ToObject();
+      }
+      err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      v8::Local<v8::Value> argv[1] = {
+        err
+      };
+      callback->Call(1, argv);
+      if (baton->error->message)
+        free((void *)baton->error->message);
+      free((void *)baton->error);
+    } else if (baton->error_code < 0) {
+      std::queue< v8::Local<v8::Value> > workerArguments;
+      workerArguments.push(GetFromPersistent("repo"));
+      workerArguments.push(GetFromPersistent("their_heads"));
+      workerArguments.push(GetFromPersistent("their_heads_len"));
+      workerArguments.push(GetFromPersistent("merge_opts"));
+      workerArguments.push(GetFromPersistent("checkout_opts"));
+      bool callbackFired = false;
+      while(!workerArguments.empty()) {
+        v8::Local<v8::Value> node = workerArguments.front();
+        workerArguments.pop();
+
+        if (
+          !node->IsObject()
+          || node->IsArray()
+          || node->IsBooleanObject()
+          || node->IsDate()
+          || node->IsFunction()
+          || node->IsNumberObject()
+          || node->IsRegExp()
+          || node->IsStringObject()
+        ) {
+          continue;
+        }
+
+        v8::Local<v8::Object> nodeObj = node->ToObject();
+        v8::Local<v8::Value> checkValue = GetPrivate(nodeObj, Nan::New("NodeGitPromiseError").ToLocalChecked());
+
+        if (!checkValue.IsEmpty() && !checkValue->IsNull() && !checkValue->IsUndefined()) {
+          v8::Local<v8::Value> argv[1] = {
+            checkValue->ToObject()
+          };
+          callback->Call(1, argv);
+          callbackFired = true;
+          break;
+        }
+
+        v8::Local<v8::Array> properties = nodeObj->GetPropertyNames();
+        for (unsigned int propIndex = 0; propIndex < properties->Length(); ++propIndex) {
+          v8::Local<v8::String> propName = properties->Get(propIndex)->ToString();
+          v8::Local<v8::Value> nodeToQueue = nodeObj->Get(propName);
+          if (!nodeToQueue->IsUndefined()) {
+            workerArguments.push(nodeToQueue);
+          }
+        }
+      }
+
+      if (!callbackFired) {
+        v8::Local<v8::Object> err = Nan::Error("Method merge has thrown an error.")->ToObject();
+        err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        v8::Local<v8::Value> argv[1] = {
+          err
+        };
+        callback->Call(1, argv);
+      }
+    } else {
+      callback->Call(0, NULL);
+    }
+
+  }
+
+
+  delete baton;
+}
+
   
 /*
   * @param Repository repo

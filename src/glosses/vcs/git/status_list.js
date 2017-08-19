@@ -1,15 +1,15 @@
 const native = adone.bind("git.node");
 
 const {
-    promise,
+    promise: { promisifyAll },
     vcs: { git: { StatusOptions, Utils: { normalizeOptions } } }
 } = adone;
 
 const StatusList = native.StatusList;
 
-StatusList.prototype.getPerfdata = promise.promisifyAll(StatusList.prototype.getPerfdata);
+StatusList.prototype.getPerfdata = promisifyAll(StatusList.prototype.getPerfdata);
 
-const asyncCreate = promise.promisifyAll(StatusList.create);
+const asyncCreate = promisifyAll(StatusList.create);
 
 // Override StatusList.create to normalize opts
 StatusList.create = function (repo, opts) {

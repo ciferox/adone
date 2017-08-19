@@ -1,14 +1,17 @@
 const native = adone.bind("git.node");
 
 const {
+    promise: { promisifyAll },
     vcs: { git: { Checkout, RebaseOptions, CheckoutOptions, MergeOptions, Utils: { normalizeOptions, shallowClone } } }
 } = adone;
 
 const Rebase = native.Rebase;
 
-Rebase.prototype.next = adone.promise.promisifyAll(Rebase.prototype.next);
-const asyncInit = adone.promise.promisifyAll(Rebase.init);
-const asyncOpen = adone.promise.promisifyAll(Rebase.open);
+Rebase.prototype.next = promisifyAll(Rebase.prototype.next);
+const asyncAbort = promisifyAll(Rebase.prototype.abort);
+const asyncCommit = promisifyAll(Rebase.prototype.commit);
+const asyncInit = promisifyAll(Rebase.init);
+const asyncOpen = promisifyAll(Rebase.open);
 
 /**
  * Initializes a rebase
@@ -26,7 +29,7 @@ const asyncOpen = adone.promise.promisifyAll(Rebase.open);
  * @return {Remote}
  */
 
-function defaultRebaseOptions(options, checkoutStrategy) {
+const defaultRebaseOptions = (options, checkoutStrategy) => {
     let checkoutOptions;
     let mergeOptions;
 
@@ -62,7 +65,7 @@ function defaultRebaseOptions(options, checkoutStrategy) {
     }
 
     return options;
-}
+};
 
 Rebase.init = function (repository, branch, upstream, onto, options) {
     options = defaultRebaseOptions(
@@ -87,6 +90,14 @@ Rebase.open = function (repository, options) {
         Checkout.STRATEGY.SAFE
     );
     return asyncOpen(repository, options);
+};
+
+Rebase.prototype.commit = function (author, committer, encoding, message) {
+    return asyncCommit.call(this, author, committer, encoding, message);
+};
+
+Rebase.prototype.abort = function () {
+    return asyncAbort.call(this);
 };
 
 export default Rebase;

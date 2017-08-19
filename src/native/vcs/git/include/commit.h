@@ -67,6 +67,33 @@ class GitCommit : public
     {}
     ~GitCommit();
                                                                                                                             
+    struct AmendBaton {
+      int error_code;
+      const git_error* error;
+      git_oid * id;
+      const git_commit * commit_to_amend;
+      const char * update_ref;
+      const git_signature * author;
+      const git_signature * committer;
+      const char * message_encoding;
+      const char * message;
+      const git_tree * tree;
+    };
+    class AmendWorker : public Nan::AsyncWorker {
+      public:
+        AmendWorker(
+            AmendBaton *_baton,
+            Nan::Callback *callback
+        ) : Nan::AsyncWorker(callback)
+          , baton(_baton) {};
+        ~AmendWorker() {};
+        void Execute();
+        void HandleOKCallback();
+
+      private:
+        AmendBaton *baton;
+    };
+
     static NAN_METHOD(Amend);
 
     static NAN_METHOD(Author);

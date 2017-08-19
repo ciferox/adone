@@ -1,5 +1,9 @@
 const native = adone.bind("git.node");
 
+const {
+    promise: { promisifyAll }
+} = adone;
+
 const Branch = native.Branch;
 
 Branch.BRANCH = {
@@ -8,16 +12,16 @@ Branch.BRANCH = {
     ALL: 3
 };
 
-Branch.create = adone.promise.promisifyAll(Branch.create);
-Branch.createFromAnnotated = adone.promise.promisifyAll(Branch.createFromAnnotated);
-Branch.iteratorNew = adone.promise.promisifyAll(Branch.iteratorNew);
-Branch.lookup = adone.promise.promisifyAll(Branch.lookup);
-Branch.move = adone.promise.promisifyAll(Branch.move);
-Branch.name = adone.promise.promisifyAll(Branch.name);
-Branch.setUpstream = adone.promise.promisifyAll(Branch.setUpstream);
-Branch.upstream = adone.promise.promisifyAll(Branch.upstream);
+Branch.create = promisifyAll(Branch.create);
+Branch.createFromAnnotated = promisifyAll(Branch.createFromAnnotated);
+Branch.iteratorNew = promisifyAll(Branch.iteratorNew);
+Branch.lookup = promisifyAll(Branch.lookup);
+Branch.move = promisifyAll(Branch.move);
+Branch.name = promisifyAll(Branch.name);
+Branch.setUpstream = promisifyAll(Branch.setUpstream);
+Branch.upstream = promisifyAll(Branch.upstream);
 
-const asyncRemoteName = adone.promise.promisifyAll(Branch.remoteName);
+const asyncRemoteName = promisifyAll(Branch.remoteName);
 
 /**
  * Retrieve the Branch's Remote Name as a String.

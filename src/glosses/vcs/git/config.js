@@ -1,5 +1,9 @@
 const native = adone.bind("git.node");
 
+const {
+    promise: { promisifyAll }
+} = adone;
+
 const Config = native.Config;
 
 Config.LEVEL = {
@@ -12,11 +16,11 @@ Config.LEVEL = {
     HIGHEST_LEVEL: -1
 };
 
-Config.findProgramdata = adone.promise.promisifyAll(Config.findProgramdata);
-Config.prototype.getStringBuf = adone.promise.promisifyAll(Config.prototype.getStringBuf);
-Config.openDefault = adone.promise.promisifyAll(Config.openDefault);
-Config.prototype.setString = adone.promise.promisifyAll(Config.prototype.setString);
-Config.prototype.snapshot = adone.promise.promisifyAll(Config.prototype.snapshot);
+Config.findProgramdata = promisifyAll(Config.findProgramdata);
+Config.prototype.getStringBuf = promisifyAll(Config.prototype.getStringBuf);
+Config.openDefault = promisifyAll(Config.openDefault);
+Config.prototype.setString = promisifyAll(Config.prototype.setString);
+Config.prototype.snapshot = promisifyAll(Config.prototype.snapshot);
 
 // Backwards compatibility.
 Config.prototype.getString = function () {

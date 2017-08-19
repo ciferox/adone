@@ -1,13 +1,14 @@
 const native = adone.bind("git.node");
 
 const {
+    promise: { promisifyAll },
     vcs: { git: { CherrypickOptions, MergeOptions, CheckoutOptions, Utils: { shallowClone, normalizeOptions } } }
 } = adone;
 
 const Cherrypick = native.Cherrypick;
 
-Cherrypick.cherrypick = adone.promise.promisifyAll(Cherrypick.cherrypick);
-Cherrypick.commit = adone.promise.promisifyAll(Cherrypick.commit);
+Cherrypick.cherrypick = promisifyAll(Cherrypick.cherrypick);
+Cherrypick.commit = promisifyAll(Cherrypick.commit);
 
 const _cherrypick = Cherrypick.cherrypick;
 const _commit = Cherrypick.commit;

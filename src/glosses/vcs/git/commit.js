@@ -2,6 +2,7 @@ const native = adone.bind("git.node");
 
 const {
     is,
+    promise: { promisifyAll },
     std: { events },
     vcs: { git: {
         Oid,
@@ -10,14 +11,15 @@ const {
 
 const Commit = native.Commit;
 
-Commit.create = adone.promise.promisifyAll(Commit.create);
-Commit.createWithSignature = adone.promise.promisifyAll(Commit.createWithSignature);
-Commit.prototype.dup = adone.promise.promisifyAll(Commit.prototype.dup);
-Commit.prototype.headerField = adone.promise.promisifyAll(Commit.prototype.headerField);
-Commit.lookup = adone.promise.promisifyAll(Commit.lookup);
-Commit.lookupPrefix = adone.promise.promisifyAll(Commit.lookupPrefix);
-Commit.prototype.nthGenAncestor = adone.promise.promisifyAll(Commit.prototype.nthGenAncestor);
-Commit.prototype.parent = adone.promise.promisifyAll(Commit.prototype.parent);
+Commit.prototype.amend = promisifyAll(Commit.prototype.amend);
+Commit.create = promisifyAll(Commit.create);
+Commit.createWithSignature = promisifyAll(Commit.createWithSignature);
+Commit.prototype.dup = promisifyAll(Commit.prototype.dup);
+Commit.prototype.headerField = promisifyAll(Commit.prototype.headerField);
+Commit.lookup = promisifyAll(Commit.lookup);
+Commit.lookupPrefix = promisifyAll(Commit.lookupPrefix);
+Commit.prototype.nthGenAncestor = promisifyAll(Commit.prototype.nthGenAncestor);
+Commit.prototype.parent = promisifyAll(Commit.prototype.parent);
 
 
 const _amend = Commit.prototype.amend;

@@ -22,6 +22,7 @@ extern "C" {
 #include "../include/oid.h"
 #include "../include/repository.h"
 #include "../include/writestream.h"
+#include "../include/buf.h"
 // Forward declaration.
 struct git_blob {
 };
@@ -54,7 +55,7 @@ class GitBlob : public
    public:
     static void InitializeComponent (v8::Local<v8::Object> target);
 
-                                                           
+                                                                 
 
   private:
     GitBlob()
@@ -66,8 +67,53 @@ class GitBlob : public
       : NodeGitWrapper<GitBlobTraits>(raw, selfFreeing, owner)
     {}
     ~GitBlob();
-                                                           
+                                                                 
+    struct CreateFrombufferBaton {
+      int error_code;
+      const git_error* error;
+      git_oid * id;
+      git_repository * repo;
+      const void * buffer;
+      size_t len;
+    };
+    class CreateFrombufferWorker : public Nan::AsyncWorker {
+      public:
+        CreateFrombufferWorker(
+            CreateFrombufferBaton *_baton,
+            Nan::Callback *callback
+        ) : Nan::AsyncWorker(callback)
+          , baton(_baton) {};
+        ~CreateFrombufferWorker() {};
+        void Execute();
+        void HandleOKCallback();
+
+      private:
+        CreateFrombufferBaton *baton;
+    };
+
     static NAN_METHOD(CreateFrombuffer);
+
+    struct CreateFromdiskBaton {
+      int error_code;
+      const git_error* error;
+      git_oid * id;
+      git_repository * repo;
+      const char * path;
+    };
+    class CreateFromdiskWorker : public Nan::AsyncWorker {
+      public:
+        CreateFromdiskWorker(
+            CreateFromdiskBaton *_baton,
+            Nan::Callback *callback
+        ) : Nan::AsyncWorker(callback)
+          , baton(_baton) {};
+        ~CreateFromdiskWorker() {};
+        void Execute();
+        void HandleOKCallback();
+
+      private:
+        CreateFromdiskBaton *baton;
+    };
 
     static NAN_METHOD(CreateFromdisk);
 
@@ -118,6 +164,28 @@ class GitBlob : public
 
     static NAN_METHOD(CreateFromstreamCommit);
 
+    struct CreateFromworkdirBaton {
+      int error_code;
+      const git_error* error;
+      git_oid * id;
+      git_repository * repo;
+      const char * relative_path;
+    };
+    class CreateFromworkdirWorker : public Nan::AsyncWorker {
+      public:
+        CreateFromworkdirWorker(
+            CreateFromworkdirBaton *_baton,
+            Nan::Callback *callback
+        ) : Nan::AsyncWorker(callback)
+          , baton(_baton) {};
+        ~CreateFromworkdirWorker() {};
+        void Execute();
+        void HandleOKCallback();
+
+      private:
+        CreateFromworkdirBaton *baton;
+    };
+
     static NAN_METHOD(CreateFromworkdir);
 
     struct DupBaton {
@@ -142,6 +210,31 @@ class GitBlob : public
     };
 
     static NAN_METHOD(Dup);
+
+    struct FilteredContentBaton {
+      int error_code;
+      const git_error* error;
+      git_buf * out;
+      git_blob * blob;
+      const char * as_path;
+      int check_for_binary_data;
+    };
+    class FilteredContentWorker : public Nan::AsyncWorker {
+      public:
+        FilteredContentWorker(
+            FilteredContentBaton *_baton,
+            Nan::Callback *callback
+        ) : Nan::AsyncWorker(callback)
+          , baton(_baton) {};
+        ~FilteredContentWorker() {};
+        void Execute();
+        void HandleOKCallback();
+
+      private:
+        FilteredContentBaton *baton;
+    };
+
+    static NAN_METHOD(FilteredContent);
 
     static NAN_METHOD(Free);
 

@@ -1,6 +1,6 @@
 const native = adone.bind("git.node");
 const {
-    promise,
+    promise: { promisifyAll },
     vcs: { git: { ProxyOptions, PushOptions, RemoteCallbacks, Utils: { normalizeFetchOptions, normalizeOptions, lookupWrapper, shallowClone } } }
 } = adone;
 
@@ -18,23 +18,23 @@ Remote.COMPLETION_TYPE = {
     COMPLETION_ERROR: 2
 };
 
-Remote.create = promise.promisifyAll(Remote.create);
-Remote.createAnonymous = promise.promisifyAll(Remote.createAnonymous);
-Remote.createWithFetchspec = promise.promisifyAll(Remote.createWithFetchspec);
-Remote.prototype.defaultBranch = promise.promisifyAll(Remote.prototype.defaultBranch);
-Remote.delete = promise.promisifyAll(Remote.delete);
-Remote.prototype.disconnect = promise.promisifyAll(Remote.prototype.disconnect);
-Remote.prototype.dup = promise.promisifyAll(Remote.prototype.dup);
-Remote.prototype.getFetchRefspecs = promise.promisifyAll(Remote.prototype.getFetchRefspecs);
-Remote.prototype.getPushRefspecs = promise.promisifyAll(Remote.prototype.getPushRefspecs);
-Remote.list = promise.promisifyAll(Remote.list);
-Remote.lookup = promise.promisifyAll(Remote.lookup);
-Remote.prototype.referenceList = promise.promisifyAll(Remote.prototype.referenceList);
+Remote.create = promisifyAll(Remote.create);
+Remote.createAnonymous = promisifyAll(Remote.createAnonymous);
+Remote.createWithFetchspec = promisifyAll(Remote.createWithFetchspec);
+Remote.prototype.defaultBranch = promisifyAll(Remote.prototype.defaultBranch);
+Remote.delete = promisifyAll(Remote.delete);
+Remote.prototype.disconnect = promisifyAll(Remote.prototype.disconnect);
+Remote.prototype.dup = promisifyAll(Remote.prototype.dup);
+Remote.prototype.getFetchRefspecs = promisifyAll(Remote.prototype.getFetchRefspecs);
+Remote.prototype.getPushRefspecs = promisifyAll(Remote.prototype.getPushRefspecs);
+Remote.list = promisifyAll(Remote.list);
+Remote.lookup = promisifyAll(Remote.lookup);
+Remote.prototype.referenceList = promisifyAll(Remote.prototype.referenceList);
 
-const asyncConnect = promise.promisifyAll(Remote.prototype.connect);
-const asyncDownload = promise.promisifyAll(Remote.prototype.download);
-const asyncFetch = promise.promisifyAll(Remote.prototype.fetch);
-const asyncPush = promise.promisifyAll(Remote.prototype.push);
+const asyncConnect = promisifyAll(Remote.prototype.connect);
+const asyncDownload = promisifyAll(Remote.prototype.download);
+const asyncFetch = promisifyAll(Remote.prototype.fetch);
+const asyncPush = promisifyAll(Remote.prototype.push);
 const asyncUpload = Remote.prototype.upload;
 
 

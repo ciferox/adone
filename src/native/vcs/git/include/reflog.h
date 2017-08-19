@@ -104,6 +104,26 @@ class GitReflog : public
 
     static NAN_METHOD(Rename);
 
+    struct WriteBaton {
+      int error_code;
+      const git_error* error;
+      git_reflog * reflog;
+    };
+    class WriteWorker : public Nan::AsyncWorker {
+      public:
+        WriteWorker(
+            WriteBaton *_baton,
+            Nan::Callback *callback
+        ) : Nan::AsyncWorker(callback)
+          , baton(_baton) {};
+        ~WriteWorker() {};
+        void Execute();
+        void HandleOKCallback();
+
+      private:
+        WriteBaton *baton;
+    };
+
     static NAN_METHOD(Write);
 };
 

@@ -1,8 +1,12 @@
 const native = adone.bind("git.node");
 
+const {
+    promise: { promisifyAll }
+} = adone;
+
 const TreeBuilder = native.Treebuilder;
 
-TreeBuilder.prototype.insert = adone.promise.promisifyAll(TreeBuilder.prototype.insert);
-TreeBuilder.create = adone.promise.promisifyAll(TreeBuilder.create);
+TreeBuilder.prototype.insert = promisifyAll(TreeBuilder.prototype.insert);
+TreeBuilder.create = promisifyAll(TreeBuilder.create);
 
 export default TreeBuilder;

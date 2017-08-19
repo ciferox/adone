@@ -42,6 +42,30 @@ class GitMerge : public
 
   private:
                                            
+    struct MergeBaton {
+      int error_code;
+      const git_error* error;
+      git_repository * repo;
+      const git_annotated_commit ** their_heads;
+      size_t their_heads_len;
+      git_merge_options * merge_opts;
+      git_checkout_options * checkout_opts;
+    };
+    class MergeWorker : public Nan::AsyncWorker {
+      public:
+        MergeWorker(
+            MergeBaton *_baton,
+            Nan::Callback *callback
+        ) : Nan::AsyncWorker(callback)
+          , baton(_baton) {};
+        ~MergeWorker() {};
+        void Execute();
+        void HandleOKCallback();
+
+      private:
+        MergeBaton *baton;
+    };
+
     static NAN_METHOD(Merge);
 
     struct BaseBaton {

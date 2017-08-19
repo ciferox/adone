@@ -1,6 +1,7 @@
 const native = adone.bind("git.node");
 
 const {
+    promise: { promisifyAll },
     vcs: { git: { CloneOptions, Repository, Utils: { shallowClone, normalizeFetchOptions, normalizeOptions } } }
 } = adone;
 
@@ -13,7 +14,7 @@ Clone.LOCAL = {
     NO_LINKS: 3
 };
 
-const asyncClone = adone.promise.promisifyAll(Clone.clone);
+const asyncClone = promisifyAll(Clone.clone);
 
 /**
  * Patch repository cloning to automatically coerce objects.

@@ -1,5 +1,6 @@
 const native = adone.bind("git.node");
 const {
+    promise: { promisifyAll },
     vcs: { git: { Branch, Utils: { lookupWrapper } } }
 } = adone;
 
@@ -19,20 +20,20 @@ Reference.NORMALIZE = {
     REF_FORMAT_REFSPEC_SHORTHAND: 4
 };
 
-Reference.create = adone.promise.promisifyAll(Reference.create);
-Reference.createMatching = adone.promise.promisifyAll(Reference.createMatching);
-Reference.prototype.dup = adone.promise.promisifyAll(Reference.prototype.dup);
-Reference.dwim = adone.promise.promisifyAll(Reference.dwim);
-Reference.list = adone.promise.promisifyAll(Reference.list);
-Reference.lookup = adone.promise.promisifyAll(Reference.lookup);
-Reference.nameToId = adone.promise.promisifyAll(Reference.nameToId);
-Reference.prototype.peel = adone.promise.promisifyAll(Reference.prototype.peel);
-Reference.prototype.rename = adone.promise.promisifyAll(Reference.prototype.rename);
-Reference.prototype.resolve = adone.promise.promisifyAll(Reference.prototype.resolve);
-Reference.prototype.setTarget = adone.promise.promisifyAll(Reference.prototype.setTarget);
-Reference.symbolicCreate = adone.promise.promisifyAll(Reference.symbolicCreate);
-Reference.symbolicCreateMatching = adone.promise.promisifyAll(Reference.symbolicCreateMatching);
-Reference.prototype.symbolicSetTarget = adone.promise.promisifyAll(Reference.prototype.symbolicSetTarget);
+Reference.create = promisifyAll(Reference.create);
+Reference.createMatching = promisifyAll(Reference.createMatching);
+Reference.prototype.dup = promisifyAll(Reference.prototype.dup);
+Reference.dwim = promisifyAll(Reference.dwim);
+Reference.list = promisifyAll(Reference.list);
+Reference.lookup = promisifyAll(Reference.lookup);
+Reference.nameToId = promisifyAll(Reference.nameToId);
+Reference.prototype.peel = promisifyAll(Reference.prototype.peel);
+Reference.prototype.rename = promisifyAll(Reference.prototype.rename);
+Reference.prototype.resolve = promisifyAll(Reference.prototype.resolve);
+Reference.prototype.setTarget = promisifyAll(Reference.prototype.setTarget);
+Reference.symbolicCreate = promisifyAll(Reference.symbolicCreate);
+Reference.symbolicCreateMatching = promisifyAll(Reference.symbolicCreateMatching);
+Reference.prototype.symbolicSetTarget = promisifyAll(Reference.prototype.symbolicSetTarget);
 
 /**
 * Retrieves the reference by it's short name

@@ -1,7 +1,7 @@
 const native = adone.bind("git.node");
 
 const {
-    promise
+    promise: { promisifyAll }
 } = adone;
 
 const Index = native.Index;
@@ -20,26 +20,26 @@ Index.CAP = {
     FROM_OWNER: -1
 };
 
-Index.prototype.add = promise.promisifyAll(Index.prototype.add);
-Index.prototype.addByPath = promise.promisifyAll(Index.prototype.addByPath);
-Index.prototype.clear = promise.promisifyAll(Index.prototype.clear);
-Index.prototype.conflictAdd = promise.promisifyAll(Index.prototype.conflictAdd);
-Index.prototype.conflictCleanup = promise.promisifyAll(Index.prototype.conflictCleanup);
-Index.prototype.conflictGet = promise.promisifyAll(Index.prototype.conflictGet);
-Index.prototype.conflictRemove = promise.promisifyAll(Index.prototype.conflictRemove);
-Index.open = promise.promisifyAll(Index.open);
-Index.prototype.read = promise.promisifyAll(Index.prototype.read);
-Index.prototype.readTree = promise.promisifyAll(Index.prototype.readTree);
-Index.prototype.remove = promise.promisifyAll(Index.prototype.remove);
-Index.prototype.removeByPath = promise.promisifyAll(Index.prototype.removeByPath);
-Index.prototype.removeDirectory = promise.promisifyAll(Index.prototype.removeDirectory);
-Index.prototype.write = promise.promisifyAll(Index.prototype.write);
-Index.prototype.writeTree = promise.promisifyAll(Index.prototype.writeTree);
-Index.prototype.writeTreeTo = promise.promisifyAll(Index.prototype.writeTreeTo);
+Index.prototype.add = promisifyAll(Index.prototype.add);
+Index.prototype.addByPath = promisifyAll(Index.prototype.addByPath);
+Index.prototype.clear = promisifyAll(Index.prototype.clear);
+Index.prototype.conflictAdd = promisifyAll(Index.prototype.conflictAdd);
+Index.prototype.conflictCleanup = promisifyAll(Index.prototype.conflictCleanup);
+Index.prototype.conflictGet = promisifyAll(Index.prototype.conflictGet);
+Index.prototype.conflictRemove = promisifyAll(Index.prototype.conflictRemove);
+Index.open = promisifyAll(Index.open);
+Index.prototype.read = promisifyAll(Index.prototype.read);
+Index.prototype.readTree = promisifyAll(Index.prototype.readTree);
+Index.prototype.remove = promisifyAll(Index.prototype.remove);
+Index.prototype.removeByPath = promisifyAll(Index.prototype.removeByPath);
+Index.prototype.removeDirectory = promisifyAll(Index.prototype.removeDirectory);
+Index.prototype.write = promisifyAll(Index.prototype.write);
+Index.prototype.writeTree = promisifyAll(Index.prototype.writeTree);
+Index.prototype.writeTreeTo = promisifyAll(Index.prototype.writeTreeTo);
 
-const asyncAddAll = promise.promisifyAll(Index.prototype.addAll);
-const asyncRemoveAll = promise.promisifyAll(Index.prototype.removeAll);
-const asyncUpdateAll = promise.promisifyAll(Index.prototype.updateAll);
+const asyncAddAll = promisifyAll(Index.prototype.addAll);
+const asyncRemoveAll = promisifyAll(Index.prototype.removeAll);
+const asyncUpdateAll = promisifyAll(Index.prototype.updateAll);
 
 Index.prototype.addAll = function (pathspec, flags, matchedCallback) {
     return asyncAddAll.call(this, pathspec || "*", flags, matchedCallback, null);

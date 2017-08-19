@@ -490,7 +490,7 @@ describe("Rebase", () => {
                 assert.equal(commit.id().toString(), commitOid.toString());
             });
         }).then(() => {
-            return rebase.abort(ourSignature);
+            return rebase.abort();
         }).then(() => {
             return Rebase.open(repository).then((existingRebase) => {
                 assert.fail(existingRebase, undefined, "There should not be a rebase in progress");

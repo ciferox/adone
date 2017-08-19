@@ -61,46 +61,158 @@ using namespace node;
     Nan::Set(target, Nan::New("Rebase").ToLocalChecked(), _constructor_template);
   }
 
-  
-/*
-     * @return Number  result    */
-NAN_METHOD(GitRebase::Abort) {
-  Nan::EscapableHandleScope scope;
-
  
+/*
+     */
+NAN_METHOD(GitRebase::Abort) {
+
+  if (info.Length() == 0 || !info[0]->IsFunction()) {
+    return Nan::ThrowError("Callback is required and must be a Function.");
+  }
+
+  AbortBaton* baton = new AbortBaton;
+
+  baton->error_code = GIT_OK;
+  baton->error = NULL;
+
+  baton->rebase = Nan::ObjectWrap::Unwrap<GitRebase>(info.This())->GetValue();
+
+  Nan::Callback *callback = new Nan::Callback(v8::Local<Function>::Cast(info[0]));
+  AbortWorker *worker = new AbortWorker(baton, callback);
+  worker->SaveToPersistent("rebase", info.This());
+
+  AsyncLibgit2QueueWorker(worker);
+  return;
+}
+
+void GitRebase::AbortWorker::Execute() {
   giterr_clear();
 
   {
-    LockMaster lockMaster(/*asyncAction: */false        ,    Nan::ObjectWrap::Unwrap<GitRebase>(info.This())->GetValue()
+    LockMaster lockMaster(/*asyncAction: */true        ,baton->rebase
 );
 
-    int result = git_rebase_abort(
-  Nan::ObjectWrap::Unwrap<GitRebase>(info.This())->GetValue()
-    );
+  int result = git_rebase_abort(
+baton->rebase    );
 
- 
-    v8::Local<v8::Value> to;
-// start convert_to_v8 block
-     to = Nan::New<Number>( result);
-  // end convert_to_v8 block
-    return info.GetReturnValue().Set(scope.Escape(to));
+    baton->error_code = result;
+
+    if (result != GIT_OK && giterr_last() != NULL) {
+      baton->error = git_error_dup(giterr_last());
+    }
+
   }
 }
-   
+
+void GitRebase::AbortWorker::HandleOKCallback() {
+  if (baton->error_code == GIT_OK) {
+    v8::Local<v8::Value> result = Nan::Undefined();
+    v8::Local<v8::Value> argv[2] = {
+      Nan::Null(),
+      result
+    };
+    callback->Call(2, argv);
+  } else {
+    if (baton->error) {
+      v8::Local<v8::Object> err;
+      if (baton->error->message) {
+        err = Nan::Error(baton->error->message)->ToObject();
+      } else {
+        err = Nan::Error("Method abort has thrown an error.")->ToObject();
+      }
+      err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      v8::Local<v8::Value> argv[1] = {
+        err
+      };
+      callback->Call(1, argv);
+      if (baton->error->message)
+        free((void *)baton->error->message);
+      free((void *)baton->error);
+    } else if (baton->error_code < 0) {
+      std::queue< v8::Local<v8::Value> > workerArguments;
+      bool callbackFired = false;
+      while(!workerArguments.empty()) {
+        v8::Local<v8::Value> node = workerArguments.front();
+        workerArguments.pop();
+
+        if (
+          !node->IsObject()
+          || node->IsArray()
+          || node->IsBooleanObject()
+          || node->IsDate()
+          || node->IsFunction()
+          || node->IsNumberObject()
+          || node->IsRegExp()
+          || node->IsStringObject()
+        ) {
+          continue;
+        }
+
+        v8::Local<v8::Object> nodeObj = node->ToObject();
+        v8::Local<v8::Value> checkValue = GetPrivate(nodeObj, Nan::New("NodeGitPromiseError").ToLocalChecked());
+
+        if (!checkValue.IsEmpty() && !checkValue->IsNull() && !checkValue->IsUndefined()) {
+          v8::Local<v8::Value> argv[1] = {
+            checkValue->ToObject()
+          };
+          callback->Call(1, argv);
+          callbackFired = true;
+          break;
+        }
+
+        v8::Local<v8::Array> properties = nodeObj->GetPropertyNames();
+        for (unsigned int propIndex = 0; propIndex < properties->Length(); ++propIndex) {
+          v8::Local<v8::String> propName = properties->Get(propIndex)->ToString();
+          v8::Local<v8::Value> nodeToQueue = nodeObj->Get(propName);
+          if (!nodeToQueue->IsUndefined()) {
+            workerArguments.push(nodeToQueue);
+          }
+        }
+      }
+
+      if (!callbackFired) {
+        v8::Local<v8::Object> err = Nan::Error("Method abort has thrown an error.")->ToObject();
+        err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        v8::Local<v8::Value> argv[1] = {
+          err
+        };
+        callback->Call(1, argv);
+      }
+    } else {
+      callback->Call(0, NULL);
+    }
+
+  }
+
+
+  delete baton;
+}
+
+  
 /*
     * @param Signature author
    * @param Signature committer
    * @param String message_encoding
    * @param String message
-     * @return Oid id    */
+    * @param Oid callback
+   */
 NAN_METHOD(GitRebase::Commit) {
-  Nan::EscapableHandleScope scope;
 
   if (info.Length() == 1 || !info[1]->IsObject()) {
     return Nan::ThrowError("Signature committer is required.");
   }
 
-  git_oid *id = (git_oid *)malloc(sizeof(git_oid));
+  if (info.Length() == 4 || !info[4]->IsFunction()) {
+    return Nan::ThrowError("Callback is required and must be a Function.");
+  }
+
+  CommitBaton* baton = new CommitBaton;
+
+  baton->error_code = GIT_OK;
+  baton->error = NULL;
+
+        baton->id = (git_oid *)malloc(sizeof(git_oid ));
+  baton->rebase = Nan::ObjectWrap::Unwrap<GitRebase>(info.This())->GetValue();
 // start convert_from_v8 block
   const git_signature * from_author = NULL;
     if (info[0]->IsObject()) {
@@ -110,10 +222,12 @@ from_author = Nan::ObjectWrap::Unwrap<GitSignature>(info[0]->ToObject())->GetVal
     from_author = 0;
   }
 // end convert_from_v8 block
+  baton->author = from_author;
 // start convert_from_v8 block
   const git_signature * from_committer = NULL;
 from_committer = Nan::ObjectWrap::Unwrap<GitSignature>(info[1]->ToObject())->GetValue();
 // end convert_from_v8 block
+  baton->committer = from_committer;
 // start convert_from_v8 block
   const char * from_message_encoding = NULL;
     if (info[2]->IsString()) {
@@ -132,6 +246,7 @@ from_committer = Nan::ObjectWrap::Unwrap<GitSignature>(info[1]->ToObject())->Get
     from_message_encoding = 0;
   }
 // end convert_from_v8 block
+  baton->message_encoding = from_message_encoding;
 // start convert_from_v8 block
   const char * from_message = NULL;
     if (info[3]->IsString()) {
@@ -150,42 +265,148 @@ from_committer = Nan::ObjectWrap::Unwrap<GitSignature>(info[1]->ToObject())->Get
     from_message = 0;
   }
 // end convert_from_v8 block
- 
+  baton->message = from_message;
+
+  Nan::Callback *callback = new Nan::Callback(v8::Local<Function>::Cast(info[4]));
+  CommitWorker *worker = new CommitWorker(baton, callback);
+  worker->SaveToPersistent("rebase", info.This());
+  if (!info[0]->IsUndefined() && !info[0]->IsNull())
+    worker->SaveToPersistent("author", info[0]->ToObject());
+  if (!info[1]->IsUndefined() && !info[1]->IsNull())
+    worker->SaveToPersistent("committer", info[1]->ToObject());
+  if (!info[2]->IsUndefined() && !info[2]->IsNull())
+    worker->SaveToPersistent("message_encoding", info[2]->ToObject());
+  if (!info[3]->IsUndefined() && !info[3]->IsNull())
+    worker->SaveToPersistent("message", info[3]->ToObject());
+
+  AsyncLibgit2QueueWorker(worker);
+  return;
+}
+
+void GitRebase::CommitWorker::Execute() {
   giterr_clear();
 
   {
-    LockMaster lockMaster(/*asyncAction: */false        ,    Nan::ObjectWrap::Unwrap<GitRebase>(info.This())->GetValue()
-        ,    from_author
-        ,    from_committer
-        ,    from_message_encoding
-        ,    from_message
+    LockMaster lockMaster(/*asyncAction: */true        ,baton->id
+        ,baton->rebase
+        ,baton->author
+        ,baton->committer
+        ,baton->message_encoding
+        ,baton->message
 );
 
-    int result = git_rebase_commit(
-  id
-,  Nan::ObjectWrap::Unwrap<GitRebase>(info.This())->GetValue()
-,  from_author
-,  from_committer
-,  from_message_encoding
-,  from_message
-    );
+  int result = git_rebase_commit(
+baton->id,baton->rebase,baton->author,baton->committer,baton->message_encoding,baton->message    );
 
- 
+    baton->error_code = result;
+
+    if (result != GIT_OK && giterr_last() != NULL) {
+      baton->error = git_error_dup(giterr_last());
+    }
+
+  }
+}
+
+void GitRebase::CommitWorker::HandleOKCallback() {
+  if (baton->error_code == GIT_OK) {
     v8::Local<v8::Value> to;
 // start convert_to_v8 block
   
-  if (id != NULL) {
-    // GitOid id
-       to = GitOid::New(id, true  );
+  if (baton->id != NULL) {
+    // GitOid baton->id
+       to = GitOid::New(baton->id, true  );
    }
   else {
     to = Nan::Null();
   }
 
  // end convert_to_v8 block
-    return info.GetReturnValue().Set(scope.Escape(to));
+    v8::Local<v8::Value> result = to;
+    v8::Local<v8::Value> argv[2] = {
+      Nan::Null(),
+      result
+    };
+    callback->Call(2, argv);
+  } else {
+    if (baton->error) {
+      v8::Local<v8::Object> err;
+      if (baton->error->message) {
+        err = Nan::Error(baton->error->message)->ToObject();
+      } else {
+        err = Nan::Error("Method commit has thrown an error.")->ToObject();
+      }
+      err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      v8::Local<v8::Value> argv[1] = {
+        err
+      };
+      callback->Call(1, argv);
+      if (baton->error->message)
+        free((void *)baton->error->message);
+      free((void *)baton->error);
+    } else if (baton->error_code < 0) {
+      std::queue< v8::Local<v8::Value> > workerArguments;
+      workerArguments.push(GetFromPersistent("author"));
+      workerArguments.push(GetFromPersistent("committer"));
+      workerArguments.push(GetFromPersistent("message_encoding"));
+      workerArguments.push(GetFromPersistent("message"));
+      bool callbackFired = false;
+      while(!workerArguments.empty()) {
+        v8::Local<v8::Value> node = workerArguments.front();
+        workerArguments.pop();
+
+        if (
+          !node->IsObject()
+          || node->IsArray()
+          || node->IsBooleanObject()
+          || node->IsDate()
+          || node->IsFunction()
+          || node->IsNumberObject()
+          || node->IsRegExp()
+          || node->IsStringObject()
+        ) {
+          continue;
+        }
+
+        v8::Local<v8::Object> nodeObj = node->ToObject();
+        v8::Local<v8::Value> checkValue = GetPrivate(nodeObj, Nan::New("NodeGitPromiseError").ToLocalChecked());
+
+        if (!checkValue.IsEmpty() && !checkValue->IsNull() && !checkValue->IsUndefined()) {
+          v8::Local<v8::Value> argv[1] = {
+            checkValue->ToObject()
+          };
+          callback->Call(1, argv);
+          callbackFired = true;
+          break;
+        }
+
+        v8::Local<v8::Array> properties = nodeObj->GetPropertyNames();
+        for (unsigned int propIndex = 0; propIndex < properties->Length(); ++propIndex) {
+          v8::Local<v8::String> propName = properties->Get(propIndex)->ToString();
+          v8::Local<v8::Value> nodeToQueue = nodeObj->Get(propName);
+          if (!nodeToQueue->IsUndefined()) {
+            workerArguments.push(nodeToQueue);
+          }
+        }
+      }
+
+      if (!callbackFired) {
+        v8::Local<v8::Object> err = Nan::Error("Method commit has thrown an error.")->ToObject();
+        err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        v8::Local<v8::Value> argv[1] = {
+          err
+        };
+        callback->Call(1, argv);
+      }
+    } else {
+      callback->Call(0, NULL);
+    }
+
   }
+
+
+  delete baton;
 }
+
    
 /*
    * @param Signature signature

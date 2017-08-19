@@ -69,7 +69,52 @@ class GitRebase : public
     {}
     ~GitRebase();
                                                    
+    struct AbortBaton {
+      int error_code;
+      const git_error* error;
+      git_rebase * rebase;
+    };
+    class AbortWorker : public Nan::AsyncWorker {
+      public:
+        AbortWorker(
+            AbortBaton *_baton,
+            Nan::Callback *callback
+        ) : Nan::AsyncWorker(callback)
+          , baton(_baton) {};
+        ~AbortWorker() {};
+        void Execute();
+        void HandleOKCallback();
+
+      private:
+        AbortBaton *baton;
+    };
+
     static NAN_METHOD(Abort);
+
+    struct CommitBaton {
+      int error_code;
+      const git_error* error;
+      git_oid * id;
+      git_rebase * rebase;
+      const git_signature * author;
+      const git_signature * committer;
+      const char * message_encoding;
+      const char * message;
+    };
+    class CommitWorker : public Nan::AsyncWorker {
+      public:
+        CommitWorker(
+            CommitBaton *_baton,
+            Nan::Callback *callback
+        ) : Nan::AsyncWorker(callback)
+          , baton(_baton) {};
+        ~CommitWorker() {};
+        void Execute();
+        void HandleOKCallback();
+
+      private:
+        CommitBaton *baton;
+    };
 
     static NAN_METHOD(Commit);
 

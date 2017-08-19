@@ -1,6 +1,7 @@
 const native = adone.bind("git.node");
 const {
     is,
+    promise: { promisifyAll },
     vcs: { git: {
         OdbObject // force load in case of indirect instantiation
     } }
@@ -14,9 +15,9 @@ Odb.STREAM = {
     RW: 6
 };
 
-Odb.open = adone.promise.promisifyAll(Odb.open);
-Odb.prototype.read = adone.promise.promisifyAll(Odb.prototype.read);
-Odb.prototype.write = adone.promise.promisifyAll(Odb.prototype.write);
+Odb.open = promisifyAll(Odb.open);
+Odb.prototype.read = promisifyAll(Odb.prototype.read);
+Odb.prototype.write = promisifyAll(Odb.prototype.write);
 
 const _read = Odb.prototype.read;
 

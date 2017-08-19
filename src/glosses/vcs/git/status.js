@@ -1,7 +1,7 @@
 const native = adone.bind("git.node");
 
 const {
-    promise,
+    promise: { promisifyAll },
     vcs: { git: { StatusOptions, Utils: { normalizeOptions } } }
 } = adone;
 
@@ -49,8 +49,9 @@ Status.SHOW = {
     WORKDIR_ONLY: 2
 };
 
-const asyncForeach = promise.promisifyAll(Status.foreach);
-const asyncForeachExt = promise.promisifyAll(Status.foreachExt);
+Status.file = promisifyAll(Status.file);
+const asyncForeach = promisifyAll(Status.foreach);
+const asyncForeachExt = promisifyAll(Status.foreachExt);
 
 // Override Status.foreach to eliminate the need to pass null payload
 Status.foreach = function (repo, callback) {

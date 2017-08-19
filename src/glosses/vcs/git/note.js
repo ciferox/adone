@@ -1,13 +1,17 @@
 const native = adone.bind("git.node");
 
+const {
+    promise: { promisifyAll }
+} = adone;
+
 const Note = native.Note;
 
-Note.create = adone.promise.promisifyAll(Note.create);
-Note.iteratorNew = adone.promise.promisifyAll(Note.iteratorNew);
-Note.read = adone.promise.promisifyAll(Note.read);
-Note.remove = adone.promise.promisifyAll(Note.remove);
+Note.create = promisifyAll(Note.create);
+Note.iteratorNew = promisifyAll(Note.iteratorNew);
+Note.read = promisifyAll(Note.read);
+Note.remove = promisifyAll(Note.remove);
 
-const asyncForeach = adone.promise.promisifyAll(Note.foreach);
+const asyncForeach = promisifyAll(Note.foreach);
 
 // Override Note.foreach to eliminate the need to pass null payload
 Note.foreach = function (repo, notesRef, callback) {

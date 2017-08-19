@@ -1,6 +1,7 @@
 const native = adone.bind("git.node");
 
 const {
+    promise: { promisifyAll },
     vcs: { git: { CheckoutOptions, StashApplyOptions, Utils: { normalizeOptions, shallowClone } } }
 } = adone;
 
@@ -29,11 +30,11 @@ Stash.FLAGS = {
     INCLUDE_IGNORED: 4
 };
 
-Stash.apply = adone.promise.promisifyAll(Stash.apply);
-Stash.drop = adone.promise.promisifyAll(Stash.drop);
-Stash.foreach = adone.promise.promisifyAll(Stash.foreach);
-Stash.pop = adone.promise.promisifyAll(Stash.pop);
-Stash.save = adone.promise.promisifyAll(Stash.save);
+Stash.apply = promisifyAll(Stash.apply);
+Stash.drop = promisifyAll(Stash.drop);
+Stash.foreach = promisifyAll(Stash.foreach);
+Stash.pop = promisifyAll(Stash.pop);
+Stash.save = promisifyAll(Stash.save);
 
 const _apply = Stash.apply;
 const _foreach = Stash.foreach;

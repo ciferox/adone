@@ -587,31 +587,133 @@ from_repo = Nan::ObjectWrap::Unwrap<GitRepository>(info[0]->ToObject())->GetValu
     return info.GetReturnValue().Set(scope.Escape(to));
   }
 }
-   
+  
 /*
-     * @return Number  result    */
+     */
 NAN_METHOD(GitReflog::Write) {
-  Nan::EscapableHandleScope scope;
 
- 
+  if (info.Length() == 0 || !info[0]->IsFunction()) {
+    return Nan::ThrowError("Callback is required and must be a Function.");
+  }
+
+  WriteBaton* baton = new WriteBaton;
+
+  baton->error_code = GIT_OK;
+  baton->error = NULL;
+
+  baton->reflog = Nan::ObjectWrap::Unwrap<GitReflog>(info.This())->GetValue();
+
+  Nan::Callback *callback = new Nan::Callback(v8::Local<Function>::Cast(info[0]));
+  WriteWorker *worker = new WriteWorker(baton, callback);
+  worker->SaveToPersistent("reflog", info.This());
+
+  AsyncLibgit2QueueWorker(worker);
+  return;
+}
+
+void GitReflog::WriteWorker::Execute() {
   giterr_clear();
 
   {
-    LockMaster lockMaster(/*asyncAction: */false        ,    Nan::ObjectWrap::Unwrap<GitReflog>(info.This())->GetValue()
+    LockMaster lockMaster(/*asyncAction: */true        ,baton->reflog
 );
 
-    int result = git_reflog_write(
-  Nan::ObjectWrap::Unwrap<GitReflog>(info.This())->GetValue()
-    );
+  int result = git_reflog_write(
+baton->reflog    );
 
- 
-    v8::Local<v8::Value> to;
-// start convert_to_v8 block
-     to = Nan::New<Number>( result);
-  // end convert_to_v8 block
-    return info.GetReturnValue().Set(scope.Escape(to));
+    baton->error_code = result;
+
+    if (result != GIT_OK && giterr_last() != NULL) {
+      baton->error = git_error_dup(giterr_last());
+    }
+
   }
 }
+
+void GitReflog::WriteWorker::HandleOKCallback() {
+  if (baton->error_code == GIT_OK) {
+    v8::Local<v8::Value> result = Nan::Undefined();
+    v8::Local<v8::Value> argv[2] = {
+      Nan::Null(),
+      result
+    };
+    callback->Call(2, argv);
+  } else {
+    if (baton->error) {
+      v8::Local<v8::Object> err;
+      if (baton->error->message) {
+        err = Nan::Error(baton->error->message)->ToObject();
+      } else {
+        err = Nan::Error("Method write has thrown an error.")->ToObject();
+      }
+      err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      v8::Local<v8::Value> argv[1] = {
+        err
+      };
+      callback->Call(1, argv);
+      if (baton->error->message)
+        free((void *)baton->error->message);
+      free((void *)baton->error);
+    } else if (baton->error_code < 0) {
+      std::queue< v8::Local<v8::Value> > workerArguments;
+      bool callbackFired = false;
+      while(!workerArguments.empty()) {
+        v8::Local<v8::Value> node = workerArguments.front();
+        workerArguments.pop();
+
+        if (
+          !node->IsObject()
+          || node->IsArray()
+          || node->IsBooleanObject()
+          || node->IsDate()
+          || node->IsFunction()
+          || node->IsNumberObject()
+          || node->IsRegExp()
+          || node->IsStringObject()
+        ) {
+          continue;
+        }
+
+        v8::Local<v8::Object> nodeObj = node->ToObject();
+        v8::Local<v8::Value> checkValue = GetPrivate(nodeObj, Nan::New("NodeGitPromiseError").ToLocalChecked());
+
+        if (!checkValue.IsEmpty() && !checkValue->IsNull() && !checkValue->IsUndefined()) {
+          v8::Local<v8::Value> argv[1] = {
+            checkValue->ToObject()
+          };
+          callback->Call(1, argv);
+          callbackFired = true;
+          break;
+        }
+
+        v8::Local<v8::Array> properties = nodeObj->GetPropertyNames();
+        for (unsigned int propIndex = 0; propIndex < properties->Length(); ++propIndex) {
+          v8::Local<v8::String> propName = properties->Get(propIndex)->ToString();
+          v8::Local<v8::Value> nodeToQueue = nodeObj->Get(propName);
+          if (!nodeToQueue->IsUndefined()) {
+            workerArguments.push(nodeToQueue);
+          }
+        }
+      }
+
+      if (!callbackFired) {
+        v8::Local<v8::Object> err = Nan::Error("Method write has thrown an error.")->ToObject();
+        err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        v8::Local<v8::Value> argv[1] = {
+          err
+        };
+        callback->Call(1, argv);
+      }
+    } else {
+      callback->Call(0, NULL);
+    }
+
+  }
+
+
+  delete baton;
+}
+
     // force base class template instantiation, to make sure we get all the
 // methods, statics, etc.
 template class NodeGitWrapper<GitReflogTraits>;

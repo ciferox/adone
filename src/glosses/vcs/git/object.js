@@ -1,5 +1,9 @@
 const native = adone.bind("git.node");
 
+const {
+    promise: { promisifyAll }
+} = adone;
+
 const Obj = native.Object;
 
 Obj.TYPE = {
@@ -15,12 +19,12 @@ Obj.TYPE = {
     REF_DELTA: 7
 };
 
-Obj.prototype.dup = adone.promise.promisifyAll(Obj.prototype.dup);
-Obj.lookup = adone.promise.promisifyAll(Obj.lookup);
-Obj.prototype.lookupByPath = adone.promise.promisifyAll(Obj.prototype.lookupByPath);
-Obj.lookupPrefix = adone.promise.promisifyAll(Obj.lookupPrefix);
-Obj.prototype.peel = adone.promise.promisifyAll(Obj.prototype.peel);
-Obj.prototype.shortId = adone.promise.promisifyAll(Obj.prototype.shortId);
+Obj.prototype.dup = promisifyAll(Obj.prototype.dup);
+Obj.lookup = promisifyAll(Obj.lookup);
+Obj.prototype.lookupByPath = promisifyAll(Obj.prototype.lookupByPath);
+Obj.lookupPrefix = promisifyAll(Obj.lookupPrefix);
+Obj.prototype.peel = promisifyAll(Obj.prototype.peel);
+Obj.prototype.shortId = promisifyAll(Obj.prototype.shortId);
 
 /**
  * Is this object a blob?

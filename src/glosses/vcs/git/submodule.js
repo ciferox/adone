@@ -1,5 +1,6 @@
 const native = adone.bind("git.node");
 const {
+    promise: { promisifyAll },
     vcs: { git: { SubmoduleUpdateOptions, Utils: { normalizeFetchOptions, normalizeOptions, shallowClone } } }
 } = adone;
 
@@ -44,22 +45,22 @@ Submodule.UPDATE = {
     DEFAULT: 0
 };
 
-Submodule.prototype.addFinalize = adone.promise.promisifyAll(Submodule.prototype.addFinalize);
-Submodule.addSetup = adone.promise.promisifyAll(Submodule.addSetup);
-Submodule.prototype.addToIndex = adone.promise.promisifyAll(Submodule.prototype.addToIndex);
-Submodule.foreach = adone.promise.promisifyAll(Submodule.foreach);
-Submodule.prototype.init = adone.promise.promisifyAll(Submodule.prototype.init);
-Submodule.prototype.location = adone.promise.promisifyAll(Submodule.prototype.location);
-Submodule.lookup = adone.promise.promisifyAll(Submodule.lookup);
-Submodule.prototype.open = adone.promise.promisifyAll(Submodule.prototype.open);
-Submodule.prototype.repoInit = adone.promise.promisifyAll(Submodule.prototype.repoInit);
-Submodule.resolveUrl = adone.promise.promisifyAll(Submodule.resolveUrl);
-Submodule.setIgnore = adone.promise.promisifyAll(Submodule.setIgnore);
-Submodule.setUpdate = adone.promise.promisifyAll(Submodule.setUpdate);
-Submodule.setUrl = adone.promise.promisifyAll(Submodule.setUrl);
-Submodule.status = adone.promise.promisifyAll(Submodule.status);
-Submodule.prototype.sync = adone.promise.promisifyAll(Submodule.prototype.sync);
-Submodule.prototype.update = adone.promise.promisifyAll(Submodule.prototype.update);
+Submodule.prototype.addFinalize = promisifyAll(Submodule.prototype.addFinalize);
+Submodule.addSetup = promisifyAll(Submodule.addSetup);
+Submodule.prototype.addToIndex = promisifyAll(Submodule.prototype.addToIndex);
+Submodule.foreach = promisifyAll(Submodule.foreach);
+Submodule.prototype.init = promisifyAll(Submodule.prototype.init);
+Submodule.prototype.location = promisifyAll(Submodule.prototype.location);
+Submodule.lookup = promisifyAll(Submodule.lookup);
+Submodule.prototype.open = promisifyAll(Submodule.prototype.open);
+Submodule.prototype.repoInit = promisifyAll(Submodule.prototype.repoInit);
+Submodule.resolveUrl = promisifyAll(Submodule.resolveUrl);
+Submodule.setIgnore = promisifyAll(Submodule.setIgnore);
+Submodule.setUpdate = promisifyAll(Submodule.setUpdate);
+Submodule.setUrl = promisifyAll(Submodule.setUrl);
+Submodule.status = promisifyAll(Submodule.status);
+Submodule.prototype.sync = promisifyAll(Submodule.prototype.sync);
+Submodule.prototype.update = promisifyAll(Submodule.prototype.update);
 
 const _foreach = Submodule.foreach;
 const _update = Submodule.prototype.update;

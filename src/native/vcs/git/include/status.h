@@ -77,6 +77,28 @@ class GitStatus : public
                           
     static NAN_METHOD(Byindex);
 
+    struct FileBaton {
+      int error_code;
+      const git_error* error;
+      unsigned int * status_flags;
+      git_repository * repo;
+      const char * path;
+    };
+    class FileWorker : public Nan::AsyncWorker {
+      public:
+        FileWorker(
+            FileBaton *_baton,
+            Nan::Callback *callback
+        ) : Nan::AsyncWorker(callback)
+          , baton(_baton) {};
+        ~FileWorker() {};
+        void Execute();
+        void HandleOKCallback();
+
+      private:
+        FileBaton *baton;
+    };
+
     static NAN_METHOD(File);
 
     struct ForeachBaton {

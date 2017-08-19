@@ -1,7 +1,7 @@
 const native = adone.bind("git.node");
 
 const {
-    promise,
+    promise: { promisifyAll },
     is
 } = adone;
 
@@ -14,9 +14,9 @@ Revwalk.SORT = {
     REVERSE: 4
 };
 
-Revwalk.prototype.next = promise.promisifyAll(Revwalk.prototype.next);
-Revwalk.prototype.fastWalk = promise.promisifyAll(Revwalk.prototype.fastWalk);
-Revwalk.prototype.fileHistoryWalk = promise.promisifyAll(Revwalk.prototype.fileHistoryWalk);
+Revwalk.prototype.next = promisifyAll(Revwalk.prototype.next);
+Revwalk.prototype.fastWalk = promisifyAll(Revwalk.prototype.fastWalk);
+Revwalk.prototype.fileHistoryWalk = promisifyAll(Revwalk.prototype.fileHistoryWalk);
 
 Object.defineProperty(Revwalk.prototype, "repo", {
     get() {

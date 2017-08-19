@@ -282,7 +282,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         system: "./glosses/system",
         hardware: "./glosses/hardware",
         shell: "./glosses/shell",
-        virt: "./glosses/virt",
+        virtualization: "./glosses/virtualization",
         vault: "./glosses/vault",
         specter: "./glosses/specter",
         netscan: "./glosses/netscan",

@@ -1,6 +1,6 @@
 const native = adone.bind("git.node");
 const {
-    promise,
+    promise: { promisifyAll },
     vcs: { git }
 } = adone;
 
@@ -22,13 +22,13 @@ Blame.FLAG = {
  * @param {String} path to the file to get the blame of
  * @param {BlameOptions} [options] Options for the blame
  */
-const asyncFile = promise.promisifyAll(Blame.file);
+const asyncFile = promisifyAll(Blame.file);
 Blame.file = function (repo, path, options) {
     options = git.Utils.normalizeOptions(options, git.BlameOptions);
 
     return asyncFile.call(this, repo, path, options);
 };
 
-Blame.prototype.buffer = promise.promisifyAll(Blame.prototype.buffer);
+Blame.prototype.buffer = promisifyAll(Blame.prototype.buffer);
 
 export default Blame;

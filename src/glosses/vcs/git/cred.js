@@ -1,5 +1,9 @@
 const native = adone.bind("git.node");
 
+const {
+    promise: { promisifyAll }
+} = adone;
+
 const Cred = native.Cred;
 
 Cred.TYPE = {
@@ -12,7 +16,7 @@ Cred.TYPE = {
     SSH_MEMORY: 64
 };
 
-Cred.sshKeyMemoryNew = adone.promise.promisifyAll(Cred.sshKeyMemoryNew);
-Cred.usernameNew = adone.promise.promisifyAll(Cred.usernameNew);
+Cred.sshKeyMemoryNew = promisifyAll(Cred.sshKeyMemoryNew);
+Cred.usernameNew = promisifyAll(Cred.usernameNew);
 
 export default Cred;

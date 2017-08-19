@@ -1,16 +1,21 @@
 const native = adone.bind("git.node");
 
 const {
+    promise: { promisifyAll },
     vcs: { git: { TreeEntry, Utils: { lookupWrapper } } }
 } = adone;
 
 const Blob = native.Blob;
 
-Blob.createFromStream = adone.promise.promisifyAll(Blob.createFromStream);
-Blob.createFromstreamCommit = adone.promise.promisifyAll(Blob.createFromstreamCommit);
-Blob.prototype.dup = adone.promise.promisifyAll(Blob.prototype.dup);
-Blob.lookup = adone.promise.promisifyAll(Blob.lookup);
-Blob.lookupPrefix = adone.promise.promisifyAll(Blob.lookupPrefix);
+Blob.createFromBuffer = promisifyAll(Blob.createFromBuffer);
+Blob.createFromDisk = promisifyAll(Blob.createFromDisk);
+Blob.createFromStream = promisifyAll(Blob.createFromStream);
+Blob.createFromstreamCommit = promisifyAll(Blob.createFromstreamCommit);
+Blob.createFromWorkdir = promisifyAll(Blob.createFromWorkdir);
+Blob.prototype.dup = promisifyAll(Blob.prototype.dup);
+Blob.filteredContent = promisifyAll(Blob.filteredContent);
+Blob.lookup = promisifyAll(Blob.lookup);
+Blob.lookupPrefix = promisifyAll(Blob.lookupPrefix);
 
 /**
 * Retrieves the blob pointed to by the oid

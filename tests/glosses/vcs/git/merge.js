@@ -1073,9 +1073,7 @@ describe("Merge", () => {
             return AnnotatedCommit.fromRef(repository, theirRef);
         }).then((theirAnnotatedCommit) => {
             return Merge(repository, theirAnnotatedCommit);
-        }).then((result) => {
-            assert.equal(result, 0);
-
+        }).then(() => {
             assert.equal(repository.state(), Repository.STATE.MERGE);
             // verify the convenience method
             assert.ok(repository.isMerging());

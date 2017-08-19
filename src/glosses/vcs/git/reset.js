@@ -1,6 +1,7 @@
 const native = adone.bind("git.node");
 
 const {
+    promise: { promisifyAll },
     vcs: { git: { CheckoutOptions, Utils: { normalizeOptions } } }
 } = adone;
 
@@ -12,9 +13,9 @@ Reset.TYPE = {
     HARD: 3
 };
 
-Reset.reset = adone.promise.promisifyAll(Reset.reset);
-Reset.default = adone.promise.promisifyAll(Reset.default);
-Reset.fromAnnotated = adone.promise.promisifyAll(Reset.fromAnnotated);
+Reset.reset = promisifyAll(Reset.reset);
+Reset.default = promisifyAll(Reset.default);
+Reset.fromAnnotated = promisifyAll(Reset.fromAnnotated);
 
 const _default = Reset.default;
 const _reset = Reset.reset;

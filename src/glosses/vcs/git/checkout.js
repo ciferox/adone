@@ -1,6 +1,7 @@
 const native = adone.bind("git.node");
 
 const {
+    promise: { promisifyAll },
     vcs: { git: { CheckoutOptions, Utils: { normalizeOptions } } }
 } = adone;
 
@@ -41,9 +42,9 @@ Checkout.STRATEGY = {
     UPDATE_SUBMODULES_IF_CHANGED: 131072
 };
 
-const asyncHead = adone.promise.promisifyAll(Checkout.head);
-const asyncIndex = adone.promise.promisifyAll(Checkout.index);
-const asyncTree = adone.promise.promisifyAll(Checkout.tree);
+const asyncHead = promisifyAll(Checkout.head);
+const asyncIndex = promisifyAll(Checkout.index);
+const asyncTree = promisifyAll(Checkout.tree);
 
 /**
 * Patch head checkout to automatically coerce objects.

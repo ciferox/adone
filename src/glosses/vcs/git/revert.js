@@ -2,14 +2,14 @@ const native = adone.bind("git.node");
 
 const {
     is,
-    promise,
+    promise: { promisifyAll },
     vcs: { git: { MergeOptions, Utils: { normalizeOptions } } }
 } = adone;
 
 const Revert = native.Revert;
 
-Revert.revert = promise.promisifyAll(Revert.revert);
-const asyncCommit = promise.promisifyAll(Revert.commit);
+Revert.revert = promisifyAll(Revert.revert);
+const asyncCommit = promisifyAll(Revert.commit);
 
 /**
  * Reverts the given commit against the given "our" commit, producing an index

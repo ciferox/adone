@@ -2,6 +2,7 @@ const native = adone.bind("git.node");
 
 const {
     is,
+    promise: { promisifyAll },
     std: { path, events },
     vcs: { git: { Diff, TreeBuilder, Utils: { lookupWrapper } } }
 } = adone;
@@ -18,11 +19,11 @@ Tree.WALK_MODE = {
     WALK_POST: 1
 };
 
-Tree.prototype.createUpdated = adone.promise.promisifyAll(Tree.prototype.createUpdated);
-Tree.prototype.dup = adone.promise.promisifyAll(Tree.prototype.dup);
-Tree.prototype.entryByPath = adone.promise.promisifyAll(Tree.prototype.entryByPath);
-Tree.lookup = adone.promise.promisifyAll(Tree.lookup);
-Tree.lookupPrefix = adone.promise.promisifyAll(Tree.lookupPrefix);
+Tree.prototype.createUpdated = promisifyAll(Tree.prototype.createUpdated);
+Tree.prototype.dup = promisifyAll(Tree.prototype.dup);
+Tree.prototype.entryByPath = promisifyAll(Tree.prototype.entryByPath);
+Tree.lookup = promisifyAll(Tree.lookup);
+Tree.lookupPrefix = promisifyAll(Tree.lookupPrefix);
 
 /**
 * Retrieves the tree pointed to by the oid
