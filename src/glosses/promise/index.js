@@ -101,6 +101,26 @@ export const nodeify = (promise, cb) => {
 };
 
 /**
+ * Converts a function that returns promises to a node.js style callback function
+ *
+ * @param {Function} fn Function
+ * @returns {Promise} the original promise
+ */
+export const callbackify = (fn) => {
+    if (!is.function(fn)) {
+        throw new adone.x.InvalidArgument("The first argument must be a function");
+    }
+    return function (...args) {
+        const cb = args.pop();
+        const promise = fn.apply(this, args);
+        if (is.function(cb)) {
+            nodeify(promise, cb);
+        }
+        return promise;
+    };
+};
+
+/**
  * Converts a callback function to a promise-based function
  *
  * @param {Function} fn

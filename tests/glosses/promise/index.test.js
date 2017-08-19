@@ -152,6 +152,39 @@ describe("promise", () => {
         });
     });
 
+    describe("callbackify", () => {
+        const { callbackify } = promise;
+
+        it("should convert an async function to a callback-based function", async () => {
+            const fn = async (a, b) => {
+                return a + b;
+            };
+            const fn2 = callbackify(fn);
+            const [err, res] = await new Promise((resolve) => {
+                fn2(1, 2, (err, result) => {
+                    resolve([err, result]);
+                });
+            });
+            expect(err).to.be.null;
+            expect(res).to.be.equal(3);
+        });
+
+        it("should correctly handle errors", async () => {
+            const fn = async (a, b) => {
+                throw new Error(`hello ${a} + ${b}`);
+            };
+            const fn2 = callbackify(fn);
+            const [err, res] = await new Promise((resolve) => {
+                fn2(1, 2, (err, result) => {
+                    resolve([err, result]);
+                });
+            });
+            expect(err).to.be.an("error");
+            expect(err.message).to.be.equal("hello 1 + 2");
+            expect(res).to.be.undefined;
+        });
+    });
+
     describe("promisify", () => {
         it("should turn a callback-based function into an async function", async () => {
             const getSecrets = (cb) => {
