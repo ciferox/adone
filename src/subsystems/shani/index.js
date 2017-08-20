@@ -17,6 +17,7 @@ export default class ShaniCLI extends adone.application.Subsystem {
                 { name: "--timeout", help: "default timeout for all tests", nargs: 1, type: Number, default: 5000, group: "flow" },
                 { name: "--skip", help: "tests to skip", nargs: 1, default: "", group: "flow" },
                 { name: "--call-gc", help: "call gc after file processing", group: "flow" },
+                { name: "--inspect", help: "run node inspector on the given port and set a breakpoint on the first line", nargs: "?", default: 9229, group: "flow" },
 
                 { name: "--config", help: "a config path", nargs: 1, default: "shanifile.js", group: "config" },
                 { name: "--tests", help: "tests path", nargs: 1, default: "tests/**/*.js", group: "config" },
@@ -60,10 +61,13 @@ export default class ShaniCLI extends adone.application.Subsystem {
             }
         }
         const inclusive = args.get("tests");
-
+        const execArgv = ["--expose-gc"];
+        if (opts.has("inspect")) {
+            execArgv.push(`--inspect=${opts.get("inspect")}`, "--inspect-brk");
+        }
         const proc = cp.fork(path.resolve(__dirname, "runner.js"), {
             stdio: ["inherit", "inherit", "inherit", "ipc"],
-            execArgv: ["--expose-gc"]
+            execArgv
         });
 
         await new Promise((resolve) => proc.once("message", resolve));

@@ -104,7 +104,7 @@ Module.transforms = {
                 // a source map exists, assume it has been transpiled
                 return content;
             }
-            options = Object.assign(options, { filename, sourceMaps: true });
+            options = Object.assign(options, { filename, sourceMaps: "inline" });
             const { code, map } = adone.js.compiler.core.transform(content, options);
             if (map) {
                 transform.sourceMaps.set(filename, { map, url: filename });
