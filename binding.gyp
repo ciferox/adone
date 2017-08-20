@@ -995,6 +995,52 @@
       ]
     },
     {
+      'target_name': 'libvirt',
+      'product_prefix': 'lib',
+      'sources': [
+        'src/native/virtualization/libvirt/domain.cc',
+        'src/native/virtualization/libvirt/error.cc',
+        'src/native/virtualization/libvirt/event_impl.cc',
+        'src/native/virtualization/libvirt/hypervisor.cc',
+        'src/native/virtualization/libvirt/interface.cc',
+        'src/native/virtualization/libvirt/network.cc',
+        'src/native/virtualization/libvirt/network_filter.cc',
+        'src/native/virtualization/libvirt/nlv_async_worker.cc',
+        'src/native/virtualization/libvirt/node_device.cc',
+        'src/native/virtualization/libvirt/node_libvirt.cc',
+        'src/native/virtualization/libvirt/secret.cc',
+        'src/native/virtualization/libvirt/storage_pool.cc',
+        'src/native/virtualization/libvirt/storage_volume.cc',
+        'src/native/virtualization/libvirt/worker.cc'
+      ],
+      "cflags": [
+        '-std=c++11',
+      ],
+      'include_dirs' : [
+        "<!(node -e \"require('nan')\")"
+      ],
+      'conditions': [
+        ['OS!="win"', {
+          'link_settings': {
+            'libraries': [
+              '<!@(pkg-config --libs libvirt)'
+            ]
+          },
+          'cflags': [
+            '<!@(pkg-config --cflags libvirt)'
+          ],
+        }],
+        ['OS=="mac"', {
+          'xcode_settings': {
+            'GCC_ENABLE_CPP_RTTI': 'YES',
+            'OTHER_CPLUSPLUSFLAGS' : [ '-std=c++11', '-stdlib=libc++' ],
+            'OTHER_LDFLAGS': [ '-stdlib=libc++' ],
+            'MACOSX_DEPLOYMENT_TARGET': "10.7"
+          }
+        }]
+      ]
+    },
+    {
       "target_name": "copy_modules",
       "variables": {
         "srcpath%": "<(module_root_dir)/build/Release",
@@ -1015,7 +1061,8 @@
         "report",
         "rpigpio",
         "i2c",
-        "git"
+        "git",
+        "libvirt"
       ],
       "copies": [
         {
@@ -1035,7 +1082,8 @@
             "<(srcpath)/report.node",
             "<(srcpath)/rpigpio.node",
             "<(srcpath)/i2c.node",
-            "<(srcpath)/git.node"
+            "<(srcpath)/git.node",
+            "<(srcpath)/libvirt.node"
           ],
           "destination": "<(module_root_dir)/lib/native"
         }

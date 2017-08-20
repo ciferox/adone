@@ -1,0 +1,8 @@
+<devices>
+  <disk type='file' device='cdrom'>
+    <source file='/tmp/boot.iso'/>
+    <target dev='hdc'/>
+    <readonly/>
+  </disk>
+</devices>
+

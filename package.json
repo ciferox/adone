@@ -91,7 +91,10 @@
     "throw-max-listeners-error": "1.0.1",
     "tmp": "0.0.24",
     "useref": "^1.2.0",
-    "vuvuzela": "^1.0.3"
+    "vuvuzela": "^1.0.3",
+    "segfault-handler": "^1.0.0",
+    "xmldom": "^0.1.27",
+    "xpath": "0.0.24"
   },
   "optionalDependencies": {
     "fsevents": "^1.0.0"
@@ -103,8 +106,5 @@
   "repository": "https://github.com/ciferox/adone",
   "bin": {
     "adone": "./bin/adone.js"
-  },
-  "dependencies": {
-    "lodash": "^4.17.4"
   }
 }
