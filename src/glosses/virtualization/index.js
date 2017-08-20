@@ -1,3 +1,4 @@
 adone.lazify({
-    virtualbox: "./virtualbox"
+    virtualbox: "./virtualbox",
+    libvirt: "./libvirt"
 }, exports, require);

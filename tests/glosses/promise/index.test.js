@@ -38,7 +38,7 @@ describe("promise", () => {
         it("should be delayed", async () => {
             const past = new Date();
             await promise.delay(100);
-            expect(new Date() - past).to.be.at.least(95);  // v8, wtf?
+            expect(new Date() - past).to.be.at.least(95); // v8, wtf?
         });
 
         it("should be resolves with a value", async () => {
@@ -393,6 +393,46 @@ describe("promise", () => {
         it("returning a rejected promise in the callback for an already rejected promise changes the rejection reason", async () => {
             await promise.finally(Promise.reject(new Error("orig err")), () => Promise.reject(fixtureErr)).catch((err) => {
                 assert.equal(err, fixtureErr);
+            });
+        });
+    });
+
+    describe("custom promisifier", () => {
+        const input = "adone";
+        const err = new adone.x.NotValid();
+        const a = {
+            ok(input, callback) {
+                setTimeout(() => {
+                    callback(input);
+                }, 1);
+            },
+            bad(input, callback, errback) {
+                setTimeout(() => {
+                    errback(err);
+                }, 1);
+            }
+        };
+
+        const b = promise.promisifyAll(a, {
+            promisifier(originalMethod) {
+                return function (...args) {
+                    return new Promise(((f, r) => {
+                        args.push(f, r);
+                        originalMethod.apply(this, args);
+                    }));
+                };
+            }
+        });
+
+        it("normal execution", () => {
+            return b.okAsync(input).then((result) => {
+                assert.equal(result, input);
+            });
+        });
+
+        it("execution with error", () => {
+            return b.badAsync(input).then(assert.fail, (e) => {
+                assert.equal(e, err);
             });
         });
     });

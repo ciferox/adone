@@ -127,7 +127,7 @@ export const callbackify = (fn) => {
  * @param {object} [context] Context to bind to new function
  * @returns {Function}
  */
-export const promisify = (fn, { context = null } = {}) => {
+export const promisify = (fn, { context = null, promisifier = null } = {}) => {
     if (!is.function(fn)) {
         throw new adone.x.InvalidArgument("The first argument must be a function");
     }
@@ -165,6 +165,9 @@ export const promisify = (fn, { context = null } = {}) => {
         };
     }
 
+    if (is.function(promisifier)) {
+        res[name] = promisifier(fn, res[name]);
+    }
     res[name][PROMISIFIED] = true;
     res[name][PROMISIFY_SOURCE] = fn;
     return res[name];
@@ -179,19 +182,18 @@ export const promisify = (fn, { context = null } = {}) => {
  * @param {object} [context] Context to bind to new functions
  * @returns {object} object with promisified functions
  */
-export const promisifyAll = (source, { suffix = "Async", filter = () => true, context } = {}) => {
+export const promisifyAll = (source, { suffix = "Async", filter = adone.truly, context, promisifier } = {}) => {
     if (is.function(source)) {
-        return promisify(source, context);
+        return promisify(source, { context, promisifier });
     }
 
     const target = adone.o(source);
     for (const [key, value] of adone.util.entries(source)) {
         if (is.function(value) && filter(key)) {
-            target[`${key}${suffix}`] = promisify(value, { context });
+            target[`${key}${suffix}`] = promisify(value, { context, promisifier });
         }
     }
     return target;
-
 };
 
 /**
