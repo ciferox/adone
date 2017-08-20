@@ -948,6 +948,27 @@ export const pick = (obj, props) => {
     return newObj;
 };
 
+export const max = (array, func = adone.identity) => {
+    if (!array.length) {
+        return undefined;
+    }
+    let maxScore = null;
+    let maxElem = undefined;
+    for (const elem of array) {
+        if (is.null(maxScore)) {
+            maxScore = func(elem);
+            maxElem = elem;
+            continue;
+        }
+        const score = func(elem);
+        if (score > maxScore) {
+            maxScore = score;
+            maxElem = elem;
+        }
+    }
+    return maxElem;
+};
+
 adone.lazify({
     match: "./match",
     toposort: "./toposort",

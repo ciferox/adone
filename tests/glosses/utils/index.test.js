@@ -1453,4 +1453,22 @@ describe("util", () => {
             expect(b).to.be.deep.equal({ a: 1, b: 2 });
         });
     });
+
+    describe("max", () => {
+        const { max } = util;
+
+        it("should find the maximum value of an array", () => {
+            expect(max([1, 2, 3])).to.be.equal(3);
+            expect(max([-1, -2, -2])).to.be.equal(-1);
+        });
+
+        it("should reutrn undefined for empty array", () => {
+            expect(max([])).to.be.undefined;
+        });
+
+        it("should support score evaluator", () => {
+            const f = (x) => x[0] + x[1];
+            expect(max([[1, 2], [3, 4], [-1, 7]], f)).to.be.deep.equal([3, 4]);
+        });
+    });
 });
