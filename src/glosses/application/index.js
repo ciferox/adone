@@ -1436,7 +1436,9 @@ export class Application extends Subsystem {
             const defaultConfigPath = std.path.join(this.defaultConfigsPath, basename);
             await this.config.load(defaultConfigPath, path);
             if (userDefined) {
-                await adone.fs.copy(defaultConfigPath, this.config.adone.configsPath);
+                await adone.fs.copy(defaultConfigPath, this.config.adone.configsPath, {
+                    ignoreExisting: true
+                });
             }
         }
         if (userDefined) {

@@ -86,6 +86,33 @@ export default {
                 $notify: notificatorFor("bin"),
                 $onError: errorHandlerFor("bin")
             },
+            cli: {
+                $progress: ({ watch }) => !watch,
+                async $clean() {
+                    await fs.rm("lib/cli");
+                },
+                async $before({ watch }) {
+                    if (!watch) {
+                        await this.$clean();
+                    } else {
+                        adone.info("watch cli");
+                    }
+                },
+                $from: ["src/cli/**/*", "!src/cli/adone.js"],
+                $to: "lib/cli",
+                $watchOpts,
+                $transform: (stream) => {
+                    stream.sourcemapsInit();
+                    transpile(stream, importAdoneReplacer(({ filename }) => {
+                        return path.relative(path.dirname(filename), "lib");
+                    }));
+                    stream.sourcemapsWrite(".", {
+                        destPath: "lib/cli"
+                    });
+                },
+                $notify: notificatorFor("cli"),
+                $onError: errorHandlerFor("cli")
+            },
             glosses: {
                 async $clean() {
                     await fs.rm("lib/glosses");
@@ -268,33 +295,6 @@ export default {
                 },
                 $notify: notificatorFor("omnitron"),
                 $onError: errorHandlerFor("omnitron")
-            },
-            subsystems: {
-                $progress: ({ watch }) => !watch,
-                async $clean() {
-                    await fs.rm("lib/subsystems");
-                },
-                async $before({ watch }) {
-                    if (!watch) {
-                        await this.$clean();
-                    } else {
-                        adone.info("watch subsystems");
-                    }
-                },
-                $from: "src/subsystems/**/*",
-                $to: "lib/subsystems",
-                $watchOpts,
-                $transform: (stream) => {
-                    stream.sourcemapsInit();
-                    transpile(stream, importAdoneReplacer(({ filename }) => {
-                        return path.relative(path.dirname(filename), "lib");
-                    }));
-                    stream.sourcemapsWrite(".", {
-                        destPath: "lib/subsystems"
-                    });
-                },
-                $notify: notificatorFor("subsystems"),
-                $onError: errorHandlerFor("subsystems")
             }
         }
     }

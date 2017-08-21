@@ -32,8 +32,8 @@ export default function prettyTable(data, {
             let bordersWidth = 0;
             if (!borderless) {
                 // todo: custom chars?
-                bordersWidth += 1 + 1;  // left + right border
-                bordersWidth += model.length - 1;  // between cells
+                bordersWidth += 1 + 1; // left + right border
+                bordersWidth += model.length - 1; // between cells
             }
             const maxWidth = terminal.cols - bordersWidth;
             tableWidth = coercePercent(width, maxWidth);
@@ -42,7 +42,7 @@ export default function prettyTable(data, {
         }
     }
 
-    const padLeft = style["padding-left"] || (borderless ? 0 : 1);  // bad, table defaults
+    const padLeft = style["padding-left"] || (borderless ? 0 : 1); // bad, table defaults
     const padRight = style["padding-right"] || (borderless ? 0 : 1);
     const head = [];
     const colAligns = [];

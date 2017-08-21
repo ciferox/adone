@@ -5,8 +5,13 @@ import adone from "adone";
 const {
     is,
     std,
-    application
+    application,
+    terminal
 } = adone;
+
+const lazy = adone.lazify({
+    InstallationManager: ["../lib/cli/manager", (x) => x.InstallationManager]
+}, exports, require);
 
 export default class AdoneCLI extends application.Application {
     async initialize() {
@@ -22,19 +27,56 @@ export default class AdoneCLI extends application.Application {
                 {
                     name: "path",
                     default: "index.js",
-                    help: "run [es6] script or adone compact application"
+                    help: "Run [es6] script or adone compact application"
                 }
             ],
             options: [
                 {
                     name: "--sourcemaps",
-                    help: "force enable sourcemaps support"
+                    help: "Force enable sourcemaps support"
                 }
             ],
             commands: [
                 {
+                    name: "install",
+                    help: "Install adone glosses, extensions, applications, etc.",
+                    arguments: [
+                        {
+                            name: "name",
+                            type: String,
+                            required: true,
+                            help: "Extension name or absolute path to local project"
+                        }
+                    ],
+                    options: [
+                        {
+                            name: "--symlink",
+                            help: "Create symlink to project instead of install it (for local projects)"
+                        }
+                    ],
+                    handler: this.installCommand
+                },
+                {
+                    name: "uninstall",
+                    help: "Uninstall adone glosses, extensions, applications, etc.",
+                    handler: this.uninstallCommand
+                },
+                {
+                    name: "inspect",
+                    help: "Inspect adone namespace/object",
+                    arguments: [
+                        {
+                            name: "name",
+                            type: String,
+                            default: "",
+                            help: "Name of class/object/function/namespace"
+                        }
+                    ],
+                    handler: this.inspectCommand
+                },
+                {
                     name: "config",
-                    help: "configurations management",
+                    help: "Configurations management",
                     arguments: [
                         {
                             name: "path",
@@ -75,21 +117,32 @@ export default class AdoneCLI extends application.Application {
                         }
                     ],
                     handler: this.configCommand
-                },
-                {
-                    name: "sloc",
-                    help: "print stats of a source code",
-                    arguments: [{ name: "paths", holder: "p", nargs: "+", help: "path to a script" }],
-                    options: [
-                        { name: "--format", choices: ["raw", "json", "table"], default: "raw", help: "output format", nargs: 1 },
-                        { name: "--exts", holder: "e", help: "process files matching an extension", nargs: "+", default: ["js"] }
-                    ],
-                    handler: this.slocCommand
                 }
             ]
         });
 
         this.loadCliSubsystems(this.config.cli.subsystems);
+    }
+
+    async installCommand(args, opts) {
+        try {
+            const manager = new lazy.InstallationManager({
+                name: args.get("name")
+            });
+
+            await manager.install({
+                symlink: opts.has("symlink")
+            });
+
+            return 0;
+        } catch (err) {
+            terminal.print(`{red-fg}${err.message}{/}`);
+            return 1;
+        }
+    }
+
+    uninstallCommand(args) {
+
     }
 
     async main(args, opts, { rest }) {
@@ -128,145 +181,41 @@ export default class AdoneCLI extends application.Application {
         return 0;
     }
 
-    async slocCommand(args, opts) {
-        let paths = args.get("paths");
-        const exts = opts.get("exts");
+    async inspectCommand(args) {
+        try {
+            const name = args.get("name");
+            const { namespace, objectName } = adone.meta.parseName(name);
+            const inspectOptions = { style: "color", depth: 1, noDescriptor: true, noNotices: true, sort: true };
 
-        const oldPaths = paths;
-        paths = [];
-        for (let i = 0; i < oldPaths.length; ++i) {
-            // eslint-disable-next-line
-            if (!await adone.fs.exists(oldPaths[i])) {
-                adone.error(`No such file or directory: '${oldPaths[i]}'`);
-                return this.exit(1);
-            }
-
-            // eslint-disable-next-line
-            if (await adone.fs.is.directory(oldPaths[i])) {
-                paths.push(std.path.join(oldPaths[i], "**/*"));
+            let ns;
+            if (namespace === "global" || namespace === "") {
+                ns = global;
             } else {
-                paths.push(oldPaths[i]);
-                const fileExt = std.path.extname(oldPaths[i]).replace(".", "");
-                if (!exts.includes(fileExt)) {
-                    exts.push(fileExt);
+                if (namespace === "adone") {
+                    ns = adone;
+                } else {
+                    ns = adone.vendor.lodash.get(adone, namespace.substring("adone".length + 1));
                 }
             }
+
+            if (objectName === "") {
+                adone.log(adone.meta.inspect(ns, inspectOptions));
+            } else if (adone.vendor.lodash.has(ns, objectName)) {
+                const obj = adone.vendor.lodash.get(ns, objectName);
+                const type = adone.util.typeOf(obj);
+                if (type === "function") {
+                    adone.log(obj.toString());
+                } else {
+                    adone.log(adone.meta.inspect(adone.vendor.lodash.get(ns, objectName), inspectOptions));
+                }
+            } else {
+                throw new adone.x.Unknown(`Unknown object: ${name}`);
+            }
+        } catch (err) {
+            adone.error(err.message);
+            return 1;
         }
-
-        const stats = {};
-        for (const ext of exts) {
-            stats[ext] = {
-                total: 0,
-                source: 0,
-                comment: 0,
-                single: 0,
-                block: 0,
-                mixed: 0,
-                empty: 0,
-                todo: 0
-            };
-        }
-
-        let filesCount = 0;
-
-        const search = adone.fs.glob(paths, { nodir: true }).map((path) => {
-            const fileExt = std.path.extname(path).replace(".", "");
-            if (exts.includes(fileExt)) {
-                return {
-                    ext: fileExt,
-                    path
-                };
-            }
-            return null;
-        }).map(async (file) => {
-            if (file) {
-                const code = (await adone.fs.readFile(file.path)).toString();
-                const fileStats = adone.metrics.sloc(code, file.ext);
-                for (const key of adone.util.keys(fileStats)) {
-                    stats[file.ext][key] += fileStats[key];
-                }
-
-                ++filesCount;
-            }
-        }).each(adone.noop);
-
-        return new Promise((resolve) => {
-            search.on("end", () => {
-                if (exts.length > 1) {
-                    const total = {
-                        total: 0,
-                        source: 0,
-                        comment: 0,
-                        single: 0,
-                        block: 0,
-                        mixed: 0,
-                        empty: 0,
-                        todo: 0
-                    };
-
-                    for (const ext of exts) {
-                        for (const key of adone.util.keys(stats[ext])) {
-                            total[key] += stats[ext][key];
-                        }
-                    }
-
-                    stats.total = total;
-                    exts.push("total");
-                }
-
-                const titles = {
-                    total: "Physical",
-                    source: "Source",
-                    comment: "Comment",
-                    single: "Single-line comment",
-                    block: "Block comment",
-                    mixed: "Mixed",
-                    empty: "Empty",
-                    todo: "TODO"
-                };
-
-                switch (opts.get("format")) {
-                    case "raw": {
-                        for (const ext of exts) {
-                            adone.log(`${ext.toUpperCase()}:`);
-                            for (const key of adone.util.keys(stats[ext])) {
-                                adone.log(adone.sprintf(
-                                    "%20s : %d",
-                                    titles[key],
-                                    stats[ext][key]
-                                ));
-                            }
-                        }
-                        adone.log(`\nNumber of files read : ${filesCount}`);
-                        // adone.log(adone.meta.inspect({minimal: true}, stats));
-                        // adone.log(adone.meta.inspect({minimal: true}, total));
-                        break;
-                    }
-                    case "json": {
-                        adone.log(JSON.stringify(stats));
-                        break;
-                    }
-                    case "table": {
-                        const table = new adone.text.Table();
-                        const header = ["Extention"];
-                        for (const key of adone.util.keys(titles)) {
-                            header.push(titles[key]);
-                        }
-                        table.push(header);
-                        for (const ext of exts) {
-                            const row = [ext.toUpperCase()];
-                            for (const key of adone.util.keys(stats[ext])) {
-                                row.push(stats[ext][key]);
-                            }
-                            table.push(row);
-                        }
-                        adone.log(table.toString());
-                        break;
-                    }
-                }
-                resolve();
-            });
-        });
+        return 0;
     }
 }
 
