@@ -22,7 +22,7 @@ export default class AdoneCLI extends application.Application {
                 {
                     name: "path",
                     default: "index.js",
-                    help: "run [es6] script/adone compact application"
+                    help: "run [es6] script or adone compact application"
                 }
             ],
             options: [
@@ -89,12 +89,7 @@ export default class AdoneCLI extends application.Application {
             ]
         });
 
-        for (const ss of this.config.cli.subsystems) {
-            this.lazyLoadSubsystem(ss);
-        }
-    }
-
-    uninitialize() {
+        this.loadCliSubsystems(this.config.cli.subsystems);
     }
 
     async main(args, opts, { rest }) {

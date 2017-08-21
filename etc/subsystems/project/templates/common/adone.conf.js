@@ -1,8 +1,16 @@
-const { std: { path } } = adone;
+const {
+    fs,
+    std: { path },
+    fast
+} = adone;
 
 export default {
+    name: "{{ name }}",
+    description: "",
+    version: "0.0.0",
+    author: "",
     project: {
-        name: "{{ name }}",
+        type: "{{ type }}",
         structure: {
             {{ bin }}
             {{ lib }}

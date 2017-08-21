@@ -63,6 +63,12 @@ export default class extends adone.application.Subsystem {
                     ],
                     options: [
                         {
+                            name: "--subsystem",
+                            nargs: "+",
+                            type: String,
+                            help: "generate subsystem(s)"
+                        },
+                        {
                             name: "--frontend",
                             choices: ["generic", "ng"],
                             default: "generic",
@@ -196,7 +202,9 @@ export default class extends adone.application.Subsystem {
 
     async newCommand(args, opts) {
         const type = args.get("type");
-        return lazy.Generator.new().createProject(args.get("name"), type, {
+        return lazy.Generator.new().createProject({
+            name: args.get("name"),
+            type,
             sourceDir: opts.has("sourceDir") ? opts.get("sourceDir") : null,
             skipGit: opts.has("skipGit"),
             editor: opts.has("editor") ? opts.get("editor") : null,

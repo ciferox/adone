@@ -1,10 +1,10 @@
+const {
+    application
+} = adone;
 
-export default class extends adone.application.Subsystem {
+export default class extends application.Subsystem {
     initialize() {
         this.defineCommand({
-            name: "{{ name }}",
-            group: "subsystem",
-            help: "subsystem description",
             arguments: [
             ],
             options: [

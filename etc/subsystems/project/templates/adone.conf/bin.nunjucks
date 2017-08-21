@@ -1,5 +1,5 @@
 bin: {
-                $before: ({ watch }) => !watch && adone.fs.rm("bin"),
+                $before: ({ watch }) => !watch && fs.rm("bin"),
                 $from: "{{ fromBin }}",
                 $to: "bin",
                 $transform: (stream) => stream
@@ -23,7 +23,7 @@ bin: {
                     filter: watch ? (file) => file.extname !== ".map" : null,
                     message: watch ? (file) => path.relative(process.cwd(), file.path) : "Done"
                 }),
-                $onError: adone.fast.transform.notify.onError({
+                $onError: fast.transform.notify.onError({
                     title: "bin",
                     message: (error) => error.message
                 })

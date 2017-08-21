@@ -25,7 +25,7 @@ lib: {
                     filter: watch ? (file) => file.extname !== ".map" : null,
                     message: watch ? (file) => path.relative(process.cwd(), file.path) : "Done"
                 }),
-                $onError: adone.fast.transform.notify.onError({
+                $onError: fast.transform.notify.onError({
                     title: "lib",
                     message: (error) => error.message
                 })

@@ -200,6 +200,23 @@ export default {
                 $watchOpts,
                 $notify: notificatorFor("vendor")
             },
+            npm: {
+                $progress: ({ watch }) => !watch,
+                async $clean() {
+                    await fs.rm("lib/npm");
+                },
+                async $before({ watch }) {
+                    if (!watch) {
+                        await this.$clean();
+                    } else {
+                        adone.info("watch npm");
+                    }
+                },
+                $from: "src/npm/**/*",
+                $to: "lib/npm",
+                $watchOpts,
+                $notify: notificatorFor("npm")
+            },
             index: {
                 $progress: ({ watch }) => !watch,
                 async $clean() {

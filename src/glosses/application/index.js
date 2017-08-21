@@ -6,7 +6,8 @@ const {
     text,
     lazify,
     util,
-    terminal
+    terminal,
+    tag
 } = adone;
 
 const lazy = lazify({
@@ -64,11 +65,14 @@ export class Subsystem extends adone.AsyncEmitter {
     uninitialize() {
     }
 
+    reinitialize() {
+    }
+
     defineCommand(...args) {
         return this.app.defineCommand(this, ...args);
     }
 }
-adone.tag.set(Subsystem, adone.tag.SUBSYSTEM);
+tag.set(Subsystem, tag.SUBSYSTEM);
 
 
 const INTERNAL = Symbol.for("adone:application:internal");
@@ -87,7 +91,7 @@ class Argument {
         this.nargs = options.nargs;
         this._default = options.default;
         this.type = options.type;
-        this.help = options.help;
+        this.description = options.description;
         this.required = options.required;
         this.holder = options.holder;
         this.choices = options.choices && options.choices.slice();
@@ -213,7 +217,7 @@ class Argument {
         } else {
             options = adone.o(options);
         }
-        if (!options.name || !options.name.length) {
+        if (!options.name || options.name.length === 0) {
             throw new x.IllegalState("An argument should have a name");
         }
         options.name = adone.util.arrify(options.name);
@@ -276,9 +280,15 @@ class Argument {
         if (!options.required) {
             options.required = false;
         }
-        if (!options.help) {
-            options.help = "";
+
+        if (!is.string(options.description)) {
+            if (is.string(options.help)) {
+                options.description = options.help;
+            } else {
+                options.description = "";
+            }
         }
+        
         if (!options.choices) {
             options.choices = null;
         } else {
@@ -368,7 +378,7 @@ class Argument {
     }
 
     _help() {
-        return this.help;
+        return this.description;
     }
 
     getShortHelpMessage() {
@@ -462,7 +472,7 @@ class PositionalArgument extends Argument {
     }
 
     _help() {
-        return this.colors ? this.colors.argumentHelpMessage(this.help) : this.help;
+        return this.colors ? this.colors.argumentHelpMessage(this.description) : this.description;
     }
 
     getNamesMessage() {
@@ -572,7 +582,7 @@ class OptionalArgument extends Argument {
     }
 
     _help() {
-        return this.colors ? this.colors.optionHelpMessage(this.help) : this.help;
+        return this.colors ? this.colors.optionHelpMessage(this.description) : this.description;
     }
 
     getNamesMessage() {
@@ -765,8 +775,7 @@ class Command {
     constructor(options = {}) {
         options = this.constructor.normalize(options);
         this.names = options.name;
-        this.help = options.help;
-        this.description = options.description || options.help;
+        this.description = options.description;
         this.loader = options.loader;
         this.handler = options.handler;
         this.parent = null;
@@ -981,7 +990,7 @@ class Command {
 
     static normalize(options) {
         options = adone.o(options);
-        if (!options.name) {
+        if (!is.string(options.name)) {
             throw new x.IllegalState("A command should have a name");
         }
         options.name = adone.util.arrify(options.name);
@@ -997,12 +1006,14 @@ class Command {
             options.handler[INTERNAL] = true;
         }
 
-        if (!options.help) {
-            options.help = "";
+        if (!is.string(options.description)) {
+            if (is.string(options.help)) {
+                options.description = options.help;
+            } else {
+                options.description = "";
+            }
         }
-        if (!options.description) {
-            options.description = "";
-        }
+
         if (!options.group) {
             options.group = UNNAMED;
         }
@@ -1097,7 +1108,7 @@ class Command {
     }
 
     getShortHelpMessage() {
-        return this.colors ? this.colors.commandHelpMessage(this.help) : this.help;
+        return this.colors ? this.colors.commandHelpMessage(this.description) : this.description;
     }
 
     getHelpMessage() {
@@ -1105,7 +1116,7 @@ class Command {
 
         const totalWidth = terminal.cols;
 
-        if (this.description) {
+        if (is.string(this.description)) {
             helpMessage.push("", text.wordwrap(this.description, totalWidth));
         }
 
@@ -1142,16 +1153,16 @@ class Command {
                         message: arg.getShortHelpMessage()
                     };
                 }), {
-                        model: [
-                            { id: "left-spacing", width: 4 },
-                            { id: "names", maxWidth: 40, wordwrap: true },
-                            { id: "between-cells", width: 2 },
-                            { id: "message", wordwrap: false }
-                        ],
-                        width: "100%",
-                        borderless: true,
-                        noHeader: true
-                    }));
+                    model: [
+                        { id: "left-spacing", width: 4 },
+                        { id: "names", maxWidth: 40, wordwrap: true },
+                        { id: "between-cells", width: 2 },
+                        { id: "message", wordwrap: false }
+                    ],
+                    width: "100%",
+                    borderless: true,
+                    noHeader: true
+                }));
             }
             if (options.length) {
                 if (this.arguments.length) {
@@ -1182,16 +1193,16 @@ class Command {
                             message: opt.getShortHelpMessage()
                         };
                     }), {
-                            model: [
-                                { id: "left-spacing", width: 4 },
-                                { id: "names", maxWidth: 40, wordwrap: true },
-                                { id: "between-cells", width: 2 },
-                                { id: "message", wordwrap: false }
-                            ],
-                            width: "100%",
-                            borderless: true,
-                            noHeader: true
-                        }));
+                        model: [
+                            { id: "left-spacing", width: 4 },
+                            { id: "names", maxWidth: 40, wordwrap: true },
+                            { id: "between-cells", width: 2 },
+                            { id: "message", wordwrap: false }
+                        ],
+                        width: "100%",
+                        borderless: true,
+                        noHeader: true
+                    }));
                 }
             }
             if (commands.length) {
@@ -1223,16 +1234,16 @@ class Command {
                             message: cmd.getShortHelpMessage()
                         };
                     }), {
-                            model: [
-                                { id: "left-spacing", width: 4 },
-                                { id: "names", maxWidth: 40, wordwrap: true },
-                                { id: "between-cells", width: 2 },
-                                { id: "message", wordwrap: true }
-                            ],
-                            width: "100%",
-                            borderless: true,
-                            noHeader: true
-                        }));
+                        model: [
+                            { id: "left-spacing", width: 4 },
+                            { id: "names", maxWidth: 40, wordwrap: true },
+                            { id: "between-cells", width: 2 },
+                            { id: "message", wordwrap: true }
+                        ],
+                        width: "100%",
+                        borderless: true,
+                        noHeader: true
+                    }));
                 }
             }
         }
@@ -1387,11 +1398,6 @@ export class Application extends Subsystem {
             this._errorScope = true;
             await this.initialize();
 
-            // Initialize subsystems
-            for (let i = 0; i < this._subsystems.length; i++) {
-                const ss = this._subsystems[i];
-                await ss.initialize(); // eslint-disable-line no-await-in-loop
-            }
             this._errorScope = false;
             let command = this._mainCommand;
             let errors = [];
@@ -1444,42 +1450,66 @@ export class Application extends Subsystem {
     }
 
     /**
-     * Lazily loads subsystems from specified path.
+     * Loads cli subsystem (always lazily).
      * 
      * @param {object} ssConfig Subsystem object.
      * @returns {void}
      */
-    lazyLoadSubsystem(ssConfig) {
-        const ssCommand = {
-            name: ssConfig.name,
-            help: ssConfig.description,
-            group: "subsystem",
-            loader: () => this.loadSubsystem(std.path.isAbsolute(ssConfig.path) ? ssConfig.path : std.path.join(this.adoneRootPath, ssConfig.path))
-        };
-        if (is.string(ssConfig.group)) {
-            ssCommand.group = ssConfig.group;
+    loadCliSubsystem({ name, description = "", group = "subsystem", path } = {}) {
+        if (!is.string(name)) {
+            throw new adone.NotValid("Invalid name of subsystem");
         }
 
-        this.defineCommand(ssCommand);
+        if (!is.string(path)) {
+            throw new adone.NotValid("Invalid path of subsystem");
+        }
+
+        this.defineCommand({
+            name,
+            description,
+            group,
+            loader: () => this.loadSubsystem({
+                subsystem: std.path.isAbsolute(path) ? path : std.path.join(this.adoneRootPath, path),
+                initialize: false
+            })
+        });
     }
 
     /**
-     * Loads subsystems from specified path.
+     * Loads cli subsystems.
+     * 
+     * @param {*array} subsystems List of subsystem descriptors
+     */
+    loadCliSubsystems(subsystems) {
+        for (const ss of subsystems) {
+            this.loadCliSubsystem(ss);
+        }
+    }
+
+    /**
+     * Loads subsystem from specified path.
      * 
      * @param {string|adone.application.Subsystem} subsystem Subsystem instance or absolute path.
-     * @returns {adone.application.Subsystem}
+     * @returns {Promise<adone.application.Subsystem>}
      */
-    loadSubsystem(subsystem) {
+    async loadSubsystem({ subsystem, initialize = true } = {}) {
         if (is.string(subsystem)) {
             let Subsystem = require(subsystem);
             if (Subsystem.__esModule === true) {
                 Subsystem = Subsystem.default;
             }
             subsystem = new Subsystem();
+        } else if (!is.subsystem(subsystem)) {
+            throw new adone.x.NotValid("'subsystem' should be path or instance of adone.application.Subsystem");
         }
+
         subsystem.app = this;
 
         this._subsystems.push(subsystem);
+
+        if (initialize) {
+            await subsystem.initialize();
+        }
 
         return subsystem;
     }
@@ -1501,14 +1531,27 @@ export class Application extends Subsystem {
         }
 
         for (const name of names) {
-            // eslint-disable-next-line
-            if (await filter(name)) {
-                const subsystem = this.loadSubsystem(std.path.join(path, name));
-                if (initialize) {
-                    await subsystem.initialize(); // eslint-disable-line
-                }
+            if (await filter(name)) { // eslint-disable-line
+                // eslint-disable-next-line
+                await this.loadSubsystem({
+                    subsystem: std.path.join(path, name),
+                    initialize
+                });
             }
         }
+    }
+
+    /**
+     * Uninitializes all subsystems.
+     * 
+     * @returns {Promise<void>}
+     */
+    async uninitializeSubsystems() {
+        for (let i = 0; i < this._subsystems.length; i++) {
+            const ss = this._subsystems[i];
+            await ss.uninitialize(); // eslint-disable-line
+        }
+        this._subsystems.length = 0;
     }
 
     exitOnSignal(...names) {
@@ -1590,15 +1633,6 @@ export class Application extends Subsystem {
                 process.removeListener(sigName, this._handlers.signalExit);
             }
         }
-    }
-
-    async uninitializeSubsystems() {
-        for (let i = 0; i < this._subsystems.length; i++) {
-            const ss = this._subsystems[i];
-            // eslint-disable-next-line no-await-in-loop
-            await ss.uninitialize();
-        }
-        this._subsystems.length = 0;
     }
 
     customizeLogger() {
@@ -1957,9 +1991,9 @@ export class Application extends Subsystem {
                                 command = commands[j];
                                 if (is.function(command.loader)) {
                                     // We have lazy loaded subsystem, try load it and reinit command
-                                    const subsystem = command.loader();
+                                    const subsystem = await command.loader(); // eslint-disable-line
                                     subsystem[COMMAND] = command;
-                                    await subsystem.initialize();
+                                    await subsystem.initialize(); // eslint-disable-line
                                 }
                                 state.push("start command");
                                 nextPart();
@@ -2284,7 +2318,7 @@ export class Application extends Subsystem {
         return this.exit(Application.SUCCESS);
     }
 }
-adone.tag.set(Application, adone.tag.APPLICATION);
+tag.set(Application, tag.APPLICATION);
 Application.SUCCESS = 0;
 Application.ERROR = 1;
 Application.Argument = Argument;

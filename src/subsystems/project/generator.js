@@ -92,7 +92,7 @@ export class Generator {
         }
     }
 
-    async createProject(name, type, { sourceDir, skipGit, editor, frontend, netron }) {
+    async createProject({ name, type, sourceDir, skipGit, editor, frontend, netron }) {
         let projectPath = null;
         try {
             if (!regex.filename.test(name)) {
@@ -126,10 +126,10 @@ export class Generator {
 
             switch (type) {
                 case "app":
-                    await this._createApp({ name, projectName, projectPath, sourceDir, skipGit });
+                    await this._createApp({ name, type, projectName, projectPath, sourceDir, skipGit });
                     break;
                 case "webapp":
-                    await this._createWebApp({ name, projectName, projectPath, sourceDir, skipGit, frontend, netron });
+                    await this._createWebApp({ name, type, projectName, projectPath, sourceDir, skipGit, frontend, netron });
                     break;
             }
 
@@ -147,11 +147,11 @@ export class Generator {
         }
     }
 
-    async _createApp({ name, projectName, projectPath, sourceDir, skipGit }) {
+    async _createApp({ name, type, projectName, projectPath, sourceDir, skipGit }) {
         this.gitFiles.push("package-lock.json");
 
         // backend files
-        await this._installApp({ name, projectName, projectPath, sourceDir, skipGit });
+        await this._installApp({ name, type, projectName, projectPath, sourceDir, skipGit });
 
         // npm
         await this._installNpms(projectPath);
@@ -162,7 +162,7 @@ export class Generator {
         }
     }
 
-    async _createWebApp({ name, projectName, projectPath, sourceDir, skipGit, frontend, netron }) {
+    async _createWebApp({ name, type, projectName, projectPath, sourceDir, skipGit, frontend, netron }) {
         const withFrontend = is.string(frontend);
         const backendPath = withFrontend ? std.path.join(projectPath, BACKEND_NAME) : projectPath;
 
@@ -174,7 +174,7 @@ export class Generator {
         }
 
         // backend files
-        await this._installWebappBackend({ name, projectName, projectPath, sourceDir, skipGit, frontend, netron, bundleDir, withFrontend, backendPath });
+        await this._installWebappBackend({ name, type, projectName, projectPath, sourceDir, skipGit, frontend, netron, bundleDir, withFrontend, backendPath });
 
         // backend npms
         await this._installNpms(backendPath);
@@ -199,7 +199,7 @@ export class Generator {
         }
     }
 
-    async _installApp({ name, projectName, projectPath, sourceDir, skipGit }) {
+    async _installApp({ name, type, projectName, projectPath, sourceDir, skipGit }) {
         const bar = adone.terminal.progress({
             schema: " :spinner installing files"
         });
@@ -209,7 +209,7 @@ export class Generator {
             const appRelPath = std.path.join(sourceDir, "app.js");
 
             // common
-            await this._copyCommonFiles({ name, appRelPath, destPath: projectPath, sourceDir, skipGit, withFrontend: false });
+            await this._copyCommonFiles({ name, type, appRelPath, destPath: projectPath, sourceDir, skipGit, withFrontend: false });
 
             // src
             await fast.src("skeletons/app.js", {
@@ -234,7 +234,7 @@ export class Generator {
         }
     }
 
-    async _installWebappBackend({ name, projectName, projectPath, sourceDir, skipGit, frontend, netron, bundleDir, withFrontend, backendPath }) {
+    async _installWebappBackend({ name, type, projectName, projectPath, sourceDir, skipGit, frontend, netron, bundleDir, withFrontend, backendPath }) {
         const bar = adone.terminal.progress({
             schema: " :spinner installing backend files"
         });
@@ -245,7 +245,7 @@ export class Generator {
             const appRelPath = std.path.join(sourceDir, "app.js");
 
             // common
-            await this._copyCommonFiles({ name, appRelPath, destPath: backendPath, sourceDir, skipGit, withFrontend });
+            await this._copyCommonFiles({ name, type, appRelPath, destPath: backendPath, sourceDir, skipGit, withFrontend });
 
             // src
             await fast.src(`skeletons/webapp/backend/${bundleDir}/src/**/*`, {
@@ -292,7 +292,7 @@ export class Generator {
         }
     }
 
-    _copyCommonFiles({ name, appRelPath, destPath, sourceDir, skipGit, withFrontend }) {
+    _copyCommonFiles({ name, type, appRelPath, destPath, sourceDir, skipGit, withFrontend }) {
         return fast.src("common/**/*", {
             cwd: this.templatesPath
         }).filter((x) => {
@@ -319,6 +319,7 @@ export class Generator {
                 bin,
                 lib,
                 name,
+                type,
                 from: appRelPath
             }));
             return x;

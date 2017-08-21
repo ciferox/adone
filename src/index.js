@@ -38,15 +38,15 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
                         const value = modules[key];
 
                         let mod;
-                        if (typeof value === "function") {
+                        if (typeof value === "function") { // eslint-disable-line
                             mod = value(key);
-                        } else if (typeof value === "string") {
+                        } else if (typeof value === "string") { // eslint-disable-line
                             mod = _require(value);
-                        } else if (Array.isArray(value) && value.length >= 1 && typeof value[0] === "string") {
+                        } else if (Array.isArray(value) && value.length >= 1 && typeof value[0] === "string") { // eslint-disable-line
                             mod = value.reduce((mod, entry, i) => {
-                                if (typeof entry === "function") {
+                                if (typeof entry === "function") { // eslint-disable-line
                                     return entry(mod);
-                                } else if (typeof entry === "string") {
+                                } else if (typeof entry === "string") { // eslint-disable-line
                                     if (!(entry in mod)) {
                                         throw new Error(`Invalid parameter name in ${key}[${i + 1}]`);
                                     }
@@ -58,7 +58,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
                             throw new TypeError(`Invalid module type of ${key}`);
                         }
 
-                        if (typeof mod === "object" && mod.__esModule === true && "default" in mod) {
+                        if (typeof mod === "object" && mod.__esModule === true && "default" in mod) { // eslint-disable-line
                             mod = mod.default;
                         }
 
@@ -80,8 +80,8 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
                 Class.prototype[tag] = 1;
             },
             has(obj, tag) {
-                if (obj != null && typeof obj === "object") {
-                    for (; (obj = obj.__proto__) != null;) {
+                if (obj != null && typeof obj === "object") { // eslint-disable-line
+                    for (; (obj = obj.__proto__) != null;) { // eslint-disable-line
                         if (obj[tag] === 1) {
                             return true;
                         }
@@ -91,7 +91,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             },
             define(tag, predicate) {
                 adone.tag[tag] = Symbol();
-                if (typeof (predicate) === "string") {
+                if (typeof (predicate) === "string") { // eslint-disable-line
                     Object.defineProperty(adone.is, predicate, {
                         enumerable: true,
                         value: (obj) => adone.tag.has(obj, tag)
@@ -307,7 +307,9 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         }),
 
         // Vendor
-        vendor: "./vendor"
+        vendor: "./vendor",
+        // Npm
+        npm: "./npm"
     }, adone);
     if (process.env.ADONE_SOURCEMAPS) {
         adone.sourcemap.support(Error).install();
