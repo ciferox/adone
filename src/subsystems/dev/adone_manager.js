@@ -134,6 +134,12 @@ export default class AdoneManager {
     }
 
     getTargets() {
-        return ["!**/*.map", "package.json", "README*", "LICENSE*"].concat(["bin", "lib", "etc"].map((x) => util.globize(x, { recursively: true })));
+        return [
+            "!**/*.map",
+            "package.json",
+            "README*",
+            "LICENSE*",
+            ...[".meta", "bin", "lib", "etc"].map((x) => util.globize(x, { recursively: true }))
+        ];
     }
 }
