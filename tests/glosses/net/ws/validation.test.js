@@ -3,7 +3,7 @@ describe("net", "ws", "Validation", () => {
         let txt;
         before(async () => {
             const fixtures = new adone.fs.Directory(__dirname, "..", "fixtures");
-            txt = await fixtures.getVirtualFile("lorem-ipsum.txt").content();
+            txt = await fixtures.getVirtualFile("lorem-ipsum.txt").contents();
         });
 
 

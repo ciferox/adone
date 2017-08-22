@@ -31,7 +31,7 @@ describe("archive", "tar", () => {
 
         expect(aStat.mode).to.be.equal(bStat.mode);
         expect(mtime(aStat)).to.be.equal(mtime(bStat));
-        expect(await fileA.content()).to.be.equal(await fileB.content());
+        expect(await fileA.contents()).to.be.equal(await fileB.contents());
     });
 
     specify("copy b -> copy/b", async () => {
@@ -64,7 +64,7 @@ describe("archive", "tar", () => {
 
         expect(aStat.mode).to.be.equal(bStat.mode);
         expect(mtime(aStat)).to.be.equal(mtime(bStat));
-        expect(await fileA.content()).to.be.equal(await fileB.content());
+        expect(await fileA.contents()).to.be.equal(await fileB.contents());
     });
 
     specify("symlink", async function () {
@@ -97,7 +97,7 @@ describe("archive", "tar", () => {
         const lstatB = await linkB.lstat();
 
         expect(mtime(lstatA)).to.be.equal(mtime(lstatB));
-        expect(await linkA.content()).to.be.equal(await linkB.content());
+        expect(await linkA.contents()).to.be.equal(await linkB.contents());
     });
 
     specify("follow symlinks", async function () {
@@ -130,7 +130,7 @@ describe("archive", "tar", () => {
         const stat2 = await file2.lstat();
         expect(stat2.isSymbolicLink()).to.be.false;
         expect(mtime(stat1)).to.be.equal(mtime(stat2));
-        expect(await file1.content()).to.be.equal(await file2.content());
+        expect(await file1.contents()).to.be.equal(await file2.contents());
     });
 
     specify("strip", async () => {

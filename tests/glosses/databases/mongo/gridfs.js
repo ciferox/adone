@@ -139,7 +139,7 @@ describe("gridfs", function () {
         await gridStore.open();
         await gridStore.writeFile(file.path());
         const data = await GridStore.read(db, "test_gs_writing_file");
-        const expectedData = await file.content(null);
+        const expectedData = await file.contents("buffer");
         expect(data.toString("hex")).to.be.equal(expectedData.toString("hex"));
         expect(data.length).to.be.equal(await file.size());
         // Ensure we have a md5
@@ -156,7 +156,7 @@ describe("gridfs", function () {
         await gridStore.open();
         const doc = await gridStore.writeFile(file.path());
         const data = await GridStore.read(db, doc.fileId);
-        const expectedData = await file.content(null);
+        const expectedData = await file.contents("buffer");
         expect(await data.toString("hex")).to.be.equal(expectedData.toString("hex"));
         expect(data.length).to.be.equal(await file.size());
         const gridStore2 = new GridStore(db, doc.fileId, "r");
@@ -170,7 +170,7 @@ describe("gridfs", function () {
         const file = new fs.File(__dirname, "fixtures", "test_gs_working_field_read.pdf");
         const gridStore = new GridStore(db, "test_gs_working_field_read", "w");
         await gridStore.open();
-        const expectedData = await file.content(null);
+        const expectedData = await file.contents("buffer");
         await gridStore.write(expectedData);
         await gridStore.close();
         const data = await GridStore.read(db, "test_gs_working_field_read");
@@ -183,7 +183,7 @@ describe("gridfs", function () {
         const gridStore = new GridStore(db, "test.txt", "w");
         gridStore.chunkSize = 40960;
         await gridStore.open();
-        const stream = file.contentStream(null);
+        const stream = file.contentsStream(null);
         await new Promise((resolve, reject) => {
             stream.on("data", (chunk) => {
                 gridStore.write(chunk).catch(reject);
@@ -193,20 +193,20 @@ describe("gridfs", function () {
         });
         const result = await gridStore.close();
         const data = await GridStore.read(db, result._id);
-        expect(data.toString("hex")).to.be.deep.equal(await file.content("hex"));
+        expect(data.toString("hex")).to.be.deep.equal(await file.contents("hex"));
     });
 
     it("should correctly perform working filed with big file", async () => {
         const { db } = this;
         const file = new fs.File(__dirname, "fixtures", "test_gs_working_field_read.pdf");
         const tmpFile = new fs.File(await fs.tmpName());
-        const tmpContent = Buffer.from((await file.content("binary")).repeat(10), "binary");
+        const tmpContent = Buffer.from((await file.contents("binary")).repeat(10), "binary");
         await tmpFile.write(tmpContent);
         const gridStore = new GridStore(db, null, "w");
         gridStore.chunkSize = 80960;
         await gridStore.open();
         await new Promise((resolve, reject) => {
-            const stream = tmpFile.contentStream(null);
+            const stream = tmpFile.contentsStream(null);
             stream.on("data", (chunk) => {
                 gridStore.write(chunk).catch(reject);
             });
@@ -222,7 +222,7 @@ describe("gridfs", function () {
         const { db } = this;
         const file = new fs.File(__dirname, "fixtures", "test_gs_working_field_read.pdf");
         const tmpFile = new fs.File(await fs.tmpName());
-        const tmpContent = Buffer.from((await file.content("binary")).repeat(10), "binary");
+        const tmpContent = Buffer.from((await file.contents("binary")).repeat(10), "binary");
         await tmpFile.write(tmpContent);
 
         const executeTest = async (chunkSize) => {
@@ -230,7 +230,7 @@ describe("gridfs", function () {
             gridStore.chunkSize = chunkSize;
             await gridStore.open();
             await new Promise((resolve, reject) => {
-                const stream = tmpFile.contentStream(null);
+                const stream = tmpFile.contentsStream(null);
                 stream.on("data", (chunk) => {
                     gridStore.write(chunk).catch(reject);
                 });
@@ -250,7 +250,7 @@ describe("gridfs", function () {
         const { db } = this;
         const gridStore = new GridStore(db, "test_gs_weird_bug", "w");
         const file = new fs.File(__dirname, "fixtures", "test_gs_working_field_read.pdf");
-        const data = await file.content(null);
+        const data = await file.contents("buffer");
         await gridStore.open();
         await gridStore.write(data);
         await gridStore.close();
@@ -264,7 +264,7 @@ describe("gridfs", function () {
         const gridStore = new GridStore(db, null, "w");
         // force multiple chunks
         gridStore.chunkSize = 5000;
-        const data = await file.content(null);
+        const data = await file.contents("buffer");
         await gridStore.open();
         await gridStore.write(data);
         const doc = await gridStore.close();
@@ -278,7 +278,7 @@ describe("gridfs", function () {
         const { db } = this;
         const file = new fs.File(__dirname, "fixtures", "test_gs_weird_bug.png");
         const gridStore = new GridStore(db, null, "w");
-        const data = await file.content(null);
+        const data = await file.contents("buffer");
         gridStore.chunkSize = data.length + 100;
         await gridStore.open();
         await gridStore.write(data);
@@ -293,7 +293,7 @@ describe("gridfs", function () {
         const { db } = this;
         const file = new fs.File(__dirname, "fixtures", "test_gs_weird_bug.png");
         const gridStore = new GridStore(db, null, "w");
-        const data = await file.content(null);
+        const data = await file.contents("buffer");
         gridStore.chunkSize = 5000;
         await gridStore.open();
         await gridStore.write(data);
@@ -308,7 +308,7 @@ describe("gridfs", function () {
         const { db } = this;
         const file = new fs.File(__dirname, "fixtures", "test_gs_weird_bug.png");
         const gridStore = new GridStore(db, null, "w");
-        const data = await file.content(null);
+        const data = await file.contents("buffer");
         gridStore.chunkSize = 5000;
         await gridStore.open();
         await gridStore.write(data);
@@ -540,7 +540,7 @@ describe("gridfs", function () {
         });
         await gridStore.close();
         const data = await fs.readFile(tmpName, { encoding: null });
-        expect(data).to.be.deep.equal(await file.content(null));
+        expect(data).to.be.deep.equal(await file.contents("buffer"));
     });
 
     it("should correctly stream read from grid store object no grid store open called", async () => {
@@ -552,7 +552,7 @@ describe("gridfs", function () {
 
         gridStore = new GridStore(db, "test_stream_write_2", "r");
         const data = await gridStore.stream().pipe(stream.concat());
-        expect(data).to.be.deep.equal(await file.content(null));
+        expect(data).to.be.deep.equal(await file.contents("buffer"));
     });
 
     it("should correctly stream write from grid store object", async () => {
@@ -562,10 +562,10 @@ describe("gridfs", function () {
         const storeStream = new GridStore(db, filename, "w").stream();
         await new Promise((resolve) => {
             storeStream.once("end", resolve);
-            file.contentStream(null).pipe(storeStream);
+            file.contentsStream(null).pipe(storeStream);
         });
         const data = await GridStore.read(db, filename);
-        expect(data).to.be.deep.equal(await file.content(null));
+        expect(data).to.be.deep.equal(await file.contents("buffer"));
     });
 
     it("should correctly write large file string and read back", async () => {
@@ -1098,11 +1098,11 @@ describe("gridfs", function () {
         const stream = new GridStore(db, "simple_100_document_toArray.png", "w").stream();
         const file = new fs.File(__dirname, "fixtures", "test_gs_working_field_read.pdf");
         await new Promise((resolve) => {
-            file.contentStream(null).pipe(stream);
+            file.contentsStream(null).pipe(stream);
             stream.once("end", resolve);
         });
         const gridData = await GridStore.read(db, "simple_100_document_toArray.png");
-        expect(gridData).to.be.deep.equal(await file.content(null));
+        expect(gridData).to.be.deep.equal(await file.contents("buffer"));
     });
 
     it("should correctly seek on file where size of file is a multiple of the chunk size", async () => {

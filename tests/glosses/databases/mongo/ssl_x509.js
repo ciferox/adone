@@ -9,11 +9,11 @@ describe("ssl x509", function () {
 
     const caFile = new fs.File(__dirname, "ssl", "rootCA.crt");
     const caPath = caFile.path();
-    const clientNoPassKey = new fs.File(__dirname, "ssl", "client_no_pass.key").contentSync();
-    const clientNoPassCert = new fs.File(__dirname, "ssl", "client_no_pass.crt").contentSync();
-    const clientNoPassPEM = new fs.File(__dirname, "ssl", "client_no_pass.pem").contentSync();
-    const clientx509Key = new fs.File(__dirname, "ssl", "client_x509.key").contentSync();
-    const clientx509Cert = new fs.File(__dirname, "ssl", "client_x509.crt").contentSync();
+    const clientNoPassKey = new fs.File(__dirname, "ssl", "client_no_pass.key").contentsSync();
+    const clientNoPassCert = new fs.File(__dirname, "ssl", "client_no_pass.crt").contentsSync();
+    const clientNoPassPEM = new fs.File(__dirname, "ssl", "client_no_pass.pem").contentsSync();
+    const clientx509Key = new fs.File(__dirname, "ssl", "client_x509.key").contentsSync();
+    const clientx509Cert = new fs.File(__dirname, "ssl", "client_x509.crt").contentsSync();
     const localhostPEMPath = new fs.File(__dirname, "ssl", "localhost.pem").path();
     const crlPEMPath = new fs.File(__dirname, "ssl", "crl.pem").path();
 

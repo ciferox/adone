@@ -4,7 +4,7 @@ describe("data", "yaml", "issues", () => {
 
     specify("Parse failed when no document start present - 8", async () => {
         const file = fixtures.getVirtualFile("0008.yml");
-        const content = await file.content();
+        const content = await file.contents();
         expect(() => {
             yaml.safeLoad(content);
         }).not.to.throw();
@@ -12,25 +12,25 @@ describe("data", "yaml", "issues", () => {
 
     specify('Non-specific "!" tags should resolve to !!str - 17', async () => {
         const file = fixtures.getVirtualFile("0017.yml");
-        const data = yaml.safeLoad(await file.content());
+        const data = yaml.safeLoad(await file.contents());
         expect(data).to.be.a("string");
     });
 
     specify("Timestamp parsing is one month off - 19", async () => {
         const file = fixtures.getVirtualFile("0019.yml");
-        const data = yaml.safeLoad(await file.content());
+        const data = yaml.safeLoad(await file.contents());
         expect(data.xmas.getTime()).to.be.equal(Date.UTC(2011, 11, 24));
     });
 
     it("should convert new line into white space - 26", async () => {
         const file = fixtures.getVirtualFile("0026.yml");
-        const data = yaml.safeLoad(await file.content());
+        const data = yaml.safeLoad(await file.contents());
         expect(data.test).to.be.equal("a b c\n");
     });
 
     specify("refactor compact variant of MarkedYAMLError.toString - 33", async () => {
         const file = fixtures.getVirtualFile("0033.yml");
-        const content = await file.content();
+        const content = await file.contents();
         expect(() => {
             yaml.safeLoad(content);
         }).to.throw();
@@ -38,7 +38,7 @@ describe("data", "yaml", "issues", () => {
 
     specify("Timestamps are incorrectly parsed in local time - 46", async () => {
         const file = fixtures.getVirtualFile("0046.yml");
-        const data = yaml.safeLoad(await file.content());
+        const data = yaml.safeLoad(await file.contents());
         const { date1, date2 } = data;
 
         // 2010-10-20T20:45:00Z
@@ -60,7 +60,7 @@ describe("data", "yaml", "issues", () => {
 
     specify("Incorrect utf-8 handling on require('file.yaml') - 54", async () => {
         const file = fixtures.getVirtualFile("0054.yml");
-        const data = yaml.safeLoad(await file.content());
+        const data = yaml.safeLoad(await file.contents());
         const expected = "у".repeat(101); // russian 'у'
         expect(data).to.have.lengthOf(41);
         for (const line of data) {
@@ -93,7 +93,7 @@ describe("data", "yaml", "issues", () => {
 
     specify("Wrong error message when yaml file contains tabs - 64", async () => {
         const file = fixtures.getVirtualFile("0054.yml");
-        const data = yaml.safeLoad(await file.content());
+        const data = yaml.safeLoad(await file.contents());
         expect(() => {
             yaml.safeLoad(data);
         }).not.to.throw();
@@ -123,7 +123,7 @@ describe("data", "yaml", "issues", () => {
 
     specify("Unwanted line breaks in folded scalars - 93", async () => {
         const file = fixtures.getVirtualFile("0093.yml");
-        const data = yaml.safeLoad(await file.content());
+        const data = yaml.safeLoad(await file.contents());
         expect(data.first).to.be.equal("a b\n  c\n  d\ne f\n");
         expect(data.second).to.be.equal("a b\n  c\n\n  d\ne f\n");
         expect(data.third).to.be.equal("a b\n\n  c\n  d\ne f\n");
@@ -249,7 +249,7 @@ describe("data", "yaml", "issues", () => {
 
     specify("Don\'t throw on warning - 194", async () => {
         const file = fixtures.getVirtualFile("0194.yml");
-        const content = await file.content();
+        const content = await file.contents();
         const data = yaml.safeLoad(content);
 
         expect(data).to.be.deep.equal({ foo: { bar: true } });
@@ -261,7 +261,7 @@ describe("data", "yaml", "issues", () => {
 
     specify("Don\'t throw on warning - 203", async () => {
         const file = fixtures.getVirtualFile("0203.yml");
-        const data = yaml.safeLoad(await file.content());
+        const data = yaml.safeLoad(await file.contents());
         expect(data).to.be.deep.equal({ test: "\n\nHello\nworld" });
     });
 
@@ -424,7 +424,7 @@ describe("data", "yaml", "issues", () => {
     context("243", () => {
         specify("Duplicated mapping key errors on top level throw at beginning of key", async () => {
             const file = fixtures.getVirtualFile("0243_basic.yml");
-            const content = await file.content();
+            const content = await file.contents();
             const lines = content.split(/\r?\n/);
             try {
                 yaml.safeLoad(content);
@@ -437,7 +437,7 @@ describe("data", "yaml", "issues", () => {
 
         specify("Duplicated mapping key errors inside of mapping values throw at beginning of key", async () => {
             const file = fixtures.getVirtualFile("0243_nested.yml");
-            const content = await file.content();
+            const content = await file.contents();
             const lines = content.split(/\r?\n/);
             try {
                 yaml.safeLoad(content);
@@ -506,7 +506,7 @@ describe("data", "yaml", "issues", () => {
 
     specify("should allow cast integers as !!float - 333", async () => {
         const file = fixtures.getVirtualFile("0333.yml");
-        const data = yaml.safeLoad(await file.content());
+        const data = yaml.safeLoad(await file.contents());
         expect(data).to.be.deep.equal({
             negative: -1,
             zero: 0,
@@ -517,7 +517,7 @@ describe("data", "yaml", "issues", () => {
     specify("Don't throw on warning", async () => {
         const src = fixtures.getVirtualFile("0335.yml");
 
-        expect(yaml.safeLoad(await src.content())).to.be.deep.equal({
+        expect(yaml.safeLoad(await src.contents())).to.be.deep.equal({
             not_num_1: "-_123",
             not_num_2: "_123",
             not_num_3: "123_",
@@ -589,7 +589,7 @@ describe("data", "yaml", "issues", () => {
         it("should include the error message in the error stack", async () => {
             const src = fixtures.getVirtualFile("0351.yml");
             const err = await assert.throws(async () => {
-                yaml.safeLoad(await src.content(), "utf8");
+                yaml.safeLoad(await src.contents(), "utf8");
             });
             expect(err.stack).to.match(/^YAMLException: end of the stream or a document separator is expected/);
         });

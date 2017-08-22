@@ -77,8 +77,8 @@ describe("fast", "transform", "sourcemaps", "write", () => {
         root = await adone.fs.Directory.createTmp();
         fromdir = await root.addDirectory("from");
         await generateFixtures(fromdir);
-        sourceContent = await fromdir.getVirtualFile("helloworld.js").content();
-        mappedContent = await fromdir.getVirtualFile("helloworld.map.js").content();
+        sourceContent = await fromdir.getVirtualFile("helloworld.js").contents();
+        mappedContent = await fromdir.getVirtualFile("helloworld.map.js").contents();
     });
 
     after(async () => {

@@ -143,7 +143,7 @@ describe("replset read preference", function () {
         });
 
         const file = new fs.File(__dirname, "fixtures", "test_gs_weird_bug.png");
-        const data = await file.content(null);
+        const data = await file.contents("buffer");
 
         await gridStore.open();
         await gridStore.write(data);

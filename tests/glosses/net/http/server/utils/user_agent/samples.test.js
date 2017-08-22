@@ -37,7 +37,7 @@ describe("net", "http", "server", "util", "user agent", "samples", () => {
                 this.timeout(120000);
             }
             const file = new fs.File(__dirname, "fixtures", "samples", `${ftype}.json`);
-            const lines = (await file.content()).split("\n");
+            const lines = (await file.contents()).split("\n");
 
             if (lines[lines.length - 1] === "") {
                 lines.pop();

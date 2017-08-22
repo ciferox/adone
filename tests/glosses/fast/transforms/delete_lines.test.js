@@ -33,7 +33,7 @@ describe("fast", "transform", "deleteLines", () => {
 
         const file = todir.getVirtualFile("test.txt");
         assert.isOk(await file.exists());
-        assert.equal(await file.content(), "Freedom!!!\n");
+        assert.equal(await file.contents(), "Freedom!!!\n");
     });
 
     it("should throw on stream", async () => {

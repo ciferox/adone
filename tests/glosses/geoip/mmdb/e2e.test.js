@@ -5,7 +5,7 @@ describe("geoip", "mmdb", "geoip", () => {
     const source = fixtures.getVirtualDirectory("source");
 
     const actual = async (file) => {
-        const data = JSON.parse(await source.getVirtualFile(file).content());
+        const data = JSON.parse(await source.getVirtualFile(file).contents());
         const hash = {};
         data.forEach((item) => {
             for (const key in item) {

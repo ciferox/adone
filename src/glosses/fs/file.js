@@ -3,6 +3,21 @@ const { std: { fs: sfs, path: spath }, is, fs } = adone;
 export default class File {
     constructor(...path) {
         this._path = spath.resolve(...path);
+        this._encoding = "utf8";
+    }
+
+    encoding(name = adone.null) {
+        if (name === adone.null) {
+            if (is.null(this._encoding)) {
+                return "buffer";
+            }
+            return this._encoding;
+        }
+        if (name === "buffer") {
+            name = null;
+        }
+        this._encoding = name;
+        return this;
     }
 
     stat() {
@@ -64,11 +79,11 @@ export default class File {
         return this.write("", { mode });
     }
 
-    write(buffer, { encoding = "utf8", mode = 0o755, flag = "w" } = {}) {
+    write(buffer, { encoding = this._encoding, mode = 0o755, flag = "w" } = {}) {
         return fs.writeFile(this._path, buffer, { encoding, mode, flag });
     }
 
-    append(buffer, { encoding = "utf8", mode = 0o755, flag = "w" } = {}) {
+    append(buffer, { encoding = this._encoding, mode = 0o755, flag = "w" } = {}) {
         return fs.appendFile(this._path, buffer, { encoding, mode, flag });
     }
 
@@ -81,19 +96,22 @@ export default class File {
         });
     }
 
-    content(encoding = "utf8") {
+    contents(encoding = this._encoding) {
         return fs.readFile(this._path, { encoding });
     }
 
-    contentSync(encoding = "utf8") {
+    contentsSync(encoding = this._encoding) {
         return sfs.readFileSync(this._path, encoding);
     }
 
-    contentStream(encoding = "utf8") {
+    contentsStream(encoding = this._encoding) {
         return sfs.createReadStream(this._path, { encoding });
     }
 
     chmod(mode) {
+        if (mode instanceof adone.fs.Mode) {
+            mode = mode.valueOf();
+        }
         return fs.chmod(this._path, mode);
     }
 

@@ -12,16 +12,16 @@ describe("ssl validation", function () {
 
     const caFile = new fs.File(__dirname, "ssl", "rootCA.crt");
     const caPath = caFile.path();
-    const ca = caFile.contentSync();
-    const clientKey = new fs.File(__dirname, "ssl", "client.key").contentSync();
-    const clientCert = new fs.File(__dirname, "ssl", "client.crt").contentSync();
-    const clientNoPassKey = new fs.File(__dirname, "ssl", "client_no_pass.key").contentSync();
-    const clientNoPassCert = new fs.File(__dirname, "ssl", "client_no_pass.crt").contentSync();
-    const selfKey = new fs.File(__dirname, "ssl", "self.key").contentSync();
-    const selfCert = new fs.File(__dirname, "ssl", "self.crt").contentSync();
-    const selfPEM = new fs.File(__dirname, "ssl", "self.pem").contentSync();
-    const localhostKey = new fs.File(__dirname, "ssl", "localhost.key").contentSync();
-    const localhostCert = new fs.File(__dirname, "ssl", "localhost.crt").contentSync();
+    const ca = caFile.contentsSync();
+    const clientKey = new fs.File(__dirname, "ssl", "client.key").contentsSync();
+    const clientCert = new fs.File(__dirname, "ssl", "client.crt").contentsSync();
+    const clientNoPassKey = new fs.File(__dirname, "ssl", "client_no_pass.key").contentsSync();
+    const clientNoPassCert = new fs.File(__dirname, "ssl", "client_no_pass.crt").contentsSync();
+    const selfKey = new fs.File(__dirname, "ssl", "self.key").contentsSync();
+    const selfCert = new fs.File(__dirname, "ssl", "self.crt").contentsSync();
+    const selfPEM = new fs.File(__dirname, "ssl", "self.pem").contentsSync();
+    const localhostKey = new fs.File(__dirname, "ssl", "localhost.key").contentsSync();
+    const localhostCert = new fs.File(__dirname, "ssl", "localhost.crt").contentsSync();
     const localhostPEMPath = new fs.File(__dirname, "ssl", "localhost.pem").path();
     const crlPEMPath = new fs.File(__dirname, "ssl", "crl.pem").path();
 

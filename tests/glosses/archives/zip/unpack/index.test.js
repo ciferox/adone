@@ -102,7 +102,7 @@ describe("archive", "zip", "unpack", () => {
                                 const key = addUnicodeSupport(file.relativePath(unpackedDir).replace(/\\/g, "/"));
                                 if (file instanceof adone.fs.File) {
                                     if (file.filename() !== ".git_please_make_this_directory") {
-                                        expectedArchiveContents[key] = forceLF(file.contentSync(null));
+                                        expectedArchiveContents[key] = forceLF(file.contentsSync(null));
                                     }
                                 } else {
                                     expectedArchiveContents[key] = DIRECTORY;
@@ -359,7 +359,7 @@ describe("archive", "zip", "unpack", () => {
         const makeRandomAccessReader = () => {
             const dir = thisDir.getVirtualDirectory("zip64");
             const file = dir.getVirtualFile("zip64.zip_fragment");
-            const backendContents = file.contentSync(null);
+            const backendContents = file.contentsSync(null);
             if (backendContents.length <= 4) {
                 throw new Error("unexpected EOF");
             }

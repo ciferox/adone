@@ -393,7 +393,7 @@ describe("apm", function () {
 
         for (const scenario of scenarios) {
             specify(scenario.stem(), async () => {
-                const data = JSON.parse(await scenario.content());
+                const data = JSON.parse(await scenario.contents());
                 const listener = mongo.instrument(() => { });
                 const client = await mongo.connect(this.url());
                 await executeTests(client, listener, data, data.tests);

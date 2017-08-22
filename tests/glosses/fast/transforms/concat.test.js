@@ -68,7 +68,7 @@ describe("fast", "transform", "concat", () => {
         await fast.src(srcPath).concat("test.js").dest(todir.path());
         const file = todir.getVirtualFile("test.js");
         expect(await file.exists()).to.be.true;
-        expect(await file.content()).to.be.equal("console.log(123);");
+        expect(await file.contents()).to.be.equal("console.log(123);");
     });
 
     it("should concat multiple files", async () => {
@@ -81,7 +81,7 @@ describe("fast", "transform", "concat", () => {
         const files = await fast.src(srcPath).concat("test.js").dest(todir.path(), { produceFiles: true });
         const file = todir.getVirtualFile("test.js");
         expect(await file.exists()).to.be.true;
-        expect(await file.content()).to.be.equal(files.map((x) => x.contents.toString()).join("\n"));
+        expect(await file.contents()).to.be.equal(files.map((x) => x.contents.toString()).join("\n"));
     });
 
     it("should preserve mode from files", async () => {
@@ -169,7 +169,7 @@ describe("fast", "transform", "concat", () => {
             await fast.src(srcPath).concat({ path: "new.txt" }).dest(todir.path());
             const file = todir.getVirtualFile("new.txt");
             expect(await file.exists()).to.be.true;
-            expect(await file.content()).to.be.equal("console.log(123);");
+            expect(await file.contents()).to.be.equal("console.log(123);");
         });
 
         it("should calculate relative path from cwd and path in arguments", async () => {
@@ -182,7 +182,7 @@ describe("fast", "transform", "concat", () => {
                 .dest(todir.path());
             const file = todir.getVirtualFile("d", "new.txt");
             expect(await file.exists()).to.be.true;
-            expect(await file.content()).to.be.equal("console.log(123);");
+            expect(await file.contents()).to.be.equal("console.log(123);");
         });
     });
 });

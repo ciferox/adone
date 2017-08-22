@@ -114,7 +114,7 @@ describe("net", "http", "server", "util", "user agent", "_", () => {
 
         before(async () => {
             const file = new fs.File(__dirname, "fixtures", "ua", "group.yml");
-            const regexes = adone.data.yaml.safeLoad(await file.content());
+            const regexes = adone.data.yaml.safeLoad(await file.contents());
             const { rules, pattern } = regexes;
             const parser = new PartialParser(rules, { pattern });
             parse = parser.parse.bind(parser);

@@ -126,7 +126,7 @@ describe("util", "iconv", "Full DBCS encoding tests", function () {
                     const iconvChgs = iconvChanges[enc] || {};
                     const iconvCannotDecodeChars = iconvCannotDecode[enc] || {};
                     const errors = [];
-                    const buffer = ExBuffer.wrap(await expectedFile.content(null));
+                    const buffer = ExBuffer.wrap(await expectedFile.contents("buffer"));
                     while (buffer.remaining() > 0) {
                         const valid = buffer.readUInt8();
                         const inpLength = buffer.readUInt8();
@@ -188,7 +188,7 @@ describe("util", "iconv", "Full DBCS encoding tests", function () {
                     const iconvChgs = iconvChanges[enc] || {};
                     const iconvCannotDecodeChars = iconvCannotDecode[enc] || {};
                     const errors = [];
-                    const buffer = ExBuffer.wrap(await expectedFile.content(null));
+                    const buffer = ExBuffer.wrap(await expectedFile.contents("buffer"));
                     for (let i = 0; i < 0x10000; i++) {
                         if (i === 0xD800) {
                             i = 0xF900;

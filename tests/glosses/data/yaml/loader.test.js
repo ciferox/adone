@@ -15,7 +15,7 @@ describe("data", "yaml", "loader", () => {
             const expected = require(file.path());
             let actual = [];
 
-            yaml.loadAll(await yamlFile.content(), (doc) => {
+            yaml.loadAll(await yamlFile.contents(), (doc) => {
                 actual.push(doc);
             }, { filename: yamlFile, schema: TEST_SCHEMA });
 

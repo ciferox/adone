@@ -9,7 +9,7 @@ describe("connection string", function () {
 
     for (const spec of specs) {
         it(spec.stem(), async () => {
-            const content = await spec.content();
+            const content = await spec.contents();
             const data = JSON.parse(content);
             for (const { auth, description, hosts, options, uri, valid, warning } of data.tests) {
                 let success = true;

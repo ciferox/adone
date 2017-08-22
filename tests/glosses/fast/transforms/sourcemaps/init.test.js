@@ -53,7 +53,7 @@ describe("fast", "transform", "sourcemaps", "init", () => {
         root = await adone.fs.Directory.createTmp();
         fromdir = await root.addDirectory("from");
         await generateFixtures(fromdir);
-        sourceContent = await fromdir.getVirtualFile("helloworld.js").content();
+        sourceContent = await fromdir.getVirtualFile("helloworld.js").contents();
     });
 
     after(async () => {

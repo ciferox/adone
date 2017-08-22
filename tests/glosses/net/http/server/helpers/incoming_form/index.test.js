@@ -215,8 +215,8 @@ describe("net", "http", "helpers", "incoming form", () => {
                     const file = files.file;
                     expect(file.size).to.be.equal(162);
 
-                    const uploaded = new adone.fs.File(file.path).contentSync();
-                    const original = testFile.contentSync();
+                    const uploaded = new adone.fs.File(file.path).contentsSync();
+                    const original = testFile.contentsSync();
 
                     expect(uploaded).to.be.equal(original);
                     res.end();
@@ -704,7 +704,7 @@ describe("net", "http", "helpers", "incoming form", () => {
                     }
                 });
 
-                video.contentStream(null).pipe(request);
+                video.contentsStream(null).pipe(request);
             });
         });
     });

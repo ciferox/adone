@@ -72,7 +72,7 @@ describe("fast", "transform", "sass", () => {
         expect(cssFile.relative).to.be.ok;
         expect(cssFile.contents).to.be.ok;
         expect(cssFile.basename).to.be.equal("empty.css");
-        expect(cssFile.contents.toString()).to.be.equal(await expectdir.getVirtualFile("empty.css").content());
+        expect(cssFile.contents.toString()).to.be.equal(await expectdir.getVirtualFile("empty.css").contents());
     });
 
     it("should compile a single sass file", async () => {
@@ -85,7 +85,7 @@ describe("fast", "transform", "sass", () => {
         expect(cssFile.path).to.be.ok;
         expect(cssFile.relative).to.be.ok;
         expect(cssFile.contents).to.be.ok;
-        expect(cssFile.contents.toString()).to.be.equal(await expectdir.getVirtualFile("mixins.css").content());
+        expect(cssFile.contents.toString()).to.be.equal(await expectdir.getVirtualFile("mixins.css").contents());
     });
 
     it("should compile multiple sass files", (done) => {
@@ -102,7 +102,7 @@ describe("fast", "transform", "sass", () => {
             expect(cssFile.relative).to.be.ok;
             expect(cssFile.contents).to.be.ok;
             expect(cssFile.contents.toString()).to.be.equal(
-                expectdir.getVirtualFile(cssFile.basename).contentSync()
+                expectdir.getVirtualFile(cssFile.basename).contentsSync()
             );
             mustSee--;
             if (mustSee <= 0) {
@@ -124,7 +124,7 @@ describe("fast", "transform", "sass", () => {
             expect(cssFile.relative).to.be.ok;
             expect(cssFile.contents).to.be.ok;
             expect(cssFile.contents.toString()).to.be.equal(
-                expectdir.getVirtualFile(cssFile.basename).contentSync()
+                expectdir.getVirtualFile(cssFile.basename).contentsSync()
             );
             done();
         });
@@ -173,7 +173,7 @@ describe("fast", "transform", "sass", () => {
             expect(cssFile.relative).to.be.ok;
             expect(cssFile.contents).to.be.ok;
             expect(cssFile.contents.toString()).to.be.equal(
-                expectdir.getVirtualFile("mixins.css").contentSync()
+                expectdir.getVirtualFile("mixins.css").contentsSync()
             );
             done();
         });
@@ -193,7 +193,7 @@ describe("fast", "transform", "sass", () => {
             expect(cssFile.relative).to.be.ok;
             expect(cssFile.contents).to.be.ok;
             expect(cssFile.contents.toString()).to.be.equal(`/* Added Dynamically */\n${
-                expectdir.getVirtualFile(cssFile.basename).contentSync()}`
+                expectdir.getVirtualFile(cssFile.basename).contentsSync()}`
             );
             done();
         });
@@ -237,7 +237,7 @@ describe("fast", "transform", "sass", () => {
             expect(cssFile.relative).to.be.ok;
             expect(cssFile.contents).to.be.ok;
             expect(cssFile.contents.toString()).to.be.equal(
-                expectdir.getVirtualFile(cssFile.basename).contentSync()
+                expectdir.getVirtualFile(cssFile.basename).contentsSync()
             );
             done();
         });
@@ -258,7 +258,7 @@ describe("fast", "transform", "sass", () => {
             expect(cssFile.relative).to.be.ok;
             expect(cssFile.contents).to.be.ok;
             expect(cssFile.contents.toString()).to.be.equal(
-                expectdir.getVirtualFile(cssFile.basename).contentSync()
+                expectdir.getVirtualFile(cssFile.basename).contentsSync()
             );
             mustSee--;
             if (mustSee <= 0) {

@@ -80,7 +80,7 @@ describe("util", "iconv", "Full SBCS encoding tests", function () {
                         return;
                     }
                     const errors = [];
-                    const buffer = ExBuffer.wrap(await expectedFile.content(null));
+                    const buffer = ExBuffer.wrap(await expectedFile.contents("buffer"));
                     for (let i = 0; i < 0x100; i++) {
                         const buf = Buffer.from([i]);
                         const strActual = iconv.decode(buf, enc);
@@ -116,7 +116,7 @@ describe("util", "iconv", "Full SBCS encoding tests", function () {
                         return;
                     }
                     const errors = [];
-                    const buffer = ExBuffer.wrap(await expectedFile.content(null));
+                    const buffer = ExBuffer.wrap(await expectedFile.contents("buffer"));
                     for (let i = 0; i < 0xFFF0; i++) {
                         if (i === 0xD800) {
                             i = 0xF900;

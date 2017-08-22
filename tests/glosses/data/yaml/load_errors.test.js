@@ -8,7 +8,7 @@ describe("data", "yaml", "load errors", () => {
     for (const rfile of files) {
         const file = fixtures.getVirtualFile(rfile);
         specify(file.filename().slice(0, -3), async () => {
-            const yamlSource = await file.content();
+            const yamlSource = await file.contents();
 
             assert.throws(() => {
                 yaml.loadAll(

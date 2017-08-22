@@ -403,7 +403,7 @@ describe("data", "yaml", "unit", () => {
 
     specify("Mark", async () => {
         const file = fixtures.getVirtualFile("mark.txt");
-        const content = await file.content();
+        const content = await file.contents();
 
         for (const input of content.split("---\n").slice(1)) {
             assert(input.indexOf("*") >= 0);
@@ -449,7 +449,7 @@ describe("data", "yaml", "unit", () => {
 
         specify("Function constructor must not allow to execute any code while parsing.", async () => {
             const file = fixtures.getVirtualFile("parse_function_security.yml");
-            const content = await file.content();
+            const content = await file.contents();
 
             assert.throws(() => {
                 yaml.load(content);

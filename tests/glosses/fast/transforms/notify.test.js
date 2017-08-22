@@ -22,11 +22,11 @@ describe("fast", "transform", "notify", () => {
             base: fromdir.path()
         });
         if (stream) {
-            const fstream = f.contentStream();
+            const fstream = f.contentsStream();
             streams.push(fstream);
             file.contents = fstream;
         } else {
-            file.contents = f.contentSync();
+            file.contents = f.contentsSync();
         }
         return file;
     };

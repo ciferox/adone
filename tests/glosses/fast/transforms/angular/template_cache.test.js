@@ -464,7 +464,7 @@ describe("fast", "transform", "angular", "templateCache", () => {
             expect(files).to.have.lengthOf(1);
             const file = root.getVirtualFile("templates.js");
             expect(await file.exists()).to.be.true;
-            expect(await file.content()).to.be.equal("angular.module('templates').run(['$templateCache', function($templateCache) {$templateCache.put('/template-a.html','<h1 id=\"template-a\">I\\'m template A!</h1>');\n$templateCache.put('/template-b.html','<h1 id=\"template-b\">I\\'m template B!</h1>');}]);");
+            expect(await file.contents()).to.be.equal("angular.module('templates').run(['$templateCache', function($templateCache) {$templateCache.put('/template-a.html','<h1 id=\"template-a\">I\\'m template A!</h1>');\n$templateCache.put('/template-b.html','<h1 id=\"template-b\">I\\'m template B!</h1>');}]);");
         });
 
         it("should set filename", async () => {
@@ -480,7 +480,7 @@ describe("fast", "transform", "angular", "templateCache", () => {
             expect(files).to.have.lengthOf(1);
             const file = root.getVirtualFile("foobar.js");
             expect(await file.exists()).to.be.true;
-            expect(await file.content()).to.be.equal("angular.module('templates', []).run(['$templateCache', function($templateCache) {$templateCache.put('/views/template-a.html','<h1 id=\"template-a\">I\\'m template A!</h1>');}]);");
+            expect(await file.contents()).to.be.equal("angular.module('templates', []).run(['$templateCache', function($templateCache) {$templateCache.put('/views/template-a.html','<h1 id=\"template-a\">I\\'m template A!</h1>');}]);");
         });
     });
 });

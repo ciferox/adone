@@ -309,7 +309,7 @@ describe("database", "local", "Persistence", () => {
             expect(err).to.be.not.null;
 
             // Data file left untouched
-            expect(await hookFile.content()).to.be.equal("Some content");
+            expect(await hookFile.contents()).to.be.equal("Some content");
 
             err = null;
             try {
@@ -320,7 +320,7 @@ describe("database", "local", "Persistence", () => {
             }
             expect(err).to.be.not.null;
 
-            expect(await hookFile.content()).to.be.equal("Some content");
+            expect(await hookFile.contents()).to.be.equal("Some content");
         });
 
         it.skip("Declaring two hooks that are not reverse of one another will cause an exception to prevent data loss", async () => {
@@ -342,7 +342,7 @@ describe("database", "local", "Persistence", () => {
             expect(err).to.be.not.null;
 
             // Data file left untouched
-            expect(await hookFile.content()).to.be.equal("Some content");
+            expect(await hookFile.contents()).to.be.equal("Some content");
         });
 
         it("A serialization hook can be used to transform data before writing new state to disk", async () => {
@@ -352,7 +352,7 @@ describe("database", "local", "Persistence", () => {
             await d.load();
             await d.insert({ hello: "world" });
             {
-                const _data = await hookFile.content();
+                const _data = await hookFile.contents();
                 const data = _data.split("\n");
                 let doc0 = bd(data[0]);
 
@@ -366,7 +366,7 @@ describe("database", "local", "Persistence", () => {
             }
             await d.insert({ p: "Mars" });
             {
-                const _data = await hookFile.content();
+                const _data = await hookFile.contents();
                 const data = _data.split("\n");
                 let doc0 = bd(data[0]);
                 let doc1 = bd(data[1]);
@@ -388,7 +388,7 @@ describe("database", "local", "Persistence", () => {
             }
             await d.ensureIndex({ fieldName: "idefix" });
             {
-                const _data = await hookFile.content();
+                const _data = await hookFile.contents();
                 const data = _data.split("\n");
                 let doc0 = bd(data[0]);
                 let doc1 = bd(data[1]);
@@ -425,7 +425,7 @@ describe("database", "local", "Persistence", () => {
             await d.ensureIndex({ fieldName: "idefix" });
             let _id;
             {
-                const _data = await hookFile.content();
+                const _data = await hookFile.contents();
                 const data = _data.split("\n");
                 let doc0 = bd(data[0]);
                 let doc1 = bd(data[1]);
@@ -449,7 +449,7 @@ describe("database", "local", "Persistence", () => {
             }
             await d.persistence.persistCachedDatabase();
             {
-                const _data = await hookFile.content();
+                const _data = await hookFile.contents();
                 const data = _data.split("\n");
                 let doc0 = bd(data[0]);
                 let idx = bd(data[1]);
@@ -480,7 +480,7 @@ describe("database", "local", "Persistence", () => {
             await d.remove({ yo: "ya" }, {});
             await d.ensureIndex({ fieldName: "idefix" });
 
-            const _data = await hookFile.content();
+            const _data = await hookFile.contents();
             const data = _data.split("\n");
             expect(data).to.have.lengthOf(6);
 
@@ -521,7 +521,7 @@ describe("database", "local", "Persistence", () => {
 
             expect(await file.exists()).to.be.true;
             expect(await sfile.exists()).to.be.false;
-            expect(await file.content()).to.be.empty;
+            expect(await file.contents()).to.be.empty;
         });
 
         it("If only datafile exists, ensureDatafileIntegrity will use it", async () => {
@@ -542,7 +542,7 @@ describe("database", "local", "Persistence", () => {
             expect(await file.exists()).to.be.true;
             expect(await sfile.exists()).to.be.false;
 
-            expect(await file.content()).to.be.equal("something");
+            expect(await file.contents()).to.be.equal("something");
         });
 
         it("If temp datafile exists and datafile doesnt, ensureDatafileIntegrity will use it (cannot happen except upon first use)", async () => {
@@ -563,7 +563,7 @@ describe("database", "local", "Persistence", () => {
             expect(await file.exists()).to.be.true;
             expect(await sfile.exists()).to.be.false;
 
-            expect(await file.content()).to.be.equal("something");
+            expect(await file.contents()).to.be.equal("something");
         });
 
         // Technically it could also mean the write was successful but the rename wasn't, but there is in any case no guarantee that the data in the temp file is whole so we have to discard the whole file
@@ -587,7 +587,7 @@ describe("database", "local", "Persistence", () => {
             expect(await file.exists()).to.be.true;
             expect(await sfile.exists()).to.be.true;
 
-            expect(await file.content()).to.be.equal("{\"_id\":\"0\",\"hello\":\"world\"}");
+            expect(await file.contents()).to.be.equal("{\"_id\":\"0\",\"hello\":\"world\"}");
 
             await theDb.load();
             const docs = await theDb.find({});
@@ -679,7 +679,7 @@ describe("database", "local", "Persistence", () => {
 
             await theDb.load();
 
-            const contents = await file.content();
+            const contents = await file.contents();
             expect(await file.exists()).to.be.true;
             expect(await sfile.exists()).to.be.false;
             expect(contents).to.be.empty;
@@ -748,7 +748,7 @@ describe("database", "local", "Persistence", () => {
             }
             await file.write(toWrite);
 
-            const datafileLength = (await file.content()).length;
+            const datafileLength = (await file.contents()).length;
 
             // Loading it in a separate process that we will crash before finishing the loadDatabase
             const code = await new Promise((resolve) => {
@@ -758,15 +758,15 @@ describe("database", "local", "Persistence", () => {
             expect(code).to.be.equal(1); // See loadAndCrash.js
             expect(await file.exists()).to.be.true;
             expect(await sfile.exists()).to.be.true;
-            expect((await file.content()).length).to.be.equal(datafileLength);
-            expect((await sfile.content()).length).to.be.equal(5000);
+            expect((await file.contents()).length).to.be.equal(datafileLength);
+            expect((await sfile.contents()).length).to.be.equal(5000);
 
             // Reload database without a crash, check that no data was lost and fs state is clean (no temp file)
             const db = new Datastore({ filename: file.path() });
             await db.load();
             expect(await file.exists()).to.be.true;
             expect(await sfile.exists()).to.be.false;
-            expect((await file.content()).length).to.be.equal(datafileLength);
+            expect((await file.contents()).length).to.be.equal(datafileLength);
 
             const docs = await db.find({});
             expect(docs).to.have.lengthOf(N);

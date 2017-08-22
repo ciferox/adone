@@ -1850,7 +1850,7 @@ describe("examples", function () {
         it("should correctly write and read jpg image", async () => {
             const db = await mongo.connect(this.url());
             const file = new fs.File(__dirname, "fixtures", "iya_logo_final_bw.jpg");
-            const data = await file.content(null);
+            const data = await file.contents("buffer");
 
             let gridStore = new GridStore(db, "test", "w");
             await gridStore.open();
@@ -1893,7 +1893,7 @@ describe("examples", function () {
             const gridStore = new GridStore(db, fileId, "w");
             await gridStore.open();
             await gridStore.writeFile(file.path());
-            expect(await GridStore.read(db, fileId)).to.be.deep.equal(await file.content(null));
+            expect(await GridStore.read(db, fileId)).to.be.deep.equal(await file.contents("buffer"));
             await gridStore.close();
             await db.close();
         });
@@ -1906,7 +1906,7 @@ describe("examples", function () {
             const fd = await fs.fd.open(file.path(), "r");
             await gridStore.open();
             await gridStore.writeFile(fd);
-            expect(await GridStore.read(db, fileId)).to.be.deep.equal(await file.content(null));
+            expect(await GridStore.read(db, fileId)).to.be.deep.equal(await file.contents("buffer"));
             await gridStore.close();
             await db.close();
         });
@@ -1974,7 +1974,7 @@ describe("examples", function () {
         it("should correctly put a couple of lines in grid store and read", async () => {
             const db = await mongo.connect(this.url());
             const file = new fs.File(__dirname, "fixtures", "test_gs_weird_bug.png");
-            const data = await file.content(null);
+            const data = await file.contents("buffer");
             const gridStore = new GridStore(db, null, "w");
             await gridStore.open();
             await gridStore.write(data);

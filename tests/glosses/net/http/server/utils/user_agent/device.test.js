@@ -62,7 +62,7 @@ describe("net", "http", "server", "util", "user agent", "_", "device", () => {
 
         before(async () => {
             const file = new fs.File(__dirname, "fixtures", "device", "groupdevice.yml");
-            const { rules } = yaml.safeLoad(await file.content());
+            const { rules } = yaml.safeLoad(await file.contents());
             const parser = new PartialParser(rules, options);
             parse = parser.parse.bind(parser);
         });

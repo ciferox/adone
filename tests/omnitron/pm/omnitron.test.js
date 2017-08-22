@@ -341,8 +341,8 @@ describe("Process manager", function () {
                             await waitFor(() => pm.started("test"));
                             await waitFor(() => pm.started("test2"));
                             await adone.promise.delay(2000);
-                            const d1 = await f1.content();
-                            const d2 = await f2.content();
+                            const d1 = await f1.contents();
+                            const d2 = await f2.contents();
                             try {
                                 if (isCluster) {
                                     expect(d1).to.be.deep.equal("alice".repeat(5) + "bob".repeat(5));
@@ -1740,7 +1740,7 @@ describe("Process manager", function () {
                             });
                             const stdout = new adone.fs.File(await pm.stdoutPath("test"));
                             for (; ;) {
-                                const t = (await stdout.content()).split("\n").slice(1, -1).map(Number);
+                                const t = (await stdout.contents()).split("\n").slice(1, -1).map(Number);
                                 // stop, start, stop, start
                                 for (let i = 1; i < t.length; i += 2) {
                                     expect(t[i] - t[i - 1]).to.be.at.least(1000);
