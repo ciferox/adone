@@ -1,18 +1,20 @@
-require("./node.setup");
+import * as util from "./utils";
 
-describe("db", "pouch", "bulk_get", () => {
-    let dbs = {};
-    beforeEach((done) => {
-        dbs = { name: testUtils.adapterUrl("local", "testdb") };
-        testUtils.cleanup([dbs.name], done);
+describe("database", "pouch", "bulk_get", () => {
+    const dbName = "testdb";
+    let DB = null;
+
+    beforeEach(async () => {
+        DB = await util.setup();
+        await util.cleanup(dbName);
     });
 
-    afterEach((done) => {
-        testUtils.cleanup([dbs.name], done);
+    after(async () => {
+        await util.destroy();
     });
 
     it("test bulk get with rev specified", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         db.put({ _id: "foo", val: 1 }).then((response) => {
             const rev = response.rev;
             db.bulkGet({
@@ -29,7 +31,7 @@ describe("db", "pouch", "bulk_get", () => {
     });
 
     it("test bulk get with latest=true", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         let first;
 
         return db.post({ version: "first" })
@@ -54,7 +56,7 @@ describe("db", "pouch", "bulk_get", () => {
     });
 
     it("test bulk get with no rev specified", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         db.put({ _id: "foo", val: 1 }).then((response) => {
             const rev = response.rev;
             db.bulkGet({
@@ -71,7 +73,7 @@ describe("db", "pouch", "bulk_get", () => {
     });
 
     it("_revisions is not returned by default", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         db.put({ _id: "foo", val: 1 }).then((response) => {
             const rev = response.rev;
             db.bulkGet({
@@ -87,7 +89,7 @@ describe("db", "pouch", "bulk_get", () => {
     });
 
     it("#5886 bulkGet with reserved id", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         db.put({ _id: "constructor", val: 1 }).then((response) => {
             const rev = response.rev;
             db.bulkGet({
@@ -104,7 +106,7 @@ describe("db", "pouch", "bulk_get", () => {
     });
 
     it("_revisions is returned when specified", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         db.put({ _id: "foo", val: 1 }).then((response) => {
             const rev = response.rev;
             db.bulkGet({
@@ -122,7 +124,7 @@ describe("db", "pouch", "bulk_get", () => {
 
     it("_revisions is returned when specified, using implicit rev",
         (done) => {
-            const db = new PouchDB(dbs.name);
+            const db = new DB(dbName);
             db.put({ _id: "foo", val: 1 }).then((response) => {
                 const rev = response.rev;
                 db.bulkGet({
@@ -139,7 +141,7 @@ describe("db", "pouch", "bulk_get", () => {
         });
 
     it("attachments are not included by default", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
 
         db.put({
             _id: "foo",
@@ -165,7 +167,7 @@ describe("db", "pouch", "bulk_get", () => {
     });
 
     it("attachments are included when specified", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
 
         db.put({
             _id: "foo",
@@ -192,7 +194,7 @@ describe("db", "pouch", "bulk_get", () => {
     });
 
     it("attachments are included when specified, using implicit rev", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
 
         db.put({
             _id: "foo",

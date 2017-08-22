@@ -1,39 +1,42 @@
-require("./node.setup");
+import * as util from "./utils";
 
-describe("db", "pouch", "conflicts", () => {
-    const dbs = {};
+describe("database", "pouch", "conflicts", () => {
+    const dbName = "testdb";
+    let DB = null;
 
-    beforeEach(function (done) {
-        this.timeout(30000);
-        dbs.name = testUtils.adapterUrl("local", "testdb");
-        testUtils.cleanup([dbs.name], done);
+    beforeEach(async () => {
+        DB = await util.setup();
+        await util.cleanup(dbName);
     });
 
-    after((done) => {
-        testUtils.cleanup([dbs.name], done);
+    after(async () => {
+        await util.destroy();
     });
-
 
     it("Testing conflicts", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const doc = { _id: "foo", a: 1, b: 1 };
-        db.put(doc, (err, res) => {
+        db.put(doc).then((res) => {
             doc._rev = res.rev;
             assert.exists(res.ok, "Put first document");
-            db.get("foo", (err, doc2) => {
+            db.get("foo").then((doc2) => {
                 assert.equal(doc._id, doc2._id);
                 assert.property(doc, "_rev");
                 assert.property(doc2, "_rev");
                 doc.a = 2;
                 doc2.a = 3;
-                db.put(doc, (err, res) => {
+                db.put(doc).then((res) => {
                     assert.exists(res.ok, "Put second doc");
-                    db.put(doc2, (err) => {
+                    db.put(doc2).then(() => {
+                        done(new Error());
+                    }, (err) => {
                         assert.equal(err.name, "conflict", "Put got a conflicts");
                         db.changes().on("complete", (results) => {
                             assert.lengthOf(results.results, 1);
                             doc2._rev = undefined;
-                            db.put(doc2, (err) => {
+                            db.put(doc2).then(() => {
+                                done(new Error());
+                            }, (err) => {
                                 assert.equal(err.name, "conflict", "Another conflict");
                                 done();
                             });
@@ -46,15 +49,12 @@ describe("db", "pouch", "conflicts", () => {
 
     it("Testing conflicts", (done) => {
         const doc = { _id: "fubar", a: 1, b: 1 };
-        const db = new PouchDB(dbs.name);
-        db.put(doc, (err, ndoc) => {
+        const db = new DB(dbName);
+        db.put(doc).then((ndoc) => {
             doc._rev = ndoc.rev;
-            db.remove(doc, () => {
+            db.remove(doc).then(() => {
                 delete doc._rev;
-                db.put(doc, (err, ndoc) => {
-                    if (err) {
-                        return done(err);
-                    }
+                db.put(doc).then((ndoc) => {
                     assert.exists(ndoc.ok, "written previously deleted doc without rev");
                     done();
                 });
@@ -63,13 +63,7 @@ describe("db", "pouch", "conflicts", () => {
     });
 
     it("#2882/#2883 last_seq for empty db", () => {
-        // CouchDB 2.0 sequence numbers are not
-        // incremental so skip this test
-        if (testUtils.isCouchMaster()) {
-            return true;
-        }
-
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.changes().then((changes) => {
             assert.equal(changes.last_seq, 0);
             assert.lengthOf(changes.results, 0);
@@ -80,13 +74,7 @@ describe("db", "pouch", "conflicts", () => {
     });
 
     it("#2882/#2883 last_seq when putting parent before leaf", () => {
-        // CouchDB 2.0 sequence numbers are not
-        // incremental so skip this test
-        if (testUtils.isCouchMaster()) {
-            return true;
-        }
-
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         let lastSeq;
         return db.bulkDocs({
             docs: [
@@ -114,7 +102,7 @@ describe("db", "pouch", "conflicts", () => {
     });
 
     it("force put ok on 1st level", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const docId = "docId";
         let rev1, rev2, rev3, rev2_;
         // given
@@ -149,7 +137,7 @@ describe("db", "pouch", "conflicts", () => {
     });
 
     it("force put ok on 2nd level", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const docId = "docId";
         let rev2, rev3, rev4, rev3_;
         // given
@@ -217,7 +205,7 @@ describe("db", "pouch", "conflicts", () => {
                 }
             }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.bulkDocs({ docs, new_edits: false }).then(() => {
             return db.get("fubar");
         }).then((doc) => {
@@ -258,7 +246,7 @@ describe("db", "pouch", "conflicts", () => {
                 }
             }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.bulkDocs({ docs, new_edits: false }).then(() => {
             return db.get("fubar");
         }).then((doc) => {
@@ -287,7 +275,7 @@ describe("db", "pouch", "conflicts", () => {
                 }
             }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.bulkDocs({ docs, new_edits: false }).then(() => {
             return db.get("fubar");
         }).then((doc) => {
@@ -319,7 +307,7 @@ describe("db", "pouch", "conflicts", () => {
                 _revisions: { start: 1, ids: ["b1"] }
             }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.bulkDocs({ docs, new_edits: false }).then(() => {
             return db.get("fubar");
         }).then((doc) => {
@@ -351,7 +339,7 @@ describe("db", "pouch", "conflicts", () => {
                 _revisions: { start: 1, ids: ["b1"] }
             }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.bulkDocs({ docs, new_edits: false }).then(() => {
             return db.get("fubar");
         }).then((doc) => {
@@ -383,7 +371,7 @@ describe("db", "pouch", "conflicts", () => {
                 _revisions: { start: 3, ids: ["a3", "a2", "a1"] }
             }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.bulkDocs({ docs, new_edits: false }).then(() => {
             return db.get("fubar");
         }).then((doc) => {
@@ -415,7 +403,7 @@ describe("db", "pouch", "conflicts", () => {
                 _revisions: { start: 3, ids: ["a3", "a2", "a1"] }
             }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.bulkDocs({ docs, new_edits: false }).then(() => {
             return db.get("fubar");
         }).then((doc) => {
@@ -447,7 +435,7 @@ describe("db", "pouch", "conflicts", () => {
                 _revisions: { start: 1, ids: ["a1"] }
             }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.bulkDocs({ docs, new_edits: false }).then(() => {
             return db.get("fubar");
         }).then((doc) => {
@@ -476,7 +464,7 @@ describe("db", "pouch", "conflicts", () => {
                 _revisions: { start: 1, ids: ["c1"] }
             }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.bulkDocs({ docs, new_edits: false }).then(() => {
             return db.get("fubar");
         }).then((doc) => {
@@ -505,7 +493,7 @@ describe("db", "pouch", "conflicts", () => {
                 _revisions: { start: 1, ids: ["c1"] }
             }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.bulkDocs({ docs, new_edits: false }).then(() => {
             return db.get("fubar");
         }).then((doc) => {
@@ -534,7 +522,7 @@ describe("db", "pouch", "conflicts", () => {
                 _revisions: { start: 2, ids: ["a2", "a1"] }
             }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.bulkDocs({ docs, new_edits: false }).then(() => {
             return db.get("fubar");
         }).then((doc) => {
@@ -548,9 +536,9 @@ describe("db", "pouch", "conflicts", () => {
     it("#2543 excessive recursion with merging", () => {
         let chain = Promise.resolve();
 
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
 
-        function addTask(batch) {
+        const addTask = (batch) => {
             return function () {
                 const docs = [];
                 for (let i = 0; i < 50; i++) {
@@ -566,7 +554,7 @@ describe("db", "pouch", "conflicts", () => {
                 }
                 return db.bulkDocs(docs, { new_edits: false });
             };
-        }
+        };
 
         chain = chain.then(() => {
             return db.bulkDocs([{
@@ -582,10 +570,7 @@ describe("db", "pouch", "conflicts", () => {
     });
 
     it("local conflicts", () => {
-        if (testUtils.isCouchMaster()) {
-            return true;
-        }
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.put({ foo: "bar" }, "_local/baz").then((result) => {
             return db.put({ foo: "bar" }, "_local/baz", result.res);
         }).then(() => {
@@ -615,7 +600,7 @@ describe("db", "pouch", "conflicts", () => {
                 _revisions: { start: 2, ids: ["b2", "a1"] }
             }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.bulkDocs({
             docs, new_edits: false
         }).then(() => {

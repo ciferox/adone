@@ -80,7 +80,7 @@ export default class Default extends AbstractBackend {
             throw new Error("repair() requires a location string argument");
         }
 
-        if (typeof callback !== "function") {
+        if (!is.function(callback)) {
             throw new Error("repair() requires a callback function argument");
         }
 

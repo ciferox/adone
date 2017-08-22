@@ -1,21 +1,22 @@
-require("./node.setup");
+import * as util from "./utils";
 
-describe("db", "pouch", "issue3179", () => {
-    const dbs = {};
+describe("database", "pouch", "issue3179", () => {
+    const dbName = "testdb";
+    const dbRemote = "test_repl_remote";
+    let DB = null;
 
-    beforeEach((done) => {
-        dbs.name = testUtils.adapterUrl("local", "testdb");
-        dbs.remote = testUtils.adapterUrl("local", "test_repl_remote");
-        testUtils.cleanup([dbs.name, dbs.remote], done);
+    beforeEach(async () => {
+        DB = await util.setup();
+        await util.cleanup(dbName, dbRemote);
     });
 
-    after((done) => {
-        testUtils.cleanup([dbs.name, dbs.remote], done);
+    after(async () => {
+        await util.destroy();
     });
 
     it("#3179 conflicts synced, non-live replication", () => {
-        const local = new PouchDB(dbs.name);
-        const remote = new PouchDB(dbs.remote);
+        const local = new DB(dbName);
+        const remote = new DB(dbRemote);
 
         return local.put({ _id: "1" }).then(() => {
             return local.replicate.to(remote).then(() => {
@@ -56,8 +57,8 @@ describe("db", "pouch", "issue3179", () => {
     });
 
     it("#3179 conflicts synced, non-live sync", () => {
-        const local = new PouchDB(dbs.name);
-        const remote = new PouchDB(dbs.remote);
+        const local = new DB(dbName);
+        const remote = new DB(dbRemote);
 
         return local.put({ _id: "1" }).then(() => {
             return local.sync(remote);
@@ -92,21 +93,21 @@ describe("db", "pouch", "issue3179", () => {
     });
 
     it("#3179 conflicts synced, live sync", () => {
-        const local = new PouchDB(dbs.name);
-        const remote = new PouchDB(dbs.remote);
+        const local = new DB(dbName);
+        const remote = new DB(dbRemote);
 
         let sync = local.sync(remote, { live: true });
 
-        function waitForUptodate() {
+        const waitForUptodate = () => {
 
-            function defaultToEmpty(promise) {
+            const defaultToEmpty = (promise) => {
                 return promise.catch((err) => {
                     if (err.status !== 404) {
                         throw err;
                     }
                     return { _revisions: [] };
                 });
-            }
+            };
 
             return defaultToEmpty(local.get("1", {
                 revs: true,
@@ -129,11 +130,11 @@ describe("db", "pouch", "issue3179", () => {
                     }
                 });
             });
-        }
+        };
 
-        function waitForConflictsResolved() {
+        const waitForConflictsResolved = () => {
             return new Promise((resolve) => {
-                var changes = remote.changes({
+                const changes = remote.changes({
                     live: true,
                     include_docs: true,
                     conflicts: true
@@ -144,16 +145,16 @@ describe("db", "pouch", "issue3179", () => {
                 });
                 changes.on("complete", resolve);
             });
-        }
+        };
 
-        function cleanup() {
+        const cleanup = () => {
             return new Promise((resolve, reject) => {
                 sync.on("complete", resolve);
                 sync.on("error", reject);
                 sync.cancel();
                 sync = null;
             });
-        }
+        };
 
         return local.put({ _id: "1" }).then(() => {
             return waitForUptodate();
@@ -198,15 +199,15 @@ describe("db", "pouch", "issue3179", () => {
     });
 
     it("#3179 conflicts synced, live repl", () => {
-        const local = new PouchDB(dbs.name);
-        const remote = new PouchDB(dbs.remote);
+        const local = new DB(dbName);
+        const remote = new DB(dbRemote);
 
         let repl1 = local.replicate.to(remote, { live: true });
         let repl2 = local.replicate.from(remote, { live: true });
 
-        function waitForConflictsResolved() {
+        const waitForConflictsResolved = () => {
             return new Promise((resolve) => {
-                var changes = remote.changes({
+                const changes = remote.changes({
                     live: true,
                     include_docs: true,
                     conflicts: true
@@ -217,18 +218,18 @@ describe("db", "pouch", "issue3179", () => {
                 });
                 changes.on("complete", resolve);
             });
-        }
+        };
 
-        function waitForUptodate() {
+        const waitForUptodate = () => {
 
-            function defaultToEmpty(promise) {
+            const defaultToEmpty = (promise) => {
                 return promise.catch((err) => {
                     if (err.status !== 404) {
                         throw err;
                     }
                     return { _revisions: [] };
                 });
-            }
+            };
 
             return defaultToEmpty(local.get("1", {
                 revs: true,
@@ -251,17 +252,17 @@ describe("db", "pouch", "issue3179", () => {
                     }
                 });
             });
-        }
+        };
 
-        function cleanup() {
+        const cleanup = () => {
             return new Promise((resolve, reject) => {
                 let numDone = 0;
 
-                function checkDone() {
+                const checkDone = () => {
                     if (++numDone === 2) {
                         resolve();
                     }
-                }
+                };
                 repl1.on("complete", checkDone);
                 repl2.on("complete", checkDone);
                 repl1.on("error", reject);
@@ -271,7 +272,7 @@ describe("db", "pouch", "issue3179", () => {
                 repl1 = null;
                 repl2 = null;
             });
-        }
+        };
 
         return local.put({ _id: "1" }).then(() => {
             return waitForUptodate();

@@ -1,19 +1,20 @@
-require("./node.setup");
+import * as util from "./utils";
 
-describe("db", "pouch", "issue3646", () => {
-    const dbs = {};
+describe("database", "pouch", "issue3646", () => {
+    const dbName = "testdb";
+    let DB = null;
 
-    beforeEach((done) => {
-        dbs.name = testUtils.adapterUrl("local", "testdb");
-        testUtils.cleanup([dbs.name], done);
+    beforeEach(async () => {
+        DB = await util.setup();
+        await util.cleanup(dbName);
     });
 
-    after((done) => {
-        testUtils.cleanup([dbs.name], done);
+    after(async () => {
+        await util.destroy();
     });
 
     it("Should finish with 0 documents", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
 
         return db.bulkDocs(data[0], { new_edits: false }).then(() => {
             return db.bulkDocs(data[1], { new_edits: false });
@@ -41,7 +42,7 @@ describe("db", "pouch", "issue3646", () => {
         });
     });
 
-    var data = [
+    const data = [
         {
             docs: [
                 {

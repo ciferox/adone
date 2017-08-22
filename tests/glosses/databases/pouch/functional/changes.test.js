@@ -1,12 +1,12 @@
-require("./node.setup");
+import * as util from "./utils";
 
-describe("db", "pouch", "changes", () => {
+describe("database", "pouch", "changes", () => {
     const dbs = {};
 
     // if it exists, return the single element
     // which has the specific id. Else retun null.
     // useful for finding elements within a _changes feed
-    function findById(array, id) {
+    const findById = (array, id) => {
         const result = array.filter((i) => {
             return i.id === id;
         });
@@ -15,22 +15,24 @@ describe("db", "pouch", "changes", () => {
         if (result.length === 1) {
             return result[0];
         }
-    }
+    };
 
-    beforeEach(function (done) {
-        this.timeout(30000);
-        dbs.name = testUtils.adapterUrl("local", "testdb");
-        dbs.remote = testUtils.adapterUrl("local", "test_repl_remote");
-        testUtils.cleanup([dbs.name, dbs.remote], done);
+    const dbName = "testdb";
+    const dbRemote = "test_repl_remote";
+    let DB = null;
+
+    beforeEach(async () => {
+        DB = await util.setup();
+        await util.cleanup(dbName, dbRemote);
     });
 
-    after((done) => {
-        testUtils.cleanup([dbs.name, dbs.remote], done);
+    after(async () => {
+        await util.destroy();
     });
 
     it("All changes", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.post({ test: "somestuff" }, () => {
+        const db = new DB(dbName);
+        db.post({ test: "somestuff" }).then(() => {
             const promise = db.changes({
             }).on("change", (change) => {
                 assert.notProperty(change, "doc");
@@ -56,10 +58,10 @@ describe("db", "pouch", "changes", () => {
             { _id: "9", integer: 9 },
             { _id: "10", integer: 10 }
         ];
-        const db = new PouchDB(dbs.name);
-        db.bulkDocs({ docs }, () => {
+        const db = new DB(dbName);
+        db.bulkDocs({ docs }).then(() => {
             let changeCount = 0;
-            var promise = db.changes().on("change", function handler() {
+            const promise = db.changes().on("change", function handler() {
                 changeCount++;
                 if (changeCount === 5) {
                     promise.cancel();
@@ -84,7 +86,7 @@ describe("db", "pouch", "changes", () => {
     });
 
     it("Live changes should clean listener when cancelled", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
 
         // TODO: The bug was fixed for the 'idb' adapter in
         // https://github.com/pouchdb/pouchdb/pull/6504, but still happens with
@@ -106,7 +108,7 @@ describe("db", "pouch", "changes", () => {
             // Try to trigger the problem
             let changes;
             let i = 0;
-            function renewChangeListener() {
+            const renewChangeListener = () => {
                 changes = db.changes({ live: true });
                 if (i++ < 20) {
                     setTimeout(() => {
@@ -121,8 +123,7 @@ describe("db", "pouch", "changes", () => {
                         console.error = oldLog;
 
                         const badLogs = logs.filter((args) => {
-                            return args[0].indexOf(
-                                "possible EventEmitter memory leak detected") !== -1;
+                            return args[0].indexOf("possible EventEmitter memory leak detected") !== -1;
                         });
 
                         if (badLogs.length > 0) {
@@ -132,7 +133,7 @@ describe("db", "pouch", "changes", () => {
                         }
                     });
                 }
-            }
+            };
             renewChangeListener();
         });
     });
@@ -152,10 +153,10 @@ describe("db", "pouch", "changes", () => {
             { _id: "10", integer: 10 },
             { _id: "11", integer: 11 }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
 
-        db.bulkDocs({ docs: docs1 }, () => {
-            db.info((err, info) => {
+        db.bulkDocs({ docs: docs1 }).then(() => {
+            db.info().then((info) => {
                 const update_seq = info.update_seq;
 
                 const docs2 = [
@@ -163,7 +164,7 @@ describe("db", "pouch", "changes", () => {
                     { _id: "13", integer: 13 }
                 ];
 
-                db.bulkDocs({ docs: docs2 }, () => {
+                db.bulkDocs({ docs: docs2 }).then(() => {
                     const promise = db.changes({
                         since: update_seq
                     }).on("complete", (results) => {
@@ -183,9 +184,9 @@ describe("db", "pouch", "changes", () => {
             { _id: "1", integer: 1 },
             { _id: "2", integer: 2 }
         ];
-        const db = new PouchDB(dbs.name);
-        db.bulkDocs({ docs: docs1 }, () => {
-            db.info((err, info) => {
+        const db = new DB(dbName);
+        db.bulkDocs({ docs: docs1 }).then(() => {
+            db.info().then((info) => {
                 const update_seq = info.update_seq;
 
                 const docs2 = [
@@ -193,7 +194,7 @@ describe("db", "pouch", "changes", () => {
                     { _id: "4", integer: 4 }
                 ];
 
-                db.bulkDocs({ docs: docs2 }, () => {
+                db.bulkDocs({ docs: docs2 }).then(() => {
                     db.changes({
                         since: update_seq,
                         limit: 1
@@ -212,9 +213,9 @@ describe("db", "pouch", "changes", () => {
             { _id: "1", integer: 1 },
             { _id: "2", integer: 2 }
         ];
-        const db = new PouchDB(dbs.name);
-        db.bulkDocs({ docs: docs1 }, () => {
-            db.info((err, info) => {
+        const db = new DB(dbName);
+        db.bulkDocs({ docs: docs1 }).then(() => {
+            db.info().then((info) => {
                 const update_seq = info.update_seq;
 
                 const docs2 = [
@@ -235,7 +236,7 @@ describe("db", "pouch", "changes", () => {
         });
     });
 
-    it("Changes limit", (done) => {
+    it("Changes limit", async () => {
         const docs1 = [
             { _id: "0", integer: 0 },
             { _id: "1", integer: 1 },
@@ -246,51 +247,49 @@ describe("db", "pouch", "changes", () => {
             { _id: "2", integer: 11 },
             { _id: "3", integer: 12 }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         // we use writeDocs since bulkDocs looks to have undefined
         // order of doing insertions
-        testUtils.writeDocs(db, docs1, (err, info) => {
-            docs2[0]._rev = info[2].rev;
-            docs2[1]._rev = info[3].rev;
+        let info = await util.writeDocs(db, docs1);
 
-            db.info((err, info) => {
-                const update_seq = info.update_seq;
+        docs2[0]._rev = info[2].rev;
+        docs2[1]._rev = info[3].rev;
 
-                db.put(docs2[0], (err, info) => {
-                    docs2[0]._rev = info.rev;
-                    db.put(docs2[1], (err, info) => {
-                        docs2[1]._rev = info.rev;
-                        db.changes({
-                            limit: 2,
-                            since: update_seq,
-                            include_docs: true
-                        }).on("complete", (results) => {
-                            results = results.results;
-                            assert.equal(results.length, 2);
+        info = await db.info();
+        const update_seq = info.update_seq;
 
-                            // order is not guaranteed
-                            let first = results[0];
-                            let second = results[1];
-                            if (first.id === "3") {
-                                second = first;
-                                first = results[1];
-                            }
-                            assert.equal(first.id, "2");
-                            assert.equal(first.doc.integer, docs2[0].integer);
-                            assert.equal(first.doc._rev, docs2[0]._rev);
-                            assert.equal(second.id, "3");
-                            assert.equal(second.doc.integer, docs2[1].integer);
-                            assert.equal(second.doc._rev, docs2[1]._rev);
-                            done();
-                        });
-                    });
-                });
-            });
+        info = await db.put(docs2[0]);
+        docs2[0]._rev = info.rev;
+        info = await db.put(docs2[1]);
+        docs2[1]._rev = info.rev;
+        await new Promise((resolve, reject) => {
+            db.changes({
+                limit: 2,
+                since: update_seq,
+                include_docs: true
+            }).on("complete", (results) => {
+                results = results.results;
+                assert.equal(results.length, 2);
+
+                // order is not guaranteed
+                let first = results[0];
+                let second = results[1];
+                if (first.id === "3") {
+                    second = first;
+                    first = results[1];
+                }
+                assert.equal(first.id, "2");
+                assert.equal(first.doc.integer, docs2[0].integer);
+                assert.equal(first.doc._rev, docs2[0]._rev);
+                assert.equal(second.id, "3");
+                assert.equal(second.doc.integer, docs2[1].integer);
+                assert.equal(second.doc._rev, docs2[1]._rev);
+                resolve();
+            }).on("error", reject);
         });
     });
 
-    it("Changes with filter not present in ddoc", function (done) {
-        this.timeout(15000);
+    it("Changes with filter not present in ddoc", async () => {
         const docs = [
             { _id: "1", integer: 1 },
             {
@@ -299,22 +298,23 @@ describe("db", "pouch", "changes", () => {
                 filters: { even: "function (doc) { return doc.integer % 2 === 1; }" }
             }
         ];
-        const db = new PouchDB(dbs.name);
-        testUtils.writeDocs(db, docs, () => {
+        const db = new DB(dbName);
+        await util.writeDocs(db, docs);
+        await new Promise((resolve) => {
             db.changes({
                 filter: "foo/odd",
                 limit: 2,
                 include_docs: true
             }).on("error", (err) => {
                 assert.equal(err.name, "not_found");
-                assert.equal(err.status, testUtils.errors.MISSING_DOC.status,
+                assert.equal(err.status, util.x.MISSING_DOC.status,
                     "correct error status returned");
-                done();
+                resolve();
             });
         });
     });
 
-    it("Changes with `filters` key not present in ddoc", (done) => {
+    it("Changes with `filters` key not present in ddoc", async () => {
         const docs = [
             { _id: "0", integer: 0 },
             { _id: "1", integer: 1 },
@@ -329,27 +329,28 @@ describe("db", "pouch", "changes", () => {
                 }
             }
         ];
-        const db = new PouchDB(dbs.name);
-        testUtils.writeDocs(db, docs, () => {
+        const db = new DB(dbName);
+        await util.writeDocs(db, docs);
+        await new Promise((resolve) => {
             db.changes({
                 filter: "foo/even",
                 limit: 2,
                 include_docs: true
             }).on("error", (err) => {
-                assert.equal(err.status, testUtils.errors.MISSING_DOC.status, "correct error status returned");
+                assert.equal(err.status, util.x.MISSING_DOC.status, "correct error status returned");
                 assert.equal(err.name, "not_found");
-                done();
+                resolve();
             });
         });
     });
 
-    it("Changes limit and filter", (done) => {
+    it("Changes limit and filter", async () => {
         const docs1 = [
             { _id: "0", integer: 0 },
             { _id: "1", integer: 1 },
             { _id: "2", integer: 2 }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
 
         const docs2 = [
             { _id: "3", integer: 3 },
@@ -362,28 +363,27 @@ describe("db", "pouch", "changes", () => {
             }
         ];
 
-        db.bulkDocs({ docs: docs1 }, () => {
-            db.info((err, info) => {
-                const update_seq = info.update_seq;
+        await db.bulkDocs({ docs: docs1 });
+        const info = await db.info();
+        const update_seq = info.update_seq;
+        await util.writeDocs(db, docs2);
+        await new Promise((resolve, reject) => {
+            const promise = db.changes({
+                filter: "foo/even",
+                limit: 2,
+                since: update_seq,
+                include_docs: true
+            }).on("complete", (results) => {
+                assert.equal(results.results.length, 2);
+                const three = findById(results.results, "3");
+                assert.equal(three.doc.integer, 3);
+                const five = findById(results.results, "5");
+                assert.equal(five.doc.integer, 5);
+                resolve();
+            }).on("error", reject);
 
-                testUtils.writeDocs(db, docs2, () => {
-                    const promise = db.changes({
-                        filter: "foo/even",
-                        limit: 2,
-                        since: update_seq,
-                        include_docs: true
-                    }).on("complete", (results) => {
-                        assert.equal(results.results.length, 2);
-                        const three = findById(results.results, "3");
-                        assert.equal(three.doc.integer, 3);
-                        const five = findById(results.results, "5");
-                        assert.equal(five.doc.integer, 5);
-                        done();
-                    }).on("error", done);
-                    assert.exists(promise);
-                    assert.isFunction(promise.cancel);
-                });
-            });
+            assert.exists(promise);
+            assert.isFunction(promise.cancel);
         });
     });
 
@@ -398,9 +398,9 @@ describe("db", "pouch", "changes", () => {
                 filters: { even: "function (doc) { return doc.integer % 2 === 0; }" }
             }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
 
-        db.bulkDocs({ docs }, () => {
+        db.bulkDocs({ docs }).then(() => {
             const promise = db.changes({
                 filter: "even",
                 include_docs: true
@@ -417,23 +417,24 @@ describe("db", "pouch", "changes", () => {
         });
     });
 
-    it("Changes with filter from nonexistent ddoc", (done) => {
+    it("Changes with filter from nonexistent ddoc", async () => {
         const docs = [
             { _id: "0", integer: 0 },
             { _id: "1", integer: 1 }
         ];
-        const db = new PouchDB(dbs.name);
-        testUtils.writeDocs(db, docs, () => {
+        const db = new DB(dbName);
+        await util.writeDocs(db, docs);
+        await new Promise((resolve) => {
             db.changes({
                 filter: "foobar/odd"
             }).on("error", (err) => {
                 assert.exists(err);
-                done();
+                resolve();
             });
         });
     });
 
-    it("Changes with view not present in ddoc", (done) => {
+    it("Changes with view not present in ddoc", async () => {
         const docs = [
             { _id: "0", integer: 0 },
             { _id: "1", integer: 1 },
@@ -450,21 +451,22 @@ describe("db", "pouch", "changes", () => {
                 }
             }
         ];
-        const db = new PouchDB(dbs.name);
-        testUtils.writeDocs(db, docs, () => {
+        const db = new DB(dbName);
+        await util.writeDocs(db, docs);
+        await new Promise((resolve) => {
             db.changes({
                 filter: "_view",
                 view: "foo/odd"
             }).on("error", (err) => {
-                assert.equal(err.status, testUtils.errors.MISSING_DOC.status,
+                assert.equal(err.status, util.x.MISSING_DOC.status,
                     "correct error status returned");
                 assert.equal(err.name, "not_found");
-                done();
+                resolve();
             });
         });
     });
 
-    it("Changes with `views` key not present in ddoc", (done) => {
+    it("Changes with `views` key not present in ddoc", async () => {
         const docs = [
             { _id: "1", integer: 1 },
             {
@@ -473,16 +475,17 @@ describe("db", "pouch", "changes", () => {
                 filters: { even: "function (doc) { return doc.integer % 2 === 1; }" }
             }
         ];
-        const db = new PouchDB(dbs.name);
-        testUtils.writeDocs(db, docs, () => {
+        const db = new DB(dbName);
+        await util.writeDocs(db, docs);
+        await new Promise((resolve) => {
             db.changes({
                 filter: "_view",
                 view: "foo/even"
             }).on("error", (err) => {
-                assert.equal(err.status, testUtils.errors.MISSING_DOC.status,
+                assert.equal(err.status, util.x.MISSING_DOC.status,
                     "correct error status returned");
                 assert.equal(err.name, "not_found");
-                done();
+                resolve();
             });
         });
     });
@@ -495,7 +498,7 @@ describe("db", "pouch", "changes", () => {
                 filters: { even: "function (doc) { return doc.integer % 2 === 1; }" }
             }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         db.bulkDocs(docs).then(() => {
             db.changes({ filter: "a/b/c" }).on("error", () => {
                 done("should not be called");
@@ -506,7 +509,7 @@ describe("db", "pouch", "changes", () => {
     });
 
     it("3356 throw inside a filter", async () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         await db.put({
             _id: "_design/test",
             filters: {
@@ -518,7 +521,7 @@ describe("db", "pouch", "changes", () => {
         await assert.throws(async () => db.changes({ filter: "test/test" }));
     });
 
-    it("Changes with missing param `view` in request", (done) => {
+    it("Changes with missing param `view` in request", async () => {
         const docs = [
             { _id: "0", integer: 0 },
             { _id: "1", integer: 1 },
@@ -533,15 +536,16 @@ describe("db", "pouch", "changes", () => {
                 }
             }
         ];
-        const db = new PouchDB(dbs.name);
-        testUtils.writeDocs(db, docs, () => {
+        const db = new DB(dbName);
+        await util.writeDocs(db, docs);
+        await new Promise((resolve) => {
             db.changes({
                 filter: "_view"
             }).on("error", (err) => {
-                assert.equal(err.status, testUtils.errors.BAD_REQUEST.status,
+                assert.equal(err.status, util.x.BAD_REQUEST.status,
                     "correct error status returned");
                 assert.equal(err.name, "bad_request");
-                done();
+                resolve();
             });
         });
     });
@@ -552,9 +556,9 @@ describe("db", "pouch", "changes", () => {
             { _id: "1", integer: 1 },
             { _id: "2", integer: 2 }
         ];
-        const db = new PouchDB(dbs.name);
-        db.bulkDocs({ docs: docs1 }, () => {
-            db.info((err, info) => {
+        const db = new DB(dbName);
+        db.bulkDocs({ docs: docs1 }).then(() => {
+            db.info().then((info) => {
                 const update_seq = info.update_seq;
 
                 const docs2 = [
@@ -574,7 +578,7 @@ describe("db", "pouch", "changes", () => {
                     }
                 ];
 
-                db.bulkDocs({ docs: docs2 }, () => {
+                db.bulkDocs({ docs: docs2 }).then(() => {
 
                     db.changes({
                         filter: "_view",
@@ -613,7 +617,7 @@ describe("db", "pouch", "changes", () => {
             }
         ];
 
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.bulkDocs(docs).then(() => {
             return db.changes({ view: "foo/even" });
         }).then((changes) => {
@@ -622,14 +626,6 @@ describe("db", "pouch", "changes", () => {
     });
 
     it("Changes last_seq", (done) => {
-        // this test doesn't really make sense for clustered
-        // CouchDB because changes is unordered and last_seq might
-        // not equal the last seq in the _changes feed (although it
-        // should evaluate to the same thing on the server).
-        if (testUtils.isCouchMaster()) {
-            return done();
-        }
-
         const docs = [
             { _id: "0", integer: 0 },
             { _id: "1", integer: 1 },
@@ -641,10 +637,10 @@ describe("db", "pouch", "changes", () => {
                 filters: { even: "function (doc) { return doc.integer % 2 === 1; }" }
             }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         db.changes().on("complete", (results) => {
             assert.equal(results.last_seq, 0);
-            db.bulkDocs({ docs }, () => {
+            db.bulkDocs({ docs }).then(() => {
                 db.changes().on("complete", (results) => {
                     assert.equal(results.last_seq, 5);
                     db.changes({
@@ -664,7 +660,7 @@ describe("db", "pouch", "changes", () => {
         // emits 'complete' even if the db's task queue isn't
         // ready yet
         return new Promise((resolve, reject) => {
-            const db = new PouchDB(dbs.name);
+            const db = new DB(dbName);
             const changes = db.changes({ live: true });
             changes.on("error", reject);
             changes.on("complete", resolve);
@@ -674,7 +670,7 @@ describe("db", "pouch", "changes", () => {
 
     it("Changes with invalid ddoc view name", () => {
         return new Promise((resolve, reject) => {
-            const db = new PouchDB(dbs.name);
+            const db = new DB(dbName);
             db.post({});
             const changes = db.changes({ live: true, filter: "_view", view: "" });
             changes.on("error", resolve);
@@ -684,7 +680,7 @@ describe("db", "pouch", "changes", () => {
 
     it("Changes with invalid ddoc view name 2", () => {
         return new Promise((resolve, reject) => {
-            const db = new PouchDB(dbs.name);
+            const db = new DB(dbName);
             db.post({});
             const changes = db.changes({ live: true, filter: "_view", view: "a/b/c" });
             changes.on("error", resolve);
@@ -699,13 +695,7 @@ describe("db", "pouch", "changes", () => {
     // worth our time. This test does increase code coverage for our
     // own local code, though.
     it("Changes with invalid ddoc with no map function", () => {
-        // CouchDB 2.X does not allow saving of invalid design docs,
-        // so this test is not valid
-        if (testUtils.isCouchMaster()) {
-            return Promise.resolve();
-        }
-
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.put({
             _id: "_design/name",
             views: {
@@ -727,13 +717,7 @@ describe("db", "pouch", "changes", () => {
     });
 
     it("Changes with invalid ddoc with no filter function", () => {
-        // CouchDB 2.X does not allow saving of invalid design docs,
-        // so this test is not valid
-        if (testUtils.isCouchMaster()) {
-            return Promise.resolve();
-        }
-
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.put({
             _id: "_design/name",
             views: {
@@ -754,14 +738,6 @@ describe("db", "pouch", "changes", () => {
     });
 
     it("Changes last_seq with view instead of filter", (done) => {
-        // this test doesn't really make sense for clustered
-        // CouchDB because changes is unordered and last_seq might
-        // not equal the last seq in the _changes feed (although it
-        // should evaluate to the same thing on the server).
-        if (testUtils.isCouchMaster()) {
-            return done();
-        }
-
         const docs = [
             { _id: "0", integer: 0 },
             { _id: "1", integer: 1 },
@@ -780,10 +756,10 @@ describe("db", "pouch", "changes", () => {
                 }
             }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         db.changes().on("complete", (results) => {
             assert.equal(results.last_seq, 0);
-            db.bulkDocs({ docs }, () => {
+            db.bulkDocs({ docs }).then(() => {
                 db.changes().on("complete", (results) => {
                     assert.equal(results.last_seq, 5);
                     db.changes({
@@ -799,20 +775,21 @@ describe("db", "pouch", "changes", () => {
         }).on("error", done);
     });
 
-    it("Changes with style = all_docs", (done) => {
+    it("Changes with style = all_docs", async () => {
         const simpleTree = [
             [{ _id: "foo", _rev: "1-a", value: "foo a" },
-            { _id: "foo", _rev: "2-b", value: "foo b" },
-            { _id: "foo", _rev: "3-c", value: "foo c" }],
+                { _id: "foo", _rev: "2-b", value: "foo b" },
+                { _id: "foo", _rev: "3-c", value: "foo c" }],
             [{ _id: "foo", _rev: "1-a", value: "foo a" },
-            { _id: "foo", _rev: "2-d", value: "foo d" },
-            { _id: "foo", _rev: "3-e", value: "foo e" },
-            { _id: "foo", _rev: "4-f", value: "foo f" }],
+                { _id: "foo", _rev: "2-d", value: "foo d" },
+                { _id: "foo", _rev: "3-e", value: "foo e" },
+                { _id: "foo", _rev: "4-f", value: "foo f" }],
             [{ _id: "foo", _rev: "1-a", value: "foo a" },
-            { _id: "foo", _rev: "2-g", value: "foo g", _deleted: true }]
+                { _id: "foo", _rev: "2-g", value: "foo g", _deleted: true }]
         ];
-        const db = new PouchDB(dbs.name);
-        testUtils.putTree(db, simpleTree, () => {
+        const db = new DB(dbName);
+        await util.putTree(db, simpleTree);
+        await new Promise((resolve, reject) => {
             db.changes().on("complete", (res) => {
                 assert.equal(res.results[0].changes.length, 1);
                 assert.equal(res.results[0].changes[0].rev, "4-f");
@@ -827,47 +804,47 @@ describe("db", "pouch", "changes", () => {
                     assert.equal(changes[0].rev, "4-f");
                     assert.equal(changes[1].rev, "3-c");
                     assert.equal(changes[2].rev, "2-g");
-                    done();
-                }).on("error", done);
-            }).on("error", done);
+                    resolve();
+                }).on("error", reject);
+            }).on("error", reject);
         });
     });
 
-    it("Changes with style = all_docs and a callback for complete",
-        (done) => {
-            const simpleTree = [
-                [{ _id: "foo", _rev: "1-a", value: "foo a" },
+    it("Changes with style = all_docs and a callback for complete", async () => {
+        const simpleTree = [
+            [{ _id: "foo", _rev: "1-a", value: "foo a" },
                 { _id: "foo", _rev: "2-b", value: "foo b" },
                 { _id: "foo", _rev: "3-c", value: "foo c" }],
-                [{ _id: "foo", _rev: "1-a", value: "foo a" },
+            [{ _id: "foo", _rev: "1-a", value: "foo a" },
                 { _id: "foo", _rev: "2-d", value: "foo d" },
                 { _id: "foo", _rev: "3-e", value: "foo e" },
                 { _id: "foo", _rev: "4-f", value: "foo f" }],
-                [{ _id: "foo", _rev: "1-a", value: "foo a" },
+            [{ _id: "foo", _rev: "1-a", value: "foo a" },
                 { _id: "foo", _rev: "2-g", value: "foo g", _deleted: true }]
-            ];
-            const db = new PouchDB(dbs.name);
-            testUtils.putTree(db, simpleTree, () => {
-                db.changes((err, res) => {
-                    assert.equal(res.results[0].changes.length, 1);
-                    assert.equal(res.results[0].changes[0].rev, "4-f");
-                    db.changes({
-                        style: "all_docs"
-                    }, (err, res) => {
-                        assert.isNull(err);
-                        assert.equal(res.results[0].changes.length, 3);
-                        const changes = res.results[0].changes;
-                        changes.sort((a, b) => {
-                            return a.rev < b.rev;
-                        });
-                        assert.equal(changes[0].rev, "4-f");
-                        assert.equal(changes[1].rev, "3-c");
-                        assert.equal(changes[2].rev, "2-g");
-                        done();
+        ];
+        const db = new DB(dbName);
+        await util.putTree(db, simpleTree);
+        await new Promise((resolve) => {
+            db.changes((err, res) => {
+                assert.equal(res.results[0].changes.length, 1);
+                assert.equal(res.results[0].changes[0].rev, "4-f");
+                db.changes({
+                    style: "all_docs"
+                }, (err, res) => {
+                    assert.isNull(err);
+                    assert.equal(res.results[0].changes.length, 3);
+                    const changes = res.results[0].changes;
+                    changes.sort((a, b) => {
+                        return a.rev < b.rev;
                     });
+                    assert.equal(changes[0].rev, "4-f");
+                    assert.equal(changes[1].rev, "3-c");
+                    assert.equal(changes[2].rev, "2-g");
+                    resolve();
                 });
             });
         });
+    });
 
     it("Changes limit = 0", (done) => {
         const docs = [
@@ -876,8 +853,8 @@ describe("db", "pouch", "changes", () => {
             { _id: "2", integer: 2 },
             { _id: "3", integer: 3 }
         ];
-        const db = new PouchDB(dbs.name);
-        db.bulkDocs({ docs }, () => {
+        const db = new DB(dbName);
+        db.bulkDocs({ docs }).then(() => {
             db.changes({
                 limit: 0
             }).on("complete", (results) => {
@@ -890,15 +867,10 @@ describe("db", "pouch", "changes", () => {
     // Note for the following test that CouchDB's implementation of /_changes
     // with `descending=true` ignores any `since` parameter.
     it("Descending changes", (done) => {
-        // _changes in CouchDB 2.0 does not guarantee order
-        // so skip this test
-        if (testUtils.isCouchMaster()) {
-            return done();
-        }
-        const db = new PouchDB(dbs.name);
-        db.post({ _id: "0", test: "ing" }, () => {
-            db.post({ _id: "1", test: "ing" }, () => {
-                db.post({ _id: "2", test: "ing" }, () => {
+        const db = new DB(dbName);
+        db.post({ _id: "0", test: "ing" }).then(() => {
+            db.post({ _id: "1", test: "ing" }).then(() => {
+                db.post({ _id: "2", test: "ing" }).then(() => {
                     db.changes({
                         descending: true,
                         since: 1
@@ -916,8 +888,8 @@ describe("db", "pouch", "changes", () => {
     });
 
     it("Changes doc", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.post({ test: "somestuff" }, () => {
+        const db = new DB(dbName);
+        db.post({ test: "somestuff" }).then(() => {
             db.changes({
                 include_docs: true
             }).on("change", (change) => {
@@ -931,7 +903,7 @@ describe("db", "pouch", "changes", () => {
     // Note for the following test that CouchDB's implementation of /_changes
     // with `descending=true` ignores any `since` parameter.
     it("Descending many changes", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const docs = [];
         const num = 100;
         for (let i = 0; i < num; i++) {
@@ -941,10 +913,7 @@ describe("db", "pouch", "changes", () => {
             });
         }
         let changes = 0;
-        db.bulkDocs({ docs }, (err) => {
-            if (err) {
-                return done(err);
-            }
+        db.bulkDocs({ docs }).then(() => {
             db.changes({
                 descending: true
             }).on("change", () => {
@@ -959,20 +928,14 @@ describe("db", "pouch", "changes", () => {
     });
 
     it("changes w/ many modifications of same doc", () => {
-        // this test depends on the order of changes
-        // so fails against CouchDB 2 when multiple shards are present
-        if (testUtils.isCouchMaster()) {
-            return true;
-        }
-
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         let promise = Promise.resolve();
         const doc = { _id: "1" };
-        function modifyDoc() {
+        const modifyDoc = () => {
             return db.put(doc).then((res) => {
                 doc._rev = res.rev;
             });
-        }
+        };
         for (let i = 0; i < 5; i++) {
             promise = promise.then(modifyDoc);
         }
@@ -990,18 +953,18 @@ describe("db", "pouch", "changes", () => {
                     delete x.seq;
                     return x;
                 }), [
-                        { id: "1" },
-                        { id: "2" },
-                        { id: "3" }
-                    ]);
+                    { id: "1" },
+                    { id: "2" },
+                    { id: "3" }
+                ]);
             });
         });
     });
 
     it("live-changes", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         let count = 0;
-        var changes = db.changes({
+        const changes = db.changes({
             live: true
         }).on("complete", () => {
             assert.equal(count, 1);
@@ -1016,17 +979,17 @@ describe("db", "pouch", "changes", () => {
     });
 
     it("Multiple watchers", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         let count = 0;
         let changes1Complete = false;
         let changes2Complete = false;
-        function checkCount() {
+        const checkCount = () => {
             if (changes1Complete && changes2Complete) {
                 assert.equal(count, 2);
                 done();
             }
-        }
-        var changes1 = db.changes({
+        };
+        let changes1 = db.changes({
             live: true
         }).on("complete", () => {
             changes1Complete = true;
@@ -1036,7 +999,7 @@ describe("db", "pouch", "changes", () => {
             changes1.cancel();
             changes1 = null;
         }).on("error", done);
-        var changes2 = db.changes({
+        let changes2 = db.changes({
             live: true
         }).on("complete", () => {
             changes2Complete = true;
@@ -1050,8 +1013,8 @@ describe("db", "pouch", "changes", () => {
     });
 
     it("Continuous changes doc", (done) => {
-        const db = new PouchDB(dbs.name);
-        var changes = db.changes({
+        const db = new DB(dbName);
+        const changes = db.changes({
             live: true,
             include_docs: true
         }).on("complete", (result) => {
@@ -1066,7 +1029,7 @@ describe("db", "pouch", "changes", () => {
     });
 
     it("Cancel changes", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         let count = 0;
         let interval;
         let docPosted = false;
@@ -1074,7 +1037,7 @@ describe("db", "pouch", "changes", () => {
         // We want to wait for a period of time after the final
         // document was posted to ensure we didnt see another
         // change
-        function waitForDocPosted() {
+        const waitForDocPosted = () => {
             if (!docPosted) {
                 return;
             }
@@ -1083,9 +1046,9 @@ describe("db", "pouch", "changes", () => {
                 assert.equal(count, 1);
                 done();
             }, 200);
-        }
+        };
 
-        var changes = db.changes({
+        const changes = db.changes({
             live: true
         }).on("complete", (result) => {
             assert.equal(result.status, "cancelled");
@@ -1096,10 +1059,7 @@ describe("db", "pouch", "changes", () => {
             count += 1;
             if (count === 1) {
                 changes.cancel();
-                db.post({ test: "another doc" }, (err) => {
-                    if (err) {
-                        return done(err);
-                    }
+                db.post({ test: "another doc" }).then(() => {
                     docPosted = true;
                 });
             }
@@ -1109,7 +1069,7 @@ describe("db", "pouch", "changes", () => {
 
 
     it("#3579 changes firing 1 too many times", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.bulkDocs([{}, {}, {}]).then(() => {
             const changes = db.changes({
                 since: "now",
@@ -1138,7 +1098,7 @@ describe("db", "pouch", "changes", () => {
     });
 
     it("Kill database while listening to live changes", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
 
         db.changes({ live: true })
             .on("error", () => {
@@ -1156,7 +1116,7 @@ describe("db", "pouch", "changes", () => {
 
     it("#3136 style=all_docs", () => {
 
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
 
         let chain = Promise.resolve();
 
@@ -1179,7 +1139,7 @@ describe("db", "pouch", "changes", () => {
     });
 
     it("#4191 revs_diff causes endless loop", () => {
-        const db = new PouchDB(dbs.name, { auto_compaction: false });
+        const db = new DB(dbName, { auto_compaction: false });
         return db.bulkDocs({
             new_edits: false,
             docs: [{ _id: "799", _rev: "1-d22" }
@@ -1195,9 +1155,9 @@ describe("db", "pouch", "changes", () => {
                     new_edits: false,
                     docs:
                     [{ _id: "FB3", _rev: "1-363" },
-                    { _id: "27C", _rev: "1-4c3" },
-                    { _id: "BD6", _rev: "1-de0" },
-                    { _id: "1E9", _rev: "1-451" }]
+                        { _id: "27C", _rev: "1-4c3" },
+                        { _id: "BD6", _rev: "1-de0" },
+                        { _id: "1E9", _rev: "1-451" }]
                 }
             );
         }).then(() => {
@@ -1212,7 +1172,7 @@ describe("db", "pouch", "changes", () => {
 
     it("#3136 style=all_docs & include_docs", () => {
 
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
 
         let chain = Promise.resolve();
 
@@ -1238,11 +1198,7 @@ describe("db", "pouch", "changes", () => {
     });
 
     it("#3136 tricky changes, limit/descending", () => {
-        if (testUtils.isCouchMaster()) {
-            return true;
-        }
-
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
 
         const docs = [
             {
@@ -1304,14 +1260,14 @@ describe("db", "pouch", "changes", () => {
             });
         });
 
-        function normalizeResult(result) {
+        const normalizeResult = (result) => {
             // order of changes doesn't matter
             result.results.forEach((ch) => {
                 ch.changes = ch.changes.sort((a, b) => {
                     return a.rev < b.rev ? -1 : 1;
                 });
             });
-        }
+        };
 
         return chain.then(() => {
             return db.changes();
@@ -1399,7 +1355,7 @@ describe("db", "pouch", "changes", () => {
                 last_seq: seqs[3]
             };
             assert.deepEqual(result, expected, `5:${JSON.stringify(result)
-                }, shoulda got: ${JSON.stringify(expected)}`);
+            }, shoulda got: ${JSON.stringify(expected)}`);
             return db.changes({ descending: true });
         }).then((result) => {
             normalizeResult(result);
@@ -1417,16 +1373,12 @@ describe("db", "pouch", "changes", () => {
                 last_seq: seqs[2]
             };
             assert.deepEqual(result, expected, `6:${JSON.stringify(result)
-                }, shoulda got: ${JSON.stringify(expected)}`);
+            }, shoulda got: ${JSON.stringify(expected)}`);
         });
     });
 
     it("#3176 winningRev has a lower seq, descending", () => {
-        if (testUtils.isCouchMaster()) {
-            return true;
-        }
-
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const tree = [
             [
                 {
@@ -1468,7 +1420,7 @@ describe("db", "pouch", "changes", () => {
         let chain = Promise.resolve();
         const seqs = [0];
 
-        function getExpected(i) {
+        const getExpected = (i) => {
             const expecteds = [
                 {
                     results: [
@@ -1492,16 +1444,16 @@ describe("db", "pouch", "changes", () => {
                 }
             ];
             return expecteds[i];
-        }
+        };
 
-        function normalizeResult(result) {
+        const normalizeResult = (result) => {
             // order of changes doesn't matter
             result.results.forEach((ch) => {
                 ch.changes = ch.changes.sort((a, b) => {
                     return a.rev < b.rev ? -1 : 1;
                 });
             });
-        }
+        };
 
         tree.forEach((docs, i) => {
             chain = chain.then(() => {
@@ -1523,11 +1475,7 @@ describe("db", "pouch", "changes", () => {
     });
 
     it("#3136 winningRev has a lower seq, style=all_docs", () => {
-        if (testUtils.isCouchMaster()) {
-            return true;
-        }
-
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const tree = [
             [
                 {
@@ -1591,7 +1539,7 @@ describe("db", "pouch", "changes", () => {
         let chain = Promise.resolve();
         const seqs = [0];
 
-        function getExpected(i) {
+        const getExpected = (i) => {
             const expecteds = [
                 {
                     results: [
@@ -1628,16 +1576,16 @@ describe("db", "pouch", "changes", () => {
                 }
             ];
             return expecteds[i];
-        }
+        };
 
-        function normalizeResult(result) {
+        const normalizeResult = (result) => {
             // order of changes doesn't matter
             result.results.forEach((ch) => {
                 ch.changes = ch.changes.sort((a, b) => {
                     return a.rev < b.rev ? -1 : 1;
                 });
             });
-        }
+        };
 
         tree.forEach((docs, i) => {
             chain = chain.then(() => {
@@ -1661,11 +1609,7 @@ describe("db", "pouch", "changes", () => {
     });
 
     it("#3136 winningRev has a lower seq, style=all_docs 2", () => {
-        if (testUtils.isCouchMaster()) {
-            return true;
-        }
-
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const tree = [
             [
                 {
@@ -1753,14 +1697,14 @@ describe("db", "pouch", "changes", () => {
 
             let chain2 = Promise.resolve();
 
-            function normalizeResult(result) {
+            const normalizeResult = (result) => {
                 // order of changes doesn't matter
                 result.results.forEach((ch) => {
                     ch.changes = ch.changes.sort((a, b) => {
                         return a.rev < b.rev ? -1 : 1;
                     });
                 });
-            }
+            };
 
             seqs.forEach((seq, i) => {
                 chain2 = chain2.then(() => {
@@ -1770,9 +1714,9 @@ describe("db", "pouch", "changes", () => {
                     }).then((res) => {
                         normalizeResult(res);
                         assert.deepEqual(res, expecteds[i], `since=${seq
-                            }: got: ${
+                        }: got: ${
                             JSON.stringify(res)
-                            }, shoulda got: ${
+                        }, shoulda got: ${
                             JSON.stringify(expecteds[i])}`);
                     });
                 });
@@ -1782,11 +1726,7 @@ describe("db", "pouch", "changes", () => {
     });
 
     it("#3136 winningRev has a higher seq, using limit", () => {
-        if (testUtils.isCouchMaster()) {
-            return true;
-        }
-
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const tree = [
             [
                 {
@@ -1872,14 +1812,14 @@ describe("db", "pouch", "changes", () => {
 
             let chain2 = Promise.resolve();
 
-            function normalizeResult(result) {
+            const normalizeResult = (result) => {
                 // order of changes doesn't matter
                 result.results.forEach((ch) => {
                     ch.changes = ch.changes.sort((a, b) => {
                         return a.rev < b.rev ? -1 : 1;
                     });
                 });
-            }
+            };
 
             seqs.forEach((seq, i) => {
                 chain2 = chain2.then(() => {
@@ -1913,10 +1853,10 @@ describe("db", "pouch", "changes", () => {
             { _id: "6", integer: 6 },
             { _id: "7", integer: 7 }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         let count = 0;
-        db.bulkDocs({ docs: docs1 }, () => {
-            var changes = db.changes({
+        db.bulkDocs({ docs: docs1 }).then(() => {
+            const changes = db.changes({
                 filter(doc) {
                     return doc.integer % 2 === 0;
                 },
@@ -1948,10 +1888,10 @@ describe("db", "pouch", "changes", () => {
             { _id: "7", integer: 7 }
         ];
         const params = { abc: true };
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         let count = 0;
-        db.bulkDocs({ docs: docs1 }, () => {
-            var changes = db.changes({
+        db.bulkDocs({ docs: docs1 }).then(() => {
+            const changes = db.changes({
                 filter(doc, req) {
                     if (req.query.abc) {
                         return doc.integer % 2 === 0;
@@ -1979,8 +1919,8 @@ describe("db", "pouch", "changes", () => {
             { _id: "2", integer: 2 },
             { _id: "3", integer: 3 }
         ];
-        const db = new PouchDB(dbs.name);
-        db.bulkDocs({ docs: docs1 }, () => {
+        const db = new DB(dbName);
+        db.bulkDocs({ docs: docs1 }).then(() => {
             db.changes().on("complete", (allChanges) => {
                 db.changes({
                     filter(doc) {
@@ -2004,8 +1944,8 @@ describe("db", "pouch", "changes", () => {
             { _id: "2", integer: 2 },
             { _id: "3", integer: 3 }
         ];
-        const db = new PouchDB(dbs.name);
-        db.bulkDocs({ docs: docs1 }, () => {
+        const db = new DB(dbName);
+        db.bulkDocs({ docs: docs1 }).then(() => {
             db.changes({
                 descending: true
             }).on("complete", (allChanges) => {
@@ -2032,7 +1972,7 @@ describe("db", "pouch", "changes", () => {
             { _id: "2" },
             { _id: "3" }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.bulkDocs(docs).then(() => {
             return db.changes({
                 doc_ids: ["1", "3"]
@@ -2051,11 +1991,11 @@ describe("db", "pouch", "changes", () => {
             let id = "";
             for (let j = 0; j < 50; j++) {
                 // make a huge id
-                id += testUtils.btoa(Math.random().toString());
+                id += util.btoa(Math.random().toString());
             }
             docs.push({ _id: id });
         }
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.bulkDocs(docs).then(() => {
             return db.changes({
                 doc_ids: [docs[1]._id, docs[3]._id]
@@ -2076,11 +2016,11 @@ describe("db", "pouch", "changes", () => {
             { _id: "2" },
             { _id: "3" }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.bulkDocs(docs).then(() => {
             return new Promise((resolve, reject) => {
                 const retChanges = [];
-                var changes = db.changes({
+                const changes = db.changes({
                     doc_ids: ["1", "3"],
                     live: true
                 }).on("change", (change) => {
@@ -2106,15 +2046,15 @@ describe("db", "pouch", "changes", () => {
             let id = "";
             for (let j = 0; j < 50; j++) {
                 // make a huge id
-                id += testUtils.btoa(Math.random().toString());
+                id += util.btoa(Math.random().toString());
             }
             docs.push({ _id: id });
         }
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.bulkDocs(docs).then(() => {
             return new Promise((resolve, reject) => {
                 const retChanges = [];
-                var changes = db.changes({
+                const changes = db.changes({
                     doc_ids: [docs[1]._id, docs[3]._id],
                     live: true
                 }).on("change", (change) => {
@@ -2141,7 +2081,7 @@ describe("db", "pouch", "changes", () => {
             { _id: "2" },
             { _id: "3" }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.bulkDocs(docs).then(() => {
             return db.changes({
                 filter: "_doc_ids",
@@ -2162,7 +2102,7 @@ describe("db", "pouch", "changes", () => {
             { _id: "2" },
             { _id: "3" }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.bulkDocs(docs).then(() => {
             return db.changes({
                 filter: "_doc_ids",
@@ -2187,12 +2127,12 @@ describe("db", "pouch", "changes", () => {
             { _id: "2", integer: 11 },
             { _id: "3", integer: 12 }
         ];
-        const db = new PouchDB(dbs.name);
-        db.bulkDocs({ docs: docs1 }, (err, info) => {
+        const db = new DB(dbName);
+        db.bulkDocs({ docs: docs1 }).then((info) => {
             docs2[0]._rev = info[2].rev;
             docs2[1]._rev = info[3].rev;
-            db.put(docs2[0], () => {
-                db.put(docs2[1], () => {
+            db.put(docs2[0]).then(() => {
+                db.put(docs2[1]).then(() => {
                     db.changes({
                         include_docs: true
                     }).on("complete", (changes) => {
@@ -2219,15 +2159,15 @@ describe("db", "pouch", "changes", () => {
             { _id: "2", integer: 11 },
             { _id: "3", integer: 12 }
         ];
-        const localdb = new PouchDB(dbs.name);
-        const remotedb = new PouchDB(dbs.remote);
+        const localdb = new DB(dbName);
+        const remotedb = new DB(dbRemote);
         localdb.bulkDocs({ docs: docs1 }).then((info) => {
             docs2[0]._rev = info[2].rev;
             docs2[1]._rev = info[3].rev;
             return localdb.put(docs2[0]).then(() => {
                 return localdb.put(docs2[1]).then((info) => {
                     const rev2 = info.rev;
-                    return PouchDB.replicate(localdb, remotedb).then(() => {
+                    return DB.replicate(localdb, remotedb).then(() => {
                         // update remote once, local twice, then replicate from
                         // remote to local so the remote losing conflict is later in
                         // the tree
@@ -2250,7 +2190,7 @@ describe("db", "pouch", "changes", () => {
                                 };
                                 return remotedb.put(rev4Doc).then((resp) => {
                                     const remoterev = resp.rev;
-                                    return PouchDB.replicate(remotedb, localdb).then(
+                                    return DB.replicate(remotedb, localdb).then(
                                         () => {
                                             return localdb.changes({
                                                 include_docs: true,
@@ -2291,22 +2231,18 @@ describe("db", "pouch", "changes", () => {
             { _id: "2", integer: 2 },
             { _id: "3", integer: 3 }
         ];
-        const db = new PouchDB(dbs.name);
-        db.bulkDocs({ docs: docs1 }, (err, info) => {
+        const db = new DB(dbName);
+        db.bulkDocs({ docs: docs1 }).then((info) => {
             const rev = info[3].rev;
             db.remove({
                 _id: "3",
                 _rev: rev
-            }, () => {
+            }).then(() => {
                 db.changes({
                     include_docs: true
                 }).on("complete", (changes) => {
                     assert.equal(changes.results.length, 4);
                     const ch = findById(changes.results, "3");
-                    // sequence numbers are not incremental in CouchDB 2.0
-                    if (!testUtils.isCouchMaster()) {
-                        assert.equal(ch.seq, 5);
-                    }
                     assert.equal(ch.deleted, true);
                     done();
                 }).on("error", done);
@@ -2323,8 +2259,8 @@ describe("db", "pouch", "changes", () => {
                 foo: `bar_${i}`
             });
         }
-        const db = new PouchDB(dbs.name);
-        db.bulkDocs({ docs }, () => {
+        const db = new DB(dbName);
+        db.bulkDocs({ docs }).then(() => {
             db.changes().on("complete", (res) => {
                 assert.equal(res.results.length, num);
                 done();
@@ -2333,17 +2269,12 @@ describe("db", "pouch", "changes", () => {
     });
 
     it("Calling db.changes({since: 'now'})", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.bulkDocs({ docs: [{ foo: "bar" }] }, () => {
-            db.info((err, info) => {
+        const db = new DB(dbName);
+        db.bulkDocs({ docs: [{ foo: "bar" }] }).then(() => {
+            db.info().then(() => {
                 const api = db.changes({
                     since: "now"
                 }).on("complete", (res) => {
-                    // last_seq and update_seq might be encoded differently
-                    // in clustered CouchDB - they cannot be reliably compared.
-                    if (!testUtils.isCouchMaster()) {
-                        assert.equal(res.last_seq, info.update_seq);
-                    }
                     done();
                 }).on("error", done);
                 assert.isObject(api);
@@ -2354,17 +2285,12 @@ describe("db", "pouch", "changes", () => {
 
     //Duplicate to make sure both api options work.
     it("Calling db.changes({since: 'latest'})", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.bulkDocs({ docs: [{ foo: "bar" }] }, () => {
-            db.info((err, info) => {
+        const db = new DB(dbName);
+        db.bulkDocs({ docs: [{ foo: "bar" }] }).then(() => {
+            db.info().then(() => {
                 const api = db.changes({
                     since: "latest"
                 }).on("complete", (res) => {
-                    // last_seq and update_seq might be encoded differently
-                    // in clustered CouchDB - they cannot be reliably compared.
-                    if (!testUtils.isCouchMaster()) {
-                        assert.equal(res.last_seq, info.update_seq);
-                    }
                     done();
                 }).on("error", done);
                 assert.isObject(api);
@@ -2373,35 +2299,33 @@ describe("db", "pouch", "changes", () => {
         });
     });
 
-    it.skip("Closing db does not cause a crash if changes cancelled",
-        (done) => {
-            const db = new PouchDB(dbs.name);
-            let called = 0;
-            function checkDone() {
-                called++;
-                if (called === 2) {
-                    done();
-                }
+    it("Closing db does not cause a crash if changes cancelled", (done) => {
+        const db = new DB(dbName);
+        let called = 0;
+        const checkDone = () => {
+            called++;
+            if (called === 2) {
+                done();
             }
-            db.bulkDocs({ docs: [{ foo: "bar" }] }, () => {
-                const changes = db.changes({
-                    live: true
-                }).on("complete", (result) => {
-                    assert.equal(result.status, "cancelled");
-                    checkDone();
-                });
-                assert.exists(changes);
-                assert.isFunction(changes.cancel);
-                changes.cancel();
-                db.close((error) => {
-                    assert.isNull(error);
-                    checkDone();
-                });
+        };
+        db.bulkDocs({ docs: [{ foo: "bar" }] }).then(() => {
+            const changes = db.changes({
+                live: true
+            }).on("complete", (result) => {
+                assert.equal(result.status, "cancelled");
+                checkDone();
+            });
+            assert.exists(changes);
+            assert.isFunction(changes.cancel);
+            changes.cancel();
+            db.close().then(() => {
+                checkDone();
             });
         });
+    });
 
     it("fire-complete-on-cancel", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         let cancelled = false;
         const changes = db.changes({
             live: true
@@ -2422,9 +2346,9 @@ describe("db", "pouch", "changes", () => {
     });
 
     it("changes are not duplicated", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         let called = 0;
-        var changes = db.changes({
+        const changes = db.changes({
             live: true
         }).on("change", () => {
             called++;
@@ -2441,17 +2365,14 @@ describe("db", "pouch", "changes", () => {
     });
 
     it("supports return_docs=false", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const docs = [];
         const num = 10;
         for (let i = 0; i < num; i++) {
             docs.push({ _id: `doc_${i}` });
         }
         let changes = 0;
-        db.bulkDocs({ docs }, (err) => {
-            if (err) {
-                return done(err);
-            }
+        db.bulkDocs({ docs }).then(() => {
             db.changes({
                 descending: true,
                 return_docs: false
@@ -2469,17 +2390,14 @@ describe("db", "pouch", "changes", () => {
 
     // TODO: Remove 'returnDocs' in favor of 'return_docs' in a future release
     it("supports returnDocs=false", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const docs = [];
         const num = 10;
         for (let i = 0; i < num; i++) {
             docs.push({ _id: `doc_${i}` });
         }
         let changes = 0;
-        db.bulkDocs({ docs }, (err) => {
-            if (err) {
-                return done(err);
-            }
+        db.bulkDocs({ docs }).then(() => {
             db.changes({
                 descending: true,
                 returnDocs: false
@@ -2504,8 +2422,8 @@ describe("db", "pouch", "changes", () => {
             { _id: "d", integer: 3 }
         ];
         let called = 0;
-        const db = new PouchDB(dbs.name);
-        db.bulkDocs({ docs: docs1 }, () => {
+        const db = new DB(dbName);
+        db.bulkDocs({ docs: docs1 }).then(() => {
             db.changes({
                 limit: 1
             }).on("change", () => {
@@ -2519,7 +2437,7 @@ describe("db", "pouch", "changes", () => {
     });
 
     it("doesn't throw if opts.complete is undefined", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         db.put({ _id: "foo" }).then(() => {
             db.changes().on("change", () => {
                 done();
@@ -2529,44 +2447,43 @@ describe("db", "pouch", "changes", () => {
         }, done);
     });
 
-    it("it handles a bunch of individual changes in live replication",
-        (done) => {
-            const db = new PouchDB(dbs.name);
-            const len = 80;
-            let called = 0;
-            let changesDone = false;
-            let changesWritten = 0;
-            const changes = db.changes({ live: true });
+    it("it handles a bunch of individual changes in live replication", (done) => {
+        const db = new DB(dbName);
+        const len = 80;
+        let called = 0;
+        let changesDone = false;
+        let changesWritten = 0;
+        const changes = db.changes({ live: true });
 
-            changes.on("change", () => {
-                called++;
-                if (called === len) {
-                    changes.cancel();
-                }
-            }).on("error", done).on("complete", () => {
-                changesDone = true;
-                maybeDone();
-            });
-
-            let i = -1;
-
-            function maybeDone() {
-                if (changesDone && changesWritten === len) {
-                    done();
-                }
+        changes.on("change", () => {
+            called++;
+            if (called === len) {
+                changes.cancel();
             }
-
-            function after() {
-                changesWritten++;
-                assert.isBelow(db.listeners("destroyed").length, 5);
-                maybeDone();
-            }
-
-            while (++i < len) {
-                db.post({}).then(after).catch(done);
-            }
-
+        }).on("error", done).on("complete", () => {
+            changesDone = true;
+            maybeDone();
         });
+
+        let i = -1;
+
+        const maybeDone = () => {
+            if (changesDone && changesWritten === len) {
+                done();
+            }
+        };
+
+        const after = () => {
+            changesWritten++;
+            assert.isBelow(db.listeners("destroyed").length, 5);
+            maybeDone();
+        };
+
+        while (++i < len) {
+            db.post({}).then(after).catch(done);
+        }
+
+    });
 
     it("changes-filter without filter", (done) => {
         const docs1 = [
@@ -2581,10 +2498,10 @@ describe("db", "pouch", "changes", () => {
             { _id: "6", integer: 6 },
             { _id: "7", integer: 7 }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         let count = 0;
-        db.bulkDocs({ docs: docs1 }, () => {
-            var changes = db.changes({
+        db.bulkDocs({ docs: docs1 }).then(() => {
+            const changes = db.changes({
                 live: true
             }).on("complete", (result) => {
                 assert.equal(result.status, "cancelled");
@@ -2601,8 +2518,7 @@ describe("db", "pouch", "changes", () => {
 
 
     it("#3539 - Exception in changes is fine", (done) => {
-
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         let count = 0;
 
         const changes = db.changes({ live: true });
@@ -2633,9 +2549,9 @@ describe("db", "pouch", "changes", () => {
             { _id: "1", user: "bar" },
             { _id: "2", user: "foo" }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
 
-        db.bulkDocs({ docs }, () => {
+        db.bulkDocs({ docs }).then(() => {
             db.changes({
                 selector: { user: "foo" },
                 include_docs: true
@@ -2656,9 +2572,9 @@ describe("db", "pouch", "changes", () => {
             { _id: "1", user: "bar" },
             { _id: "2", user: "foo" }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
 
-        db.bulkDocs({ docs }, () => {
+        db.bulkDocs({ docs }).then(() => {
             db.changes({
                 selector: { user: "foo" },
                 filter: "_selector",
@@ -2675,7 +2591,7 @@ describe("db", "pouch", "changes", () => {
     });
 
     it("Changes with selector and mismatched filter", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
 
         db.changes({
             selector: { user: "foo" },
@@ -2696,9 +2612,9 @@ describe("db", "pouch", "changes", () => {
             { _id: "1", user: "bar" },
             { _id: "2", user: "foo" }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
 
-        db.bulkDocs({ docs }, () => {
+        db.bulkDocs({ docs }).then(() => {
             return db.changes({
                 limit: 1,
                 selector: { user: "foo" },

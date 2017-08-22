@@ -1,9 +1,19 @@
-require("./node.setup");
+import * as util from "./utils";
 
-describe("db", "pouch", "constructor errors", () => {
+describe("database", "pouch", "constructor errors", () => {
+    let DB = null;
+
+    before(async () => {
+        DB = await util.setup();
+    });
+
+    after(async () => {
+        await util.destroy();
+    });
+
     it("should error on an undefined name", (done) => {
         try {
-            new PouchDB();
+            new DB();
             done("Should have thrown");
         } catch (err) {
             assert.equal(err instanceof Error, true, "should be an error");
@@ -13,7 +23,7 @@ describe("db", "pouch", "constructor errors", () => {
 
     it("should error on an undefined adapter", (done) => {
         try {
-            new PouchDB("foo", { adapter: "myFakeAdapter" });
+            new DB("foo", { adapter: "myFakeAdapter" });
             done("Should have thrown");
         } catch (err) {
             assert.equal(err instanceof Error, true, "should be an error");
@@ -24,7 +34,7 @@ describe("db", "pouch", "constructor errors", () => {
 
     it("should error on a null name", (done) => {
         try {
-            new PouchDB(null);
+            new DB(null);
             done("Should have thrown");
         } catch (err) {
             assert.equal(err instanceof Error, true, "should be an error");

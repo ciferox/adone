@@ -1,20 +1,21 @@
-require("./node.setup");
+import * as util from "./utils";
 
-describe.skip("db", "pouch", "close", () => {
-    const dbs = {};
-    beforeEach(function (done) {
-        this.timeout(60000);
-        dbs.name = testUtils.adapterUrl("local", "testdb");
-        testUtils.cleanup([dbs.name], done);
+describe("database", "pouch", "close", () => {
+    const dbName = "testdb";
+    let DB = null;
+
+    beforeEach(async () => {
+        DB = await util.setup();
+        await util.cleanup(dbName);
     });
 
-    after((done) => {
-        testUtils.cleanup([dbs.name], done);
+    after(async () => {
+        await util.destroy();
     });
 
     it("should emit destroyed even when closed (sync)", () => {
-        const db1 = new PouchDB("testdb");
-        const db2 = new PouchDB("testdb");
+        const db1 = new DB(dbName);
+        const db2 = new DB(dbName);
 
         return new Promise((resolve) => {
             db2.once("destroyed", resolve);
@@ -26,17 +27,17 @@ describe.skip("db", "pouch", "close", () => {
     });
 
     it("should emit destroyed even when closed (async)", () => {
-        const db1 = new PouchDB("testdb");
-        const db2 = new PouchDB("testdb");
+        const db1 = new DB(dbName);
+        const db2 = new DB(dbName);
 
         return new Promise((resolve) => {
             // FIXME This should be 2 if close-then-destroy worked.
             let need = 1;
-            function checkDone() {
+            const checkDone = () => {
                 if (--need === 0) {
                     resolve();
                 }
-            }
+            };
             db1.once("closed", checkDone);
             db2.once("destroyed", checkDone);
             db1.info().then(() => {
@@ -51,17 +52,17 @@ describe.skip("db", "pouch", "close", () => {
     });
 
     it("should emit closed even when destroyed (async #2)", () => {
-        const db1 = new PouchDB("testdb");
-        const db2 = new PouchDB("testdb");
+        const db1 = new DB(dbName);
+        const db2 = new DB(dbName);
 
         return new Promise((resolve) => {
             // FIXME This should be 2 if destroy-then-close worked.
             let need = 1;
-            function checkDone() {
+            const checkDone = () => {
                 if (--need === 0) {
                     resolve();
                 }
-            }
+            };
             db1.once("closed", checkDone);
             db2.once("destroyed", checkDone);
             db2.destroy().catch((err) => {
@@ -77,26 +78,26 @@ describe.skip("db", "pouch", "close", () => {
     });
 
     it("test unref for coverage", () => {
-        const db1 = new PouchDB("testdb");
+        const db1 = new DB(dbName);
         return new Promise((resolve) => {
-            PouchDB.once("unref", resolve);
+            DB.once("unref", resolve);
             db1.close();
         });
     });
 
     it("test double unref for coverage", function () {
         this.timeout(1000);
-        const db1 = new PouchDB("testdb");
-        const db2 = new PouchDB("testdb");
+        const db1 = new DB(dbName);
+        const db2 = new DB(dbName);
 
         return new Promise((resolve) => {
             let need = 2;
-            function checkDone() {
+            const checkDone = () => {
                 if (--need === 0) {
                     resolve();
                 }
-            }
-            PouchDB.on("unref", checkDone);
+            };
+            DB.on("unref", checkDone);
             db1.info()
                 .then(() => {
                     return db2.info();
@@ -112,18 +113,18 @@ describe.skip("db", "pouch", "close", () => {
 
     it("test close-then-destroyed for coverage", function () {
         this.timeout(1000);
-        const db1 = new PouchDB("testdb");
-        const db2 = new PouchDB("testdb");
+        const db1 = new DB(dbName);
+        const db2 = new DB(dbName);
         return new Promise((resolve) => {
             // FIXME This should be 2 if close-then-destroy worked.
             let need = 1;
-            function checkDone() {
+            const checkDone = () => {
                 if (--need === 0) {
                     resolve();
                 }
-            }
-            PouchDB.once("unref", checkDone);
-            PouchDB.once("destroyed", checkDone);
+            };
+            DB.once("unref", checkDone);
+            DB.once("destroyed", checkDone);
             db1.info()
                 .then(() => {
                     return db1.close();
@@ -137,18 +138,18 @@ describe.skip("db", "pouch", "close", () => {
 
     it("test destroy-then-close for coverage", function () {
         this.timeout(1000);
-        const db1 = new PouchDB("testdb");
-        const db2 = new PouchDB("testdb");
+        const db1 = new DB(dbName);
+        const db2 = new DB(dbName);
         return new Promise((resolve) => {
             // FIXME This should be 2 if close-then-destroy worked.
             let need = 1;
-            function checkDone() {
+            const checkDone = () => {
                 if (--need === 0) {
                     resolve();
                 }
-            }
-            PouchDB.once("destroyed", checkDone);
-            PouchDB.once("unref", checkDone);
+            };
+            DB.once("destroyed", checkDone);
+            DB.once("unref", checkDone);
             db2.info()
                 .then(() => {
                     return db1.destroy();
@@ -162,19 +163,19 @@ describe.skip("db", "pouch", "close", () => {
 
     it("test destroy-then-close-and-close for coverage", function () {
         this.timeout(1000);
-        const db1 = new PouchDB("testdb");
-        const db2 = new PouchDB("testdb");
-        const db3 = new PouchDB("testdb");
+        const db1 = new DB(dbName);
+        const db2 = new DB(dbName);
+        const db3 = new DB(dbName);
         return new Promise((resolve) => {
             // FIXME This should be 3 if close-then-destroy worked.
             let need = 1;
-            function checkDone() {
+            const checkDone = () => {
                 if (--need === 0) {
                     resolve();
                 }
-            }
-            PouchDB.once("destroyed", checkDone);
-            PouchDB.on("unref", checkDone);
+            };
+            DB.once("destroyed", checkDone);
+            DB.on("unref", checkDone);
             db2.info()
                 .then(() => {
                     return db3.info();

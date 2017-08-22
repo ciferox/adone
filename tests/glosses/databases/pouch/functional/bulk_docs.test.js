@@ -1,8 +1,10 @@
-require("./node.setup");
+import * as util from "./utils";
 
-function makeDocs(start, end, templateDoc) {
+const { is } = adone;
+
+const makeDocs = (start, end, templateDoc) => {
     const templateDocSrc = templateDoc ? JSON.stringify(templateDoc) : "{}";
-    if (end === undefined) {
+    if (is.undefined(end)) {
         end = start;
         start = 0;
     }
@@ -16,20 +18,20 @@ function makeDocs(start, end, templateDoc) {
         docs.push(newDoc);
     }
     return docs;
-}
+};
 
-describe("db", "pouch", "bulk_docs", () => {
-    const dbs = {};
+describe("database", "pouch", "bulk_docs", () => {
+    const dbName = "testdb";
+    let DB = null;
 
-    beforeEach((done) => {
-        dbs.name = testUtils.adapterUrl("local", "testdb");
-        testUtils.cleanup([dbs.name], done);
+    beforeEach(async () => {
+        DB = await util.setup();
+        await util.cleanup(dbName);
     });
 
-    after((done) => {
-        testUtils.cleanup([dbs.name], done);
+    after(async () => {
+        await util.destroy();
     });
-
 
     const authors = [
         { name: "Dale Harvey", commits: 253 },
@@ -39,7 +41,7 @@ describe("db", "pouch", "bulk_docs", () => {
     ];
 
     it("Testing bulk docs", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const docs = makeDocs(5);
         return db.bulkDocs({ docs }).then((results) => {
             assert.lengthOf(results, 5, "results length matches");
@@ -75,7 +77,7 @@ describe("db", "pouch", "bulk_docs", () => {
     });
 
     it("#6039 test id in bulk docs for conflict", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const docs = makeDocs(5);
         return db.bulkDocs(docs).then((res) => {
             docs.forEach((doc, i) => {
@@ -120,12 +122,12 @@ describe("db", "pouch", "bulk_docs", () => {
     });
 
     it("No id in bulk docs", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const newdoc = {
             _id: "foobar",
             body: "baz"
         };
-        db.put(newdoc, (err, doc) => {
+        return db.put(newdoc).then((doc) => {
             assert.exists(doc.ok);
             const docs = [
                 {
@@ -139,7 +141,7 @@ describe("db", "pouch", "bulk_docs", () => {
                     _deleted: true
                 }
             ];
-            db.bulkDocs({ docs }, (err, results) => {
+            return db.bulkDocs({ docs }).then((results) => {
                 assert.property(results[0], "name", "conflict");
                 assert.property(results[1], "name", "conflict");
                 done();
@@ -147,25 +149,24 @@ describe("db", "pouch", "bulk_docs", () => {
         });
     });
 
-    it("No _rev and new_edits=false", (done) => {
-        const db = new PouchDB(dbs.name);
+    it("No _rev and new_edits=false", async () => {
+        const db = new DB(dbName);
         const docs = [{
             _id: "foo",
             integer: 1
         }];
-        db.bulkDocs({ docs }, { new_edits: false }, (err) => {
-            assert.exists(err, "error reported");
-            done();
+        await assert.throws(async () => {
+            await db.bulkDocs({ docs }, { new_edits: false });
         });
     });
 
     it("Test empty bulkDocs", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.bulkDocs([]);
     });
 
     it("Test many bulkDocs", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const docs = [];
         for (let i = 0; i < 201; i++) {
             docs.push({ _id: i.toString() });
@@ -173,52 +174,49 @@ describe("db", "pouch", "bulk_docs", () => {
         return db.bulkDocs(docs);
     });
 
-    it("Test errors on invalid doc id", (done) => {
-        const db = new PouchDB(dbs.name);
+    it("Test errors on invalid doc id", async () => {
+        const db = new DB(dbName);
         const docs = [{
             _id: "_invalid",
             foo: "bar"
         }];
-        db.bulkDocs({ docs }, (err, info) => {
-            assert.equal(err.status, testUtils.errors.RESERVED_ID.status, "correct error status returned");
-            assert.isUndefined(info, "info is empty");
-            done();
+        const err = await assert.throws(async () => {
+            await db.bulkDocs({ docs });
         });
+        assert.equal(err.status, util.x.RESERVED_ID.status, "correct error status returned");
     });
 
-    it("Test two errors on invalid doc id", (done) => {
+    it("Test two errors on invalid doc id", async () => {
         const docs = [
             { _id: "_invalid", foo: "bar" },
             { _id: 123, foo: "bar" }
         ];
 
-        const db = new PouchDB(dbs.name);
-        db.bulkDocs({ docs }, (err, info) => {
-            assert.equal(err.status, testUtils.errors.RESERVED_ID.status,
-                "correct error returned");
-            assert.isUndefined(info, "info is empty");
-            done();
+        const db = new DB(dbName);
+        const err = await assert.throws(async () => {
+            await db.bulkDocs({ docs });
         });
+        assert.equal(err.status, util.x.RESERVED_ID.status, "correct error returned");
     });
 
-    it("No docs", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.bulkDocs({ doc: [{ foo: "bar" }] }, (err) => {
-            assert.equal(err.status, testUtils.errors.MISSING_BULK_DOCS.status, "correct error returned");
-            assert.equal(err.message, testUtils.errors.MISSING_BULK_DOCS.message, "correct error message returned");
-            done();
+    it("No docs", async () => {
+        const db = new DB(dbName);
+        const err = await assert.throws(async () => {
+            await db.bulkDocs({ doc: [{ foo: "bar" }] });
         });
+        assert.equal(err.status, util.x.MISSING_BULK_DOCS.status, "correct error returned");
+        assert.equal(err.message, util.x.MISSING_BULK_DOCS.message, "correct error message returned");
     });
 
     it("Jira 911", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const docs = [
             { _id: "0", a: 0 },
             { _id: "1", a: 1 },
             { _id: "1", a: 1 },
             { _id: "3", a: 3 }
         ];
-        db.bulkDocs({ docs }, (err, results) => {
+        db.bulkDocs({ docs }).then((results) => {
             assert.equal(results[1].id, "1", "check ordering");
             assert.isUndefined(results[1].name, "first id succeded");
             assert.equal(results[2].name, "conflict", "second conflicted");
@@ -227,16 +225,12 @@ describe("db", "pouch", "bulk_docs", () => {
         });
     });
 
-    it("Test multiple bulkdocs", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.bulkDocs({ docs: authors }, () => {
-            db.bulkDocs({ docs: authors }, () => {
-                db.allDocs((err, result) => {
-                    assert.equal(result.total_rows, 8, "correct number of results");
-                    done();
-                });
-            });
-        });
+    it("Test multiple bulkdocs", async () => {
+        const db = new DB(dbName);
+        await db.bulkDocs({ docs: authors });
+        await db.bulkDocs({ docs: authors });
+        const result = await db.allDocs();
+        assert.equal(result.total_rows, 8, "correct number of results");
     });
 
     it("#2935 new_edits=false correct number", () => {
@@ -256,7 +250,7 @@ describe("db", "pouch", "bulk_docs", () => {
             }
         ];
 
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
 
         return db.bulkDocs({ docs, new_edits: false }).then((res) => {
             assert.deepEqual(res, []);
@@ -286,7 +280,7 @@ describe("db", "pouch", "bulk_docs", () => {
             }
         ];
 
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
 
         return db.bulkDocs({ docs, new_edits: false }).then((res) => {
             assert.deepEqual(res, []);
@@ -300,7 +294,7 @@ describe("db", "pouch", "bulk_docs", () => {
     });
 
     it("bulk docs update then delete then conflict", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const docs = [{ _id: "1" }];
         return db.bulkDocs(docs).then((res) => {
             assert.isUndefined(res[0].error, "no error");
@@ -321,12 +315,7 @@ describe("db", "pouch", "bulk_docs", () => {
     });
 
     it("bulk docs update then delete then update", () => {
-        // Not supported in CouchDB 2.x, see COUCHDB-2386
-        if (testUtils.isCouchMaster()) {
-            return;
-        }
-
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const docs = [{ _id: "1" }];
         return db.bulkDocs(docs).then((res) => {
             assert.isUndefined(res[0].error, "no error");
@@ -347,7 +336,7 @@ describe("db", "pouch", "bulk_docs", () => {
     });
 
     it("bulk_docs delete then undelete", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const doc = { _id: "1" };
         return db.bulkDocs([doc]).then((res) => {
             assert.isUndefined(res[0].error, "should not be an error 1");
@@ -364,12 +353,7 @@ describe("db", "pouch", "bulk_docs", () => {
     });
 
     it("bulk_docs delete then update then undelete", () => {
-        // Not supported in CouchDB 2.x, see COUCHDB-2386
-        if (testUtils.isCouchMaster()) {
-            return;
-        }
-
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const doc = { _id: "1" };
         return db.bulkDocs([doc]).then((res) => {
             assert.isUndefined(res[0].error, "should not be an error 1");
@@ -389,7 +373,7 @@ describe("db", "pouch", "bulk_docs", () => {
     });
 
     it("Deleting _local docs with bulkDocs", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
 
         let rev1;
         let rev2;
@@ -423,7 +407,7 @@ describe("db", "pouch", "bulk_docs", () => {
     // https://issues.apache.org/jira/browse/COUCHDB-2758
 
     it("Deleting _local docs with bulkDocs, not found", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
 
         let rev2;
         let rev3;
@@ -445,7 +429,7 @@ describe("db", "pouch", "bulk_docs", () => {
     });
 
     it("Deleting _local docs with bulkDocs, wrong rev", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
 
         let rev2;
         let rev3;
@@ -469,7 +453,7 @@ describe("db", "pouch", "bulk_docs", () => {
     });
 
     it("Bulk with new_edits=false", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const docs = [{
             _id: "foo",
             _rev: "2-x",
@@ -485,8 +469,8 @@ describe("db", "pouch", "bulk_docs", () => {
                 ids: ["y", "a"]
             }
         }];
-        db.bulkDocs({ docs }, { new_edits: false }, () => {
-            db.get("foo", { open_revs: "all" }, (err, res) => {
+        db.bulkDocs({ docs }, { new_edits: false }).then(() => {
+            db.get("foo", { open_revs: "all" }).then((res) => {
                 res.sort((a, b) => {
                     return a.ok._rev < b.ok._rev ? -1 :
                         a.ok._rev > b.ok._rev ? 1 : 0;
@@ -499,9 +483,9 @@ describe("db", "pouch", "bulk_docs", () => {
         });
     });
 
-    it("Testing successive new_edits to the same doc", (done) => {
+    it("Testing successive new_edits to the same doc", () => {
 
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const docs = [{
             _id: "foobar123",
             _rev: "1-x",
@@ -512,20 +496,17 @@ describe("db", "pouch", "bulk_docs", () => {
             }
         }];
 
-        db.bulkDocs({ docs, new_edits: false }, (err) => {
-            assert.isNull(err);
-            db.bulkDocs({ docs, new_edits: false }, (err) => {
-                assert.isNull(err);
-                db.get("foobar123", (err, res) => {
-                    assert.equal(res._rev, "1-x");
-                    done();
-                });
-            });
+        return db.bulkDocs({ docs, new_edits: false }).then(() => {
+            return db.bulkDocs({ docs, new_edits: false });
+        }).then(() => {
+            return db.get("foobar123");
+        }).then((res) => {
+            assert.equal(res._rev, "1-x");
         });
     });
 
     it("#3062 bulkDocs with staggered seqs", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const docs = [];
         for (let i = 10; i <= 20; i++) {
             docs.push({ _id: `doc-${i}` });
@@ -543,95 +524,91 @@ describe("db", "pouch", "bulk_docs", () => {
             assert.deepEqual(infos.map((x) => {
                 return { id: x.id, error: Boolean(x.error), rev: (typeof x.rev) };
             }), [
-                    { error: false, id: "doc-19", rev: "string" },
-                    { error: false, id: "doc-17", rev: "string" },
-                    { error: false, id: "doc-15", rev: "string" },
-                    { error: false, id: "doc-13", rev: "string" },
-                    { error: false, id: "doc-11", rev: "string" }
-                ]);
+                { error: false, id: "doc-19", rev: "string" },
+                { error: false, id: "doc-17", rev: "string" },
+                { error: false, id: "doc-15", rev: "string" },
+                { error: false, id: "doc-13", rev: "string" },
+                { error: false, id: "doc-11", rev: "string" }
+            ]);
         });
     });
 
-    it("Testing successive new_edits to the same doc, different content",
-        (done) => {
+    it("Testing successive new_edits to the same doc, different content", (done) => {
+        const db = new DB(dbName);
+        const docsA = [{
+            _id: "foo321",
+            _rev: "1-x",
+            bar: "baz",
+            _revisions: {
+                start: 1,
+                ids: ["x"]
+            }
+        }, {
+            _id: "fee321",
+            bar: "quux",
+            _rev: "1-x",
+            _revisions: {
+                start: 1,
+                ids: ["x"]
+            }
+        }];
 
-            const db = new PouchDB(dbs.name);
-            const docsA = [{
-                _id: "foo321",
-                _rev: "1-x",
-                bar: "baz",
-                _revisions: {
-                    start: 1,
-                    ids: ["x"]
-                }
-            }, {
-                _id: "fee321",
-                bar: "quux",
-                _rev: "1-x",
-                _revisions: {
-                    start: 1,
-                    ids: ["x"]
-                }
-            }];
+        const docsB = [{
+            _id: "foo321",
+            _rev: "1-x",
+            bar: "zam", // this update should be rejected
+            _revisions: {
+                start: 1,
+                ids: ["x"]
+            }
+        }, {
+            _id: "faa321",
+            _rev: "1-x",
+            bar: "zul",
+            _revisions: {
+                start: 1,
+                ids: ["x"]
+            }
+        }];
 
-            const docsB = [{
-                _id: "foo321",
-                _rev: "1-x",
-                bar: "zam", // this update should be rejected
-                _revisions: {
-                    start: 1,
-                    ids: ["x"]
-                }
-            }, {
-                _id: "faa321",
-                _rev: "1-x",
-                bar: "zul",
-                _revisions: {
-                    start: 1,
-                    ids: ["x"]
-                }
-            }];
+        db.bulkDocs({ docs: docsA, new_edits: false }).then(() => {
+            db.changes().on("complete", (result) => {
+                const ids = result.results.map((row) => {
+                    return row.id;
+                });
+                assert.include(ids, "foo321");
+                assert.include(ids, "fee321");
+                assert.notInclude(ids, "faa321");
 
-            db.bulkDocs({ docs: docsA, new_edits: false }, (err) => {
-                assert.isNull(err);
-                db.changes().on("complete", (result) => {
-                    const ids = result.results.map((row) => {
-                        return row.id;
-                    });
-                    assert.include(ids, "foo321");
-                    assert.include(ids, "fee321");
-                    assert.notInclude(ids, "faa321");
+                const update_seq = result.last_seq;
+                db.bulkDocs({ docs: docsB, new_edits: false }).then(() => {
+                    db.changes({
+                        since: update_seq
+                    }).on("complete", (result) => {
+                        const ids = result.results.map((row) => {
+                            return row.id;
+                        });
+                        assert.notInclude(ids, "foo321");
+                        assert.notInclude(ids, "fee321");
+                        assert.include(ids, "faa321");
 
-                    const update_seq = result.last_seq;
-                    db.bulkDocs({ docs: docsB, new_edits: false }, (err) => {
-                        assert.isNull(err);
-                        db.changes({
-                            since: update_seq
-                        }).on("complete", (result) => {
-                            const ids = result.results.map((row) => {
-                                return row.id;
+                        db.get("foo321").then((res) => {
+                            assert.equal(res._rev, "1-x");
+                            assert.equal(res.bar, "baz");
+                            db.info().then((info) => {
+                                assert.equal(info.doc_count, 3);
+                                done();
                             });
-                            assert.notInclude(ids, "foo321");
-                            assert.notInclude(ids, "fee321");
-                            assert.include(ids, "faa321");
-
-                            db.get("foo321", (err, res) => {
-                                assert.equal(res._rev, "1-x");
-                                assert.equal(res.bar, "baz");
-                                db.info((err, info) => {
-                                    assert.equal(info.doc_count, 3);
-                                    done();
-                                });
-                            });
-                        }).on("error", done);
-                    });
-                }).on("error", done);
-            });
+                        });
+                    }).on("error", done);
+                });
+            }).on("error", done);
         });
+    });
 
     it("Testing successive new_edits to two doc", () => {
 
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const doc1 = {
             _id: "foo",
             _rev: "1-x",
@@ -662,7 +639,7 @@ describe("db", "pouch", "bulk_docs", () => {
 
     it("Deletion with new_edits=false", () => {
 
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const doc1 = {
             _id: "foo",
             _rev: "1-x",
@@ -693,7 +670,7 @@ describe("db", "pouch", "bulk_docs", () => {
 
     it("Deletion with new_edits=false, no history", () => {
 
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const doc1 = {
             _id: "foo",
             _rev: "1-x",
@@ -720,7 +697,7 @@ describe("db", "pouch", "bulk_docs", () => {
 
     it("Modification with new_edits=false, no history", () => {
 
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const doc1 = {
             _id: "foo",
             _rev: "1-x",
@@ -745,7 +722,7 @@ describe("db", "pouch", "bulk_docs", () => {
 
     it("Deletion with new_edits=false, no history, no revisions", () => {
 
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const doc = {
             _deleted: true,
             _id: "foo",
@@ -761,7 +738,7 @@ describe("db", "pouch", "bulk_docs", () => {
     });
 
     it("Testing new_edits=false in req body", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const docs = [{
             _id: "foo",
             _rev: "2-x",
@@ -777,8 +754,8 @@ describe("db", "pouch", "bulk_docs", () => {
                 ids: ["y", "a"]
             }
         }];
-        db.bulkDocs({ docs, new_edits: false }, () => {
-            db.get("foo", { open_revs: "all" }, (err, res) => {
+        db.bulkDocs({ docs, new_edits: false }).then(() => {
+            db.get("foo", { open_revs: "all" }).then((res) => {
                 res.sort((a, b) => {
                     return a.ok._rev < b.ok._rev ? -1 :
                         a.ok._rev > b.ok._rev ? 1 : 0;
@@ -792,51 +769,47 @@ describe("db", "pouch", "bulk_docs", () => {
     });
 
     it("656 regression in handling deleted docs", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         db.bulkDocs({
             docs: [{
                 _id: "foo",
                 _rev: "1-a",
                 _deleted: true
             }]
-        }, { new_edits: false }, () => {
-            db.get("foo", (err) => {
-                assert.exists(err, "deleted");
+        }, { new_edits: false }).then(() => {
+            db.get("foo").catch((err) => {
                 assert.equal(err.name, "not_found");
-                assert.equal(err.status, testUtils.errors.MISSING_DOC.status, "correct error status returned");
+                assert.equal(err.status, util.x.MISSING_DOC.status, "correct error status returned");
                 done();
             });
         });
     });
 
     it("Test quotes in doc ids", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const docs = [{ _id: "'your_sql_injection_script_here'" }];
-        db.bulkDocs({ docs }, (err) => {
-            assert.isNull(err, `got error: ${JSON.stringify(err)}`);
-            db.get("foo", (err) => {
-                assert.exists(err, "deleted");
+        db.bulkDocs({ docs }).then(() => {
+            db.get("foo").catch(() => {
                 done();
             });
         });
     });
 
     it("Bulk docs empty list", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         db.bulkDocs({ docs: [] }, (err) => {
             done(err);
         });
     });
 
     it("handles simultaneous writes", (done) => {
-        const db1 = new PouchDB(dbs.name);
-        const db2 = new PouchDB(dbs.name);
+        const db1 = new DB(dbName);
+        const db2 = new DB(dbName);
         const id = "fooId";
         const errorNames = [];
         const ids = [];
         let numDone = 0;
-        function callback(err, res) {
-            assert.isNull(err);
+        const callback = (res) => {
             if (res[0].error) {
                 errorNames.push(res[0].name);
             } else {
@@ -847,36 +820,36 @@ describe("db", "pouch", "bulk_docs", () => {
                 assert.deepEqual(ids, [id]);
                 done();
             }
-        }
-        db1.bulkDocs({ docs: [{ _id: id }] }, callback);
-        db2.bulkDocs({ docs: [{ _id: id }] }, callback);
+        };
+        db1.bulkDocs({ docs: [{ _id: id }] }).then(callback);
+        db2.bulkDocs({ docs: [{ _id: id }] }).then(callback);
     });
 
     it("bulk docs input by array", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const docs = makeDocs(5);
-        db.bulkDocs(docs, (err, results) => {
+        db.bulkDocs(docs).then((results) => {
             assert.lengthOf(results, 5, "results length matches");
-            for (var i = 0; i < 5; i++) {
+            for (let i = 0; i < 5; i++) {
                 assert.equal(results[i].id, docs[i]._id, "id matches");
                 assert.exists(results[i].rev, "rev is set");
                 // Update the doc
                 docs[i]._rev = results[i].rev;
                 docs[i].string = `${docs[i].string}.00`;
             }
-            db.bulkDocs(docs, (err, results) => {
+            db.bulkDocs(docs).then((results) => {
                 assert.lengthOf(results, 5, "results length matches");
-                for (i = 0; i < 5; i++) {
+                for (let i = 0; i < 5; i++) {
                     assert.equal(results[i].id, i.toString(), "id matches again");
                     // set the delete flag to delete the docs in the next step
                     docs[i]._rev = results[i].rev;
                     docs[i]._deleted = true;
                 }
-                db.put(docs[0], () => {
-                    db.bulkDocs(docs, (err, results) => {
+                db.put(docs[0]).then(() => {
+                    db.bulkDocs(docs).then((results) => {
                         assert.equal(results[0].name, "conflict", "First doc should be in conflict");
                         assert.isUndefined(results[0].rev, "no rev in conflict");
-                        for (i = 1; i < 5; i++) {
+                        for (let i = 1; i < 5; i++) {
                             assert.equal(results[i].id, i.toString());
                             assert.exists(results[i].rev);
                         }
@@ -887,51 +860,42 @@ describe("db", "pouch", "bulk_docs", () => {
         });
     });
 
-    it("Bulk empty list", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.bulkDocs([], (err) => {
-            done(err);
-        });
+    it("Bulk empty list", () => {
+        const db = new DB(dbName);
+        return db.bulkDocs([]);
     });
 
     it("Bulk docs not an array", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.bulkDocs({ docs: "foo" }, (err) => {
+        const db = new DB(dbName);
+        db.bulkDocs({ docs: "foo" }).catch((err) => {
             assert.exists(err, "error reported");
-            assert.equal(err.status, testUtils.errors.MISSING_BULK_DOCS.status,
+            assert.equal(err.status, util.x.MISSING_BULK_DOCS.status,
                 "correct error status returned");
-            assert.equal(err.message, testUtils.errors.MISSING_BULK_DOCS.message,
+            assert.equal(err.message, util.x.MISSING_BULK_DOCS.message,
                 "correct error message returned");
             done();
         });
     });
 
-    it("Bulk docs not an object", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.bulkDocs({ docs: ["foo"] }, (err) => {
-            assert.exists(err, "error reported");
-            assert.equal(err.status, testUtils.errors.NOT_AN_OBJECT.status,
-                "correct error status returned");
-            assert.equal(err.message, testUtils.errors.NOT_AN_OBJECT.message,
-                "correct error message returned");
+    it("Bulk docs not an object", async () => {
+        const db = new DB(dbName);
+        let err = await assert.throws(async () => {
+            await db.bulkDocs({ docs: ["foo"] });
         });
-        db.bulkDocs({ docs: [[]] }, (err) => {
-            assert.exists(err, "error reported");
-            assert.equal(err.status, testUtils.errors.NOT_AN_OBJECT.status,
-                "correct error status returned");
-            assert.equal(err.message, testUtils.errors.NOT_AN_OBJECT.message,
-                "correct error message returned");
-            done();
+        assert.equal(err.status, util.x.NOT_AN_OBJECT.status, "correct error status returned");
+        assert.equal(err.message, util.x.NOT_AN_OBJECT.message, "correct error message returned");
+        err = await assert.throws(async () => {
+            await db.bulkDocs({ docs: [[]] });
         });
+        assert.equal(err.status, util.x.NOT_AN_OBJECT.status, "correct error status returned");
+        assert.equal(err.message, util.x.NOT_AN_OBJECT.message, "correct error message returned");
     });
 
     it("Bulk docs two different revisions to same document id", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const docid = "mydoc";
 
-        function uuid() {
-            return testUtils.rev();
-        }
+        const uuid = () => util.rev();
 
         // create a few of rando, good revisions
         const numRevs = 3;
@@ -979,11 +943,11 @@ describe("db", "pouch", "bulk_docs", () => {
     });
 
     it("4204 respect revs_limit", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
 
         // simulate 5000 normal commits with two conflicts at the very end
 
-        const isSafari = (typeof process === "undefined" || process.browser) &&
+        const isSafari = (is.undefined(process) || process.browser) &&
             /Safari/.test(window.navigator.userAgent) &&
             !/Chrome/.test(window.navigator.userAgent);
 
@@ -992,9 +956,9 @@ describe("db", "pouch", "bulk_docs", () => {
         const uuids = [];
 
         for (let i = 0; i < numRevs - 1; i++) {
-            uuids.push(testUtils.rev());
+            uuids.push(util.rev());
         }
-        const conflict1 = `a${testUtils.rev()}`;
+        const conflict1 = `a${util.rev()}`;
 
         const doc1 = {
             _id: "doc",
@@ -1014,12 +978,10 @@ describe("db", "pouch", "bulk_docs", () => {
 
     it("2839 implement revs_limit", (done) => {
         const LIMIT = 50;
-        const db = new PouchDB(dbs.name, { revs_limit: LIMIT });
+        const db = new DB(dbName, { revs_limit: LIMIT });
 
         // simulate 5000 normal commits with two conflicts at the very end
-        function uuid() {
-            return testUtils.rev();
-        }
+        const uuid = () => util.rev();
 
         const numRevs = 5000;
         const uuids = [];
@@ -1045,7 +1007,7 @@ describe("db", "pouch", "bulk_docs", () => {
     });
 
     it("4372 revs_limit deletes old revisions of the doc", (done) => {
-        const db = new PouchDB(dbs.name, { revs_limit: 2 });
+        const db = new DB(dbName, { revs_limit: 2 });
 
         // old revisions are always deleted with auto compaction
         if (db.auto_compaction) {
@@ -1076,7 +1038,7 @@ describe("db", "pouch", "bulk_docs", () => {
     });
 
     it("4712 invalid rev for new doc generates conflict", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const newdoc = {
             _id: "foobar",
             _rev: "1-123"
@@ -1088,7 +1050,7 @@ describe("db", "pouch", "bulk_docs", () => {
     });
 
     it("5793 bulk docs accepts _conflicts when new_edits=false", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const newdoc = {
             _id: "foobar",
             _rev: "1-123",

@@ -1,32 +1,34 @@
+import * as util from "./utils";
+
 const { is } = adone;
-require("./node.setup");
 
-describe("db", "pouch", "basics", () => {
+describe("database", "pouch", "basics", () => {
     const dbs = {};
+    const dbName = "testdb";
+    let DB = null;
 
-    beforeEach((done) => {
-        dbs.name = testUtils.adapterUrl("local", "testdb");
-        testUtils.cleanup([dbs.name], done);
+    beforeEach(async () => {
+        DB = await util.setup();
+        await util.cleanup(dbName);
     });
 
-    after((done) => {
-        testUtils.cleanup([dbs.name], done);
+    after(async () => {
+        await util.destroy();
     });
-
 
     it("Create a pouch without new keyword", () => {
         /* jshint newcap:false */
-        const db = PouchDB(dbs.name);
-        assert.instanceOf(db, PouchDB);
+        const db = new DB(dbName);
+        assert.instanceOf(db, DB);
     });
 
     it("Name is accessible via instance", () => {
-        const db = new PouchDB(dbs.name);
-        assert.equal(db.name, dbs.name);
+        const db = new DB(dbName);
+        assert.equal(db.name, dbName);
     });
 
     it("4314 Create a pouch with + in name", () => {
-        const db = new PouchDB(`${dbs.name}+suffix`);
+        const db = new DB(`${dbName}+suffix`);
         return db.info().then(() => {
             return db.destroy();
         });
@@ -34,7 +36,7 @@ describe("db", "pouch", "basics", () => {
 
     it("Creating Pouch without name will throw", (done) => {
         try {
-            new PouchDB();
+            new DB();
             done("Should have thrown");
         } catch (err) {
             assert.equal(err instanceof Error, true, "should be an error");
@@ -43,18 +45,18 @@ describe("db", "pouch", "basics", () => {
     });
 
     it("4314 Create a pouch with urlencoded name", () => {
-        const db = new PouchDB(`${dbs.name}some%2Ftest`);
+        const db = new DB(`${dbName}some%2Ftest`);
         return db.info().then(() => {
             return db.destroy();
         });
     });
 
     it("4219 destroy a pouch", () => {
-        return new PouchDB(dbs.name).destroy({});
+        return new DB(dbName).destroy({});
     });
 
     it("4339 throw useful error if method called on stale instance", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
 
         return db.put({
             _id: "cleanTest"
@@ -69,16 +71,13 @@ describe("db", "pouch", "basics", () => {
         });
     });
 
-    it("Add a doc", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.post({ test: "somestuff" }, (err) => {
-            assert.isNull(err);
-            done();
-        });
+    it("Add a doc", async () => {
+        const db = new DB(dbName);
+        await db.post({ test: "somestuff" });
     });
 
     it("Get invalid id", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.get(1234).then(() => {
             throw new Error("should not be here");
         }).catch((err) => {
@@ -87,7 +86,7 @@ describe("db", "pouch", "basics", () => {
     });
 
     it("Missing doc should contain ID in error object", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.get("abc-123").then(() => {
             throw new Error("should not be here");
         }).catch((err) => {
@@ -97,7 +96,7 @@ describe("db", "pouch", "basics", () => {
     });
 
     it("PUTed Conflicted doc should contain ID in error object", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         let savedDocId;
         return db.post({}).then((info) => {
             savedDocId = info.id;
@@ -113,7 +112,7 @@ describe("db", "pouch", "basics", () => {
     });
 
     it("POSTed Conflicted doc should contain ID in error object", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         let savedDocId;
         return db.post({}).then((info) => {
             savedDocId = info.id;
@@ -129,37 +128,30 @@ describe("db", "pouch", "basics", () => {
     });
 
     it("Add a doc with a promise", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         db.post({ test: "somestuff" }).then(() => {
             done();
         }, done);
     });
 
-    it("Add a doc with opts object", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.post({ test: "somestuff" }, {}, (err) => {
-            assert.isNull(err);
-            done();
-        });
+    it("Add a doc with opts object", async () => {
+        const db = new DB(dbName);
+        await db.post({ test: "somestuff" }, {});
     });
 
-    it("Modify a doc", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.post({ test: "somestuff" }, (err, info) => {
-            db.put({
-                _id: info.id,
-                _rev: info.rev,
-                another: "test"
-            }, (err, info2) => {
-                assert.isNull(err);
-                assert.notEqual(info.rev, info2.rev);
-                done();
-            });
+    it("Modify a doc", async () => {
+        const db = new DB(dbName);
+        const info = await db.post({ test: "somestuff" });
+        const info2 = await db.put({
+            _id: info.id,
+            _rev: info.rev,
+            another: "test"
         });
+        assert.notEqual(info.rev, info2.rev);
     });
 
     it("Modify a doc with a promise", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         db.post({ test: "promisestuff" }).then((info) => {
             return db.put({
                 _id: info.id,
@@ -173,16 +165,8 @@ describe("db", "pouch", "basics", () => {
         });
     });
 
-    it("Read db id", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.id((err, id) => {
-            assert.isString(id);
-            done(err);
-        });
-    });
-
-    it("Read db id with promise", (done) => {
-        const db = new PouchDB(dbs.name);
+    it("Read db", (done) => {
+        const db = new DB(dbName);
         db.id().then((id) => {
             assert.isString(id);
             done();
@@ -190,92 +174,54 @@ describe("db", "pouch", "basics", () => {
     });
 
     it("Close db", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         db.info().then(() => {
             db.close(done);
         });
     });
 
     it("Close db with a promise", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.close();
     });
 
-    it("Read db id after closing Close", (done) => {
-        let db = new PouchDB(dbs.name);
-        db.close(() => {
-            db = new PouchDB(dbs.name);
-            db.id((err, id) => {
-                assert.isString(id);
-                done();
-            });
+    it("Read db id after closing Close", async () => {
+        let db = new DB(dbName);
+        await db.close();
+        db = new DB(dbName);
+        const id = await db.id();
+        assert.isString(id);
+    });
+
+    it("Modify a doc with incorrect rev", async () => {
+        const db = new DB(dbName);
+        const info = await db.post({ test: "somestuff" });
+        const nDoc = {
+            _id: info.id,
+            _rev: `${info.rev}broken`,
+            another: "test"
+        };
+        await assert.throws(async () => {
+            await db.put(nDoc);
         });
     });
 
-    it("Modify a doc with incorrect rev", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.post({ test: "somestuff" }, (err, info) => {
-            const nDoc = {
-                _id: info.id,
-                _rev: `${info.rev}broken`,
-                another: "test"
-            };
-            db.put(nDoc, (err) => {
-                assert.exists(err);
-                done();
-            });
+    it("Remove doc", async () => {
+        const db = new DB(dbName);
+        const info = await db.post({ test: "somestuff" });
+        await db.remove({
+            test: "somestuff",
+            _id: info.id,
+            _rev: info.rev
         });
-    });
-
-    it("Remove doc", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.post({ test: "somestuff" }, (err, info) => {
-            db.remove({
-                test: "somestuff",
-                _id: info.id,
-                _rev: info.rev
-            }, () => {
-                db.get(info.id, (err) => {
-                    assert.exists(err.error);
-                    done();
-                });
-            });
+        const err = await assert.throws(async () => {
+            await db.get(info.id);
         });
-    });
-
-    it("Remove doc with a promise", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.post({ test: "someotherstuff" }).then((info) => {
-            return db.remove({
-                test: "someotherstuff",
-                _id: info.id,
-                _rev: info.rev
-            }).then(() => {
-                return db.get(info.id).then(() => {
-                    done(true);
-                }, (err) => {
-                    assert.exists(err.error);
-                    done();
-                });
-            });
-        });
-    });
-
-    it("Remove doc with new syntax", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.post({ test: "somestuff" }, (err, info) => {
-            db.remove(info.id, info.rev, (err) => {
-                assert.isNull(err);
-                db.get(info.id, (err) => {
-                    assert.exists(err);
-                    done();
-                });
-            });
-        });
+        assert.exists(err.error);
     });
 
     it("Remove doc with new syntax and a promise", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         let id;
         db.post({ test: "someotherstuff" }).then((info) => {
             id = info.id;
@@ -290,26 +236,21 @@ describe("db", "pouch", "basics", () => {
         });
     });
 
-    it("Doc removal leaves only stub", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.put({ _id: "foo", value: "test" }, () => {
-            db.get("foo", (err, doc) => {
-                db.remove(doc, (err, res) => {
-                    db.get("foo", { rev: res.rev }, (err, doc) => {
-                        assert.deepEqual(doc, {
-                            _id: res.id,
-                            _rev: res.rev,
-                            _deleted: true
-                        });
-                        done();
-                    });
-                });
-            });
+    it("Doc removal leaves only stub", async () => {
+        const db = new DB(dbName);
+        await db.put({ _id: "foo", value: "test" });
+        let doc = await db.get("foo");
+        const res = await db.remove(doc);
+        doc = await db.get("foo", { rev: res.rev });
+        assert.deepEqual(doc, {
+            _id: res.id,
+            _rev: res.rev,
+            _deleted: true
         });
     });
 
     it("Remove doc twice with specified id", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.put({ _id: "specifiedId", test: "somestuff" }).then(() => {
             return db.get("specifiedId");
         }).then((doc) => {
@@ -327,8 +268,8 @@ describe("db", "pouch", "basics", () => {
     });
 
     it("Remove doc, no callback", (done) => {
-        const db = new PouchDB(dbs.name);
-        var changes = db.changes({
+        const db = new DB(dbName);
+        const changes = db.changes({
             live: true,
             include_docs: true
         }).on("change", (change) => {
@@ -339,7 +280,7 @@ describe("db", "pouch", "basics", () => {
             assert.equal(result.status, "cancelled");
             done();
         }).on("error", done);
-        db.post({ _id: "somestuff" }, (err, res) => {
+        db.post({ _id: "somestuff" }).then((res) => {
             db.remove({
                 _id: res.id,
                 _rev: res.rev
@@ -347,56 +288,31 @@ describe("db", "pouch", "basics", () => {
         });
     });
 
-    it("Delete document without id", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.remove({ test: "ing" }, (err) => {
-            assert.exists(err);
-            done();
+    it("Delete document without id", async () => {
+        const db = new DB(dbName);
+        await assert.throws(async () => {
+            await db.remove({ test: "ing" });
         });
     });
 
     it("Delete document with many args", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const doc = { _id: "foo" };
         return db.put(doc).then((info) => {
             return db.remove(doc._id, info.rev, {});
         });
     });
 
-    it("Delete document with many args, callback style", (done) => {
-        const db = new PouchDB(dbs.name);
-        const doc = { _id: "foo" };
-        db.put(doc, (err, info) => {
-            assert.isNull(err);
-            db.remove(doc._id, info.rev, {}, (err) => {
-                assert.isNull(err);
-                done();
-            });
-        });
-    });
-
     it("Delete doc with id + rev + no opts", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const doc = { _id: "foo" };
         return db.put(doc).then((info) => {
             return db.remove(doc._id, info.rev);
         });
     });
 
-    it("Delete doc with id + rev + no opts, callback style", (done) => {
-        const db = new PouchDB(dbs.name);
-        const doc = { _id: "foo" };
-        db.put(doc, (err, info) => {
-            assert.isNull(err);
-            db.remove(doc._id, info.rev, (err) => {
-                assert.isNull(err);
-                done();
-            });
-        });
-    });
-
     it("Delete doc with doc + opts", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const doc = { _id: "foo" };
         return db.put(doc).then((info) => {
             doc._rev = info.rev;
@@ -404,44 +320,16 @@ describe("db", "pouch", "basics", () => {
         });
     });
 
-    it("Delete doc with doc + opts, callback style", (done) => {
-        const db = new PouchDB(dbs.name);
-        const doc = { _id: "foo" };
-        db.put(doc, (err, info) => {
-            assert.isNull(err);
-            doc._rev = info.rev;
-            db.remove(doc, {}, (err) => {
-                assert.isNull(err);
-                done();
-            });
-        });
-    });
-
     it("Delete doc with rev in opts", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const doc = { _id: "foo" };
         return db.put(doc).then((info) => {
             return db.remove(doc, { rev: info.rev });
         });
     });
 
-    it("Bulk docs", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.bulkDocs({
-            docs: [
-                { test: "somestuff" },
-                { test: "another" }
-            ]
-        }, (err, infos) => {
-            assert.equal(infos.length, 2);
-            assert.equal(infos[0].ok, true);
-            assert.equal(infos[1].ok, true);
-            done();
-        });
-    });
-
     it("Bulk docs with a promise", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         db.bulkDocs({
             docs: [
                 { test: "somestuff" },
@@ -455,49 +343,41 @@ describe("db", "pouch", "basics", () => {
         }).catch(done);
     });
 
-    it("Basic checks", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.info((err, info) => {
-            const updateSeq = info.update_seq;
-            const doc = { _id: "0", a: 1, b: 1 };
-            assert.equal(info.doc_count, 0);
-            db.put(doc, (err, res) => {
-                assert.equal(res.ok, true);
-                assert.property(res, "id");
-                assert.property(res, "rev");
-                db.info((err, info) => {
-                    assert.equal(info.doc_count, 1);
-                    assert.notEqual(info.update_seq, updateSeq);
-                    db.get(doc._id, (err, doc) => {
-                        assert.equal(doc._id, res.id);
-                        assert.equal(doc._rev, res.rev);
-                        db.get(doc._id, { revs_info: true }, (err, doc) => {
-                            assert.equal(doc._revs_info[0].status, "available");
-                            done();
-                        });
-                    });
-                });
-            });
+    it("Basic checks", async () => {
+        const db = new DB(dbName);
+        let info = await db.info();
+        const updateSeq = info.update_seq;
+        let doc = { _id: "0", a: 1, b: 1 };
+        assert.equal(info.doc_count, 0);
+        const res = await db.put(doc);
+        assert.equal(res.ok, true);
+        assert.property(res, "id");
+        assert.property(res, "rev");
+        info = await db.info();
+        assert.equal(info.doc_count, 1);
+        assert.notEqual(info.update_seq, updateSeq);
+        doc = await db.get(doc._id);
+        assert.equal(doc._id, res.id);
+        assert.equal(doc._rev, res.rev);
+        doc = await db.get(doc._id, { revs_info: true }, (err, doc) => {
+            assert.equal(doc._revs_info[0].status, "available");
         });
     });
 
-    it("update with invalid rev", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.post({ test: "somestuff" }, (err, info) => {
-            assert.isNull(err);
-            db.put({
+    it("update with invalid rev", async () => {
+        const db = new DB(dbName);
+        const info = await db.post({ test: "somestuff" });
+        const err = await assert.throws(async () => {
+            await db.put({
                 _id: info.id,
                 _rev: "undefined",
                 another: "test"
-            }, (err) => {
-                assert.exists(err);
-                assert.equal(err.name, "bad_request");
-                done();
             });
         });
+        assert.equal(err.name, "bad_request");
     });
 
-    it("Doc validation", (done) => {
+    it("Doc validation", async () => {
         const bad_docs = [
             { _zing: 4 },
             { _zoom: "hello" },
@@ -507,109 +387,84 @@ describe("db", "pouch", "basics", () => {
             },
             { _bing: { "wha?": "soda can" } }
         ];
-        const db = new PouchDB(dbs.name);
-        db.bulkDocs({ docs: bad_docs }, (err) => {
-            assert.equal(err.name, "doc_validation");
-            assert.equal(err.message, `${testUtils.errors.DOC_VALIDATION.message}: _zing`, "correct error message returned");
-            done();
+        const db = new DB(dbName);
+        const err = await assert.throws(async () => {
+            await db.bulkDocs({ docs: bad_docs });
         });
+        assert.equal(err.name, "doc_validation");
+        assert.equal(err.message, `${util.x.DOC_VALIDATION.message}: _zing`, "correct error message returned");
     });
 
-    it("Replication fields (#2442)", (done) => {
+    it("Replication fields (#2442)", () => {
         const doc = {
             _replication_id: "test",
             _replication_state: "triggered",
             _replication_state_time: 1,
             _replication_stats: {}
         };
-        const db = new PouchDB(dbs.name);
-        db.post(doc, (err, resp) => {
-            assert.isNull(err);
-
-            db.get(resp.id, (err, doc2) => {
-                assert.isNull(err);
-
-                assert.equal(doc2._replication_id, "test");
-                assert.equal(doc2._replication_state, "triggered");
-                assert.equal(doc2._replication_state_time, 1);
-                assert.deepEqual(doc2._replication_stats, {});
-
-                done();
-            });
+        const db = new DB(dbName);
+        return db.post(doc).then((resp) => {
+            return db.get(resp.id);
+        }).then((doc2) => {
+            assert.equal(doc2._replication_id, "test");
+            assert.equal(doc2._replication_state, "triggered");
+            assert.equal(doc2._replication_state_time, 1);
+            assert.deepEqual(doc2._replication_stats, {});
         });
     });
 
-    it("Testing issue #48", (done) => {
+    it("Testing issue #48", async () => {
         const docs = [
             { _id: "0" }, { _id: "1" }, { _id: "2" },
             { _id: "3" }, { _id: "4" }, { _id: "5" }
         ];
-        const TO_SEND = 5;
-        let sent = 0;
-        let complete = 0;
-        let timer;
+        const db = new DB(dbName);
 
-        const db = new PouchDB(dbs.name);
-
-        const bulkCallback = function (err) {
-            assert.isNull(err);
-            if (++complete === TO_SEND) {
-                done();
-            }
-        };
-
-        const save = function () {
-            if (++sent === TO_SEND) {
-                clearInterval(timer);
-            }
-            db.bulkDocs({ docs }, bulkCallback);
-        };
-
-        timer = setInterval(save, 10);
+        const promises = [];
+        for (let i = 0; i < 10; ++i) {
+            promises.push(db.bulkDocs({ docs }));
+            await adone.promise.delay(10);
+        }
+        await Promise.all(promises);
     });
 
-    it("Testing valid id", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.post({
-            _id: 123,
-            test: "somestuff"
-        }, (err) => {
-            assert.exists(err);
-            assert.include(["bad_request", "illegal_docid"], err.name);
-            done();
+    it("Testing valid id", async () => {
+        const db = new DB(dbName);
+        const err = await assert.throws(async () => {
+            await db.post({
+                _id: 123,
+                test: "somestuff"
+            });
         });
+        assert.include(["bad_request", "illegal_docid"], err.name);
     });
 
-    it("Put doc without _id should fail", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.put({ test: "somestuff" }, (err) => {
-            assert.exists(err);
-            assert.equal(err.message, testUtils.errors.MISSING_ID.message,
-                "correct error message returned");
-            done();
+    it("Put doc without _id should fail", async () => {
+        const db = new DB(dbName);
+        const err = await assert.throws(async () => {
+            await db.put({ test: "somestuff" });
         });
+        assert.equal(err.message, util.x.MISSING_ID.message, "correct error message returned");
     });
 
-    it("Put doc with bad reserved id should fail", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.put({
-            _id: "_i_test",
-            test: "somestuff"
-        }, (err) => {
-            assert.exists(err);
-            assert.equal(err.status, testUtils.errors.RESERVED_ID.status);
-            assert.equal(err.message, testUtils.errors.RESERVED_ID.message,
-                "correct error message returned");
-            done();
+    it("Put doc with bad reserved id should fail", async () => {
+        const db = new DB(dbName);
+        const err = await assert.throws(async () => {
+            await db.put({
+                _id: "_i_test",
+                test: "somestuff"
+            });
         });
+        assert.equal(err.status, util.x.RESERVED_ID.status);
+        assert.equal(err.message, util.x.RESERVED_ID.message, "correct error message returned");
     });
 
     it("update_seq persists", () => {
-        let db = new PouchDB(dbs.name);
+        let db = new DB(dbName);
         return db.post({ test: "somestuff" }).then(() => {
             return db.close();
         }).then(() => {
-            db = new PouchDB(dbs.name);
+            db = new DB(dbName);
             return db.info();
         }).then((info) => {
             assert.notEqual(info.update_seq, 0);
@@ -617,32 +472,24 @@ describe("db", "pouch", "basics", () => {
         });
     });
 
-    it("deletions persists", (done) => {
+    it("deletions persists", async () => {
 
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const doc = { _id: "staticId", contents: "stuff" };
 
-        function writeAndDelete(cb) {
-            db.put(doc, (err, info) => {
-                db.remove({
-                    _id: info.id,
-                    _rev: info.rev
-                }, () => {
-                    cb();
-                });
+        const writeAndDelete = async () => {
+            const info = await db.put(doc);
+            await db.remove({
+                _id: info.id,
+                _rev: info.rev
             });
-        }
+        };
 
-        writeAndDelete(() => {
-            writeAndDelete(() => {
-                db.put(doc, () => {
-                    db.get(doc._id, { conflicts: true }, (err, details) => {
-                        assert.notProperty(details, "_conflicts");
-                        done();
-                    });
-                });
-            });
-        });
+        await writeAndDelete();
+        await writeAndDelete();
+        await db.put(doc);
+        const details = await db.get(doc._id, { conflicts: true });
+        assert.notProperty(details, "_conflicts");
     });
 
     it("#4126 should not store raw Dates", () => {
@@ -656,7 +503,7 @@ describe("db", "pouch", "basics", () => {
                 _id: "3", deep: { deeper: { deeperstill: date3 } }
             }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.bulkDocs(origDocs).then(() => {
             return db.allDocs({ include_docs: true });
         }).then((res) => {
@@ -678,91 +525,92 @@ describe("db", "pouch", "basics", () => {
     });
 
     it("Create a db with a reserved name", () => {
-        const db = new PouchDB("__proto__");
+        const db = new DB("__proto__");
         return db.info().then(() => {
             return db.destroy();
         });
     });
 
-    it("Error when document is not an object", (done) => {
-        const db = new PouchDB(dbs.name);
+    it("Error when document is not an object", async () => {
+        const db = new DB(dbName);
         const doc1 = [{ _id: "foo" }, { _id: "bar" }];
         const doc2 = "this is not an object";
-        let count = 5;
-        const callback = function (err) {
-            assert.exists(err);
-            count--;
-            if (count === 0) {
-                done();
-            }
-        };
-        db.post(doc1, callback);
-        db.post(doc2, callback);
-        db.put(doc1, callback);
-        db.put(doc2, callback);
-        db.bulkDocs({ docs: [doc1, doc2] }, callback);
+        await assert.throws(async () => {
+            await db.post(doc1);
+        });
+        await assert.throws(async () => {
+            await db.post(doc2);
+        });
+        await assert.throws(async () => {
+            await db.put(doc1);
+        });
+        await assert.throws(async () => {
+            await db.put(doc2);
+        });
+        await assert.throws(async () => {
+            await db.bulkDocs({ docs: [doc1, doc2] });
+        });
     });
 
-    it("Test instance update_seq updates correctly", (done) => {
-        const db1 = new PouchDB(dbs.name);
-        const db2 = new PouchDB(dbs.name);
-        db1.post({ a: "doc" }, () => {
-            db1.info((err, db1Info) => {
-                db2.info((err, db2Info) => {
-                    assert.notEqual(db1Info.update_seq, 0);
-                    assert.notEqual(db2Info.update_seq, 0);
-                    done();
-                });
+    it("Test instance update_seq updates correctly", async () => {
+        const db1 = new DB(dbName);
+        const db2 = new DB(dbName);
+        return db1.post({ a: "doc" }).then(() => {
+            return db1.info();
+        }).then((db1Info) => {
+            return db2.info().then((db2Info) => {
+                assert.notEqual(db1Info.update_seq, 0);
+                assert.notEqual(db2Info.update_seq, 0);
             });
         });
     });
 
-    it("Fail to fetch a doc after db was deleted", (done) => {
-        const db = new PouchDB(dbs.name);
-        let db2 = new PouchDB(dbs.name);
+    it("Fail to fetch a doc after db was deleted", async () => {
+        const db = new DB(dbName);
+        let db2 = new DB(dbName);
         const doc = { _id: "foodoc" };
         const doc2 = { _id: "foodoc2" };
-        db.put(doc, () => {
-            db2.put(doc2, () => {
-                db.allDocs((err, docs) => {
-                    assert.equal(docs.total_rows, 2);
-                    db.destroy((err) => {
-                        assert.isNull(err);
-                        db2 = new PouchDB(dbs.name);
-                        db2.get(doc._id, (err) => {
-                            assert.equal(err.name, "not_found");
-                            assert.equal(err.status, 404);
-                            done();
-                        });
-                    });
-                });
-            });
+        return db.put(doc).then(() => {
+            return db2.put(doc2);
+        }).then(() => {
+            return db.allDocs();
+        }).then((docs) => {
+            assert.equal(docs.total_rows, 2);
+            return db.destroy();
+        }).then(() => {
+            db2 = new DB(dbName);
+            return db2.get(doc._id);
+        }).then(() => {
+            throw new Error();
+        }, (err) => {
+            assert.equal(err.name, "not_found");
+            assert.equal(err.status, 404);
         });
     });
 
-    it("Fail to fetch a doc after db was deleted", (done) => {
-        const db = new PouchDB(dbs.name);
-        let db2 = new PouchDB(dbs.name);
+    it("Fail to fetch a doc after db was deleted", async () => {
+        const db = new DB(dbName);
+        let db2 = new DB(dbName);
         const doc = { _id: "foodoc" };
         const doc2 = { _id: "foodoc2" };
-        db.put(doc, () => {
-            db2.put(doc2, () => {
-                db.allDocs((err, docs) => {
-                    assert.equal(docs.total_rows, 2);
-                    db.destroy().then(() => {
-                        db2 = new PouchDB(dbs.name);
-                        db2.get(doc._id, (err, doc) => {
-                            assert.isUndefined(doc);
-                            assert.equal(err.status, 404);
-                            done();
-                        });
-                    });
-                });
+        return db.put(doc).then(() => {
+            return db2.put(doc2);
+        }).then(() => {
+            return db.allDocs();
+        }).then((docs) => {
+            assert.equal(docs.total_rows, 2);
+            return db.destroy();
+        }).then(() => {
+            db2 = new DB(dbName);
+            return db2.get(doc._id).then(() => {
+                throw new Error();
+            }, (err) => {
+                assert.equal(err.status, 404);
             });
         });
     });
 
-    it("Cant add docs with empty ids", (done) => {
+    it("Cant add docs with empty ids", async () => {
         const docs = [
             {},
             { _id: null },
@@ -771,20 +619,15 @@ describe("db", "pouch", "basics", () => {
             { _id: {} },
             { _id: "_underscored_id" }
         ];
-        let num = docs.length;
-        const db = new PouchDB(dbs.name);
-        docs.forEach((doc) => {
-            db.put(doc, (err) => {
-                assert.exists(err);
-                if (!--num) {
-                    done();
-                }
+        for (const doc of docs) {
+            await assert.throws(async () => {
+                await db.put(doc);
             });
-        });
+        }
     });
 
     it("Test doc with percent in ID", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const doc = {
             foo: "bar",
             _id: "foo%bar"
@@ -806,11 +649,7 @@ describe("db", "pouch", "basics", () => {
     });
 
     it("db.info should give correct name", (done) => {
-        // CouchDB Master uses random names
-        if (testUtils.isCouchMaster()) {
-            return done();
-        }
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         db.info().then((info) => {
             assert.equal(info.db_name, "testdb");
             done();
@@ -818,14 +657,14 @@ describe("db", "pouch", "basics", () => {
     });
 
     it("db.info should give auto_compaction = false (#2744)", () => {
-        const db = new PouchDB(dbs.name, { auto_compaction: false });
+        const db = new DB(dbName, { auto_compaction: false });
         return db.info().then((info) => {
             assert.equal(info.auto_compaction, false);
         });
     });
 
     it("db.info should give auto_compaction = true (#2744)", () => {
-        const db = new PouchDB(dbs.name, { auto_compaction: true });
+        const db = new DB(dbName, { auto_compaction: true });
         return db.info().then((info) => {
             // http doesn't support auto compaction
             assert.equal(info.auto_compaction, true);
@@ -833,14 +672,14 @@ describe("db", "pouch", "basics", () => {
     });
 
     it("db.info should give adapter name (#3567)", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.info().then((info) => {
             assert.equal(info.adapter, db.adapter);
         });
     });
 
     it("db.info should give correct doc_count", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.info().then((info) => {
             assert.equal(info.doc_count, 0);
             return db.bulkDocs({ docs: [{ _id: "1" }, { _id: "2" }, { _id: "3" }] });
@@ -861,7 +700,7 @@ describe("db", "pouch", "basics", () => {
     it("putting returns {ok: true}", () => {
         // in couch, it's {ok: true} and in cloudant it's {},
         // but the http adapter smooths this out
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.put({ _id: "_local/foo" }).then((info) => {
             assert.isTrue(info.ok, "putting local returns ok=true");
             return db.put({ _id: "quux" });
@@ -879,7 +718,7 @@ describe("db", "pouch", "basics", () => {
     });
 
     it("putting is override-able", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         let called = 0;
         const plugin = {
             initPull() {
@@ -895,7 +734,7 @@ describe("db", "pouch", "basics", () => {
                 this.put = this.oldPut;
             }
         };
-        PouchDB.plugin(plugin);
+        DB.plugin(plugin);
         db.initPull();
         return db.put({ _id: "anid", foo: "bar" }).then(() => {
             assert.isAbove(called, 0, "put was called");
@@ -906,7 +745,7 @@ describe("db", "pouch", "basics", () => {
     });
 
     it("issue 2779, deleted docs, old revs COUCHDB-292", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         let rev;
 
         db.put({ _id: "foo" }).then((resp) => {
@@ -925,22 +764,17 @@ describe("db", "pouch", "basics", () => {
     });
 
     it("issue 2779, correct behavior for undeleting", () => {
-
-        if (testUtils.isCouchMaster()) {
-            return true;
-        }
-
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         let rev;
 
-        function checkNumRevisions(num) {
+        const checkNumRevisions = (num) => {
             return db.get("foo", {
                 open_revs: "all",
                 revs: true
             }).then((fullDocs) => {
                 assert.lengthOf(fullDocs[0].ok._revisions.ids, num);
             });
-        }
+        };
 
         return db.put({ _id: "foo" }).then((resp) => {
             rev = resp.rev;
@@ -960,7 +794,7 @@ describe("db", "pouch", "basics", () => {
     });
 
     it("issue 2888, successive deletes and writes", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         let rev;
 
         function checkNumRevisions(num) {
@@ -990,20 +824,18 @@ describe("db", "pouch", "basics", () => {
         });
     });
 
-    it("2 invalid puts", (done) => {
-        const db = new PouchDB(dbs.name);
-        let called = 0;
-        const cb = function () {
-            if (++called === 2) {
-                done();
-            }
-        };
-        db.put({ _id: "foo", _zing: "zing" }, cb);
-        db.put({ _id: "bar", _zing: "zing" }, cb);
+    it("2 invalid puts", async () => {
+        const db = new DB(dbName);
+        await assert.throws(async () => {
+            await db.put({ _id: "foo", _zing: "zing" });
+        });
+        await assert.throws(async () => {
+            await db.put({ _id: "bar", _zing: "zing" });
+        });
     });
 
     it('Docs save "null" value', () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.put({ _id: "doc", foo: null }).then(() => {
             return db.get("doc");
         }).then((doc) => {
@@ -1013,22 +845,22 @@ describe("db", "pouch", "basics", () => {
         });
     });
 
-    it("replace PouchDB.destroy() (express-pouchdb#203)", (done) => {
-        const old = PouchDB.destroy;
-        PouchDB.destroy = function (name, callback) {
-            const db = new PouchDB(name);
+    it("replace DB.destroy() (express-pouchdb#203)", (done) => {
+        const old = DB.destroy;
+        DB.destroy = function (name, callback) {
+            const db = new DB(name);
             return db.destroy(callback);
         };
         // delete a non-existing db, should be fine.
-        PouchDB.destroy(dbs.name, (err, resp) => {
-            PouchDB.destroy = old;
+        DB.destroy(dbName, (err, resp) => {
+            DB.destroy = old;
 
             done(err, resp);
         });
     });
 
     it("3968, keeps all object fields", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         /* jshint -W001 */
         const doc = {
             _id: "x",
@@ -1056,7 +888,7 @@ describe("db", "pouch", "basics", () => {
     });
 
     it("4712 invalid rev for new doc generates conflict", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const newdoc = {
             _id: "foobar",
             _rev: "1-123"
@@ -1071,7 +903,7 @@ describe("db", "pouch", "basics", () => {
     });
 
     it("test info() after db close", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.close().then(() => {
             return db.info().catch((err) => {
                 assert.equal(err.message, "database is closed");
@@ -1080,7 +912,7 @@ describe("db", "pouch", "basics", () => {
     });
 
     it("test get() after db close", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.close().then(() => {
             return db.get("foo").catch((err) => {
                 assert.equal(err.message, "database is closed");
@@ -1089,7 +921,7 @@ describe("db", "pouch", "basics", () => {
     });
 
     it("test close() after db close", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.close().then(() => {
             return db.close().catch((err) => {
                 assert.equal(err.message, "database is closed");
@@ -1099,7 +931,7 @@ describe("db", "pouch", "basics", () => {
 
     // TODO: this test fails in the http adapter in Chrome
     it("should allow unicode doc ids", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const ids = [
             // "PouchDB is awesome" in Japanese, contains 1-3 byte chars
             "\u30d1\u30a6\u30c1\u30e5DB\u306f\u6700\u9ad8\u3060",
@@ -1128,9 +960,9 @@ describe("db", "pouch", "basics", () => {
 
     // this test only really makes sense for IDB
     it("should have same blob support for 2 dbs", () => {
-        const db1 = new PouchDB(dbs.name);
+        const db1 = new DB(dbName);
         return db1.info().then(() => {
-            const db2 = new PouchDB(dbs.name);
+            const db2 = new DB(dbName);
             return db2.info().then(() => {
                 if (!is.undefined(db1._blobSupport)) {
                     assert.equal(db1._blobSupport, db2._blobSupport, "same blob support");
@@ -1141,18 +973,10 @@ describe("db", "pouch", "basics", () => {
         });
     });
 
-    it("6053, PouchDB.plugin() resets defaults", () => {
-        const PouchDB1 = PouchDB.defaults({ foo: "bar" });
-        const PouchDB2 = PouchDB1.plugin({ foo() { } });
-        assert.exists(PouchDB2.__defaults);
-        assert.deepEqual(PouchDB1.__defaults, PouchDB2.__defaults);
+    it("6053, DB.plugin() resets defaults", () => {
+        const DB1 = DB.defaults({ foo: "bar" });
+        const DB2 = DB1.plugin({ foo() { } });
+        assert.exists(DB2.__defaults);
+        assert.deepEqual(DB1.__defaults, DB2.__defaults);
     });
-
-    if (!is.undefined(process) && !process.browser) {
-        it("#5471 PouchDB.plugin() should throw error if passed wrong type or empty object", () => {
-            assert.throws(() => {
-                PouchDB.plugin("pouchdb-adapter-memory");
-            }, 'Invalid plugin: got "pouchdb-adapter-memory", expected an object or a function');
-        });
-    }
 });

@@ -1,32 +1,25 @@
-require("./node.setup");
+import * as util from "./utils";
 
-describe("db", "pouch", "taskqueue", () => {
-    const dbs = {};
+describe("database", "pouch", "taskqueue", () => {
+    const dbName = "testdb";
+    let DB = null;
 
-    beforeEach((done) => {
-        dbs.name = testUtils.adapterUrl("local", "testdb");
-        testUtils.cleanup([dbs.name], done);
+    beforeEach(async () => {
+        DB = await util.setup();
+        await util.cleanup(dbName);
     });
 
-    after((done) => {
-        testUtils.cleanup([dbs.name], done);
+    after(async () => {
+        await util.destroy();
     });
 
-
-    it("Add a doc", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.post({ test: "somestuff" }, (err) => {
-            done(err);
-        });
+    it("Add a doc", async () => {
+        const db = new DB(dbName);
+        await db.post({ test: "somestuff" });
     });
 
     it("Query", (done) => {
-        // temp views are not supported in CouchDB 2.0
-        if (testUtils.isCouchMaster()) {
-            return done();
-        }
-
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         // Test invalid if adapter doesnt support mapreduce
         if (!db.query) {
             return done();
@@ -35,20 +28,20 @@ describe("db", "pouch", "taskqueue", () => {
         const queryFun = {
             map() { }
         };
-        db.query(queryFun, { reduce: false }, (_, res) => {
+        db.query(queryFun, { reduce: false }).then((res) => {
             assert.lengthOf(res.rows, 0);
             done();
         });
     });
 
     it("Bulk docs", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         db.bulkDocs({
             docs: [
                 { test: "somestuff" },
                 { test: "another" }
             ]
-        }, (err, infos) => {
+        }).then((infos) => {
             assert.isUndefined(infos[0].error);
             assert.isUndefined(infos[1].error);
             done();
@@ -56,16 +49,15 @@ describe("db", "pouch", "taskqueue", () => {
     });
 
     it("Get", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.get("0", (err) => {
-            assert.exists(err);
+        const db = new DB(dbName);
+        db.get("0").catch(() => {
             done();
         });
     });
 
     it("Info", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.info((err, info) => {
+        const db = new DB(dbName);
+        db.info().then((info) => {
             assert.equal(info.doc_count, 0);
             done();
         });

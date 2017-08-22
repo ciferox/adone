@@ -1,23 +1,23 @@
-require("./node.setup");
+import * as util from "./utils";
 
-describe("db", "pouch", "issue221", () => {
-    const dbs = {};
+describe("database", "pouch", "issue221", () => {
+    const dbName = "testdb";
+    const dbRemote = "test_repl_remote";
+    let DB = null;
 
-    beforeEach((done) => {
-        dbs.name = testUtils.adapterUrl("local", "testdb");
-        dbs.remote = testUtils.adapterUrl("local", "test_repl_remote");
-        testUtils.cleanup([dbs.name, dbs.remote], done);
+    beforeEach(async () => {
+        DB = await util.setup();
+        await util.cleanup(dbName, dbRemote);
     });
 
-    after((done) => {
-        testUtils.cleanup([dbs.name, dbs.remote], done);
+    after(async () => {
+        await util.destroy();
     });
-
 
     it("Testing issue #221", () => {
         const doc = { _id: "0", integer: 0 };
-        const local = new PouchDB(dbs.name);
-        const remote = new PouchDB(dbs.remote);
+        const local = new DB(dbName);
+        const remote = new DB(dbRemote);
 
         // Write a doc in CouchDB.
         return remote.put(doc).then((results) => {
@@ -43,12 +43,9 @@ describe("db", "pouch", "issue221", () => {
     });
 
     it("Testing issue #221 again", () => {
-        if (testUtils.isCouchMaster()) {
-            return;
-        }
         const doc = { _id: "0", integer: 0 };
-        const local = new PouchDB(dbs.name);
-        const remote = new PouchDB(dbs.remote);
+        const local = new DB(dbName);
+        const remote = new DB(dbRemote);
 
         // Write a doc in CouchDB.
         return remote.put(doc).then((results) => {

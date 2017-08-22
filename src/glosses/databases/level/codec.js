@@ -96,7 +96,11 @@ export default class Codec {
     }
 
     _valueEncoding(opts, batchOpts) {
-        return this._encoding(batchOpts && (batchOpts.valueEncoding || batchOpts.encoding) || opts && (opts.valueEncoding || opts.encoding) || (this.options.valueEncoding || this.options.encoding));
+        return this._encoding(
+            batchOpts && (batchOpts.valueEncoding || batchOpts.encoding)
+            || opts && (opts.valueEncoding || opts.encoding)
+            || (this.options.valueEncoding || this.options.encoding)
+        );
     }
 
     encodeKey(key, opts, batchOpts) {

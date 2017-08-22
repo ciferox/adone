@@ -1,15 +1,16 @@
-require("./node.setup");
+import * as util from "./utils";
 
-describe("db", "pouch", "design_docs", () => {
-    const dbs = {};
+describe("database", "pouch", "design_docs", () => {
+    const dbName = "testdb";
+    let DB = null;
 
-    beforeEach((done) => {
-        dbs.name = testUtils.adapterUrl("local", "testdb");
-        testUtils.cleanup([dbs.name], done);
+    beforeEach(async () => {
+        DB = await util.setup();
+        await util.cleanup(dbName);
     });
 
-    after((done) => {
-        testUtils.cleanup([dbs.name], done);
+    after(async () => {
+        await util.destroy();
     });
 
     const doc = {
@@ -24,12 +25,9 @@ describe("db", "pouch", "design_docs", () => {
     };
 
     it("Test writing design doc", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.post(doc, (err) => {
-            assert.isNull(err, "Wrote design doc");
-            db.get("_design/foo", (err) => {
-                done(err);
-            });
+        const db = new DB(dbName);
+        db.post(doc).then(() => {
+            db.get("_design/foo").then(() => done(), done);
         });
     });
 
@@ -48,10 +46,10 @@ describe("db", "pouch", "design_docs", () => {
             { _id: "7", integer: 7 }
         ];
 
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         let count = 0;
-        db.bulkDocs({ docs: docs1 }, () => {
-            var changes = db.changes({
+        db.bulkDocs({ docs: docs1 }).then(() => {
+            const changes = db.changes({
                 live: true,
                 filter: "foo/even"
             }).on("change", () => {
@@ -76,16 +74,16 @@ describe("db", "pouch", "design_docs", () => {
             { _id: "max", score: 4 },
             { _id: "nuno", score: 3 }
         ];
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         // Test invalid if adapter doesnt support mapreduce
         if (!db.query) {
             return done();
         }
 
-        db.bulkDocs({ docs: docs1 }, () => {
+        db.bulkDocs({ docs: docs1 }).then(() => {
             db.query("foo/scores", { reduce: false }, (err, result) => {
                 assert.lengthOf(result.rows, 4, "Correct # of results");
-                db.query("foo/scores", (err, result) => {
+                db.query("foo/scores").then((result) => {
                     assert.equal(result.rows[0].value, 15, "Reduce gave correct result");
                     done();
                 });
@@ -94,7 +92,7 @@ describe("db", "pouch", "design_docs", () => {
     });
 
     it("Concurrent queries", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         // Test invalid if adapter doesnt support mapreduce
         if (!db.query) {
             return done();
@@ -105,15 +103,15 @@ describe("db", "pouch", "design_docs", () => {
                 doc,
                 { _id: "dale", score: 3 }
             ]
-        }, () => {
+        }).then(() => {
             let cnt = 0;
-            db.query("foo/scores", { reduce: false }, (err, result) => {
+            db.query("foo/scores", { reduce: false }).then((result) => {
                 assert.lengthOf(result.rows, 1, "Correct # of results");
                 if (++cnt === 2) {
                     done();
                 }
             });
-            db.query("foo/scores", { reduce: false }, (err, result) => {
+            db.query("foo/scores", { reduce: false }).then((result) => {
                 assert.lengthOf(result.rows, 1, "Correct # of results");
                 if (++cnt === 2) {
                     done();

@@ -2,12 +2,13 @@
 // https://github.com/davisp/couchdb/blob/local_doc_revs/test/
 // etap/060-kt-merging.t
 
-const PouchDB = adone.database.pouch.coverage.DB;
-const merge = PouchDB.utils.merge;
-const winningRev = PouchDB.utils.winningRev;
-
-describe("db", "pouch", "merge", () => {
-
+describe("database", "pouch", "merge", () => {
+    const {
+        merge: {
+            merge,
+            winningRev
+        }
+    } = adone.database.pouch.__.util;
     let simple;
     let two0;
     let two1;

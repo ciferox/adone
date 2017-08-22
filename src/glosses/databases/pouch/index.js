@@ -1,15 +1,29 @@
-import DB from "./core";
-
-import LevelPouch from "./adapter-leveldb";
-import mapreduce from "./mapreduce";
-import replication from "./replication";
-
-DB.plugin(LevelPouch)
-    .plugin(mapreduce)
-    .plugin(replication);
-
-export { DB };
-
-export const coverage = adone.lazify({
-    DB: "./for-coverage"
-}, null, require);
+const pouch = adone.lazify({
+    __: "./__",
+    x: "./x",
+    adapter: "./adapters",
+    plugin: "./plugins",
+    BaseDB: "./db",
+    DB: () => {
+        const {
+            adapter: {
+                level
+            },
+            plugin: {
+                changesFilter,
+                mapreduce,
+                replication,
+                find
+            }
+        } = pouch;
+        return pouch.BaseDB.defaults()
+            .plugin(changesFilter.plugin)
+            .adapter("leveldb", level.adapter, true)
+            .plugin(mapreduce.plugin)
+            .plugin(replication.plugin)
+            .plugin(find.plugin);
+    },
+    MemoryDB: () => {
+        return pouch.DB.defaults({ db: adone.database.level.backend.Memory });
+    }
+}, exports, require);

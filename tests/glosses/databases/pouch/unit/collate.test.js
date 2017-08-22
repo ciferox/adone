@@ -1,11 +1,4 @@
-const PouchDB = adone.database.pouch.coverage.DB;
-const pouchCollate = PouchDB.collate;
-const collate = pouchCollate.collate;
-const normalizeKey = pouchCollate.normalizeKey;
-const toIndexableString = pouchCollate.toIndexableString;
-const parseIndexableString = pouchCollate.parseIndexableString;
-
-function stringLexCompare(a, b) {
+const stringLexCompare = (a, b) => {
     const aLen = a.length;
     const bLen = b.length;
 
@@ -28,13 +21,15 @@ function stringLexCompare(a, b) {
     }
 
     return 0;
-}
+};
+
+const { collate: { collate, toIndexableString, parseIndexableString, normalizeKey } } = adone.database.pouch.__;
 
 /*
  * returns the decimal form for the given integer, i.e. writes
  * out all the digits (in base-10) instead of using scientific notation
  */
-function intToDecimalForm(int) {
+const intToDecimalForm = (int) => {
     const isNeg = int < 0;
     let result = "";
 
@@ -51,16 +46,16 @@ function intToDecimalForm(int) {
     }
 
     return result;
-}
+};
 
 const verifyLexicalKeysSort = function (keys) {
     const lexical = keys.map((key) => {
-        return [key, pouchCollate.toIndexableString(key)];
+        return [key, toIndexableString(key)];
     });
     lexical.sort((a, b) => {
         return stringLexCompare(a[1], b[1]);
     });
-    keys.sort(pouchCollate.collate);
+    keys.sort(collate);
 
     keys.forEach((expected, i) => {
         const actual = lexical[i][0];
@@ -70,7 +65,7 @@ const verifyLexicalKeysSort = function (keys) {
 };
 
 
-describe("db", "pouch", "collate", () => {
+describe("database", "pouch", "collate", () => {
     const a = {
         array: [1, 2, 3],
         bool: true,
@@ -172,7 +167,7 @@ describe("db", "pouch", "collate", () => {
 
 });
 
-describe("db", "pouch", "normalizeKey", () => {
+describe("database", "pouch", "normalizeKey", () => {
     it("verify key normalizations", () => {
         const normalizations = [
             [null, null],
@@ -201,7 +196,7 @@ describe("db", "pouch", "normalizeKey", () => {
     });
 });
 
-describe("db", "pouch", "indexableString", () => {
+describe("database", "pouch", "indexableString", () => {
     it("verify intToDecimalForm", () => {
         assert.equal(intToDecimalForm(0), "0");
         assert.equal(intToDecimalForm(Number.MIN_VALUE), "0");

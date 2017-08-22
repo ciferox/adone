@@ -1,43 +1,44 @@
-require("./node.setup");
+import * as util from "./utils";
 
-describe("db", "pouch", "events", () => {
-    const dbs = {};
-    beforeEach((done) => {
-        dbs.name = testUtils.adapterUrl("local", "testdb");
-        testUtils.cleanup([dbs.name], done);
+describe("database", "pouch", "events", () => {
+    const dbName = "testdb";
+    let DB = null;
+
+    beforeEach(async () => {
+        DB = await util.setup();
+        await util.cleanup(dbName);
     });
 
-    after((done) => {
-        testUtils.cleanup([dbs.name], done);
+    after(async () => {
+        await util.destroy();
     });
 
-
-    it("PouchDB emits creation event", (done) => {
-        PouchDB.once("created", (name) => {
-            assert.equal(name, dbs.name, "should be same thing");
+    it("DB emits creation event", (done) => {
+        DB.once("created", (name) => {
+            assert.equal(name, dbName, "should be same thing");
             done();
         });
-        new PouchDB(dbs.name);
+        new DB(dbName);
     });
 
-    it("PouchDB emits destruction event", (done) => {
-        const db = new PouchDB(dbs.name);
+    it("DB emits destruction event", (done) => {
+        const db = new DB(dbName);
         db.once("destroyed", done);
         db.destroy();
     });
 
-    it("PouchDB emits destruction event on PouchDB object", (done) => {
-        PouchDB.once("destroyed", (name) => {
-            assert.equal(name, dbs.name, "should have the same name");
+    it("DB emits destruction event on DB object", (done) => {
+        DB.once("destroyed", (name) => {
+            assert.equal(name, dbName, "should have the same name");
             done();
         });
-        new PouchDB(dbs.name).destroy();
+        new DB(dbName).destroy();
     });
 
-    it("PouchDB emits destroyed when using {name: foo}", () => {
-        const db = new PouchDB({ name: "testdb" });
+    it("DB emits destroyed when using {name: foo}", () => {
+        const db = new DB({ name: "testdb" });
         return new Promise((resolve) => {
-            PouchDB.once("destroyed", (name) => {
+            DB.once("destroyed", (name) => {
                 assert.equal(name, "testdb");
                 resolve();
             });
@@ -46,16 +47,16 @@ describe("db", "pouch", "events", () => {
     });
 
     it("db emits destroyed on all DBs", () => {
-        const db1 = new PouchDB("testdb");
-        const db2 = new PouchDB("testdb");
+        const db1 = new DB("testdb");
+        const db2 = new DB("testdb");
 
         return new Promise((resolve) => {
             let called = 0;
-            function checkDone() {
+            const checkDone = () => {
                 if (++called === 2) {
                     resolve();
                 }
-            }
+            };
             db1.once("destroyed", checkDone);
             db2.once("destroyed", checkDone);
             db1.destroy();
@@ -63,7 +64,7 @@ describe("db", "pouch", "events", () => {
     });
 
     it("3900 db emits destroyed event", () => {
-        const db = new PouchDB("testdb");
+        const db = new DB("testdb");
         return new Promise((resolve) => {
             db.once("destroyed", () => {
                 resolve();
@@ -73,7 +74,7 @@ describe("db", "pouch", "events", () => {
     });
 
     it("3900 db emits destroyed event 2", () => {
-        const db = new PouchDB("testdb");
+        const db = new DB("testdb");
         return new Promise((resolve) => {
             db.once("destroyed", () => {
                 resolve();
@@ -83,7 +84,7 @@ describe("db", "pouch", "events", () => {
     });
 
     it("emit creation event", (done) => {
-        var db = new PouchDB(dbs.name).on("created", (newDB) => {
+        const db = new DB(dbName).on("created", (newDB) => {
             assert.equal(db, newDB, "should be same thing");
             done();
         });
@@ -91,24 +92,24 @@ describe("db", "pouch", "events", () => {
 
     it("#4168 multiple constructor calls don't leak listeners", () => {
         for (let i = 0; i < 50; i++) {
-            new PouchDB(dbs.name);
+            new DB(dbName);
         }
     });
 
     it("4922 Destroyed is not called twice", (done) => {
         let count = 0;
-        function destroyed() {
+        const destroyed = () => {
             count++;
             if (count === 1) {
                 setTimeout(() => {
                     assert.equal(count, 1);
-                    PouchDB.removeListener("destroyed", destroyed);
+                    DB.removeListener("destroyed", destroyed);
                     done();
                 }, 50);
             }
-        }
-        PouchDB.on("destroyed", destroyed);
-        new PouchDB(dbs.name).destroy();
+        };
+        DB.on("destroyed", destroyed);
+        new DB(dbName).destroy();
     });
 
 });

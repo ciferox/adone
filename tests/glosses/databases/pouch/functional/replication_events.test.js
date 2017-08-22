@@ -1,23 +1,23 @@
-require("./node.setup");
+import * as util from "./utils";
 
-describe("db", "pouch", "suite2 replication_events", () => {
-    const dbs = {};
+describe("database", "pouch", "suite2 replication_events", () => {
+    const dbName = "testdb";
+    const dbRemote = "test_repl_remote";
+    let DB = null;
 
-    beforeEach((done) => {
-        dbs.name = testUtils.adapterUrl("local", "testdb");
-        dbs.remote = testUtils.adapterUrl("local", "test_repl_remote");
-        testUtils.cleanup([dbs.name, dbs.remote], done);
+    beforeEach(async () => {
+        DB = await util.setup();
+        await util.cleanup(dbName, dbRemote);
     });
 
-    after((done) => {
-        testUtils.cleanup([dbs.name, dbs.remote], done);
+    after(async () => {
+        await util.destroy();
     });
-
 
     it("#3852 Test basic starting empty", (done) => {
 
-        const db = new PouchDB(dbs.name);
-        const repl = db.replicate.to(dbs.remote, { retry: true, live: true });
+        const db = new DB(dbName);
+        const repl = db.replicate.to(dbRemote, { retry: true, live: true });
         let counter = 0;
 
         repl.on("complete", () => {
@@ -50,11 +50,11 @@ describe("db", "pouch", "suite2 replication_events", () => {
 
     it("#3852 Test basic starting with docs", (done) => {
 
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
 
         db.bulkDocs([{ _id: "a" }, { _id: "b" }]).then(() => {
 
-            const repl = db.replicate.to(dbs.remote, { retry: true, live: true });
+            const repl = db.replicate.to(dbRemote, { retry: true, live: true });
 
             let counter = 0;
 
@@ -92,12 +92,12 @@ describe("db", "pouch", "suite2 replication_events", () => {
     // should propagate to the remote database and then back to the
     // local database via the live replications.
     // Previously, this test resulted in 'change' events being
-    // generated for already-replicated documents. When PouchDB is working
+    // generated for already-replicated documents. When DB is working
     // as expected, each remote document should be passed to a
     // change event exactly once (though a change might contain multiple docs)
     it("#4627 Test no duplicate changes in live replication", (done) => {
-        const db = new PouchDB(dbs.name);
-        const remote = new PouchDB(dbs.remote);
+        const db = new DB(dbName);
+        const remote = new DB(dbRemote);
         let docId = -1;
         const docsToGenerate = 10;
         let lastChange = -1;
@@ -105,22 +105,22 @@ describe("db", "pouch", "suite2 replication_events", () => {
         let secondReplication;
         let completeCalls = 0;
 
-        function generateDocs(n) {
-            return Array.apply(null, new Array(n)).map(() => {
+        const generateDocs = (n) => {
+            return adone.util.range(n).map(() => {
                 docId += 1;
                 return {
                     _id: docId.toString(),
                     foo: Math.random().toString()
                 };
             });
-        }
+        };
 
-        function complete() {
+        const complete = () => {
             completeCalls++;
             if (completeCalls === 2) {
                 done();
             }
-        }
+        };
 
         remote.bulkDocs(generateDocs(docsToGenerate)).then(() => {
             firstReplication = db.replicate.to(remote, {
@@ -167,35 +167,5 @@ describe("db", "pouch", "suite2 replication_events", () => {
                     db.bulkDocs(generateDocs(1));
                 });
         }).catch(done);
-    });
-
-    describe("#5172 triggering error when replicating", () => {
-        let securedDbs = [], source, dest, previousAjax;
-        beforeEach(() => {
-            const err = {
-                status: 401,
-                name: "unauthorized",
-                message: "You are not authorized to access this db."
-            };
-
-            source = new PouchDB(dbs.name);
-            dest = new PouchDB(dbs.remote);
-        });
-
-        afterEach(() => {
-            securedDbs.forEach((db) => {
-                db._ajax = previousAjax;
-            });
-        });
-
-        function attachHandlers(replication) {
-            const invokedHandlers = [];
-            ["change", "complete", "paused", "active", "denied", "error"].forEach((type) => {
-                replication.on(type, () => {
-                    invokedHandlers.push(type);
-                });
-            });
-            return invokedHandlers;
-        }
     });
 });

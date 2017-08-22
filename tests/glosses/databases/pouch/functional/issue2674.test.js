@@ -1,26 +1,19 @@
-require("./node.setup");
+import * as util from "./utils";
 
-describe("issue2674", () => {
-    const dbs = {};
+describe("database", "pouch", "issue2674", () => {
+    const dbName = "testdb";
+    const dbSecond = "test_repl_remote";
+    const dbThird = "test_slash_ids";
+    const dbFourth = "test_slash_ids_remote";
+    let DB = null;
 
-    beforeEach((done) => {
-        dbs.name = testUtils.adapterUrl("local", "testdb");
-        dbs.secondDB = testUtils.adapterUrl("local", "test_repl_remote");
-        //
-        // "test_slash_ids" is just a convenient name, b/c we re-use db
-        // names to avoid the Safari popup bug in long-running tests.
-        //
-        // Also for this test, it's only important that the fourth DB be
-        // truly remote.
-        dbs.thirdDB = testUtils.adapterUrl("local", "test_slash_ids");
-        dbs.fourthDB = testUtils.adapterUrl("local", "test_slash_ids_remote");
-        testUtils.cleanup([dbs.name, dbs.secondDB, dbs.thirdDB, dbs.fourthDB],
-            done);
+    beforeEach(async () => {
+        DB = await util.setup();
+        await util.cleanup(dbName, dbSecond, dbThird, dbFourth);
     });
 
-    after((done) => {
-        testUtils.cleanup([dbs.name, dbs.secondDB, dbs.thirdDB, dbs.fourthDB],
-            done);
+    after(async () => {
+        await util.destroy();
     });
 
     it("Should correctly synchronize attachments (#2674)", function () {
@@ -57,37 +50,37 @@ describe("issue2674", () => {
             "UgNoMoyxBwSMH/WnAzy5cnfLFu+dK2l5gMvuPGLGJd1/9AOiBQiEgkzOpg" +
             "AAAABJRU5ErkJffQ==";
 
-        const dbA = new PouchDB(dbs.name);
-        const dbB = new PouchDB(dbs.secondDB);
-        const dbC = new PouchDB(dbs.thirdDB);
-        const remoteDb = new PouchDB(dbs.fourthDB);
+        const dbA = new DB(dbName);
+        const dbB = new DB(dbSecond);
+        const dbC = new DB(dbThird);
+        const remoteDb = new DB(dbFourth);
 
         // browser a:
         // create document, no atts
-        function createDoc() {
+        const createDoc = () => {
             return dbA.put(doc)
                 .then(addRev)
                 .catch(handleError);
-        }
+        };
 
         // add image1.jpg
-        function addImg1() {
+        const addImg1 = () => {
             return dbA.putAttachment(
                 doc._id, "image1.png", doc._rev, img1, "image/png")
                 .then(addRev)
                 .catch(handleError);
-        }
+        };
 
         // add image2.jpg
-        function addImg2() {
+        const addImg2 = () => {
             return dbA.putAttachment(
                 doc._id, "image2.png", doc._rev, img2, "image/png")
                 .then(addRev)
                 .catch(handleError);
-        }
+        };
 
         // sync() with remote CouchDB
-        function syncWithRemote(source) {
+        const syncWithRemote = (source) => {
             return new Promise((resolve, reject) => {
                 source.sync(remoteDb).on("complete", () => {
                     resolve();
@@ -95,11 +88,11 @@ describe("issue2674", () => {
                     reject(error);
                 });
             });
-        }
+        };
 
         // remove image1.jpg from doc with an extra revision
         // to guarantee conflict winning revision from dbA
-        function removeImg1() {
+        const removeImg1 = () => {
             return dbA.get(doc._id)
                 .then((doc) => {
                     return dbA.put(doc);
@@ -109,13 +102,13 @@ describe("issue2674", () => {
                     return dbA.removeAttachment(doc._id, "image1.png", doc._rev);
                 })
                 .catch(handleError);
-        }
+        };
 
         // browser b:
         // sync from remote CouchDB
         // sync(updateDoc)
         // update doc json, leave attachments alone
-        function updateDoc() {
+        const updateDoc = () => {
             const newDoc = {
                 _id: doc._id,
                 _rev: revs[2],
@@ -123,19 +116,19 @@ describe("issue2674", () => {
             };
             return dbB.put(newDoc)
                 .catch(handleError);
-        }
+        };
 
         // utils:
-        function handleError(error) {
+        const handleError = (error) => {
             throw error;
-        }
+        };
 
-        var revs = [];
+        const revs = [];
 
-        function addRev(result) {
+        const addRev = (result) => {
             doc._rev = result.rev;
             revs.push(result.rev);
-        }
+        };
 
         return createDoc() // create document, no atts
             .then(addImg1) // add image1.jpg

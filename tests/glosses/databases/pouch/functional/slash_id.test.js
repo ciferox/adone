@@ -1,46 +1,42 @@
-require("./node.setup");
+import * as util from "./utils";
 
-describe("db", "pouch", "slash_ids", () => {
-    const dbs = {};
+describe("database", "pouch", "slash_ids", () => {
+    const dbName = "test_slash_ids";
+    const dbRemote = "test_slash_ids_remote";
+    let DB = null;
 
-    beforeEach((done) => {
-        dbs.name = testUtils.adapterUrl("local", "test_slash_ids");
-        dbs.remote = testUtils.adapterUrl("local", "test_slash_ids_remote");
-        testUtils.cleanup([dbs.name, dbs.remote], done);
+    beforeEach(async () => {
+        DB = await util.setup();
+        await util.cleanup(dbName, dbRemote);
     });
 
-    afterEach((done) => {
-        testUtils.cleanup([dbs.name, dbs.remote], done);
+    after(async () => {
+        await util.destroy();
     });
-
 
     it("Insert a doc, putAttachment and allDocs", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const docId = "doc/with/slashes";
         const attachmentId = "attachment/with/slashes";
         const blobData = "attachment content";
-        const blob = testUtils.makeBlob(blobData);
+        const blob = Buffer.from(blobData);
         const doc = { _id: docId, test: true };
-        db.put(doc, (err, info) => {
-            assert.isNull(err, "saved doc");
+        db.put(doc).then((info) => {
             assert.equal(info.id, "doc/with/slashes", "id is the same as inserted");
-            db.putAttachment(docId, attachmentId, info.rev, blob, "text/plain",
-                () => {
-                    db.getAttachment(docId, attachmentId, (err, res) => {
-                        testUtils.readBlob(res, () => {
-                            db.get(docId, (err, res) => {
-                                assert.equal(res._id, docId);
-                                assert.include(Object.keys(res._attachments), attachmentId);
-                                done();
-                            });
-                        });
+            db.putAttachment(docId, attachmentId, info.rev, blob, "text/plain").then(() => {
+                db.getAttachment(docId, attachmentId).then(() => {
+                    db.get(docId).then((res) => {
+                        assert.equal(res._id, docId);
+                        assert.include(Object.keys(res._attachments), attachmentId);
+                        done();
                     });
                 });
+            });
         });
     });
 
     it("BulkDocs and changes", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const docs = [
             { _id: "part/doc1", int: 1 },
             {
@@ -53,14 +49,14 @@ describe("db", "pouch", "slash_ids", () => {
             },
             { _id: "part/doc3", int: 3 }
         ];
-        db.bulkDocs({ docs }, (err, res) => {
+        db.bulkDocs({ docs }).then((res) => {
             for (let i = 0; i < 3; i++) {
                 assert.equal(res[i].ok, true, `correctly inserted ${docs[i]._id}`);
             }
             db.allDocs({
                 include_docs: true,
                 attachments: true
-            }, (err, res) => {
+            }).then((res) => {
                 res.rows.sort((a, b) => {
                     return a.doc.int - b.doc.int;
                 });
@@ -98,15 +94,14 @@ describe("db", "pouch", "slash_ids", () => {
             { _id: "2", integer: 2 },
             { _id: "3", integer: 3 }
         ];
-        const db = new PouchDB(dbs.name);
-        const remote = new PouchDB(dbs.remote);
-        remote.bulkDocs({ docs: docs1 }, () => {
-            db.replicate.from(remote, () => {
-                db.get("bin_doc/with/slash", { attachments: true },
-                    (err, doc) => {
-                        assert.equal(binAttDoc._attachments["foo/with/slash.txt"].data, doc._attachments["foo/with/slash.txt"].data);
-                        done();
-                    });
+        const db = new DB(dbName);
+        const remote = new DB(dbRemote);
+        remote.bulkDocs({ docs: docs1 }).then(() => {
+            db.replicate.from(remote).then(() => {
+                db.get("bin_doc/with/slash", { attachments: true }).then((doc) => {
+                    assert.equal(binAttDoc._attachments["foo/with/slash.txt"].data, doc._attachments["foo/with/slash.txt"].data);
+                    done();
+                });
             });
         });
     });

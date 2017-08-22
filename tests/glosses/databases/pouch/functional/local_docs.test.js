@@ -1,19 +1,20 @@
-require("./node.setup");
+import * as util from "./utils";
 
-describe("db", "pouch", "local_docs", () => {
-    const dbs = {};
+describe("database", "pouch", "local_docs", () => {
+    const dbName = "testdb";
+    let DB = null;
 
-    beforeEach((done) => {
-        dbs.name = testUtils.adapterUrl("local", "testdb");
-        testUtils.cleanup([dbs.name], done);
+    beforeEach(async () => {
+        DB = await util.setup();
+        await util.cleanup(dbName);
     });
 
-    after((done) => {
-        testUtils.cleanup([dbs.name], done);
+    after(async () => {
+        await util.destroy();
     });
 
     it("local docs - put then get", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.put({ _id: "_local/foo" }).then((res) => {
             assert.equal(res.id, "_local/foo");
             assert.isString(res.rev);
@@ -23,7 +24,7 @@ describe("db", "pouch", "local_docs", () => {
     });
 
     it("local docs - put then get w/ revisions", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const doc = {
             _id: "_local/foo"
         };
@@ -44,7 +45,7 @@ describe("db", "pouch", "local_docs", () => {
     });
 
     it("local docs - put then remove then get", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const doc = { _id: "_local/foo" };
         return db.put(doc).then((res) => {
             doc._rev = res.rev;
@@ -62,7 +63,7 @@ describe("db", "pouch", "local_docs", () => {
     });
 
     it("local docs - put after remove", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const doc = { _id: "_local/foo" };
         return db.put(doc).then((res) => {
             doc._rev = res.rev;
@@ -79,7 +80,7 @@ describe("db", "pouch", "local_docs", () => {
     it("local docs - put after remove, check return vals", () => {
         // as long as it starts with 0-, couch
         // treats it as a new local doc
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const doc = { _id: "_local/quux" };
         return db.put(doc).then((res) => {
             assert.equal(res.ok, true);
@@ -95,7 +96,7 @@ describe("db", "pouch", "local_docs", () => {
     });
 
     it("local docs - remove missing", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.remove({
             _id: "_local/foo",
             _rev: "1-fake"
@@ -107,7 +108,7 @@ describe("db", "pouch", "local_docs", () => {
     });
 
     it("local docs - put after put w/ deleted:true", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const doc = { _id: "_local/foo" };
         return db.put(doc).then((res) => {
             doc._rev = res.rev;
@@ -124,7 +125,7 @@ describe("db", "pouch", "local_docs", () => {
     });
 
     it("local docs - put after remove with a rev", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const doc = { _id: "_local/foo" };
         return db.put(doc).then((res) => {
             doc._rev = res.rev;
@@ -139,7 +140,7 @@ describe("db", "pouch", "local_docs", () => {
     });
 
     it("local docs - multiple removes", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const doc = { _id: "_local/foo" };
         return db.put(doc).then((res) => {
             doc._rev = res.rev;
@@ -160,7 +161,7 @@ describe("db", "pouch", "local_docs", () => {
     });
 
     it("local docs - get unknown", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.get("_local/foo").then((doc) => {
             assert.isUndefined(doc);
         }).catch((err) => {
@@ -169,7 +170,7 @@ describe("db", "pouch", "local_docs", () => {
     });
 
     it("local docs - put unknown", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const doc = { _id: "_local/foo", _rev: "1-fake" };
         return db.put(doc).then((res) => {
             assert.isUndefined(res);
@@ -179,7 +180,7 @@ describe("db", "pouch", "local_docs", () => {
     });
 
     it("local docs - put new and conflicting", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const doc = { _id: "_local/foo" };
         return db.put(doc).then(() => {
             return db.put(doc);
@@ -191,7 +192,7 @@ describe("db", "pouch", "local_docs", () => {
     });
 
     it("local docs - put modified and conflicting", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const doc = { _id: "_local/foo" };
         return db.put(doc).then((res) => {
             doc._rev = res.rev;

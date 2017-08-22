@@ -1,20 +1,23 @@
-require("./node.setup");
+import * as util from "./utils";
 
-describe.skip("db", "pouch", "retry", () => {
-    const dbs = {};
+const { is } = adone;
 
-    beforeEach((done) => {
-        dbs.name = testUtils.adapterUrl("local", "testdb");
-        dbs.remote = testUtils.adapterUrl("local", "test_repl_remote");
-        testUtils.cleanup([dbs.name, dbs.remote], done);
+describe.skip("database", "pouch", "retry", () => {
+    const dbName = "testdb";
+    const dbRemote = "test_repl_remote";
+    let DB = null;
+
+    beforeEach(async () => {
+        DB = await util.setup();
+        await util.cleanup(dbName, dbRemote);
     });
 
-    after((done) => {
-        testUtils.cleanup([dbs.name, dbs.remote], done);
+    after(async () => {
+        await util.destroy();
     });
 
     it("retry stuff", (done) => {
-        const remote = new PouchDB(dbs.remote);
+        const remote = new DB(dbRemote);
         const allDocs = remote.allDocs;
 
         // Reject attempting to write 'foo' 3 times, then let it succeed
@@ -28,7 +31,7 @@ describe.skip("db", "pouch", "retry", () => {
             return allDocs.apply(remote, arguments);
         };
 
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const rep = db.replicate.from(remote, {
             live: true,
             retry: true,
@@ -81,8 +84,8 @@ describe.skip("db", "pouch", "retry", () => {
 
     it("#3687 active event only fired once...", (done) => {
 
-        const remote = new PouchDB(dbs.remote);
-        const db = new PouchDB(dbs.name);
+        const remote = new DB(dbRemote);
+        const db = new DB(dbName);
         const rep = db.replicate.from(remote, {
             live: true,
             retry: true,
@@ -98,7 +101,7 @@ describe.skip("db", "pouch", "retry", () => {
             // The first paused event is the replication up to date
             // and waiting on changes (no error)
             try {
-                should.not.exist(e);
+                expect(e).to.not.exist;
             } catch (err) {
                 error = err;
                 rep.cancel();
@@ -122,8 +125,7 @@ describe.skip("db", "pouch", "retry", () => {
 
         rep.on("complete", () => {
             try {
-                adone.log(active);
-                active.should.be.within(1, 2);
+                expect(active).to.be.within(1, 2);
                 assert.equal(paused, 2);
                 assert.equal(numChanges, 2);
                 done(error);
@@ -139,8 +141,8 @@ describe.skip("db", "pouch", "retry", () => {
 
     it('source doesn\'t leak "destroyed" event', () => {
 
-        const db = new PouchDB(dbs.name);
-        const remote = new PouchDB(dbs.remote);
+        const db = new DB(dbName);
+        const remote = new DB(dbRemote);
 
         const origGet = remote.get;
         let i = 0;
@@ -169,18 +171,18 @@ describe.skip("db", "pouch", "retry", () => {
             return new Promise((resolve, reject) => {
 
                 let error;
-                function cleanup(err) {
+                const cleanup = (err) => {
                     if (err) {
                         error = err;
                     }
                     rep.cancel();
-                }
-                function finish() {
+                };
+                const finish = () => {
                     if (error) {
                         return reject(error);
                     }
                     resolve();
-                }
+                };
 
                 rep.on("complete", finish).on("error", cleanup);
                 rep.on("change", () => {
@@ -199,8 +201,7 @@ describe.skip("db", "pouch", "retry", () => {
                         if (!is.number(originalNumListeners)) {
                             originalNumListeners = numListeners;
                         } else {
-                            numListeners.should.equal(originalNumListeners,
-                                "numListeners should never increase");
+                            expect(numListeners).to.be.equal(originalNumListeners, "numListeners should never increase");
                         }
                     } catch (err) {
                         cleanup(err);
@@ -212,8 +213,8 @@ describe.skip("db", "pouch", "retry", () => {
 
     it('target doesn\'t leak "destroyed" event', () => {
 
-        const db = new PouchDB(dbs.name);
-        const remote = new PouchDB(dbs.remote);
+        const db = new DB(dbName);
+        const remote = new DB(dbRemote);
 
         const origGet = remote.get;
         let i = 0;
@@ -277,7 +278,7 @@ describe.skip("db", "pouch", "retry", () => {
                             // there can briefly be one extra listener or one
                             // fewer listener. The point of this test is to ensure
                             // that the listeners don't grow out of control.
-                            numListeners.should.be.within(
+                            expect(numListeners).to.be.within(
                                 originalNumListeners - 1,
                                 originalNumListeners + 1,
                                 "numListeners should never increase by +1/-1");
@@ -296,8 +297,8 @@ describe.skip("db", "pouch", "retry", () => {
     ].forEach((event) => {
         it(`returnValue doesn't leak "${event}" event`, () => {
 
-            const db = new PouchDB(dbs.name);
-            const remote = new PouchDB(dbs.remote);
+            const db = new DB(dbName);
+            const remote = new DB(dbRemote);
 
             const origGet = remote.get;
             let i = 0;
@@ -357,9 +358,9 @@ describe.skip("db", "pouch", "retry", () => {
                                 originalNumListeners = numListeners;
                             } else {
                                 if (event === "paused") {
-                                    Math.abs(numListeners - originalNumListeners).should.be.at.most(1);
+                                    expect(Math.abs(numListeners - originalNumListeners)).to.be.at.most(1);
                                 } else {
-                                    Math.abs(numListeners - originalNumListeners).should.be.eql(0);
+                                    expect(Math.abs(numListeners - originalNumListeners)).to.be.eql(0);
                                 }
                             }
                         } catch (err) {
@@ -373,8 +374,8 @@ describe.skip("db", "pouch", "retry", () => {
 
     it('returnValue doesn\'t leak "change" event w/ onChange', () => {
 
-        const db = new PouchDB(dbs.name);
-        const remote = new PouchDB(dbs.remote);
+        const db = new DB(dbName);
+        const remote = new DB(dbRemote);
 
         const origGet = remote.get;
         let i = 0;
@@ -433,8 +434,7 @@ describe.skip("db", "pouch", "retry", () => {
                         if (!is.number(originalNumListeners)) {
                             originalNumListeners = numListeners;
                         } else {
-                            numListeners.should.equal(originalNumListeners,
-                                "numListeners should never increase");
+                            expect(numListeners).to.be.equal(originalNumListeners, "numListeners should never increase");
                         }
                     } catch (err) {
                         cleanup(err);
@@ -446,8 +446,8 @@ describe.skip("db", "pouch", "retry", () => {
 
     it("retry many times, no leaks on any events", function () {
         this.timeout(200000);
-        const db = new PouchDB(dbs.name);
-        const remote = new PouchDB(dbs.remote);
+        const db = new DB(dbName);
+        const remote = new DB(dbRemote);
 
         let flunked = 0;
         const origGet = remote.get;
@@ -524,7 +524,7 @@ describe.skip("db", "pouch", "retry", () => {
                             if (!is.number(originalNumListeners)) {
                                 originalNumListeners = numListeners;
                             } else {
-                                Math.abs(numListeners - originalNumListeners).should.be.at.most(1);
+                                expect(Math.abs(numListeners - originalNumListeners)).to.be.at.most(1);
                             }
                         } catch (err) {
                             cleanup(err);
@@ -557,8 +557,8 @@ describe.skip("db", "pouch", "retry", () => {
                 });
             }
         }
-        const db = new PouchDB(dbs.name);
-        const remote = new PouchDB(dbs.remote);
+        const db = new DB(dbName);
+        const remote = new DB(dbRemote);
         return db.bulkDocs({
             docs,
             new_edits: false
@@ -585,13 +585,13 @@ describe.skip("db", "pouch", "retry", () => {
         }).then(() => {
             return remote.info();
         }).then((info) => {
-            info.doc_count.should.equal(numDocs);
+            expect(info.doc_count).to.be.equal(numDocs);
         });
     });
 
     it("6510 no changes live+retry does not call backoff function", () => {
-        const db = new PouchDB(dbs.name);
-        const remote = new PouchDB(dbs.remote);
+        const db = new DB(dbName);
+        const remote = new DB(dbRemote);
         let called = false;
         let replication;
 
@@ -616,7 +616,7 @@ describe.skip("db", "pouch", "retry", () => {
         }, 2000);
 
         return replicatePromise(remote, db).then(() => {
-            called.should.equal(false);
+            expect(called).to.be.false;
         });
     });
 });

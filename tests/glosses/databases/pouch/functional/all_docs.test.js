@@ -1,16 +1,18 @@
-require("./node.setup");
+import * as util from "./utils";
 
-describe("db", "pouch", "db.allDocs()", () => {
-    let dbs = {};
-    beforeEach((done) => {
-        dbs = { name: testUtils.adapterUrl("local", "testdb") };
-        testUtils.cleanup([dbs.name], done);
+describe("database", "pouch", "db.allDocs()", () => {
+    const dbName = "testdb";
+
+    let DB;
+
+    beforeEach(async () => {
+        DB = await util.setup();
+        await util.cleanup(dbName);
     });
 
-    afterEach((done) => {
-        testUtils.cleanup([dbs.name], done);
+    after(async () => {
+        await util.destroy();
     });
-
 
     const origDocs = [
         { _id: "0", a: 1, b: 1 },
@@ -19,60 +21,57 @@ describe("db", "pouch", "db.allDocs()", () => {
         { _id: "2", a: 3, b: 9 }
     ];
 
-    it("Testing all docs", (done) => {
-        const db = new PouchDB(dbs.name);
-        testUtils.writeDocs(db, JSON.parse(JSON.stringify(origDocs)),
-            () => {
-                db.allDocs((err, result) => {
-                    assert.isNull(err);
-                    const rows = result.rows;
-                    assert.equal(result.total_rows, 4, "correct number of results");
-                    for (let i = 0; i < rows.length; i++) {
-                        assert.isAtLeast(Number.parseInt(rows[i].id), 0);
-                        assert.isAtMost(Number.parseInt(rows[i].id), 4);
-                    }
-                    db.allDocs({
-                        startkey: "2",
-                        include_docs: true
-                    }, (err, all) => {
-                        assert.lengthOf(all.rows, 2, "correct number when opts.startkey set");
-                        assert.equal(all.rows[0].id, "2", "correct docs when opts.startkey set");
-                        const opts = {
-                            startkey: "org.couchdb.user:",
-                            endkey: "org.couchdb.user;"
-                        };
-                        db.allDocs(opts, (err, raw) => {
-                            assert.lengthOf(raw.rows, 0, "raw collation");
-                            let ids = ["0", "3", "1", "2"];
-                            db.changes().on("complete", (changes) => {
-                                // order of changes is not guaranteed in a
-                                // clustered changes feed
-                                changes.results.forEach((row) => {
-                                    assert.include(ids, row.id, "seq order");
-                                });
-                                db.changes({
-                                    descending: true
-                                }).on("complete", (changes) => {
-                                    // again, order is not guaranteed so
-                                    // unsure if this is a useful test
-                                    ids = ["2", "1", "3", "0"];
-                                    changes.results.forEach((row) => {
-                                        assert.include(ids, row.id, "descending=true");
-                                    });
-                                    done();
-                                }).on("error", done);
-                            }).on("error", done);
-                        });
-                    });
+    it("Testing all docs", async () => {
+        const db = new DB(dbName);
+        await util.writeDocs(db, origDocs);
+        const result = await db.allDocs();
+        const rows = result.rows;
+        assert.equal(result.total_rows, 4, "correct number of results");
+        for (let i = 0; i < rows.length; i++) {
+            assert.isAtLeast(Number.parseInt(rows[i].id), 0);
+            assert.isAtMost(Number.parseInt(rows[i].id), 4);
+        }
+
+        const all = await db.allDocs({
+            startkey: "2",
+            include_docs: true
+        });
+        assert.lengthOf(all.rows, 2, "correct number when opts.startkey set");
+        assert.equal(all.rows[0].id, "2", "correct docs when opts.startkey set");
+
+        const opts = {
+            startkey: "org.couchdb.user:",
+            endkey: "org.couchdb.user;"
+        };
+        const raw = await db.allDocs(opts);
+        assert.lengthOf(raw.rows, 0, "raw collation");
+
+        let ids = ["0", "3", "1", "2"];
+        await new Promise((resolve, reject) => {
+            db.changes().on("complete", (changes) => {
+                // order of changes is not guaranteed in a
+                // clustered changes feed
+                changes.results.forEach((row) => {
+                    assert.include(ids, row.id, "seq order");
                 });
-            });
+                db.changes({
+                    descending: true
+                }).on("complete", (changes) => {
+                    // again, order is not guaranteed so
+                    // unsure if this is a useful test
+                    ids = ["2", "1", "3", "0"];
+                    changes.results.forEach((row) => {
+                        assert.include(ids, row.id, "descending=true");
+                    });
+                    resolve();
+                }).on("error", reject);
+            }).on("error", reject);
+        });
     });
 
     it("Testing allDocs opts.keys", () => {
-        const db = new PouchDB(dbs.name);
-        function keyFunc(doc) {
-            return doc.key;
-        }
+        const db = new DB(dbName);
+        const keyFunc = (doc) => doc.key;
         let keys;
         return db.bulkDocs(origDocs).then(() => {
             keys = ["3", "1"];
@@ -124,7 +123,7 @@ describe("db", "pouch", "db.allDocs()", () => {
     });
 
     it("Testing allDocs opts.keys with skip", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.bulkDocs(origDocs).then(() => {
             return db.allDocs({
                 keys: ["3", "1"],
@@ -138,7 +137,7 @@ describe("db", "pouch", "db.allDocs()", () => {
     });
 
     it("Testing allDocs invalid opts.keys", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.allDocs({ keys: 1234 }).then(() => {
             throw new Error("should not be here");
         }).catch((err) => {
@@ -146,164 +145,145 @@ describe("db", "pouch", "db.allDocs()", () => {
         });
     });
 
-    it("Testing deleting in changes", (done) => {
-        const db = new PouchDB(dbs.name);
-
-        db.info((err, info) => {
-            const update_seq = info.update_seq;
-
-            testUtils.writeDocs(db, JSON.parse(JSON.stringify(origDocs)),
-                () => {
-                    db.get("1", (err, doc) => {
-                        db.remove(doc, (err, deleted) => {
-                            assert.exists(deleted.ok);
-
-                            db.changes({
-                                since: update_seq
-                            }).on("complete", (changes) => {
-                                const deleted_ids = changes.results.map((c) => {
-                                    if (c.deleted) {
-                                        return c.id;
-                                    }
-                                });
-                                assert.include(deleted_ids, "1");
-
-                                done();
-                            }).on("error", done);
-                        });
-                    });
+    it("Testing deleting in changes", async () => {
+        const db = new DB(dbName);
+        const info = await db.info();
+        const update_seq = info.update_seq;
+        await util.writeDocs(db, origDocs);
+        const deleted = await db.remove(await db.get("1"));
+        assert.exists(deleted.ok);
+        await new Promise((resolve, reject) => {
+            db.changes({
+                since: update_seq
+            }).on("complete", (changes) => {
+                const deleted_ids = changes.results.map((c) => {
+                    if (c.deleted) {
+                        return c.id;
+                    }
                 });
+                assert.include(deleted_ids, "1");
+
+                resolve();
+            }).on("error", reject);
         });
     });
 
-    it("Testing updating in changes", (done) => {
-        const db = new PouchDB(dbs.name);
+    it("Testing updating in changes", async () => {
+        const db = new DB(dbName);
 
-        db.info((err, info) => {
-            const update_seq = info.update_seq;
-
-            testUtils.writeDocs(db, JSON.parse(JSON.stringify(origDocs)),
-                () => {
-                    db.get("3", (err, doc) => {
-                        doc.updated = "totally";
-                        db.put(doc, () => {
-                            db.changes({
-                                since: update_seq
-                            }).on("complete", (changes) => {
-                                const ids = changes.results.map((c) => {
-                                    return c.id;
-                                });
-                                assert.include(ids, "3");
-
-                                done();
-                            }).on("error", done);
-                        });
-                    });
+        const info = await db.info();
+        const update_seq = info.update_seq;
+        await util.writeDocs(db, origDocs);
+        const doc = await db.get("3");
+        doc.updated = "totally";
+        await db.put(doc);
+        await new Promise((resolve, reject) => {
+            db.changes({
+                since: update_seq
+            }).on("complete", (changes) => {
+                const ids = changes.results.map((c) => {
+                    return c.id;
                 });
+                assert.include(ids, "3");
+
+                resolve();
+            }).on("error", reject);
         });
     });
 
-    it("Testing include docs", (done) => {
-        const db = new PouchDB(dbs.name);
-        testUtils.writeDocs(db, JSON.parse(JSON.stringify(origDocs)),
-            () => {
-                db.changes({
-                    include_docs: true
-                }).on("complete", (changes) => {
-                    changes.results.forEach((row) => {
-                        if (row.id === "0") {
-                            assert.equal(row.doc.a, 1);
-                        }
-                    });
-                    done();
-                }).on("error", done);
-            });
-    });
-
-    it("Testing conflicts", (done) => {
-        const db = new PouchDB(dbs.name);
-        testUtils.writeDocs(db, JSON.parse(JSON.stringify(origDocs)),
-            () => {
-                // add conflicts
-                const conflictDoc1 = {
-                    _id: "3",
-                    _rev: "2-aa01552213fafa022e6167113ed01087",
-                    value: "X"
-                };
-                const conflictDoc2 = {
-                    _id: "3",
-                    _rev: "2-ff01552213fafa022e6167113ed01087",
-                    value: "Z"
-                };
-                db.put(conflictDoc1, { new_edits: false }, () => {
-                    db.put(conflictDoc2, { new_edits: false }, () => {
-                        db.get("3", (err, winRev) => {
-                            assert.equal(winRev._rev, conflictDoc2._rev);
-                            db.changes({
-                                include_docs: true,
-                                conflicts: true,
-                                style: "all_docs"
-                            }).on("complete", (changes) => {
-                                assert.deepEqual(changes.results.map((x) => {
-                                    return x.id;
-                                }).sort(), ["0", "1", "2", "3"], "all ids are in _changes");
-
-                                const result = changes.results.filter((row) => {
-                                    return row.id === "3";
-                                })[0];
-
-                                assert.lengthOf(result.changes, 3, "correct number of changes");
-                                assert.equal(result.doc._rev, conflictDoc2._rev);
-                                assert.equal(result.doc._id, "3", "correct doc id");
-                                assert.equal(winRev._rev, result.doc._rev);
-                                assert.instanceOf(result.doc._conflicts, Array);
-                                assert.lengthOf(result.doc._conflicts, 2);
-                                assert.equal(conflictDoc1._rev, result.doc._conflicts[0]);
-
-                                db.allDocs({
-                                    include_docs: true,
-                                    conflicts: true
-                                }, (err, res) => {
-                                    const row = res.rows[3];
-                                    assert.lengthOf(res.rows, 4, "correct number of changes");
-                                    assert.equal(row.key, "3", "correct key");
-                                    assert.equal(row.id, "3", "correct id");
-                                    assert.equal(row.value.rev, winRev._rev, "correct rev");
-                                    assert.equal(row.doc._rev, winRev._rev, "correct rev");
-                                    assert.equal(row.doc._id, "3", "correct order");
-                                    assert.instanceOf(row.doc._conflicts, Array);
-                                    assert.lengthOf(row.doc._conflicts, 2);
-                                    assert.equal(conflictDoc1._rev, res.rows[3].doc._conflicts[0]);
-                                    done();
-                                });
-                            }).on("error", done);
-                        });
-                    });
+    it("Testing include docs", async () => {
+        const db = new DB(dbName);
+        await util.writeDocs(db, origDocs);
+        await new Promise((resolve, reject) => {
+            db.changes({
+                include_docs: true
+            }).on("complete", (changes) => {
+                changes.results.forEach((row) => {
+                    if (row.id === "0") {
+                        assert.equal(row.doc.a, 1);
+                    }
                 });
-            });
+                resolve();
+            }).on("error", reject);
+        });
     });
 
-    it("test basic collation", (done) => {
-        const db = new PouchDB(dbs.name);
+    it("Testing conflicts", async () => {
+        const db = new DB(dbName);
+        await util.writeDocs(db, origDocs);
+        // add conflicts
+        const conflictDoc1 = {
+            _id: "3",
+            _rev: "2-aa01552213fafa022e6167113ed01087",
+            value: "X"
+        };
+        const conflictDoc2 = {
+            _id: "3",
+            _rev: "2-ff01552213fafa022e6167113ed01087",
+            value: "Z"
+        };
+        await db.put(conflictDoc1, { new_edits: false });
+        await db.put(conflictDoc2, { new_edits: false });
+        const winRev = await db.get("3");
+        assert.equal(winRev._rev, conflictDoc2._rev);
+        await new Promise((resolve, reject) => {
+            db.changes({
+                include_docs: true,
+                conflicts: true,
+                style: "all_docs"
+            }).on("complete", (changes) => {
+                assert.deepEqual(changes.results.map((x) => {
+                    return x.id;
+                }).sort(), ["0", "1", "2", "3"], "all ids are in _changes");
+
+                const result = changes.results.filter((row) => {
+                    return row.id === "3";
+                })[0];
+
+                assert.lengthOf(result.changes, 3, "correct number of changes");
+                assert.equal(result.doc._rev, conflictDoc2._rev);
+                assert.equal(result.doc._id, "3", "correct doc id");
+                assert.equal(winRev._rev, result.doc._rev);
+                assert.instanceOf(result.doc._conflicts, Array);
+                assert.lengthOf(result.doc._conflicts, 2);
+                assert.equal(conflictDoc1._rev, result.doc._conflicts[0]);
+                resolve();
+            }).on("error", reject);
+        });
+        const res = await db.allDocs({
+            include_docs: true,
+            conflicts: true
+        });
+        const row = res.rows[3];
+        assert.lengthOf(res.rows, 4, "correct number of changes");
+        assert.equal(row.key, "3", "correct key");
+        assert.equal(row.id, "3", "correct id");
+        assert.equal(row.value.rev, winRev._rev, "correct rev");
+        assert.equal(row.doc._rev, winRev._rev, "correct rev");
+        assert.equal(row.doc._id, "3", "correct order");
+        assert.instanceOf(row.doc._conflicts, Array);
+        assert.lengthOf(row.doc._conflicts, 2);
+        assert.equal(conflictDoc1._rev, res.rows[3].doc._conflicts[0]);
+    });
+
+    it("test basic collation", async () => {
+        const db = new DB(dbName);
         const docs = {
             docs: [
                 { _id: "z", foo: "z" },
                 { _id: "a", foo: "a" }
             ]
         };
-        db.bulkDocs(docs, () => {
-            db.allDocs({
-                startkey: "z",
-                endkey: "z"
-            }, (err, result) => {
-                assert.lengthOf(result.rows, 1, "Exclude a result");
-                done();
-            });
+        await db.bulkDocs(docs);
+        const result = await db.allDocs({
+            startkey: "z",
+            endkey: "z"
         });
+        assert.lengthOf(result.rows, 1, "Exclude a result");
     });
 
     it("3883 start_key end_key aliases", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const docs = [{ _id: "a", foo: "a" }, { _id: "z", foo: "z" }];
         return db.bulkDocs(docs).then(() => {
             return db.allDocs({ start_key: "z", end_key: "z" });
@@ -314,7 +294,7 @@ describe("db", "pouch", "db.allDocs()", () => {
 
     it("test total_rows with a variety of criteria", function (done) {
         this.timeout(20000);
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
 
         const docs = [
             { _id: "0" },
@@ -429,8 +409,8 @@ describe("db", "pouch", "db.allDocs()", () => {
 
     });
 
-    it("test total_rows with both skip and limit", (done) => {
-        const db = new PouchDB(dbs.name);
+    it("test total_rows with both skip and limit", async () => {
+        const db = new DB(dbName);
         const docs = {
             docs: [
                 { _id: "w", foo: "w" },
@@ -439,48 +419,40 @@ describe("db", "pouch", "db.allDocs()", () => {
                 { _id: "z", foo: "z" }
             ]
         };
-        db.bulkDocs(docs, () => {
-            db.allDocs({ startkey: "x", limit: 1, skip: 1 }, (err, res) => {
-                assert.equal(res.total_rows, 4, "Accurately return total_rows count");
-                assert.lengthOf(res.rows, 1, "Correctly limit the returned rows");
-                assert.equal(res.rows[0].id, "y", "Correctly skip 1 doc");
+        await db.bulkDocs(docs);
+        let res = await db.allDocs({ startkey: "x", limit: 1, skip: 1 });
+        assert.equal(res.total_rows, 4, "Accurately return total_rows count");
+        assert.lengthOf(res.rows, 1, "Correctly limit the returned rows");
+        assert.equal(res.rows[0].id, "y", "Correctly skip 1 doc");
 
-                db.get("x", (err, xDoc) => {
-                    db.remove(xDoc, () => {
-                        db.allDocs({ startkey: "w", limit: 2, skip: 1 }, (err, res) => {
-                            assert.equal(res.total_rows, 3, "Accurately return total_rows count after delete");
-                            assert.lengthOf(res.rows, 2, "Correctly limit the returned rows after delete");
-                            assert.equal(res.rows[0].id, "y", "Correctly skip 1 doc after delete");
-                            done();
-                        });
-                    });
-                });
-            });
-        });
+        const xDoc = await db.get("x");
+        await db.remove(xDoc);
+
+        res = await db.allDocs({ startkey: "w", limit: 2, skip: 1 });
+        assert.equal(res.total_rows, 3, "Accurately return total_rows count after delete");
+        assert.lengthOf(res.rows, 2, "Correctly limit the returned rows after delete");
+        assert.equal(res.rows[0].id, "y", "Correctly skip 1 doc after delete");
     });
 
-    it("test limit option and total_rows", (done) => {
-        const db = new PouchDB(dbs.name);
+    it("test limit option and total_rows", async () => {
+        const db = new DB(dbName);
         const docs = {
             docs: [
                 { _id: "z", foo: "z" },
                 { _id: "a", foo: "a" }
             ]
         };
-        db.bulkDocs(docs, () => {
-            db.allDocs({
-                startkey: "a",
-                limit: 1
-            }, (err, res) => {
-                assert.equal(res.total_rows, 2, "Accurately return total_rows count");
-                assert.lengthOf(res.rows, 1, "Correctly limit the returned rows.");
-                done();
-            });
+        await db.bulkDocs(docs);
+        const res = await db.allDocs({
+            startkey: "a",
+            limit: 1
         });
+        assert.equal(res.total_rows, 2, "Accurately return total_rows count");
+        assert.lengthOf(res.rows, 1, "Correctly limit the returned rows.");
     });
 
-    it("test escaped startkey/endkey", (done) => {
-        const db = new PouchDB(dbs.name);
+    it("test escaped startkey/endkey", async () => {
+        const db = new DB(dbName);
         const id1 = '"weird id!" a';
         const id2 = '"weird id!" z';
         const docs = {
@@ -495,60 +467,49 @@ describe("db", "pouch", "db.allDocs()", () => {
                 }
             ]
         };
-        db.bulkDocs(docs, () => {
-            db.allDocs({
-                startkey: id1,
-                endkey: id2
-            }, (err, res) => {
-                assert.equal(res.total_rows, 2, "Accurately return total_rows count");
-                done();
-            });
+        await db.bulkDocs(docs);
+        const res = await db.allDocs({
+            startkey: id1,
+            endkey: id2
         });
+        assert.equal(res.total_rows, 2, "Accurately return total_rows count");
     });
 
-    it('test "key" option', (done) => {
-        const db = new PouchDB(dbs.name);
-        db.bulkDocs({
+    it('test "key" option', async () => {
+        const db = new DB(dbName);
+        await db.bulkDocs({
             docs: [
                 { _id: "0" },
                 { _id: "1" },
                 { _id: "2" }
             ]
-        }, (err) => {
-            assert.isNull(err);
-            db.allDocs({ key: "1" }, (err, res) => {
-                assert.lengthOf(res.rows, 1, "key option returned 1 doc");
-                db.allDocs({
-                    key: "1",
-                    keys: [
-                        "1",
-                        "2"
-                    ]
-                }, (err) => {
-                    assert.exists(err);
-                    db.allDocs({
-                        key: "1",
-                        startkey: "1"
-                    }, (err) => {
-                        assert.isNull(err);
-                        db.allDocs({
-                            key: "1",
-                            endkey: "1"
-                        }, (err) => {
-                            assert.isNull(err);
-                            // when mixing key/startkey or key/endkey, the results
-                            // are very weird and probably undefined, so don't go beyond
-                            // verifying that there's no error
-                            done();
-                        });
-                    });
-                });
+        });
+        const res = await db.allDocs({ key: "1" });
+        assert.lengthOf(res.rows, 1, "key option returned 1 doc");
+        await assert.throws(async () => {
+            await db.allDocs({
+                key: "1",
+                keys: [
+                    "1",
+                    "2"
+                ]
             });
         });
+        await db.allDocs({
+            key: "1",
+            startkey: "1"
+        });
+        await db.allDocs({
+            key: "1",
+            endkey: "1"
+        });
+        // when mixing key/startkey or key/endkey, the results
+        // are very weird and probably undefined, so don't go beyond
+        // verifying that there's no error
     });
 
     it("test inclusive_end=false", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const docs = [
             { _id: "1" },
             { _id: "2" },
@@ -601,7 +562,7 @@ describe("db", "pouch", "db.allDocs()", () => {
     });
 
     it("test descending with startkey/endkey", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.bulkDocs([
             { _id: "a" },
             { _id: "b" },
@@ -657,7 +618,7 @@ describe("db", "pouch", "db.allDocs()", () => {
     });
 
     it("#3082 test wrong num results returned", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const docs = [];
         for (let i = 0; i < 1000; i++) {
             docs.push({});
@@ -666,7 +627,7 @@ describe("db", "pouch", "db.allDocs()", () => {
         let lastkey;
         const allkeys = [];
 
-        function paginate() {
+        const paginate = () => {
             const opts = { include_doc: true, limit: 100 };
             if (lastkey) {
                 opts.startkey = lastkey;
@@ -684,7 +645,7 @@ describe("db", "pouch", "db.allDocs()", () => {
                 allkeys.push(lastkey);
                 return paginate();
             });
-        }
+        };
 
         return db.bulkDocs(docs).then(() => {
             return paginate().then(() => {
@@ -708,7 +669,7 @@ describe("db", "pouch", "db.allDocs()", () => {
     });
 
     it("test empty db", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.allDocs().then((res) => {
             assert.lengthOf(res.rows, 0);
             assert.equal(res.total_rows, 0);
@@ -716,7 +677,7 @@ describe("db", "pouch", "db.allDocs()", () => {
     });
 
     it("test after db close", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.close().then(() => {
             return db.allDocs().catch((err) => {
                 assert.equal(err.message, "database is closed");
@@ -725,7 +686,7 @@ describe("db", "pouch", "db.allDocs()", () => {
     });
 
     it("test unicode ids and revs", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const id = "baz\u0000";
         let rev;
         return db.put({ _id: id }).then((res) => {
@@ -743,7 +704,7 @@ describe("db", "pouch", "db.allDocs()", () => {
     });
 
     it("5793 _conflicts should not exist if no conflicts", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.put({
             _id: "0", a: 1
         }).then(() => {

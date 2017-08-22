@@ -1,70 +1,62 @@
-require("./node.setup");
+import * as util from "./utils";
 
-const path = require("path");
-const mkdirp = require("mkdirp");
-const rimraf = require("rimraf");
+describe("database", "pouch", "defaults", () => {
+    let DB = null;
 
-describe("db", "pouch", "defaults", () => {
-    beforeEach(() => {
-        return new PouchDB("mydb").destroy().then(() => {
-            return new PouchDB("mydb", { db: require("memdown") }).destroy();
-        });
+    before(async () => {
+        DB = await util.setup();
     });
 
-    afterEach((done) => {
-        rimraf.sync("./tmp/_pouch_.");
-        rimraf.sync("./tmp/path");
-        done();
+    beforeEach(async () => {
+        await new DB("mydb").destroy();
+        await new DB("mydb", { db: adone.database.level.backend.Memory }).destroy();
     });
 
-    it("should allow prefixes", () => {
-        const prefix = "./tmp/path/to/db/1/";
-        const dir = path.join(prefix, "/tmp/");
-        const dir2 = path.join("./tmp/_pouch_./", prefix);
-        const dir3 = path.join(dir2, "./tmp/_pouch_mydb");
-        mkdirp.sync(dir);
-        mkdirp.sync(dir2);
-        mkdirp.sync(dir3);
+    afterEach(async () => {
+        await util.tmpdir.getVirtualDirectory("_pouch_.").unlink();
+        await util.tmpdir.getVirtualDirectory("path").unlink();
+    });
 
-        const db = new PouchDB("mydb", { prefix });
-        return db.info().then((info1) => {
-            assert.equal(info1.db_name, "mydb");
-            return db.destroy();
-        });
+    after(async () => {
+        await util.destroy();
+    });
+
+    it("should allow prefixes", async () => {
+        const prefix = util.tmpdir.getVirtualDirectory("path", "to", "db", "1").path();
+        await adone.fs.mkdir(prefix);
+
+        const db = new DB("mydb", { prefix });
+        const info = await db.info();
+        expect(info.db_name).to.be.equal("mydb");
+        await db.destroy();
     });
 
     it("Defaults leaks eventEmitters", () => {
-        PouchDB.defaults({ db: require("memdown") });
-        PouchDB.defaults({ db: require("memdown") });
-        PouchDB.defaults({ db: require("memdown") });
-        PouchDB.defaults({ db: require("memdown") });
+        DB.defaults({ db: adone.database.level.backend.Memory });
+        DB.defaults({ db: adone.database.level.backend.Memory });
+        DB.defaults({ db: adone.database.level.backend.Memory });
+        DB.defaults({ db: adone.database.level.backend.Memory });
     });
 
-    it("should allow us to set a prefix by default", () => {
-        const prefix = "./tmp/path/to/db/2/";
-        const dir = path.join(prefix, "/tmp/");
-        const dir2 = path.join("./tmp/_pouch_./", prefix);
-        const dir3 = path.join(dir2, "./tmp/_pouch_mydb");
-        mkdirp.sync(dir);
-        mkdirp.sync(dir2);
-        mkdirp.sync(dir3);
+    it("should allow us to set a prefix by default", async () => {
+        const prefix = util.tmpdir.getVirtualDirectory("path", "to", "db", "2").path();
+        await adone.fs.mkdir(prefix);
 
-        const CustomPouch = PouchDB.defaults({
+        const CustomPouch = DB.defaults({
             prefix
         });
         /* jshint newcap:false */
-        const db = CustomPouch({ name: "mydb" });
-        return db.info().then((info1) => {
-            assert.equal(info1.db_name, "mydb");
-            return db.destroy();
-        });
+        const db = new CustomPouch({ name: "mydb" });
+        const info = await db.info();
+        assert.equal(info.db_name, "mydb");
+        await db.destroy();
     });
 
     it("should allow us to use memdown", () => {
-        const opts = { name: "mydb", db: require("memdown") };
-        const db = new PouchDB(opts);
+        const opts = { name: "mydb", db: adone.database.level.backend.Memory };
+        const db = new DB(opts);
         return db.put({ _id: "foo" }).then(() => {
-            const otherDB = new PouchDB("mydb");
+            const otherDB = new DB("mydb");
             return db.info().then((info1) => {
                 return otherDB.info().then((info2) => {
                     assert.notEqual(info1.doc_count, info2.doc_count);
@@ -77,16 +69,16 @@ describe("db", "pouch", "defaults", () => {
     });
 
     it("should allow us to destroy memdown", () => {
-        const opts = { db: require("memdown") };
-        const db = new PouchDB("mydb", opts);
+        const opts = { db: adone.database.level.backend.Memory };
+        const db = new DB("mydb", opts);
         return db.put({ _id: "foo" }).then(() => {
-            const otherDB = new PouchDB("mydb", opts);
+            const otherDB = new DB("mydb", opts);
             return db.info().then((info1) => {
                 return otherDB.info().then((info2) => {
                     assert.equal(info1.doc_count, info2.doc_count);
                     return otherDB.destroy();
                 }).then(() => {
-                    const db3 = new PouchDB("mydb", opts);
+                    const db3 = new DB("mydb", opts);
                     return db3.info().then((info) => {
                         assert.equal(info.doc_count, 0);
                         return db3.destroy();
@@ -97,10 +89,10 @@ describe("db", "pouch", "defaults", () => {
     });
 
     it("should allow us to use memdown by default", () => {
-        const CustomPouch = PouchDB.defaults({ db: require("memdown") });
+        const CustomPouch = DB.defaults({ db: adone.database.level.backend.Memory });
         const db = new CustomPouch("mydb");
         return db.put({ _id: "foo" }).then(() => {
-            const otherDB = new PouchDB("mydb");
+            const otherDB = new DB("mydb");
             return db.info().then((info1) => {
                 return otherDB.info().then((info2) => {
                     assert.notEqual(info1.doc_count, info2.doc_count);
@@ -114,15 +106,15 @@ describe("db", "pouch", "defaults", () => {
 
 
     it("should inform us when using memdown", () => {
-        const opts = { name: "mydb", db: require("memdown") };
-        const db = new PouchDB(opts);
+        const opts = { name: "mydb", db: adone.database.level.backend.Memory };
+        const db = new DB(opts);
         return db.info().then((info) => {
-            assert.equal(info.backend_adapter, "MemDOWN");
+            assert.equal(info.backend_adapter, "Memory");
         });
     });
 
     it("constructor emits destroyed when using defaults", () => {
-        const CustomPouch = PouchDB.defaults({ db: require("memdown") });
+        const CustomPouch = DB.defaults({ db: adone.database.level.backend.Memory });
 
         const db = new CustomPouch("mydb");
         return new Promise((resolve) => {
@@ -135,7 +127,7 @@ describe("db", "pouch", "defaults", () => {
     });
 
     it("db emits destroyed when using defaults", () => {
-        const CustomPouch = PouchDB.defaults({ db: require("memdown") });
+        const CustomPouch = DB.defaults({ db: adone.database.level.backend.Memory });
 
         const db = new CustomPouch("mydb");
         return new Promise((resolve) => {
@@ -145,23 +137,23 @@ describe("db", "pouch", "defaults", () => {
     });
 
     it("constructor emits creation event", (done) => {
-        const CustomPouch = PouchDB.defaults({ db: require("memdown") });
+        const CustomPouch = DB.defaults({ db: adone.database.level.backend.Memory });
 
         CustomPouch.once("created", (name) => {
             assert.equal(name, "mydb", "should be same thing");
             done();
         });
-        new PouchDB("mydb");
+        new DB("mydb");
     });
 
     // somewhat odd behavior (CustomPouch constructor always mirrors PouchDB),
     // but better to test it explicitly
     it("PouchDB emits destroyed when using defaults", () => {
-        const CustomPouch = PouchDB.defaults({ db: require("memdown") });
+        const CustomPouch = DB.defaults({ db: adone.database.level.backend.Memory });
 
         const db = new CustomPouch("mydb");
         return new Promise((resolve) => {
-            PouchDB.once("destroyed", (name) => {
+            DB.once("destroyed", (name) => {
                 assert.equal(name, "mydb");
                 resolve();
             });
@@ -172,9 +164,9 @@ describe("db", "pouch", "defaults", () => {
     // somewhat odd behavior (CustomPouch constructor always mirrors PouchDB),
     // but better to test it explicitly
     it("PouchDB emits created when using defaults", (done) => {
-        const CustomPouch = PouchDB.defaults({ db: require("memdown") });
+        const CustomPouch = DB.defaults({ db: adone.database.level.backend.Memory });
 
-        PouchDB.once("created", (name) => {
+        DB.once("created", (name) => {
             assert.equal(name, "mydb", "should be same thing");
             done();
         });
@@ -182,13 +174,13 @@ describe("db", "pouch", "defaults", () => {
     });
 
     it("should be transitive (#5922)", () => {
-        const CustomPouch = PouchDB
-            .defaults({ db: require("memdown") })
+        const CustomPouch = DB
+            .defaults({ db: adone.database.level.backend.Memory })
             .defaults({});
 
         const db = new CustomPouch("mydb");
         return db.info().then((info) => {
-            assert.equal(info.backend_adapter, "MemDOWN");
+            assert.equal(info.backend_adapter, "Memory");
         });
     });
 });

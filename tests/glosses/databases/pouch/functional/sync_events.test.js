@@ -1,23 +1,23 @@
-require("./node.setup");
+import * as util from "./utils";
 
-describe("db", "pouch", "suite2 sync_events", () => {
-    const dbs = {};
+describe("database", "pouch", "suite2 sync_events", () => {
+    const dbName = "testdb";
+    const dbRemote = "test_repl_remote";
+    let DB = null;
 
-    beforeEach((done) => {
-        dbs.name = testUtils.adapterUrl("local", "testdb");
-        dbs.remote = testUtils.adapterUrl("local", "test_repl_remote");
-        testUtils.cleanup([dbs.name, dbs.remote], done);
+    beforeEach(async () => {
+        DB = await util.setup();
+        await util.cleanup(dbName, dbRemote);
     });
 
-    after((done) => {
-        testUtils.cleanup([dbs.name, dbs.remote], done);
+    after(async () => {
+        await util.destroy();
     });
-
 
     it("#4251 Should fire paused and active on sync", (done) => {
 
-        const db = new PouchDB(dbs.name);
-        const remote = new PouchDB(dbs.remote);
+        const db = new DB(dbName);
+        const remote = new DB(dbRemote);
 
         db.bulkDocs([{ _id: "a" }, { _id: "b" }]).then(() => {
 

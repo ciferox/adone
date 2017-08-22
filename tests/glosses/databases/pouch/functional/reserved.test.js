@@ -1,21 +1,22 @@
-require("./node.setup");
+import * as util from "./utils";
 
-describe("db", "pouch", "reserved", () => {
-    const dbs = {};
+describe("database", "pouch", "reserved", () => {
+    const dbName = "testdb";
+    const dbRemote = "test_repl_remote";
+    let DB = null;
 
-    beforeEach((done) => {
-        dbs.name = testUtils.adapterUrl("local", "testdb");
-        dbs.remote = testUtils.adapterUrl("local", "test_repl_remote");
-        testUtils.cleanup([dbs.name, dbs.remote], done);
+    beforeEach(async () => {
+        DB = await util.setup();
+        await util.cleanup(dbName, dbRemote);
     });
 
-    after((done) => {
-        testUtils.cleanup([dbs.name, dbs.remote], done);
+    after(async () => {
+        await util.destroy();
     });
 
     it("test docs with reserved javascript ids", () => {
-        const db = new PouchDB(dbs.name);
-        const remote = new PouchDB(dbs.remote);
+        const db = new DB(dbName);
+        const remote = new DB(dbRemote);
         return db.bulkDocs([
             { _id: "constructor" },
             { _id: "toString" },
@@ -61,7 +62,7 @@ describe("db", "pouch", "reserved", () => {
     });
 
     it("can create db with reserved name", () => {
-        const db = new PouchDB("constructor");
+        const db = new DB("constructor");
         return db.info().then(() => {
             return db.destroy();
         });

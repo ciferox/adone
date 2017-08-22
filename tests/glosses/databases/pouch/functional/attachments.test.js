@@ -1,4 +1,6 @@
-require("./node.setup");
+import * as util from "./utils";
+
+const { is } = adone;
 
 /* jshint maxlen:false */
 const icons = [
@@ -19,32 +21,107 @@ const iconDigests = [
 
 const iconLengths = [1047, 789, 967, 527, 1108];
 
-describe("db", "pouch", () => {
-    describe("suite2 attachments", () => {
+describe("database", "pouch", "suite2 attachments", () => {
+    const dbName = "testdb";
 
-        const dbs = {};
+    let DB = null;
 
-        beforeEach((done) => {
-            dbs.name = testUtils.adapterUrl("local", "testdb");
-            testUtils.cleanup([dbs.name], done);
-        });
+    beforeEach(async () => {
+        DB = await util.setup();
+        await util.cleanup(dbName);
+    });
 
-        after((done) => {
-            testUtils.cleanup([dbs.name], done);
-        });
+    after(async () => {
+        await util.destroy();
+    });
 
-        const binAttDoc = {
-            _id: "bin_doc",
-            _attachments: {
-                "foo.txt": {
+    const binAttDoc = {
+        _id: "bin_doc",
+        _attachments: {
+            "foo.txt": {
+                content_type: "text/plain",
+                data: "VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ="
+            }
+        }
+    };
+    // empty attachment
+    const binAttDoc2 = {
+        _id: "bin_doc2",
+        _attachments: {
+            "foo.txt": {
+                content_type: "text/plain",
+                data: ""
+            }
+        }
+    };
+    // json string doc
+    const jsonDoc = {
+        _id: "json_doc",
+        _attachments: {
+            "foo.json": {
+                content_type: "application/json",
+                data: "eyJIZWxsbyI6IndvcmxkIn0="
+            }
+        }
+    };
+    const pngAttDoc = {
+        _id: "png_doc",
+        _attachments: {
+            "foo.png": {
+                content_type: "image/png",
+                data: "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAMFBMVEX+9+" +
+                "j+9OD+7tL95rr93qT80YD7x2L6vkn6syz5qRT4ogT4nwD4ngD4nQD4nQD4" +
+                "nQDT2nT/AAAAcElEQVQY002OUQLEQARDw1D14f7X3TCdbfPnhQTqI5UqvG" +
+                "OWIz8gAIXFH9zmC63XRyTsOsCWk2A9Ga7wCXlA9m2S6G4JlVwQkpw/Ymxr" +
+                "UgNoMoyxBwSMH/WnAzy5cnfLFu+dK2l5gMvuPGLGJd1/9AOiBQiEgkzOpg" +
+                "AAAABJRU5ErkJggg=="
+            }
+        }
+    };
+
+    it("3357 Attachment names cant start with _", () => {
+        const db = new DB(dbName);
+        const doc = {
+            _id: "baz", _attachments: {
+                "_text1.txt": {
                     content_type: "text/plain",
-                    data: "VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ="
+                    data: util.btoa("text1")
                 }
             }
         };
-        // empty attachment
-        const binAttDoc2 = {
-            _id: "bin_doc2",
+        return db.put(doc).then(() => {
+            throw new Error("Should not succeed");
+        }).catch((err) => {
+            assert.equal(err.name, "bad_request");
+        });
+    });
+
+    it("5736 warning for putAttachment without content_type", () => {
+        const db = new DB(dbName);
+        return db.putAttachment("bar", "baz.txt", util.btoa("text"), "");
+    });
+
+    it("5736 warning for bulkDocs attachments without content_type", () => {
+        const db = new DB(dbName);
+        const doc = {
+            _attachments: {
+                "att.txt": {
+                    data: util.btoa("well")
+                }
+            }
+        };
+        return db.bulkDocs([doc]);
+    });
+
+    it("fetch atts with open_revs and missing", () => {
+        const db = new DB(dbName);
+        const doc = {
+            _id: "frog",
+            _rev: "1-x",
+            _revisions: {
+                start: 1,
+                ids: ["x"]
+            },
             _attachments: {
                 "foo.txt": {
                     content_type: "text/plain",
@@ -52,3198 +129,2837 @@ describe("db", "pouch", () => {
                 }
             }
         };
-        // json string doc
-        const jsonDoc = {
-            _id: "json_doc",
-            _attachments: {
-                "foo.json": {
-                    content_type: "application/json",
-                    data: "eyJIZWxsbyI6IndvcmxkIn0="
-                }
-            }
-        };
-        const pngAttDoc = {
-            _id: "png_doc",
-            _attachments: {
-                "foo.png": {
-                    content_type: "image/png",
-                    data: "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAMFBMVEX+9+" +
-                    "j+9OD+7tL95rr93qT80YD7x2L6vkn6syz5qRT4ogT4nwD4ngD4nQD4nQD4" +
-                    "nQDT2nT/AAAAcElEQVQY002OUQLEQARDw1D14f7X3TCdbfPnhQTqI5UqvG" +
-                    "OWIz8gAIXFH9zmC63XRyTsOsCWk2A9Ga7wCXlA9m2S6G4JlVwQkpw/Ymxr" +
-                    "UgNoMoyxBwSMH/WnAzy5cnfLFu+dK2l5gMvuPGLGJd1/9AOiBQiEgkzOpg" +
-                    "AAAABJRU5ErkJggg=="
-                }
-            }
-        };
-
-        it("3357 Attachment names cant start with _", () => {
-            const db = new PouchDB(dbs.name);
-            const doc = {
-                _id: "baz", _attachments: {
-                    "_text1.txt": {
-                        content_type: "text/plain",
-                        data: testUtils.btoa("text1")
-                    }
-                }
-            };
-            return db.put(doc).then(() => {
-                throw new Error("Should not succeed");
-            }).catch((err) => {
-                assert.equal(err.name, "bad_request");
+        return db.bulkDocs({
+            docs: [doc],
+            new_edits: false
+        }).then(() => {
+            return db.get("frog", {
+                revs: true,
+                open_revs: ["1-x", "2-fake"],
+                attachments: true
             });
+        }).then((res) => {
+            // there should be exactly one "ok" result
+            // and one result with attachments
+            assert.lengthOf(res.filter((x) => {
+                return x.ok;
+            }), 1);
+            assert.lengthOf(res.filter((x) => {
+                return x.ok && x.ok._attachments;
+            }), 1);
         });
+    });
 
-        it("5736 warning for putAttachment without content_type", () => {
-            const db = new PouchDB(dbs.name);
-            return db.putAttachment("bar", "baz.txt", testUtils.btoa("text"), "");
-        });
-
-        it("5736 warning for bulkDocs attachments without content_type", () => {
-            const db = new PouchDB(dbs.name);
-            const doc = {
-                _attachments: {
-                    "att.txt": {
-                        data: testUtils.btoa("well")
-                    }
-                }
+    it("issue 2803 should throw 412", () => {
+        const db = new DB(dbName);
+        return db.put(binAttDoc).then(() => {
+            return db.get(binAttDoc._id);
+        }).then((doc) => {
+            doc._attachments["bar.txt"] = {
+                stub: true,
+                digest: "md5-sorryIDoNotReallyExist=="
             };
-            return db.bulkDocs([doc]);
+            return db.put(doc);
+        }).then((res) => {
+            assert.isUndefined(res, "should throw");
+        }).catch((err) => {
+            assert.exists(err.status, `got improper error: ${err}`);
+            assert.equal(err.status, 412);
         });
+    });
 
-        it("fetch atts with open_revs and missing", () => {
-            const db = new PouchDB(dbs.name);
-            const doc = {
-                _id: "frog",
-                _rev: "1-x",
-                _revisions: {
-                    start: 1,
-                    ids: ["x"]
-                },
-                _attachments: {
-                    "foo.txt": {
-                        content_type: "text/plain",
-                        data: ""
-                    }
+    it("issue 2803 should throw 412 part 2", () => {
+        const stubDoc = {
+            _id: "stubby",
+            _attachments: {
+                "foo.txt": {
+                    content_type: "text/plain",
+                    digest: "md5-aEI7pOYCRBLTRQvvqYrrJQ==",
+                    stub: true
                 }
+            }
+        };
+        const db = new DB(dbName);
+        return db.put(stubDoc).then((res) => {
+            assert.isUndefined(res, "should throw");
+        }).catch((err) => {
+            assert.exists(err.status, `got improper error: ${err}`);
+            assert.equal(err.status, 412, `got improper error: ${err}`);
+        });
+    });
+
+    it("issue 2803 should throw 412 part 3", () => {
+        const db = new DB(dbName);
+        return db.put(binAttDoc).then(() => {
+            return db.get(binAttDoc._id);
+        }).then((doc) => {
+            doc._attachments["foo.json"] = jsonDoc._attachments["foo.json"];
+        }).then(() => {
+            return db.get(binAttDoc._id);
+        }).then((doc) => {
+            doc._attachments["bar.txt"] = {
+                stub: true,
+                digest: "md5-sorryIDoNotReallyExist=="
             };
-            return db.bulkDocs({
-                docs: [doc],
-                new_edits: false
-            }).then(() => {
-                return db.get("frog", {
-                    revs: true,
-                    open_revs: ["1-x", "2-fake"],
-                    attachments: true
+            return db.put(doc);
+        }).then((res) => {
+            assert.isUndefined(res, "should throw");
+        }).catch((err) => {
+            assert.exists(err.status, `got improper error: ${err}`);
+            assert.equal(err.status, 412);
+        });
+    });
+
+    it("issue 2803 should throw 412 part 4", () => {
+        const db = new DB(dbName);
+        return db.put(binAttDoc).then(() => {
+            return db.get(binAttDoc._id);
+        }).then((doc) => {
+            doc._attachments["foo.json"] = jsonDoc._attachments["foo.json"];
+        }).then(() => {
+            return db.get(binAttDoc._id);
+        }).then((doc) => {
+            doc._attachments["bar.txt"] = {
+                stub: true,
+                digest: "md5-sorryIDoNotReallyExist=="
+            };
+            doc._attachments["baz.txt"] = {
+                stub: true,
+                digest: "md5-yahNoIDoNotExistEither=="
+            };
+            return db.put(doc);
+        }).then((res) => {
+            assert.isUndefined(res, "should throw");
+        }).catch((err) => {
+            assert.exists(err.status, `got improper error: ${err}`);
+            assert.equal(err.status, 412);
+        });
+    });
+
+    it("#2858 {binary: true} in get()", () => {
+        const db = new DB(dbName);
+        const docs = [binAttDoc, binAttDoc2, pngAttDoc];
+        return db.bulkDocs(docs).then(() => {
+            return Promise.all(docs.map((doc) => {
+                const attName = Object.keys(doc._attachments)[0];
+                const expected = doc._attachments[attName];
+                return db.get(doc._id, {
+                    attachments: true,
+                    binary: true
+                }).then((savedDoc) => {
+                    const att = savedDoc._attachments[attName];
+                    assert.isUndefined(att.stub);
+                    assert.exists(att.digest);
+                    assert.equal(att.content_type, expected.content_type);
+                    assert.isNotString(att.data);
+                    assert.equal(att.data.type, expected.content_type);
+                    return att.data.toString("binary");
+                }).then((bin) => {
+                    assert.equal(util.btoa(bin), expected.data);
                 });
-            }).then((res) => {
-                // there should be exactly one "ok" result
-                // and one result with attachments
-                assert.lengthOf(res.filter((x) => {
-                    return x.ok;
-                }), 1);
-                assert.lengthOf(res.filter((x) => {
-                    return x.ok && x.ok._attachments;
-                }), 1);
-            });
+            }));
         });
+    });
 
-        it("issue 2803 should throw 412", () => {
-            const db = new PouchDB(dbs.name);
-            return db.put(binAttDoc).then(() => {
-                return db.get(binAttDoc._id);
-            }).then((doc) => {
-                doc._attachments["bar.txt"] = {
-                    stub: true,
-                    digest: "md5-sorryIDoNotReallyExist=="
-                };
-                return db.put(doc);
-            }).then((res) => {
-                assert.isUndefined(res, "should throw");
-            }).catch((err) => {
-                assert.exists(err.status, `got improper error: ${err}`);
-                assert.equal(err.status, 412);
-            });
-        });
-
-        it("issue 2803 should throw 412 part 2", () => {
-            const stubDoc = {
-                _id: "stubby",
-                _attachments: {
-                    "foo.txt": {
-                        content_type: "text/plain",
-                        digest: "md5-aEI7pOYCRBLTRQvvqYrrJQ==",
-                        stub: true
+    it("#2858 {binary: true} in allDocs() 1", () => {
+        const db = new DB(dbName);
+        const docs = [binAttDoc, binAttDoc2, pngAttDoc, { _id: "foo" }];
+        return db.bulkDocs(docs).then(() => {
+            return Promise.all(docs.map((doc) => {
+                const atts = doc._attachments;
+                const attName = atts && Object.keys(atts)[0];
+                const expected = atts && atts[attName];
+                return db.allDocs({
+                    key: doc._id,
+                    attachments: true,
+                    binary: true,
+                    include_docs: true
+                }).then((res) => {
+                    assert.lengthOf(res.rows, 1);
+                    const savedDoc = res.rows[0].doc;
+                    if (!atts) {
+                        assert.isUndefined(savedDoc._attachments);
+                        return;
                     }
-                }
-            };
-            const db = new PouchDB(dbs.name);
-            return db.put(stubDoc).then((res) => {
-                assert.isUndefined(res, "should throw");
-            }).catch((err) => {
-                assert.exists(err.status, `got improper error: ${err}`);
-                assert.equal(err.status, 412, `got improper error: ${err}`);
-            });
+                    const att = savedDoc._attachments[attName];
+                    assert.isUndefined(att.stub);
+                    assert.exists(att.digest);
+                    assert.equal(att.content_type, expected.content_type);
+                    assert.isNotString(att.data);
+                    assert.equal(att.data.type, expected.content_type);
+                    assert.equal(util.btoa(att.data.toString("binary")), expected.data);
+                });
+            }));
         });
+    });
 
-        it("issue 2803 should throw 412 part 3", () => {
-            const db = new PouchDB(dbs.name);
-            return db.put(binAttDoc).then(() => {
-                return db.get(binAttDoc._id);
-            }).then((doc) => {
-                doc._attachments["foo.json"] = jsonDoc._attachments["foo.json"];
-            }).then(() => {
-                return db.get(binAttDoc._id);
-            }).then((doc) => {
-                doc._attachments["bar.txt"] = {
-                    stub: true,
-                    digest: "md5-sorryIDoNotReallyExist=="
-                };
-                return db.put(doc);
+    it("#2858 {binary: true} in allDocs() 2", () => {
+        const db = new DB(dbName);
+        const docs = [binAttDoc, binAttDoc2, pngAttDoc, { _id: "foo" }];
+        return db.bulkDocs(docs).then(() => {
+            return db.allDocs({
+                include_docs: true,
+                attachments: true,
+                binary: true
             }).then((res) => {
-                assert.isUndefined(res, "should throw");
-            }).catch((err) => {
-                assert.exists(err.status, `got improper error: ${err}`);
-                assert.equal(err.status, 412);
-            });
-        });
-
-        it("issue 2803 should throw 412 part 4", () => {
-            const db = new PouchDB(dbs.name);
-            return db.put(binAttDoc).then(() => {
-                return db.get(binAttDoc._id);
-            }).then((doc) => {
-                doc._attachments["foo.json"] = jsonDoc._attachments["foo.json"];
-            }).then(() => {
-                return db.get(binAttDoc._id);
-            }).then((doc) => {
-                doc._attachments["bar.txt"] = {
-                    stub: true,
-                    digest: "md5-sorryIDoNotReallyExist=="
-                };
-                doc._attachments["baz.txt"] = {
-                    stub: true,
-                    digest: "md5-yahNoIDoNotExistEither=="
-                };
-                return db.put(doc);
-            }).then((res) => {
-                assert.isUndefined(res, "should throw");
-            }).catch((err) => {
-                assert.exists(err.status, `got improper error: ${err}`);
-                assert.equal(err.status, 412);
-            });
-        });
-
-        it("#2858 {binary: true} in get()", () => {
-            const db = new PouchDB(dbs.name);
-            const docs = [binAttDoc, binAttDoc2, pngAttDoc];
-            return db.bulkDocs(docs).then(() => {
-                return Promise.all(docs.map((doc) => {
-                    const attName = Object.keys(doc._attachments)[0];
-                    const expected = doc._attachments[attName];
-                    return db.get(doc._id, {
-                        attachments: true,
-                        binary: true
-                    }).then((savedDoc) => {
-                        const att = savedDoc._attachments[attName];
-                        assert.isUndefined(att.stub);
-                        assert.exists(att.digest);
-                        assert.equal(att.content_type, expected.content_type);
-                        assert.isNotString(att.data);
-                        assert.equal(att.data.type, expected.content_type);
-                        return testUtils.readBlobPromise(att.data);
-                    }).then((bin) => {
-                        assert.equal(testUtils.btoa(bin), expected.data);
-                    });
-                }));
-            });
-        });
-
-        it("#2858 {binary: true} in allDocs() 1", () => {
-            const db = new PouchDB(dbs.name);
-            const docs = [binAttDoc, binAttDoc2, pngAttDoc, { _id: "foo" }];
-            return db.bulkDocs(docs).then(() => {
+                const savedDocs = res.rows.map((x) => {
+                    return x.doc;
+                });
                 return Promise.all(docs.map((doc) => {
                     const atts = doc._attachments;
                     const attName = atts && Object.keys(atts)[0];
                     const expected = atts && atts[attName];
-                    return db.allDocs({
-                        key: doc._id,
-                        attachments: true,
-                        binary: true,
-                        include_docs: true
-                    }).then((res) => {
-                        assert.lengthOf(res.rows, 1);
-                        const savedDoc = res.rows[0].doc;
-                        if (!atts) {
-                            assert.isUndefined(savedDoc._attachments);
-                            return;
-                        }
-                        const att = savedDoc._attachments[attName];
-                        assert.isUndefined(att.stub);
-                        assert.exists(att.digest);
-                        assert.equal(att.content_type, expected.content_type);
-                        assert.isNotString(att.data);
-                        assert.equal(att.data.type, expected.content_type);
-                        return testUtils.readBlobPromise(att.data).then((bin) => {
-                            assert.equal(testUtils.btoa(bin), expected.data);
-                        });
-                    });
-                }));
-            });
-        });
-
-        it("#2858 {binary: true} in allDocs() 2", () => {
-            const db = new PouchDB(dbs.name);
-            const docs = [binAttDoc, binAttDoc2, pngAttDoc, { _id: "foo" }];
-            return db.bulkDocs(docs).then(() => {
-                return db.allDocs({
-                    include_docs: true,
-                    attachments: true,
-                    binary: true
-                }).then((res) => {
-                    const savedDocs = res.rows.map((x) => {
-                        return x.doc;
-                    });
-                    return Promise.all(docs.map((doc) => {
-                        const atts = doc._attachments;
-                        const attName = atts && Object.keys(atts)[0];
-                        const expected = atts && atts[attName];
-                        const savedDoc = savedDocs.filter((x) => {
-                            return x._id === doc._id;
-                        })[0];
-                        if (!atts) {
-                            assert.isUndefined(savedDoc._attachments);
-                            return;
-                        }
-                        const att = savedDoc._attachments[attName];
-                        assert.isUndefined(att.stub);
-                        assert.exists(att.digest);
-                        assert.equal(att.content_type, expected.content_type);
-                        assert.isNotString(att.data);
-                        assert.equal(att.data.type, expected.content_type);
-                        return testUtils.readBlobPromise(att.data).then((bin) => {
-                            assert.equal(testUtils.btoa(bin), expected.data);
-                        });
-                    }));
-                });
-            });
-        });
-
-        it("#2858 {binary: true} in allDocs() 3", () => {
-            const db = new PouchDB(dbs.name);
-            const docs = [binAttDoc, binAttDoc2, pngAttDoc,
-                { _id: "bar" },
-                { _id: "foo", _deleted: true }];
-            return db.bulkDocs(docs).then(() => {
-                return db.allDocs({
-                    include_docs: true,
-                    attachments: true,
-                    binary: true
-                }).then((res) => {
-                    assert.lengthOf(res.rows, 4);
-                    const savedDocs = res.rows.map((x) => {
-                        return x.doc;
-                    });
-                    return Promise.all(docs.filter((doc) => {
-                        return !doc._deleted;
-                    }).map((doc) => {
-                        const atts = doc._attachments;
-                        const attName = atts && Object.keys(atts)[0];
-                        const expected = atts && atts[attName];
-                        const savedDoc = savedDocs.filter((x) => {
-                            return x._id === doc._id;
-                        })[0];
-                        if (!atts) {
-                            assert.isUndefined(savedDoc._attachments);
-                            return;
-                        }
-                        const att = savedDoc._attachments[attName];
-                        assert.isUndefined(att.stub);
-                        assert.exists(att.digest);
-                        assert.equal(att.content_type, expected.content_type);
-                        assert.isNotString(att.data);
-                        assert.equal(att.data.type, expected.content_type);
-                        return testUtils.readBlobPromise(att.data).then((bin) => {
-                            assert.equal(testUtils.btoa(bin), expected.data);
-                        });
-                    }));
-                });
-            });
-        });
-
-        it("#2858 {binary: true} in allDocs() 4", () => {
-            const db = new PouchDB(dbs.name);
-            const docs = [binAttDoc, binAttDoc2, pngAttDoc,
-                { _id: "bar" },
-                { _id: "foo", _deleted: true }];
-            return db.bulkDocs(docs).then(() => {
-                return db.allDocs({
-                    attachments: true,
-                    binary: true
-                }).then((res) => {
-                    assert.lengthOf(res.rows, 4);
-                    res.rows.forEach((row) => {
-                        assert.isUndefined(row.doc);
-                    });
-                    return db.allDocs({
-                        binary: true
-                    });
-                }).then((res) => {
-                    assert.lengthOf(res.rows, 4);
-                    res.rows.forEach((row) => {
-                        assert.isUndefined(row.doc);
-                    });
-                });
-            });
-        });
-
-        it("#2858 {binary: true} in allDocs() 5", () => {
-            const db = new PouchDB(dbs.name);
-            const docs = [binAttDoc, binAttDoc2, pngAttDoc,
-                { _id: "bar" },
-                { _id: "foo", deleted: true }];
-            return db.bulkDocs(docs).then(() => {
-                return db.allDocs({
-                    keys: [
-                        binAttDoc._id, binAttDoc2._id, pngAttDoc._id, "foo", "bar"
-                    ],
-                    attachments: true,
-                    binary: true,
-                    include_docs: true
-                }).then((res) => {
-                    assert.lengthOf(res.rows, 5);
-
-                    return Promise.all(res.rows.map((row, i) => {
-                        if (docs[i]._deleted) {
-                            assert.isUndefined(row.doc);
-                            return;
-                        }
-                        const atts = docs[i]._attachments;
-                        const attName = atts && Object.keys(atts)[0];
-                        const expected = atts && atts[attName];
-                        const savedDoc = row.doc;
-                        if (!atts) {
-                            assert.isUndefined(savedDoc._attachments);
-                            return;
-                        }
-                        const att = savedDoc._attachments[attName];
-                        assert.isUndefined(att.stub);
-                        assert.exists(att.digest);
-                        assert.equal(att.content_type, expected.content_type);
-                        assert.isNotString(att.data);
-                        assert.equal(att.data.type, expected.content_type);
-                        return testUtils.readBlobPromise(att.data).then((bin) => {
-                            assert.equal(testUtils.btoa(bin), expected.data);
-                        });
-                    }));
-                });
-            });
-        });
-
-        it("#2858 {binary: true} in allDocs(), many atts", () => {
-            const db = new PouchDB(dbs.name);
-            const docs = [
-                {
-                    _id: "baz", _attachments: {
-                        "text1.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text1")
-                        },
-                        "text2.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text2")
-                        }
-                    }
-                },
-                {
-                    _id: "foo", _attachments: {
-                        "text5.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text5")
-                        }
-                    }
-                },
-                {
-                    _id: "quux", _attachments: {
-                        "text3.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text3")
-                        },
-                        "text4.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text4")
-                        }
-                    }
-                },
-                {
-                    _id: "zob", _attachments: {
-                        "text6.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text3")
-                        }
-                    }
-                },
-                {
-                    _id: "zorb", _attachments: {
-                        "text2.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text2")
-                        },
-                        "text3.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text3")
-                        }
-                    }
-                }
-            ];
-            return db.bulkDocs(docs).then(() => {
-                return db.allDocs({
-                    attachments: true,
-                    binary: true,
-                    include_docs: true
-                }).then((res) => {
-                    assert.lengthOf(res.rows, 5);
-
-                    return Promise.all(res.rows.map((row) => {
-                        const doc = docs.filter((x) => {
-                            return x._id === row.id;
-                        })[0];
-                        const atts = doc._attachments;
-                        const attNames = Object.keys(atts);
-                        return Promise.all(attNames.map((attName) => {
-                            const expected = atts && atts[attName];
-                            const savedDoc = row.doc;
-                            const att = savedDoc._attachments[attName];
-                            assert.isUndefined(att.stub);
-                            assert.exists(att.digest);
-                            assert.equal(att.content_type, expected.content_type);
-                            assert.isNotString(att.data);
-                            assert.equal(att.data.type, expected.content_type);
-                            return testUtils.readBlobPromise(att.data).then((bin) => {
-                                assert.equal(testUtils.btoa(bin), expected.data);
-                            });
-                        }));
-                    }));
-                });
-            });
-        });
-
-        it("#2858 {binary: true} in allDocs(), mixed atts", () => {
-            const db = new PouchDB(dbs.name);
-            const docs = [
-                {
-                    _id: "baz", _attachments: {
-                        "text1.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text1")
-                        },
-                        "text2.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text2")
-                        }
-                    }
-                },
-                {
-                    _id: "foo", _attachments: {
-                        "text5.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text5")
-                        }
-                    }
-                },
-                { _id: "imdeleted", _deleted: true },
-                {
-                    _id: "quux", _attachments: {
-                        "text3.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text3")
-                        },
-                        "text4.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text4")
-                        }
-                    }
-                },
-                { _id: "imempty" },
-                {
-                    _id: "zob", _attachments: {
-                        "text6.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text3")
-                        }
-                    }
-                },
-
-                { _id: "imempty2" },
-                {
-                    _id: "zorb", _attachments: {
-                        "text2.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text2")
-                        },
-                        "text3.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text3")
-                        }
-                    }
-                },
-                {
-                    _id: "imkindaempty", _attachments: {
-                        "text0.txt": {
-                            content_type: "text/plain",
-                            data: ""
-                        }
-                    }
-                }
-            ];
-            return db.bulkDocs(docs).then(() => {
-                return db.allDocs({
-                    attachments: true,
-                    binary: true,
-                    include_docs: true
-                }).then((res) => {
-                    assert.lengthOf(res.rows, 8);
-
-                    return Promise.all(res.rows.map((row) => {
-                        const doc = docs.filter((x) => {
-                            return x._id === row.id;
-                        })[0];
-                        if (doc._deleted) {
-                            assert.isUndefined(row.doc);
-                            return;
-                        }
-                        const atts = doc._attachments;
-                        if (!atts) {
-                            assert.isUndefined(row.doc._attachments);
-                            return;
-                        }
-                        const attNames = Object.keys(atts);
-                        return Promise.all(attNames.map((attName) => {
-                            const expected = atts && atts[attName];
-                            const savedDoc = row.doc;
-                            const att = savedDoc._attachments[attName];
-                            assert.isUndefined(att.stub);
-                            assert.exists(att.digest);
-                            assert.equal(att.content_type, expected.content_type);
-                            assert.isNotString(att.data);
-                            assert.equal(att.data.type, expected.content_type);
-                            return testUtils.readBlobPromise(att.data).then((bin) => {
-                                assert.equal(testUtils.btoa(bin), expected.data);
-                            });
-                        }));
-                    }));
-                });
-            });
-        });
-
-        it("#2858 {binary: true} in changes() non-live", () => {
-            const db = new PouchDB(dbs.name);
-            const docs = [binAttDoc, binAttDoc2, pngAttDoc,
-                { _id: "bar" },
-                { _id: "foo", deleted: true }];
-            return db.bulkDocs(docs).then(() => {
-                return db.changes({
-                    attachments: true,
-                    binary: true,
-                    include_docs: true
-                }).then((res) => {
-                    assert.lengthOf(res.results, 5);
-
-                    return Promise.all(res.results.map((row) => {
-                        const doc = docs.filter((x) => {
-                            return x._id === row.id;
-                        })[0];
-                        if (doc._deleted) {
-                            assert.isUndefined(row.doc);
-                            return;
-                        }
-                        const atts = doc._attachments;
-                        const attName = atts && Object.keys(atts)[0];
-                        const expected = atts && atts[attName];
-                        const savedDoc = row.doc;
-                        if (!atts) {
-                            assert.isUndefined(savedDoc._attachments);
-                            return;
-                        }
-                        const att = savedDoc._attachments[attName];
-                        assert.isUndefined(att.stub);
-                        assert.exists(att.digest);
-                        assert.equal(att.content_type, expected.content_type);
-                        assert.isNotString(att.data);
-                        assert.equal(att.data.type, expected.content_type);
-                        return testUtils.readBlobPromise(att.data).then((bin) => {
-                            assert.equal(testUtils.btoa(bin), expected.data);
-                        });
-                    }));
-                });
-            });
-        });
-
-        it("#2858 {binary: true} in changes() non-live, many atts", () => {
-            const db = new PouchDB(dbs.name);
-            const docs = [
-                {
-                    _id: "baz", _attachments: {
-                        "text1.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text1")
-                        },
-                        "text2.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text2")
-                        }
-                    }
-                },
-                {
-                    _id: "foo", _attachments: {
-                        "text5.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text5")
-                        }
-                    }
-                },
-                {
-                    _id: "quux", _attachments: {
-                        "text3.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text3")
-                        },
-                        "text4.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text4")
-                        }
-                    }
-                },
-                {
-                    _id: "zob", _attachments: {
-                        "text6.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text3")
-                        }
-                    }
-                },
-                {
-                    _id: "zorb", _attachments: {
-                        "text2.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text2")
-                        },
-                        "text3.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text3")
-                        }
-                    }
-                }
-            ];
-            return db.bulkDocs(docs).then(() => {
-                return db.changes({
-                    attachments: true,
-                    binary: true,
-                    include_docs: true
-                }).then((res) => {
-                    assert.lengthOf(res.results, 5);
-
-                    return Promise.all(res.results.map((row) => {
-                        const doc = docs.filter((x) => {
-                            return x._id === row.id;
-                        })[0];
-                        const atts = doc._attachments;
-                        const attNames = Object.keys(atts);
-                        return Promise.all(attNames.map((attName) => {
-                            const expected = atts && atts[attName];
-                            const savedDoc = row.doc;
-                            const att = savedDoc._attachments[attName];
-                            assert.isUndefined(att.stub);
-                            assert.exists(att.digest);
-                            assert.equal(att.content_type, expected.content_type);
-                            assert.isNotString(att.data);
-                            assert.equal(att.data.type, expected.content_type);
-                            return testUtils.readBlobPromise(att.data).then((bin) => {
-                                assert.equal(testUtils.btoa(bin), expected.data);
-                            });
-                        }));
-                    }));
-                });
-            });
-        });
-
-        it("#2858 {binary: true} in changes() non-live, mixed atts", () => {
-            const db = new PouchDB(dbs.name);
-            const docs = [
-                {
-                    _id: "baz", _attachments: {
-                        "text1.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text1")
-                        },
-                        "text2.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text2")
-                        }
-                    }
-                },
-                {
-                    _id: "foo", _attachments: {
-                        "text5.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text5")
-                        }
-                    }
-                },
-                { _id: "imdeleted", _deleted: true },
-                {
-                    _id: "quux", _attachments: {
-                        "text3.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text3")
-                        },
-                        "text4.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text4")
-                        }
-                    }
-                },
-                { _id: "imempty" },
-                {
-                    _id: "zob", _attachments: {
-                        "text6.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text3")
-                        }
-                    }
-                },
-
-                { _id: "imempty2" },
-                {
-                    _id: "zorb", _attachments: {
-                        "text2.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text2")
-                        },
-                        "text3.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text3")
-                        }
-                    }
-                },
-                {
-                    _id: "imkindaempty", _attachments: {
-                        "text0.txt": {
-                            content_type: "text/plain",
-                            data: ""
-                        }
-                    }
-                }
-            ];
-            return db.bulkDocs(docs).then(() => {
-                return db.changes({
-                    attachments: true,
-                    binary: true,
-                    include_docs: true
-                }).then((res) => {
-                    assert.lengthOf(res.results, 9);
-
-                    return Promise.all(res.results.map((row) => {
-                        const doc = docs.filter((x) => {
-                            return x._id === row.id;
-                        })[0];
-                        const atts = doc._attachments;
-                        if (!atts) {
-                            assert.isUndefined(row.doc._attachments);
-                            return;
-                        }
-                        const attNames = Object.keys(atts);
-                        return Promise.all(attNames.map((attName) => {
-                            const expected = atts && atts[attName];
-                            const savedDoc = row.doc;
-                            const att = savedDoc._attachments[attName];
-                            assert.isUndefined(att.stub);
-                            assert.exists(att.digest);
-                            assert.equal(att.content_type, expected.content_type);
-                            assert.isNotString(att.data);
-                            assert.equal(att.data.type, expected.content_type);
-                            return testUtils.readBlobPromise(att.data).then((bin) => {
-                                assert.equal(testUtils.btoa(bin), expected.data);
-                            });
-                        }));
-                    }));
-                });
-            });
-        });
-
-        it("#2858 {binary: true} non-live changes, complete event", () => {
-            const db = new PouchDB(dbs.name);
-            const docs = [
-                {
-                    _id: "baz", _attachments: {
-                        "text1.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text1")
-                        },
-                        "text2.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text2")
-                        }
-                    }
-                },
-                {
-                    _id: "foo", _attachments: {
-                        "text5.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text5")
-                        }
-                    }
-                },
-                { _id: "imdeleted", _deleted: true },
-                {
-                    _id: "quux", _attachments: {
-                        "text3.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text3")
-                        },
-                        "text4.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text4")
-                        }
-                    }
-                },
-                { _id: "imempty" },
-                {
-                    _id: "zob", _attachments: {
-                        "text6.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text3")
-                        }
-                    }
-                },
-
-                { _id: "imempty2" },
-                {
-                    _id: "zorb", _attachments: {
-                        "text2.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text2")
-                        },
-                        "text3.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text3")
-                        }
-                    }
-                },
-                {
-                    _id: "imkindaempty", _attachments: {
-                        "text0.txt": {
-                            content_type: "text/plain",
-                            data: ""
-                        }
-                    }
-                }
-            ];
-            return db.bulkDocs(docs).then(() => {
-                return new Promise((resolve, reject) => {
-                    db.changes({
-                        attachments: true,
-                        binary: true,
-                        include_docs: true
-                    }).on("error", reject).on("complete", resolve);
-                }).then((results) => {
-                    return Promise.all(results.results.map((row) => {
-                        const doc = docs.filter((x) => {
-                            return x._id === row.id;
-                        })[0];
-                        if (row.deleted) {
-                            assert.isUndefined(row.doc._attachments);
-                            return;
-                        }
-                        const atts = doc._attachments;
-                        const savedDoc = row.doc;
-                        if (!atts) {
-                            assert.isUndefined(savedDoc._attachments);
-                            return;
-                        }
-                        const attNames = Object.keys(atts);
-                        return Promise.all(attNames.map((attName) => {
-                            const expected = atts && atts[attName];
-                            const att = savedDoc._attachments[attName];
-                            assert.isUndefined(att.stub);
-                            assert.exists(att.digest);
-                            assert.equal(att.content_type, expected.content_type);
-                            assert.isNotString(att.data);
-                            assert.equal(att.data.type, expected.content_type);
-                            return testUtils.readBlobPromise(att.data).then((bin) => {
-                                assert.equal(testUtils.btoa(bin), expected.data);
-                            });
-                        }));
-                    }));
-                });
-            });
-        });
-
-        it("#2858 {binary: true} in live changes", () => {
-            const db = new PouchDB(dbs.name);
-            const docs = [binAttDoc, binAttDoc2, pngAttDoc,
-                { _id: "bar" },
-                { _id: "foo", deleted: true }];
-            return db.bulkDocs(docs).then(() => {
-                return new Promise((resolve, reject) => {
-                    const ret = db.changes({
-                        attachments: true,
-                        binary: true,
-                        include_docs: true,
-                        live: true
-                    }).on("error", reject)
-                        .on("change", handleChange)
-                        .on("complete", resolve);
-
-                    let promise = Promise.resolve();
-                    let done = 0;
-
-                    function doneWithDoc() {
-                        if (++done === 5 && changes === 5) {
-                            ret.cancel();
-                        }
-                    }
-
-                    var changes = 0;
-                    function handleChange(change) {
-                        changes++;
-                        promise = promise.then(() => {
-                            const doc = docs.filter((x) => {
-                                return x._id === change.id;
-                            })[0];
-                            if (change.deleted) {
-                                assert.isUndefined(change.doc);
-                                return doneWithDoc();
-                            }
-                            const atts = doc._attachments;
-                            const attName = atts && Object.keys(atts)[0];
-                            const expected = atts && atts[attName];
-                            const savedDoc = change.doc;
-                            if (!atts) {
-                                assert.isUndefined(savedDoc._attachments);
-                                return doneWithDoc();
-                            }
-                            const att = savedDoc._attachments[attName];
-                            assert.isUndefined(att.stub);
-                            assert.exists(att.digest);
-                            assert.equal(att.content_type, expected.content_type);
-                            assert.isNotString(att.data);
-                            assert.equal(att.data.type, expected.content_type);
-                            return testUtils.readBlobPromise(att.data).then((bin) => {
-                                assert.equal(testUtils.btoa(bin), expected.data);
-                                doneWithDoc();
-                            });
-                        }).catch(reject);
-                    }
-                });
-            });
-        });
-
-        it("#2858 {binary: true} in live changes, mixed atts", () => {
-            const db = new PouchDB(dbs.name);
-            const docs = [
-                {
-                    _id: "baz", _attachments: {
-                        "text1.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text1")
-                        },
-                        "text2.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text2")
-                        }
-                    }
-                },
-                {
-                    _id: "foo", _attachments: {
-                        "text5.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text5")
-                        }
-                    }
-                },
-                { _id: "imdeleted", _deleted: true },
-                {
-                    _id: "quux", _attachments: {
-                        "text3.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text3")
-                        },
-                        "text4.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text4")
-                        }
-                    }
-                },
-                { _id: "imempty" },
-                {
-                    _id: "zob", _attachments: {
-                        "text6.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text3")
-                        }
-                    }
-                },
-
-                { _id: "imempty2" },
-                {
-                    _id: "zorb", _attachments: {
-                        "text2.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text2")
-                        },
-                        "text3.txt": {
-                            content_type: "text/plain",
-                            data: testUtils.btoa("text3")
-                        }
-                    }
-                },
-                {
-                    _id: "imkindaempty", _attachments: {
-                        "text0.txt": {
-                            content_type: "text/plain",
-                            data: ""
-                        }
-                    }
-                }
-            ];
-            return db.bulkDocs(docs).then(() => {
-                return new Promise((resolve, reject) => {
-                    const ret = db.changes({
-                        attachments: true,
-                        binary: true,
-                        include_docs: true,
-                        live: true
-                    }).on("error", reject)
-                        .on("change", handleChange)
-                        .on("complete", resolve);
-
-                    let promise = Promise.resolve();
-                    let done = 0;
-
-                    function doneWithDoc() {
-                        if (++done === 9 && changes === 9) {
-                            ret.cancel();
-                        }
-                    }
-
-                    var changes = 0;
-                    function handleChange(change) {
-                        changes++;
-                        promise = promise.then(() => {
-                            const doc = docs.filter((x) => {
-                                return x._id === change.id;
-                            })[0];
-                            if (change.deleted) {
-                                assert.isUndefined(change.doc._attachments);
-                                return doneWithDoc();
-                            }
-                            const atts = doc._attachments;
-                            const savedDoc = change.doc;
-                            if (!atts) {
-                                assert.isUndefined(savedDoc._attachments);
-                                return doneWithDoc();
-                            }
-                            const attNames = Object.keys(atts);
-                            return Promise.all(attNames.map((attName) => {
-                                const expected = atts && atts[attName];
-                                const att = savedDoc._attachments[attName];
-                                assert.isUndefined(att.stub);
-                                assert.exists(att.digest);
-                                assert.equal(att.content_type, expected.content_type);
-                                assert.isNotString(att.data);
-                                assert.equal(att.data.type, expected.content_type);
-                                return testUtils.readBlobPromise(att.data).then((bin) => {
-                                    assert.equal(testUtils.btoa(bin), expected.data);
-                                });
-                            })).then(doneWithDoc);
-                        }).catch(reject);
-                    }
-                });
-            });
-        });
-
-        it("#2858 {binary: true} in live+retry changes", () => {
-            const db = new PouchDB(dbs.name);
-            const docs = [binAttDoc, binAttDoc2, pngAttDoc,
-                { _id: "bar" },
-                { _id: "foo", deleted: true }];
-            return db.bulkDocs(docs).then(() => {
-                return new Promise((resolve, reject) => {
-                    const ret = db.changes({
-                        attachments: true,
-                        binary: true,
-                        include_docs: true,
-                        live: true
-                    }).on("error", reject)
-                        .on("change", handleChange)
-                        .on("complete", resolve);
-
-                    let promise = Promise.resolve();
-                    let done = 0;
-
-                    function doneWithDoc() {
-                        if (++done === 5 && changes === 5) {
-                            ret.cancel();
-                        }
-                    }
-
-                    var changes = 0;
-                    function handleChange(change) {
-                        changes++;
-                        promise = promise.then(() => {
-                            const doc = docs.filter((x) => {
-                                return x._id === change.id;
-                            })[0];
-                            if (change.deleted) {
-                                assert.isUndefined(change.doc);
-                                return doneWithDoc();
-                            }
-                            const atts = doc._attachments;
-                            const attName = atts && Object.keys(atts)[0];
-                            const expected = atts && atts[attName];
-                            const savedDoc = change.doc;
-                            if (!atts) {
-                                assert.isUndefined(savedDoc._attachments);
-                                return doneWithDoc();
-                            }
-                            const att = savedDoc._attachments[attName];
-                            assert.isUndefined(att.stub);
-                            assert.exists(att.digest);
-                            assert.equal(att.content_type, expected.content_type);
-                            assert.isNotString(att.data);
-                            assert.equal(att.data.type, expected.content_type);
-                            return testUtils.readBlobPromise(att.data).then((bin) => {
-                                assert.equal(testUtils.btoa(bin), expected.data);
-                                doneWithDoc();
-                            });
-                        }).catch(reject);
-                    }
-                });
-            });
-        });
-
-        it("#2858 {binary: true} in live changes, attachments:false", () => {
-            const db = new PouchDB(dbs.name);
-            const docs = [binAttDoc, binAttDoc2, pngAttDoc,
-                { _id: "bar" },
-                { _id: "foo", deleted: true }];
-            return db.bulkDocs(docs).then(() => {
-                return new Promise((resolve, reject) => {
-                    const ret = db.changes({
-                        include_docs: true,
-                        binary: true,
-                        live: true
-                    }).on("error", reject)
-                        .on("change", handleChange)
-                        .on("complete", resolve);
-
-                    let promise = Promise.resolve();
-                    let done = 0;
-
-                    function doneWithDoc() {
-                        if (++done === 5 && changes === 5) {
-                            ret.cancel();
-                        }
-                    }
-
-                    var changes = 0;
-                    function handleChange(change) {
-                        changes++;
-                        promise = promise.then(() => {
-                            const doc = docs.filter((x) => {
-                                return x._id === change.id;
-                            })[0];
-                            if (change.deleted) {
-                                assert.isUndefined(change.doc);
-                                return doneWithDoc();
-                            }
-                            const atts = doc._attachments;
-                            const attName = atts && Object.keys(atts)[0];
-                            const expected = atts && atts[attName];
-                            const savedDoc = change.doc;
-                            if (!atts) {
-                                assert.isUndefined(savedDoc._attachments);
-                                return doneWithDoc();
-                            }
-                            const att = savedDoc._attachments[attName];
-                            assert.equal(att.stub, true);
-                            assert.exists(att.digest);
-                            assert.equal(att.content_type, expected.content_type);
-                            assert.isUndefined(att.data);
-                            doneWithDoc();
-                        }).catch(reject);
-                    }
-                });
-            });
-        });
-
-        it("#2858 {binary: true} in live changes, include_docs:false", () => {
-            const db = new PouchDB(dbs.name);
-            const docs = [binAttDoc, binAttDoc2, pngAttDoc,
-                { _id: "bar" },
-                { _id: "foo", deleted: true }];
-            return db.bulkDocs(docs).then(() => {
-                return new Promise((resolve, reject) => {
-                    const ret = db.changes({
-                        attachments: true,
-                        binary: true,
-                        live: true
-                    }).on("error", reject)
-                        .on("change", handleChange)
-                        .on("complete", resolve);
-
-                    let promise = Promise.resolve();
-                    let done = 0;
-
-                    function doneWithDoc() {
-                        if (++done === 5 && changes === 5) {
-                            ret.cancel();
-                        }
-                    }
-
-                    var changes = 0;
-                    function handleChange(change) {
-                        changes++;
-                        promise = promise.then(() => {
-                            assert.isUndefined(change.doc);
-                            return doneWithDoc();
-                        }).catch(reject);
-                    }
-                });
-            });
-        });
-
-        it("Measures length correctly after put()", () => {
-            const db = new PouchDB(dbs.name);
-            return db.put(binAttDoc).then(() => {
-                return db.get(binAttDoc._id);
-            }).then((doc) => {
-                delete doc._attachments["foo.txt"].revpos;
-
-                // because of libicu vs. ascii
-                const digest = doc._attachments["foo.txt"].digest;
-                const validDigests = [
-                    "md5-qUUYqS41RhwF0TrCsTAxFg==",
-                    "md5-aEI7pOYCRBLTRQvvqYrrJQ==",
-                    "md5-jeLnIuUvK7d+6gya044lVA=="
-                ];
-                assert.notEqual(validDigests.indexOf(digest), -1, `expected ${digest} to be in: ${JSON.stringify(validDigests)}`);
-                delete doc._attachments["foo.txt"].digest;
-                assert.deepEqual(doc._attachments, {
-                    "foo.txt": {
-                        content_type: "text/plain",
-                        stub: true,
-                        length: 29
-                    }
-                });
-            });
-        });
-
-        it("#3074 non-live changes()", () => {
-            const db = new PouchDB(dbs.name);
-            const docs = [];
-            for (let i = 0; i < 5; i++) {
-                docs.push({
-                    _id: i.toString(),
-                    _attachments: {
-                        "foo.png": {
-                            data: icons[i],
-                            content_type: "image/png"
-                        }
-                    }
-                });
-            }
-            return db.bulkDocs(docs).then(() => {
-                return db.changes({ include_docs: true, attachments: true });
-            }).then((res) => {
-                const attachments = res.results.sort((left, right) => {
-                    return left.id < right.id ? -1 : 1;
-                }).map((change) => {
-                    const doc = change.doc;
-                    delete doc._attachments["foo.png"].revpos;
-                    return doc._attachments;
-                });
-                assert.deepEqual(attachments, icons.map((icon, i) => {
-                    return {
-                        "foo.png": {
-                            content_type: "image/png",
-                            data: icon,
-                            digest: iconDigests[i]
-                        }
-                    };
-                }), "when attachments=true");
-                return db.changes({ include_docs: true });
-            }).then((res) => {
-                const attachments = res.results.sort((left, right) => {
-                    return left.id < right.id ? -1 : 1;
-                }).map((change) => {
-                    const doc = change.doc;
-                    delete doc._attachments["foo.png"].revpos;
-                    return doc._attachments["foo.png"];
-                });
-                assert.deepEqual(attachments, icons.map((icon, i) => {
-                    return {
-                        content_type: "image/png",
-                        stub: true,
-                        digest: iconDigests[i],
-                        length: iconLengths[i]
-                    };
-                }), "when attachments=false");
-                return db.changes({ attachments: true });
-            }).then((res) => {
-                assert.lengthOf(res.results, 5);
-                res.results.forEach((row) => {
-                    assert.isUndefined(row.doc,
-                        "no doc when attachments=true but include_docs=false");
-                });
-                return db.changes();
-            }).then((res) => {
-                assert.lengthOf(res.results, 5);
-                res.results.forEach((row) => {
-                    assert.isUndefined(row.doc,
-                        "no doc when attachments=false and include_docs=false");
-                });
-            });
-        });
-
-        it("#3074 live changes()", () => {
-            const db = new PouchDB(dbs.name);
-
-            function liveChangesPromise(opts) {
-                opts.live = true;
-                return new Promise((resolve, reject) => {
-                    const retChanges = { results: [] };
-                    var changes = db.changes(opts)
-                        .on("change", (change) => {
-                            retChanges.results.push(change);
-                            if (retChanges.results.length === 5) {
-                                changes.cancel();
-                                resolve(retChanges);
-                            }
-                        }).on("error", reject);
-                });
-            }
-
-            const docs = [];
-            for (let i = 0; i < 5; i++) {
-                docs.push({
-                    _id: i.toString(),
-                    _attachments: {
-                        "foo.png": {
-                            data: icons[i],
-                            content_type: "image/png"
-                        }
-                    }
-                });
-            }
-            return db.bulkDocs(docs).then(() => {
-                return liveChangesPromise({
-                    include_docs: true,
-                    attachments: true
-                });
-            }).then((res) => {
-                const attachments = res.results.sort((left, right) => {
-                    return left.id < right.id ? -1 : 1;
-                }).map((change) => {
-                    const doc = change.doc;
-                    delete doc._attachments["foo.png"].revpos;
-                    return doc._attachments;
-                });
-                assert.deepEqual(attachments, icons.map((icon, i) => {
-                    return {
-                        "foo.png": {
-                            content_type: "image/png",
-                            data: icon,
-                            digest: iconDigests[i]
-                        }
-                    };
-                }), "when attachments=true");
-                return liveChangesPromise({ include_docs: true });
-            }).then((res) => {
-                const attachments = res.results.sort((left, right) => {
-                    return left.id < right.id ? -1 : 1;
-                }).map((change) => {
-                    const doc = change.doc;
-                    delete doc._attachments["foo.png"].revpos;
-                    return doc._attachments["foo.png"];
-                });
-                assert.deepEqual(attachments, icons.map((icon, i) => {
-                    return {
-                        content_type: "image/png",
-                        stub: true,
-                        digest: iconDigests[i],
-                        length: iconLengths[i]
-                    };
-                }), "when attachments=false");
-                return liveChangesPromise({ attachments: true });
-            }).then((res) => {
-                assert.lengthOf(res.results, 5);
-                res.results.forEach((row) => {
-                    assert.isUndefined(row.doc,
-                        "no doc when attachments=true but include_docs=false");
-                });
-                return liveChangesPromise({});
-            }).then((res) => {
-                assert.lengthOf(res.results, 5);
-                res.results.forEach((row) => {
-                    assert.isUndefined(row.doc,
-                        "no doc when attachments=false and include_docs=false");
-                });
-            });
-        });
-
-        it("#3074 non-live changes(), no attachments", () => {
-            const db = new PouchDB(dbs.name);
-            const docs = [];
-            for (let i = 0; i < 5; i++) {
-                docs.push({
-                    _id: i.toString()
-                });
-            }
-            return db.bulkDocs(docs).then(() => {
-                return db.changes({ include_docs: true, attachments: true });
-            }).then((res) => {
-                const attachments = res.results.sort((left, right) => {
-                    return left.id < right.id ? -1 : 1;
-                }).map((change) => {
-                    const doc = change.doc;
-                    return Boolean(doc._attachments);
-                });
-                assert.deepEqual(attachments, icons.map(() => {
-                    return false;
-                }), "when attachments=true");
-                return db.changes({ include_docs: true });
-            }).then((res) => {
-                const attachments = res.results.sort((left, right) => {
-                    return left.id < right.id ? -1 : 1;
-                }).map((change) => {
-                    const doc = change.doc;
-                    return Boolean(doc._attachments);
-                });
-                assert.deepEqual(attachments, icons.map(() => {
-                    return false;
-                }), "when attachments=false");
-                return db.changes({ attachments: true });
-            }).then((res) => {
-                assert.lengthOf(res.results, 5);
-                res.results.forEach((row) => {
-                    assert.isUndefined(row.doc,
-                        "no doc when attachments=true but include_docs=false");
-                });
-                return db.changes();
-            }).then((res) => {
-                assert.lengthOf(res.results, 5);
-                res.results.forEach((row) => {
-                    assert.isUndefined(row.doc,
-                        "no doc when attachments=false and include_docs=false");
-                });
-            });
-        });
-
-        it("#3074 live changes(), no attachments", () => {
-
-            const db = new PouchDB(dbs.name);
-
-            function liveChangesPromise(opts) {
-                opts.live = true;
-                return new Promise((resolve, reject) => {
-                    const retChanges = { results: [] };
-                    var changes = db.changes(opts)
-                        .on("change", (change) => {
-                            retChanges.results.push(change);
-                            if (retChanges.results.length === 5) {
-                                changes.cancel();
-                                resolve(retChanges);
-                            }
-                        }).on("error", reject);
-                });
-            }
-
-            const docs = [];
-            for (let i = 0; i < 5; i++) {
-                docs.push({
-                    _id: i.toString()
-                });
-            }
-            return db.bulkDocs(docs).then(() => {
-                return liveChangesPromise({
-                    include_docs: true,
-                    attachments: true
-                });
-            }).then((res) => {
-                const attachments = res.results.sort((left, right) => {
-                    return left.id < right.id ? -1 : 1;
-                }).map((change) => {
-                    const doc = change.doc;
-                    return Boolean(doc._attachments);
-                });
-                assert.deepEqual(attachments, icons.map(() => {
-                    return false;
-                }), "when attachments=true");
-                return liveChangesPromise({ include_docs: true });
-            }).then((res) => {
-                const attachments = res.results.sort((left, right) => {
-                    return left.id < right.id ? -1 : 1;
-                }).map((change) => {
-                    const doc = change.doc;
-                    return Boolean(doc._attachments);
-                });
-                assert.deepEqual(attachments, icons.map(() => {
-                    return false;
-                }), "when attachments=false");
-                return liveChangesPromise({ attachments: true });
-            }).then((res) => {
-                assert.lengthOf(res.results, 5);
-                res.results.forEach((row) => {
-                    assert.isUndefined(row.doc,
-                        "no doc when attachments=true but include_docs=false");
-                });
-                return liveChangesPromise({});
-            }).then((res) => {
-                assert.lengthOf(res.results, 5);
-                res.results.forEach((row) => {
-                    assert.isUndefined(row.doc,
-                        "no doc when attachments=false and include_docs=false");
-                });
-            });
-        });
-
-        it("#3881 filter extraneous keys from _attachments", () => {
-            const db = new PouchDB(dbs.name);
-            return db.put({
-                _id: "foo",
-                _attachments: {
-                    "foo.txt": {
-                        data: "",
-                        content_type: "text/plain",
-                        follows: false,
-                        foo: "bar",
-                        baz: true,
-                        quux: 1
-                    }
-                }
-            }).then(() => {
-                return db.get("foo", { attachments: true });
-            }).then((doc) => {
-                const keys = Object.keys(doc._attachments["foo.txt"]).filter((x) => {
-                    return x !== "revpos"; // not supported by PouchDB right now
-                }).sort();
-                assert.deepEqual(keys, ["content_type", "data", "digest"]);
-            });
-        });
-
-        it("#2771 allDocs() 1, single attachment", () => {
-            const db = new PouchDB(dbs.name);
-            return db.put(binAttDoc).then(() => {
-                return db.allDocs({ key: binAttDoc._id, include_docs: true });
-            }).then((res) => {
-                const doc = res.rows[0].doc;
-                delete doc._attachments["foo.txt"].revpos;
-
-                // because of libicu vs. ascii
-                const digest = doc._attachments["foo.txt"].digest;
-                const validDigests = [
-                    "md5-qUUYqS41RhwF0TrCsTAxFg==",
-                    "md5-aEI7pOYCRBLTRQvvqYrrJQ==",
-                    "md5-jeLnIuUvK7d+6gya044lVA=="
-                ];
-                assert.notEqual(validDigests.indexOf(digest), -1,
-                    `expected ${digest} to be in: ${
-                    JSON.stringify(validDigests)}`);
-                delete doc._attachments["foo.txt"].digest;
-                assert.deepEqual(doc._attachments, {
-                    "foo.txt": {
-                        content_type: "text/plain",
-                        stub: true,
-                        length: 29
-                    }
-                });
-                return db.allDocs({
-                    key: binAttDoc._id,
-                    include_docs: true,
-                    attachments: true
-                });
-            }).then((res) => {
-                const doc = res.rows[0].doc;
-                assert.equal(doc._attachments["foo.txt"].content_type, binAttDoc._attachments["foo.txt"].content_type);
-                assert.equal(doc._attachments["foo.txt"].data, binAttDoc._attachments["foo.txt"].data);
-            });
-        });
-
-        it("#2771 allDocs() 2, many docs same att", () => {
-            const db = new PouchDB(dbs.name);
-            const docs = [];
-            for (let i = 0; i < 5; i++) {
-                docs.push({
-                    _id: i.toString(),
-                    _attachments: {
-                        "foo.txt": {
-                            data: "VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ=",
-                            content_type: "text/plain"
-                        }
-                    }
-                });
-            }
-            return db.bulkDocs(docs).then(() => {
-                return db.allDocs({ include_docs: true, attachments: true });
-            }).then((res) => {
-                const attachments = res.rows.map((row) => {
-                    const doc = row.doc;
-                    delete doc._attachments["foo.txt"].revpos;
-                    assert.exists(doc._attachments["foo.txt"].digest);
-                    delete doc._attachments["foo.txt"].digest;
-                    return doc._attachments;
-                });
-                assert.deepEqual(attachments, [1, 2, 3, 4, 5].map(() => {
-                    return {
-                        "foo.txt": {
-                            content_type: "text/plain",
-                            data: "VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ="
-                        }
-                    };
-                }));
-            });
-        });
-
-        it("#2771 allDocs() 3, many docs diff atts", () => {
-            const db = new PouchDB(dbs.name);
-            const docs = [];
-            for (let i = 0; i < 5; i++) {
-                docs.push({
-                    _id: i.toString(),
-                    _attachments: {
-                        "foo.png": {
-                            data: icons[i],
-                            content_type: "image/png"
-                        }
-                    }
-                });
-            }
-            return db.bulkDocs(docs).then(() => {
-                return db.allDocs({ include_docs: true, attachments: true });
-            }).then((res) => {
-                const attachments = res.rows.map((row) => {
-                    const doc = row.doc;
-                    delete doc._attachments["foo.png"].revpos;
-                    return doc._attachments;
-                });
-                assert.deepEqual(attachments, icons.map((icon, i) => {
-                    return {
-                        "foo.png": {
-                            content_type: "image/png",
-                            data: icon,
-                            digest: iconDigests[i]
-                        }
-                    };
-                }));
-                return db.allDocs({ include_docs: true });
-            }).then((res) => {
-                const attachments = res.rows.map((row) => {
-                    const doc = row.doc;
-                    delete doc._attachments["foo.png"].revpos;
-                    return doc._attachments["foo.png"];
-                });
-                assert.deepEqual(attachments, icons.map((icon, i) => {
-                    return {
-                        content_type: "image/png",
-                        stub: true,
-                        digest: iconDigests[i],
-                        length: iconLengths[i]
-                    };
-                }));
-            });
-        });
-
-        it("#2771 allDocs() 4, mix of atts and no atts", () => {
-            const db = new PouchDB(dbs.name);
-            const docs = [];
-            for (let i = 0; i < 5; i++) {
-                const doc = {
-                    _id: i.toString()
-                };
-                if (i % 2 === 1) {
-                    doc._attachments = {
-                        "foo.png": {
-                            data: icons[i],
-                            content_type: "image/png"
-                        }
-                    };
-                }
-                docs.push(doc);
-            }
-            return db.bulkDocs(docs).then(() => {
-                return db.allDocs({ include_docs: true, attachments: true });
-            }).then((res) => {
-                const attachments = res.rows.map((row, i) => {
-                    const doc = row.doc;
-                    if (i % 2 === 1) {
-                        delete doc._attachments["foo.png"].revpos;
-                        return doc._attachments;
-                    }
-                    return null;
-                });
-                assert.deepEqual(attachments, icons.map((icon, i) => {
-                    if (i % 2 === 0) {
-                        return null;
-                    }
-                    return {
-                        "foo.png": {
-                            content_type: "image/png",
-                            data: icon,
-                            digest: iconDigests[i]
-                        }
-                    };
-                }));
-                return db.allDocs({ include_docs: true });
-            }).then((res) => {
-                const attachments = res.rows.map((row, i) => {
-                    const doc = row.doc;
-                    if (i % 2 === 1) {
-                        delete doc._attachments["foo.png"].revpos;
-                        return doc._attachments["foo.png"];
-                    }
-                    return null;
-                });
-                assert.deepEqual(attachments, icons.map((icon, i) => {
-                    if (i % 2 === 0) {
-                        return null;
-                    }
-                    return {
-                        content_type: "image/png",
-                        stub: true,
-                        digest: iconDigests[i],
-                        length: iconLengths[i]
-                    };
-                }));
-            });
-        });
-
-        it("#2771 allDocs() 5, no atts", () => {
-            const db = new PouchDB(dbs.name);
-            const docs = [];
-            for (let i = 0; i < 5; i++) {
-                const doc = {
-                    _id: i.toString()
-                };
-                docs.push(doc);
-            }
-            return db.bulkDocs(docs).then(() => {
-                return db.allDocs({ include_docs: true, attachments: true });
-            }).then((res) => {
-                assert.lengthOf(res.rows, 5);
-                res.rows.forEach((row) => {
-                    assert.exists(row.doc);
-                    assert.isUndefined(row.doc._attachments);
-                });
-                return db.allDocs({ include_docs: true });
-            }).then((res) => {
-                assert.lengthOf(res.rows, 5);
-                res.rows.forEach((row) => {
-                    assert.exists(row.doc);
-                    assert.isUndefined(row.doc._attachments);
-                });
-            });
-        });
-
-        it("#2771 allDocs() 6, no docs", () => {
-            const db = new PouchDB(dbs.name);
-            const docs = [];
-            for (let i = 0; i < 5; i++) {
-                const doc = {
-                    _id: i.toString()
-                };
-                docs.push(doc);
-            }
-            return db.bulkDocs(docs).then(() => {
-                return db.allDocs({
-                    include_docs: true,
-                    attachments: true,
-                    keys: []
-                });
-            }).then((res) => {
-                assert.lengthOf(res.rows, 0);
-                return db.allDocs({ include_docs: true, keys: [] });
-            }).then((res) => {
-                assert.lengthOf(res.rows, 0);
-            });
-        });
-
-        it("#2771 allDocs() 7, revisions and deletions", () => {
-            const db = new PouchDB(dbs.name, { auto_compaction: false });
-            const doc = {
-                _id: "doc",
-                _attachments: {
-                    "foo.txt": {
-                        content_type: "text/plain",
-                        data: "Zm9vYmFy" // 'foobar'
-                    }
-                }
-            };
-            let rev;
-            return db.put(doc).then(() => {
-                return db.allDocs({ keys: ["doc"], attachments: true, include_docs: true });
-            }).then((res) => {
-                const doc = res.rows[0].doc;
-                assert.equal(doc._attachments["foo.txt"].data, "Zm9vYmFy");
-                rev = doc._rev;
-                doc._attachments["foo.txt"] = {
-                    content_type: "text/plain",
-                    data: "dG90bw=="
-                }; // 'toto'
-                return db.put(doc);
-            }).then(() => {
-                return db.allDocs({ keys: ["doc"], attachments: true, include_docs: true });
-            }).then((res) => {
-                const doc = res.rows[0].doc;
-                assert.equal(doc._attachments["foo.txt"].data, "dG90bw==");
-                return db.remove(doc);
-            }).then((res) => {
-                rev = res.rev;
-                return db.allDocs({ keys: ["doc"], attachments: true, include_docs: true });
-            }).then((res) => {
-                // technically CouchDB sets this to null, but we won't adhere strictly to that
-                assert.isNull(res.rows[0].doc);
-                delete res.rows[0].doc;
-                assert.deepEqual(res.rows, [
-                    {
-                        id: "doc",
-                        key: "doc",
-                        value: {
-                            rev,
-                            deleted: true
-                        }
-                    }
-                ]);
-            });
-        });
-
-        it("#2771 allDocs() 8, empty attachment", () => {
-            const db = new PouchDB(dbs.name);
-            return db.put(binAttDoc2).then(() => {
-                return db.allDocs({ key: binAttDoc2._id, include_docs: true });
-            }).then((res) => {
-                const doc = res.rows[0].doc;
-                delete doc._attachments["foo.txt"].revpos;
-
-                // because of libicu vs. ascii
-                const digest = doc._attachments["foo.txt"].digest;
-                const validDigests = [
-                    "md5-1B2M2Y8AsgTpgAmY7PhCfg==",
-                    "md5-cCkGbCesb17xjWYNV0GXmg==",
-                    "md5-3gIs+o2eJiHrXZqziQZqBA=="
-                ];
-                assert.notEqual(validDigests.indexOf(digest), -1,
-                    `expected ${digest} to be in: ${
-                    JSON.stringify(validDigests)}`);
-                delete doc._attachments["foo.txt"].digest;
-                delete doc._attachments["foo.txt"].digest;
-                assert.deepEqual(doc._attachments, {
-                    "foo.txt": {
-                        content_type: "text/plain",
-                        stub: true,
-                        length: 0
-                    }
-                });
-                return db.allDocs({
-                    key: binAttDoc2._id,
-                    include_docs: true,
-                    attachments: true
-                });
-            }).then((res) => {
-                const doc = res.rows[0].doc;
-                assert.equal(doc._attachments["foo.txt"].content_type,
-                    binAttDoc2._attachments["foo.txt"].content_type);
-                assert.equal(doc._attachments["foo.txt"].data,
-                    binAttDoc2._attachments["foo.txt"].data);
-            });
-        });
-
-        it("No length for non-stubs", () => {
-            const db = new PouchDB(dbs.name);
-            return db.put(binAttDoc).then(() => {
-                return db.get(binAttDoc._id, { attachments: true });
-            }).then((doc) => {
-                assert.isUndefined(doc._attachments["foo.txt"].stub);
-                assert.isUndefined(doc._attachments["foo.txt"].length);
-            });
-        });
-
-        it('Test some attachments', function (done) {
-            var db = new PouchDB(dbs.name);
-            db.put(binAttDoc, function (err) {
-                assert.isNull(err, 'saved doc with attachment');
-                db.get('bin_doc', function (err, doc) {
-                    assert.exists(doc._attachments, 'doc has attachments field');
-                    assert.exists(doc._attachments['foo.txt'], 'doc has attachment');
-                    assert.equal(doc._attachments['foo.txt'].content_type, 'text/plain');
-                    db.getAttachment('bin_doc', 'foo.txt', function (err, res) {
-                        assert.isNull(err, 'fetched attachment');
-                        assert.equal(res.type, 'text/plain');
-                        testUtils.readBlob(res, function (data) {
-                            assert.equal(data, 'This is a base64 encoded text');
-                            db.put(binAttDoc2, function (err, rev) {
-                                db.getAttachment('bin_doc2', 'foo.txt',
-                                    function (err, res) {
-                                        assert.isNull(err);
-                                        assert.equal(res.type, 'text/plain');
-                                        testUtils.readBlob(res, function (data) {
-                                            assert.equal(data, '', 'Correct data returned');
-                                            moreTests(rev.rev);
-                                        });
-                                    });
-                            });
-                        });
-                    });
-                });
-            });
-
-            function moreTests(rev) {
-                var blob = testUtils.makeBlob('This is no base64 encoded text');
-                db.putAttachment('bin_doc2', 'foo2.txt', rev, blob, 'text/plain', function (err, info) {
-                    assert.equal(info.ok, true);
-                    db.getAttachment('bin_doc2', 'foo2.txt', function (err, res) {
-                        assert.isNull(err);
-                        assert.equal(res.type, 'text/plain');
-                        testUtils.readBlob(res, function (data) {
-                            assert.exists(data);
-                            db.get('bin_doc2', { attachments: true },
-                                function (err, res) {
-                                    assert.isNull(err);
-                                    assert.exists(res._attachments, 'Result has attachments field');
-                                    assert.notExists(res._attachments['foo2.txt'].stub, 'stub is false');
-                                    assert.equal(res._attachments['foo2.txt'].data, 'VGhpcyBpcyBubyBiYXNlNjQgZW5jb2RlZCB0ZXh0');
-                                    assert.equal(res._attachments['foo2.txt'].content_type, 'text/plain');
-                                    assert.equal(res._attachments['foo.txt'].data, '');
-                                    done();
-                                });
-                        });
-                    });
-                });
-            }
-        });
-
-        it("Test getAttachment", (done) => {
-            const db = new PouchDB(dbs.name);
-            db.put(binAttDoc, (err) => {
-                assert.isNull(err);
-                db.getAttachment("bin_doc", "foo.txt", (err, res) => {
-                    if (err) {
-                        return done(err);
-                    }
-                    assert.equal(res.type, "text/plain");
-                    testUtils.readBlob(res, (data) => {
-                        assert.equal(data, "This is a base64 encoded text", "correct data");
-                        done();
-                    });
-                });
-            });
-        });
-
-        it("Test getAttachment with stubs", () => {
-            const db = new PouchDB(dbs.name);
-            return db.put({
-                _id: "doc",
-                _attachments: {
-                    1: {
-                        content_type: "application/octet-stream",
-                        data: testUtils.btoa("1\u00002\u00013\u0002")
-                    }
-                }
-            }).then(() => {
-                return db.get("doc");
-            }).then((doc) => {
-                doc._attachments["2"] = {
-                    content_type: "application/octet-stream",
-                    data: testUtils.btoa("3\u00002\u00011\u0002")
-                };
-                return db.put(doc);
-            }).then(() => {
-                return db.getAttachment("doc", "1");
-            }).then((att) => {
-                assert.equal(att.type, "application/octet-stream");
-                return testUtils.readBlobPromise(att);
-            }).then((bin) => {
-                assert.equal(bin, "1\u00002\u00013\u0002");
-                return db.getAttachment("doc", "2");
-            }).then((att) => {
-                assert.equal(att.type, "application/octet-stream");
-                return testUtils.readBlobPromise(att);
-            }).then((bin) => {
-                assert.equal(bin, "3\u00002\u00011\u0002");
-            });
-        });
-
-        it("Test get() with binary:true and stubs", () => {
-            const db = new PouchDB(dbs.name);
-            return db.put({
-                _id: "doc",
-                _attachments: {
-                    1: {
-                        content_type: "application/octet-stream",
-                        data: testUtils.btoa("1\u00002\u00013\u0002")
-                    }
-                }
-            }).then(() => {
-                return db.get("doc");
-            }).then((doc) => {
-                doc._attachments["2"] = {
-                    content_type: "application/octet-stream",
-                    data: testUtils.btoa("3\u00002\u00011\u0002")
-                };
-                return db.put(doc);
-            }).then(() => {
-                return db.get("doc", { attachments: true, binary: true });
-            }).then((doc) => {
-                const att1 = doc._attachments["1"].data;
-                const att2 = doc._attachments["2"].data;
-                assert.equal(att1.type, "application/octet-stream");
-                assert.equal(att2.type, "application/octet-stream");
-                return testUtils.readBlobPromise(att1).then((bin) => {
-                    assert.equal(bin, "1\u00002\u00013\u0002");
-                    return testUtils.readBlobPromise(att2);
-                }).then((bin) => {
-                    assert.equal(bin, "3\u00002\u00011\u0002");
-                });
-            });
-        });
-
-        it("Test attachments in allDocs/changes", (done) => {
-            const db = new PouchDB(dbs.name);
-            const docs = [
-                { _id: "doc0" },
-                {
-                    _id: "doc1",
-                    _attachments: {
-                        att0: {
-                            data: "YXR0YWNobWVudDA=",
-                            content_type: "text/plain"
-                        }
-                    }
-                },
-                {
-                    _id: "doc2",
-                    _attachments: {
-                        att0: {
-                            data: "YXR0YWNobWVudDA=",
-                            content_type: "text/plain"
-                        },
-                        att1: {
-                            data: "YXR0YWNobWVudDE=",
-                            content_type: "text/plain"
-                        }
-                    }
-                },
-                {
-                    _id: "doc3",
-                    _attachments: {
-                        att0: {
-                            data: "YXR0YWNobWVudDA=",
-                            content_type: "text/plain"
-                        }
-                    }
-                }
-            ];
-            function sort(a, b) {
-                return a.id.localeCompare(b.id);
-            }
-            db.bulkDocs({ docs }, () => {
-                db.allDocs({ include_docs: true }, (err, res) => {
-                    for (let i = 0; i < docs.length; i++) {
-                        const attachmentsNb = typeof docs[i]._attachments !== "undefined" ?
-                            Object.keys(docs[i]._attachments).length : 0;
-                        for (let j = 0; j < attachmentsNb; j++) {
-                            assert.equal(res.rows[i].doc._attachments[`att${j}`].stub, true, `(allDocs) doc${i} contains att${j} stub`);
-                        }
-                    }
-                    assert.isUndefined(res.rows[0].doc._attachments, "(allDocs) doc0 contains no attachments");
-                    db.changes({
-                        include_docs: true
-                    }).on("change", (change) => {
-                        const i = Number(change.id.substr(3));
-                        if (i === 0) {
-                            assert.isUndefined(res.rows[0].doc._attachments, "(onChange) doc0 contains no attachments");
-                        } else {
-                            const attachmentsNb =
-                                typeof docs[i]._attachments !== "undefined" ?
-                                    Object.keys(docs[i]._attachments).length : 0;
-                            for (let j = 0; j < attachmentsNb; j++) {
-                                assert.equal(res.rows[i].doc._attachments[`att${j}`].stub, true, `(onChange) doc${i} contains att${j} stub`);
-                            }
-                        }
-                    }).on("complete", (res) => {
-                        let attachmentsNb = 0;
-                        res.results.sort(sort);
-                        for (let i = 0; i < 3; i++) {
-                            attachmentsNb = typeof docs[i]._attachments !== "undefined" ?
-                                Object.keys(docs[i]._attachments).length : 0;
-                            for (let j = 0; j < attachmentsNb; j++) {
-                                assert.equal(res.results[i].doc._attachments[`att${j}`].stub, true, `(complete) doc${i} contains att${j} stub`);
-                            }
-                        }
-                        assert.isUndefined(res.results[0].doc._attachments, "(complete) doc0 contains no attachments");
-                        done();
-                    });
-                });
-            });
-        });
-
-        it("Test putAttachment with base64 plaintext", () => {
-            const db = new PouchDB(dbs.name);
-            return db.putAttachment("doc", "att", null, "Zm9v", "text/plain").then(() => {
-                return db.getAttachment("doc", "att");
-            }).then((blob) => {
-                return new Promise((resolve) => {
-                    testUtils.base64Blob(blob, (data) => {
-                        assert.equal(data, "Zm9v", "should get the correct base64 back");
-                        resolve();
-                    });
-                });
-            });
-        });
-
-        it("Test putAttachment with invalid base64", async () => {
-            const db = new PouchDB(dbs.name);
-            await assert.throws(async () => db.putAttachment("doc", "att", null, "\u65e5\u672c\u8a9e", "text/plain").should.be.rejected.then((err) => {
-                assert.property(err, "message", "Some query argument is invalid");
-            }));
-        });
-
-        it("Test getAttachment with empty text", (done) => {
-            const db = new PouchDB(dbs.name);
-            db.put(binAttDoc2, (err) => {
-                if (err) {
-                    return done(err);
-                }
-                db.getAttachment("bin_doc2", "foo.txt", (err, res) => {
-                    if (err) {
-                        return done(err);
-                    }
-                    assert.equal((typeof res), "object", "res is object, not a string");
-                    testUtils.base64Blob(res, (data) => {
-                        assert.equal(data, "", "correct data");
-                        db.get(binAttDoc2._id, (err, doc) => {
-                            const att = doc._attachments["foo.txt"];
-                            assert.equal(att.stub, true);
-                            // both ascii and libicu
-                            const validDigests = [
-                                "md5-1B2M2Y8AsgTpgAmY7PhCfg==",
-                                "md5-cCkGbCesb17xjWYNV0GXmg==",
-                                "md5-3gIs+o2eJiHrXZqziQZqBA=="
-                            ];
-                            assert.isAbove(validDigests.indexOf(att.digest), -1);
-                            assert.equal(att.content_type, "text/plain");
-                            assert.equal(att.length, 0);
-                            done();
-                        });
-                    });
-                });
-            });
-        });
-
-        it("Test getAttachment with normal text", (done) => {
-            const db = new PouchDB(dbs.name);
-            db.put(binAttDoc, (err) => {
-                if (err) {
-                    return done(err);
-                }
-                db.getAttachment("bin_doc", "foo.txt", (err, res) => {
-                    if (err) {
-                        return done(err);
-                    }
-                    assert.equal((typeof res), "object", "res is object, not a string");
-                    testUtils.base64Blob(res, (data) => {
-                        assert.equal(data, binAttDoc._attachments["foo.txt"].data, "correct data");
-                        done();
-                    });
-                });
-            });
-        });
-
-        it("Test getAttachment with PNG", (done) => {
-            const db = new PouchDB(dbs.name);
-            db.put(pngAttDoc, (err) => {
-                if (err) {
-                    return done(err);
-                }
-                db.getAttachment("png_doc", "foo.png", (err, res) => {
-                    if (err) {
-                        return done(err);
-                    }
-                    assert.equal((typeof res), "object", "res is object, not a string");
-                    testUtils.base64Blob(res, (data) => {
-                        assert.equal(data, pngAttDoc._attachments["foo.png"].data, "correct data");
-                        done();
-                    });
-                });
-            });
-        });
-
-        it("Test getAttachment with PNG using bulkDocs", (done) => {
-            const db = new PouchDB(dbs.name);
-            db.bulkDocs([pngAttDoc], (err) => {
-                if (err) {
-                    return done(err);
-                }
-                db.getAttachment("png_doc", "foo.png", (err, res) => {
-                    if (err) {
-                        return done(err);
-                    }
-                    testUtils.base64Blob(res, (data) => {
-                        assert.equal(data, pngAttDoc._attachments["foo.png"].data, "correct data");
-                        done();
-                    });
-                });
-            });
-        });
-
-        it("Test getAttachment with PNG using post", (done) => {
-            const db = new PouchDB(dbs.name);
-            db.post(pngAttDoc, (err) => {
-                if (err) {
-                    return done(err);
-                }
-                db.getAttachment("png_doc", "foo.png", (err, res) => {
-                    if (err) {
-                        return done(err);
-                    }
-                    testUtils.base64Blob(res, (data) => {
-                        assert.equal(data, pngAttDoc._attachments["foo.png"].data, "correct data");
-                        done();
-                    });
-                });
-            });
-        });
-
-        it("Test postAttachment with PNG then bulkDocs", (done) => {
-            const db = new PouchDB(dbs.name);
-            db.put({ _id: "foo" }, () => {
-                db.get("foo", (err, doc) => {
-                    const data = pngAttDoc._attachments["foo.png"].data;
-                    const blob = testUtils.binaryStringToBlob(testUtils.atob(data), "image/png");
-                    db.putAttachment("foo", "foo.png", doc._rev, blob, "image/png",
-                        (err) => {
-                            assert.isNull(err, "attachment inserted");
-                            db.bulkDocs([{}], (err) => {
-                                assert.isNull(err, "doc inserted");
-                                done();
-                            });
-                        });
-                });
-            });
-        });
-
-        it("proper stub behavior", () => {
-            const db = new PouchDB(dbs.name);
-            return db.put(binAttDoc).then(() => {
-                return db.get(binAttDoc._id);
-            }).then((doc) => {
-                return db.putAttachment(doc._id, "foo.json", doc._rev,
-                    jsonDoc._attachments["foo.json"].data,
-                    jsonDoc._attachments["foo.json"].content_type);
-            }).then(() => {
-                return db.get(binAttDoc._id);
-            }).then((doc) => {
-                Object.keys(doc._attachments).forEach((filename) => {
-                    const att = doc._attachments[filename];
-                    assert.isUndefined(att.data);
-                    assert.equal(att.stub, true);
-                    assert.exists(att.digest);
-                    assert.exists(att.content_type);
-                });
-                return db.get(binAttDoc._id, { attachments: true });
-            }).then((doc) => {
-                Object.keys(doc._attachments).forEach((filename) => {
-                    const att = doc._attachments[filename];
-                    assert.exists(att.data);
+                    const savedDoc = savedDocs.filter((x) => {
+                        return x._id === doc._id;
+                    })[0];
+                    if (!atts) {
+                        assert.isUndefined(savedDoc._attachments);
+                        return;
+                    }
+                    const att = savedDoc._attachments[attName];
                     assert.isUndefined(att.stub);
                     assert.exists(att.digest);
-                    assert.exists(att.content_type);
+                    assert.equal(att.content_type, expected.content_type);
+                    assert.isNotString(att.data);
+                    assert.equal(att.data.type, expected.content_type);
+                    assert.equal(util.btoa(att.data.toString("binary")), expected.data);
+                }));
+            });
+        });
+    });
+
+    it("#2858 {binary: true} in allDocs() 3", () => {
+        const db = new DB(dbName);
+        const docs = [binAttDoc, binAttDoc2, pngAttDoc,
+            { _id: "bar" },
+            { _id: "foo", _deleted: true }];
+        return db.bulkDocs(docs).then(() => {
+            return db.allDocs({
+                include_docs: true,
+                attachments: true,
+                binary: true
+            }).then((res) => {
+                assert.lengthOf(res.rows, 4);
+                const savedDocs = res.rows.map((x) => {
+                    return x.doc;
+                });
+                return Promise.all(docs.filter((doc) => {
+                    return !doc._deleted;
+                }).map((doc) => {
+                    const atts = doc._attachments;
+                    const attName = atts && Object.keys(atts)[0];
+                    const expected = atts && atts[attName];
+                    const savedDoc = savedDocs.filter((x) => {
+                        return x._id === doc._id;
+                    })[0];
+                    if (!atts) {
+                        assert.isUndefined(savedDoc._attachments);
+                        return;
+                    }
+                    const att = savedDoc._attachments[attName];
+                    assert.isUndefined(att.stub);
+                    assert.exists(att.digest);
+                    assert.equal(att.content_type, expected.content_type);
+                    assert.isNotString(att.data);
+                    assert.equal(att.data.type, expected.content_type);
+                    assert.equal(util.btoa(att.data.toString("binary")), expected.data);
+                }));
+            });
+        });
+    });
+
+    it("#2858 {binary: true} in allDocs() 4", () => {
+        const db = new DB(dbName);
+        const docs = [binAttDoc, binAttDoc2, pngAttDoc,
+            { _id: "bar" },
+            { _id: "foo", _deleted: true }];
+        return db.bulkDocs(docs).then(() => {
+            return db.allDocs({
+                attachments: true,
+                binary: true
+            }).then((res) => {
+                assert.lengthOf(res.rows, 4);
+                res.rows.forEach((row) => {
+                    assert.isUndefined(row.doc);
+                });
+                return db.allDocs({
+                    binary: true
+                });
+            }).then((res) => {
+                assert.lengthOf(res.rows, 4);
+                res.rows.forEach((row) => {
+                    assert.isUndefined(row.doc);
                 });
             });
         });
+    });
 
-        it("Testing with invalid docs", (done) => {
-            const db = new PouchDB(dbs.name);
-            const invalidDoc = {
-                _id: "_invalid",
-                foo: "bar"
+    it("#2858 {binary: true} in allDocs() 5", () => {
+        const db = new DB(dbName);
+        const docs = [binAttDoc, binAttDoc2, pngAttDoc,
+            { _id: "bar" },
+            { _id: "foo", deleted: true }];
+        return db.bulkDocs(docs).then(() => {
+            return db.allDocs({
+                keys: [
+                    binAttDoc._id, binAttDoc2._id, pngAttDoc._id, "foo", "bar"
+                ],
+                attachments: true,
+                binary: true,
+                include_docs: true
+            }).then((res) => {
+                assert.lengthOf(res.rows, 5);
+
+                return Promise.all(res.rows.map((row, i) => {
+                    if (docs[i]._deleted) {
+                        assert.isUndefined(row.doc);
+                        return;
+                    }
+                    const atts = docs[i]._attachments;
+                    const attName = atts && Object.keys(atts)[0];
+                    const expected = atts && atts[attName];
+                    const savedDoc = row.doc;
+                    if (!atts) {
+                        assert.isUndefined(savedDoc._attachments);
+                        return;
+                    }
+                    const att = savedDoc._attachments[attName];
+                    assert.isUndefined(att.stub);
+                    assert.exists(att.digest);
+                    assert.equal(att.content_type, expected.content_type);
+                    assert.isNotString(att.data);
+                    assert.equal(att.data.type, expected.content_type);
+                    assert.equal(util.btoa(att.data.toString("binary")), expected.data);
+                }));
+            });
+        });
+    });
+
+    it("#2858 {binary: true} in allDocs(), many atts", () => {
+        const db = new DB(dbName);
+        const docs = [
+            {
+                _id: "baz", _attachments: {
+                    "text1.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text1")
+                    },
+                    "text2.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text2")
+                    }
+                }
+            },
+            {
+                _id: "foo", _attachments: {
+                    "text5.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text5")
+                    }
+                }
+            },
+            {
+                _id: "quux", _attachments: {
+                    "text3.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text3")
+                    },
+                    "text4.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text4")
+                    }
+                }
+            },
+            {
+                _id: "zob", _attachments: {
+                    "text6.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text3")
+                    }
+                }
+            },
+            {
+                _id: "zorb", _attachments: {
+                    "text2.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text2")
+                    },
+                    "text3.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text3")
+                    }
+                }
+            }
+        ];
+        return db.bulkDocs(docs).then(() => {
+            return db.allDocs({
+                attachments: true,
+                binary: true,
+                include_docs: true
+            }).then((res) => {
+                assert.lengthOf(res.rows, 5);
+
+                return Promise.all(res.rows.map((row) => {
+                    const doc = docs.filter((x) => {
+                        return x._id === row.id;
+                    })[0];
+                    const atts = doc._attachments;
+                    const attNames = Object.keys(atts);
+                    return Promise.all(attNames.map((attName) => {
+                        const expected = atts && atts[attName];
+                        const savedDoc = row.doc;
+                        const att = savedDoc._attachments[attName];
+                        assert.isUndefined(att.stub);
+                        assert.exists(att.digest);
+                        assert.equal(att.content_type, expected.content_type);
+                        assert.isNotString(att.data);
+                        assert.equal(att.data.type, expected.content_type);
+                        assert.equal(util.btoa(att.data.toString("binary")), expected.data);
+                    }));
+                }));
+            });
+        });
+    });
+
+    it("#2858 {binary: true} in allDocs(), mixed atts", () => {
+        const db = new DB(dbName);
+        const docs = [
+            {
+                _id: "baz", _attachments: {
+                    "text1.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text1")
+                    },
+                    "text2.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text2")
+                    }
+                }
+            },
+            {
+                _id: "foo", _attachments: {
+                    "text5.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text5")
+                    }
+                }
+            },
+            { _id: "imdeleted", _deleted: true },
+            {
+                _id: "quux", _attachments: {
+                    "text3.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text3")
+                    },
+                    "text4.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text4")
+                    }
+                }
+            },
+            { _id: "imempty" },
+            {
+                _id: "zob", _attachments: {
+                    "text6.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text3")
+                    }
+                }
+            },
+
+            { _id: "imempty2" },
+            {
+                _id: "zorb", _attachments: {
+                    "text2.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text2")
+                    },
+                    "text3.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text3")
+                    }
+                }
+            },
+            {
+                _id: "imkindaempty", _attachments: {
+                    "text0.txt": {
+                        content_type: "text/plain",
+                        data: ""
+                    }
+                }
+            }
+        ];
+        return db.bulkDocs(docs).then(() => {
+            return db.allDocs({
+                attachments: true,
+                binary: true,
+                include_docs: true
+            }).then((res) => {
+                assert.lengthOf(res.rows, 8);
+
+                return Promise.all(res.rows.map((row) => {
+                    const doc = docs.filter((x) => {
+                        return x._id === row.id;
+                    })[0];
+                    if (doc._deleted) {
+                        assert.isUndefined(row.doc);
+                        return;
+                    }
+                    const atts = doc._attachments;
+                    if (!atts) {
+                        assert.isUndefined(row.doc._attachments);
+                        return;
+                    }
+                    const attNames = Object.keys(atts);
+                    return Promise.all(attNames.map((attName) => {
+                        const expected = atts && atts[attName];
+                        const savedDoc = row.doc;
+                        const att = savedDoc._attachments[attName];
+                        assert.isUndefined(att.stub);
+                        assert.exists(att.digest);
+                        assert.equal(att.content_type, expected.content_type);
+                        assert.isNotString(att.data);
+                        assert.equal(att.data.type, expected.content_type);
+                        assert.equal(util.btoa(att.data.toString("binary")), expected.data);
+                    }));
+                }));
+            });
+        });
+    });
+
+    it("#2858 {binary: true} in changes() non-live", () => {
+        const db = new DB(dbName);
+        const docs = [binAttDoc, binAttDoc2, pngAttDoc,
+            { _id: "bar" },
+            { _id: "foo", deleted: true }];
+        return db.bulkDocs(docs).then(() => {
+            return db.changes({
+                attachments: true,
+                binary: true,
+                include_docs: true
+            }).then((res) => {
+                assert.lengthOf(res.results, 5);
+
+                return Promise.all(res.results.map((row) => {
+                    const doc = docs.filter((x) => {
+                        return x._id === row.id;
+                    })[0];
+                    if (doc._deleted) {
+                        assert.isUndefined(row.doc);
+                        return;
+                    }
+                    const atts = doc._attachments;
+                    const attName = atts && Object.keys(atts)[0];
+                    const expected = atts && atts[attName];
+                    const savedDoc = row.doc;
+                    if (!atts) {
+                        assert.isUndefined(savedDoc._attachments);
+                        return;
+                    }
+                    const att = savedDoc._attachments[attName];
+                    assert.isUndefined(att.stub);
+                    assert.exists(att.digest);
+                    assert.equal(att.content_type, expected.content_type);
+                    assert.isNotString(att.data);
+                    assert.equal(att.data.type, expected.content_type);
+                    assert.equal(util.btoa(att.data.toString("binary")), expected.data);
+                }));
+            });
+        });
+    });
+
+    it("#2858 {binary: true} in changes() non-live, many atts", () => {
+        const db = new DB(dbName);
+        const docs = [
+            {
+                _id: "baz", _attachments: {
+                    "text1.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text1")
+                    },
+                    "text2.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text2")
+                    }
+                }
+            },
+            {
+                _id: "foo", _attachments: {
+                    "text5.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text5")
+                    }
+                }
+            },
+            {
+                _id: "quux", _attachments: {
+                    "text3.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text3")
+                    },
+                    "text4.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text4")
+                    }
+                }
+            },
+            {
+                _id: "zob", _attachments: {
+                    "text6.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text3")
+                    }
+                }
+            },
+            {
+                _id: "zorb", _attachments: {
+                    "text2.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text2")
+                    },
+                    "text3.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text3")
+                    }
+                }
+            }
+        ];
+        return db.bulkDocs(docs).then(() => {
+            return db.changes({
+                attachments: true,
+                binary: true,
+                include_docs: true
+            }).then((res) => {
+                assert.lengthOf(res.results, 5);
+
+                return Promise.all(res.results.map((row) => {
+                    const doc = docs.filter((x) => {
+                        return x._id === row.id;
+                    })[0];
+                    const atts = doc._attachments;
+                    const attNames = Object.keys(atts);
+                    return Promise.all(attNames.map((attName) => {
+                        const expected = atts && atts[attName];
+                        const savedDoc = row.doc;
+                        const att = savedDoc._attachments[attName];
+                        assert.isUndefined(att.stub);
+                        assert.exists(att.digest);
+                        assert.equal(att.content_type, expected.content_type);
+                        assert.isNotString(att.data);
+                        assert.equal(att.data.type, expected.content_type);
+                        assert.equal(util.btoa(att.data.toString("binary")), expected.data);
+                    }));
+                }));
+            });
+        });
+    });
+
+    it("#2858 {binary: true} in changes() non-live, mixed atts", () => {
+        const db = new DB(dbName);
+        const docs = [
+            {
+                _id: "baz", _attachments: {
+                    "text1.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text1")
+                    },
+                    "text2.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text2")
+                    }
+                }
+            },
+            {
+                _id: "foo", _attachments: {
+                    "text5.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text5")
+                    }
+                }
+            },
+            { _id: "imdeleted", _deleted: true },
+            {
+                _id: "quux", _attachments: {
+                    "text3.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text3")
+                    },
+                    "text4.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text4")
+                    }
+                }
+            },
+            { _id: "imempty" },
+            {
+                _id: "zob", _attachments: {
+                    "text6.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text3")
+                    }
+                }
+            },
+
+            { _id: "imempty2" },
+            {
+                _id: "zorb", _attachments: {
+                    "text2.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text2")
+                    },
+                    "text3.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text3")
+                    }
+                }
+            },
+            {
+                _id: "imkindaempty", _attachments: {
+                    "text0.txt": {
+                        content_type: "text/plain",
+                        data: ""
+                    }
+                }
+            }
+        ];
+        return db.bulkDocs(docs).then(() => {
+            return db.changes({
+                attachments: true,
+                binary: true,
+                include_docs: true
+            }).then((res) => {
+                assert.lengthOf(res.results, 9);
+
+                return Promise.all(res.results.map((row) => {
+                    const doc = docs.filter((x) => {
+                        return x._id === row.id;
+                    })[0];
+                    const atts = doc._attachments;
+                    if (!atts) {
+                        assert.isUndefined(row.doc._attachments);
+                        return;
+                    }
+                    const attNames = Object.keys(atts);
+                    return Promise.all(attNames.map((attName) => {
+                        const expected = atts && atts[attName];
+                        const savedDoc = row.doc;
+                        const att = savedDoc._attachments[attName];
+                        assert.isUndefined(att.stub);
+                        assert.exists(att.digest);
+                        assert.equal(att.content_type, expected.content_type);
+                        assert.isNotString(att.data);
+                        assert.equal(att.data.type, expected.content_type);
+                        assert.equal(util.btoa(att.data.toString("binary")), expected.data);
+                    }));
+                }));
+            });
+        });
+    });
+
+    it("#2858 {binary: true} non-live changes, complete event", () => {
+        const db = new DB(dbName);
+        const docs = [
+            {
+                _id: "baz", _attachments: {
+                    "text1.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text1")
+                    },
+                    "text2.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text2")
+                    }
+                }
+            },
+            {
+                _id: "foo", _attachments: {
+                    "text5.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text5")
+                    }
+                }
+            },
+            { _id: "imdeleted", _deleted: true },
+            {
+                _id: "quux", _attachments: {
+                    "text3.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text3")
+                    },
+                    "text4.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text4")
+                    }
+                }
+            },
+            { _id: "imempty" },
+            {
+                _id: "zob", _attachments: {
+                    "text6.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text3")
+                    }
+                }
+            },
+
+            { _id: "imempty2" },
+            {
+                _id: "zorb", _attachments: {
+                    "text2.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text2")
+                    },
+                    "text3.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text3")
+                    }
+                }
+            },
+            {
+                _id: "imkindaempty", _attachments: {
+                    "text0.txt": {
+                        content_type: "text/plain",
+                        data: ""
+                    }
+                }
+            }
+        ];
+        return db.bulkDocs(docs).then(() => {
+            return new Promise((resolve, reject) => {
+                db.changes({
+                    attachments: true,
+                    binary: true,
+                    include_docs: true
+                }).on("error", reject).on("complete", resolve);
+            }).then((results) => {
+                return Promise.all(results.results.map((row) => {
+                    const doc = docs.filter((x) => {
+                        return x._id === row.id;
+                    })[0];
+                    if (row.deleted) {
+                        assert.isUndefined(row.doc._attachments);
+                        return;
+                    }
+                    const atts = doc._attachments;
+                    const savedDoc = row.doc;
+                    if (!atts) {
+                        assert.isUndefined(savedDoc._attachments);
+                        return;
+                    }
+                    const attNames = Object.keys(atts);
+                    return Promise.all(attNames.map((attName) => {
+                        const expected = atts && atts[attName];
+                        const att = savedDoc._attachments[attName];
+                        assert.isUndefined(att.stub);
+                        assert.exists(att.digest);
+                        assert.equal(att.content_type, expected.content_type);
+                        assert.isNotString(att.data);
+                        assert.equal(att.data.type, expected.content_type);
+                        assert.equal(util.btoa(att.data.toString("binary")), expected.data);
+                    }));
+                }));
+            });
+        });
+    });
+
+    it("#2858 {binary: true} in live changes", () => {
+        const db = new DB(dbName);
+        const docs = [binAttDoc, binAttDoc2, pngAttDoc,
+            { _id: "bar" },
+            { _id: "foo", deleted: true }];
+        return db.bulkDocs(docs).then(() => {
+            return new Promise((resolve, reject) => {
+                let changes = 0;
+                const handleChange = (change) => {
+                    changes++;
+                    promise = promise.then(() => {
+                        const doc = docs.filter((x) => {
+                            return x._id === change.id;
+                        })[0];
+                        if (change.deleted) {
+                            assert.isUndefined(change.doc);
+                            return doneWithDoc();
+                        }
+                        const atts = doc._attachments;
+                        const attName = atts && Object.keys(atts)[0];
+                        const expected = atts && atts[attName];
+                        const savedDoc = change.doc;
+                        if (!atts) {
+                            assert.isUndefined(savedDoc._attachments);
+                            return doneWithDoc();
+                        }
+                        const att = savedDoc._attachments[attName];
+                        assert.isUndefined(att.stub);
+                        assert.exists(att.digest);
+                        assert.equal(att.content_type, expected.content_type);
+                        assert.isNotString(att.data);
+                        assert.equal(att.data.type, expected.content_type);
+                        assert.equal(util.btoa(att.data.toString("binary")), expected.data);
+                        doneWithDoc();
+                    }).catch(reject);
+                };
+                const ret = db.changes({
+                    attachments: true,
+                    binary: true,
+                    include_docs: true,
+                    live: true
+                }).on("error", reject)
+                    .on("change", handleChange)
+                    .on("complete", resolve);
+
+                let promise = Promise.resolve();
+                let done = 0;
+
+                const doneWithDoc = () => {
+                    if (++done === 5 && changes === 5) {
+                        ret.cancel();
+                    }
+                };
+            });
+        });
+    });
+
+    it("#2858 {binary: true} in live changes, mixed atts", () => {
+        const db = new DB(dbName);
+        const docs = [
+            {
+                _id: "baz", _attachments: {
+                    "text1.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text1")
+                    },
+                    "text2.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text2")
+                    }
+                }
+            },
+            {
+                _id: "foo", _attachments: {
+                    "text5.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text5")
+                    }
+                }
+            },
+            { _id: "imdeleted", _deleted: true },
+            {
+                _id: "quux", _attachments: {
+                    "text3.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text3")
+                    },
+                    "text4.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text4")
+                    }
+                }
+            },
+            { _id: "imempty" },
+            {
+                _id: "zob", _attachments: {
+                    "text6.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text3")
+                    }
+                }
+            },
+
+            { _id: "imempty2" },
+            {
+                _id: "zorb", _attachments: {
+                    "text2.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text2")
+                    },
+                    "text3.txt": {
+                        content_type: "text/plain",
+                        data: util.btoa("text3")
+                    }
+                }
+            },
+            {
+                _id: "imkindaempty", _attachments: {
+                    "text0.txt": {
+                        content_type: "text/plain",
+                        data: ""
+                    }
+                }
+            }
+        ];
+        return db.bulkDocs(docs).then(() => {
+            return new Promise((resolve, reject) => {
+                let changes = 0;
+                const handleChange = (change) => {
+                    changes++;
+                    promise = promise.then(() => {
+                        const doc = docs.filter((x) => {
+                            return x._id === change.id;
+                        })[0];
+                        if (change.deleted) {
+                            assert.isUndefined(change.doc._attachments);
+                            return doneWithDoc();
+                        }
+                        const atts = doc._attachments;
+                        const savedDoc = change.doc;
+                        if (!atts) {
+                            assert.isUndefined(savedDoc._attachments);
+                            return doneWithDoc();
+                        }
+                        const attNames = Object.keys(atts);
+                        return Promise.all(attNames.map((attName) => {
+                            const expected = atts && atts[attName];
+                            const att = savedDoc._attachments[attName];
+                            assert.isUndefined(att.stub);
+                            assert.exists(att.digest);
+                            assert.equal(att.content_type, expected.content_type);
+                            assert.isNotString(att.data);
+                            assert.equal(att.data.type, expected.content_type);
+                            assert.equal(util.btoa(att.data.toString("binary")), expected.data);
+                        })).then(doneWithDoc);
+                    }).catch(reject);
+                };
+                const ret = db.changes({
+                    attachments: true,
+                    binary: true,
+                    include_docs: true,
+                    live: true
+                }).on("error", reject)
+                    .on("change", handleChange)
+                    .on("complete", resolve);
+
+                let promise = Promise.resolve();
+                let done = 0;
+
+                const doneWithDoc = () => {
+                    if (++done === 9 && changes === 9) {
+                        ret.cancel();
+                    }
+                };
+            });
+        });
+    });
+
+    it("#2858 {binary: true} in live+retry changes", () => {
+        const db = new DB(dbName);
+        const docs = [binAttDoc, binAttDoc2, pngAttDoc,
+            { _id: "bar" },
+            { _id: "foo", deleted: true }];
+        return db.bulkDocs(docs).then(() => {
+            return new Promise((resolve, reject) => {
+                let changes = 0;
+                const handleChange = (change) => {
+                    changes++;
+                    promise = promise.then(() => {
+                        const doc = docs.filter((x) => {
+                            return x._id === change.id;
+                        })[0];
+                        if (change.deleted) {
+                            assert.isUndefined(change.doc);
+                            return doneWithDoc();
+                        }
+                        const atts = doc._attachments;
+                        const attName = atts && Object.keys(atts)[0];
+                        const expected = atts && atts[attName];
+                        const savedDoc = change.doc;
+                        if (!atts) {
+                            assert.isUndefined(savedDoc._attachments);
+                            return doneWithDoc();
+                        }
+                        const att = savedDoc._attachments[attName];
+                        assert.isUndefined(att.stub);
+                        assert.exists(att.digest);
+                        assert.equal(att.content_type, expected.content_type);
+                        assert.isNotString(att.data);
+                        assert.equal(att.data.type, expected.content_type);
+                        assert.equal(util.btoa(att.data.toString("binary")), expected.data);
+                        doneWithDoc();
+                    }).catch(reject);
+                };
+
+                const ret = db.changes({
+                    attachments: true,
+                    binary: true,
+                    include_docs: true,
+                    live: true
+                }).on("error", reject)
+                    .on("change", handleChange)
+                    .on("complete", resolve);
+
+                let promise = Promise.resolve();
+                let done = 0;
+
+                const doneWithDoc = () => {
+                    if (++done === 5 && changes === 5) {
+                        ret.cancel();
+                    }
+                };
+            });
+        });
+    });
+
+    it("#2858 {binary: true} in live changes, attachments:false", () => {
+        const db = new DB(dbName);
+        const docs = [binAttDoc, binAttDoc2, pngAttDoc,
+            { _id: "bar" },
+            { _id: "foo", deleted: true }];
+        return db.bulkDocs(docs).then(() => {
+            return new Promise((resolve, reject) => {
+                const ret = db.changes({
+                    include_docs: true,
+                    binary: true,
+                    live: true
+                }).on("error", reject)
+                    .on("change", handleChange)
+                    .on("complete", resolve);
+
+                let promise = Promise.resolve();
+                let done = 0;
+
+                function doneWithDoc() {
+                    if (++done === 5 && changes === 5) {
+                        ret.cancel();
+                    }
+                }
+
+                var changes = 0;
+                function handleChange(change) {
+                    changes++;
+                    promise = promise.then(() => {
+                        const doc = docs.filter((x) => {
+                            return x._id === change.id;
+                        })[0];
+                        if (change.deleted) {
+                            assert.isUndefined(change.doc);
+                            return doneWithDoc();
+                        }
+                        const atts = doc._attachments;
+                        const attName = atts && Object.keys(atts)[0];
+                        const expected = atts && atts[attName];
+                        const savedDoc = change.doc;
+                        if (!atts) {
+                            assert.isUndefined(savedDoc._attachments);
+                            return doneWithDoc();
+                        }
+                        const att = savedDoc._attachments[attName];
+                        assert.equal(att.stub, true);
+                        assert.exists(att.digest);
+                        assert.equal(att.content_type, expected.content_type);
+                        assert.isUndefined(att.data);
+                        doneWithDoc();
+                    }).catch(reject);
+                }
+            });
+        });
+    });
+
+    it("#2858 {binary: true} in live changes, include_docs:false", () => {
+        const db = new DB(dbName);
+        const docs = [binAttDoc, binAttDoc2, pngAttDoc,
+            { _id: "bar" },
+            { _id: "foo", deleted: true }];
+        return db.bulkDocs(docs).then(() => {
+            return new Promise((resolve, reject) => {
+                const ret = db.changes({
+                    attachments: true,
+                    binary: true,
+                    live: true
+                }).on("error", reject)
+                    .on("change", handleChange)
+                    .on("complete", resolve);
+
+                let promise = Promise.resolve();
+                let done = 0;
+
+                function doneWithDoc() {
+                    if (++done === 5 && changes === 5) {
+                        ret.cancel();
+                    }
+                }
+
+                var changes = 0;
+                function handleChange(change) {
+                    changes++;
+                    promise = promise.then(() => {
+                        assert.isUndefined(change.doc);
+                        return doneWithDoc();
+                    }).catch(reject);
+                }
+            });
+        });
+    });
+
+    it("Measures length correctly after put()", () => {
+        const db = new DB(dbName);
+        return db.put(binAttDoc).then(() => {
+            return db.get(binAttDoc._id);
+        }).then((doc) => {
+            delete doc._attachments["foo.txt"].revpos;
+
+            // because of libicu vs. ascii
+            const digest = doc._attachments["foo.txt"].digest;
+            const validDigests = [
+                "md5-qUUYqS41RhwF0TrCsTAxFg==",
+                "md5-aEI7pOYCRBLTRQvvqYrrJQ==",
+                "md5-jeLnIuUvK7d+6gya044lVA=="
+            ];
+            assert.notEqual(validDigests.indexOf(digest), -1, `expected ${digest} to be in: ${JSON.stringify(validDigests)}`);
+            delete doc._attachments["foo.txt"].digest;
+            assert.deepEqual(doc._attachments, {
+                "foo.txt": {
+                    content_type: "text/plain",
+                    stub: true,
+                    length: 29
+                }
+            });
+        });
+    });
+
+    it("#3074 non-live changes()", () => {
+        const db = new DB(dbName);
+        const docs = [];
+        for (let i = 0; i < 5; i++) {
+            docs.push({
+                _id: i.toString(),
+                _attachments: {
+                    "foo.png": {
+                        data: icons[i],
+                        content_type: "image/png"
+                    }
+                }
+            });
+        }
+        return db.bulkDocs(docs).then(() => {
+            return db.changes({ include_docs: true, attachments: true });
+        }).then((res) => {
+            const attachments = res.results.sort((left, right) => {
+                return left.id < right.id ? -1 : 1;
+            }).map((change) => {
+                const doc = change.doc;
+                delete doc._attachments["foo.png"].revpos;
+                return doc._attachments;
+            });
+            assert.deepEqual(attachments, icons.map((icon, i) => {
+                return {
+                    "foo.png": {
+                        content_type: "image/png",
+                        data: icon,
+                        digest: iconDigests[i]
+                    }
+                };
+            }), "when attachments=true");
+            return db.changes({ include_docs: true });
+        }).then((res) => {
+            const attachments = res.results.sort((left, right) => {
+                return left.id < right.id ? -1 : 1;
+            }).map((change) => {
+                const doc = change.doc;
+                delete doc._attachments["foo.png"].revpos;
+                return doc._attachments["foo.png"];
+            });
+            assert.deepEqual(attachments, icons.map((icon, i) => {
+                return {
+                    content_type: "image/png",
+                    stub: true,
+                    digest: iconDigests[i],
+                    length: iconLengths[i]
+                };
+            }), "when attachments=false");
+            return db.changes({ attachments: true });
+        }).then((res) => {
+            assert.lengthOf(res.results, 5);
+            res.results.forEach((row) => {
+                assert.isUndefined(row.doc,
+                    "no doc when attachments=true but include_docs=false");
+            });
+            return db.changes();
+        }).then((res) => {
+            assert.lengthOf(res.results, 5);
+            res.results.forEach((row) => {
+                assert.isUndefined(row.doc,
+                    "no doc when attachments=false and include_docs=false");
+            });
+        });
+    });
+
+    it("#3074 live changes()", () => {
+        const db = new DB(dbName);
+
+        function liveChangesPromise(opts) {
+            opts.live = true;
+            return new Promise((resolve, reject) => {
+                const retChanges = { results: [] };
+                var changes = db.changes(opts)
+                    .on("change", (change) => {
+                        retChanges.results.push(change);
+                        if (retChanges.results.length === 5) {
+                            changes.cancel();
+                            resolve(retChanges);
+                        }
+                    }).on("error", reject);
+            });
+        }
+
+        const docs = [];
+        for (let i = 0; i < 5; i++) {
+            docs.push({
+                _id: i.toString(),
+                _attachments: {
+                    "foo.png": {
+                        data: icons[i],
+                        content_type: "image/png"
+                    }
+                }
+            });
+        }
+        return db.bulkDocs(docs).then(() => {
+            return liveChangesPromise({
+                include_docs: true,
+                attachments: true
+            });
+        }).then((res) => {
+            const attachments = res.results.sort((left, right) => {
+                return left.id < right.id ? -1 : 1;
+            }).map((change) => {
+                const doc = change.doc;
+                delete doc._attachments["foo.png"].revpos;
+                return doc._attachments;
+            });
+            assert.deepEqual(attachments, icons.map((icon, i) => {
+                return {
+                    "foo.png": {
+                        content_type: "image/png",
+                        data: icon,
+                        digest: iconDigests[i]
+                    }
+                };
+            }), "when attachments=true");
+            return liveChangesPromise({ include_docs: true });
+        }).then((res) => {
+            const attachments = res.results.sort((left, right) => {
+                return left.id < right.id ? -1 : 1;
+            }).map((change) => {
+                const doc = change.doc;
+                delete doc._attachments["foo.png"].revpos;
+                return doc._attachments["foo.png"];
+            });
+            assert.deepEqual(attachments, icons.map((icon, i) => {
+                return {
+                    content_type: "image/png",
+                    stub: true,
+                    digest: iconDigests[i],
+                    length: iconLengths[i]
+                };
+            }), "when attachments=false");
+            return liveChangesPromise({ attachments: true });
+        }).then((res) => {
+            assert.lengthOf(res.results, 5);
+            res.results.forEach((row) => {
+                assert.isUndefined(row.doc,
+                    "no doc when attachments=true but include_docs=false");
+            });
+            return liveChangesPromise({});
+        }).then((res) => {
+            assert.lengthOf(res.results, 5);
+            res.results.forEach((row) => {
+                assert.isUndefined(row.doc,
+                    "no doc when attachments=false and include_docs=false");
+            });
+        });
+    });
+
+    it("#3074 non-live changes(), no attachments", () => {
+        const db = new DB(dbName);
+        const docs = [];
+        for (let i = 0; i < 5; i++) {
+            docs.push({
+                _id: i.toString()
+            });
+        }
+        return db.bulkDocs(docs).then(() => {
+            return db.changes({ include_docs: true, attachments: true });
+        }).then((res) => {
+            const attachments = res.results.sort((left, right) => {
+                return left.id < right.id ? -1 : 1;
+            }).map((change) => {
+                const doc = change.doc;
+                return Boolean(doc._attachments);
+            });
+            assert.deepEqual(attachments, icons.map(() => {
+                return false;
+            }), "when attachments=true");
+            return db.changes({ include_docs: true });
+        }).then((res) => {
+            const attachments = res.results.sort((left, right) => {
+                return left.id < right.id ? -1 : 1;
+            }).map((change) => {
+                const doc = change.doc;
+                return Boolean(doc._attachments);
+            });
+            assert.deepEqual(attachments, icons.map(() => {
+                return false;
+            }), "when attachments=false");
+            return db.changes({ attachments: true });
+        }).then((res) => {
+            assert.lengthOf(res.results, 5);
+            res.results.forEach((row) => {
+                assert.isUndefined(row.doc,
+                    "no doc when attachments=true but include_docs=false");
+            });
+            return db.changes();
+        }).then((res) => {
+            assert.lengthOf(res.results, 5);
+            res.results.forEach((row) => {
+                assert.isUndefined(row.doc,
+                    "no doc when attachments=false and include_docs=false");
+            });
+        });
+    });
+
+    it("#3074 live changes(), no attachments", () => {
+
+        const db = new DB(dbName);
+
+        function liveChangesPromise(opts) {
+            opts.live = true;
+            return new Promise((resolve, reject) => {
+                const retChanges = { results: [] };
+                var changes = db.changes(opts)
+                    .on("change", (change) => {
+                        retChanges.results.push(change);
+                        if (retChanges.results.length === 5) {
+                            changes.cancel();
+                            resolve(retChanges);
+                        }
+                    }).on("error", reject);
+            });
+        }
+
+        const docs = [];
+        for (let i = 0; i < 5; i++) {
+            docs.push({
+                _id: i.toString()
+            });
+        }
+        return db.bulkDocs(docs).then(() => {
+            return liveChangesPromise({
+                include_docs: true,
+                attachments: true
+            });
+        }).then((res) => {
+            const attachments = res.results.sort((left, right) => {
+                return left.id < right.id ? -1 : 1;
+            }).map((change) => {
+                const doc = change.doc;
+                return Boolean(doc._attachments);
+            });
+            assert.deepEqual(attachments, icons.map(() => {
+                return false;
+            }), "when attachments=true");
+            return liveChangesPromise({ include_docs: true });
+        }).then((res) => {
+            const attachments = res.results.sort((left, right) => {
+                return left.id < right.id ? -1 : 1;
+            }).map((change) => {
+                const doc = change.doc;
+                return Boolean(doc._attachments);
+            });
+            assert.deepEqual(attachments, icons.map(() => {
+                return false;
+            }), "when attachments=false");
+            return liveChangesPromise({ attachments: true });
+        }).then((res) => {
+            assert.lengthOf(res.results, 5);
+            res.results.forEach((row) => {
+                assert.isUndefined(row.doc,
+                    "no doc when attachments=true but include_docs=false");
+            });
+            return liveChangesPromise({});
+        }).then((res) => {
+            assert.lengthOf(res.results, 5);
+            res.results.forEach((row) => {
+                assert.isUndefined(row.doc,
+                    "no doc when attachments=false and include_docs=false");
+            });
+        });
+    });
+
+    it("#3881 filter extraneous keys from _attachments", () => {
+        const db = new DB(dbName);
+        return db.put({
+            _id: "foo",
+            _attachments: {
+                "foo.txt": {
+                    data: "",
+                    content_type: "text/plain",
+                    follows: false,
+                    foo: "bar",
+                    baz: true,
+                    quux: 1
+                }
+            }
+        }).then(() => {
+            return db.get("foo", { attachments: true });
+        }).then((doc) => {
+            const keys = Object.keys(doc._attachments["foo.txt"]).filter((x) => {
+                return x !== "revpos"; // not supported by PouchDB right now
+            }).sort();
+            assert.deepEqual(keys, ["content_type", "data", "digest"]);
+        });
+    });
+
+    it("#2771 allDocs() 1, single attachment", () => {
+        const db = new DB(dbName);
+        return db.put(binAttDoc).then(() => {
+            return db.allDocs({ key: binAttDoc._id, include_docs: true });
+        }).then((res) => {
+            const doc = res.rows[0].doc;
+            delete doc._attachments["foo.txt"].revpos;
+
+            // because of libicu vs. ascii
+            const digest = doc._attachments["foo.txt"].digest;
+            const validDigests = [
+                "md5-qUUYqS41RhwF0TrCsTAxFg==",
+                "md5-aEI7pOYCRBLTRQvvqYrrJQ==",
+                "md5-jeLnIuUvK7d+6gya044lVA=="
+            ];
+            assert.notEqual(validDigests.indexOf(digest), -1,
+                `expected ${digest} to be in: ${
+                JSON.stringify(validDigests)}`);
+            delete doc._attachments["foo.txt"].digest;
+            assert.deepEqual(doc._attachments, {
+                "foo.txt": {
+                    content_type: "text/plain",
+                    stub: true,
+                    length: 29
+                }
+            });
+            return db.allDocs({
+                key: binAttDoc._id,
+                include_docs: true,
+                attachments: true
+            });
+        }).then((res) => {
+            const doc = res.rows[0].doc;
+            assert.equal(doc._attachments["foo.txt"].content_type, binAttDoc._attachments["foo.txt"].content_type);
+            assert.equal(doc._attachments["foo.txt"].data, binAttDoc._attachments["foo.txt"].data);
+        });
+    });
+
+    it("#2771 allDocs() 2, many docs same att", () => {
+        const db = new DB(dbName);
+        const docs = [];
+        for (let i = 0; i < 5; i++) {
+            docs.push({
+                _id: i.toString(),
+                _attachments: {
+                    "foo.txt": {
+                        data: "VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ=",
+                        content_type: "text/plain"
+                    }
+                }
+            });
+        }
+        return db.bulkDocs(docs).then(() => {
+            return db.allDocs({ include_docs: true, attachments: true });
+        }).then((res) => {
+            const attachments = res.rows.map((row) => {
+                const doc = row.doc;
+                delete doc._attachments["foo.txt"].revpos;
+                assert.exists(doc._attachments["foo.txt"].digest);
+                delete doc._attachments["foo.txt"].digest;
+                return doc._attachments;
+            });
+            assert.deepEqual(attachments, [1, 2, 3, 4, 5].map(() => {
+                return {
+                    "foo.txt": {
+                        content_type: "text/plain",
+                        data: "VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ="
+                    }
+                };
+            }));
+        });
+    });
+
+    it("#2771 allDocs() 3, many docs diff atts", () => {
+        const db = new DB(dbName);
+        const docs = [];
+        for (let i = 0; i < 5; i++) {
+            docs.push({
+                _id: i.toString(),
+                _attachments: {
+                    "foo.png": {
+                        data: icons[i],
+                        content_type: "image/png"
+                    }
+                }
+            });
+        }
+        return db.bulkDocs(docs).then(() => {
+            return db.allDocs({ include_docs: true, attachments: true });
+        }).then((res) => {
+            const attachments = res.rows.map((row) => {
+                const doc = row.doc;
+                delete doc._attachments["foo.png"].revpos;
+                return doc._attachments;
+            });
+            assert.deepEqual(attachments, icons.map((icon, i) => {
+                return {
+                    "foo.png": {
+                        content_type: "image/png",
+                        data: icon,
+                        digest: iconDigests[i]
+                    }
+                };
+            }));
+            return db.allDocs({ include_docs: true });
+        }).then((res) => {
+            const attachments = res.rows.map((row) => {
+                const doc = row.doc;
+                delete doc._attachments["foo.png"].revpos;
+                return doc._attachments["foo.png"];
+            });
+            assert.deepEqual(attachments, icons.map((icon, i) => {
+                return {
+                    content_type: "image/png",
+                    stub: true,
+                    digest: iconDigests[i],
+                    length: iconLengths[i]
+                };
+            }));
+        });
+    });
+
+    it("#2771 allDocs() 4, mix of atts and no atts", () => {
+        const db = new DB(dbName);
+        const docs = [];
+        for (let i = 0; i < 5; i++) {
+            const doc = {
+                _id: i.toString()
             };
-            db.bulkDocs({
+            if (i % 2 === 1) {
+                doc._attachments = {
+                    "foo.png": {
+                        data: icons[i],
+                        content_type: "image/png"
+                    }
+                };
+            }
+            docs.push(doc);
+        }
+        return db.bulkDocs(docs).then(() => {
+            return db.allDocs({ include_docs: true, attachments: true });
+        }).then((res) => {
+            const attachments = res.rows.map((row, i) => {
+                const doc = row.doc;
+                if (i % 2 === 1) {
+                    delete doc._attachments["foo.png"].revpos;
+                    return doc._attachments;
+                }
+                return null;
+            });
+            assert.deepEqual(attachments, icons.map((icon, i) => {
+                if (i % 2 === 0) {
+                    return null;
+                }
+                return {
+                    "foo.png": {
+                        content_type: "image/png",
+                        data: icon,
+                        digest: iconDigests[i]
+                    }
+                };
+            }));
+            return db.allDocs({ include_docs: true });
+        }).then((res) => {
+            const attachments = res.rows.map((row, i) => {
+                const doc = row.doc;
+                if (i % 2 === 1) {
+                    delete doc._attachments["foo.png"].revpos;
+                    return doc._attachments["foo.png"];
+                }
+                return null;
+            });
+            assert.deepEqual(attachments, icons.map((icon, i) => {
+                if (i % 2 === 0) {
+                    return null;
+                }
+                return {
+                    content_type: "image/png",
+                    stub: true,
+                    digest: iconDigests[i],
+                    length: iconLengths[i]
+                };
+            }));
+        });
+    });
+
+    it("#2771 allDocs() 5, no atts", () => {
+        const db = new DB(dbName);
+        const docs = [];
+        for (let i = 0; i < 5; i++) {
+            const doc = {
+                _id: i.toString()
+            };
+            docs.push(doc);
+        }
+        return db.bulkDocs(docs).then(() => {
+            return db.allDocs({ include_docs: true, attachments: true });
+        }).then((res) => {
+            assert.lengthOf(res.rows, 5);
+            res.rows.forEach((row) => {
+                assert.exists(row.doc);
+                assert.isUndefined(row.doc._attachments);
+            });
+            return db.allDocs({ include_docs: true });
+        }).then((res) => {
+            assert.lengthOf(res.rows, 5);
+            res.rows.forEach((row) => {
+                assert.exists(row.doc);
+                assert.isUndefined(row.doc._attachments);
+            });
+        });
+    });
+
+    it("#2771 allDocs() 6, no docs", () => {
+        const db = new DB(dbName);
+        const docs = [];
+        for (let i = 0; i < 5; i++) {
+            const doc = {
+                _id: i.toString()
+            };
+            docs.push(doc);
+        }
+        return db.bulkDocs(docs).then(() => {
+            return db.allDocs({
+                include_docs: true,
+                attachments: true,
+                keys: []
+            });
+        }).then((res) => {
+            assert.lengthOf(res.rows, 0);
+            return db.allDocs({ include_docs: true, keys: [] });
+        }).then((res) => {
+            assert.lengthOf(res.rows, 0);
+        });
+    });
+
+    it("#2771 allDocs() 7, revisions and deletions", () => {
+        const db = new DB(dbName, { auto_compaction: false });
+        const doc = {
+            _id: "doc",
+            _attachments: {
+                "foo.txt": {
+                    content_type: "text/plain",
+                    data: "Zm9vYmFy" // 'foobar'
+                }
+            }
+        };
+        let rev;
+        return db.put(doc).then(() => {
+            return db.allDocs({ keys: ["doc"], attachments: true, include_docs: true });
+        }).then((res) => {
+            const doc = res.rows[0].doc;
+            assert.equal(doc._attachments["foo.txt"].data, "Zm9vYmFy");
+            rev = doc._rev;
+            doc._attachments["foo.txt"] = {
+                content_type: "text/plain",
+                data: "dG90bw=="
+            }; // 'toto'
+            return db.put(doc);
+        }).then(() => {
+            return db.allDocs({ keys: ["doc"], attachments: true, include_docs: true });
+        }).then((res) => {
+            const doc = res.rows[0].doc;
+            assert.equal(doc._attachments["foo.txt"].data, "dG90bw==");
+            return db.remove(doc);
+        }).then((res) => {
+            rev = res.rev;
+            return db.allDocs({ keys: ["doc"], attachments: true, include_docs: true });
+        }).then((res) => {
+            // technically CouchDB sets this to null, but we won't adhere strictly to that
+            assert.isNull(res.rows[0].doc);
+            delete res.rows[0].doc;
+            assert.deepEqual(res.rows, [
+                {
+                    id: "doc",
+                    key: "doc",
+                    value: {
+                        rev,
+                        deleted: true
+                    }
+                }
+            ]);
+        });
+    });
+
+    it("#2771 allDocs() 8, empty attachment", () => {
+        const db = new DB(dbName);
+        return db.put(binAttDoc2).then(() => {
+            return db.allDocs({ key: binAttDoc2._id, include_docs: true });
+        }).then((res) => {
+            const doc = res.rows[0].doc;
+            delete doc._attachments["foo.txt"].revpos;
+
+            // because of libicu vs. ascii
+            const digest = doc._attachments["foo.txt"].digest;
+            const validDigests = [
+                "md5-1B2M2Y8AsgTpgAmY7PhCfg==",
+                "md5-cCkGbCesb17xjWYNV0GXmg==",
+                "md5-3gIs+o2eJiHrXZqziQZqBA=="
+            ];
+            assert.notEqual(validDigests.indexOf(digest), -1,
+                `expected ${digest} to be in: ${
+                JSON.stringify(validDigests)}`);
+            delete doc._attachments["foo.txt"].digest;
+            delete doc._attachments["foo.txt"].digest;
+            assert.deepEqual(doc._attachments, {
+                "foo.txt": {
+                    content_type: "text/plain",
+                    stub: true,
+                    length: 0
+                }
+            });
+            return db.allDocs({
+                key: binAttDoc2._id,
+                include_docs: true,
+                attachments: true
+            });
+        }).then((res) => {
+            const doc = res.rows[0].doc;
+            assert.equal(doc._attachments["foo.txt"].content_type,
+                binAttDoc2._attachments["foo.txt"].content_type);
+            assert.equal(doc._attachments["foo.txt"].data,
+                binAttDoc2._attachments["foo.txt"].data);
+        });
+    });
+
+    it("No length for non-stubs", () => {
+        const db = new DB(dbName);
+        return db.put(binAttDoc).then(() => {
+            return db.get(binAttDoc._id, { attachments: true });
+        }).then((doc) => {
+            assert.isUndefined(doc._attachments["foo.txt"].stub);
+            assert.isUndefined(doc._attachments["foo.txt"].length);
+        });
+    });
+
+    it("Test some attachments", async () => {
+        const db = new DB(dbName);
+        await db.put(binAttDoc);
+        const doc = await db.get("bin_doc");
+        assert.exists(doc._attachments, "doc has attachments field");
+        assert.exists(doc._attachments["foo.txt"], "doc has attachment");
+        assert.equal(doc._attachments["foo.txt"].content_type, "text/plain");
+        let res = await db.getAttachment("bin_doc", "foo.txt");
+        assert.equal(res.type, "text/plain");
+        let resData = res.toString("binary");
+        assert.equal(resData, "This is a base64 encoded text");
+        let rev = await db.put(binAttDoc2);
+        res = await db.getAttachment("bin_doc2", "foo.txt");
+        assert.equal(res.type, "text/plain");
+        resData = res.toString("binary");
+        assert.equal(resData, "", "Correct data returned");
+        rev = rev.rev;
+
+        const blob = Buffer.from("This is no base64 encoded text", "binary");
+        const info = await db.putAttachment("bin_doc2", "foo2.txt", rev, blob, "text/plain");
+        assert.equal(info.ok, true);
+        res = await db.getAttachment("bin_doc2", "foo2.txt");
+        assert.equal(res.type, "text/plain");
+        resData = res.toString("binary");
+        assert.exists(resData);
+        res = await db.get("bin_doc2", { attachments: true });
+        assert.exists(res._attachments, "Result has attachments field");
+        assert.notExists(res._attachments["foo2.txt"].stub, "stub is false");
+        assert.equal(res._attachments["foo2.txt"].data, "VGhpcyBpcyBubyBiYXNlNjQgZW5jb2RlZCB0ZXh0");
+        assert.equal(res._attachments["foo2.txt"].content_type, "text/plain");
+        assert.equal(res._attachments["foo.txt"].data, "");
+    });
+
+    it("Test getAttachment", async () => {
+        const db = new DB(dbName);
+        await db.put(binAttDoc);
+        const res = await db.getAttachment("bin_doc", "foo.txt");
+        assert.equal(res.type, "text/plain");
+        const resData = res.toString("binary");
+        assert.equal(resData, "This is a base64 encoded text", "correct data");
+    });
+
+    it("Test getAttachment with stubs", () => {
+        const db = new DB(dbName);
+        return db.put({
+            _id: "doc",
+            _attachments: {
+                1: {
+                    content_type: "application/octet-stream",
+                    data: util.btoa("1\u00002\u00013\u0002")
+                }
+            }
+        }).then(() => {
+            return db.get("doc");
+        }).then((doc) => {
+            doc._attachments["2"] = {
+                content_type: "application/octet-stream",
+                data: util.btoa("3\u00002\u00011\u0002")
+            };
+            return db.put(doc);
+        }).then(() => {
+            return db.getAttachment("doc", "1");
+        }).then((att) => {
+            assert.equal(att.type, "application/octet-stream");
+            return att.toString("binary");
+        }).then((bin) => {
+            assert.equal(bin, "1\u00002\u00013\u0002");
+            return db.getAttachment("doc", "2");
+        }).then((att) => {
+            assert.equal(att.type, "application/octet-stream");
+            return att.toString("binary");
+        }).then((bin) => {
+            assert.equal(bin, "3\u00002\u00011\u0002");
+        });
+    });
+
+    it("Test get() with binary:true and stubs", () => {
+        const db = new DB(dbName);
+        return db.put({
+            _id: "doc",
+            _attachments: {
+                1: {
+                    content_type: "application/octet-stream",
+                    data: util.btoa("1\u00002\u00013\u0002")
+                }
+            }
+        }).then(() => {
+            return db.get("doc");
+        }).then((doc) => {
+            doc._attachments["2"] = {
+                content_type: "application/octet-stream",
+                data: util.btoa("3\u00002\u00011\u0002")
+            };
+            return db.put(doc);
+        }).then(() => {
+            return db.get("doc", { attachments: true, binary: true });
+        }).then((doc) => {
+            const att1 = doc._attachments["1"].data;
+            const att2 = doc._attachments["2"].data;
+            assert.equal(att1.type, "application/octet-stream");
+            assert.equal(att2.type, "application/octet-stream");
+            assert.equal(att1.toString("binary"), "1\u00002\u00013\u0002");
+            assert.equal(att2.toString("binary"), "3\u00002\u00011\u0002");
+        });
+    });
+
+    it("Test attachments in allDocs/changes", async () => {
+        const db = new DB(dbName);
+        const docs = [
+            { _id: "doc0" },
+            {
+                _id: "doc1",
+                _attachments: {
+                    att0: {
+                        data: "YXR0YWNobWVudDA=",
+                        content_type: "text/plain"
+                    }
+                }
+            },
+            {
+                _id: "doc2",
+                _attachments: {
+                    att0: {
+                        data: "YXR0YWNobWVudDA=",
+                        content_type: "text/plain"
+                    },
+                    att1: {
+                        data: "YXR0YWNobWVudDE=",
+                        content_type: "text/plain"
+                    }
+                }
+            },
+            {
+                _id: "doc3",
+                _attachments: {
+                    att0: {
+                        data: "YXR0YWNobWVudDA=",
+                        content_type: "text/plain"
+                    }
+                }
+            }
+        ];
+        const sort = (a, b) => a.id.localeCompare(b.id);
+        await db.bulkDocs({ docs });
+        const res = await db.allDocs({ include_docs: true });
+        for (let i = 0; i < docs.length; i++) {
+            const attachmentsNb = !is.undefined(docs[i]._attachments) ?
+                Object.keys(docs[i]._attachments).length : 0;
+            for (let j = 0; j < attachmentsNb; j++) {
+                assert.equal(res.rows[i].doc._attachments[`att${j}`].stub, true, `(allDocs) doc${i} contains att${j} stub`);
+            }
+        }
+        assert.isUndefined(res.rows[0].doc._attachments, "(allDocs) doc0 contains no attachments");
+        await new Promise((resolve) => {
+            db.changes({
+                include_docs: true
+            }).on("change", (change) => {
+                const i = Number(change.id.substr(3));
+                if (i === 0) {
+                    assert.isUndefined(res.rows[0].doc._attachments, "(onChange) doc0 contains no attachments");
+                } else {
+                    const attachmentsNb =
+                        !is.undefined(docs[i]._attachments) ?
+                            Object.keys(docs[i]._attachments).length : 0;
+                    for (let j = 0; j < attachmentsNb; j++) {
+                        assert.equal(res.rows[i].doc._attachments[`att${j}`].stub, true, `(onChange) doc${i} contains att${j} stub`);
+                    }
+                }
+            }).on("complete", (res) => {
+                let attachmentsNb = 0;
+                res.results.sort(sort);
+                for (let i = 0; i < 3; i++) {
+                    attachmentsNb = !is.undefined(docs[i]._attachments) ?
+                        Object.keys(docs[i]._attachments).length : 0;
+                    for (let j = 0; j < attachmentsNb; j++) {
+                        assert.equal(res.results[i].doc._attachments[`att${j}`].stub, true, `(complete) doc${i} contains att${j} stub`);
+                    }
+                }
+                assert.isUndefined(res.results[0].doc._attachments, "(complete) doc0 contains no attachments");
+                resolve();
+            });
+        });
+    });
+
+    it("Test putAttachment with base64 plaintext", () => {
+        const db = new DB(dbName);
+        return db.putAttachment("doc", "att", null, "Zm9v", "text/plain").then(() => {
+            return db.getAttachment("doc", "att");
+        }).then((blob) => {
+            assert.equal(util.btoa(blob.toString("binary")), "Zm9v", "should get the correct base64 back");
+        });
+    });
+
+    it("Test putAttachment with invalid base64", async () => {
+        const db = new DB(dbName);
+        const err = await assert.throws(async () => db.putAttachment("doc", "att", null, "\u65e5\u672c\u8a9e", "text/plain"));
+        expect(err.message).to.equal("Some query argument is invalid");
+    });
+
+    it("Test getAttachment with empty text", async () => {
+        const db = new DB(dbName);
+        await db.put(binAttDoc2);
+        const res = await db.getAttachment("bin_doc2", "foo.txt");
+        assert.equal((typeof res), "object", "res is object, not a string");
+        assert.equal(util.btoa(res), "", "correct data");
+        const doc = await db.get(binAttDoc2._id);
+        const att = doc._attachments["foo.txt"];
+        assert.equal(att.stub, true);
+        // both ascii and libicu
+        const validDigests = [
+            "md5-1B2M2Y8AsgTpgAmY7PhCfg==",
+            "md5-cCkGbCesb17xjWYNV0GXmg==",
+            "md5-3gIs+o2eJiHrXZqziQZqBA=="
+        ];
+        assert.isAbove(validDigests.indexOf(att.digest), -1);
+        assert.equal(att.content_type, "text/plain");
+        assert.equal(att.length, 0);
+    });
+
+    it("Test getAttachment with normal text", async () => {
+        const db = new DB(dbName);
+        await db.put(binAttDoc);
+        const res = await db.getAttachment("bin_doc", "foo.txt");
+        assert.equal((typeof res), "object", "res is object, not a string");
+        assert.equal(util.btoa(res), binAttDoc._attachments["foo.txt"].data, "correct data");
+    });
+
+    it("Test getAttachment with PNG", async () => {
+        const db = new DB(dbName);
+        await db.put(pngAttDoc);
+        const res = await db.getAttachment("png_doc", "foo.png");
+        assert.equal((typeof res), "object", "res is object, not a string");
+        assert.equal(util.btoa(res), pngAttDoc._attachments["foo.png"].data, "correct data");
+    });
+
+    it("Test getAttachment with PNG using bulkDocs", async () => {
+        const db = new DB(dbName);
+        await db.bulkDocs([pngAttDoc]);
+        const res = await db.getAttachment("png_doc", "foo.png");
+        assert.equal(util.btoa(res), pngAttDoc._attachments["foo.png"].data, "correct data");
+    });
+
+    it("Test getAttachment with PNG using post", async () => {
+        const db = new DB(dbName);
+        await db.post(pngAttDoc);
+        const res = await db.getAttachment("png_doc", "foo.png");
+        assert.equal(util.btoa(res), pngAttDoc._attachments["foo.png"].data, "correct data");
+    });
+
+    it("Test postAttachment with PNG then bulkDocs", async () => {
+        const db = new DB(dbName);
+        await db.put({ _id: "foo" });
+        const doc = await db.get("foo");
+        const data = pngAttDoc._attachments["foo.png"].data;
+        const blob = util.binaryStringToBuffer(util.atob(data), "image/png");
+        await db.putAttachment("foo", "foo.png", doc._rev, blob, "image/png");
+        await db.bulkDocs([{}]);
+    });
+
+    it("proper stub behavior", () => {
+        const db = new DB(dbName);
+        return db.put(binAttDoc).then(() => {
+            return db.get(binAttDoc._id);
+        }).then((doc) => {
+            return db.putAttachment(doc._id, "foo.json", doc._rev,
+                jsonDoc._attachments["foo.json"].data,
+                jsonDoc._attachments["foo.json"].content_type);
+        }).then(() => {
+            return db.get(binAttDoc._id);
+        }).then((doc) => {
+            Object.keys(doc._attachments).forEach((filename) => {
+                const att = doc._attachments[filename];
+                assert.isUndefined(att.data);
+                assert.equal(att.stub, true);
+                assert.exists(att.digest);
+                assert.exists(att.content_type);
+            });
+            return db.get(binAttDoc._id, { attachments: true });
+        }).then((doc) => {
+            Object.keys(doc._attachments).forEach((filename) => {
+                const att = doc._attachments[filename];
+                assert.exists(att.data);
+                assert.isUndefined(att.stub);
+                assert.exists(att.digest);
+                assert.exists(att.content_type);
+            });
+        });
+    });
+
+    it("Testing with invalid docs", async () => {
+        const db = new DB(dbName);
+        const invalidDoc = {
+            _id: "_invalid",
+            foo: "bar"
+        };
+        await assert.throws(async () => {
+            await db.bulkDocs({
                 docs: [
                     invalidDoc,
                     binAttDoc
                 ]
-            }, (err) => {
-                assert.exists(err, "bad request");
-                done();
             });
         });
+    });
 
-        it("Test create attachment and doc in one go", (done) => {
-            const db = new PouchDB(dbs.name);
-            const blob = testUtils.makeBlob("Mytext");
-            db.putAttachment("anotherdoc", "mytext", blob, "text/plain",
-                (err, res) => {
-                    assert.exists(res.ok);
-                    done();
+    it("Test create attachment and doc in one go", async () => {
+        const db = new DB(dbName);
+        const blob = Buffer.from("Mytext");
+        const res = await db.putAttachment("anotherdoc", "mytext", blob, "text/plain");
+        assert.exists(res.ok);
+    });
+
+    it("Test create attachment and doc in one go without callback", (done) => {
+        const db = new DB(dbName);
+        const changes = db.changes({
+            live: true
+        }).on("complete", (result) => {
+            assert.equal(result.status, "cancelled");
+            done();
+        }).on("change", (change) => {
+            if (change.id === "anotherdoc2") {
+                assert.equal(change.id, "anotherdoc2", "Doc has been created");
+                db.get(change.id, { attachments: true }, (err, doc) => {
+                    assert.isObject(doc._attachments, "doc has attachments object");
+                    assert.exists(doc._attachments.mytext, "doc has attachments attachment");
+                    assert.equal(doc._attachments.mytext.data, "TXl0ZXh0", "doc has attachments attachment");
+                    changes.cancel();
                 });
+            }
         });
+        const blob = Buffer.from("Mytext");
+        db.putAttachment("anotherdoc2", "mytext", blob, "text/plain");
+    });
 
-        it("Test create attachment and doc in one go without callback",
-            (done) => {
-                const db = new PouchDB(dbs.name);
-                var changes = db.changes({
-                    live: true
+    it("Test create attachment without callback", (done) => {
+        const db = new DB(dbName);
+        db.put({ _id: "anotherdoc3" }).then((resp) => {
+            db.info().then((info) => {
+                const changes = db.changes({
+                    since: info.update_seq,
+                    live: true,
+                    include_docs: true
                 }).on("complete", (result) => {
                     assert.equal(result.status, "cancelled");
                     done();
                 }).on("change", (change) => {
-                    if (change.id === "anotherdoc2") {
-                        assert.equal(change.id, "anotherdoc2", "Doc has been created");
-                        db.get(change.id, { attachments: true }, (err, doc) => {
-                            assert.isObject(doc._attachments, "doc has attachments object");
-                            assert.exists(doc._attachments.mytext, "doc has attachments attachment");
-                            assert.equal(doc._attachments.mytext.data, "TXl0ZXh0", "doc has attachments attachment");
+                    if (change.id === "anotherdoc3") {
+                        db.get(change.id, { attachments: true }).then((doc) => {
+                            assert.isObject(doc._attachments, "object", "doc has attachments object");
+                            assert.exists(doc._attachments.mytext);
+                            assert.equal(doc._attachments.mytext.data, "TXl0ZXh0");
                             changes.cancel();
                         });
                     }
                 });
-                const blob = testUtils.makeBlob("Mytext");
-                db.putAttachment("anotherdoc2", "mytext", blob, "text/plain");
-            });
-
-        it("Test create attachment without callback", (done) => {
-            const db = new PouchDB(dbs.name);
-            db.put({ _id: "anotherdoc3" }, (err, resp) => {
-                assert.isNull(err, "doc was saved");
-                db.info((err, info) => {
-
-                    var changes = db.changes({
-                        since: info.update_seq,
-                        live: true,
-                        include_docs: true
-                    }).on("complete", (result) => {
-                        assert.equal(result.status, "cancelled");
-                        done();
-                    }).on("change", (change) => {
-                        if (change.id === "anotherdoc3") {
-                            db.get(change.id, { attachments: true }, (err, doc) => {
-                                assert.isObject(doc._attachments, "object", "doc has attachments object");
-                                assert.exists(doc._attachments.mytext);
-                                assert.equal(doc._attachments.mytext.data, "TXl0ZXh0");
-                                changes.cancel();
-                            });
-                        }
-                    });
-                    const blob = testUtils.makeBlob("Mytext");
-                    db.putAttachment("anotherdoc3", "mytext", resp.rev, blob,
-                        "text/plain");
-                });
+                const blob = Buffer.from("Mytext");
+                db.putAttachment("anotherdoc3", "mytext", resp.rev, blob, "text/plain");
             });
         });
+    });
 
-        it("Test put attachment on a doc without attachments", (done) => {
-            const db = new PouchDB(dbs.name);
-            db.put({ _id: "mydoc" }, (err, resp) => {
-                const blob = testUtils.makeBlob("Mytext");
-                db.putAttachment("mydoc", "mytext", resp.rev, blob, "text/plain",
-                    (err, res) => {
-                        assert.exists(res.ok);
-                        done();
-                    });
-            });
-        });
+    it("Test put attachment on a doc without attachments", async () => {
+        const db = new DB(dbName);
+        const resp = await db.put({ _id: "mydoc" });
+        const blob = Buffer.from("Mytext");
+        const res = await db.putAttachment("mydoc", "mytext", resp.rev, blob, "text/plain");
+        assert.exists(res.ok);
+    });
 
-        it("Test put attachment with unencoded name", (done) => {
-            const db = new PouchDB(dbs.name);
-            db.put({ _id: "mydoc" }, (err, resp) => {
-                const blob = testUtils.makeBlob("Mytext");
-                db.putAttachment("mydoc", "my/text?@", resp.rev, blob, "text/plain", (err, res) => {
-                    assert.exists(res.ok);
+    it("Test put attachment with unencoded name", async () => {
+        const db = new DB(dbName);
+        const resp = await db.put({ _id: "mydoc" });
+        const blob = Buffer.from("Mytext");
+        let res = await db.putAttachment("mydoc", "my/text?@", resp.rev, blob, "text/plain");
+        assert.exists(res.ok);
+        res = await db.get("mydoc", { attachments: true });
+        assert.exists(res._attachments["my/text?@"]);
+        const attachment = await db.getAttachment("mydoc", "my/text?@");
+        assert.equal(attachment.type, "text/plain");
+        const data = attachment.toString("binary");
+        assert.equal(data, "Mytext");
+    });
 
-                    db.get("mydoc", { attachments: true }, (err, res) => {
-                        assert.exists(res._attachments["my/text?@"]);
+    it("3963 length property on stubs", () => {
+        const db = new DB(dbName);
 
-                        db.getAttachment("mydoc", "my/text?@", (err, attachment) => {
-                            assert.isNull(err);
-                            assert.equal(attachment.type, "text/plain");
-                            testUtils.readBlob(attachment, (data) => {
-                                assert.equal(data, "Mytext");
-
-                                done();
-                            });
+        const checkAttachments = () => {
+            return db.get("bin_doc").then((doc) => {
+                assert.equal(doc._attachments["foo.txt"].stub, true);
+                assert.equal(doc._attachments["foo.txt"].length, 29);
+                return db.changes({ include_docs: true });
+            }).then((res) => {
+                const doc = res.results[0].doc;
+                assert.equal(doc._attachments["foo.txt"].stub, true);
+                assert.equal(doc._attachments["foo.txt"].length, 29);
+                return db.allDocs({ include_docs: true });
+            }).then((res) => {
+                const doc = res.rows[0].doc;
+                assert.equal(doc._attachments["foo.txt"].stub, true);
+                assert.equal(doc._attachments["foo.txt"].length, 29);
+                return new Promise((resolve, reject) => {
+                    let change;
+                    const changes = db.changes({ include_docs: true, live: true })
+                        .on("change", (x) => {
+                            change = x;
+                            changes.cancel();
+                        })
+                        .on("error", reject)
+                        .on("complete", () => {
+                            resolve(change);
                         });
-                    });
                 });
+            }).then((change) => {
+                const doc = change.doc;
+                assert.equal(doc._attachments["foo.txt"].stub, true);
+                assert.equal(doc._attachments["foo.txt"].length, 29);
             });
+        };
+
+        return db.put(binAttDoc).then(checkAttachments).then(() => {
+            return db.get("bin_doc");
+        }).then((doc) => {
+            return db.put(doc);
+        }).then(checkAttachments);
+    });
+
+    it("Testing with invalid rev", async () => {
+        const db = new DB(dbName);
+        const doc = { _id: "adoc" };
+        const resp = await db.put(doc);
+        doc._rev = resp.rev;
+        doc.foo = "bar";
+        await db.put(doc);
+        const blob = Buffer.from("bar");
+        const err = await assert.throws(async () => {
+            await db.putAttachment("adoc", "foo.txt", doc._rev, blob, "text/plain");
         });
+        assert.equal(err.name, "conflict", "error is a conflict");
+    });
 
-        it("3963 length property on stubs", () => {
-            const db = new PouchDB(dbs.name);
+    it("Test put another attachment on a doc with attachments", async () => {
+        const db = new DB(dbName);
+        const res1 = await db.put({ _id: "mydoc" });
+        const blob = Buffer.from("Mytext");
+        const res2 = await db.putAttachment("mydoc", "mytext", res1.rev, blob, "text/plain");
+        const res3 = await db.putAttachment("mydoc", "mytext2", res2.rev, blob, "text/plain");
+        assert.exists(res3.ok);
+    });
 
-            function checkAttachments() {
-                return db.get("bin_doc").then((doc) => {
-                    assert.equal(doc._attachments["foo.txt"].stub, true);
-                    assert.equal(doc._attachments["foo.txt"].length, 29);
-                    return db.changes({ include_docs: true });
-                }).then((res) => {
-                    const doc = res.results[0].doc;
-                    assert.equal(doc._attachments["foo.txt"].stub, true);
-                    assert.equal(doc._attachments["foo.txt"].length, 29);
-                    return db.allDocs({ include_docs: true });
-                }).then((res) => {
-                    const doc = res.rows[0].doc;
-                    assert.equal(doc._attachments["foo.txt"].stub, true);
-                    assert.equal(doc._attachments["foo.txt"].length, 29);
-                    return new Promise((resolve, reject) => {
-                        let change;
-                        var changes = db.changes({ include_docs: true, live: true })
-                            .on("change", (x) => {
-                                change = x;
-                                changes.cancel();
-                            })
-                            .on("error", reject)
-                            .on("complete", () => {
-                                resolve(change);
-                            });
-                    });
-                }).then((change) => {
-                    const doc = change.doc;
-                    assert.equal(doc._attachments["foo.txt"].stub, true);
-                    assert.equal(doc._attachments["foo.txt"].length, 29);
-                });
+    it("Test get with attachments: true if empty attachments", async () => {
+        const db = new DB(dbName);
+        await db.put({
+            _id: "foo",
+            _attachments: {}
+        });
+        const res = await db.get("foo", { attachments: true });
+        assert.equal(res._id, "foo");
+    });
+
+    it("Test delete attachment from a doc", async () => {
+        const db = new DB(dbName);
+        let res = await db.put({
+            _id: "mydoc",
+            _attachments: {
+                mytext1: {
+                    content_type: "text/plain",
+                    data: "TXl0ZXh0MQ=="
+                },
+                mytext2: {
+                    content_type: "text/plain",
+                    data: "TXl0ZXh0Mg=="
+                }
             }
-
-            return db.put(binAttDoc).then(checkAttachments).then(() => {
-                return db.get("bin_doc");
-            }).then((doc) => {
-                return db.put(doc);
-            }).then(checkAttachments);
         });
-
-        it("Testing with invalid rev", (done) => {
-            const db = new PouchDB(dbs.name);
-            const doc = { _id: "adoc" };
-            db.put(doc, (err, resp) => {
-                assert.isNull(err, "Doc has been saved");
-                doc._rev = resp.rev;
-                doc.foo = "bar";
-                db.put(doc, (err) => {
-                    assert.isNull(err, "Doc has been updated");
-                    const blob = testUtils.makeBlob("bar");
-                    db.putAttachment("adoc", "foo.txt", doc._rev, blob, "text/plain",
-                        (err) => {
-                            assert.exists(err, "Attachment has not been saved");
-                            assert.equal(err.name, "conflict", "error is a conflict");
-                            done();
-                        });
-                });
-            });
+        const rev = res.rev;
+        res = await db.get("mydoc", { attachments: true });
+        assert.include(Object.keys(res._attachments), "mytext1", "mytext2");
+        await assert.throws(async () => {
+            await db.removeAttachment("mydoc", "mytext1", 0);
         });
+        await db.removeAttachment("mydoc", "mytext1", rev);
+        res = await db.get("mydoc", { attachments: true });
+        assert.notInclude(Object.keys(res._attachments), "mytext1");
+        assert.include(Object.keys(res._attachments), "mytext2");
+        res = await db.removeAttachment("mydoc", "mytext2", res._rev);
+        assert.isUndefined(res._attachments);
+    });
 
-        it("Test put another attachment on a doc with attachments",
-            (done) => {
-                const db = new PouchDB(dbs.name);
-                db.put({ _id: "mydoc" }, (err, res1) => {
-                    const blob = testUtils.makeBlob("Mytext");
-                    db.putAttachment("mydoc", "mytext", res1.rev, blob, "text/plain",
-                        (err, res2) => {
-                            db.putAttachment("mydoc", "mytext2", res2.rev, blob, "text/plain",
-                                (err, res3) => {
-                                    assert.exists(res3.ok);
-                                    done();
-                                });
-                        });
-                });
-            });
+    it("Test a document with a json string attachment", async () => {
+        const db = new DB(dbName);
+        const results = await db.put(jsonDoc);
+        const doc = await db.get(results.id);
+        assert.exists(doc._attachments, "doc has attachments field");
+        assert.include(Object.keys(doc._attachments), "foo.json");
+        assert.equal(doc._attachments["foo.json"].content_type, "application/json", "doc has correct content type");
+        const attachment = await db.getAttachment(results.id, "foo.json");
+        assert.equal(attachment.type, "application/json");
+        assert.equal(jsonDoc._attachments["foo.json"].data, "eyJIZWxsbyI6IndvcmxkIn0=", "correct data");
+    });
 
-        it("Test get with attachments: true if empty attachments", (done) => {
-            const db = new PouchDB(dbs.name);
-            db.put({
-                _id: "foo",
-                _attachments: {}
-            }, () => {
-                db.get("foo", { attachments: true }, (err, res) => {
-                    assert.equal(res._id, "foo");
-                    done();
-                });
-            });
+    it("Test remove doc with attachment", () => {
+        const db = new DB(dbName);
+        return db.put({ _id: "mydoc" }).then((resp) => {
+            const blob = Buffer.from("Mytext");
+            return db.putAttachment("mydoc", "mytext", resp.rev, blob, "text/plain");
+        }).then((res) => {
+            assert.exists(res.ok);
+            return db.get("mydoc", { attachments: false });
+        }).then((doc) => {
+            return db.remove(doc);
+        }).then((res) => {
+            assert.exists(res.ok);
         });
+    });
 
-        it("Test delete attachment from a doc", (done) => {
-            const db = new PouchDB(dbs.name);
-            db.put({
-                _id: "mydoc",
-                _attachments: {
-                    mytext1: {
-                        content_type: "text/plain",
-                        data: "TXl0ZXh0MQ=="
-                    },
-                    mytext2: {
-                        content_type: "text/plain",
-                        data: "TXl0ZXh0Mg=="
-                    }
+    it("Try to insert a doc with unencoded attachment", async () => {
+        const db = new DB(dbName);
+        const doc = {
+            _id: "foo",
+            _attachments: {
+                "foo.txt": {
+                    content_type: "text/plain",
+                    data: "this should have been encoded!"
                 }
-            }, (err, res) => {
-                const rev = res.rev;
-                db.get("mydoc", { attachments: true }, (err, res) => {
-                    assert.include(Object.keys(res._attachments), "mytext1", "mytext2");
-                    db.removeAttachment("mydoc", "mytext1", 0, (err) => {
-                        assert.exists(err, "removal should fail due to broken rev");
-                        db.removeAttachment("mydoc", "mytext1", rev, () => {
-                            db.get("mydoc", { attachments: true }, (err, res) => {
-                                assert.notInclude(Object.keys(res._attachments), "mytext1");
-                                assert.include(Object.keys(res._attachments), "mytext2");
-                                db.removeAttachment("mydoc", "mytext2", res._rev,
-                                    (err, res) => {
-                                        assert.isUndefined(res._attachments);
-                                        done();
-                                    });
-                            });
-                        });
-                    });
-                });
-            });
+            }
+        };
+        await assert.throws(async () => {
+            await db.put(doc);
         });
+    });
 
-        it("Test a document with a json string attachment", (done) => {
-            const db = new PouchDB(dbs.name);
-            db.put(jsonDoc, (err, results) => {
-                assert.isNull(err, "saved doc with attachment");
-                db.get(results.id, (err, doc) => {
-                    assert.isNull(err, "fetched doc");
-                    assert.exists(doc._attachments, "doc has attachments field");
-                    assert.include(Object.keys(doc._attachments), "foo.json");
-                    assert.equal(doc._attachments["foo.json"].content_type, "application/json", "doc has correct content type");
-                    db.getAttachment(results.id, "foo.json", (err, attachment) => {
-                        assert.isNull(err);
-                        assert.equal(attachment.type, "application/json");
-                        testUtils.readBlob(attachment, () => {
-                            assert.equal(jsonDoc._attachments["foo.json"].data, "eyJIZWxsbyI6IndvcmxkIn0=", "correct data");
-                            done();
-                        });
-                    });
-                });
-            });
+    it("Try to get attachment of unexistent doc", async () => {
+        const db = new DB(dbName);
+        await assert.throws(async () => {
+            await db.getAttachment("unexistent", "attachment");
         });
+    });
 
-        it("Test remove doc with attachment", () => {
-            const db = new PouchDB(dbs.name);
-            return db.put({ _id: "mydoc" }).then((resp) => {
-                const blob = testUtils.makeBlob("Mytext");
-                return db.putAttachment("mydoc", "mytext", resp.rev, blob, "text/plain");
-            }).then((res) => {
-                assert.exists(res.ok);
-                return db.get("mydoc", { attachments: false });
-            }).then((doc) => {
-                return db.remove(doc);
-            }).then((res) => {
-                assert.exists(res.ok);
-            });
+    it("Test synchronous getAttachment", async () => {
+        const db = new DB(dbName);
+        await assert.throws(async () => {
+            await db.getAttachment("unexistent", "attachment");
         });
+    });
 
-        it("Try to insert a doc with unencoded attachment", (done) => {
-            const db = new PouchDB(dbs.name);
-            const doc = {
-                _id: "foo",
-                _attachments: {
-                    "foo.txt": {
-                        content_type: "text/plain",
-                        data: "this should have been encoded!"
-                    }
-                }
-            };
-            db.put(doc, (err) => {
-                assert.exists(err);
-                done();
-            });
-        });
+    it("Test synchronous putAttachment with text data", async () => {
+        const db = new DB(dbName);
+        const blob = Buffer.from("foobaz");
+        await db.putAttachment("a", "foo2.txt", "", blob, "text/plain");
+        const doc = await db.get("a", { attachments: true });
+        assert.equal(doc._attachments["foo2.txt"].data, "Zm9vYmF6");
+        assert.equal(doc._attachments["foo2.txt"].content_type, "text/plain");
+    });
 
-        it("Try to get attachment of unexistent doc", (done) => {
-            const db = new PouchDB(dbs.name);
-            db.getAttachment("unexistent", "attachment", (err) => {
-                assert.exists(err, "Correctly returned error");
-                done();
-            });
-        });
+    it("Test synchronous putAttachment with no text data", async () => {
+        const db = new DB(dbName);
+        await db.putAttachment("a", "foo2.txt", "", "", "text/plain");
+        const doc = await db.get("a", { attachments: true });
+        assert.equal(doc._attachments["foo2.txt"].data, "");
+        assert.equal(doc._attachments["foo2.txt"].content_type.indexOf("text/plain"), 0, "expected content-type to start with text/plain");
+    });
 
-        it("Test synchronous getAttachment", (done) => {
-            const db = new PouchDB(dbs.name);
-            db.getAttachment("unexistent", "attachment", (err) => {
-                assert.exists(err, "Correctly returned error");
-                done();
-            });
-        });
-
-        it("Test synchronous putAttachment with text data", (done) => {
-            const db = new PouchDB(dbs.name);
-            const blob = testUtils.makeBlob("foobaz", "text/plain");
-            db.putAttachment("a", "foo2.txt", "", blob, "text/plain", (err) => {
-                assert.isNull(err, "Correctly wrote attachment");
-                db.get("a", { attachments: true }, (err, doc) => {
-                    assert.isNull(err, "Correctly got attachment");
-                    assert.equal(doc._attachments["foo2.txt"].data, "Zm9vYmF6");
-                    assert.equal(doc._attachments["foo2.txt"].content_type, "text/plain");
-                    done();
-                });
-            });
-        });
-
-        it("Test synchronous putAttachment with no text data", (done) => {
-            const db = new PouchDB(dbs.name);
-            db.putAttachment("a", "foo2.txt", "", "", "text/plain", (err) => {
-                assert.isNull(err, "Correctly wrote attachment");
-                db.get("a", { attachments: true }, (err, doc) => {
-                    assert.isNull(err, "Correctly got attachment");
-                    assert.equal(doc._attachments["foo2.txt"].data, "");
-                    // firefox 3 appends charset=utf8
-                    // see http://forums.mozillazine.org/viewtopic.php?p=6318215#p6318215
-                    assert.equal(doc._attachments["foo2.txt"].content_type.indexOf("text/plain"), 0, "expected content-type to start with text/plain");
-                    done();
-                });
-            });
-        });
-
-        it("Test put with partial stubs", () => {
-            const db = new PouchDB(dbs.name);
-            const doc = {
-                _id: "doc",
-                _attachments: {
-                    "foo.txt": {
-                        content_type: "text/plain",
-                        data: "Zm9v"
-                    },
-                    "bar.txt": {
-                        content_type: "text/plain",
-                        data: "Zm9v"
-                    }
-                }
-            };
-            return db.put(doc).then(() => {
-                return db.get(doc._id);
-            }).then((doc) => {
-                doc._attachments["baz.txt"] = {
+    it("Test put with partial stubs", () => {
+        const db = new DB(dbName);
+        const doc = {
+            _id: "doc",
+            _attachments: {
+                "foo.txt": {
                     content_type: "text/plain",
                     data: "Zm9v"
-                };
-                // at this point, foo and bar are stubs, but baz is not
-                return db.put(doc);
-            }).then(() => {
-                return db.get(doc._id, { attachments: true });
-            }).then((doc) => {
-                assert.notEqual(doc._rev, "2-x");
-                assert.lengthOf(Object.keys(doc._attachments), 3);
-                Object.keys(doc._attachments).forEach((key) => {
-                    const att = doc._attachments[key];
-                    assert.equal(att.data, "Zm9v");
-                    assert.equal(att.content_type, "text/plain");
-                });
-            });
-        });
-
-        it("Test put with attachments and new_edits=false", () => {
-            const db = new PouchDB(dbs.name);
-            const doc = {
-                _id: "doc",
-                _rev: "2-x",
-                _attachments: {
-                    "foo.txt": {
-                        content_type: "text/plain",
-                        data: "Zm9v"
-                    },
-                    "bar.txt": {
-                        content_type: "text/plain",
-                        data: "Zm9v"
-                    },
-                    "baz.txt": {
-                        content_type: "text/plain",
-                        data: "Zm9v"
-                    }
                 },
-                _revisions: {
-                    start: 2,
-                    ids: ["x", "a"]
-                }
-            };
-            return db.bulkDocs([doc], { new_edits: false }).then(() => {
-                return db.get(doc._id);
-            }).then(() => {
-                // at this point, foo and bar are stubs, but baz is not
-                return db.bulkDocs([doc], { new_edits: false });
-            }).then(() => {
-                return db.get(doc._id, { attachments: true });
-            }).then((doc) => {
-                assert.equal(doc._rev, "2-x");
-                assert.lengthOf(Object.keys(doc._attachments), 3);
-                Object.keys(doc._attachments).forEach((key) => {
-                    const att = doc._attachments[key];
-                    assert.equal(att.data, "Zm9v");
-                    assert.equal(att.content_type, "text/plain");
-                });
-            });
-        });
-
-        it("Test getAttachment with specific rev", () => {
-            const db = new PouchDB(dbs.name, { auto_compaction: false });
-
-            const doc = {
-                _id: "a"
-            };
-            let rev1;
-            let rev2;
-            let rev3;
-            return db.put(doc).then((res) => {
-                doc._rev = rev1 = res.rev;
-                doc._attachments = {
-                    "foo.txt": {
-                        content_type: "text/plain",
-                        data: "Zm9v"
-                    }
-                };
-                return db.put(doc);
-            }).then((res) => {
-                doc._rev = rev2 = res.rev;
-
-                delete doc._attachments;
-                return db.put(doc);
-            }).then((res) => {
-                doc._rev = rev3 = res.rev;
-
-                return db.getAttachment("a", "foo.txt", { rev: rev2 });
-            }).then((blob) => {
-                assert.exists(blob);
-
-                return Promise.all([
-                    db.getAttachment("a", "foo.txt", { rev: rev1 }),
-                    db.getAttachment("a", "foo.txt", { rev: "3-fake" }),
-                    db.getAttachment("a", "foo.txt"),
-                    db.getAttachment("a", "foo.txt", {}),
-                    db.getAttachment("a", "foo.txt", { rev: rev3 })
-                ].map((promise) => {
-                    return promise.then(() => {
-                        throw new Error("expected an error");
-                    }, (err) => {
-                        assert.exists(err);
-                        assert.equal(err.status, 404);
-                    });
-                }));
-            });
-        });
-
-        it("Test getAttachment with diff revs and content", () => {
-            const db = new PouchDB(dbs.name, { auto_compaction: false });
-
-            const doc = {
-                _id: "a",
-                _attachments: {
-                    "foo.txt": {
-                        content_type: "text/plain",
-                        data: "Zm9v"
-                    }
-                }
-            };
-            let rev1;
-            let rev2;
-            let rev3;
-            return db.put(doc).then((res) => {
-                doc._rev = rev1 = res.rev;
-                doc._attachments = {
-                    "foo.txt": {
-                        content_type: "text/plain",
-                        data: "YmFy"
-                    }
-                };
-                return db.put(doc);
-            }).then((res) => {
-                doc._rev = rev2 = res.rev;
-                doc._attachments = {
-                    "foo.txt": {
-                        content_type: "text/plain",
-                        data: "YmF6"
-                    }
-                };
-                return db.put(doc);
-            }).then((res) => {
-                doc._rev = rev3 = res.rev;
-
-                const testCases = [
-                    [db.getAttachment("a", "foo.txt"), "baz"],
-                    [db.getAttachment("a", "foo.txt", { rev: rev3 }), "baz"],
-                    [db.getAttachment("a", "foo.txt", { rev: rev2 }), "bar"],
-                    [db.getAttachment("a", "foo.txt", { rev: rev1 }), "foo"]
-                ];
-
-                return Promise.all(testCases.map((testCase) => {
-                    const promise = testCase[0];
-                    const expected = testCase[1];
-                    return promise.then((blob) => {
-                        assert.equal(blob.type, "text/plain");
-                        return testUtils.readBlobPromise(blob);
-                    }).then((bin) => {
-                        assert.equal(bin, expected, "didn't get blob we expected for rev");
-                    });
-                }));
-            });
-        });
-
-        it("Test stubs", (done) => {
-            const db = new PouchDB(dbs.name);
-            db.putAttachment("a", "foo2.txt", "", "", "text/plain", () => {
-                db.allDocs({ include_docs: true }, (err, docs) => {
-                    assert.isUndefined(docs.rows[0].stub, "no stub");
-                    done();
-                });
-            });
-        });
-
-        it("Try to get unexistent attachment of some doc", (done) => {
-            const db = new PouchDB(dbs.name);
-            db.put({ _id: "foo" }, (err) => {
-                assert.isNull(err, "doc inserted");
-                db.getAttachment("foo", "unexistentAttachment", (err) => {
-                    assert.exists(err, "Correctly returned error");
-                    done();
-                });
-            });
-        });
-
-        it("putAttachment and getAttachment with plaintext", (done) => {
-            const db = new PouchDB(dbs.name);
-            db.put({ _id: "foo" }, () => {
-                db.get("foo", (err, doc) => {
-                    const data = binAttDoc._attachments["foo.txt"].data;
-                    const blob = testUtils.binaryStringToBlob(testUtils.atob(data),
-                        "text/plain");
-                    db.putAttachment("foo", "foo.txt", doc._rev, blob, "text/plain",
-                        (err) => {
-                            assert.isNull(err, "attachment inserted");
-                            db.getAttachment("foo", "foo.txt", (err, blob) => {
-                                assert.isNull(err, "attachment gotten");
-                                assert.equal(blob.type, "text/plain");
-                                testUtils.readBlob(blob, (returnedData) => {
-                                    assert.equal(testUtils.btoa(returnedData), data);
-                                    db.get("foo", (err, doc) => {
-                                        assert.isNull(err, "err on get");
-                                        delete doc._attachments["foo.txt"].revpos;
-
-                                        // couchdb encodes plaintext strings differently from us
-                                        // because of libicu vs. ascii. that's okay
-                                        const digest = doc._attachments["foo.txt"].digest;
-                                        const validDigests = [
-                                            "md5-qUUYqS41RhwF0TrCsTAxFg==",
-                                            "md5-aEI7pOYCRBLTRQvvqYrrJQ==",
-                                            "md5-jeLnIuUvK7d+6gya044lVA=="
-                                        ];
-                                        assert.notEqual(validDigests.indexOf(digest), -1, `expected ${digest} to be in: ${JSON.stringify(validDigests)}`);
-                                        delete doc._attachments["foo.txt"].digest;
-                                        assert.deepEqual(doc._attachments, {
-                                            "foo.txt": {
-                                                content_type: "text/plain",
-                                                stub: true,
-                                                length: 29
-                                            }
-                                        });
-                                        done();
-                                    });
-                                });
-                            });
-                        });
-                });
-            });
-        });
-
-        it("putAttachment and getAttachment with png data", (done) => {
-            const db = new PouchDB(dbs.name);
-            db.put({ _id: "foo" }, () => {
-                db.get("foo", (err, doc) => {
-                    const data = pngAttDoc._attachments["foo.png"].data;
-                    const blob = testUtils.binaryStringToBlob(testUtils.atob(data),
-                        "image/png");
-                    db.putAttachment("foo", "foo.png", doc._rev, blob, "image/png",
-                        (err) => {
-                            assert.isNull(err, "attachment inserted");
-                            db.getAttachment("foo", "foo.png", (err, blob) => {
-                                assert.isNull(err, "attachment gotten");
-                                assert.equal(blob.type, "image/png");
-                                testUtils.readBlob(blob, (returnedData) => {
-                                    assert.equal(testUtils.btoa(returnedData), data);
-                                    db.get("foo", (err, doc) => {
-                                        assert.isNull(err, "err on get");
-                                        delete doc._attachments["foo.png"].revpos;
-                                        assert.deepEqual(doc._attachments, {
-                                            "foo.png": {
-                                                content_type: "image/png",
-                                                digest: "md5-c6eA+rofKUsstTNQBKUc8A==",
-                                                stub: true,
-                                                length: 229
-                                            }
-                                        });
-                                        done();
-                                    });
-                                });
-                            });
-                        });
-                });
-            });
-        });
-
-        it("putAttachment in new doc with base64", () => {
-            const db = new PouchDB(dbs.name, { auto_compaction: false });
-
-            return db.putAttachment("foo", "att", "Zm9v", "text/plain").then(() => {
-                return db.get("foo", { attachments: true });
-            }).then((doc) => {
-                assert.match(doc._attachments.att.content_type, /^text\/plain/);
-                assert.equal(doc._attachments.att.data, "Zm9v");
-            });
-        });
-
-        it("#2818 - save same attachment in different revs", () => {
-            const db = new PouchDB(dbs.name, { auto_compaction: false });
-
-            return db.put({ _id: "foo" }).then((res) => {
-                return db.putAttachment("foo", "att", res.rev, "Zm9v", "text/plain");
-            }).then(() => {
-                return db.get("foo", { attachments: true });
-            }).then((doc) => {
-                assert.match(doc._attachments.att.content_type, /^text\/plain/);
-                assert.exists(doc._attachments.att.data);
-                return db.get("foo");
-            }).then((doc) => {
-                return db.put(doc);
-            }).then(() => {
-                return db.compact();
-            }).then(() => {
-                return db.get("foo", { attachments: true });
-            }).then((doc) => {
-                assert.match(doc._attachments.att.content_type, /^text\/plain/);
-                assert.isAbove(doc._attachments.att.data.length, 0, "attachment exists");
-            });
-        });
-
-        it("#2818 - save same attachment many times in parallel", () => {
-            const db = new PouchDB(dbs.name);
-            const docs = [];
-
-            for (let i = 0; i < 50; i++) {
-                docs.push({
-                    _id: `doc${i}`,
-                    _attachments: {
-                        "foo.txt": {
-                            content_type: "text/plain",
-                            data: "Zm9vYmFy" // 'foobar'
-                        }
-                    }
-                });
-            }
-            return db.bulkDocs(docs);
-        });
-
-        it("#2818 - revisions keep attachments (no compaction)", () => {
-            const db = new PouchDB(dbs.name, { auto_compaction: false });
-            const doc = {
-                _id: "doc",
-                _attachments: {
-                    "foo.txt": {
-                        content_type: "text/plain",
-                        data: "Zm9vYmFy" // 'foobar'
-                    }
-                }
-            };
-            let rev;
-            return db.put(doc).then(() => {
-                return db.get("doc");
-            }).then((doc) => {
-                rev = doc._rev;
-                //delete doc._attachments['foo.txt'];
-                doc._attachments["foo.txt"] = {
+                "bar.txt": {
                     content_type: "text/plain",
-                    data: "dG90bw=="
-                }; // 'toto'
-                return db.put(doc);
-            }).then(() => {
-                return db.get("doc", { attachments: true });
-            }).then((doc) => {
-                assert.equal(doc._attachments["foo.txt"].data, "dG90bw==");
-                return db.get("doc", { rev, attachments: true });
-            }).then((doc) => {
-                assert.equal(doc._attachments["foo.txt"].data, "Zm9vYmFy");
+                    data: "Zm9v"
+                }
+            }
+        };
+        return db.put(doc).then(() => {
+            return db.get(doc._id);
+        }).then((doc) => {
+            doc._attachments["baz.txt"] = {
+                content_type: "text/plain",
+                data: "Zm9v"
+            };
+            // at this point, foo and bar are stubs, but baz is not
+            return db.put(doc);
+        }).then(() => {
+            return db.get(doc._id, { attachments: true });
+        }).then((doc) => {
+            assert.notEqual(doc._rev, "2-x");
+            assert.lengthOf(Object.keys(doc._attachments), 3);
+            Object.keys(doc._attachments).forEach((key) => {
+                const att = doc._attachments[key];
+                assert.equal(att.data, "Zm9v");
+                assert.equal(att.content_type, "text/plain");
             });
         });
+    });
 
-        it("#2818 - doesn't throw 409 if same filename", () => {
-            const db = new PouchDB(dbs.name, { auto_compaction: false });
-            const doc = {
-                _id: "doc",
+    it("Test put with attachments and new_edits=false", () => {
+        const db = new DB(dbName);
+        const doc = {
+            _id: "doc",
+            _rev: "2-x",
+            _attachments: {
+                "foo.txt": {
+                    content_type: "text/plain",
+                    data: "Zm9v"
+                },
+                "bar.txt": {
+                    content_type: "text/plain",
+                    data: "Zm9v"
+                },
+                "baz.txt": {
+                    content_type: "text/plain",
+                    data: "Zm9v"
+                }
+            },
+            _revisions: {
+                start: 2,
+                ids: ["x", "a"]
+            }
+        };
+        return db.bulkDocs([doc], { new_edits: false }).then(() => {
+            return db.get(doc._id);
+        }).then(() => {
+            // at this point, foo and bar are stubs, but baz is not
+            return db.bulkDocs([doc], { new_edits: false });
+        }).then(() => {
+            return db.get(doc._id, { attachments: true });
+        }).then((doc) => {
+            assert.equal(doc._rev, "2-x");
+            assert.lengthOf(Object.keys(doc._attachments), 3);
+            Object.keys(doc._attachments).forEach((key) => {
+                const att = doc._attachments[key];
+                assert.equal(att.data, "Zm9v");
+                assert.equal(att.content_type, "text/plain");
+            });
+        });
+    });
+
+    it("Test getAttachment with specific rev", () => {
+        const db = new DB(dbName, { auto_compaction: false });
+
+        const doc = {
+            _id: "a"
+        };
+        let rev1;
+        let rev2;
+        let rev3;
+        return db.put(doc).then((res) => {
+            doc._rev = rev1 = res.rev;
+            doc._attachments = {
+                "foo.txt": {
+                    content_type: "text/plain",
+                    data: "Zm9v"
+                }
+            };
+            return db.put(doc);
+        }).then((res) => {
+            doc._rev = rev2 = res.rev;
+
+            delete doc._attachments;
+            return db.put(doc);
+        }).then((res) => {
+            doc._rev = rev3 = res.rev;
+
+            return db.getAttachment("a", "foo.txt", { rev: rev2 });
+        }).then((blob) => {
+            assert.exists(blob);
+
+            return Promise.all([
+                db.getAttachment("a", "foo.txt", { rev: rev1 }),
+                db.getAttachment("a", "foo.txt", { rev: "3-fake" }),
+                db.getAttachment("a", "foo.txt"),
+                db.getAttachment("a", "foo.txt", {}),
+                db.getAttachment("a", "foo.txt", { rev: rev3 })
+            ].map((promise) => {
+                return promise.then(() => {
+                    throw new Error("expected an error");
+                }, (err) => {
+                    assert.exists(err);
+                    assert.equal(err.status, 404);
+                });
+            }));
+        });
+    });
+
+    it("Test getAttachment with diff revs and content", () => {
+        const db = new DB(dbName, { auto_compaction: false });
+
+        const doc = {
+            _id: "a",
+            _attachments: {
+                "foo.txt": {
+                    content_type: "text/plain",
+                    data: "Zm9v"
+                }
+            }
+        };
+        let rev1;
+        let rev2;
+        let rev3;
+        return db.put(doc).then((res) => {
+            doc._rev = rev1 = res.rev;
+            doc._attachments = {
+                "foo.txt": {
+                    content_type: "text/plain",
+                    data: "YmFy"
+                }
+            };
+            return db.put(doc);
+        }).then((res) => {
+            doc._rev = rev2 = res.rev;
+            doc._attachments = {
+                "foo.txt": {
+                    content_type: "text/plain",
+                    data: "YmF6"
+                }
+            };
+            return db.put(doc);
+        }).then((res) => {
+            doc._rev = rev3 = res.rev;
+
+            const testCases = [
+                [db.getAttachment("a", "foo.txt"), "baz"],
+                [db.getAttachment("a", "foo.txt", { rev: rev3 }), "baz"],
+                [db.getAttachment("a", "foo.txt", { rev: rev2 }), "bar"],
+                [db.getAttachment("a", "foo.txt", { rev: rev1 }), "foo"]
+            ];
+
+            return Promise.all(testCases.map((testCase) => {
+                const promise = testCase[0];
+                const expected = testCase[1];
+                return promise.then((blob) => {
+                    assert.equal(blob.type, "text/plain");
+                    return blob.toString("binary");
+                }).then((bin) => {
+                    assert.equal(bin, expected, "didn't get blob we expected for rev");
+                });
+            }));
+        });
+    });
+
+    it("Test stubs", async () => {
+        const db = new DB(dbName);
+        await db.putAttachment("a", "foo2.txt", "", "", "text/plain");
+        const docs = await db.allDocs({ include_docs: true });
+        assert.isUndefined(docs.rows[0].stub, "no stub");
+    });
+
+    it("Try to get unexistent attachment of some doc", async () => {
+        const db = new DB(dbName);
+        await db.put({ _id: "foo" });
+        await assert.throws(async () => {
+            await db.getAttachment("foo", "unexistentAttachment");
+        });
+    });
+
+    it("putAttachment and getAttachment with plaintext", async () => {
+        const db = new DB(dbName);
+        await db.put({ _id: "foo" });
+        let doc = await db.get("foo");
+        const data = binAttDoc._attachments["foo.txt"].data;
+        let blob = util.binaryStringToBuffer(util.atob(data), "text/plain");
+        await db.putAttachment("foo", "foo.txt", doc._rev, blob, "text/plain");
+        blob = await db.getAttachment("foo", "foo.txt");
+        assert.equal(blob.type, "text/plain");
+        const blobData = blob.toString("binary");
+        assert.equal(util.btoa(blobData), data);
+        doc = await db.get("foo");
+        delete doc._attachments["foo.txt"].revpos;
+
+        // couchdb encodes plaintext strings differently from us
+        // because of libicu vs. ascii. that's okay
+        const digest = doc._attachments["foo.txt"].digest;
+        const validDigests = [
+            "md5-qUUYqS41RhwF0TrCsTAxFg==",
+            "md5-aEI7pOYCRBLTRQvvqYrrJQ==",
+            "md5-jeLnIuUvK7d+6gya044lVA=="
+        ];
+        assert.notEqual(validDigests.indexOf(digest), -1, `expected ${digest} to be in: ${JSON.stringify(validDigests)}`);
+        delete doc._attachments["foo.txt"].digest;
+        assert.deepEqual(doc._attachments, {
+            "foo.txt": {
+                content_type: "text/plain",
+                stub: true,
+                length: 29
+            }
+        });
+    });
+
+    it("putAttachment and getAttachment with png data", async () => {
+        const db = new DB(dbName);
+        await db.put({ _id: "foo" });
+        let doc = await db.get("foo");
+        const data = pngAttDoc._attachments["foo.png"].data;
+        let blob = util.binaryStringToBuffer(util.atob(data), "image/png");
+        await db.putAttachment("foo", "foo.png", doc._rev, blob, "image/png");
+        blob = await db.getAttachment("foo", "foo.png");
+        assert.equal(blob.type, "image/png");
+        const blobData = blob.toString("binary");
+        assert.equal(util.btoa(blobData), data);
+        doc = await db.get("foo");
+        delete doc._attachments["foo.png"].revpos;
+        assert.deepEqual(doc._attachments, {
+            "foo.png": {
+                content_type: "image/png",
+                digest: "md5-c6eA+rofKUsstTNQBKUc8A==",
+                stub: true,
+                length: 229
+            }
+        });
+    });
+
+    it("putAttachment in new doc with base64", () => {
+        const db = new DB(dbName, { auto_compaction: false });
+
+        return db.putAttachment("foo", "att", "Zm9v", "text/plain").then(() => {
+            return db.get("foo", { attachments: true });
+        }).then((doc) => {
+            assert.match(doc._attachments.att.content_type, /^text\/plain/);
+            assert.equal(doc._attachments.att.data, "Zm9v");
+        });
+    });
+
+    it("#2818 - save same attachment in different revs", () => {
+        const db = new DB(dbName, { auto_compaction: false });
+
+        return db.put({ _id: "foo" }).then((res) => {
+            return db.putAttachment("foo", "att", res.rev, "Zm9v", "text/plain");
+        }).then(() => {
+            return db.get("foo", { attachments: true });
+        }).then((doc) => {
+            assert.match(doc._attachments.att.content_type, /^text\/plain/);
+            assert.exists(doc._attachments.att.data);
+            return db.get("foo");
+        }).then((doc) => {
+            return db.put(doc);
+        }).then(() => {
+            return db.compact();
+        }).then(() => {
+            return db.get("foo", { attachments: true });
+        }).then((doc) => {
+            assert.match(doc._attachments.att.content_type, /^text\/plain/);
+            assert.isAbove(doc._attachments.att.data.length, 0, "attachment exists");
+        });
+    });
+
+    it("#2818 - save same attachment many times in parallel", () => {
+        const db = new DB(dbName);
+        const docs = [];
+
+        for (let i = 0; i < 50; i++) {
+            docs.push({
+                _id: `doc${i}`,
                 _attachments: {
                     "foo.txt": {
                         content_type: "text/plain",
                         data: "Zm9vYmFy" // 'foobar'
                     }
                 }
-            };
-            return db.put(doc).then((res) => {
-                doc._rev = res.rev;
-                doc._attachments["foo.txt"].data = "dG90bw=="; // 'toto'
-                return db.put(doc);
-            });
-        });
-
-        it("#3008 test correct encoding/decoding of \\u0000 etc.", () => {
-
-            const base64 =
-                "iVBORw0KGgoAAAANSUhEUgAAAhgAAAJLCAYAAAClnu9J" +
-                "AAAgAElEQVR4Xuy9B7ylZXUu/p62T5nOMAPM0BVJICQi" +
-                "ogjEJN5ohEgQ";
-
-            const db = new PouchDB(dbs.name);
-            return db.putAttachment("foo", "foo.bin", base64, "image/png").then(() => {
-                return db.getAttachment("foo", "foo.bin");
-            }).then((blob) => {
-                assert.equal(blob.type, "image/png");
-                return testUtils.readBlobPromise(blob);
-            }).then((bin) => {
-                assert.equal(testUtils.btoa(bin), base64);
-            });
-        });
-
-
-        const isSafari = (typeof process === "undefined" || process.browser) &&
-            /Safari/.test(window.navigator.userAgent) &&
-            !/Chrome/.test(window.navigator.userAgent);
-        if (!isSafari) {
-            // skip in safari/ios because of size limit popup
-            it("putAttachment and getAttachment with big png data", (done) => {
-
-                function getData(cb) {
-                    if (typeof process !== "undefined" && !process.browser) {
-                        const bigimage = require("./deps/bigimage.js");
-                        cb(null, bigimage);
-                    } else { // browser
-                        const script = document.createElement("script");
-                        script.src = "deps/bigimage.js";
-                        document.body.appendChild(script);
-                        var timeout = setInterval(() => {
-                            if (window.bigimage) {
-                                clearInterval(timeout);
-                                cb(null, window.bigimage);
-                            }
-                        }, 500);
-                    }
-                }
-
-                const db = new PouchDB(dbs.name);
-                db.put({ _id: "foo" }, () => {
-                    db.get("foo", (err, doc) => {
-
-                        getData((err, data) => {
-                            const blob = testUtils.binaryStringToBlob(
-                                testUtils.atob(data), "image/png");
-                            db.putAttachment("foo", "foo.png", doc._rev, blob, "image/png",
-                                (err) => {
-                                    assert.isNull(err, "attachment inserted");
-                                    db.getAttachment("foo", "foo.png", (err, blob) => {
-                                        assert.isNull(err, "attachment gotten");
-                                        assert.equal(blob.type, "image/png");
-                                        testUtils.readBlob(blob, (returnedData) => {
-                                            assert.equal(testUtils.btoa(returnedData), data);
-                                            db.get("foo", (err, doc) => {
-                                                assert.isNull(err, "err on get");
-                                                delete doc._attachments["foo.png"].revpos;
-                                                assert.deepEqual(doc._attachments, {
-                                                    "foo.png": {
-                                                        content_type: "image/png",
-                                                        digest: "md5-kqr2YcdElgDs3RkMn1Ygbw==",
-                                                        stub: true,
-                                                        length: 678010
-                                                    }
-                                                });
-                                                done();
-                                            });
-                                        });
-                                    });
-                                });
-                        });
-                    });
-                });
             });
         }
+        return db.bulkDocs(docs);
+    });
 
-        it("#2709 `revpos` with putAttachment", (done) => {
-            const db = new PouchDB(dbs.name);
-            db.putAttachment("a", "one", "", testUtils.btoa("one"), "text/plain", () => {
-                db.get("a", (err, doc) => {
-                    assert.exists(doc._attachments.one.revpos);
-                    assert.equal(doc._attachments.one.revpos, 1);
-                    db.putAttachment("a", "two", doc._rev, testUtils.btoa("two"), "text/plain", () => {
-                        db.get("a", (err, doc) => {
-                            assert.exists(doc._attachments.two.revpos);
-                            assert.equal(doc._attachments.two.revpos, 2);
-                            assert.equal(doc._attachments.one.revpos, 1);
-                            db.putAttachment("a", "one", doc._rev, testUtils.btoa("one-changed"), "text/plain", () => {
-                                db.get("a", (err, doc) => {
-                                    assert.equal(doc._attachments.one.revpos, 3);
-                                    assert.equal(doc._attachments.two.revpos, 2);
-                                    done();
-                                });
-                            });
-                        });
-                    });
-                });
-            });
-        });
-
-        it("#2709 `revpos` with inline attachment", (done) => {
-            const db = new PouchDB(dbs.name);
-            const doc = {
-                _id: "a",
-                _attachments: {
-                    one: {
-                        content_type: "text/plain",
-                        data: testUtils.btoa("one")
-                    }
+    it("#2818 - revisions keep attachments (no compaction)", () => {
+        const db = new DB(dbName, { auto_compaction: false });
+        const doc = {
+            _id: "doc",
+            _attachments: {
+                "foo.txt": {
+                    content_type: "text/plain",
+                    data: "Zm9vYmFy" // 'foobar'
                 }
-            };
-            db.put(doc, () => {
-                db.get("a", (err, doc) => {
-                    assert.exists(doc._attachments.one.revpos);
-                    assert.equal(doc._attachments.one.revpos, 1);
-                    doc._attachments.two = {
-                        content_type: "text/plain",
-                        data: testUtils.btoa("two")
-                    };
-                    db.put(doc, () => {
-                        db.get("a", (err, doc) => {
-                            assert.exists(doc._attachments.two.revpos);
-                            assert.equal(doc._attachments.two.revpos, 2);
-                            assert.equal(doc._attachments.one.revpos, 1);
-                            delete doc._attachments.one.stub;
-                            doc._attachments.one.data = testUtils.btoa("one-changed");
-                            db.put(doc, () => {
-                                db.get("a", (err, doc) => {
-                                    assert.equal(doc._attachments.one.revpos, 3);
-                                    assert.equal(doc._attachments.two.revpos, 2);
-                                    done();
-                                });
-                            });
-                        });
-                    });
-                });
-            });
+            }
+        };
+        let rev;
+        return db.put(doc).then(() => {
+            return db.get("doc");
+        }).then((doc) => {
+            rev = doc._rev;
+            //delete doc._attachments['foo.txt'];
+            doc._attachments["foo.txt"] = {
+                content_type: "text/plain",
+                data: "dG90bw=="
+            }; // 'toto'
+            return db.put(doc);
+        }).then(() => {
+            return db.get("doc", { attachments: true });
+        }).then((doc) => {
+            assert.equal(doc._attachments["foo.txt"].data, "dG90bw==");
+            return db.get("doc", { rev, attachments: true });
+        }).then((doc) => {
+            assert.equal(doc._attachments["foo.txt"].data, "Zm9vYmFy");
         });
+    });
 
-        it("#2709 `revpos` with allDocs", (done) => {
-            const db = new PouchDB(dbs.name);
-            db.putAttachment("a", "one", "", testUtils.btoa("one"), "text/plain", () => {
-                db.allDocs({ keys: ["a"], include_docs: true }, (err, docs) => {
-                    const doc = docs.rows[0].doc;
-                    assert.exists(doc._attachments.one.revpos);
-                    assert.equal(doc._attachments.one.revpos, 1);
-                    done();
-                });
-            });
+    it("#2818 - doesn't throw 409 if same filename", () => {
+        const db = new DB(dbName, { auto_compaction: false });
+        const doc = {
+            _id: "doc",
+            _attachments: {
+                "foo.txt": {
+                    content_type: "text/plain",
+                    data: "Zm9vYmFy" // 'foobar'
+                }
+            }
+        };
+        return db.put(doc).then((res) => {
+            doc._rev = res.rev;
+            doc._attachments["foo.txt"].data = "dG90bw=="; // 'toto'
+            return db.put(doc);
         });
+    });
+
+    it("#3008 test correct encoding/decoding of \\u0000 etc.", () => {
+
+        const base64 =
+            "iVBORw0KGgoAAAANSUhEUgAAAhgAAAJLCAYAAAClnu9J" +
+            "AAAgAElEQVR4Xuy9B7ylZXUu/p62T5nOMAPM0BVJICQi" +
+            "ogjEJN5ohEgQ";
+
+        const db = new DB(dbName);
+        return db.putAttachment("foo", "foo.bin", base64, "image/png").then(() => {
+            return db.getAttachment("foo", "foo.bin");
+        }).then((blob) => {
+            assert.equal(blob.type, "image/png");
+            return blob.toString("binary");
+        }).then((bin) => {
+            assert.equal(util.btoa(bin), base64);
+        });
+    });
+
+    it("putAttachment and getAttachment with big png data", async () => {
+
+        const db = new DB(dbName);
+        await db.put({ _id: "foo" });
+        let doc = await db.get("foo");
+
+        const data = require("./deps/bigimage.js");
+
+        let blob = util.binaryStringToBuffer(util.atob(data), "image/png");
+        await db.putAttachment("foo", "foo.png", doc._rev, blob, "image/png");
+        blob = await db.getAttachment("foo", "foo.png");
+        assert.equal(blob.type, "image/png");
+        const blobData = blob.toString("binary");
+        assert.equal(util.btoa(blobData), data);
+        doc = await db.get("foo");
+        delete doc._attachments["foo.png"].revpos;
+        assert.deepEqual(doc._attachments, {
+            "foo.png": {
+                content_type: "image/png",
+                digest: "md5-kqr2YcdElgDs3RkMn1Ygbw==",
+                stub: true,
+                length: 678010
+            }
+        });
+    });
+
+    it("#2709 `revpos` with putAttachment", async () => {
+        const db = new DB(dbName);
+        await db.putAttachment("a", "one", "", util.btoa("one"), "text/plain");
+        let doc = await db.get("a");
+        assert.exists(doc._attachments.one.revpos);
+        assert.equal(doc._attachments.one.revpos, 1);
+        await db.putAttachment("a", "two", doc._rev, util.btoa("two"), "text/plain");
+        doc = await db.get("a");
+        assert.exists(doc._attachments.two.revpos);
+        assert.equal(doc._attachments.two.revpos, 2);
+        assert.equal(doc._attachments.one.revpos, 1);
+        await db.putAttachment("a", "one", doc._rev, util.btoa("one-changed"), "text/plain");
+        doc = await db.get("a");
+        assert.equal(doc._attachments.one.revpos, 3);
+        assert.equal(doc._attachments.two.revpos, 2);
+    });
+
+    it("#2709 `revpos` with inline attachment", async () => {
+        const db = new DB(dbName);
+        let doc = {
+            _id: "a",
+            _attachments: {
+                one: {
+                    content_type: "text/plain",
+                    data: util.btoa("one")
+                }
+            }
+        };
+        await db.put(doc);
+        doc = await db.get("a");
+        assert.exists(doc._attachments.one.revpos);
+        assert.equal(doc._attachments.one.revpos, 1);
+        doc._attachments.two = {
+            content_type: "text/plain",
+            data: util.btoa("two")
+        };
+        await db.put(doc);
+        doc = await db.get("a");
+        assert.exists(doc._attachments.two.revpos);
+        assert.equal(doc._attachments.two.revpos, 2);
+        assert.equal(doc._attachments.one.revpos, 1);
+        delete doc._attachments.one.stub;
+        doc._attachments.one.data = util.btoa("one-changed");
+        await db.put(doc);
+        doc = await db.get("a");
+        assert.equal(doc._attachments.one.revpos, 3);
+        assert.equal(doc._attachments.two.revpos, 2);
+    });
+
+    it("#2709 `revpos` with allDocs", async () => {
+        const db = new DB(dbName);
+        await db.putAttachment("a", "one", "", util.btoa("one"), "text/plain");
+        const docs = await db.allDocs({ keys: ["a"], include_docs: true });
+        const doc = docs.rows[0].doc;
+        assert.exists(doc._attachments.one.revpos);
+        assert.equal(doc._attachments.one.revpos, 1);
     });
 });

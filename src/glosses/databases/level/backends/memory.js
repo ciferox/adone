@@ -210,11 +210,15 @@ export default class Memory extends AbstractBackend {
         }
     }
 
-    static destroy(name) {
+    static destroy(name, callback) {
         const key = `$${name}`;
 
         if (key in globalStore) {
             delete globalStore[key];
+        }
+        // to be compatible with the default store
+        if (is.function(callback)) {
+            callback();
         }
     }
 }

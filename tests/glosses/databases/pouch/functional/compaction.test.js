@@ -1,40 +1,35 @@
-require("./node.setup");
+import * as util from "./utils";
 
-describe("db", "pouch", "compaction", () => {
-    if (testUtils.isCouchMaster()) {
-        return true;
-    }
+describe("database", "pouch", "compaction", () => {
+    const dbName = "testdb";
+    let DB = null;
 
-    const dbs = {};
-
-    beforeEach((done) => {
-        dbs.name = testUtils.adapterUrl("local", "testdb");
-        testUtils.cleanup([dbs.name], done);
+    beforeEach(async () => {
+        DB = await util.setup();
+        await util.cleanup(dbName);
     });
 
-    after((done) => {
-        testUtils.cleanup([dbs.name], done);
+    after(async () => {
+        await util.destroy();
     });
 
     it("#3350 compact should return {ok: true}", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.compact((err, result) => {
-            assert.isNull(err);
+        const db = new DB(dbName);
+        db.compact().then((result) => {
             assert.deepEqual(result, { ok: true });
-
             done();
         });
     });
 
     it("compact with options object", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         return db.compact({}).then((result) => {
             assert.deepEqual(result, { ok: true });
         });
     });
 
     it("#2913 massively parallel compaction", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const tasks = [];
         for (let i = 0; i < 30; i++) {
             tasks.push(i);
@@ -55,173 +50,144 @@ describe("db", "pouch", "compaction", () => {
     });
 
     it("Compaction document with no revisions to remove", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const doc = { _id: "foo", value: "bar" };
-        db.put(doc, () => {
-            db.compact(() => {
-                db.get("foo", (err) => {
-                    done(err);
-                });
+        db.put(doc).then(() => {
+            db.compact().then(() => {
+                db.get("foo").then(() => done(), done);
             });
         });
     });
 
-    it("Compation on empty db", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.compact(() => {
-            done();
-        });
+    it("Compation on empty db", async () => {
+        const db = new DB(dbName);
+        await db.compact();
     });
 
-    it("Compation on empty db with interval option", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.compact({ interval: 199 }, () => {
-            done();
-        });
+    it("Compation on empty db with interval option", async () => {
+        const db = new DB(dbName);
+        await db.compact({ interval: 199 });
     });
 
     it("Simple compation test", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const doc = {
             _id: "foo",
             value: "bar"
         };
-        db.post(doc, (err, res) => {
+        db.post(doc).then((res) => {
             const rev1 = res.rev;
             doc._rev = rev1;
             doc.value = "baz";
-            db.post(doc, (err, res) => {
+            db.post(doc).then((res) => {
                 const rev2 = res.rev;
-                db.compact(() => {
-                    db.get("foo", { rev: rev1 }, (err) => {
+                db.compact().then(() => {
+                    db.get("foo", { rev: rev1 }).then(() => {
+                        done(new Error());
+                    }, (err) => {
                         assert.equal(err.status, 404);
                         assert.equal(err.name, "not_found", "compacted document is missing");
-                        db.get("foo", { rev: rev2 }, (err) => {
-                            done(err);
-                        });
+                        db.get("foo", { rev: rev2 }).then(() => done(), done);
                     });
                 });
             });
         });
     });
 
-    const checkBranch = function (db, docs, callback) {
-        function check(i) {
-            const doc = docs[i];
-            db.get(doc._id, { rev: doc._rev }, (err) => {
-                if (i < docs.length - 1) {
-                    assert.exists(err, `should be compacted: ${doc._rev}`);
-                    assert.equal(err.status, 404, "compacted!");
-                    check(i + 1);
-                } else {
-                    assert.isNull(err, `should not be compacted: ${doc._rev}`);
-                    callback();
-                }
-            });
+    const checkBranch = async (db, docs) => {
+        for (const [i, doc] of adone.util.enumerate(docs)) {
+            if (i < docs.length - 1) {
+                const err = await assert.throws(async () => {
+                    await db.get(doc._id, { rev: doc._rev });
+                });
+                expect(err.status).to.be.equal(404);
+            } else {
+                await db.get(doc._id, { rev: doc._rev });
+            }
+
         }
-        check(0);
     };
 
-    const checkTree = function (db, tree, callback) {
-        function check(i) {
-            checkBranch(db, tree[i], () => {
-                if (i < tree.length - 1) {
-                    check(i + 1);
-                } else {
-                    callback();
-                }
-            });
+    const checkTree = async (db, tree) => {
+        for (const branch of tree) {
+            await checkBranch(db, branch);
         }
-        check(0);
     };
 
     const exampleTree = [
         [{ _id: "foo", _rev: "1-a", value: "foo a" },
-        { _id: "foo", _rev: "2-b", value: "foo b" },
-        { _id: "foo", _rev: "3-c", value: "foo c" }
+            { _id: "foo", _rev: "2-b", value: "foo b" },
+            { _id: "foo", _rev: "3-c", value: "foo c" }
         ],
         [{ _id: "foo", _rev: "1-a", value: "foo a" },
-        { _id: "foo", _rev: "2-d", value: "foo d" },
-        { _id: "foo", _rev: "3-e", value: "foo e" },
-        { _id: "foo", _rev: "4-f", value: "foo f" }
+            { _id: "foo", _rev: "2-d", value: "foo d" },
+            { _id: "foo", _rev: "3-e", value: "foo e" },
+            { _id: "foo", _rev: "4-f", value: "foo f" }
         ],
         [{ _id: "foo", _rev: "1-a", value: "foo a" },
-        { _id: "foo", _rev: "2-g", value: "foo g" },
-        { _id: "foo", _rev: "3-h", value: "foo h" },
-        { _id: "foo", _rev: "4-i", value: "foo i" },
-        { _id: "foo", _rev: "5-j", _deleted: true, value: "foo j" }
+            { _id: "foo", _rev: "2-g", value: "foo g" },
+            { _id: "foo", _rev: "3-h", value: "foo h" },
+            { _id: "foo", _rev: "4-i", value: "foo i" },
+            { _id: "foo", _rev: "5-j", _deleted: true, value: "foo j" }
         ]
     ];
 
     const exampleTree2 = [
         [{ _id: "bar", _rev: "1-m", value: "bar m" },
-        { _id: "bar", _rev: "2-n", value: "bar n" },
-        { _id: "bar", _rev: "3-o", _deleted: true, value: "foo o" }
+            { _id: "bar", _rev: "2-n", value: "bar n" },
+            { _id: "bar", _rev: "3-o", _deleted: true, value: "foo o" }
         ],
         [{ _id: "bar", _rev: "2-n", value: "bar n" },
-        { _id: "bar", _rev: "3-p", value: "bar p" },
-        { _id: "bar", _rev: "4-r", value: "bar r" },
-        { _id: "bar", _rev: "5-s", value: "bar s" }
+            { _id: "bar", _rev: "3-p", value: "bar p" },
+            { _id: "bar", _rev: "4-r", value: "bar r" },
+            { _id: "bar", _rev: "5-s", value: "bar s" }
         ],
         [{ _id: "bar", _rev: "3-p", value: "bar p" },
-        { _id: "bar", _rev: "4-t", value: "bar t" },
-        { _id: "bar", _rev: "5-u", value: "bar u" }
+            { _id: "bar", _rev: "4-t", value: "bar t" },
+            { _id: "bar", _rev: "5-u", value: "bar u" }
         ]
     ];
 
-    it("Compact more complicated tree", (done) => {
-        const db = new PouchDB(dbs.name);
-        testUtils.putTree(db, exampleTree, () => {
-            db.compact(() => {
-                checkTree(db, exampleTree, () => {
-                    done();
-                });
-            });
-        });
+    it("Compact more complicated tree", async () => {
+        const db = new DB(dbName);
+        await util.putTree(db, exampleTree);
+        await db.compact();
+
+        await checkTree(db, exampleTree);
     });
 
-    it("Compact two times more complicated tree", (done) => {
-        const db = new PouchDB(dbs.name);
-        testUtils.putTree(db, exampleTree, () => {
-            db.compact(() => {
-                db.compact(() => {
-                    checkTree(db, exampleTree, () => {
-                        done();
-                    });
-                });
-            });
-        });
+    it("Compact two times more complicated tree", async () => {
+        const db = new DB(dbName);
+        await util.putTree(db, exampleTree);
+        await db.compact();
+        await db.compact();
+        await checkTree(db, exampleTree);
     });
 
-    it("Compact database with at least two documents", (done) => {
-        const db = new PouchDB(dbs.name);
-        testUtils.putTree(db, exampleTree, () => {
-            testUtils.putTree(db, exampleTree2, () => {
-                db.compact(() => {
-                    checkTree(db, exampleTree, () => {
-                        checkTree(db, exampleTree2, () => {
-                            done();
-                        });
-                    });
-                });
-            });
-        });
+    it("Compact database with at least two documents", async () => {
+        const db = new DB(dbName);
+        await util.putTree(db, exampleTree);
+        await util.putTree(db, exampleTree2);
+        await db.compact();
+        await checkTree(db, exampleTree);
+        await checkTree(db, exampleTree2);
     });
 
     it("Compact deleted document", (done) => {
-        const db = new PouchDB(dbs.name);
-        db.put({ _id: "foo" }, (err, res) => {
+        const db = new DB(dbName);
+        db.put({ _id: "foo" }).then((res) => {
             const firstRev = res.rev;
             db.remove({
                 _id: "foo",
                 _rev: firstRev
-            }, () => {
-                db.compact(() => {
-                    db.get("foo", { rev: firstRev }, (err) => {
-                        assert.exists(err, "got error");
-                        assert.equal(err.status, testUtils.errors.MISSING_DOC.status,
+            }).then(() => {
+                db.compact().then(() => {
+                    db.get("foo", { rev: firstRev }).then(() => {
+                        done(new Error());
+                    }, (err) => {
+                        assert.equal(err.status, util.x.MISSING_DOC.status,
                             "correct error status returned");
-                        assert.equal(err.message, testUtils.errors.MISSING_DOC.message,
+                        assert.equal(err.message, util.x.MISSING_DOC.message,
                             "correct error message returned");
                         done();
                     });
@@ -231,20 +197,22 @@ describe("db", "pouch", "compaction", () => {
     });
 
     it("Compact db with sql-injecty doc id", (done) => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const id = "'sql_injection_here";
-        db.put({ _id: id }, (err, res) => {
+        db.put({ _id: id }).then((res) => {
             const firstRev = res.rev;
             db.remove({
                 _id: id,
                 _rev: firstRev
-            }, () => {
-                db.compact(() => {
-                    db.get(id, { rev: firstRev }, (err) => {
+            }).then(() => {
+                db.compact().then(() => {
+                    db.get(id, { rev: firstRev }).then(() => {
+                        done(new Error());
+                    }, (err) => {
                         assert.exists(err, "got error");
-                        assert.equal(err.status, testUtils.errors.MISSING_DOC.status,
+                        assert.equal(err.status, util.x.MISSING_DOC.status,
                             "correct error status returned");
-                        assert.equal(err.message, testUtils.errors.MISSING_DOC.message,
+                        assert.equal(err.message, util.x.MISSING_DOC.message,
                             "correct error message returned");
                         done();
                     });
@@ -254,7 +222,7 @@ describe("db", "pouch", "compaction", () => {
     });
 
 
-    function getRevisions(db, docId) {
+    const getRevisions = (db, docId) => {
         return db.get(docId, {
             revs: true,
             open_revs: "all"
@@ -276,16 +244,16 @@ describe("db", "pouch", "compaction", () => {
                             return { rev };
                         });
                     })).then((docsAndRevs) => {
-                        combinedResult = combinedResult.concat(docsAndRevs);
-                    });
+                    combinedResult = combinedResult.concat(docsAndRevs);
+                });
             })).then(() => {
                 return combinedResult;
             });
         });
-    }
+    };
 
     it("Compaction removes non-leaf revs (#2807)", () => {
-        const db = new PouchDB(dbs.name, { auto_compaction: false });
+        const db = new DB(dbName, { auto_compaction: false });
         const doc = { _id: "foo" };
         return db.put(doc).then((res) => {
             doc._rev = res.rev;
@@ -311,7 +279,7 @@ describe("db", "pouch", "compaction", () => {
     });
 
     it("Compaction removes non-leaf revs pt 2 (#2807)", () => {
-        const db = new PouchDB(dbs.name, { auto_compaction: false });
+        const db = new DB(dbName, { auto_compaction: false });
         const doc = { _id: "foo" };
         return db.put(doc).then((res) => {
             doc._rev = res.rev;
@@ -332,7 +300,7 @@ describe("db", "pouch", "compaction", () => {
     });
 
     it("Compaction removes non-leaf revs pt 3 (#2807)", () => {
-        const db = new PouchDB(dbs.name, { auto_compaction: false });
+        const db = new DB(dbName, { auto_compaction: false });
 
         const docs = [
             {
@@ -381,10 +349,7 @@ describe("db", "pouch", "compaction", () => {
     });
 
     it("Compaction removes non-leaf revs pt 4 (#2807)", () => {
-        if (testUtils.isCouchMaster()) {
-            return true;
-        }
-        const db = new PouchDB(dbs.name, { auto_compaction: false });
+        const db = new DB(dbName, { auto_compaction: false });
         const doc = { _id: "foo" };
         return db.put(doc).then((res) => {
             doc._rev = res.rev;
@@ -407,7 +372,7 @@ describe("db", "pouch", "compaction", () => {
     });
 
     it("Compaction removes non-leaf revs pt 5 (#2807)", () => {
-        const db = new PouchDB(dbs.name, { auto_compaction: false });
+        const db = new DB(dbName, { auto_compaction: false });
         const doc = { _id: "foo" };
         return db.put(doc).then((res) => {
             doc._rev = res.rev;
@@ -429,8 +394,7 @@ describe("db", "pouch", "compaction", () => {
     });
 
     it("#2931 - synchronous putAttachment + compact", () => {
-
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         let queue = db.put({ _id: "doc" });
 
         const otherPromises = [];
@@ -440,11 +404,8 @@ describe("db", "pouch", "compaction", () => {
             queue = queue.then(() => {
                 return db.get("doc").then((doc) => {
                     doc._attachments = doc._attachments || {};
-                    const blob = testUtils.makeBlob(
-                        testUtils.btoa(Math.random().toString()),
-                        "text/plain");
-                    return db.putAttachment(doc._id, "att.txt", doc._rev, blob,
-                        "text/plain");
+                    const blob = Buffer.from(util.btoa(Math.random().toString()));
+                    return db.putAttachment(doc._id, "att.txt", doc._rev, blob, "text/plain");
                 });
             });
             queue.then(() => {
@@ -465,8 +426,7 @@ describe("db", "pouch", "compaction", () => {
     });
 
     it("#2931 - synchronous putAttachment + compact 2", () => {
-
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         let queue = db.put({ _id: "doc" });
 
         let compactQueue = Promise.resolve();
@@ -476,9 +436,7 @@ describe("db", "pouch", "compaction", () => {
             queue = queue.then(() => {
                 return db.get("doc").then((doc) => {
                     doc._attachments = doc._attachments || {};
-                    const blob = testUtils.makeBlob(
-                        testUtils.btoa(Math.random().toString()),
-                        "text/plain");
+                    const blob = Buffer.from(util.btoa(Math.random().toString()));
                     return db.putAttachment(doc._id, "att.txt", doc._rev, blob,
                         "text/plain");
                 });
@@ -503,7 +461,7 @@ describe("db", "pouch", "compaction", () => {
     //
     // Tests for issue #2818 follow, which make some assumptions
     // about how binary data is stored, so they don't pass in
-    // CouchDB. Namely, PouchDB dedups attachments based on
+    // CouchDB. Namely, DB dedups attachments based on
     // md5sum, whereas CouchDB does not.
     //
 
@@ -524,7 +482,7 @@ describe("db", "pouch", "compaction", () => {
         //
         // CouchDB will throw!
         //
-        const db = new PouchDB(dbs.name, { auto_compaction: false });
+        const db = new DB(dbName, { auto_compaction: false });
         const doc1 = {
             _id: "doc1",
             _attachments: {
@@ -581,7 +539,7 @@ describe("db", "pouch", "compaction", () => {
         //
         // CouchDB will throw!
         //
-        const db = new PouchDB(dbs.name, { auto_compaction: false });
+        const db = new DB(dbName, { auto_compaction: false });
         const doc1 = {
             _id: "doc1",
             _attachments: {
@@ -613,7 +571,7 @@ describe("db", "pouch", "compaction", () => {
         //
         // CouchDB will throw!
         //
-        const db = new PouchDB(dbs.name, { auto_compaction: false });
+        const db = new DB(dbName, { auto_compaction: false });
         const doc1 = {
             _id: "doc1",
             _attachments: {
@@ -644,7 +602,7 @@ describe("db", "pouch", "compaction", () => {
     it("#2818 Compaction removes attachments", () => {
         // now that we've established no 412s thanks to digests,
         // we can use that to detect true attachment deletion
-        const db = new PouchDB(dbs.name, { auto_compaction: false });
+        const db = new DB(dbName, { auto_compaction: false });
         const doc = {
             _id: "doc1",
             _attachments: {
@@ -684,7 +642,7 @@ describe("db", "pouch", "compaction", () => {
     });
 
     it("#2818 Compaction removes attachments given conflicts", () => {
-        const db = new PouchDB(dbs.name, { auto_compaction: false });
+        const db = new DB(dbName, { auto_compaction: false });
 
         const docs = [
             {
@@ -803,7 +761,7 @@ describe("db", "pouch", "compaction", () => {
     });
 
     it("#2818 Compaction retains attachments if unorphaned", () => {
-        const db = new PouchDB(dbs.name, { auto_compaction: false });
+        const db = new DB(dbName, { auto_compaction: false });
         const doc = {
             _id: "doc1",
             _attachments: {
@@ -881,7 +839,7 @@ describe("db", "pouch", "compaction", () => {
     });
 
     it("#2818 successive new_edits okay with attachments", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const docs = [{
             _id: "foo",
             _rev: "1-x",
@@ -921,7 +879,7 @@ describe("db", "pouch", "compaction", () => {
     it("#2818 Compaction really replaces attachments", () => {
         // now that we've established md5sum collisions,
         // we can use that to detect true attachment replacement
-        const db = new PouchDB(dbs.name, { auto_compaction: false });
+        const db = new DB(dbName, { auto_compaction: false });
         return db.put({
             _id: "doc1",
             _attachments: {
@@ -994,29 +952,29 @@ describe("db", "pouch", "compaction", () => {
     it("#2818 Many orphaned attachments", () => {
         // now that we've established md5sum collisions,
         // we can use that to detect true attachment replacement
-        const db = new PouchDB(dbs.name, { auto_compaction: false });
+        const db = new DB(dbName, { auto_compaction: false });
         const docs = [
             {
                 _id: "doc1",
                 _attachments: {
                     "att1.txt": {
-                        data: testUtils.btoa("1"),
+                        data: util.btoa("1"),
                         content_type: "text/plain"
                     },
                     "att2.txt": {
-                        data: testUtils.btoa("2"),
+                        data: util.btoa("2"),
                         content_type: "text/plain"
                     },
                     "att3.txt": {
-                        data: testUtils.btoa("3"),
+                        data: util.btoa("3"),
                         content_type: "text/plain"
                     },
                     "att4.txt": {
-                        data: testUtils.btoa("4"),
+                        data: util.btoa("4"),
                         content_type: "text/plain"
                     },
                     "att5.txt": {
-                        data: testUtils.btoa("5"),
+                        data: util.btoa("5"),
                         content_type: "text/plain"
                     }
                 }
@@ -1024,19 +982,19 @@ describe("db", "pouch", "compaction", () => {
                 _id: "doc2",
                 _attachments: {
                     "att3.txt": {
-                        data: testUtils.btoa("3"),
+                        data: util.btoa("3"),
                         content_type: "text/plain"
                     },
                     "att4.txt": {
-                        data: testUtils.btoa("4"),
+                        data: util.btoa("4"),
                         content_type: "text/plain"
                     },
                     "att5.txt": {
-                        data: testUtils.btoa("5"),
+                        data: util.btoa("5"),
                         content_type: "text/plain"
                     },
                     "att6.txt": {
-                        data: testUtils.btoa("6"),
+                        data: util.btoa("6"),
                         content_type: "text/plain"
                     }
                 }
@@ -1044,15 +1002,15 @@ describe("db", "pouch", "compaction", () => {
                 _id: "doc3",
                 _attachments: {
                     "att1.txt": {
-                        data: testUtils.btoa("1"),
+                        data: util.btoa("1"),
                         content_type: "text/plain"
                     },
                     "att6.txt": {
-                        data: testUtils.btoa("6"),
+                        data: util.btoa("6"),
                         content_type: "text/plain"
                     },
                     "att7.txt": {
-                        data: testUtils.btoa("7"),
+                        data: util.btoa("7"),
                         content_type: "text/plain"
                     }
                 }
@@ -1129,14 +1087,14 @@ describe("db", "pouch", "compaction", () => {
     it("#3092 atts should be ignored when _deleted - bulkDocs", () => {
         // now that we've established md5sum collisions,
         // we can use that to detect true attachment replacement
-        const db = new PouchDB(dbs.name, { auto_compaction: false });
+        const db = new DB(dbName, { auto_compaction: false });
         const doc = { _id: "doc1" };
         return db.put(doc).then((info) => {
             doc._rev = info.rev;
             doc._deleted = true;
             doc._attachments = {
                 "att1.txt": {
-                    data: testUtils.btoa("1"),
+                    data: util.btoa("1"),
                     content_type: "application/octet-stream"
                 }
             };
@@ -1161,14 +1119,14 @@ describe("db", "pouch", "compaction", () => {
     it("#3091 atts should be ignored when _deleted - put", () => {
         // now that we've established md5sum collisions,
         // we can use that to detect true attachment replacement
-        const db = new PouchDB(dbs.name, { auto_compaction: false });
+        const db = new DB(dbName, { auto_compaction: false });
         const doc = { _id: "doc1" };
         return db.put(doc).then((info) => {
             doc._rev = info.rev;
             doc._deleted = true;
             doc._attachments = {
                 "att1.txt": {
-                    data: testUtils.btoa("1"),
+                    data: util.btoa("1"),
                     content_type: "application/octet-stream"
                 }
             };
@@ -1193,29 +1151,29 @@ describe("db", "pouch", "compaction", () => {
     it("#3089 Many orphaned atts w/ parallel compaction", () => {
         // now that we've established md5sum collisions,
         // we can use that to detect true attachment replacement
-        const db = new PouchDB(dbs.name, { auto_compaction: false });
+        const db = new DB(dbName, { auto_compaction: false });
         const docs = [
             {
                 _id: "doc1",
                 _attachments: {
                     "att1.txt": {
-                        data: testUtils.btoa("1"),
+                        data: util.btoa("1"),
                         content_type: "text/plain"
                     },
                     "att2.txt": {
-                        data: testUtils.btoa("2"),
+                        data: util.btoa("2"),
                         content_type: "text/plain"
                     },
                     "att3.txt": {
-                        data: testUtils.btoa("3"),
+                        data: util.btoa("3"),
                         content_type: "text/plain"
                     },
                     "att4.txt": {
-                        data: testUtils.btoa("4"),
+                        data: util.btoa("4"),
                         content_type: "text/plain"
                     },
                     "att5.txt": {
-                        data: testUtils.btoa("5"),
+                        data: util.btoa("5"),
                         content_type: "text/plain"
                     }
                 }
@@ -1223,19 +1181,19 @@ describe("db", "pouch", "compaction", () => {
                 _id: "doc2",
                 _attachments: {
                     "att3.txt": {
-                        data: testUtils.btoa("3"),
+                        data: util.btoa("3"),
                         content_type: "text/plain"
                     },
                     "att4.txt": {
-                        data: testUtils.btoa("4"),
+                        data: util.btoa("4"),
                         content_type: "text/plain"
                     },
                     "att5.txt": {
-                        data: testUtils.btoa("5"),
+                        data: util.btoa("5"),
                         content_type: "text/plain"
                     },
                     "att6.txt": {
-                        data: testUtils.btoa("6"),
+                        data: util.btoa("6"),
                         content_type: "text/plain"
                     }
                 }
@@ -1243,15 +1201,15 @@ describe("db", "pouch", "compaction", () => {
                 _id: "doc3",
                 _attachments: {
                     "att1.txt": {
-                        data: testUtils.btoa("1"),
+                        data: util.btoa("1"),
                         content_type: "text/plain"
                     },
                     "att6.txt": {
-                        data: testUtils.btoa("6"),
+                        data: util.btoa("6"),
                         content_type: "text/plain"
                     },
                     "att7.txt": {
-                        data: testUtils.btoa("7"),
+                        data: util.btoa("7"),
                         content_type: "text/plain"
                     }
                 }
@@ -1331,7 +1289,7 @@ describe("db", "pouch", "compaction", () => {
         // which are all deleted in a single bulkDocs. This is to
         // hunt down race conditions in our orphan compaction.
 
-        const db = new PouchDB(dbs.name, { auto_compaction: false });
+        const db = new DB(dbName, { auto_compaction: false });
 
         const docs = [];
         for (let i = 0; i < 100; i++) {
@@ -1339,7 +1297,7 @@ describe("db", "pouch", "compaction", () => {
                 _id: i.toString(),
                 _attachments: {
                     "att1.txt": {
-                        data: testUtils.btoa("1"),
+                        data: util.btoa("1"),
                         content_type: "text/plain"
                     }
                 }
@@ -1382,31 +1340,33 @@ describe("db", "pouch", "compaction", () => {
     //
 
     it("Auto-compaction test", (done) => {
-        const db = new PouchDB(dbs.name, { auto_compaction: true });
+        const db = new DB(dbName, { auto_compaction: true });
         const doc = { _id: "doc", val: "1" };
-        db.post(doc, (err, res) => {
+        db.post(doc).then((res) => {
             const rev1 = res.rev;
             doc._rev = rev1;
             doc.val = "2";
-            db.post(doc, (err, res) => {
+            db.post(doc).then((res) => {
                 const rev2 = res.rev;
                 doc._rev = rev2;
                 doc.val = "3";
-                db.post(doc, (err, res) => {
+                db.post(doc).then((res) => {
                     const rev3 = res.rev;
-                    db.get("doc", { rev: rev1 }, (err) => {
+                    db.get("doc", { rev: rev1 }).then(() => {
+                        done(new Error());
+                    }, (err) => {
                         assert.equal(err.status, 404, "rev-1 should be missing");
                         assert.equal(err.name,
                             "not_found", "rev-1 should be missing"
                         );
-                        db.get("doc", { rev: rev2 }, (err) => {
+                        db.get("doc", { rev: rev2 }).then(() => {
+                            done(new Error());
+                        }, (err) => {
                             assert.equal(err.status, 404, "rev-2 should be missing");
                             assert.equal(err.name,
                                 "not_found", "rev-2 should be missing"
                             );
-                            db.get("doc", { rev: rev3 }, (err) => {
-                                done(err);
-                            });
+                            db.get("doc", { rev: rev3 }).then(() => done(), done);
                         });
                     });
                 });
@@ -1415,7 +1375,7 @@ describe("db", "pouch", "compaction", () => {
     });
 
     it("#3251 massively parallel autocompaction while getting", () => {
-        const db = new PouchDB(dbs.name, { auto_compaction: true });
+        const db = new DB(dbName, { auto_compaction: true });
 
         const doc = { _id: "foo" };
 
@@ -1454,7 +1414,7 @@ describe("db", "pouch", "compaction", () => {
     });
 
     it("#3251 massively parallel autocompaction while allDocsing", () => {
-        const db = new PouchDB(dbs.name, { auto_compaction: true });
+        const db = new DB(dbName, { auto_compaction: true });
 
         const doc = { _id: "foo" };
 
@@ -1493,7 +1453,7 @@ describe("db", "pouch", "compaction", () => {
     });
 
     it("#3251 massively parallel autocompaction while changesing", () => {
-        const db = new PouchDB(dbs.name, { auto_compaction: true });
+        const db = new DB(dbName, { auto_compaction: true });
 
         const doc = { _id: "foo" };
 
@@ -1538,29 +1498,29 @@ describe("db", "pouch", "compaction", () => {
     it("#3089 Many orphaned attachments w/ auto-compaction", () => {
         // now that we've established md5sum collisions,
         // we can use that to detect true attachment replacement
-        const db = new PouchDB(dbs.name, { auto_compaction: true });
+        const db = new DB(dbName, { auto_compaction: true });
         const docs = [
             {
                 _id: "doc1",
                 _attachments: {
                     "att1.txt": {
-                        data: testUtils.btoa("1"),
+                        data: util.btoa("1"),
                         content_type: "text/plain"
                     },
                     "att2.txt": {
-                        data: testUtils.btoa("2"),
+                        data: util.btoa("2"),
                         content_type: "text/plain"
                     },
                     "att3.txt": {
-                        data: testUtils.btoa("3"),
+                        data: util.btoa("3"),
                         content_type: "text/plain"
                     },
                     "att4.txt": {
-                        data: testUtils.btoa("4"),
+                        data: util.btoa("4"),
                         content_type: "text/plain"
                     },
                     "att5.txt": {
-                        data: testUtils.btoa("5"),
+                        data: util.btoa("5"),
                         content_type: "text/plain"
                     }
                 }
@@ -1568,19 +1528,19 @@ describe("db", "pouch", "compaction", () => {
                 _id: "doc2",
                 _attachments: {
                     "att3.txt": {
-                        data: testUtils.btoa("3"),
+                        data: util.btoa("3"),
                         content_type: "text/plain"
                     },
                     "att4.txt": {
-                        data: testUtils.btoa("4"),
+                        data: util.btoa("4"),
                         content_type: "text/plain"
                     },
                     "att5.txt": {
-                        data: testUtils.btoa("5"),
+                        data: util.btoa("5"),
                         content_type: "text/plain"
                     },
                     "att6.txt": {
-                        data: testUtils.btoa("6"),
+                        data: util.btoa("6"),
                         content_type: "text/plain"
                     }
                 }
@@ -1588,15 +1548,15 @@ describe("db", "pouch", "compaction", () => {
                 _id: "doc3",
                 _attachments: {
                     "att1.txt": {
-                        data: testUtils.btoa("1"),
+                        data: util.btoa("1"),
                         content_type: "text/plain"
                     },
                     "att6.txt": {
-                        data: testUtils.btoa("6"),
+                        data: util.btoa("6"),
                         content_type: "text/plain"
                     },
                     "att7.txt": {
-                        data: testUtils.btoa("7"),
+                        data: util.btoa("7"),
                         content_type: "text/plain"
                     }
                 }
@@ -1669,29 +1629,29 @@ describe("db", "pouch", "compaction", () => {
     it("#3089 Many orphaned atts w/ parallel auto-compaction", () => {
         // now that we've established md5sum collisions,
         // we can use that to detect true attachment replacement
-        const db = new PouchDB(dbs.name, { auto_compaction: true });
+        const db = new DB(dbName, { auto_compaction: true });
         const docs = [
             {
                 _id: "doc1",
                 _attachments: {
                     "att1.txt": {
-                        data: testUtils.btoa("1"),
+                        data: util.btoa("1"),
                         content_type: "text/plain"
                     },
                     "att2.txt": {
-                        data: testUtils.btoa("2"),
+                        data: util.btoa("2"),
                         content_type: "text/plain"
                     },
                     "att3.txt": {
-                        data: testUtils.btoa("3"),
+                        data: util.btoa("3"),
                         content_type: "text/plain"
                     },
                     "att4.txt": {
-                        data: testUtils.btoa("4"),
+                        data: util.btoa("4"),
                         content_type: "text/plain"
                     },
                     "att5.txt": {
-                        data: testUtils.btoa("5"),
+                        data: util.btoa("5"),
                         content_type: "text/plain"
                     }
                 }
@@ -1699,19 +1659,19 @@ describe("db", "pouch", "compaction", () => {
                 _id: "doc2",
                 _attachments: {
                     "att3.txt": {
-                        data: testUtils.btoa("3"),
+                        data: util.btoa("3"),
                         content_type: "text/plain"
                     },
                     "att4.txt": {
-                        data: testUtils.btoa("4"),
+                        data: util.btoa("4"),
                         content_type: "text/plain"
                     },
                     "att5.txt": {
-                        data: testUtils.btoa("5"),
+                        data: util.btoa("5"),
                         content_type: "text/plain"
                     },
                     "att6.txt": {
-                        data: testUtils.btoa("6"),
+                        data: util.btoa("6"),
                         content_type: "text/plain"
                     }
                 }
@@ -1719,15 +1679,15 @@ describe("db", "pouch", "compaction", () => {
                 _id: "doc3",
                 _attachments: {
                     "att1.txt": {
-                        data: testUtils.btoa("1"),
+                        data: util.btoa("1"),
                         content_type: "text/plain"
                     },
                     "att6.txt": {
-                        data: testUtils.btoa("6"),
+                        data: util.btoa("6"),
                         content_type: "text/plain"
                     },
                     "att7.txt": {
-                        data: testUtils.btoa("7"),
+                        data: util.btoa("7"),
                         content_type: "text/plain"
                     }
                 }
@@ -1801,7 +1761,7 @@ describe("db", "pouch", "compaction", () => {
     });
 
     it("#3089 Auto-compaction retains atts if unorphaned", () => {
-        const db = new PouchDB(dbs.name, { auto_compaction: true });
+        const db = new DB(dbName, { auto_compaction: true });
         const doc = {
             _id: "doc1",
             _attachments: {
@@ -1875,7 +1835,7 @@ describe("db", "pouch", "compaction", () => {
     });
 
     it("#2818 successive new_edits okay with attachments", () => {
-        const db = new PouchDB(dbs.name);
+        const db = new DB(dbName);
         const docs = [{
             _id: "foo",
             _rev: "1-x",
@@ -1913,7 +1873,7 @@ describe("db", "pouch", "compaction", () => {
     });
 
     it("Auto-compaction removes non-leaf revs (#2807)", () => {
-        const db = new PouchDB(dbs.name, { auto_compaction: true });
+        const db = new DB(dbName, { auto_compaction: true });
         const doc = { _id: "foo" };
         return db.put(doc).then((res) => {
             doc._rev = res.rev;
@@ -1932,7 +1892,7 @@ describe("db", "pouch", "compaction", () => {
     });
 
     it("Auto-compaction removes non-leaf revs pt 2 (#2807)", () => {
-        const db = new PouchDB(dbs.name, { auto_compaction: true });
+        const db = new DB(dbName, { auto_compaction: true });
         const doc = { _id: "foo" };
         return db.put(doc).then((res) => {
             doc._rev = res.rev;
@@ -1951,7 +1911,7 @@ describe("db", "pouch", "compaction", () => {
     });
 
     it("Auto-compaction removes non-leaf revs pt 3 (#2807)", () => {
-        const db = new PouchDB(dbs.name, { auto_compaction: true });
+        const db = new DB(dbName, { auto_compaction: true });
 
         const docs = [
             {
@@ -1991,7 +1951,7 @@ describe("db", "pouch", "compaction", () => {
     });
 
     it("Auto-compaction removes non-leaf revs pt 4 (#2807)", () => {
-        const db = new PouchDB(dbs.name, { auto_compaction: true });
+        const db = new DB(dbName, { auto_compaction: true });
         const doc = { _id: "foo" };
         return db.put(doc).then((res) => {
             doc._rev = res.rev;
@@ -2012,7 +1972,7 @@ describe("db", "pouch", "compaction", () => {
     });
 
     it("Auto-compaction removes non-leaf revs pt 5 (#2807)", () => {
-        const db = new PouchDB(dbs.name, { auto_compaction: true });
+        const db = new DB(dbName, { auto_compaction: true });
         const doc = { _id: "foo" };
         return db.put(doc).then((res) => {
             doc._rev = res.rev;
@@ -2036,7 +1996,7 @@ describe("db", "pouch", "compaction", () => {
         // which are all deleted in a single bulkDocs. This is to
         // hunt down race conditions in our orphan compaction.
 
-        const db = new PouchDB(dbs.name, { auto_compaction: true });
+        const db = new DB(dbName, { auto_compaction: true });
 
         const docs = [];
         for (let i = 0; i < 100; i++) {
@@ -2044,7 +2004,7 @@ describe("db", "pouch", "compaction", () => {
                 _id: i.toString(),
                 _attachments: {
                     "att1.txt": {
-                        data: testUtils.btoa("1"),
+                        data: util.btoa("1"),
                         content_type: "text/plain"
                     }
                 }

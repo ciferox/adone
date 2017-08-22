@@ -86,7 +86,7 @@ export default class DB extends adone.EventEmitter {
         }, options);
 
         if (is.plainObject(options.encryption)) {
-            // Force binary encoding of key/value for encryption mode 
+            // Force binary encoding of key/value for encryption mode
             this.options.keyEncoding = BINARY_CODECS.includes(this.options.keyEncoding) ? this.options.keyEncoding : "binary";
             this.options.valueEncoding = BINARY_CODECS.includes(this.options.valueEncoding) ? this.options.valueEncoding : "binary";
 
@@ -129,6 +129,19 @@ export default class DB extends adone.EventEmitter {
 
     async open() {
         if (!this.isOpen()) {
+            if (this._isOpening()) {
+                return new Promise((resolve, reject) => {
+                    const onOpen = () => {
+                        this.removeListener("error", onError);
+                        resolve(this);
+                    };
+                    const onError = (err) => {
+                        this.removeListener("open", onOpen);
+                        reject(err);
+                    };
+                    this.once("open", onOpen).once("error", onError);
+                });
+            }
             this.emit("opening");
 
             this._status = "opening";
@@ -257,6 +270,10 @@ export default class DB extends adone.EventEmitter {
                     this.close().catch(reject).then(resolve);
                 });
             });
+        } else if (this._isClosing()) {
+            return new Promise((resolve) => {
+                this.once("closed", resolve);
+            });
         }
     }
 
@@ -268,8 +285,12 @@ export default class DB extends adone.EventEmitter {
         return this._status === "opening";
     }
 
+    _isClosing() {
+        return this._status === "closing";
+    }
+
     isClosed() {
-        return (/^clos/).test(this._status);
+        return this._status === "closed";
     }
 
     async get(key_, options) {

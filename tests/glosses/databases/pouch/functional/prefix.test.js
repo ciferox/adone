@@ -1,9 +1,20 @@
-require("./node.setup");
+import * as util from "./utils";
 
-describe("db", "pouch", "prefix", () => {
+describe("database", "pouch", "prefix", () => {
+    const dbName = "testdb";
+    let DB = null;
+
+    beforeEach(async () => {
+        DB = await util.setup();
+        await util.cleanup(dbName);
+    });
+
+    after(async () => {
+        await util.destroy();
+    });
+
     it("Test plain prefix", () => {
-
-        const CustomPouch = PouchDB.defaults({ prefix: "testing" });
+        const CustomPouch = DB.defaults({ prefix: "testing" });
         const db = new CustomPouch("testdb");
 
         return db.info().then((info) => {
@@ -11,33 +22,27 @@ describe("db", "pouch", "prefix", () => {
         }).then(() => {
             return db.destroy();
         });
-
     });
 
-});
+    // This is also tested in test.defaults.js, however I wanted to cover
+    // the different use cases of prefix in here
+    if (!adone.is.windows) {
+        describe("node prefix.test.js", () => {
+            it("Test path prefix", async () => {
 
-// This is also tested in test.defaults.js, however I wanted to cover
-// the different use cases of prefix in here
-if (require("os").platform() !== "win32") {
-    const mkdirp = require("mkdirp");
-    const rimraf = require("rimraf");
-    const fs = require("fs");
+                const prefix = adone.std.path.join(util.tmppath, "testfolder");
 
-    describe("db", "pouch", "node prefix.test.js", () => {
+                await adone.fs.mkdir(prefix);
 
-        it("Test path prefix", () => {
+                const CustomPouch = DB.defaults({ prefix });
 
-            const prefix = "./tmp/testfolder/";
-            mkdirp.sync(prefix);
-            const CustomPouch = PouchDB.defaults({ prefix });
+                const db = new CustomPouch("testdb");
 
-            const db = new CustomPouch("testdb");
-
-            return db.info().then(() => {
+                await db.info();
                 // This will throw if the folder does not exist
-                fs.lstatSync(`${prefix}testdb`);
-                rimraf.sync("./tmp/testfolder");
+                await adone.fs.lstat(`${prefix}testdb`);
+                await adone.fs.rm(prefix);
             });
         });
-    });
-}
+    }
+});

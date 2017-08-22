@@ -1,10 +1,10 @@
-const memdown = require("memdown");
-const PouchDB = adone.database.pouch.coverage.DB;
-const genReplicationId = PouchDB.utils.generateReplicationId;
-const sourceDb = new PouchDB({ name: "local_db", db: memdown });
-const targetDb = new PouchDB({ name: "target_db", db: memdown });
+// const memdown = require("memdown");
+const PouchDB = adone.database.pouch.DB;
+const genReplicationId = adone.database.pouch.plugin.replication.generateReplicationId;
+const sourceDb = new PouchDB({ name: "local_db", db: adone.database.level.backend.Memory });
+const targetDb = new PouchDB({ name: "target_db", db: adone.database.level.backend.Memory });
 
-describe("db", "pouch", "gen-replication-id", () => {
+describe("database", "pouch", "gen-replication-id", () => {
     it("is different with different `doc_ids` option", () => {
         const opts2 = { doc_ids: ["1"] };
         const opts1 = { doc_ids: ["2"] };
