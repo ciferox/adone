@@ -141,7 +141,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         }
     });
 
-    exports.default = adone;
+    exports.adone = adone;
 
     Object.defineProperty(global, "adone", {
         enumerable: true,
@@ -315,5 +315,5 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         adone.sourcemap.support(Error).install();
     }
 } else {
-    exports.default = global.adone;
+    exports.adone = global.adone;
 }

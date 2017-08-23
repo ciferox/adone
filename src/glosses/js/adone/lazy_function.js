@@ -1,6 +1,8 @@
-const { is } = adone;
+const {
+    is
+} = adone;
 
-export default class XLazyFunction extends adone.meta.code.Base {
+export default class XLazyFunction extends adone.js.adone.Base {
     constructor(options) {
         super(options);
         if (!is.null(this.ast) && this.ast.id) {

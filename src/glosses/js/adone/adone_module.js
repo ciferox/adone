@@ -1,4 +1,7 @@
-const { fs, js: { compiler: { traverse } } } = adone;
+const {
+    fs,
+    js: { compiler: { traverse } }
+} = adone;
 
 const STATE_PROGRAM = 1;
 const STATE_IF_STMT = 2;
@@ -9,7 +12,7 @@ const STATE_ADONE_PROTO = 6;
 const STATE_LAZY_DEFS = 7;
 const STATE_ADONE_LAZIFIERS = 8;
 
-export default class XAdoneModule extends adone.meta.code.Module {
+export default class XAdoneModule extends adone.js.adone.Module {
     async load() {
         this.code = await fs.readFile(this.filePath, { check: true, encoding: "utf8" });
         this.init();
@@ -151,7 +154,7 @@ export default class XAdoneModule extends adone.meta.code.Module {
             for (const { name, path } of lazies) {
                 const filePath = await fs.lookup(path);
                 // adone.log(filePath);
-                const lazyModule = new adone.meta.code.Module({ nsName: this.nsName, filePath });
+                const lazyModule = new adone.js.adone.Module({ nsName: this.nsName, filePath });
                 await lazyModule.load();
                 this.lazies.set(name, lazyModule);
             }

@@ -1,4 +1,7 @@
-const { is, std } = adone;
+const {
+    is,
+    std
+} = adone;
 
 export class Inspector {
     constructor() {
@@ -8,10 +11,10 @@ export class Inspector {
 
     async attachNamespace(nsName) {
         if (!this.namespaces.has(nsName)) {
-            const ns = await adone.meta.code.Namespace.inspect(nsName, this.path);
+            const ns = await adone.js.adone.Namespace.inspect(nsName, this.path);
             // adone.log(ns.name);
             // adone.log(adone.meta.inspect(Object.keys(ns.exports), { style: "color" }));
-            this.namespaces.set(nsName, ns/*await adone.meta.code.Namespace.inspect(nsName, this.path)*/);
+            this.namespaces.set(nsName, ns/*await adone.js.adone.Namespace.inspect(nsName, this.path)*/);
         }
     }
 
@@ -77,7 +80,7 @@ adone.lazify({
         return node.type;
     },
     is: () => ({
-        functionLike: (x) => (adone.meta.code.is.function(x) || adone.meta.code.is.arrowFunction(x) || adone.meta.code.is.class(x)),
+        functionLike: (x) => (adone.js.adone.is.function(x) || adone.js.adone.is.arrowFunction(x) || adone.js.adone.is.class(x)),
         module: (x) => adone.tag.has(x, adone.tag.CODEMOD_MODULE),
         class: (x) => adone.tag.has(x, adone.tag.CODEMOD_CLASS),
         variable: (x) => adone.tag.has(x, adone.tag.CODEMOD_VAR),

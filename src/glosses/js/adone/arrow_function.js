@@ -1,4 +1,4 @@
-export default class XArrowFunction extends adone.meta.code.Base {
+export default class XArrowFunction extends adone.js.adone.Base {
     getType() {
         return "ArrowFunction";
     }

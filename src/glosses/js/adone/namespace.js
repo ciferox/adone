@@ -1,4 +1,7 @@
-const { is, std } = adone;
+const {
+    is,
+    std
+} = adone;
 
 const indexRe = /^index\.(js|ajs|tjs)$/;
 
@@ -11,7 +14,7 @@ export default class XNamespace {
     }
 
     static async inspect(name, pathPrefix) {
-        const mapExportsToNamespace = (ns, nsModule) => Object.assign(ns.exports, adone.meta.code.Module.lazyExports(nsModule));
+        const mapExportsToNamespace = (ns, nsModule) => Object.assign(ns.exports, adone.js.adone.Module.lazyExports(nsModule));
 
         const info = adone.meta.getNamespaceInfo(name);
         const ns = new XNamespace(info);
@@ -22,9 +25,9 @@ export default class XNamespace {
             let sourceModule;
             // adone.log(filePath);
             if (filePath.endsWith(relIndexPath)) {
-                sourceModule = new adone.meta.code.AdoneModule({ nsName: name, filePath });
+                sourceModule = new adone.js.adone.AdoneModule({ nsName: name, filePath });
             } else {
-                sourceModule = new adone.meta.code.Module({ nsName: name, filePath });
+                sourceModule = new adone.js.adone.Module({ nsName: name, filePath });
             }
             await sourceModule.load();
             ns.modules.push({
@@ -39,7 +42,7 @@ export default class XNamespace {
             if (nsModule.numberOfExports() === 1) { // #1
                 mapExportsToNamespace(ns, nsModule);
                 return ns;
-            } else if (nsModule.numberOfExports() >= 1 && !adone.meta.code.is.object(moduleExports.default)) { // #2
+            } else if (nsModule.numberOfExports() >= 1 && !adone.js.adone.is.object(moduleExports.default)) { // #2
                 mapExportsToNamespace(ns, nsModule);
                 return ns;
             }
@@ -52,7 +55,7 @@ export default class XNamespace {
                 const moduleExports = nsModule.exports();
                 const numberOfExports = nsModule.numberOfExports();
                 return !indexRe.test(std.path.basename(x.path)) &&
-                    ((numberOfExports === 1 && adone.meta.code.is.functionLike(moduleExports.default) && is.string(moduleExports.default.name)) ||
+                    ((numberOfExports === 1 && adone.js.adone.is.functionLike(moduleExports.default) && is.string(moduleExports.default.name)) ||
                         (is.undefined(moduleExports.default) && numberOfExports >= 1));
             });
             if (isOk) {

@@ -7,6 +7,9 @@ export const skipGlobalNs = (namespace) => namespace.substring(GLOBAL_PREFIX_LEN
 
 adone.lazify({
     reflect: "./reflect",
+    inspect: ["./inspect", (mod) => mod.inspect],
+    inspectError: ["./inspect", (mod) => mod.inspectError],
+    inspectStack: ["./inspect", (mod) => mod.inspectStack],
     namespaces: ["./consts", (mod) => mod.namespaces],
     nsNames: () => adone.meta.namespaces.map((ns) => ns.name).sort((a, b) => a.localeCompare(b)),
     nsPaths: () => {
@@ -17,10 +20,7 @@ adone.lazify({
             result[ns.name] = ns.paths;
         }
         return result;
-    },
-    inspect: ["./inspect", (mod) => mod.inspect],
-    inspectError: ["./inspect", (mod) => mod.inspectError],
-    inspectStack: ["./inspect", (mod) => mod.inspectStack]
+    }
 }, exports, require);
 
 export const parseName = (name) => {
@@ -164,7 +164,3 @@ export const getValue = (name) => {
     }
     return obj;
 };
-
-adone.lazify({
-    code: "./code"
-}, exports, require);

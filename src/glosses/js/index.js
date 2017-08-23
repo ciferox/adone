@@ -29,5 +29,6 @@ adone.lazify({
         }, null, require)
     }, null, require),
     coverage: "./coverage",
-    Module: "./module"
+    Module: "./module",
+    adone: "./adone"
 }, exports, require);

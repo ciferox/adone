@@ -1,6 +1,10 @@
-const { is, fs, js: { compiler: { traverse } } } = adone;
+const {
+    is,
+    fs,
+    js: { compiler: { traverse } }
+} = adone;
 
-export default class XModule extends adone.meta.code.Base {
+export default class XModule extends adone.js.adone.Base {
     constructor({ nsName = "global", code = null, filePath = "index.js" } = {}) {
         super({ code, type: "module" });
         this.nsName = nsName;
@@ -40,10 +44,10 @@ export default class XModule extends adone.meta.code.Base {
                 } else if (nodeType === "ExpressionStatement" && this._isLazifier(path.node.expression)) {
                     // Process adone lazyfier
                     const callExpr = path.node.expression;
-                    const targetInfo = adone.meta.code.nodeInfo(callExpr.arguments[1]);
-                    if (adone.meta.code.nodeInfo(callExpr.arguments[0]) === "ObjectExpression" &&
+                    const targetInfo = adone.js.adone.nodeInfo(callExpr.arguments[1]);
+                    if (adone.js.adone.nodeInfo(callExpr.arguments[0]) === "ObjectExpression" &&
                         targetInfo.startsWith("Identifier:") &&
-                        adone.meta.code.nodeInfo(callExpr.arguments[2]) === "Identifier:require") {
+                        adone.js.adone.nodeInfo(callExpr.arguments[2]) === "Identifier:require") {
 
                         const props = callExpr.arguments[0].properties;
                         const basePath = adone.std.path.dirname(this.filePath);
@@ -58,13 +62,13 @@ export default class XModule extends adone.meta.code.Base {
                                         lazies.push({ name: objectName, path: adone.std.path.join(basePath, prop.value.value) });
                                     } else if (prop.value.type === "ArrowFunctionExpression") {
                                         const lazyPath = this.getPathFor(path, prop.value);
-                                        this.lazies.set(objectName, new adone.meta.code.LazyFunction({ parent: this, ast: prop.value, path: lazyPath, xModule: this }));
+                                        this.lazies.set(objectName, new adone.js.adone.LazyFunction({ parent: this, ast: prop.value, path: lazyPath, xModule: this }));
                                     }
                                 }
                             }
                         } else {
                             const xObj = this.lookupInGlobalScope(targetInfo.split(":")[1]);
-                            if (!adone.meta.code.is.object(xObj.value)) {
+                            if (!adone.js.adone.is.object(xObj.value)) {
                                 throw new adone.x.NotValid(`Not valid attempt to lazify non-object: ${xObj.value.ast.type}`);
                             }
 
@@ -75,7 +79,7 @@ export default class XModule extends adone.meta.code.Base {
                                     // lazies.push({ name: objectName, path: adone.std.path.join(basePath, prop.value.value) });
                                 } else if (prop.value.type === "ArrowFunctionExpression") {
                                     const lazyPath = this.getPathFor(path, prop.value);
-                                    xObj.value.set(name, new adone.meta.code.LazyFunction({ parent: this, ast: prop.value, path: lazyPath, xModule: this }));
+                                    xObj.value.set(name, new adone.js.adone.LazyFunction({ parent: this, ast: prop.value, path: lazyPath, xModule: this }));
                                 }
                             }
                         }
@@ -127,12 +131,12 @@ export default class XModule extends adone.meta.code.Base {
                                 shouldSkip = true;
                                 if (declrNode.id.type === "Identifier") {
                                     const name = declrNode.id.name;
-                                    this.addToScope(new adone.meta.code.Native({ name, parent: this, ast: null, path: null, xModule: this }));
+                                    this.addToScope(new adone.js.adone.Native({ name, parent: this, ast: null, path: null, xModule: this }));
                                     this._addGlobal(name, null, node.kind, false);
                                 } else if (declrNode.id.type === "ObjectPattern") {
                                     const natives = this._traverseObjectPattern(declrNode.id, node.kind);
                                     for (const name of natives) {
-                                        this.addToScope(new adone.meta.code.Native({ name, parent: this, ast: null, path: null, xModule: this }));
+                                        this.addToScope(new adone.js.adone.Native({ name, parent: this, ast: null, path: null, xModule: this }));
                                         this._addGlobal(name, null, node.kind, false);
                                     }
                                 }
@@ -192,7 +196,7 @@ export default class XModule extends adone.meta.code.Base {
         if (lazies.length > 0) {
             for (const { name, path } of lazies) {
                 const filePath = await fs.lookup(path);
-                const lazyModule = new adone.meta.code.Module({ nsName: this.nsName, filePath });
+                const lazyModule = new adone.js.adone.Module({ nsName: this.nsName, filePath });
                 await lazyModule.load();
                 this.lazies.set(name, lazyModule);
             }
@@ -211,13 +215,13 @@ export default class XModule extends adone.meta.code.Base {
         Object.assign(result, this._exports);
         if (!is.null(this.lazies)) {
             for (const [name, lazy] of this.lazies.entries()) {
-                if (adone.meta.code.is.module(lazy)) {
+                if (adone.js.adone.is.module(lazy)) {
                     if (is.undefined(lazy.exports().default)) { // special case
                         result[name] = lazy;
                     } else {
                         Object.assign(result, XModule.lazyExports(lazy));
                     }
-                } else if (adone.meta.code.is.lazyFunction(lazy)) {
+                } else if (adone.js.adone.is.lazyFunction(lazy)) {
                     result[name] = lazy;
                 }
             }
@@ -373,11 +377,11 @@ export default class XModule extends adone.meta.code.Base {
         const rawExports = xModule.exports();
         const result = {};
         // adone.log(Object.values(rawExports).map(x => x.ast));
-        if (adone.meta.code.is.object(rawExports.default)) {
+        if (adone.js.adone.is.object(rawExports.default)) {
             for (const [key, val] of rawExports.default.entries()) {
                 result[key] = val;
             }
-        } else if (adone.meta.code.is.functionLike(rawExports.default)) {
+        } else if (adone.js.adone.is.functionLike(rawExports.default)) {
             // adone.log(rawExports.default.name);
             result[rawExports.default.name] = rawExports.default;
         } else if (is.undefined(rawExports.default)) {

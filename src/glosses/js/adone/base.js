@@ -1,10 +1,13 @@
-const { is, js: { compiler: { parse, generate } } } = adone;
+const {
+    is,
+    js: { compiler: { parse, generate } }
+} = adone;
 
 const jsNatives = ["Error", "EvalError", "RangeError", "ReferenceError", "SyntaxError", "TypeError", "URIError"];
 
 export default class XBase {
     constructor({ xModule = null, parent = null, code = null, ast = null, path = null, type = "script" } = {}) {
-        if (is.nil(xModule) && !adone.meta.code.is.module(this)) {
+        if (is.nil(xModule) && !adone.js.adone.is.module(this)) {
             throw new adone.x.NotValid("XModule cannot be null");
         }
         this.xModule = xModule;
@@ -113,7 +116,7 @@ export default class XBase {
         switch (ast.type) {
             case "ExportDefaultDeclaration":
             case "ExportNamedDeclaration":
-                xObj = new adone.meta.code.Export({ parent, ast, path, xModule });
+                xObj = new adone.js.adone.Export({ parent, ast, path, xModule });
                 break;
             case "VariableDeclaration": {
                 if (ast.declarations.length > 1) {
@@ -129,7 +132,7 @@ export default class XBase {
                 return xObj;
             }
             case "VariableDeclarator": {
-                xObj = new adone.meta.code.Variable({ parent, ast, path, xModule });
+                xObj = new adone.js.adone.Variable({ parent, ast, path, xModule });
                 xObj.kind = kind;
                 break;
             }
@@ -140,13 +143,13 @@ export default class XBase {
             case "ConditionalExpression":
             case "CallExpression":
             case "LogicalExpression":
-            case "UpdateExpression": xObj = new adone.meta.code.Expression({ parent, ast, path, xModule }); break;
+            case "UpdateExpression": xObj = new adone.js.adone.Expression({ parent, ast, path, xModule }); break;
             case "StringLiteral":
             case "NumericLiteral":
             case "RegExpLiteral":
             case "TemplateLiteral":
             case "NullLiteral":
-            case "BooleanLiteral": xObj = new adone.meta.code.Constant({ parent, ast, path, xModule }); break;
+            case "BooleanLiteral": xObj = new adone.js.adone.Constant({ parent, ast, path, xModule }); break;
             case "ExpressionStatement":
             case "BlockStatement":
             case "EmptyStatement":
@@ -167,17 +170,17 @@ export default class XBase {
             case "ForStatement":
             case "ForInStatement":
             case "ForOfStatement":
-            case "ForAwaitStatement": xObj = new adone.meta.code.Statement({ parent, ast, path, xModule }); break;
-            case "ClassDeclaration": xObj = new adone.meta.code.Class({ parent, ast, path, xModule }); break;
-            case "FunctionDeclaration": xObj = new adone.meta.code.Function({ parent, ast, path, xModule }); break;
-            case "FunctionExpression": xObj = new adone.meta.code.Function({ parent, ast, path, xModule }); break;
-            case "ArrowFunctionExpression": xObj = new adone.meta.code.ArrowFunction({ parent, ast, path, xModule }); break;
-            case "ObjectExpression": xObj = new adone.meta.code.Object({ parent, ast, path, xModule }); break;
-            case "ObjectProperty": xObj = new adone.meta.code.ObjectProperty({ parent, ast, path, xModule }); break;
-            case "ObjectMethod": xObj = new adone.meta.code.ObjectMethod({ parent, ast, path, xModule }); break;
+            case "ForAwaitStatement": xObj = new adone.js.adone.Statement({ parent, ast, path, xModule }); break;
+            case "ClassDeclaration": xObj = new adone.js.adone.Class({ parent, ast, path, xModule }); break;
+            case "FunctionDeclaration": xObj = new adone.js.adone.Function({ parent, ast, path, xModule }); break;
+            case "FunctionExpression": xObj = new adone.js.adone.Function({ parent, ast, path, xModule }); break;
+            case "ArrowFunctionExpression": xObj = new adone.js.adone.ArrowFunction({ parent, ast, path, xModule }); break;
+            case "ObjectExpression": xObj = new adone.js.adone.Object({ parent, ast, path, xModule }); break;
+            case "ObjectProperty": xObj = new adone.js.adone.ObjectProperty({ parent, ast, path, xModule }); break;
+            case "ObjectMethod": xObj = new adone.js.adone.ObjectMethod({ parent, ast, path, xModule }); break;
             case "Identifier": {
                 if (ast.name === "adone") {
-                    xObj = new adone.meta.code.Adone({ ast, path, xModule });
+                    xObj = new adone.js.adone.Adone({ ast, path, xModule });
                 } else {
                     xObj = this.lookupInGlobalScope(ast.name);
                     if (is.null(xObj)) {
@@ -223,7 +226,7 @@ export default class XBase {
                         break;
                     }
                 }
-            } else if (adone.meta.code.is.native(xObj)) {
+            } else if (adone.js.adone.is.native(xObj)) {
                 if (xObj.name === name) {
                     return xObj;
                 }
@@ -269,7 +272,7 @@ export default class XBase {
 
     _tryJsNative({ ast, path, xModule }) {
         if (jsNatives.includes(ast.name)) {
-            return new adone.meta.code.JsNative({ ast, path, xModule });
+            return new adone.js.adone.JsNative({ ast, path, xModule });
         }
         return null;
     }

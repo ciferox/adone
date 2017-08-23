@@ -1,4 +1,4 @@
-export default class XAdone extends adone.meta.code.Base {
+export default class XAdone extends adone.js.adone.Base {
     getType() {
         return "Adone";
     }
