@@ -390,8 +390,8 @@
       ]
     },
     {
+      'target_name': "bson",
       'win_delay_load_hook': 'true',
-      'target_name': 'bson',
       'sources': [ 'src/native/bson/bson.cc' ],
       'cflags!': [ '-fno-exceptions' ],
       'cflags_cc!': [ '-fno-exceptions' ],
@@ -418,7 +418,7 @@
         ['OS=="linux"', {
           "cflags": [
             "-O3",
-            "-msse2",
+            '<!@(grep -w -o sse2 -m 1 /proc/cpuinfo > /dev/null && echo "-msse2" || echo "")',
             "-ffast-math",
             "-fexceptions"
           ]
@@ -1017,7 +1017,7 @@
         '-std=c++11',
       ],
       'include_dirs' : [
-        "<!(node -e \"require('nan')\")"
+        "nan"
       ],
       'conditions': [
         ['OS!="win"', {
