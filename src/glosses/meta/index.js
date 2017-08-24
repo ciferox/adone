@@ -1,4 +1,4 @@
-const { is, std, fs, util } = adone;
+const { is } = adone;
 
 const GLOBAL_PREFIX_LEN = "global".length + 1;
 const ADONE_PREFIX_LEN = "adone".length + 1;
@@ -10,18 +10,29 @@ adone.lazify({
     inspect: ["./inspect", (mod) => mod.inspect],
     inspectError: ["./inspect", (mod) => mod.inspectError],
     inspectStack: ["./inspect", (mod) => mod.inspectStack],
-    namespaces: ["./consts", (mod) => mod.namespaces],
-    nsNames: () => adone.meta.namespaces.map((ns) => ns.name).sort((a, b) => a.localeCompare(b)),
-    nsPaths: () => {
-        const result = {};
-        const len = adone.meta.namespaces.length;
-        for (let i = 0; i < len; i++) {
-            const ns = adone.meta.namespaces[i];
-            result[ns.name] = ns.paths;
-        }
-        return result;
-    }
+    nsNames: () => adone.meta.namespaces.map((ns) => ns.name).sort((a, b) => a.localeCompare(b))
 }, exports, require);
+
+const metaNamespace = require("../../../.meta/adone.json");
+
+export const namespaces = [];
+export const namespaceMap = metaNamespace.namespace;
+
+const collectNamespace = (namespaceMap, prefix) => {
+    if (is.nil(namespaceMap)) {
+        return;
+    }
+    for (const [name, val] of Object.entries(namespaceMap)) {
+        const nsName = is.null(prefix) ? name : `${prefix}.${name}`;
+        namespaces.push(Object.assign({
+            name: nsName
+        }, adone.vendor.lodash.omit(val, ["namespace"])));
+        collectNamespace(val.namespace, nsName);
+    }
+};
+
+collectNamespace(metaNamespace.namespace, null);
+
 
 export const parseName = (name) => {
     let namespace = name;
@@ -43,63 +54,24 @@ export const parseName = (name) => {
 };
 
 export const getNamespaceInfo = (nsName) => {
-    const namespace = adone.meta.namespaces.find((ns) => ns.name === nsName);
+    const namespace = namespaces.find((ns) => ns.name === nsName);
     if (is.undefined(namespace)) {
         throw new adone.x.Unknown(`Unknown namespace: ${nsName}`);
     }
     return namespace;
 };
 
-export const getNamespacePaths = async ({ name, relative = true, pathPrefix = std.path.join(adone.application.instance.adoneRootPath, "lib") }) => {
-    const { namespace } = parseName(name);
-    if (namespace === "") {
-        return [];
-    }
-    const paths = adone.meta.nsPaths[namespace].map((p) => std.path.join(pathPrefix, p));
-    let targetPaths = [];
-    for (let i = 0; i < paths.length; i++) {
-        let path = paths[i];
-        let isDirectory;
-        if ((await fs.exists(path))) {
-            if (await fs.is.directory(path)) {
-                isDirectory = true;
-            } else {
-                isDirectory = false;
-            }
-        } else {
-            path = await fs.lookup(path);
-            if (await fs.is.file(path)) {
-                isDirectory = false;
-            }
-        }
-        if (is.undefined(isDirectory)) {
-            throw new adone.x.NotValid(`Path ${path} is neither a file nor a directory`);
-        }
-
-        if (isDirectory) {
-            path = util.globize(path, { exts: `{${adone.exts.join(",")}}` } );
-        }
-        targetPaths.push(path);
-    }
-
-    if (targetPaths.length === 0) {
-        return [];
-    }
-    targetPaths = await fs.glob(targetPaths);
-    return (relative ? targetPaths.map((x) => x.substring(pathPrefix.length + 1)) : targetPaths);
-};
-
 export const listNamespaces = (keyword = "", { threshold = 0.3 } = { }) => {
     let result;
     if (keyword === "" || keyword === "global") {
         result = [
-            adone.meta.namespaces[0],
-            adone.meta.namespaces[1]
+            namespaces[0],
+            namespaces[1]
         ];
     } else if (keyword === "adone") {
-        result = adone.meta.namespaces;
+        result = namespaces;
     } else {
-        const fuzzy = new adone.text.Fuzzy(adone.meta.namespaces, {
+        const fuzzy = new adone.text.Fuzzy(namespaces, {
             keys: ["name"],
             threshold
         });

@@ -19,22 +19,19 @@ export default class XNamespace {
         const info = adone.meta.getNamespaceInfo(name);
         const ns = new XNamespace(info);
 
-        const sources = await adone.meta.getNamespacePaths({ name, pathPrefix, relative: false });
-        for (const filePath of sources) {
-            const relIndexPath = adone.std.path.normalize("/adone/src/index.js");
-            let sourceModule;
-            // adone.log(filePath);
-            if (filePath.endsWith(relIndexPath)) {
-                sourceModule = new adone.js.adone.AdoneModule({ nsName: name, filePath });
-            } else {
-                sourceModule = new adone.js.adone.Module({ nsName: name, filePath });
-            }
-            await sourceModule.load();
-            ns.modules.push({
-                path: filePath,
-                module: sourceModule
-            });
+        const indexPath = std.path.join(pathPrefix, adone.vendor.lodash.get(adone.js.adone.namespaceMap, info.name).index);
+        const relIndexPath = adone.std.path.normalize("/adone/src/index.js");
+        let sourceModule;
+        if (indexPath.endsWith(relIndexPath)) {
+            sourceModule = new adone.js.adone.AdoneModule({ nsName: name, indexPath });
+        } else {
+            sourceModule = new adone.js.adone.Module({ nsName: name, indexPath });
         }
+        await sourceModule.load();
+        ns.modules.push({
+            path: indexPath,
+            module: sourceModule
+        });
 
         if (ns.modules.length === 1) {
             const nsModule = ns.modules[0].module;
@@ -75,5 +72,5 @@ export default class XNamespace {
             throw new adone.x.NotFound(`Unknown object: ${this.name}.${name}`);
         }
         return this.exports[name];
-    } 
+    }
 }
