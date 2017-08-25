@@ -51,30 +51,6 @@ const defaultColors = {
     }
 };
 
-export class Subsystem extends adone.AsyncEmitter {
-    constructor() {
-        super();
-
-        this.app = this;
-        this._ = this.data = {};
-    }
-
-    initialize() {
-    }
-
-    uninitialize() {
-    }
-
-    reinitialize() {
-    }
-
-    defineCommand(...args) {
-        return this.app.defineCommand(this, ...args);
-    }
-}
-tag.set(Subsystem, tag.SUBSYSTEM);
-
-
 const INTERNAL = Symbol.for("adone:application:internal");
 const UNNAMED = Symbol.for("adone:application:unnamed");
 const EMPTY_VALUE = Symbol.for("adone:application:emptyValue");
@@ -288,7 +264,7 @@ class Argument {
                 options.description = "";
             }
         }
-        
+
         if (!options.choices) {
             options.choices = null;
         } else {
@@ -1282,13 +1258,48 @@ const mergeGroupsLists = (a, b) => {
     return result;
 };
 
+
+export class Subsystem extends adone.AsyncEmitter {
+    constructor() {
+        super();
+
+        this.app = this;
+        this._ = this.data = {};
+    }
+
+    configure() {
+    }
+
+    initialize() {
+    }
+
+    uninitialize() {
+    }
+
+    async reinitialize() {
+        await this.uninitialize();
+        await this.initialize();
+    }
+
+    defineCommand(...args) {
+        return this.app.defineCommand(this, ...args);
+    }
+}
+tag.set(Subsystem, tag.SUBSYSTEM);
+
+
 export let instance = null; // eslint-disable-line
+
+const ADONE_ROOT_PATH = std.path.resolve(__dirname, "../../..");
+const ADONE_ETC_PATH = std.path.resolve(ADONE_ROOT_PATH, "etc");
+const DEFAULT_CONFIGS_PATH = std.path.resolve(ADONE_ETC_PATH, "configs");
+const ARGV = process.argv.slice(2);
 
 export class Application extends Subsystem {
     constructor({
         name = std.path.basename(process.argv[1], std.path.extname(process.argv[1])),
         interactive = true,
-        argv = process.argv.slice(2),
+        argv = ARGV,
         commandRequired = false } = {}) {
 
         super();
@@ -1297,7 +1308,7 @@ export class Application extends Subsystem {
         this.env = process.env;
         this._commands = [];
         this._options = [];
-        this._name = name;
+        this.name = name;
         this._commandRequired = commandRequired;
 
         this._exiting = false;
@@ -1310,9 +1321,9 @@ export class Application extends Subsystem {
         this.interactive = interactive;
 
         this._subsystems = [];
-        this.adoneRootPath = std.path.resolve(__dirname, "../../..");
-        this.adoneEtcPath = std.path.resolve(this.adoneRootPath, "etc");
-        this.defaultConfigsPath = std.path.resolve(this.adoneEtcPath, "configs");
+        this.adoneRootPath = ADONE_ROOT_PATH;
+        this.adoneEtcPath = ADONE_ETC_PATH;
+        this.defaultConfigsPath = DEFAULT_CONFIGS_PATH;
 
         this.setMaxListeners(Infinity);
         this.defineMainCommand();
@@ -1396,9 +1407,9 @@ export class Application extends Subsystem {
             }
 
             this._errorScope = true;
-            await this.initialize();
-
+            await this.configure();
             this._errorScope = false;
+
             let command = this._mainCommand;
             let errors = [];
             let rest = [];
@@ -1409,13 +1420,13 @@ export class Application extends Subsystem {
 
             if (errors.length) {
                 adone.log(`${escape(command.getUsageMessage())}\n`);
-                // adone.log();
                 for (const error of errors) {
                     adone.log(escape(error.message));
                 }
                 return this.exit(Application.ERROR);
             }
             this._errorScope = true;
+            await this.initialize();
             const code = await command.execute(rest, match);
             this._errorScope = false;
             if (is.integer(code)) {
@@ -1452,12 +1463,12 @@ export class Application extends Subsystem {
     }
 
     /**
-     * Loads cli subsystem (always lazily).
+     * Adds cli subsystem. Depending on root-command associated cli subsystem will be loaded lazily.
      * 
-     * @param {object} ssConfig Subsystem object.
+     * @param {{ name, description = "", group = "subsystem", path } = {}} ssConfig Subsystem object.
      * @returns {void}
      */
-    loadCliSubsystem({ name, description = "", group = "subsystem", path } = {}) {
+    useCliSubsystem({ name, description = "", group = "subsystem", path } = {}) {
         if (!is.string(name)) {
             throw new adone.NotValid("Invalid name of subsystem");
         }
@@ -1478,13 +1489,40 @@ export class Application extends Subsystem {
     }
 
     /**
-     * Loads cli subsystems.
+     * Adds cli subsystems.
      * 
-     * @param {*array} subsystems List of subsystem descriptors
+     * @param {*string|array<{ name, description, group, path }>} subsystems Absolute path with subsystems or list of subsystem descriptors
      */
-    loadCliSubsystems(subsystems) {
-        for (const ss of subsystems) {
-            this.loadCliSubsystem(ss);
+    async useCliSubsystems(subsystems, { group = "subsystem" } = {}) {
+        if (is.string(subsystems)) {
+            if (!std.path.isAbsolute(subsystems)) {
+                throw new adone.x.NotValid("Path should be absolute");
+            }
+            const files = await fs.readdir(subsystems);
+            for (const file of files) {
+                const path = std.path.join(subsystems, file);
+                if (await fs.is.directory(path)) { // eslint-disable-line
+                    const adoneConfPath = std.path.join(path, "adone.conf.js");
+                    if (await fs.exists(adoneConfPath)) { // eslint-disable-line
+                        const adoneConf = adone.require(adoneConfPath);
+                        
+                        this.useCliSubsystem({
+                            name: adoneConf.name,
+                            description: adoneConf.description,
+                            group,
+                            path
+                        });
+                    }
+                }
+            }
+        } else if (is.array(subsystems)) {
+            for (const ss of subsystems) {
+                this.useCliSubsystem(Object.assign({}, ss, {
+                    group
+                }));
+            }
+        } else {
+            throw new adone.x.InvalidArgument("Argument should be a string or an array");
         }
     }
 
@@ -1494,7 +1532,7 @@ export class Application extends Subsystem {
      * @param {string|adone.application.Subsystem} subsystem Subsystem instance or absolute path.
      * @returns {Promise<adone.application.Subsystem>}
      */
-    async loadSubsystem({ subsystem, initialize = true } = {}) {
+    async loadSubsystem({ subsystem, configure = true, initialize = true } = {}) {
         if (is.string(subsystem)) {
             let Subsystem = require(subsystem);
             if (Subsystem.__esModule === true) {
@@ -1508,6 +1546,10 @@ export class Application extends Subsystem {
         subsystem.app = this;
 
         this._subsystems.push(subsystem);
+
+        if (configure) {
+            await subsystem.configure();
+        }
 
         if (initialize) {
             await subsystem.initialize();
@@ -1570,25 +1612,29 @@ export class Application extends Subsystem {
         return this;
     }
 
+    async _uninitialize() {
+        await this.uninitialize();
+
+        // Uninitialize subsystems
+        await this.uninitializeSubsystems();
+
+        this.removeProcessHandlers();
+    }
+
     async exit(code = Application.SUCCESS) {
         if (this._exiting) {
             return;
         }
         this._exiting = true;
 
+        await this._uninitialize();
+
         await this.emitParallel("exit", code);
-
-        // Uninitialize subsystems
-        await this.uninitializeSubsystems();
-
-        await Promise.resolve(this.uninitialize());
 
         // Only main application instance can exit process.
         if (this !== instance) {
             return;
         }
-
-        this.removeProcessHandlers();
 
         if (this.isMain) {
             terminal.destroy();
@@ -1686,7 +1732,7 @@ export class Application extends Subsystem {
 
     defineMainCommand(options) {
         options = adone.o({
-            name: this._name,
+            name: this.name,
             handler: (args, opts, meta) => this.main(args, opts, meta),
             options: [],
             arguments: [],
@@ -2332,48 +2378,33 @@ adone.lazify({
     Logger: "./logger"
 }, exports, require);
 
-export const run = async (App, ignoreArgs = false) => {
-    if (adone.is.plainObject(App)) {
-        const app = instance;
-        if (adone.is.application(app)) {
-            instance = null;
-            // unintialize subsystems
-            await app.uninitializeSubsystems();
-
-            // set default public methods
-            app.main = adone.application.Application.prototype.main;
-            app.initialize = adone.application.Application.prototype.initialize;
-            app.uninitialize = adone.application.Application.prototype.uninitialize;
-            app.exception = null;
-
-            // redefine methods
-            for (const [name, method] of Object.entries(App)) {
-                app[name] = method;
-            }
-
-            // redefine argv
-            if (adone.is.array(adone.__argv__)) {
-                process.argv = adone.__argv__;
-                app.argv = process.argv.slice(2);
-                app._name = std.path.basename(process.argv[1], std.path.extname(process.argv[1]));
-                delete adone.__argv__;
-            }
-
-            // reset commands definitions
-            app.defineMainCommand();
-
-            // run again!
-            app.run({ ignoreArgs });
-        } else {
-            class XApplication extends adone.application.Application { }
-
-            for (const [name, method] of Object.entries(App)) {
-                XApplication.prototype[name] = method;
-            }
-
-            (new XApplication()).run({ ignoreArgs });
+export const run = async (App, ignoreArgs = false) => {    
+    if (is.null(instance) && is.class(App)) {
+        const app = new App();
+        if (!is.application(app)) {
+            throw new adone.x.InvalidArgument("First argument should be class derivative of 'adone.application.Application'");
         }
-    } else {
-        (new App()).run({ ignoreArgs });
+        return app.run({ ignoreArgs });
     }
+
+    // surrogate application
+    const methods = Object.entries(is.class(App) ? App.prototype : App);
+
+    const app = instance;
+    await app._uninitialize();
+    instance = null;
+
+    // redefine argv
+    if (is.array(adone.__argv__)) {
+        process.argv = adone.__argv__;
+        delete adone.__argv__;
+    }
+
+    class XApplication extends adone.application.Application { }
+
+    for (const [name, method] of methods) {
+        XApplication.prototype[name] = method;
+    }
+
+    (new XApplication()).run({ ignoreArgs });
 };
