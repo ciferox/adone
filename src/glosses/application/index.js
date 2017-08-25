@@ -2390,9 +2390,10 @@ export const run = async (App, ignoreArgs = false) => {
     // surrogate application
     const methods = Object.entries(is.class(App) ? App.prototype : App);
 
-    const app = instance;
-    await app._uninitialize();
-    instance = null;
+    if (!is.null(instance)) {
+        await instance._uninitialize();
+        instance = null;
+    }
 
     // redefine argv
     if (is.array(adone.__argv__)) {
