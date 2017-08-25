@@ -1640,10 +1640,6 @@ export class Application extends Subsystem {
             return;
         }
 
-        if (this.isMain) {
-            terminal.destroy();
-        }
-
         await new Promise((resolve) => {
             let fds = 0;
 
@@ -1671,6 +1667,10 @@ export class Application extends Subsystem {
                 }
             });
         });
+
+        if (this.isMain) {
+            terminal.destroy();
+        }
 
         process.exit(code);
     }

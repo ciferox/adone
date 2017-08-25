@@ -422,58 +422,6 @@ class Terminfo {
         return result;
     }
 
-    getTTYInput() {
-        if (is.null(this._input)) {
-            let input;
-            if (adone.std.tty.isatty(0)) {
-                input = process.stdin;
-            } else {
-                const inputFd = adone.std.fs.openSync("/dev/tty", "r");
-                if (!adone.std.tty.isatty(inputFd)) {
-                    throw new Error("Input file descriptor is not a TTY.");
-                }
-                input = new adone.std.tty.ReadStream(inputFd);
-                input._type = "tty";
-            }
-            this._input = input;
-        }
-        return this._input;
-    }
-
-    getTTYOutput() {
-        if (is.null(this._output)) {
-            let output;
-            if (adone.std.tty.isatty(1)) {
-                output = process.stdout;
-            } else {
-                const outputFd = adone.std.fs.openSync("/dev/tty", "w");
-                if (!adone.std.tty.isatty(outputFd)) {
-                    throw new Error("Output file descriptor is not a TTY.");
-                }
-                output = new adone.std.tty.WriteStream(outputFd);
-                output._type = "tty";
-            }
-
-            // Hack to have the stdout stream not keep the event loop alive.
-            // See: https://github.com/joyent/node/issues/1726
-            // XXX: remove/fix this once src/node.js does something different as well.
-            // @cronvel: that doesn't work much either...
-            if (output._handle && output._handle.unref) {
-                output._handle.unref();
-            }
-
-            // Update the "columns" and "rows" properties on the stdout stream
-            // whenever the console window gets resized.
-            if (output._refreshSize) {
-                process.on("SIGWINCH", () => {
-                    output._refreshSize();
-                });
-            }
-            this._output = output;
-        }
-        return this._output;
-    }
-
     setup() {
         this.generic = (process.env.COLORTERM === "truecolor" ? "xterm-256color" : ((process.env.TERM && process.env.TERM) || (is.windows ? "windows-ansi" : "xterm")).toLowerCase());
 
@@ -4142,7 +4090,6 @@ export default class Terminal extends adone.EventEmitter {
         // xterm and rxvt - not accurate
         this.isRxvt = /rxvt/i.test(process.env.COLORTERM);
 
-
         let level;
         const env = process.env;
 
@@ -4192,19 +4139,9 @@ export default class Terminal extends adone.EventEmitter {
         this.has16m = level >= 3;
 
         this.terminfo = new Terminfo();
-        try {
-            this.input = this.terminfo.getTTYInput();
-        } catch (err) {
-            this.input = process.stdin;
-        }
-        try {
-            this.output = this.terminfo.getTTYOutput();
-        } catch (err) {
-            this.output = process.stdout;
-        }
-        this._terminal = this.terminfo.terminal;
+        this.input = process.stdin;
+        this.output = process.stdout;
 
-        // Listen for resize on output
         if (!this.output.isTTY) {
             process.nextTick(() => {
                 this.emit("warning", "Output is not a TTY");
@@ -4866,8 +4803,8 @@ export default class Terminal extends adone.EventEmitter {
         this.flush();
         this._exiting = true;
 
-        this.styleReset();
-        this.showCursor(); // Restore cursor
+        // this.styleReset();
+        // this.showCursor(); // Restore cursor
 
         this.input._adoneInput--;
 

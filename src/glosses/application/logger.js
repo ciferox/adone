@@ -1,4 +1,7 @@
-const { is, std: { util: { format } } } = adone;
+const {
+    is,
+    std: { util: { format } }
+} = adone;
 
 const LOG_NOFORMAT = 255;
 
@@ -133,24 +136,22 @@ export default class Logger {
         return Logger.defaultLogger;
     }
 
-    _pipeTransform(options) {
-        const type = options.type;
+    _pipeTransform({ type, filter, argsSchema, noFormatLogger, delimiter = " ", stream, filePath } = {}) {
         class LogTransform extends adone.Transform { }
 
         LogTransform.prototype._format = format;
         LogTransform.prototype.LOG_NOFORMAT = LOG_NOFORMAT;
 
         let suffixStyle;
-        const formatDelimiter = is.propertyDefined(options, "delimiter") ? options.delimiter : " ";
         let preprocessCode = "";
         let formatString = "\"";
         let definitions = "const args = x.slice();";
-        if (is.array(options.argsSchema)) {
-            const argsNum = options.argsSchema.length;
+        if (is.array(argsSchema)) {
+            const argsNum = argsSchema.length;
             for (let i = 0; i < argsNum; i++) {
                 let leftBracket = "";
                 let rightBracket = "";
-                const argSchema = options.argsSchema[i];
+                const argSchema = argsSchema[i];
                 if (is.function(argSchema.preprocess)) {
                     LogTransform.prototype[`_preprocessArg${i}`] = argSchema.preprocess;
                     preprocessCode += `args[${i}] = this._preprocessArg${i}(args[${i}]);\n`;
@@ -205,7 +206,7 @@ export default class Logger {
                 }
                 formatString += rightBracket;
                 if (i < (argsNum - 1)) {
-                    formatString += formatDelimiter;
+                    formatString += delimiter;
                 }
             }
         }
@@ -213,19 +214,16 @@ export default class Logger {
         formatString += "\\n\"";
 
         let filterCode = "";
-        if (is.function(options.filter)) {
-            LogTransform.prototype._filter = options.filter;
+        if (is.function(filter)) {
+            LogTransform.prototype._filter = filter;
             filterCode = "if (!this._filter(x)) return;";
         }
 
         const bindingsCount = this.options.bindArgs.length;
-        let fnCode;
-        if (options.noFormatLogger === true) {
-            fnCode += `
-                if (x[${bindingsCount}] === this.LOG_NOFORMAT) {
-                    const msg = this._format.apply(null, x.slice(1 + ${bindingsCount}));
-                    this.push(msg + "\\n");
-                    return;
+        let fnCode = "";
+        if (noFormatLogger === true) {
+            fnCode += `if (x[${bindingsCount}] === this.LOG_NOFORMAT) {
+                    return this.push(\`\${this._format.apply(null, x.slice(1 + ${bindingsCount}))}\\n\`);
                 }`;
         }
         fnCode += `
@@ -241,22 +239,22 @@ export default class Logger {
             case "stdout": t.pipe(process.stdout); break;
             case "stderr": t.pipe(process.stderr); break;
             case "file": {
-                if (!is.propertyDefined(options, "filepath")) {
-                    throw new adone.x.Runtime("for 'file' log channels you should specify 'filepath' option");
+                if (!is.string(filePath)) {
+                    throw new adone.x.NotValid("For 'file' log channels you should specify 'filePath' option");
                 }
-                t.pipe(adone.std.fs.createWriteStream(options.filepath));
+                t.pipe(adone.std.fs.createWriteStream(filePath));
                 break;
             }
             case "stream": {
-                if (!is.propertyDefined(options, "stream")) {
-                    throw new adone.x.Runtime("for 'stream' log channels you should specify 'stream' option");
+                if (!is.stream(stream)) {
+                    throw new adone.x.NotValid("For 'stream' log channels you should specify 'stream' option");
                 }
-                t.pipe(options.stream);
+                t.pipe(stream);
                 break;
             }
         }
 
-        if (options.noFormatLogger === true) {
+        if (noFormatLogger === true) {
             const logNoFormatName = `${type}LogNoFmt`;
             if (!is.propertyDefined(this, logNoFormatName)) {
                 const dummyArray = new Array(bindingsCount);
