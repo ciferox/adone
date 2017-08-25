@@ -1,3 +1,0 @@
-setTimeout(() => {
-    process.exit(0);  // ipc...
-}, 1000);

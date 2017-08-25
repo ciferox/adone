@@ -1,8 +1,6 @@
 import adone from "adone";
-import Contexts from "./contexts";
+// import Contexts from "./contexts";
 // import Services from "./services";
-
-const startedAt = adone.timing.now();
 
 const {
     is,
@@ -28,8 +26,8 @@ export default class Omnitron extends adone.application.Application {
             adone.info("running garbage collector");
         });
 
-        this._.contexts = new Contexts(this);
-        await this._.contexts.initialize();
+        // this._.contexts = new Contexts(this);
+        // await this._.contexts.initialize();
 
         // await adone.fs.mkdir(this.config.omnitron.servicesPath);
 
@@ -62,7 +60,7 @@ export default class Omnitron extends adone.application.Application {
 
         await this.uninitializeNetron();
 
-        await this._.contexts.uninitialize();
+        // await this._.contexts.uninitialize();
 
         return this.deletePidFile();
     }
@@ -347,9 +345,7 @@ export default class Omnitron extends adone.application.Application {
     @Description("Uptime of omnitron")
     @Type(String)
     uptime() {
-        const curr = adone.timing.now();
-        const ms = ((curr - startedAt) / 1000) >>> 0;
-        return adone.util.humanizeTime(ms);
+        return Math.floor(process.uptime());
     }
 
     @Public
@@ -537,11 +533,11 @@ export default class Omnitron extends adone.application.Application {
         return this.config.omnitron.gates;
     }
 
-    @Public
-    @Description("Returns interface of context with supplied name")
-    context(name) {
-        return this._.contexts.get(name);
-    }
+    // @Public
+    // @Description("Returns interface of context with supplied name")
+    // context(name) {
+    //     return this._.contexts.get(name);
+    // }
 }
 
 if (require.main === module) {
