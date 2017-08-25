@@ -759,6 +759,7 @@ class Command {
         this.arguments = [];
         this.group = options.group;
         this._match = options.match;
+        this.blindMode = options.blindMode;
 
         this.optionsGroups = [new Group({ name: UNNAMED })];
         this.commandsGroups = [new Group({ name: UNNAMED })];
@@ -835,6 +836,9 @@ class Command {
         }
         if (this.hasOption(newOption)) {
             throw new x.IllegalState(`${this.names[0]}: Cannot add the option ${newOption.names[0]} due to name collision`);
+        }
+        if (this.blindMode && (newOption.nargs === "?" || newOption.nargs === "*" )) {
+            throw new x.IllegalState(`${this.names[0]}: Cannot user options with nargs = "*" | "+" | "?" it can lead to unexpected behaviour`);
         }
         for (const group of this.optionsGroups) {
             if (group.name === newOption.group) {
@@ -1019,6 +1023,7 @@ class Command {
             options.colors = util.clone(defaultColors);
             options._frozenColors = true;
         }
+        options.blindMode = Boolean(options.blindMode);
         return options;
     }
 
@@ -1293,13 +1298,12 @@ export let instance = null; // eslint-disable-line
 const ADONE_ROOT_PATH = std.path.resolve(__dirname, "../../..");
 const ADONE_ETC_PATH = std.path.resolve(ADONE_ROOT_PATH, "etc");
 const DEFAULT_CONFIGS_PATH = std.path.resolve(ADONE_ETC_PATH, "configs");
-const ARGV = process.argv.slice(2);
 
 export class Application extends Subsystem {
     constructor({
         name = std.path.basename(process.argv[1], std.path.extname(process.argv[1])),
         interactive = true,
-        argv = ARGV,
+        argv = process.argv.slice(2),
         commandRequired = false } = {}) {
 
         super();
@@ -1464,7 +1468,7 @@ export class Application extends Subsystem {
 
     /**
      * Adds cli subsystem. Depending on root-command associated cli subsystem will be loaded lazily.
-     * 
+     *
      * @param {{ name, description = "", group = "subsystem", path } = {}} ssConfig Subsystem object.
      * @returns {void}
      */
@@ -1490,7 +1494,7 @@ export class Application extends Subsystem {
 
     /**
      * Adds cli subsystems.
-     * 
+     *
      * @param {*string|array<{ name, description, group, path }>} subsystems Absolute path with subsystems or list of subsystem descriptors
      */
     async useCliSubsystems(subsystems, { group = "subsystem" } = {}) {
@@ -1505,7 +1509,7 @@ export class Application extends Subsystem {
                     const adoneConfPath = std.path.join(path, "adone.conf.js");
                     if (await fs.exists(adoneConfPath)) { // eslint-disable-line
                         const adoneConf = adone.require(adoneConfPath);
-                        
+
                         this.useCliSubsystem({
                             name: adoneConf.name,
                             description: adoneConf.description,
@@ -1528,7 +1532,7 @@ export class Application extends Subsystem {
 
     /**
      * Loads subsystem from specified path.
-     * 
+     *
      * @param {string|adone.application.Subsystem} subsystem Subsystem instance or absolute path.
      * @returns {Promise<adone.application.Subsystem>}
      */
@@ -1560,7 +1564,7 @@ export class Application extends Subsystem {
 
     /**
      * Loads subsystems from specified path.
-     * 
+     *
      * @param {string} path Subsystems path.
      * @param {array|function} filter Array of subsystem names or filter [async] function '(name) => true | false'.
      * @param {boolean} [initialize = true] Whether subsystems should be initialized.
@@ -1587,7 +1591,7 @@ export class Application extends Subsystem {
 
     /**
      * Uninitializes all subsystems.
-     * 
+     *
      * @returns {Promise<void>}
      */
     async uninitializeSubsystems() {
@@ -1771,7 +1775,8 @@ export class Application extends Subsystem {
             handler: schema.handler,
             group: schema.group,
             match: schema.match,
-            colors: schema.colors
+            colors: schema.colors,
+            blindMode: schema.blindMode
         });
 
         if (parent) {
@@ -2005,6 +2010,9 @@ export class Application extends Subsystem {
             const nextPart = () => {
                 part = argv[++partIndex];
             };
+            const unshiftPart = () => {
+                part = argv[partIndex--];
+            };
             nextPart();
 
             const state = ["start command"];
@@ -2020,6 +2028,12 @@ export class Application extends Subsystem {
                         break;
                     }
                     case "next argument": {
+                        if (command.blindMode && positional.length === 0) {
+                            unshiftPart();
+                            state.push("rest");
+                            state.push("finish");
+                            continue next;
+                        }
                         // if no element => exit
                         if (remaining < 0) {
                             state.push("finish");
@@ -2282,10 +2296,10 @@ export class Application extends Subsystem {
                         break;
                     }
                     case "finish": {
-                        finished = true;
                         if (remaining >= 0) { // it should be -1 if there are no elements, so we have extra args, weird
                             errors.push(new x.IllegalState(`unknown parameter ${part}`));
                         }
+                        finished = true;
                         // check required arguments
                         for (const arg of positional) {
                             if (!arg.present) {
@@ -2378,7 +2392,7 @@ adone.lazify({
     Logger: "./logger"
 }, exports, require);
 
-export const run = async (App, ignoreArgs = false) => {    
+export const run = async (App, ignoreArgs = false) => {
     if (is.null(instance) && is.class(App)) {
         const app = new App();
         if (!is.application(app)) {
@@ -2388,7 +2402,7 @@ export const run = async (App, ignoreArgs = false) => {
     }
 
     // surrogate application
-    const methods = Object.entries(is.class(App) ? App.prototype : App);
+    const methods = util.entries(is.class(App) ? App.prototype : App, { all: true });
 
     if (!is.null(instance)) {
         await instance._uninitialize();

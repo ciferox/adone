@@ -13,7 +13,7 @@ const lazy = adone.lazify({
     InstallationManager: ["../lib/cli/manager", (x) => x.InstallationManager]
 }, exports, require);
 
-export default class AdoneCLI extends application.Application {    
+export default class AdoneCLI extends application.Application {
     async configure() {
         // Loading cli configuration
         await this.loadConfig("cli", {
@@ -23,6 +23,7 @@ export default class AdoneCLI extends application.Application {
 
         this.defineArguments({
             commandsGroups: this.config.cli.groups,
+            blindMode: true,
             arguments: [
                 {
                     name: "path",
