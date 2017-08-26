@@ -274,7 +274,7 @@ const eventHandler = (self, event) => {
                 // Reconnecting emits a server description changed event going from unknown to the
                 // current server type.
                 emitServerDescriptionChanged(self, {
-                    address: self.name, arbiters: [], hosts: [], passives: [], type: sdam.getTopologyType(self)
+                    address: self.name, arbiters: [], hosts: [], passives: [], type: getTopologyType(self)
                 });
                 return self.emit(event, self);
             }

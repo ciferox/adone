@@ -1,17 +1,17 @@
-const { is, fs, std, noop } = adone;
+const { is, fs, std, noop, promise } = adone;
 
-let emfileTimeout = 0;  // EMFILE handling
+let emfileTimeout = 0; // EMFILE handling
 
 const rmkids = async (p) => {
     const files = await fs.readdir(p);
     if (files.length === 0) {
         return;
     }
-    const processes = files.map((x) => rmfile(std.path.join(p, x)));  // eslint-disable-line no-use-before-define
+    const processes = files.map((x) => rmfile(std.path.join(p, x))); // eslint-disable-line no-use-before-define
     let error = null;
     const errorHandler = (err) => error = error || err;
     for (const process of processes) {
-        await process.catch(errorHandler);  // eslint-disable-line no-await-in-loop
+        await process.catch(errorHandler); // eslint-disable-line no-await-in-loop
     }
     if (error) {
         return Promise.reject(error);
@@ -23,7 +23,7 @@ const rmkids = async (p) => {
 // raise the original error.
 const rmdir = (p) => fs.rmdir(p).catch((err) => {
     if (err.code === "ENOENT") {
-        return;  // has been deleted
+        return; // has been deleted
     }
     if (err.code === "ENOTEMPTY" || err.code === "EEXIST" || err.code === "EPERM") {
         return rmkids(p).then(() => fs.rmdir(p));
@@ -33,7 +33,7 @@ const rmdir = (p) => fs.rmdir(p).catch((err) => {
 
 const fixWinEPERM = (p) => fs.chmod(p, 0o666).then(() => fs.stat(p)).catch((err) => {
     if (err.code === "ENOENT") {
-        return null;  // has been deleted
+        return null; // has been deleted
     }
     return Promise.reject(err);
 });
@@ -51,7 +51,7 @@ const rmfile = async (p) => {
         }
     });
 
-    if (st === null) {
+    if (is.null(st)) {
         return;
     }
 
@@ -61,7 +61,7 @@ const rmfile = async (p) => {
 
     return fs.unlink(p).catch((err) => {
         if (err.code === "ENOENT") {
-            return;  // has been deleted
+            return; // has been deleted
         }
         if (err.code === "EPERM") {
             if (is.windows) {
@@ -90,15 +90,15 @@ export default async function rm(path, { glob = true, maxBusyTries = 3, emfileWa
             };
             const reject = (err) => {
                 if (err.code === "ENOENT") {
-                    return;  // has been deleted
+                    return; // has been deleted
                 }
                 if (err.code === "EBUSY" || err.code === "ENOTEMPTY" || err.code === "EPERM" && busyTries < maxBusyTries) {
                     ++busyTries;
                     const time = busyTries * 100;
-                    return adone.promise.delay(time).then(() => rmfile(x));  // just do the same after the delay
+                    return promise.delay(time).then(() => rmfile(x)); // just do the same after the delay
                 }
                 if (err.code === "EMFILE" && emfileTimeout < emfileWait) {
-                    return adone.promise.delay(emfileTimeout++).then(() => rmfile(x));
+                    return promise.delay(emfileTimeout++).then(() => rmfile(x));
                 }
             };
 
@@ -124,8 +124,8 @@ export default async function rm(path, { glob = true, maxBusyTries = 3, emfileWa
     }
 
     const st = await fs.lstat(path).catch(noop);
-    if (st) {  // directory or file
+    if (st) { // directory or file
         return afterGlob([path]);
     }
-    return afterGlob(await adone.fs.glob(path, glob));
+    return afterGlob(await fs.glob(path, glob));
 };

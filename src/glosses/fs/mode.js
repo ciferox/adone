@@ -2,6 +2,7 @@
  * Constants (defined in `stat.h`).
  */
 
+/* eslint-disable */
 const S_IFMT = 61440;   /* 0170000 type of file */
 const S_IFIFO = 4096;   /* 0010000 named pipe (fifo) */
 const S_IFCHR = 8192;   /* 0020000 character special */
@@ -23,6 +24,7 @@ const S_IXGRP = 8;      /* 0000010 execute/search permission, group */
 const S_IROTH = 4;      /* 0000004 read permission, others */
 const S_IWOTH = 2;      /* 0000002 write permission, others */
 const S_IXOTH = 1;      /* 0000001 execute/search permission, others */
+/* eslint-enable */
 
 class Owner {
     constructor(stat) {

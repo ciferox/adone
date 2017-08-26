@@ -6,17 +6,25 @@ export default class File {
         this._encoding = "utf8";
     }
 
+    _handleEncoding(encoding) {
+        if (encoding === "buffer") {
+            return null;
+        }
+        return encoding;
+    }
+
+    _getEncoding() {
+        if (is.null(this._encoding)) {
+            return "buffer";
+        }
+        return this._encoding;
+    }
+
     encoding(name = adone.null) {
         if (name === adone.null) {
-            if (is.null(this._encoding)) {
-                return "buffer";
-            }
-            return this._encoding;
+            return this._getEncoding();
         }
-        if (name === "buffer") {
-            name = null;
-        }
-        this._encoding = name;
+        this._encoding = this._handleEncoding(name);
         return this;
     }
 
@@ -80,10 +88,12 @@ export default class File {
     }
 
     write(buffer, { encoding = this._encoding, mode = 0o755, flag = "w" } = {}) {
+        encoding = this._handleEncoding(encoding);
         return fs.writeFile(this._path, buffer, { encoding, mode, flag });
     }
 
     append(buffer, { encoding = this._encoding, mode = 0o755, flag = "w" } = {}) {
+        encoding = this._handleEncoding(encoding);
         return fs.appendFile(this._path, buffer, { encoding, mode, flag });
     }
 
@@ -97,14 +107,17 @@ export default class File {
     }
 
     contents(encoding = this._encoding) {
+        encoding = this._handleEncoding(encoding);
         return fs.readFile(this._path, { encoding });
     }
 
     contentsSync(encoding = this._encoding) {
+        encoding = this._handleEncoding(encoding);
         return sfs.readFileSync(this._path, encoding);
     }
 
     contentsStream(encoding = this._encoding) {
+        encoding = this._handleEncoding(encoding);
         return sfs.createReadStream(this._path, { encoding });
     }
 
