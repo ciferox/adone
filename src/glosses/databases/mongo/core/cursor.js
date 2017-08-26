@@ -1,4 +1,10 @@
-const { is, x, database: { mongo: { core: { MongoError } } }, EventEmitter, data } = adone;
+const {
+    is,
+    x,
+    database: { mongo: { core: { MongoError } } },
+    event: { EventEmitter },
+    data
+} = adone;
 
 const handleCallback = (callback, err, result) => {
     try {

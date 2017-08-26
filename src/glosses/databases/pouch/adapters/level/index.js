@@ -9,7 +9,12 @@ const BINARY_STORE = "attach-binary-store";
 const LOCAL_STORE = "local-store";
 const META_STORE = "meta-store";
 
-const { is, data: { json }, util, database: { pouch }, EventEmitter } = adone;
+const {
+    is,
+    data: { json },
+    util,
+    database: { pouch }
+} = adone;
 const {
     __,
     x: {

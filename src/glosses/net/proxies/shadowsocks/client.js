@@ -1,4 +1,11 @@
-const { is, x, EventEmitter, net: { proxy: { shadowsocks } }, util: { memcpy }, std: { stream } } = adone;
+const {
+    is,
+    x,
+    event: { EventEmitter },
+    net: { proxy: { shadowsocks } },
+    util: { memcpy },
+    std: { stream }
+} = adone;
 
 class SSocket extends stream.Duplex {
     constructor(socket, writable) {

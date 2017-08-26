@@ -1,6 +1,6 @@
 const { is, util } = adone;
 
-export default class AsyncEmitter extends adone.EventEmitter {
+export default class AsyncEmitter extends adone.event.EventEmitter {
     constructor(concurrency = null) {
         super();
         if (concurrency >= 1) {

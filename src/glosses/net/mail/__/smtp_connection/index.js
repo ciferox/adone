@@ -1,5 +1,8 @@
 const {
-    is, x, EventEmitter, util,
+    is,
+    x,
+    event: { EventEmitter },
+    util,
     std: { net, tls, os, crypto, stream: { PassThrough } },
     net: { mail: { __: { shared, DataStream } } }
 } = adone;

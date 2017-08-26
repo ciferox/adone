@@ -9,7 +9,7 @@ const jsmemcmp = (buf1, _pos1, buf2, _pos2, num) => {
     return true;
 };
 
-export default class StreamSearch extends adone.EventEmitter {
+export default class StreamSearch extends adone.event.EventEmitter {
     constructor(_needle) {
         super();
 

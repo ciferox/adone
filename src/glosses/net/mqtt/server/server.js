@@ -12,7 +12,7 @@ import * as interfaces from "./interfaces";
 
 const defaults = options.defaultsLegacy();
 
-export default class Server extends adone.EventEmitter {
+export default class Server extends adone.event.EventEmitter {
     constructor(opts, callback) {
         let modernOpts = options.modernize(opts);
         const validationResult = options.validate(modernOpts);

@@ -1,12 +1,6 @@
 const {
-    database: { mongo: { core: {
-        auth,
-        Connection,
-        MongoError,
-        Query,
-        CommandResult
-    } } },
-    std: { events: EventEmitter },
+    database: { mongo: { core: { auth, Connection, MongoError, Query, CommandResult } } },
+    event: { EventEmitter },
     is, x, lazify
 } = adone;
 

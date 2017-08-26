@@ -1,4 +1,11 @@
-const { database: { redis }, EventEmitter, noop, util, is, x } = adone;
+const {
+    database: { redis },
+    event: { EventEmitter },
+    noop,
+    util,
+    is,
+    x
+} = adone;
 const { __ } = redis;
 
 const setKey = (node = {}) => {

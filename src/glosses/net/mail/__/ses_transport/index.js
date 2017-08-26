@@ -1,4 +1,8 @@
-const { is, net: { mail: { __ } }, EventEmitter } = adone;
+const {
+    is,
+    net: { mail: { __ } },
+    event: { EventEmitter }
+} = adone;
 
 /**
  * Generates a Transport object for Sendmail

@@ -1,4 +1,8 @@
-const { is, EventEmitter, database: { mongo }, lazify } = adone;
+const {
+    is,
+    event: { EventEmitter },
+    database: { mongo }, lazify
+} = adone;
 const { __: { utils: { shallowClone, toError } } } = mongo;
 
 const lazy = lazify({

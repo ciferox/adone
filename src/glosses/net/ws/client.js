@@ -86,7 +86,7 @@ const EventTarget = {
 const protocolVersions = [8, 13];
 const closeTimeout = 30 * 1000; // Allow 30 seconds to terminate the connection cleanly.
 
-export default class Client extends adone.EventEmitter {
+export default class Client extends adone.event.EventEmitter {
     constructor(address, protocols, options) {
         super();
 
@@ -295,7 +295,7 @@ export default class Client extends adone.EventEmitter {
                 });
             }
 
-            this._req.on("error", (error) => {
+            this._req.once("error", (error) => {
                 if (this._req.aborted) {
                     return;
                 }

@@ -1,4 +1,9 @@
-const { is, EventEmitter, x, collection } = adone;
+const {
+    is,
+    event: { EventEmitter },
+    x,
+    collection
+} = adone;
 
 export default class Transform extends EventEmitter {
     constructor({ transform, flush, highWaterMark = 16 } = {}) {

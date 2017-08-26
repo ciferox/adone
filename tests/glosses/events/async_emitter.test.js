@@ -1,7 +1,11 @@
+const {
+    event: { AsyncEmitter }
+} = adone;
+
 describe("AsyncEmitter", () => {
     describe(".emitParallel", () => {
         it("should receive the return value of listeners asynchronously", async () => {
-            const emitter = new adone.AsyncEmitter();
+            const emitter = new AsyncEmitter();
             emitter.on("foo", (action) => action);
             emitter.on("foo", (action) => new Promise((resolve) => {
                 setTimeout(() => resolve(action));
@@ -14,7 +18,7 @@ describe("AsyncEmitter", () => {
         });
 
         it("if an exception occurs, it should throw an exception only the first one", async () => {
-            const emitter = new adone.AsyncEmitter();
+            const emitter = new AsyncEmitter();
             emitter.on("foo", (action) => action);
             emitter.on("foo", () => new Promise(() => {
                 throw new Error("beep");
@@ -29,7 +33,7 @@ describe("AsyncEmitter", () => {
         });
 
         it("if the promise was rejected, it should throw only the first of the reject", async () => {
-            const emitter = new adone.AsyncEmitter();
+            const emitter = new AsyncEmitter();
             emitter.on("foo", (action) => action);
             emitter.on("foo", () => Promise.reject(new Error("boop")));
             emitter.on("foo", () => new Promise(() => {
@@ -44,7 +48,7 @@ describe("AsyncEmitter", () => {
         });
 
         it("if throws exception, it should be handled as reject", async () => {
-            const emitter = new adone.AsyncEmitter();
+            const emitter = new AsyncEmitter();
             emitter.on("foo", (action) => action);
             emitter.on("foo", () => {
                 throw new Error("boop");
@@ -63,7 +67,7 @@ describe("AsyncEmitter", () => {
             const delay = 100;
             const expectedArray = new Array(3);
             let index = 0;
-            const emitter = new adone.AsyncEmitter();
+            const emitter = new AsyncEmitter();
             emitter.on("delay", (ms) => new Promise((resolve) => {
                 setTimeout(() => {
                     expectedArray[index] = index;
@@ -89,7 +93,7 @@ describe("AsyncEmitter", () => {
 
         it("if an exception occurs, it should throw an exception only the first one", async () => {
             const delay = 100;
-            const emitter = new adone.AsyncEmitter();
+            const emitter = new AsyncEmitter();
             emitter.on("delay", (ms) => new Promise((resolve) => {
                 setTimeout(() => resolve(Date.now()), ms);
             }));
@@ -110,10 +114,10 @@ describe("AsyncEmitter", () => {
 
     describe(".emitReduce/.emitReduceRight", () => {
         it("listener should be run serially using previous listener return value", async () => {
-            assert.deepEqual((await (new adone.AsyncEmitter().emitReduce("noop"))), []);
-            assert.deepEqual((await (new adone.AsyncEmitter().emitReduce("noop", 1))), [1]);
+            assert.deepEqual((await (new AsyncEmitter().emitReduce("noop"))), []);
+            assert.deepEqual((await (new AsyncEmitter().emitReduce("noop", 1))), [1]);
 
-            const emitter = new adone.AsyncEmitter();
+            const emitter = new AsyncEmitter();
             emitter.on("square", (keys, value) => Promise.resolve([keys.concat(1), value * value]));
             emitter.on("square", (keys, value) => Promise.resolve([keys.concat(2), value * value]));
             emitter.on("square", (keys, value) => Promise.resolve([keys.concat(3), value * value]));
@@ -129,7 +133,7 @@ describe("AsyncEmitter", () => {
         });
 
         it("if listener returns a non-array, it should be passed on correctly value to the next listener", async () => {
-            const emitter = new adone.AsyncEmitter();
+            const emitter = new AsyncEmitter();
             emitter.on("normal", () => 1);
             emitter.on("normal", (value) => [value]);
 
@@ -140,7 +144,7 @@ describe("AsyncEmitter", () => {
         });
 
         it("if an exception occurs, it should throw an exception only the first one", async () => {
-            const emitter = new adone.AsyncEmitter();
+            const emitter = new AsyncEmitter();
             emitter.on("square", (keys, value1) => Promise.resolve([keys.concat(1), value1 * 2]));
             emitter.on("square", () => Promise.reject(new Error("foo")));
             emitter.on("square", () => Promise.reject(new Error("bar")));
@@ -161,7 +165,7 @@ describe("AsyncEmitter", () => {
 
     describe(".once", () => {
         it("listeners that have been executed should be removed immediately", async () => {
-            const emitter = new adone.AsyncEmitter();
+            const emitter = new AsyncEmitter();
             emitter.once("foo", (action) => action);
 
             let values;
@@ -175,7 +179,7 @@ describe("AsyncEmitter", () => {
         });
 
         it("if the argument isn't function, should throw an exception", async () => {
-            const emitter = new adone.AsyncEmitter();
+            const emitter = new AsyncEmitter();
             try {
                 await emitter.once("foo", "bad argument!");
             } catch (err) {
@@ -186,7 +190,7 @@ describe("AsyncEmitter", () => {
 
     describe(".subscribe", () => {
         it("if executed the return value, should remove the listener", async () => {
-            const emitter = new adone.AsyncEmitter();
+            const emitter = new AsyncEmitter();
             const unsubcribe = emitter.subscribe("foo", (action) => action);
 
             let values;
@@ -202,7 +206,7 @@ describe("AsyncEmitter", () => {
         });
 
         it("if specify third argument is true, should remove the listener after executed", async () => {
-            const emitter = new adone.AsyncEmitter();
+            const emitter = new AsyncEmitter();
 
             const unsubscribe = emitter.subscribe("foo", (action) => action, true);
             unsubscribe();
@@ -227,7 +231,7 @@ describe("AsyncEmitter", () => {
         });
 
         it("should set max concurrency in the constructor", async () => {
-            const emitter = new adone.AsyncEmitter(2);
+            const emitter = new AsyncEmitter(2);
             emitter.on("foo", delayListener);
             emitter.on("foo", delayListener);
             emitter.on("foo", delayListener);
@@ -242,7 +246,7 @@ describe("AsyncEmitter", () => {
         });
 
         it("the limit should be managed by an instance", async () => {
-            const emitter = new adone.AsyncEmitter(2);
+            const emitter = new AsyncEmitter(2);
             emitter.on("foo", delayListener);
 
             const [[a], [b], [c], [d], [e]] = await Promise.all([
@@ -259,7 +263,7 @@ describe("AsyncEmitter", () => {
         });
 
         it("should the maximum number that changed are applied", async () => {
-            const emitter = new adone.AsyncEmitter(1);
+            const emitter = new AsyncEmitter(1);
             emitter.on("foo", delayListener);
             emitter.on("foo", delayListener);
 
@@ -276,7 +280,7 @@ describe("AsyncEmitter", () => {
         describe(".once", () => {
             it("#3: always the listener should be stopped at the removeListener", async () => {
                 const listener = () => 1;
-                const emitter = new adone.AsyncEmitter();
+                const emitter = new AsyncEmitter();
                 emitter.once("foo", listener);
                 emitter.removeListener("foo", listener);
 
@@ -288,7 +292,7 @@ describe("AsyncEmitter", () => {
         describe(".emitSerial", () => {
             it("#4: should not be destroying a listener for the return values", async () => {
                 const delay = 100;
-                const emitter = new adone.AsyncEmitter();
+                const emitter = new AsyncEmitter();
                 emitter.on("delay", () => [1]);
                 emitter.on("delay", () => [2]);
 

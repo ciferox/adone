@@ -6,7 +6,6 @@ let NETRON_PORT = 32348;
 describe("netron", "websocket", "unit tests", () => {
     let exNetron;
     let superNetron;
-    let wsAdapter;
 
     before(async () => {
         if (!(await adone.net.util.isFreePort(defaultPort))) {
@@ -18,8 +17,7 @@ describe("netron", "websocket", "unit tests", () => {
     beforeEach(async () => {
         exNetron = new adone.netron.ws.Netron();
         superNetron = new Netron({ isSuper: true });
-        wsAdapter = new adone.netron.ws.Adapter({ id: "ws", port: NETRON_PORT });
-        await superNetron.attachAdapter(wsAdapter);
+        superNetron.registerAdapter("ws", adone.netron.ws.Adapter);
     });
 
     afterEach(async () => {
@@ -34,7 +32,10 @@ describe("netron", "websocket", "unit tests", () => {
             it("right status sequence", async () => {
                 const sequence = [STATUS.OFFLINE, STATUS.CONNECTING, STATUS.HANDSHAKING, STATUS.ONLINE];
                 let index = 0;
-                await superNetron.bind();
+                await superNetron.bind({
+                    adapter: "ws",
+                    port: NETRON_PORT
+                });
                 exNetron.on("peer create", (peer) => {
                     expect(sequence[index++]).to.be.equal(peer.getStatus());
                     peer.on("status", (status) => {
@@ -49,13 +50,19 @@ describe("netron", "websocket", "unit tests", () => {
             });
 
             it("no awaiters after connect", async () => {
-                await superNetron.bind();
+                await superNetron.bind({
+                    adapter: "ws",
+                    port: NETRON_PORT
+                });
                 const peer = await exNetron.connect({ port: NETRON_PORT });
                 expect(peer.getNumberOfAwaiters()).to.be.equal(0);
             });
 
             it("try to connect after connect", async () => {
-                await superNetron.bind();
+                await superNetron.bind({
+                    adapter: "ws",
+                    port: NETRON_PORT
+                });
                 const peer1 = await exNetron.connect({ port: NETRON_PORT });
                 const peer2 = await exNetron.connect({ port: NETRON_PORT });
                 assert.strictEqual(peer1, peer2);
@@ -72,7 +79,10 @@ describe("netron", "websocket", "unit tests", () => {
             });
 
             it("ping remote netron should", async () => {
-                await superNetron.bind();
+                await superNetron.bind({
+                    adapter: "ws",
+                    port: NETRON_PORT
+                });
                 await exNetron.connect({ port: NETRON_PORT });
 
                 let result = await superNetron.ping(exNetron.uid);
@@ -89,7 +99,10 @@ describe("netron", "websocket", "unit tests", () => {
             });
 
             it("getPeer(uid)", async () => {
-                await superNetron.bind();
+                await superNetron.bind({
+                    adapter: "ws",
+                    port: NETRON_PORT
+                });
 
                 let peer = await exNetron.connect({ port: NETRON_PORT });
                 assert.isOk(peer);
@@ -103,7 +116,10 @@ describe("netron", "websocket", "unit tests", () => {
 
         describe("getPeers", () => {
             it("getPeers()", async () => {
-                await superNetron.bind();
+                await superNetron.bind({
+                    adapter: "ws",
+                    port: NETRON_PORT
+                });
 
                 const peer = await exNetron.connect({ port: NETRON_PORT });
                 assert.isOk(peer);
@@ -119,7 +135,10 @@ describe("netron", "websocket", "unit tests", () => {
 
         describe("disconnect", () => {
             it("Peer.disconnect() from client", async (done) => {
-                await superNetron.bind();
+                await superNetron.bind({
+                    adapter: "ws",
+                    port: NETRON_PORT
+                });
                 const peer = await exNetron.connect({ port: NETRON_PORT });
                 assert.isOk(superNetron.getPeer(exNetron.uid));
                 assert.isOk(exNetron.getPeer(superNetron.uid));
@@ -133,7 +152,10 @@ describe("netron", "websocket", "unit tests", () => {
             });
 
             it("Peer.disconnect() from server", async (done) => {
-                await superNetron.bind();
+                await superNetron.bind({
+                    adapter: "ws",
+                    port: NETRON_PORT
+                });
                 await exNetron.connect({ port: NETRON_PORT });
 
                 superNetron.on("peer offline", (peer) => {
@@ -145,7 +167,10 @@ describe("netron", "websocket", "unit tests", () => {
             });
 
             it("Netron.disconnect(uid)", async (done) => {
-                await superNetron.bind();
+                await superNetron.bind({
+                    adapter: "ws",
+                    port: NETRON_PORT
+                });
                 await exNetron.connect({ port: NETRON_PORT });
 
                 superNetron.on("peer offline", (peer) => {
@@ -157,7 +182,10 @@ describe("netron", "websocket", "unit tests", () => {
             });
 
             it("Netron.disconnect()", async (done) => {
-                await superNetron.bind();
+                await superNetron.bind({
+                    adapter: "ws",
+                    port: NETRON_PORT
+                });
                 await exNetron.connect({ port: NETRON_PORT });
 
                 superNetron.on("peer offline", (peer) => {
@@ -173,7 +201,7 @@ describe("netron", "websocket", "unit tests", () => {
             it("Peer.get/setStatus", () => {
                 const p = new adone.netron.Peer();
 
-                const newStatus = Math.floor(Math.random() * STATUS.MAX);
+                const newStatus = 100 + Math.floor(Math.random() * (STATUS.MAX - 100));
                 p._setStatus(newStatus);
                 assert.equal(p.getStatus(), newStatus, "status changed");
 
@@ -185,7 +213,10 @@ describe("netron", "websocket", "unit tests", () => {
         describe("Events", () => {
             describe("Netron", () => {
                 it("peer create", async () => {
-                    await superNetron.bind();
+                    await superNetron.bind({
+                        adapter: "ws",
+                        port: NETRON_PORT
+                    });
 
                     const p1 = new Promise((resolve) => {
                         superNetron.on("peer create", () => {
@@ -203,7 +234,10 @@ describe("netron", "websocket", "unit tests", () => {
                 });
 
                 it("peer connect", async () => {
-                    await superNetron.bind();
+                    await superNetron.bind({
+                        adapter: "ws",
+                        port: NETRON_PORT
+                    });
 
                     const p1 = new Promise((resolve, reject) => {
                         superNetron.on("peer connect", (peer) => {
@@ -231,7 +265,10 @@ describe("netron", "websocket", "unit tests", () => {
                 });
 
                 it("peer online", async () => {
-                    await superNetron.bind();
+                    await superNetron.bind({
+                        adapter: "ws",
+                        port: NETRON_PORT
+                    });
 
                     const p1 = new Promise((resolve, reject) => {
                         superNetron.on("peer online", (peer) => {
@@ -259,7 +296,10 @@ describe("netron", "websocket", "unit tests", () => {
                 });
 
                 it("peer offline", async () => {
-                    await superNetron.bind();
+                    await superNetron.bind({
+                        adapter: "ws",
+                        port: NETRON_PORT
+                    });
                     await exNetron.connect({ port: NETRON_PORT });
 
                     const p1 = new Promise((resolve, reject) => {
@@ -316,7 +356,10 @@ describe("netron", "websocket", "unit tests", () => {
             }
 
             it("Peer.getContextNames()", async () => {
-                await superNetron.bind();
+                await superNetron.bind({
+                    adapter: "ws",
+                    port: NETRON_PORT
+                });
                 const peer = await exNetron.connect({ port: NETRON_PORT });
                 const contexts = peer.getContextNames();
 
@@ -329,7 +372,10 @@ describe("netron", "websocket", "unit tests", () => {
                     superNetron.attachContext(new A(), "a");
                     superNetron.attachContext(new B());
 
-                    await superNetron.bind();
+                    await superNetron.bind({
+                        adapter: "ws",
+                        port: NETRON_PORT
+                    });
                     const peer = await exNetron.connect({ port: NETRON_PORT });
 
                     assert.include(superNetron.getContextNames(), "a");
@@ -339,7 +385,10 @@ describe("netron", "websocket", "unit tests", () => {
                 });
 
                 it("context attach notification", async () => {
-                    await superNetron.bind();
+                    await superNetron.bind({
+                        adapter: "ws",
+                        port: NETRON_PORT
+                    });
                     const peer = await exNetron.connect({ port: NETRON_PORT });
 
                     superNetron.attachContext(new A(), "a");
@@ -374,7 +423,10 @@ describe("netron", "websocket", "unit tests", () => {
                 });
 
                 it("attach", async () => {
-                    await superNetron.bind();
+                    await superNetron.bind({
+                        adapter: "ws",
+                        port: NETRON_PORT
+                    });
                     const peer = await exNetron.connect({ port: NETRON_PORT });
                     await exNetron.attachContextRemote(peer.uid, new A(), "a");
                     await exNetron.attachContextRemote(peer.uid, new B());
@@ -390,7 +442,10 @@ describe("netron", "websocket", "unit tests", () => {
                 });
 
                 it("context attach notification", async () => {
-                    await superNetron.bind();
+                    await superNetron.bind({
+                        adapter: "ws",
+                        port: NETRON_PORT
+                    });
                     const peer = await exNetron.connect({ port: NETRON_PORT });
                     const peer2 = await exNetron2.connect({ port: NETRON_PORT });
                     await exNetron.attachContextRemote(peer.uid, new A(), "a");
@@ -409,7 +464,10 @@ describe("netron", "websocket", "unit tests", () => {
                 it("double attach same context", async () => {
                     const ctx = new A();
 
-                    await superNetron.bind();
+                    await superNetron.bind({
+                        adapter: "ws",
+                        port: NETRON_PORT
+                    });
                     const peer = await exNetron.connect({ port: NETRON_PORT });
 
                     await exNetron.attachContextRemote(peer.uid, ctx, "a");
@@ -435,7 +493,10 @@ describe("netron", "websocket", "unit tests", () => {
                 });
 
                 it("context detach notification", async () => {
-                    await superNetron.bind();
+                    await superNetron.bind({
+                        adapter: "ws",
+                        port: NETRON_PORT
+                    });
                     superNetron.attachContext(new A(), "a");
                     superNetron.attachContext(new B());
                     const peer = await exNetron.connect({ port: NETRON_PORT });
@@ -462,7 +523,10 @@ describe("netron", "websocket", "unit tests", () => {
                 });
 
                 it("detach not existing context", async () => {
-                    await superNetron.bind();
+                    await superNetron.bind({
+                        adapter: "ws",
+                        port: NETRON_PORT
+                    });
                     const peer = await exNetron.connect({ port: NETRON_PORT });
 
                     const e = await assert.throws(async () => exNetron.detachContextRemote(peer.uid, "this_context_not_exists"));
@@ -470,7 +534,10 @@ describe("netron", "websocket", "unit tests", () => {
                 });
 
                 it("valid way", async () => {
-                    await superNetron.bind();
+                    await superNetron.bind({
+                        adapter: "ws",
+                        port: NETRON_PORT
+                    });
                     const peer = await exNetron.connect({ port: NETRON_PORT });
 
                     await exNetron.attachContextRemote(peer.uid, new A(), "a");
@@ -487,7 +554,10 @@ describe("netron", "websocket", "unit tests", () => {
                 });
 
                 it("context detach notification", async () => {
-                    await superNetron.bind();
+                    await superNetron.bind({
+                        adapter: "ws",
+                        port: NETRON_PORT
+                    });
                     const peer = await exNetron.connect({ port: NETRON_PORT });
                     await exNetron.attachContextRemote(peer.uid, new A(), "a");
                     await exNetron.attachContextRemote(peer.uid, new B());
@@ -517,7 +587,10 @@ describe("netron", "websocket", "unit tests", () => {
 
             beforeEach(async () => {
                 superNetron.attachContext(new A(), "a");
-                await superNetron.bind();
+                await superNetron.bind({
+                    adapter: "ws",
+                    port: NETRON_PORT
+                });
                 peer = await exNetron.connect({ port: NETRON_PORT });
             });
 
@@ -581,7 +654,7 @@ describe("netron", "websocket", "unit tests", () => {
             }
 
             for (const currentCase of ["local", "remote", "super remote"]) {
-                describe(currentCase, () => {
+                describe(currentCase, () => { // eslint-disable-line
                     let netron;
                     let uid;
                     let defID;
@@ -593,7 +666,10 @@ describe("netron", "websocket", "unit tests", () => {
                         if (currentCase === "remote") {
 
                             superNetron.attachContext(new A(), "a");
-                            await superNetron.bind();
+                            await superNetron.bind({
+                                adapter: "ws",
+                                port: NETRON_PORT
+                            });
                             const peer = await exNetron.connect({ port: NETRON_PORT });
                             defID = peer.getDefinitionByName("a").id;
 
@@ -602,7 +678,10 @@ describe("netron", "websocket", "unit tests", () => {
 
                         } else if (currentCase === "super remote") {
 
-                            await superNetron.bind();
+                            await superNetron.bind({
+                                adapter: "ws",
+                                port: NETRON_PORT
+                            });
                             await exNetron.connect({ port: NETRON_PORT });
                             await exNetron.attachContextRemote(superNetron.uid, new A(), "a");
 
@@ -706,7 +785,10 @@ describe("netron", "websocket", "unit tests", () => {
 
             beforeEach(async () => {
                 superNetron.attachContext(new A(), "a");
-                await superNetron.bind();
+                await superNetron.bind({
+                    adapter: "ws",
+                    port: NETRON_PORT
+                });
                 await exNetron.connect({ port: NETRON_PORT });
             });
 
@@ -743,7 +825,10 @@ describe("netron", "websocket", "unit tests", () => {
 
             beforeEach(async () => {
                 superNetron.attachContext(new A(), "a");
-                await superNetron.bind();
+                await superNetron.bind({
+                    adapter: "ws",
+                    port: NETRON_PORT
+                });
                 await exNetron.connect({ port: NETRON_PORT });
             });
 
@@ -799,7 +884,10 @@ describe("netron", "websocket", "unit tests", () => {
 
             beforeEach(async () => {
                 superNetron.attachContext(new A(), "a");
-                await superNetron.bind();
+                await superNetron.bind({
+                    adapter: "ws",
+                    port: NETRON_PORT
+                });
                 peer = await exNetron.connect({ port: NETRON_PORT });
             });
 
@@ -862,7 +950,10 @@ describe("netron", "websocket", "unit tests", () => {
             }
 
             it("should not emit events about conexts to context origin netron in super mode", async () => {
-                await superNetron.bind();
+                await superNetron.bind({
+                    adapter: "ws",
+                    port: NETRON_PORT
+                });
                 await exNetron.connect({ port: NETRON_PORT });
                 let nCatchedEvent = false;
                 let n2CatchedEvent = false;
@@ -888,9 +979,9 @@ describe("netron", "websocket", "unit tests", () => {
             });
 
             for (const contextType of ["Strict", "Weak"]) {
-                describe(contextType, () => {
+                describe(contextType, () => { // eslint-disable-line
                     for (const currentCase of ["local", "remote", "super remote"]) {
-                        describe(currentCase, () => {
+                        describe(currentCase, () => { // eslint-disable-line
                             let netron;
                             let uid;
                             let iface;
@@ -901,14 +992,20 @@ describe("netron", "websocket", "unit tests", () => {
 
                                     superNetron.attachContext(new A(), "a");
                                     superNetron.attachContext(new B(), "b");
-                                    await superNetron.bind();
+                                    await superNetron.bind({
+                                        adapter: "ws",
+                                        port: NETRON_PORT
+                                    });
                                     await exNetron.connect({ port: NETRON_PORT });
                                     netron = exNetron;
                                     uid = superNetron.uid;
 
                                 } else if (currentCase === "super remote") {
 
-                                    await superNetron.bind();
+                                    await superNetron.bind({
+                                        adapter: "ws",
+                                        port: NETRON_PORT
+                                    });
                                     await exNetron.connect({ port: NETRON_PORT });
                                     await exNetron.attachContextRemote(superNetron.uid, new A(), "a");
                                     await exNetron.attachContextRemote(superNetron.uid, new B(), "b");
@@ -1045,9 +1142,11 @@ describe("netron", "websocket", "unit tests", () => {
                     }
 
                     server = new NewNetron(undefined, { restrictAccess: true });
-                    const adapter = new adone.netron.ws.Adapter({ id: "ws", port: NETRON_PORT });
-                    await server.attachAdapter(adapter);
-                    await server.bind();
+                    await server.registerAdapter("ws", adone.netron.ws.Adapter);
+                    await server.bind({
+                        adapter: "ws",
+                        port: NETRON_PORT
+                    });
                     await exNetron.connect({ port: NETRON_PORT });
                     assert.isOk(isOK);
                     exNetron.disconnect();
@@ -1063,9 +1162,11 @@ describe("netron", "websocket", "unit tests", () => {
                     }
 
                     server = new NewNetron(undefined, { restrictAccess: true });
-                    const adapter = new adone.netron.ws.Adapter({ id: "ws", port: NETRON_PORT });
-                    await server.attachAdapter(adapter);
-                    await server.bind();
+                    await server.registerAdapter("ws", adone.netron.ws.Adapter);
+                    await server.bind({
+                        adapter: "ws",
+                        port: NETRON_PORT
+                    });
 
                     let resolved = false;
                     const peerOffline = new Promise((resolve) => {
@@ -1089,9 +1190,11 @@ describe("netron", "websocket", "unit tests", () => {
                     }
 
                     server = new NewNetron(undefined, { restrictAccess: true });
-                    const adapter = new adone.netron.ws.Adapter({ id: "ws", port: NETRON_PORT });
-                    await server.attachAdapter(adapter);
-                    await server.bind();
+                    await server.registerAdapter("ws", adone.netron.ws.Adapter);
+                    await server.bind({
+                        adapter: "ws",
+                        port: NETRON_PORT
+                    });
 
                     let resolved = false;
                     const peerOffline = new Promise((resolve) => {
@@ -1121,9 +1224,11 @@ describe("netron", "websocket", "unit tests", () => {
                     }
 
                     server = new NewNetron();
-                    const adapter = new adone.netron.ws.Adapter({ id: "ws", port: NETRON_PORT });
-                    server.attachAdapter(adapter);
-                    await server.bind();
+                    server.registerAdapter("ws", adone.netron.ws.Adapter);
+                    await server.bind({
+                        adapter: "ws",
+                        port: NETRON_PORT
+                    });
                     await exNetron.connect({ port: NETRON_PORT });
                     assert.isOk(isOK);
                     exNetron.disconnect();
@@ -1139,9 +1244,11 @@ describe("netron", "websocket", "unit tests", () => {
                     }
 
                     server = new NewNetron();
-                    const adapter = new adone.netron.ws.Adapter({ id: "ws", port: NETRON_PORT });
-                    server.attachAdapter(adapter);
-                    await server.bind();
+                    server.registerAdapter("ws", adone.netron.ws.Adapter);
+                    await server.bind({
+                        adapter: "ws",
+                        port: NETRON_PORT
+                    });
 
                     const peerOffline = new Promise((resolve) => {
                         server.on("peer offline", () => {
@@ -1164,9 +1271,11 @@ describe("netron", "websocket", "unit tests", () => {
                     }
 
                     server = new NewNetron();
-                    const adapter = new adone.netron.ws.Adapter({ id: "ws", port: NETRON_PORT });
-                    server.attachAdapter(adapter);
-                    await server.bind();
+                    server.registerAdapter("ws", adone.netron.ws.Adapter);
+                    await server.bind({
+                        adapter: "ws",
+                        port: NETRON_PORT
+                    });
 
                     const peerOffline = new Promise((resolve) => {
                         server.on("peer offline", () => {
@@ -1194,7 +1303,10 @@ describe("netron", "websocket", "unit tests", () => {
                     }
 
                     const client = new Client();
-                    await superNetron.bind();
+                    await superNetron.bind({
+                        adapter: "ws",
+                        port: NETRON_PORT
+                    });
                     await client.connect({ port: NETRON_PORT });
                     assert.isOk(isOK);
                 });
@@ -1225,9 +1337,11 @@ describe("netron", "websocket", "unit tests", () => {
                     }
 
                     server = new ServerNetron();
-                    const adapter = new adone.netron.ws.Adapter({ id: "ws", port: NETRON_PORT });
-                    server.attachAdapter(adapter);
-                    await server.bind();
+                    server.registerAdapter("ws", adone.netron.ws.Adapter);
+                    await server.bind({
+                        adapter: "ws",
+                        port: NETRON_PORT
+                    });
 
                     const client = new ClientNetron("client", "right secret");
                     const hacker = new ClientNetron("hacker", "false secret");
@@ -1259,9 +1373,11 @@ describe("netron", "websocket", "unit tests", () => {
 
                         server = new ServerNetron();
                     });
-                    const adapter = new adone.netron.ws.Adapter({ id: "ws", port: NETRON_PORT });
-                    await server.attachAdapter(adapter);
-                    await server.bind();
+                    await server.registerAdapter("ws ", adone.netron.ws.Adapter);
+                    await server.bind({
+                        adapter: "ws",
+                        port: NETRON_PORT
+                    });
                     const serverPeer = await exNetron.connect({ port: NETRON_PORT });
                     await exNetron.send(serverPeer, 1, serverPeer.streamId.next(), 1, an, sendData);
                     assert.equal(await p, sendData);

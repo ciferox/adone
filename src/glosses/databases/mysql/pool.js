@@ -1,4 +1,10 @@
-const { is, x, EventEmitter, database: { mysql }, collection } = adone;
+const {
+    is,
+    x,
+    event: { EventEmitter },
+    database: { mysql },
+    collection
+} = adone;
 
 const spliceConnection = (queue, connection) => {
     if (queue.empty) {

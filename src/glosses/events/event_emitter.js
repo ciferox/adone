@@ -1,3 +1,8 @@
+const {
+    is,
+    x
+} = adone;
+
 // This constructor is used to store event handlers. Instantiating this is
 // faster than explicitly calling `Object.create(null)` to get a "clean" empty
 // object (tested with v8 v4.9).
@@ -13,8 +18,8 @@ const $maxListeners = Symbol("maxListeners");
 let defaultMaxListeners = 10;
 
 const _addListener = (target, type, listener, prepend) => {
-    if (!adone.is.function(listener)) {
-        throw new adone.x.InvalidArgument("\"listener\" argument must be a function");
+    if (!is.function(listener)) {
+        throw new x.InvalidArgument("\"listener\" argument must be a function");
     }
     let events = target[$events];
     // To avoid recursion in the case that type === "newListener"! Before
@@ -33,7 +38,7 @@ const _addListener = (target, type, listener, prepend) => {
         existing = events[type] = listener;
         ++target[$eventsCount];
     } else {
-        if (adone.is.function(existing)) {
+        if (is.function(existing)) {
             // Adding the second element, need to change to array.
             existing = events[type] = prepend ? [listener, existing] : [existing, listener];
         } else {
@@ -49,7 +54,7 @@ const _addListener = (target, type, listener, prepend) => {
             const m = target.getMaxListeners();
             if (m && m > 0 && existing.length > m) {
                 existing.warned = true;
-                const w = new adone.x.Exception(`Possible EventEmitter memory leak detected. ${existing.length} ${String(type)} listeners added. Use emitter.setMaxListeners() to increase limit`);
+                const w = new x.Exception(`Possible EventEmitter memory leak detected. ${existing.length} ${String(type)} listeners added. Use emitter.setMaxListeners() to increase limit`);
                 w.name = "MaxListenersExceededWarning";
                 w.emitter = target;
                 w.type = type;
@@ -173,8 +178,8 @@ export default class EventEmitter {
     }
 
     setMaxListeners(n) {
-        if (!adone.is.number(n) || adone.is.nan(n) || n < 0) {
-            throw new adone.x.InvalidArgument("\"n\" argument must be a positive number");
+        if (!is.number(n) || is.nan(n) || n < 0) {
+            throw new x.InvalidArgument("\"n\" argument must be a positive number");
         }
         this[$maxListeners] = n;
     }
@@ -194,7 +199,7 @@ export default class EventEmitter {
                 throw er; // Unhandled 'error' event
             } else {
                 // At least give some kind of context to the user
-                const err = new adone.x.Exception(`Uncaught, unspecified "error" event. (${er})`);
+                const err = new x.Exception(`Uncaught, unspecified "error" event. (${er})`);
                 err.context = er;
                 throw err;
             }
@@ -206,7 +211,7 @@ export default class EventEmitter {
             return false;
         }
 
-        const isFn = adone.is.function(handler);
+        const isFn = is.function(handler);
         const len = arguments.length;
         switch (len) {
             // fast cases
@@ -243,16 +248,16 @@ export default class EventEmitter {
     }
 
     once(type, listener) {
-        if (!adone.is.function(listener)) {
-            throw new adone.x.InvalidArgument("\"listener\" argument must be a function");
+        if (!is.function(listener)) {
+            throw new x.InvalidArgument("\"listener\" argument must be a function");
         }
         this.on(type, _onceWrap(this, type, listener));
         return this;
     }
 
     prependOnceListener(type, listener) {
-        if (!adone.is.function(listener)) {
-            throw new adone.x.InvalidArgument("\"listener\" argument must be a function");
+        if (!is.function(listener)) {
+            throw new x.InvalidArgument("\"listener\" argument must be a function");
         }
         this.prependListener(type, _onceWrap(this, type, listener));
         return this;
@@ -352,7 +357,7 @@ export default class EventEmitter {
 
         const listeners = events[type];
 
-        if (adone.is.function(listeners)) {
+        if (is.function(listeners)) {
             this.removeListener(type, listeners);
         } else if (listeners) {
             // LIFO order
@@ -370,7 +375,7 @@ export default class EventEmitter {
             return [];
         }
 
-        if (adone.is.function(evlistener)) {
+        if (is.function(evlistener)) {
             return [evlistener.listener || evlistener];
         }
 
@@ -383,7 +388,7 @@ export default class EventEmitter {
 
     listenerCount(type) {
         const evlistener = this[$events][type];
-        if (adone.is.function(evlistener)) {
+        if (is.function(evlistener)) {
             return 1;
         }
         if (evlistener) {

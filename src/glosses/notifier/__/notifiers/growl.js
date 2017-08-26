@@ -1,4 +1,9 @@
-const { is, EventEmitter, notifier: { __ }, std: { net, crypto, fs, util: { format } } } = adone;
+const {
+    is,
+    event: { EventEmitter },
+    notifier: { __ },
+    std: { net, crypto, fs, util: { format } }
+} = adone;
 
 const nl = "\r\n";
 

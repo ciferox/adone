@@ -1,7 +1,7 @@
 const {
     is,
     util,
-    EventEmitter,
+    event: { EventEmitter },
     database: {
         pouch: {
             __: {

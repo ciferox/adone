@@ -1,4 +1,9 @@
-const { std: { string_decoder: { StringDecoder }, stream: { Stream }, os, path, crypto }, EventEmitter, is, x } = adone;
+const {
+    std: { string_decoder: { StringDecoder }, stream: { Stream }, os, path, crypto },
+    event: { EventEmitter },
+    is,
+    x
+} = adone;
 
 const dummyParser = (self) => {
     return {

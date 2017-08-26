@@ -1,4 +1,9 @@
-const { is, util, EventEmitter, database: { pouch: { __ } } } = adone;
+const {
+    is,
+    util,
+    event: { EventEmitter },
+    database: { pouch: { __ } }
+} = adone;
 const { Adapter, TaskQueue, util: pouchUtil } = __;
 
 // OK, so here's the deal. Consider this code:

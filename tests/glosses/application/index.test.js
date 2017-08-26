@@ -28,14 +28,14 @@ describe("application", "Application", () => {
         assert.equal(stdout, "configured\ninitialized\nrun\nuninitialized");
     });
 
-
+    it("should self referenced by 'app' property", () => {
+        class TestApp extends Application {
+        }
+        const testApp = new TestApp();
+        assert.deepEqual(testApp, testApp.app);
+    });
 
     describe("Subsystems", () => {
-        it("should self referenced as subsystem", () => {
-            class TestApp extends Application {
-            }
-            const testApp = new TestApp();
-            assert.deepEqual(testApp, testApp.app);
-        });
+        
     });
 });

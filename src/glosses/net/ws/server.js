@@ -38,7 +38,7 @@ const abortConnection = (socket, code, message) => {
     socket.destroy();
 };
 
-export default class Server extends adone.EventEmitter {
+export default class Server extends adone.event.EventEmitter {
     constructor(options, callback) {
         super();
 

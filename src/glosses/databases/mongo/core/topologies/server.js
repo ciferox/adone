@@ -1,14 +1,6 @@
 const {
-    database: { mongo: { core: {
-        ReadPreference,
-    Pool,
-    Query,
-    MongoError,
-    wireProtocol,
-    Cursor: BasicCursor,
-    helper
-    } } },
-    std: { events: EventEmitter },
+    database: { mongo: { core: { ReadPreference, Pool, Query, MongoError, wireProtocol, Cursor: BasicCursor, helper } } },
+    event: { EventEmitter },
     data: { bson },
     is, x, util
 } = adone;

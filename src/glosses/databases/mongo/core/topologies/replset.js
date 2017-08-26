@@ -8,7 +8,7 @@ const {
         auth,
         helper
     } } },
-    std: { events: EventEmitter },
+    event: { EventEmitter },
     data: { bson },
     is, util, lazify
 } = adone;

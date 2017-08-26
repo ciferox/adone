@@ -610,7 +610,7 @@ const setFsWatchFileListener = (path, fullPath, options, handlers) => {
     };
 };
 
-export default class Watcher extends adone.EventEmitter {
+export default class Watcher extends adone.event.EventEmitter {
     constructor({
         persistent = true,
         ignoreInitial = false,

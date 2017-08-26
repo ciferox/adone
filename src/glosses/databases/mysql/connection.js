@@ -1,5 +1,8 @@
 const {
-    EventEmitter, is, x, util,
+    event: { EventEmitter },
+    is,
+    x,
+    util,
     database: { mysql: { __, c } },
     std: { net, tls, stream: { Readable } }
 } = adone;

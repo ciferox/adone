@@ -1,4 +1,10 @@
-const { is, x, std, EventEmitter, net: { http }, lazify } = adone;
+const {
+    is,
+    x,
+    std,
+    event: { EventEmitter },
+    net: { http }, lazify
+} = adone;
 
 lazify({
     Context: "./context",

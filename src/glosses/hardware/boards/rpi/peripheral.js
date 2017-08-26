@@ -1,4 +1,7 @@
-const { is, EventEmitter } = adone;
+const {
+    is,
+    event: { EventEmitter }
+} = adone;
 
 if (!is.plainObject(global.raspiPinUsage)) {
     global.raspiPinUsage = {};

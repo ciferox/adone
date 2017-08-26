@@ -2,7 +2,8 @@ const native = adone.bind("libvirt");
 
 const {
     promise: { promisifyAll },
-    std: { util, events: { EventEmitter } }
+    std: { util },
+    event: { EventEmitter }
 } = adone;
 
 class LibvirtError extends Error {

@@ -1,4 +1,8 @@
-const { is, EventEmitter, database: { mongo: { __, GridStore } } } = adone;
+const {
+    is,
+    event: { EventEmitter },
+    database: { mongo: { __, GridStore } }
+} = adone;
 const { bulk } = __;
 
 const basicOperationIdGenerator = {

@@ -1,6 +1,6 @@
 const {
     database: { mongo: { core: { MongoError, ReadPreference, helper } } },
-    std: { events: EventEmitter },
+    event: { EventEmitter },
     is, util
 } = adone;
 

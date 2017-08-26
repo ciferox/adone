@@ -1,4 +1,11 @@
-const { is, x, ExBuffer, netron: { GenesisPeer }, net, std } = adone;
+const {
+    is,
+    x,
+    ExBuffer,
+    netron: { GenesisPeer },
+    net,
+    std
+} = adone;
 
 export default class Peer extends GenesisPeer {
     constructor(options) {

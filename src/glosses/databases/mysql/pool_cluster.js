@@ -1,4 +1,10 @@
-const { is, x, util, EventEmitter, database: { mysql } } = adone;
+const {
+    is,
+    x,
+    util,
+    event: { EventEmitter },
+    database: { mysql }
+} = adone;
 
 const selector = {
     RR: () => {

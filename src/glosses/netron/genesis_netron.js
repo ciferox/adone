@@ -1,5 +1,25 @@
-const { is, x, util, net, data: { mpak: { serializer } }, configuration: { Configuration }, AsyncEmitter } = adone;
-const { DEFAULT_PORT, ACTION, STATUS, Reference, Interface, Stub, Investigator, Definition, Definitions, SequenceId } = adone.netron;
+const {
+    is,
+    x,
+    util,
+    net,
+    data: { mpak: { serializer } },
+    configuration: { Configuration },
+    event: { AsyncEmitter }
+} = adone;
+
+const {
+    DEFAULT_PORT,
+    ACTION,
+    STATUS,
+    Reference,
+    Interface,
+    Stub,
+    Investigator,
+    Definition,
+    Definitions,
+    SequenceId
+} = adone.netron;
 
 const MAGIC_FLAG = 0x80000000 >>> 0;
 

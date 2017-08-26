@@ -69,7 +69,7 @@ IteratorStream.prototype.destroy = IteratorStream.prototype._cleanup;
 
 const BINARY_CODECS = ["bson", "mpak"];
 
-export default class DB extends adone.EventEmitter {
+export default class DB extends adone.event.EventEmitter {
     constructor(options = {}) {
         super();
 

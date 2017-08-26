@@ -1264,7 +1264,7 @@ const mergeGroupsLists = (a, b) => {
 };
 
 
-export class Subsystem extends adone.AsyncEmitter {
+export class Subsystem extends adone.event.AsyncEmitter {
     constructor() {
         super();
 

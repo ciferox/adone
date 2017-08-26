@@ -1,5 +1,8 @@
-
-const { std: { crypto, fs }, EventEmitter, is } = adone;
+const {
+    std: { crypto, fs },
+    event: { EventEmitter },
+    is
+} = adone;
 
 export default class File extends EventEmitter {
     constructor(properties) {

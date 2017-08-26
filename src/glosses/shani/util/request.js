@@ -1,4 +1,14 @@
-const { assert, net, std, is, x, compressor, EventEmitter, text, data } = adone;
+const {
+    assert,
+    net,
+    std,
+    is,
+    x,
+    compressor,
+    event: { EventEmitter },
+    text,
+    data
+} = adone;
 
 class Request extends EventEmitter {
     constructor(server) {

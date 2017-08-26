@@ -1,4 +1,9 @@
-const { x, is, EventEmitter, std: { tls, http: _http } } = adone;
+const {
+    x,
+    is,
+    event: { EventEmitter },
+    std: { tls, http: _http }
+} = adone;
 
 class TunnelingAgent extends EventEmitter {
     constructor(options) {

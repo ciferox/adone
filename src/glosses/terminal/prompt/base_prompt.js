@@ -1,4 +1,9 @@
-const { is, vendor: { lodash: _ }, Terminal, EventEmitter } = adone;
+const {
+    is,
+    vendor: { lodash: _ },
+    Terminal,
+    event: { EventEmitter }
+} = adone;
 
 const height = (content) => content.split("\n").length;
 const lastLine = (content) => _.last(content.split("\n"));

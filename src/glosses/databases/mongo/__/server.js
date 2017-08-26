@@ -1,4 +1,9 @@
-const { is, EventEmitter, database: { mongo }, std: { os } } = adone;
+const {
+    is,
+    event: { EventEmitter },
+    database: { mongo },
+    std: { os }
+} = adone;
 const { __, MongoError, core } = mongo;
 const { utils: { MAX_JS_INT, translateOptions, filterOptions, mergeOptions, getReadPreference } } = __;
 

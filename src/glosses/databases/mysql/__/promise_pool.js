@@ -1,4 +1,7 @@
-const { EventEmitter, database: { mysql: { __ } } } = adone;
+const {
+    event: { EventEmitter },
+    database: { mysql: { __ } }
+} = adone;
 
 const makeDoneCb = (resolve, reject) => (err, rows, columns) => {
     if (err) {

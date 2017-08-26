@@ -1,4 +1,9 @@
-const { is, EventEmitter, util, database: { pouch: { __ } } } = adone;
+const {
+    is,
+    event: { EventEmitter },
+    util,
+    database: { pouch: { __ } }
+} = adone;
 const {
     util: {
         merge: {

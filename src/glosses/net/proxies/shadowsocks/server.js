@@ -1,4 +1,10 @@
-const { EventEmitter, util: { memcpy }, x, is, net: { proxy: { shadowsocks } } } = adone;
+const {
+    event: { EventEmitter },
+    util: { memcpy },
+    x,
+    is,
+    net: { proxy: { shadowsocks } }
+} = adone;
 
 export class Parser extends EventEmitter {
     constructor(stream, { ivLength, getDecipher }) {

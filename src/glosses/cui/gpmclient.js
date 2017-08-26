@@ -6,7 +6,10 @@
 
 
 
-const { std: { net, fs }, EventEmitter } = adone;
+const {
+    std: { net, fs },
+    event: { EventEmitter }
+} = adone;
 
 const GPM_USE_MAGIC = false;
 

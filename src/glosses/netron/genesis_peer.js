@@ -1,4 +1,4 @@
-const { is, x, util, configuration: { Configuration }, AsyncEmitter } = adone;
+const { is, x, util, configuration: { Configuration }, event: { AsyncEmitter } } = adone;
 const { TimedoutMap } = adone.collection;
 const { STATUS, ACTION, RemoteStub, GenesisNetron, SequenceId, Stream } = adone.netron;
 

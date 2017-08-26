@@ -1,6 +1,6 @@
 const { is, net } = adone;
 
-export default class Socket extends adone.EventEmitter {
+export default class Socket extends adone.event.EventEmitter {
     constructor(options = { }) {
         super();
         this.options = new adone.configuration.Configuration();

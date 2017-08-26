@@ -1,6 +1,6 @@
 const { net: { proxy: { socks: { createServer, createConnection, auth, ClientParser: Parser } } } } = adone;
 
-class FakeStream extends adone.EventEmitter {
+class FakeStream extends adone.event.EventEmitter {
     pause() {
 
     }

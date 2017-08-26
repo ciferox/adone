@@ -1,14 +1,6 @@
 const {
-    database: { mongo: { core: {
-        Cursor: BasicCursor,
-        MongoError,
-        Server,
-        auth,
-        helper
-    } } },
-    std: {
-        events: EventEmitter
-    },
+    database: { mongo: { core: { Cursor: BasicCursor, MongoError, Server, auth, helper } } },
+    event: { EventEmitter },
     is, util, lazify
 } = adone;
 

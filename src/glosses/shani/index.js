@@ -657,7 +657,7 @@ export class Engine {
         skip.promise = Promise.resolve();
 
         const start = function () {
-            const emitter = new adone.EventEmitter();
+            const emitter = new adone.event.EventEmitter();
 
             let stopped = false;
 
@@ -966,7 +966,7 @@ export class Engine {
         });
 
         let stopped = false;
-        const emitter = new adone.EventEmitter();
+        const emitter = new adone.event.EventEmitter();
         emitter.stop = () => {
             stopped = true;
             executing && executing.stop();

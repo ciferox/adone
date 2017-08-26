@@ -21,7 +21,14 @@ Usage
   4 = Closed or faded out
  */
 
-const { is, x, EventEmitter, lazify, std: { path, os }, notifier: { __ } } = adone;
+const {
+    is,
+    x,
+    event: { EventEmitter },
+    lazify,
+    std: { path, os },
+    notifier: { __ }
+} = adone;
 
 const lazy = lazify({
     notifier: () => path.resolve(

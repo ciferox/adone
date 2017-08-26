@@ -1,4 +1,8 @@
-const { is, database: { mongo: { __, ReadPreference, MongoError } }, EventEmitter } = adone;
+const {
+    is,
+    database: { mongo: { __, ReadPreference, MongoError } },
+    event: { EventEmitter }
+} = adone;
 const { utils: { shallowClone } } = __;
 
 const validOptionNames = [

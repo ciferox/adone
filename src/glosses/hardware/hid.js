@@ -1,6 +1,6 @@
 const binding = adone.bind("hid.node");
 
-export class Device extends adone.EventEmitter {
+export class Device extends adone.event.EventEmitter {
     constructor(...args) {
         super();
 

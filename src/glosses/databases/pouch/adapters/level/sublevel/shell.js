@@ -1,9 +1,9 @@
-import events from "events";
 import NotFoundError from "./NotFoundError";
 
-const { is } = adone;
-
-const EventEmitter = events.EventEmitter;
+const {
+    is,
+    event: { EventEmitter }
+} = adone;
 
 const NOT_FOUND_ERROR = new NotFoundError();
 

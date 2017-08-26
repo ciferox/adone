@@ -3,7 +3,7 @@ const {
     crypto: { crc32 },
     compressor: { deflate },
     std: { stream: { Transform, PassThrough } },
-    EventEmitter
+    event: { EventEmitter }
 } = adone;
 
 const writeToOutputStream = (self, buffer) => {

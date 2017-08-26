@@ -1,4 +1,7 @@
-const { EventEmitter, util } = adone;
+const {
+    event: { EventEmitter },
+    util
+} = adone;
 
 export default class Agent extends EventEmitter {
     constructor({

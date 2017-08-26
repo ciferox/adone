@@ -1,5 +1,8 @@
 const {
-    is, x, EventEmitter, util,
+    is,
+    x,
+    event: { EventEmitter },
+    util,
     net: { mail: { __ } }
 } = adone;
 

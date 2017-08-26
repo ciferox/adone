@@ -6,7 +6,7 @@ describe("net", "mqtt", "server", "Stats", () => {
 
     beforeEach(() => {
         clock = fakeClock.install();
-        server = new adone.EventEmitter();
+        server = new adone.event.EventEmitter();
         server.id = 42;
         instance = new adone.net.mqtt.server.Stats();
         instance.wire(server);

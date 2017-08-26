@@ -1,6 +1,10 @@
 import enableDestroy from "./server_destroy";
-const { is, std: { net }, EventEmitter } = adone;
-const { database: { redis: { __: { util, parser: { createParser } } } } } = adone;
+const {
+    is,
+    std: { net },
+    event: { EventEmitter },
+    database: { redis: { __: { util, parser: { createParser } } } }
+} = adone;
 
 export default class MockServer extends EventEmitter {
     constructor(port, handler) {

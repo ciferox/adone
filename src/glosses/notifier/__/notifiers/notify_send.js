@@ -1,7 +1,13 @@
 const notifier = "notify-send";
 let hasNotifier = void 0;
 
-const { is, x, EventEmitter, notifier: { __ }, std: { os } } = adone;
+const {
+    is,
+    x,
+    event: { EventEmitter },
+    notifier: { __ },
+    std: { os }
+} = adone;
 
 const allowedArguments = ["urgency", "expire-time", "icon", "category", "hint"];
 

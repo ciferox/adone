@@ -1,6 +1,6 @@
 const { is } = adone;
 
-export default class Shell extends adone.EventEmitter {
+export default class Shell extends adone.event.EventEmitter {
     constructor(options) {
         super();
 

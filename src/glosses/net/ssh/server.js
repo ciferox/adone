@@ -1,6 +1,6 @@
 const { is, net: { ssh: { Channel } } } = adone;
 const net = adone.std.net;
-const listenerCount = adone.EventEmitter.listenerCount;
+const listenerCount = adone.event.EventEmitter.listenerCount;
 
 import KeepaliveManager from "./keepalivemgr";
 
@@ -17,7 +17,7 @@ const MAX_PENDING_AUTHS = 10;
 
 let kaMgr;
 
-class Session extends adone.EventEmitter {
+class Session extends adone.event.EventEmitter {
     constructor(client, info, localChan) {
         super();
         this.subtype = undefined;
@@ -265,7 +265,7 @@ class Session extends adone.EventEmitter {
     }
 }
 
-class AuthContext extends adone.EventEmitter {
+class AuthContext extends adone.event.EventEmitter {
     constructor(stream, username, service, method, cb) {
         super();
 
@@ -523,7 +523,7 @@ const openChannel = (self, type, opts, cb) => {
     return ret;
 };
 
-class Client extends adone.EventEmitter {
+class Client extends adone.event.EventEmitter {
     constructor(stream, socket) {
         super();
 
@@ -925,7 +925,7 @@ class Client extends adone.EventEmitter {
     }
 }
 
-export default class Server extends adone.EventEmitter {
+export default class Server extends adone.event.EventEmitter {
     constructor(cfg, listener) {
         super();
 

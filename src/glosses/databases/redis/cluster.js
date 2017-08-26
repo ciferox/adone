@@ -1,4 +1,13 @@
-const { database: { redis }, is, x, noop, collection, promise, util, EventEmitter } = adone;
+const {
+    database: { redis },
+    is,
+    x,
+    noop,
+    collection,
+    promise,
+    util,
+    event: { EventEmitter }
+} = adone;
 const { __ } = redis;
 
 const isRejectOverwritten = Symbol("is reject overwritten");

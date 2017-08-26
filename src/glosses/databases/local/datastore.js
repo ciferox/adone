@@ -4,7 +4,11 @@ const {
             Persistence, Executor, Index, Cursor, Model
         }
     },
-    is, x, util, text, EventEmitter
+    is,
+    x,
+    util,
+    text,
+    event: { EventEmitter }
 } = adone;
 
 export default class Datastore extends EventEmitter {

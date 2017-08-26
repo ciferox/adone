@@ -1,5 +1,4 @@
-
-const { EventEmitter } = adone;
+const { event: { EventEmitter } } = adone;
 
 export default class OctetParser extends EventEmitter {
     write(buffer) {

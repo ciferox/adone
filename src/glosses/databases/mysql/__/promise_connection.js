@@ -1,4 +1,6 @@
-const { EventEmitter } = adone;
+const {
+    event: { EventEmitter }
+} = adone;
 
 const makeDoneCb = (resolve, reject) => (err, rows, columns) => {
     if (err) {

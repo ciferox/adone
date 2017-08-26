@@ -162,6 +162,11 @@
                     "index": "glosses/diff/index",
                     "src": "glosses/diff/**/*"
                 },
+                "event": {
+                    "description": "Event emitters and other event utilites",
+                    "index": "glosses/events/index",
+                    "src": "glosses/events/**/*"
+                },
                 "fast": {
                     "description": "File automation streaming templates/transforms",
                     "index": "glosses/fast/index",

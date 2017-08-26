@@ -62,7 +62,7 @@ class Filter {
     }
 }
 
-class Core extends adone.EventEmitter {
+class Core extends adone.event.EventEmitter {
     constructor(source, options) {
         super();
         this._lastStream = new Transform(options);

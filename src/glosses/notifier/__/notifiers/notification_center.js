@@ -1,4 +1,10 @@
-const { is, EventEmitter, lazify, notifier: { __ }, std: { path } } = adone;
+const {
+    is,
+    event: { EventEmitter },
+    lazify,
+    notifier: { __ },
+    std: { path }
+} = adone;
 
 const FAILSAFE_TIMEOUT = 30 * 1000;
 

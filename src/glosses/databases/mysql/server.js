@@ -1,4 +1,8 @@
-const { EventEmitter, std: { net }, database: { mysql } } = adone;
+const {
+    event: { EventEmitter },
+    std: { net },
+    database: { mysql }
+} = adone;
 
 // TODO: inherit Server from net.Server
 export default class Server extends EventEmitter {

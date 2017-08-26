@@ -1,4 +1,4 @@
-export default class Agent extends adone.EventEmitter {
+export default class Agent extends adone.event.EventEmitter {
     constructor(options, secure, rejectUnauthorized) {
         super();
         this.options = options;

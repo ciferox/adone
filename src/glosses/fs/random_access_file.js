@@ -1,7 +1,7 @@
 
 const { is, fs, std: { path, constants: c }, x } = adone;
 
-export default class RandomAccessFile extends adone.EventEmitter {
+export default class RandomAccessFile extends adone.event.EventEmitter {
     constructor(filename, options) {
         super();
 

@@ -65,7 +65,7 @@ adone.lazify({
     softPwm: "./soft_pwm"
 }, exports, require);
 
-export class IO extends adone.EventEmitter {
+export class IO extends adone.event.EventEmitter {
     constructor({ includePins, excludePins, enableSerial, enableSoftPwm = false } = {}) {
         super();
 

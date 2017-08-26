@@ -1,4 +1,9 @@
-const { is, EventEmitter, database: { mongo }, std: { crypto } } = adone;
+const {
+    is,
+    event: { EventEmitter },
+    database: { mongo },
+    std: { crypto }
+} = adone;
 const { __, MongoError, ObjectId, Code, core, ReadPreference } = mongo;
 const {
     utils: {

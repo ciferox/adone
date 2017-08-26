@@ -3,7 +3,7 @@ import constants from "./constants";
 
 const { is } = adone;
 
-export default class Parser extends adone.EventEmitter {
+export default class Parser extends adone.event.EventEmitter {
     constructor() {
         super();
         this._states = [

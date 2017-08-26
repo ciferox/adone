@@ -1,4 +1,6 @@
-const { EventEmitter } = adone;
+const {
+    event: { EventEmitter }
+} = adone;
 
 describe("Event emitter", () => {
     describe("addListeners", () => {

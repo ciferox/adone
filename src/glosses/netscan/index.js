@@ -1,4 +1,4 @@
-export class MasscanScanner extends adone.EventEmitter {
+export class MasscanScanner extends adone.event.EventEmitter {
     constructor(options) {
         super();
         this.options = options;

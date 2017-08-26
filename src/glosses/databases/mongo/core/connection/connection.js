@@ -1,7 +1,8 @@
 const {
     is, x,
     database: { mongo: { core: { Response, MongoError } } },
-    std: { crypto, tls, net, events: EventEmitter }
+    std: { crypto, tls, net },
+    event: { EventEmitter }
 } = adone;
 
 let _id = 0;

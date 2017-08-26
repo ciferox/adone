@@ -1,7 +1,7 @@
 const {
     is,
     x,
-    EventEmitter,
+    event: { EventEmitter },
     net: { mail: { __ } },
     std: { util, url: urllib, net, dns, crypto }
 } = adone;

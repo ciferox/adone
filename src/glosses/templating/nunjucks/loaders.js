@@ -1,4 +1,8 @@
-const { EventEmitter, std: { path, fs }, is } = adone;
+const {
+    event: { EventEmitter },
+    std: { path, fs },
+    is
+} = adone;
 
 export class Loader extends EventEmitter {
     resolve(from, to) {

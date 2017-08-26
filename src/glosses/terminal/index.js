@@ -4044,7 +4044,7 @@ const emitKeys = (stream, s) => {
     });
 };
 
-export default class Terminal extends adone.EventEmitter {
+export default class Terminal extends adone.event.EventEmitter {
     constructor() {
         super();
 
@@ -4614,7 +4614,7 @@ export default class Terminal extends adone.EventEmitter {
 
             let onNewListener;
             const onData = (b) => {
-                if (adone.EventEmitter.listenerCount(this.input, "keypress") > 0) {
+                if (adone.event.EventEmitter.listenerCount(this.input, "keypress") > 0) {
                     const r = this.input._keypressDecoder.write(b);
                     if (r) {
                         emitKeys(this.input, r);
@@ -4633,7 +4633,7 @@ export default class Terminal extends adone.EventEmitter {
                 }
             };
 
-            if (adone.EventEmitter.listenerCount(this.input, "keypress") > 0) {
+            if (adone.event.EventEmitter.listenerCount(this.input, "keypress") > 0) {
                 this.input.on("data", onData);
             } else {
                 this.input.on("newListener", onNewListener);

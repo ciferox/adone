@@ -33,7 +33,7 @@ class CallbackCache {
     }
 }
 
-class Glob extends adone.EventEmitter {
+class Glob extends adone.event.EventEmitter {
     constructor(pattern, options = {}, cb) {
         super();
 
@@ -73,7 +73,7 @@ class Glob extends adone.EventEmitter {
         this.statCache = options.statCache || new Map();
         this.realpathCache = options.realpathCache || new Map();
         this.callbackCache = new CallbackCache();
-        this.cacheEmitter = new adone.EventEmitter();
+        this.cacheEmitter = new adone.event.EventEmitter();
         this.symlinks = options.symlinks || Object.create(null);
 
         this._setupIgnores(options);
