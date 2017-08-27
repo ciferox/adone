@@ -2,10 +2,10 @@ const { x, vendor, std: { path }, is } = adone;
 
 const defaults = {
     error: {
-        icon: path.join(adone.application.instance.adoneEtcPath, "media", "logo-err.png")
+        icon: path.join(adone.etcPath, "media", "logo-err.png")
     },
     regular: {
-        icon: path.join(adone.application.instance.adoneEtcPath, "media", "logo-norm.png")
+        icon: path.join(adone.etcPath, "media", "logo-norm.png")
     }
 };
 

@@ -6,7 +6,7 @@ const {
 } = adone;
 
 const iconsPath = resolve(
-    adone.application.instance.adoneEtcPath,
+    adone.etcPath,
     "glosses",
     "net",
     "http",

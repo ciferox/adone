@@ -35,7 +35,30 @@ describe("application", "Application", () => {
         assert.deepEqual(testApp, testApp.app);
     });
 
+    it("Compact application with properties", async () => {
+        const stdout = await execStdout("node", [fixture("compact.js")]);
+        assert.equal(stdout, "non configured\nconfigured\ninitialized\nrun\nadone compact application\nuninitialized");
+    });
+
+    it("Should not run invalid application", async () => {
+        const err = await assert.throws(async () => exec("node", [fixture("invalid.js")]));
+        assert.equal(err.code, 1);
+        assert.equal(err.stderr, "\u001b[31mInvalid application class (should be derivative of 'adone.application.Application')\u001b[39m\n");
+    });
+
+    it("no public properties instead of application's reserved", async () => {
+        const expected = ["_", "data", "app", "argv", "name"];
+        const stdout = await execStdout("node", [fixture("public_reserved_props.js")]);
+        const props = stdout.split(";");
+        assert.sameMembers(props, expected);
+    });
+
+    it("'isMain' is not writable", async () => {
+        const stdout = await execStdout("node", [fixture("is_main_not_writable.js")]);
+        assert.equal(stdout, "ok");
+    });
+
     describe("Subsystems", () => {
-        
+
     });
 });

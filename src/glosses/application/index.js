@@ -55,6 +55,16 @@ const INTERNAL = Symbol.for("adone:application:internal");
 const UNNAMED = Symbol.for("adone:application:unnamed");
 const EMPTY_VALUE = Symbol.for("adone:application:emptyValue");
 const COMMAND = Symbol.for("adone:application:command");
+const INTERACTIVE = Symbol.for("adone:application:interactive");
+const REPORT = Symbol.for("adone:application:report");
+const ERROR_SCOPE = Symbol.for("adone:application:errorScope");
+const EXITING = Symbol.for("adone:application:exiting");
+const IS_MAIN = Symbol.for("adone:application:isMain");
+const MAIN_COMMAND = Symbol.for("adone:application:mainCommand");
+const SUBSYSTEMS = Symbol.for("adone:application:subsystems");
+const VERSION = Symbol.for("adone:application:version");
+const HANDLERS = Symbol.for("adone:application:handlers");
+
 
 const escape = (x) => x.replace(/%/g, "%%");
 
@@ -837,7 +847,7 @@ class Command {
         if (this.hasOption(newOption)) {
             throw new x.IllegalState(`${this.names[0]}: Cannot add the option ${newOption.names[0]} due to name collision`);
         }
-        if (this.blindMode && (newOption.nargs === "?" || newOption.nargs === "*" )) {
+        if (this.blindMode && (newOption.nargs === "?" || newOption.nargs === "*")) {
             throw new x.IllegalState(`${this.names[0]}: Cannot user options with nargs = "*" | "+" | "?" it can lead to unexpected behaviour`);
         }
         for (const group of this.optionsGroups) {
@@ -1295,42 +1305,34 @@ tag.set(Subsystem, tag.SUBSYSTEM);
 
 export let instance = null; // eslint-disable-line
 
-const ADONE_ROOT_PATH = std.path.resolve(__dirname, "../../..");
-const ADONE_ETC_PATH = std.path.resolve(ADONE_ROOT_PATH, "etc");
-const DEFAULT_CONFIGS_PATH = std.path.resolve(ADONE_ETC_PATH, "configs");
-
 export class Application extends Subsystem {
     constructor({
         name = std.path.basename(process.argv[1], std.path.extname(process.argv[1])),
         interactive = true,
-        argv = process.argv.slice(2),
-        commandRequired = false } = {}) {
+        argv = process.argv.slice(2) } = {}) {
 
         super();
 
         this.argv = argv;
-        this.env = process.env;
-        this._commands = [];
-        this._options = [];
         this.name = name;
-        this._commandRequired = commandRequired;
 
-        this._exiting = false;
-        this.isMain = false;
-        this._mainCommand = null;
-        this._errorScope = false;
-        this._version = null;
-        this.config = null;
-        this.report = null;
-        this.interactive = interactive;
-
-        this._subsystems = [];
-        this.adoneRootPath = ADONE_ROOT_PATH;
-        this.adoneEtcPath = ADONE_ETC_PATH;
-        this.defaultConfigsPath = DEFAULT_CONFIGS_PATH;
+        this[EXITING] = false;
+        this[IS_MAIN] = false;
+        this[MAIN_COMMAND] = null;
+        this[HANDLERS] = null;
+        this[ERROR_SCOPE] = false;
+        this[VERSION] = null;
+        this[REPORT] = null;
+        this[INTERACTIVE] = interactive;
+        
+        this[SUBSYSTEMS] = [];
 
         this.setMaxListeners(Infinity);
         this.defineMainCommand();
+    }
+
+    get isMain() {
+        return this[IS_MAIN];
     }
 
     _setupMain() {
@@ -1342,7 +1344,7 @@ export class Application extends Subsystem {
         }
         instance = this;
 
-        if (this.env.ADONE_REPORT) {
+        if (process.env.ADONE_REPORT) {
             this.enableReport();
         }
 
@@ -1351,7 +1353,7 @@ export class Application extends Subsystem {
         const rejectionHandled = (...args) => this._rejectionHandled(...args);
         const beforeExit = () => this.exit();
         const signalExit = (sigName) => this._signalExit(sigName);
-        this._handlers = {
+        this[HANDLERS] = {
             uncaughtException,
             unhandledRejection,
             rejectionHandled,
@@ -1362,37 +1364,37 @@ export class Application extends Subsystem {
         process.on("unhandledRejection", unhandledRejection);
         process.on("rejectionHandled", rejectionHandled);
         process.on("beforeExit", beforeExit);
-        this.isMain = true;
+        this[IS_MAIN] = true;
 
         // Track cursor if interactive application (by default) and if tty mode
-        if (this.interactive && terminal.output.isTTY) {
+        if (this[INTERACTIVE] && terminal.output.isTTY) {
             return new Promise((resolve) => terminal.trackCursor(resolve));
         }
     }
 
     enableReport({
-        events = this.env.ADONE_REPORT_EVENTS || "exception+fatalerror+signal+apicall",
-        signal = this.env.ADONE_REPORT_SIGNAL,
-        filename = this.env.ADONE_REPORT_FILENAME,
-        directory = this.env.ADONE_REPORT_DIRECTORY
+        events = process.env.ADONE_REPORT_EVENTS || "exception+fatalerror+signal+apicall",
+        signal = process.env.ADONE_REPORT_SIGNAL,
+        filename = process.env.ADONE_REPORT_FILENAME,
+        directory = process.env.ADONE_REPORT_DIRECTORY
     } = {}) {
-        this.report = lazy.report;
+        this[REPORT] = lazy.report;
         if (events) {
-            this.report.setEvents(events);
+            this[REPORT].setEvents(events);
         }
         if (signal) {
-            this.report.setSignal(signal);
+            this[REPORT].setSignal(signal);
         }
         if (filename) {
-            this.report.setFileName(filename);
+            this[REPORT].setFileName(filename);
         }
         if (directory) {
-            this.report.setDirectory(directory);
+            this[REPORT].setDirectory(directory);
         }
     }
 
     reportEnabled() {
-        return !is.null(this.report);
+        return !is.null(this[REPORT]);
     }
 
     main() {
@@ -1404,17 +1406,11 @@ export class Application extends Subsystem {
                 await this._setupMain();
             }
 
-            if (is.null(this.config)) {
-                // Load adone configuration.
-                this.config = new adone.configuration.FileConfiguration({ base: this.adoneRootPath });
-                await this.loadConfig("adone", { ext: "js", defaults: true });
-            }
-
-            this._errorScope = true;
+            this[ERROR_SCOPE] = true;
             await this.configure();
-            this._errorScope = false;
+            this[ERROR_SCOPE] = false;
 
-            let command = this._mainCommand;
+            let command = this[MAIN_COMMAND];
             let errors = [];
             let rest = [];
             let match = null;
@@ -1429,41 +1425,20 @@ export class Application extends Subsystem {
                 }
                 return this.exit(Application.ERROR);
             }
-            this._errorScope = true;
+            this[ERROR_SCOPE] = true;
             await this.initialize();
             const code = await command.execute(rest, match);
-            this._errorScope = false;
+            this[ERROR_SCOPE] = false;
             if (is.integer(code)) {
                 return this.exit(code);
             }
         } catch (err) {
-            if (this._errorScope) {
+            if (this[ERROR_SCOPE]) {
                 return this._fireException(err);
             }
             adone.error(err.stack || err.message || err);
             return this.exit(Application.ERROR);
         }
-    }
-
-    async loadConfig(name, { path = name, defaults = false, userDefined = false, ext = "json" } = {}) {
-        const basename = `${name}.${ext}`;
-        if (defaults) {
-            const defaultConfigPath = std.path.join(this.defaultConfigsPath, basename);
-            await this.config.load(defaultConfigPath, path);
-            if (userDefined) {
-                await adone.fs.copy(defaultConfigPath, this.config.adone.configsPath, {
-                    ignoreExisting: true
-                });
-            }
-        }
-        if (userDefined) {
-            const configPath = std.path.join(this.config.adone.configsPath, basename);
-            await this.config.load(configPath, path);
-        }
-    }
-
-    saveConfig(name, { path = name, ext = "json", space = 4 } = {}) {
-        return this.config.save(std.path.join(this.config.adone.configsPath, `${name}.${ext}`), path, { space });
     }
 
     /**
@@ -1474,11 +1449,15 @@ export class Application extends Subsystem {
      */
     useCliSubsystem({ name, description = "", group = "subsystem", path } = {}) {
         if (!is.string(name)) {
-            throw new adone.NotValid("Invalid name of subsystem");
+            throw new x.NotValid("Invalid name of subsystem");
         }
 
         if (!is.string(path)) {
-            throw new adone.NotValid("Invalid path of subsystem");
+            throw new x.NotValid("Invalid path of subsystem");
+        }
+
+        if (!std.path.isAbsolute(path)) {
+            throw new x.NotValid("Path must be absolute");
         }
 
         this.defineCommand({
@@ -1486,7 +1465,7 @@ export class Application extends Subsystem {
             description,
             group,
             loader: () => this.loadSubsystem({
-                subsystem: std.path.isAbsolute(path) ? path : std.path.join(this.adoneRootPath, path),
+                subsystem: path,
                 initialize: false
             })
         });
@@ -1500,7 +1479,7 @@ export class Application extends Subsystem {
     async useCliSubsystems(subsystems, { group = "subsystem" } = {}) {
         if (is.string(subsystems)) {
             if (!std.path.isAbsolute(subsystems)) {
-                throw new adone.x.NotValid("Path should be absolute");
+                throw new x.NotValid("Path should be absolute");
             }
             const files = await fs.readdir(subsystems);
             for (const file of files) {
@@ -1526,7 +1505,7 @@ export class Application extends Subsystem {
                 }));
             }
         } else {
-            throw new adone.x.InvalidArgument("Argument should be a string or an array");
+            throw new x.InvalidArgument("Argument should be a string or an array");
         }
     }
 
@@ -1544,12 +1523,12 @@ export class Application extends Subsystem {
             }
             subsystem = new Subsystem();
         } else if (!is.subsystem(subsystem)) {
-            throw new adone.x.NotValid("'subsystem' should be path or instance of adone.application.Subsystem");
+            throw new x.NotValid("'subsystem' should be path or instance of adone.application.Subsystem");
         }
 
         subsystem.app = this;
 
-        this._subsystems.push(subsystem);
+        this[SUBSYSTEMS].push(subsystem);
 
         if (configure) {
             await subsystem.configure();
@@ -1595,11 +1574,11 @@ export class Application extends Subsystem {
      * @returns {Promise<void>}
      */
     async uninitializeSubsystems() {
-        for (let i = 0; i < this._subsystems.length; i++) {
-            const ss = this._subsystems[i];
+        for (let i = 0; i < this[SUBSYSTEMS].length; i++) {
+            const ss = this[SUBSYSTEMS][i];
             await ss.uninitialize(); // eslint-disable-line
         }
-        this._subsystems.length = 0;
+        this[SUBSYSTEMS].length = 0;
     }
 
     exitOnSignal(...names) {
@@ -1611,7 +1590,7 @@ export class Application extends Subsystem {
                 continue;
             }
             this._exitSignals.push(sigName);
-            process.on(sigName, () => this._handlers.signalExit(sigName));
+            process.on(sigName, () => this[HANDLERS].signalExit(sigName));
         }
         return this;
     }
@@ -1626,10 +1605,10 @@ export class Application extends Subsystem {
     }
 
     async exit(code = Application.SUCCESS) {
-        if (this._exiting) {
+        if (this[EXITING]) {
             return;
         }
-        this._exiting = true;
+        this[EXITING] = true;
 
         await this._uninitialize();
 
@@ -1668,7 +1647,7 @@ export class Application extends Subsystem {
             });
         });
 
-        if (this.isMain) {
+        if (this[IS_MAIN]) {
             terminal.destroy();
         }
 
@@ -1676,24 +1655,20 @@ export class Application extends Subsystem {
     }
 
     removeProcessHandlers() {
-        process.removeListener("uncaughtExectption", this._handlers.uncaughtException);
-        process.removeListener("unhandledRejection", this._handlers.unhandledRejection);
-        process.removeListener("rejectionHandled", this._handlers.rejectionHandled);
-        process.removeListener("beforeExit", this._handlers.beforeExit);
+        process.removeListener("uncaughtExectption", this[HANDLERS].uncaughtException);
+        process.removeListener("unhandledRejection", this[HANDLERS].unhandledRejection);
+        process.removeListener("rejectionHandled", this[HANDLERS].rejectionHandled);
+        process.removeListener("beforeExit", this[HANDLERS].beforeExit);
         if (is.array(this._exitSignals)) {
             for (const sigName of this._exitSignals) {
-                process.removeListener(sigName, this._handlers.signalExit);
+                process.removeListener(sigName, this[HANDLERS].signalExit);
             }
         }
     }
 
-    customizeLogger() {
-
-    }
-
     async getVersion() {
-        if (!is.null(this._version)) {
-            return this._version;
+        if (!is.null(this[VERSION])) {
+            return this[VERSION];
         }
         let currentPath = __dirname;
         for (; ;) {
@@ -1701,7 +1676,7 @@ export class Application extends Subsystem {
             try {
                 // eslint-disable-next-line
                 const data = JSON.parse(await adone.fs.readFile(packagePath));
-                return this._version = data.version;
+                return this[VERSION] = data.version;
             } catch (err) {
                 //
             }
@@ -1711,14 +1686,14 @@ export class Application extends Subsystem {
             }
             currentPath = nextPath;
         }
-        return this._version = undefined;
+        return this[VERSION] = undefined;
     }
 
     defineArguments(options = {}) {
-        const mainOptionsGroups = this._mainCommand.optionsGroups
+        const mainOptionsGroups = this[MAIN_COMMAND].optionsGroups
             .filter((x) => x.name !== UNNAMED)
             .map((x) => ({ name: x.name, description: x.description }));
-        const mainCommandsGroups = this._mainCommand.commandsGroups
+        const mainCommandsGroups = this[MAIN_COMMAND].commandsGroups
             .filter((x) => x.name !== UNNAMED)
             .map((x) => ({ name: x.name, description: x.description }));
         const optionsGroups = options.optionsGroups ? options.optionsGroups.map((x) => {
@@ -1761,8 +1736,8 @@ export class Application extends Subsystem {
                 [INTERNAL]: true
             });
         }
-        this._mainCommand = this._createCommand(options, null);
-        this._mainCommand._subsystem = this;
+        this[MAIN_COMMAND] = this._createCommand(options, null);
+        this[MAIN_COMMAND]._subsystem = this;
         return this;
     }
 
@@ -1834,7 +1809,7 @@ export class Application extends Subsystem {
     }
 
     _getCommand(chain, create = false) {
-        let cmd = this._mainCommand;
+        let cmd = this[MAIN_COMMAND];
         for (let i = 0; i < chain.length; ++i) {
             const name = chain[i];
             let subcmd;
@@ -1942,7 +1917,7 @@ export class Application extends Subsystem {
     option(path, { value = true } = {}) {
         const parts = path.split(".");
         const optionName = parts.pop();
-        let cmd = this._mainCommand;
+        let cmd = this[MAIN_COMMAND];
         nextPart: for (let i = 0; i < parts.length; ++i) {
             for (const subcmd of cmd.commands) {
                 if (subcmd.match(parts[i])) {
@@ -1973,8 +1948,8 @@ export class Application extends Subsystem {
         let positional = null;
         let commands = null;
 
-        let command = this._mainCommand;
-        let match = this._mainCommand.names[0];
+        let command = this[MAIN_COMMAND];
+        let match = this[MAIN_COMMAND].names[0];
         let argument = null;
 
         let finished = false;
@@ -2396,13 +2371,15 @@ export const run = async (App, ignoreArgs = false) => {
     if (is.null(instance) && is.class(App)) {
         const app = new App();
         if (!is.application(app)) {
-            throw new adone.x.InvalidArgument("First argument should be class derivative of 'adone.application.Application'");
+            console.error(`${adone.terminal.styles.red.open}Invalid application class (should be derivative of 'adone.application.Application')${adone.terminal.styles.red.close}`);
+            process.exit(1);
+            return;
         }
         return app.run({ ignoreArgs });
     }
 
     // surrogate application
-    const methods = util.entries(is.class(App) ? App.prototype : App, { all: true });
+    const allProps = util.entries(is.class(App) ? App.prototype : App, { all: true });
 
     if (!is.null(instance)) {
         await instance._uninitialize();
@@ -2417,9 +2394,22 @@ export const run = async (App, ignoreArgs = false) => {
 
     class XApplication extends adone.application.Application { }
 
-    for (const [name, method] of methods) {
-        XApplication.prototype[name] = method;
+    const props = new Map();
+
+    for (const [name, value] of allProps) {
+        if (is.function(value)) {
+            XApplication.prototype[name] = value;
+        } else {
+            props.set(name, value);
+        }
     }
 
-    (new XApplication()).run({ ignoreArgs });
+    const app = new XApplication();
+    if (props.size > 0) {
+        for (const [name, value] of props.entries()) {
+            app[name] = value;
+        }
+    }
+
+    return app.run({ ignoreArgs });
 };

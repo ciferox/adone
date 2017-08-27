@@ -8,8 +8,9 @@ const {
     util
 } = adone;
 
-const ADONE_CONFIG = adone.application.instance.config;
-const ADONE_HOME = ADONE_CONFIG.adone.home;
+const ADONE_CONFIG = adone.application.instance.config.adone;
+const ADONE_CONFIGS_PATH = ADONE_CONFIG.configsPath;
+const CLI_SUBSYSTEMS_PATH = ADONE_CONFIG.cli.subsystemsPath;
 
 const DEST_OPTIONS = {
     produceFiles: true,
@@ -72,7 +73,7 @@ export class InstallationManager {
     }
 
     async _installCliSubsystem(adoneConf, cwd, { symlink } = {}) {
-        const destPath = std.path.join(ADONE_HOME, "extensions", "cli", "subsystems", adoneConf.name); 
+        const destPath = std.path.join(CLI_SUBSYSTEMS_PATH, adoneConf.name); 
         if (symlink) {
             if (await fs.exists(destPath)) {
                 const stat = fs.lstatSync(destPath);
@@ -142,7 +143,7 @@ export class InstallationManager {
 
         subsystems.sort((a, b) => a.name > b.name);
 
-        await ADONE_CONFIG.save(std.path.join(ADONE_HOME, "configs", "cli.json"), "cli", {
+        await ADONE_CONFIG.save(std.path.join(ADONE_CONFIGS_PATH, "cli.json"), "cli", {
             space: "    "
         });
     }

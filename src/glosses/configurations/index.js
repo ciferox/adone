@@ -1,4 +1,6 @@
-const { is } = adone;
+const {
+    is
+} = adone;
 
 export class Configuration {
     constructor() {
@@ -115,8 +117,8 @@ const lazy = adone.lazify({
     FileConfiguration: "./file_configuration"
 }, exports, require);
 
-export const load = async (confPath, name) => {
-    const config = new lazy.FileConfiguration();
-    await config.load(confPath, name);
+export const load = async (path, name, options) => {
+    const config = new lazy.FileConfiguration(options);
+    await config.load(path, name);
     return config;
 };

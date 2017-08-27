@@ -5,7 +5,7 @@ const {
 
 export class Inspector {
     constructor() {
-        this.path = std.path.join(adone.application.instance.adoneRootPath, "src");
+        this.path = std.path.join(adone.rootPath, "src");
         this.namespaces = new Map();
     }
 

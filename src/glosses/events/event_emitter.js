@@ -9,9 +9,9 @@ const {
 function EventHandlers() { }
 EventHandlers.prototype = Object.create(null);
 
-const $events = Symbol("events");
-const $eventsCount = Symbol("eventsCount");
-const $maxListeners = Symbol("maxListeners");
+const $events = Symbol.for("events");
+const $eventsCount = Symbol.for("eventsCount");
+const $maxListeners = Symbol.for("maxListeners");
 
 // By default EventEmitters will print a warning if more than 10 listeners are
 // added to it. This is a useful default which helps finding memory leaks.

@@ -1,5 +1,3 @@
-// adone-dont-transpile
-
 const { join, resolve } = require("path");
 
 let home;
@@ -40,12 +38,30 @@ if (process.env.ADONE_DIRNAME) {
 }
 
 const configsPath = join(home, "configs");
+const extensionsPath = join(home, "extensions");
+const cliExtsPath = join(extensionsPath, "cli");
+const cliSubsystemsPath = join(cliExtsPath, "subsystems");
+const omnitronExtsPath = join(extensionsPath, "omnitron");
+const omnitronServicesPath = join(omnitronExtsPath, "services");
 
 const config = {
     environment,
     dirName,
     home,
-    configsPath
+    configsPath,
+
+    cli: {
+        extsPath: cliExtsPath,
+        subsystemsPath: cliSubsystemsPath
+    },
+
+    omnitron: {
+        logFilePath: join(home, "omnitron.log"),
+        errorLogFilePath: join(home, "omnitron-err.log"),
+        pidFilePath: join(home, "omnitron.pid"),
+        extsPath: omnitronExtsPath,
+        servicesPath: omnitronServicesPath
+    }
 };
 
 module.exports = config;

@@ -233,6 +233,10 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             return $require;
         },
         package: "../package.json",
+        homePath: () => adone.config.home,
+        rootPath: () => adone.std.path.join(__dirname, ".."),
+        etcPath: () => adone.std.path.join(adone.rootPath, "etc"),
+        config: () => require(adone.std.path.join(adone.etcPath, "configs", "adone.js")),
         native: () => adone.bind("common.node"),
         assertion: "./glosses/assertion",
         assert: () => adone.assertion.loadAssertInterface().assert,

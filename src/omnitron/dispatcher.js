@@ -118,7 +118,7 @@ export default class Dispatcher {
                     const omnitronConfig = this.app.config.omnitron;
                     this.descriptors.stdout = std.fs.openSync(omnitronConfig.logFilePath, "a");
                     this.descriptors.stderr = std.fs.openSync(omnitronConfig.errorLogFilePath, "a");
-                    const child = std.child_process.spawn(process.execPath || "node", [std.path.resolve(adone.application.instance.adoneRootPath, "lib/omnitron/index.js")], {
+                    const child = std.child_process.spawn(process.execPath || "node", [std.path.resolve(adone.rootPath, "lib/omnitron/index.js")], {
                         detached: true,
                         cwd: process.cwd(),
                         stdio: ["ipc", this.descriptors.stdout, this.descriptors.stderr]

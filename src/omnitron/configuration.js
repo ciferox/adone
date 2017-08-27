@@ -14,7 +14,7 @@ export default class Configuration {
 
     async load() {
         // Force create home directory
-        await adone.fs.mkdir(this.app.config.adone.home);
+        await adone.fs.mkdir(adone.homePath);
 
         if (!is.exist(this.app.config.omnitron)) {
             await this.app.loadConfig("omnitron", { ext: "js", defaults: true });

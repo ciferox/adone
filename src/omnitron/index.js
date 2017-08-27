@@ -13,12 +13,14 @@ const { const: { DISABLED, ENABLED, INITIALIZING, ACTIVE, UNINITIALIZING, STATUS
 @Contextable
 @Private
 export default class Omnitron extends adone.application.Application {
-    async initialize() {
-        this._.netron = null;
-
+    async configure() {
         // Load omnitron configuration
         this._.configuration = new omnitron.Configuration(this);
         await this._.configuration.load();
+    }
+
+    async initialize() {
+        this._.netron = null;
 
         this.exitOnSignal("SIGQUIT", "SIGTERM", "SIGINT");
         process.on("SIGILL", () => {

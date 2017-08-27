@@ -1,4 +1,7 @@
-const { is } = adone;
+const {
+    is,
+    std
+} = adone;
 
 const DONT_TRANSPILE_COMMENT = Buffer.from("//adone-dont-transpile");
 const DONT_TRANSPILE_COMMENT_S = Buffer.from("// adone-dont-transpile");
@@ -98,7 +101,7 @@ export default class FileConfiguration extends adone.configuration.Configuration
         } else if (conf.st.isFile()) {
             let confObj = {};
 
-            const correctName = (name === true ? adone.std.path.basename(conf.path, conf.ext) : (is.string(name) ? name : ""));
+            const correctName = (name === true ? std.path.basename(conf.path, conf.ext) : (is.string(name) ? name : ""));
 
             try {
                 const content = await adone.fs.readFile(conf.path);
@@ -135,15 +138,15 @@ export default class FileConfiguration extends adone.configuration.Configuration
 
     async _checkPath(confPath, checkExists) {
         let path;
-        if (!adone.std.path.isAbsolute(confPath)) {
-            path = adone.std.path.resolve(this._.base, confPath);
+        if (!std.path.isAbsolute(confPath)) {
+            path = std.path.resolve(this._.base, confPath);
         } else {
             path = confPath;
         }
 
         let ext = null;
         let serializer = null;
-        ext = adone.std.path.extname(path);
+        ext = std.path.extname(path);
         if (ext !== "") {
             if (!is.propertyOwned(this._.serializer, ext)) {
                 throw new adone.x.NotSupported(`Unsupported format: ${ext}`);

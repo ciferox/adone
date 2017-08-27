@@ -1,5 +1,3 @@
-import adone from "adone";
-
 const {
     std: { path },
     semver,
@@ -8,7 +6,7 @@ const {
 } = adone;
 
 adone.application.run({
-    initialize() {
+    configure() {
         this.defineArguments({
             arguments: [
                 {
@@ -32,7 +30,7 @@ adone.application.run({
     },
     async main(args, opts) {
         try {
-            const packageJsonPath = path.join(this.adoneRootPath, "package.json");
+            const packageJsonPath = path.join(adone.rootPath, "package.json");
             const type = args.get("type");
             const identifier = opts.get("preid");
             const packageJson = await configuration.load(packageJsonPath);
@@ -46,12 +44,14 @@ adone.application.run({
             packageJson.version = semver.inc(semver.clean(version, loose), type, loose, identifier);
 
             // Fix version in subsystems.json
-            const cliJsonPath = path.join(this.adoneEtcPath, "configs", "cli.json");
+            const cliJsonPath = path.join(adone.etcPath, "configs", "cli.json");
             const cliJson = await configuration.load(cliJsonPath);
-            for (const ss of cliJson.subsystems) {
-                ss.version = packageJson.version;
+            if (cliJson.subsystems.length > 0) {
+                for (const ss of cliJson.subsystems) {
+                    ss.version = packageJson.version;
+                }
+                await cliJson.save(cliJsonPath, null, { space: "    " });
             }
-            await cliJson.save(cliJsonPath, null, { space: "    " });
 
             await packageJson.save(packageJsonPath, null, { space: "  " });
 

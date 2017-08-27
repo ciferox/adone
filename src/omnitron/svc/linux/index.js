@@ -38,7 +38,7 @@ export default class Service {
         }
 
         this.scriptPath = path.join(__dirname, "..", "wrapper.js");
-        this.templateRoot = path.join(adone.application.instance.adoneEtcPath, "scripts", "omnitron");
+        this.templateRoot = path.join(adone.etcPath, "scripts", "omnitron");
 
         switch (this.config.mode) {
             case "sysv":

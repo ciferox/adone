@@ -32,7 +32,7 @@ const {
 
 const lazy = lazify({
     notifier: () => path.resolve(
-        adone.application.instance.adoneEtcPath,
+        adone.etcPath,
         "glosses",
         "notifier",
         "notifu",

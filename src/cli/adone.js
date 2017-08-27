@@ -6,6 +6,7 @@ const {
     is,
     std,
     application,
+    configuration,
     terminal
 } = adone;
 
@@ -15,11 +16,19 @@ const lazy = adone.lazify({
 
 export default class AdoneCLI extends application.Application {
     async configure() {
-        // Loading cli configuration
-        await this.loadConfig("cli", {
-            defaults: true,
-            userDefined: true
+        // load default config
+        this.config = await configuration.load("cli.json", true, {
+            base: std.path.join(adone.etcPath, "configs")
         });
+
+        // copy config to home
+        const homeConfigPath = std.path.join(adone.homePath, "configs", "cli.json");
+        await adone.fs.copy(homeConfigPath, adone.config.configsPath, {
+            ignoreExisting: true
+        });
+
+        // assign config from home
+        await this.config.load(homeConfigPath, "cli");
 
         this.defineArguments({
             commandsGroups: this.config.cli.groups,

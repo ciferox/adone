@@ -1,12 +1,14 @@
 const { is, util } = adone;
 
+const ONCE_MAPPING = Symbol.for("asyncEmitter:onceMapping");
+
 export default class AsyncEmitter extends adone.event.EventEmitter {
     constructor(concurrency = null) {
         super();
         if (concurrency >= 1) {
             this.setConcurrency(concurrency);
         }
-        this._onceMapping = new Map();
+        this[ONCE_MAPPING] = new Map();
     }
 
     setConcurrency(max = null) {
@@ -60,14 +62,14 @@ export default class AsyncEmitter extends adone.event.EventEmitter {
             return undefined;
         };
         this.on(event, onceListener);
-        this._onceMapping.set(listener, onceListener);
+        this[ONCE_MAPPING].set(listener, onceListener);
         return this;
     }
 
     removeListener(event, listener) {
-        if (this._onceMapping.has(listener)) {
-            const t = this._onceMapping.get(listener);
-            this._onceMapping.delete(listener);
+        if (this[ONCE_MAPPING].has(listener)) {
+            const t = this[ONCE_MAPPING].get(listener);
+            this[ONCE_MAPPING].delete(listener);
             listener = t;
         }
         return super.removeListener(event, listener);

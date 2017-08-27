@@ -7,7 +7,7 @@ export const _ = adone.lazify({
 }, null, require);
 
 const defaultFile = path.join(
-    adone.application.instance.adoneEtcPath,
+    adone.etcPath,
     "glosses",
     "net",
     "http",
