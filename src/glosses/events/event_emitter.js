@@ -1,13 +1,8 @@
 const {
     is,
-    x
+    x,
+    util: { spliceOne }
 } = adone;
-
-// This constructor is used to store event handlers. Instantiating this is
-// faster than explicitly calling `Object.create(null)` to get a "clean" empty
-// object (tested with v8 v4.9).
-function EventHandlers() { }
-EventHandlers.prototype = Object.create(null);
 
 const $events = Symbol.for("events");
 const $eventsCount = Symbol.for("eventsCount");
@@ -22,14 +17,18 @@ const _addListener = (target, type, listener, prepend) => {
         throw new x.InvalidArgument("\"listener\" argument must be a function");
     }
     let events = target[$events];
-    // To avoid recursion in the case that type === "newListener"! Before
-    // adding it to the listeners, first emit "newListener".
-    if (events.newListener) {
-        target.emit("newListener", type, listener.listener ? listener.listener : listener);
+    if (!events) {
+        events = target[$events] = Object.create(null);
+    } else {
+        // To avoid recursion in the case that type === "newListener"! Before
+        // adding it to the listeners, first emit "newListener".
+        if (events.newListener) {
+            target.emit("newListener", type, listener.listener ? listener.listener : listener);
 
-        // Re-assign `events` because a newListener handler could have caused the
-        // this._events to be assigned to a new object
-        events = target[$events];
+            // Re-assign `events` because a newListener handler could have caused the
+            // this._events to be assigned to a new object
+            events = target[$events];
+        }
     }
     let existing = events[type];
 
@@ -143,10 +142,26 @@ const emitMany = (handler, isFn, self, args) => {
 };
 
 const onceWrapper = function () {
-    this.target.removeListener(this.type, this.wrapFn);
     if (!this.fired) {
+        this.target.removeListener(this.type, this.wrapFn);
         this.fired = true;
-        this.listener.apply(this.target, arguments);
+        switch (arguments.length) {
+            case 0:
+                return this.listener.call(this.target);
+            case 1:
+                return this.listener.call(this.target, arguments[0]);
+            case 2:
+                return this.listener.call(this.target, arguments[0], arguments[1]);
+            case 3:
+                return this.listener.call(this.target, arguments[0], arguments[1], arguments[2]);
+            default: {
+                const args = new Array(arguments.length);
+                for (let i = 0; i < args.length; ++i) {
+                    args[i] = arguments[i];
+                }
+                this.listener.apply(this.target, args);
+            }
+        }
     }
 };
 
@@ -168,7 +183,7 @@ const unwrapListeners = (arr) => {
 
 export default class EventEmitter {
     constructor() {
-        this[$events] = new EventHandlers();
+        this[$events] = Object.create(null);
         this[$eventsCount] = 0;
         this[$maxListeners] = EventEmitter.defaultMaxListeners;
     }
@@ -264,8 +279,8 @@ export default class EventEmitter {
     }
 
     removeListener(type, listener) {
-        if (!adone.is.function(listener)) {
-            throw new adone.x.InvalidArgument("\"listener\" argument must be a function");
+        if (!is.function(listener)) {
+            throw new x.InvalidArgument("\"listener\" argument must be a function");
         }
 
         const events = this[$events];
@@ -277,18 +292,18 @@ export default class EventEmitter {
 
         if (list === listener || list.listener === listener) {
             if (--this[$eventsCount] === 0) {
-                this[$events] = new EventHandlers();
+                this[$events] = Object.create(null);
             } else {
                 delete events[type];
                 if (events.removeListener) {
                     this.emit("removeListener", type, list.listener || listener);
                 }
             }
-        } else if (!adone.is.function(list)) {
+        } else if (!is.function(list)) {
             let position = -1;
             let originalListener;
 
-            for (let i = list.length; i-- > 0;) {
+            for (let i = list.length - 1; i >= 0; i--) {
                 if (list[i] === listener || list[i].listener === listener) {
                     originalListener = list[i].listener;
                     position = i;
@@ -300,17 +315,14 @@ export default class EventEmitter {
                 return this;
             }
 
-            if (list.length === 1) {
-                list[0] = undefined;
-                if (--this[$eventsCount] === 0) {
-                    this[$events] = new EventHandlers();
-                    return this;
-                }
-                delete events[type];
-            } else if (position === 0) {
+            if (position === 0) {
                 list.shift();
             } else {
-                adone.util.spliceOne(list, position);
+                spliceOne(list, position);
+            }
+
+            if (list.length === 1) {
+                events[type] = list[0];
             }
 
             if (events.removeListener) {
@@ -327,11 +339,11 @@ export default class EventEmitter {
         // not listening for removeListener, no need to emit
         if (!events.removeListener) {
             if (arguments.length === 0) {
-                this[$events] = new EventHandlers();
+                this[$events] = Object.create(null);
                 this[$eventsCount] = 0;
             } else if (events[type]) {
                 if (--this[$eventsCount] === 0) {
-                    this[$events] = new EventHandlers();
+                    this[$events] = Object.create(null);
                 } else {
                     delete events[type];
                 }
@@ -350,7 +362,7 @@ export default class EventEmitter {
                 this.removeAllListeners(key);
             }
             this.removeAllListeners("removeListener");
-            this[$events] = new EventHandlers();
+            this[$events] = Object.create(null);
             this[$eventsCount] = 0;
             return this;
         }
@@ -361,9 +373,9 @@ export default class EventEmitter {
             this.removeListener(type, listeners);
         } else if (listeners) {
             // LIFO order
-            do {
-                this.removeListener(type, listeners[listeners.length - 1]);
-            } while (listeners[0]);
+            for (let i = listeners.length - 1; i >= 0; i--) {
+                this.removeListener(type, listeners[i]);
+            }
         }
 
         return this;
@@ -405,8 +417,14 @@ export default class EventEmitter {
         return defaultMaxListeners;
     }
 
-    static set defaultMaxListeners(n) {
-        defaultMaxListeners = n;
+    static set defaultMaxListeners(arg) {
+        // check whether the input is a positive number (whose value is zero or
+        // greater and not a NaN).
+        // eslint-disable-next-line no-self-compare
+        if (!is.number(arg) || arg < 0 || arg !== arg) {
+            throw new TypeError('"defaultMaxListeners" must be a positive number');
+        }
+        defaultMaxListeners = arg;
     }
 }
 

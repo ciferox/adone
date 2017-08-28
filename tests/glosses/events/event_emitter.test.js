@@ -2,7 +2,7 @@ const {
     event: { EventEmitter }
 } = adone;
 
-describe("Event emitter", () => {
+describe("event", "EventEmitter", () => {
     describe("addListeners", () => {
         it("should add and call an \"on\" listener", () => {
             const ee = new EventEmitter();
@@ -81,6 +81,13 @@ describe("Event emitter", () => {
                 EE.emit("error", "Accepts a string");
             }).to.throw(adone.x.Exception, /Accepts a string/);
         });
+
+        it("should throw", () => {
+            const EE = new EventEmitter();
+            expect(() => {
+                EE.emit("error", { message: "Error!" });
+            }).to.throw(adone.x.Exception, /object Object/);
+        });
     });
 
     describe("getMaxListeners", () => {
@@ -99,6 +106,21 @@ describe("Event emitter", () => {
             const emitter = new EventEmitter();
             emitter.setMaxListeners(3);
             expect(emitter.getMaxListeners()).to.be.equal(3);
+        });
+    });
+
+    describe("setMaxListeners", () => {
+        it("should throw for invalid values", () => {
+            const e = new EventEmitter();
+
+            const throwsObjs = [NaN, -1, "and even this"];
+            const maxError = /^"n" argument must be a positive number$/;
+            const defError = /^"defaultMaxListeners" must be a positive number$/;
+
+            for (const obj of throwsObjs) {
+                assert.throws(() => e.setMaxListeners(obj), maxError);
+                assert.throws(() => EventEmitter.defaultMaxListeners = obj, defError);
+            }
         });
     });
 
@@ -235,22 +257,24 @@ describe("Event emitter", () => {
             expect(maxListeners.calledOnce).to.be.true;
         });
 
-        it("should emit a warning message", (done) => {
+        it("should emit a warning message", async () => {
             const e = new EventEmitter();
             e.setMaxListeners(1);
-
-            process.once("warning", (warning) => {
-                expect(warning).to.be.instanceOf(adone.x.Exception);
-                expect(warning.name).to.be.equal("MaxListenersExceededWarning");
-                expect(warning.emitter).to.be.equal(e);
-                expect(warning.count).to.be.equal(2);
-                expect(warning.type).to.be.equal("event-type");
-                expect(warning.message).to.include("2 event-type listeners added");
-                done();
-            });
+            const s = spy();
+            process.once("warning", s);
 
             e.on("event-type", adone.noop);
             e.on("event-type", adone.noop);
+            e.on("event-type", adone.noop); // Verify that warning is emitted only once.
+            await adone.promise.delay(100);
+            expect(s).to.have.been.calledOnce;
+            const warning = s.args[0][0];
+            expect(warning).to.be.instanceOf(adone.x.Exception);
+            expect(warning.name).to.be.equal("MaxListenersExceededWarning");
+            expect(warning.emitter).to.be.equal(e);
+            expect(warning.count).to.be.equal(2);
+            expect(warning.type).to.be.equal("event-type");
+            expect(warning.message).to.include("2 event-type listeners added");
         });
 
         it("should emit a warning message for 'null' event", (done) => {
@@ -297,22 +321,22 @@ describe("Event emitter", () => {
 
         const e = new EventEmitter();
 
-        function callback1() {
+        const callback1 = () => {
             called.push("callback1");
             e.on("foo", callback2);
             e.on("foo", callback3);
             e.removeListener("foo", callback1);
-        }
+        };
 
-        function callback2() {
+        const callback2 = () => {
             called.push("callback2");
             e.removeListener("foo", callback2);
-        }
+        };
 
-        function callback3() {
+        const callback3 = () => {
             called.push("callback3");
             e.removeListener("foo", callback3);
-        }
+        };
 
         e.on("foo", callback1);
         expect(e.listeners("foo")).to.have.lengthOf(1);
@@ -409,6 +433,24 @@ describe("Event emitter", () => {
             expect(() => {
                 e.once("foo", null);
             }).to.throw(adone.x.InvalidArgument, "\"listener\" argument must be a function");
+        });
+
+        it("check that once support many arguments", () => {
+            const maxArgs = 4;
+
+            for (let i = 0; i <= maxArgs; ++i) {
+                const ee = new EventEmitter();
+                const args = ["foo"];
+
+                for (let j = 0; j < i; ++j) {
+                    args.push(j);
+                }
+                const s = spy();
+                ee.once("foo", s);
+                EventEmitter.prototype.emit.apply(ee, args);
+                expect(s).to.have.been.calledOnce;
+                expect(s).to.have.been.calledWithExactly(...args.slice(1));
+            }
         });
     });
 
@@ -507,12 +549,17 @@ describe("Event emitter", () => {
             expect(remove2.args[0]).to.be.deep.equal(["foo", listener]);
             expect(remove2.args[1]).to.be.deep.equal(["bar", listener]);
         });
+
+        it("should be fluent", () => {
+            const ee = new EventEmitter();
+            expect(ee.removeAllListeners()).to.be.equal(ee);
+        });
     });
 
     describe("removeListener", () => {
         // must be different
-        const listener1 = () => {};
-        const listener2 = () => {};
+        const listener1 = () => { };
+        const listener2 = () => { };
 
         it("it should remove a listener", () => {
             const ee = new EventEmitter();
@@ -643,6 +690,29 @@ describe("Event emitter", () => {
             expect(() => {
                 ee.removeListener("foo", null);
             }).to.throw(adone.x.InvalidArgument, "\"listener\" argument must be a function");
+        });
+
+        it("should be fluent", () => {
+            const ee = new EventEmitter();
+
+            expect(ee.removeListener("foo", () => { })).to.be.equal(ee);
+        });
+
+        it("should work fine", () => {
+            const ee = new EventEmitter();
+
+            ee.on("foo", listener1);
+            ee.on("foo", listener2);
+            expect(ee.listeners("foo")).to.be.deep.equal([listener1, listener2]);
+
+            ee.removeListener("foo", listener1);
+            expect(ee[Symbol.for("events")].foo).to.be.equal(listener2);
+
+            ee.on("foo", listener1);
+            expect(ee.listeners("foo")).to.be.deep.equal([listener2, listener1]);
+
+            ee.removeListener("foo", listener1);
+            expect(ee[Symbol.for("events")].foo).to.be.equal(listener2);
         });
     });
 
