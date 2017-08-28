@@ -6,9 +6,9 @@ const {
     js
 } = adone;
 
-const BASE_PATH = Symbol.for("adone.configuration.FileConfiguration.basePath");
-const SERIALIZER = Symbol.for("adone.configuration.FileConfiguration.serializer");
-const PATHS = Symbol.for("adone.configuration.FileConfiguration.paths");
+const BASE_PATH = Symbol();
+const SERIALIZER = Symbol();
+const PATHS = Symbol();
 
 export default class FileConfiguration extends adone.configuration.Configuration {
     constructor({ base = process.cwd() } = {}) {
@@ -94,7 +94,7 @@ export default class FileConfiguration extends adone.configuration.Configuration
         if (conf.st.isDirectory()) {
             conf.path = adone.util.globize(conf.path, { exts: `{${Object.keys(this[SERIALIZER]).join(",")}}` });
             await fs.glob(conf.path).map((p) => {
-                return this.load(p, name === true ? name : null);
+                return this.load(p, name, options);
             });
         } else if (conf.st.isFile()) {
             let confObj = {};
@@ -108,7 +108,9 @@ export default class FileConfiguration extends adone.configuration.Configuration
                     key: correctName
                 }, options));
             } catch (err) {
-                //
+                if (err instanceof SyntaxError) {
+                    throw new x.NotValid("Config is not valid");
+                }
             }
 
             if (!is.object(confObj)) {

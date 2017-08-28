@@ -1,12 +1,20 @@
-const { is } = adone;
+const {
+    is,
+    configuration,
+    std
+} = adone;
 
-const options = { base: adone.std.path.resolve(__dirname, "fixtures") };
+const fixture = std.path.join.bind(std.path.join, __dirname, "fixtures");
 
 describe("configuration", "FileConfiguration", () => {
     let conf;
 
+    const options = {
+        base: fixture()
+    };
+
     beforeEach(() => {
-        conf = new adone.configuration.FileConfiguration({ base: adone.std.path.resolve(__dirname, "fixtures") });
+        conf = new configuration.FileConfiguration(options);
     });
 
     it("by default load config at root", async () => {
@@ -59,8 +67,16 @@ describe("configuration", "FileConfiguration", () => {
         assert.equal(dt, conf.a.nowTm);
     });
 
+    it("should throw exceptions on load es6-config without 'transpile' flag", async () => {
+        const conf = new configuration.FileConfiguration();
+        const err = await assert.throws(async () => conf.load(fixture("b.js"), true));
+        assert.instanceOf(err, adone.x.NotValid);
+    });
+
     it("load dir", async () => {
-        await conf.load("withfns", true);
+        await conf.load("withfns", true, {
+            transpile: true
+        });
         assert.isOk(is.propertyDefined(conf, "a"));
         assert.isOk(is.propertyDefined(conf, "b"));
         assert.isOk(is.propertyDefined(conf, "c"));
@@ -112,7 +128,7 @@ describe("configuration", "FileConfiguration", () => {
 
     for (const format of formats) {
         it(`${format} read`, async () => {
-            const conf = new adone.configuration.FileConfiguration(options);
+            const conf = new configuration.FileConfiguration(options);
             await conf.load(`a${format}`);
             assert.equal(conf.a, 1);
             assert.equal(conf.b, "adone");
@@ -120,7 +136,7 @@ describe("configuration", "FileConfiguration", () => {
         });
 
         it(`${format} write`, async () => {
-            const conf = new adone.configuration.FileConfiguration(options);
+            const conf = new configuration.FileConfiguration(options);
             conf.assign({
                 a: 1,
                 b: "adone",
@@ -129,7 +145,7 @@ describe("configuration", "FileConfiguration", () => {
             const filename = `tmpconf${format}`;
             await conf.save(filename);
 
-            const savedConf = new adone.configuration.FileConfiguration(options);
+            const savedConf = new configuration.FileConfiguration(options);
             await savedConf.load(filename);
             assert.deepEqual(savedConf, conf);
             await adone.fs.unlink(adone.std.path.resolve(options.base, filename));
@@ -138,7 +154,7 @@ describe("configuration", "FileConfiguration", () => {
 
     it("should throw on read unknown format", async () => {
         try {
-            const conf = new adone.configuration.FileConfiguration(options);
+            const conf = new configuration.FileConfiguration(options);
             await conf.load("unsupport.dat");
         } catch (err) {
             assert.instanceOf(err, adone.x.NotSupported);
@@ -148,13 +164,23 @@ describe("configuration", "FileConfiguration", () => {
     });
 
     it("save nested object", async () => {
-        const conf = new adone.configuration.FileConfiguration(options);
+        const conf = new configuration.FileConfiguration(options);
         await conf.load("b.json5", true);
         await conf.save("nested.json", "b.nested");
-        const savedConf = new adone.configuration.FileConfiguration(options);
+        const savedConf = new configuration.FileConfiguration(options);
         await savedConf.load("nested.json");
         await adone.fs.unlink(adone.std.path.resolve(options.base, "nested.json"));
         assert.equal(savedConf.str2, "val2");
         assert.equal(savedConf.num2, 8);
+    });
+
+    it("should load all es6-configs in directory", async () => {
+        const conf = new configuration.FileConfiguration();
+        await conf.load(fixture("es6_configs"), true, {
+            transpile: true
+        });
+        assert.equal(conf.a.name, "adone");
+        assert.equal(conf.b.name, "omnitron");
+        assert.equal(conf.c.name, "specter");
     });
 });

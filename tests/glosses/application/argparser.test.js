@@ -7,8 +7,8 @@ describe("application", () => {
         const parse = async (...args) => {
             const { command, errors, rest, match } = await app._parseArgs(args);
             return {
-                args: app.getMainCommand().getArgumentsMap(),
-                opts: app.getMainCommand().getOptionsMap(),
+                args: app[Symbol.for("adone.application.Application#mainCommand")].getArgumentsMap(),
+                opts: app[Symbol.for("adone.application.Application#mainCommand")].getOptionsMap(),
                 command,
                 errors,
                 rest,

@@ -51,19 +51,19 @@ const defaultColors = {
     }
 };
 
-const INTERNAL = Symbol.for("adone:application:internal");
-const UNNAMED = Symbol.for("adone:application:unnamed");
-const EMPTY_VALUE = Symbol.for("adone:application:emptyValue");
-const COMMAND = Symbol.for("adone:application:command");
-const INTERACTIVE = Symbol.for("adone:application:interactive");
-const REPORT = Symbol.for("adone:application:report");
-const ERROR_SCOPE = Symbol.for("adone:application:errorScope");
-const EXITING = Symbol.for("adone:application:exiting");
-const IS_MAIN = Symbol.for("adone:application:isMain");
-const MAIN_COMMAND = Symbol.for("adone:application:mainCommand");
-const SUBSYSTEMS = Symbol.for("adone:application:subsystems");
-const VERSION = Symbol.for("adone:application:version");
-const HANDLERS = Symbol.for("adone:application:handlers");
+const INTERNAL = Symbol();
+const UNNAMED = Symbol();
+const EMPTY_VALUE = Symbol();
+const COMMAND = Symbol();
+const INTERACTIVE = Symbol();
+const REPORT = Symbol();
+const ERROR_SCOPE = Symbol();
+const EXITING = Symbol();
+const IS_MAIN = Symbol();
+const MAIN_COMMAND = Symbol.for("adone.application.Application#mainCommand");
+const SUBSYSTEMS = Symbol();
+const VERSION = Symbol();
+const HANDLERS = Symbol();
 
 
 const escape = (x) => x.replace(/%/g, "%%");
@@ -1707,15 +1707,6 @@ export class Application extends Subsystem {
         options.commandsGroups = mergeGroupsLists(mainCommandsGroups, commandsGroups);
         options.optionsGroups = mergeGroupsLists(mainOptionsGroups, optionsGroups);
         this.defineMainCommand(options);
-    }
-
-    /**
-     * Returns main command instance.
-     * 
-     * @returns {Command}
-     */
-    getMainCommand() {
-        return this[MAIN_COMMAND];
     }
 
     defineMainCommand(options) {
