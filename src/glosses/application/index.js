@@ -1709,6 +1709,15 @@ export class Application extends Subsystem {
         this.defineMainCommand(options);
     }
 
+    /**
+     * Returns main command instance.
+     * 
+     * @returns {Command}
+     */
+    getMainCommand() {
+        return this[MAIN_COMMAND];
+    }
+
     defineMainCommand(options) {
         options = adone.o({
             name: this.name,

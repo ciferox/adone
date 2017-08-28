@@ -3,13 +3,6 @@ const {
 } = adone;
 
 export class Configuration {
-    constructor() {
-        Object.defineProperty(this, "_", {
-            value: {
-            }
-        });
-    }
-
     load(/*confPath, key*/) {
         throw new adone.x.NotImplemented("Method load() is not implemented");
     }

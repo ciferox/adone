@@ -1,66 +1,64 @@
 const {
+    x,
     is,
-    std
+    std,
+    fs,
+    js
 } = adone;
 
-const DONT_TRANSPILE_COMMENT = Buffer.from("//adone-dont-transpile");
-const DONT_TRANSPILE_COMMENT_S = Buffer.from("// adone-dont-transpile");
+const BASE_PATH = Symbol.for("adone.configuration.FileConfiguration.basePath");
+const SERIALIZER = Symbol.for("adone.configuration.FileConfiguration.serializer");
+const PATHS = Symbol.for("adone.configuration.FileConfiguration.paths");
 
 export default class FileConfiguration extends adone.configuration.Configuration {
     constructor({ base = process.cwd() } = {}) {
         super();
-        this._.base = base;
-        this._.serializer = {};
-        this.registerFormat(".js", (buf, filePath, key) => {
-            let transform;
-
-            const content = buf.toString();
-
-            if (content.includes(DONT_TRANSPILE_COMMENT_S) || content.includes(DONT_TRANSPILE_COMMENT)) {
-                transform = null;
-            } else {
-                transform = adone.js.Module.transforms.transpile(adone.require.options);
-            }
-
-            const m = new adone.js.Module(filePath, {
-                transform
-            });
-
-            m._compile(content, filePath);
-            let confObj = m.exports;
-            if (confObj.__esModule) {
-                confObj = confObj.default;
-            }
-
-            let hasFunctions = false;
-
-            const bindFunctions = (nestedConfig) => {
-                const keys = Object.getOwnPropertyNames(nestedConfig);
-                for (let i = 0; i < keys.length; i++) {
-                    const key = keys[i];
-                    const value = nestedConfig[key];
-                    if (is.function(value)) {
-                        hasFunctions = true;
-                        nestedConfig[key] = (...args) => value.apply(this.getObject(this._.paths[confObj]), args);
-                    } else if (is.object(value)) {
-                        bindFunctions(value);
+        this[BASE_PATH] = base;
+        this[SERIALIZER] = adone.lazify({
+            ".js": () => ({
+                encode: null,
+                decode: (buf, { path, key, transpile = false } = {}) => {
+                    const content = buf.toString();
+                    const transform = transpile ? js.Module.transforms.transpile(adone.require.options) : null;
+        
+                    const m = new js.Module(path, {
+                        transform
+                    });
+        
+                    m._compile(content, path);
+                    let confObj = m.exports;
+                    if (confObj.__esModule) {
+                        confObj = confObj.default;
                     }
+        
+                    let hasFunctions = false;
+        
+                    const bindFunctions = (nestedConfig) => {
+                        const keys = Object.getOwnPropertyNames(nestedConfig);
+                        for (let i = 0; i < keys.length; i++) {
+                            const k = keys[i];
+                            const value = nestedConfig[k];
+                            if (is.function(value)) {
+                                hasFunctions = true;
+                                nestedConfig[k] = (...args) => value.apply(this.getObject(this[PATHS][confObj]), args);
+                            } else if (is.object(value)) {
+                                bindFunctions(value);
+                            }
+                        }
+                    };
+        
+                    bindFunctions(confObj);
+        
+                    if (hasFunctions) {
+                        if (is.undefined(this[PATHS])) {
+                            this[PATHS] = {};
+                        }
+                        this[PATHS][confObj] = key;
+                    }
+        
+                    return confObj;
                 }
-            };
-
-            bindFunctions(confObj);
-
-            if (hasFunctions) {
-                if (is.undefined(this._.paths)) {
-                    this._.paths = {};
-                }
-                this._.paths[confObj] = key;
-            }
-
-            return confObj;
-        });
-
-        adone.lazify({
+            }),
             ".json": () => ({
                 encode: adone.data.json.encode,
                 decode: adone.data.json.decode
@@ -77,25 +75,25 @@ export default class FileConfiguration extends adone.configuration.Configuration
                 encode: adone.data.mpak.encode,
                 decode: adone.data.mpak.decode
             })
-        }, this._.serializer);
+        }, {});
     }
 
     registerFormat(ext, decode, encode) {
-        this._.serializer[ext] = {
+        this[SERIALIZER][ext] = {
             decode,
             encode
         };
     }
 
     supportedExts() {
-        return Object.keys(this._.serializer);
+        return Object.keys(this[SERIALIZER]);
     }
 
-    async load(confPath, name) {
+    async load(confPath, name, options) {
         const conf = await this._checkPath(confPath, true);
         if (conf.st.isDirectory()) {
-            conf.path = adone.util.globize(conf.path, { exts: `{${Object.keys(this._.serializer).join(",")}}` });
-            await adone.fs.glob(conf.path).map((p) => {
+            conf.path = adone.util.globize(conf.path, { exts: `{${Object.keys(this[SERIALIZER]).join(",")}}` });
+            await fs.glob(conf.path).map((p) => {
                 return this.load(p, name === true ? name : null);
             });
         } else if (conf.st.isFile()) {
@@ -104,14 +102,17 @@ export default class FileConfiguration extends adone.configuration.Configuration
             const correctName = (name === true ? std.path.basename(conf.path, conf.ext) : (is.string(name) ? name : ""));
 
             try {
-                const content = await adone.fs.readFile(conf.path);
-                confObj = await conf.serializer.decode(content, conf.path, correctName);
+                const content = await fs.readFile(conf.path);
+                confObj = await conf.serializer.decode(content, Object.assign({
+                    path: conf.path,
+                    key: correctName
+                }, options));
             } catch (err) {
                 //
             }
 
             if (!is.object(confObj)) {
-                throw new adone.x.NotValid(`'${conf.path}' is not valid ${conf.ext}-configuration file`);
+                throw new x.NotValid(`'${conf.path}' is not valid ${conf.ext}-configuration file`);
             }
 
             if (correctName !== "") {
@@ -120,7 +121,7 @@ export default class FileConfiguration extends adone.configuration.Configuration
                 this.merge(confObj);
             }
         } else {
-            throw new adone.x.NotFound(`${conf.path} not exists`);
+            throw new x.NotFound(`${conf.path} not exists`);
         }
     }
 
@@ -133,13 +134,13 @@ export default class FileConfiguration extends adone.configuration.Configuration
         } else {
             obj = this.get(name);
         }
-        await adone.fs.writeFile(conf.path, await conf.serializer.encode(obj, options));
+        await fs.writeFile(conf.path, await conf.serializer.encode(obj, options));
     }
 
     async _checkPath(confPath, checkExists) {
         let path;
         if (!std.path.isAbsolute(confPath)) {
-            path = std.path.resolve(this._.base, confPath);
+            path = std.path.resolve(this[BASE_PATH], confPath);
         } else {
             path = confPath;
         }
@@ -148,21 +149,21 @@ export default class FileConfiguration extends adone.configuration.Configuration
         let serializer = null;
         ext = std.path.extname(path);
         if (ext !== "") {
-            if (!is.propertyOwned(this._.serializer, ext)) {
-                throw new adone.x.NotSupported(`Unsupported format: ${ext}`);
+            if (!is.propertyOwned(this[SERIALIZER], ext)) {
+                throw new x.NotSupported(`Unsupported format: ${ext}`);
             }
-            serializer = this._.serializer[ext];
+            serializer = this[SERIALIZER][ext];
             if (!checkExists && !is.function(serializer.encode)) {
-                throw new adone.x.NotSupported(`Format '${ext}' is not saveable`);
+                throw new x.NotSupported(`Format '${ext}' is not saveable`);
             }
         }
 
         if (checkExists) {
             let st;
             try {
-                st = await adone.fs.stat(path);
+                st = await fs.stat(path);
             } catch (err) {
-                throw new adone.x.NotFound(`${path} not exists`);
+                throw new x.NotFound(`${path} not exists`);
             }
 
             return { path, ext, serializer, st };

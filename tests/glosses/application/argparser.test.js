@@ -7,8 +7,8 @@ describe("application", () => {
         const parse = async (...args) => {
             const { command, errors, rest, match } = await app._parseArgs(args);
             return {
-                args: app._mainCommand.getArgumentsMap(),
-                opts: app._mainCommand.getOptionsMap(),
+                args: app.getMainCommand().getArgumentsMap(),
+                opts: app.getMainCommand().getOptionsMap(),
                 command,
                 errors,
                 rest,

@@ -49,7 +49,9 @@ describe("configuration", "FileConfiguration", () => {
         assert.equal(conf.a.num, 8);
         const dt = conf.a.nowTm;
         assert.isOk(is.date(dt));
-        await conf.load("b.js", "a");
+        await conf.load("b.js", "a", {
+            transpile: true
+        });
         assert.isOk(is.propertyDefined(conf, "a"));
         assert.equal(conf.a.val, "value2");
         assert.equal(conf.a.num, 8);
@@ -78,7 +80,9 @@ describe("configuration", "FileConfiguration", () => {
     });
 
     it("load config with multiple functions", async () => {
-        await conf.load("withfns/c.js", true);
+        await conf.load("withfns/c.js", true, {
+            transpile: true
+        });
         assert.isOk(is.propertyDefined(conf, "c"));
         assert.isOk(is.date(conf.c.nowTm));
         assert.equal(conf.c.sub1.func1(), "value1");
@@ -87,7 +91,9 @@ describe("configuration", "FileConfiguration", () => {
     });
 
     it("load config with multiple functions at root", async () => {
-        await conf.load("withfns/c.js");
+        await conf.load("withfns/c.js", null, {
+            transpile: true
+        });
         assert.isOk(is.date(conf.nowTm));
         assert.equal(conf.sub1.func1(), "value1");
         assert.isOk(is.date(conf.sub1.sub2.func1()));
@@ -95,7 +101,9 @@ describe("configuration", "FileConfiguration", () => {
     });
 
     it("load config with async function", async () => {
-        await conf.load("asyncfn.js", true);
+        await conf.load("asyncfn.js", true, {
+            transpile: true
+        });
         assert.isOk(is.propertyDefined(conf, "asyncfn"));
         assert.equal(await conf.asyncfn.afn(adone), 777);
     });
