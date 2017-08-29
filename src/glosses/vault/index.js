@@ -48,3 +48,5 @@ adone.lazify({
     Vault: "./vault",
     Valuable: "./valuable"
 }, exports, require);
+
+export const __esNamespace = true;

@@ -1,5 +1,7 @@
 const { is, std, noop, collection } = adone;
 
+export const __esNamespace = true;
+
 const irregularPlurals = {
     addendum: "addenda",
     aircraft: "aircraft",

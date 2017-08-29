@@ -44,3 +44,5 @@ export const loadExpectInterface = () => {
         .use(__.core)
         .use(__.expectInterface);
 };
+
+export const __esNamespace = true;

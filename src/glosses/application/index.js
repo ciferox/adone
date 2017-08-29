@@ -10,6 +10,8 @@ const {
     tag
 } = adone;
 
+export const __esNamespace = true;
+
 const lazy = lazify({
     report: "./report"
 }, exports, require);
@@ -1471,6 +1473,7 @@ export class Application extends Subsystem {
             group,
             loader: () => this.loadSubsystem({
                 subsystem: path,
+                configure: false,
                 initialize: false
             })
         });
@@ -1520,30 +1523,40 @@ export class Application extends Subsystem {
      * @param {string|adone.application.Subsystem} subsystem Subsystem instance or absolute path.
      * @returns {Promise<adone.application.Subsystem>}
      */
-    async loadSubsystem({ subsystem, configure = true, initialize = true } = {}) {
+    async loadSubsystem({ name = null, subsystem, configure = true, initialize = true } = {}) {
+        let instance;
         if (is.string(subsystem)) {
-            let Subsystem = require(subsystem);
-            if (Subsystem.__esModule === true) {
-                Subsystem = Subsystem.default;
+            let SomeSubsystem = require(subsystem);
+            if (SomeSubsystem.__esModule === true) {
+                SomeSubsystem = SomeSubsystem.default;
             }
-            subsystem = new Subsystem();
-        } else if (!is.subsystem(subsystem)) {
+            instance = new SomeSubsystem();
+        } else if (is.subsystem(subsystem)) {
+            instance = subsystem;
+        } else {
             throw new x.NotValid("'subsystem' should be path or instance of adone.application.Subsystem");
         }
 
-        subsystem.app = this;
+        if (is.null(name)) {
+            name = instance.constructor.name;
+        }
 
-        this[SUBSYSTEMS].push(subsystem);
+        instance.app = this;
+
+        this[SUBSYSTEMS].push({
+            name,
+            instance
+        });
 
         if (configure) {
-            await subsystem.configure();
+            await instance.configure();
         }
 
         if (initialize) {
-            await subsystem.initialize();
+            await instance.initialize();
         }
 
-        return subsystem;
+        return instance;
     }
 
     /**
@@ -1574,14 +1587,29 @@ export class Application extends Subsystem {
     }
 
     /**
+     * Returns subsystems by name
+     * 
+     * @param {Subsystem} name Name of subsystem
+     */
+    getSubsystem(name) {
+        for (const ss of this[SUBSYSTEMS]) {
+            if (ss.name === name) {
+                return ss.instance;
+            }
+        }
+
+        throw new x.Unknown(`Unknown subsystem: ${name}`);
+    }
+
+    /**
      * Uninitializes all subsystems.
      *
      * @returns {Promise<void>}
      */
     async uninitializeSubsystems() {
-        for (let i = 0; i < this[SUBSYSTEMS].length; i++) {
+        for (let i = this[SUBSYSTEMS].length; --i >= 0; ) {
             const ss = this[SUBSYSTEMS][i];
-            await ss.uninitialize(); // eslint-disable-line
+            await ss.instance.uninitialize(); // eslint-disable-line
         }
         this[SUBSYSTEMS].length = 0;
     }
@@ -2037,6 +2065,7 @@ export class Application extends Subsystem {
                                     // We have lazy loaded subsystem, try load it and reinit command
                                     const subsystem = await command.loader(); // eslint-disable-line
                                     subsystem[COMMAND] = command;
+                                    await subsystem.configure(); // eslint-disable-line
                                     await subsystem.initialize(); // eslint-disable-line
                                 }
                                 state.push("start command");

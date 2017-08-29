@@ -85,3 +85,5 @@ adone.lazify({
         rpi: "./boards/rpi"
     }, null, require)
 }, exports, require);
+
+export const __esNamespace = true;

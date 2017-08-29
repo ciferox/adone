@@ -22,3 +22,5 @@ adone.lazify({
     through: "./through",
     replace: "./replace"
 }, exports, require);
+
+export const __esNamespace = true;

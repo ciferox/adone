@@ -1,3 +1,5 @@
+export const __esNamespace = true;
+
 adone.lazify({
     tar: () => adone.lazify({
         RawPackStream: "./tar/raw/pack",

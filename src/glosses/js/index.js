@@ -32,3 +32,5 @@ adone.lazify({
     Module: "./module",
     adone: "./adone"
 }, exports, require);
+
+export const __esNamespace = true;

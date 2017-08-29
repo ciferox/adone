@@ -40,3 +40,5 @@ adone.lazify({
         return new Hardware();
     }
 }, exports, require);
+
+export const __esNamespace = true;

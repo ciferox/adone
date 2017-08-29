@@ -14,8 +14,7 @@ const {
 // NOTE: local gate always be first in list of gates in gates.json
 
 export default class Dispatcher {
-    constructor(app, { noisily = false, configuration = null, omnitron = null, netronOptions = {} } = {}) {
-        this.app = app;
+    constructor({ noisily = false, configuration = null, omnitron = null, netronOptions = {} } = {}) {
         this.noisily = noisily;
         this._configuration = configuration;
         this.omnitron = omnitron;
@@ -55,11 +54,12 @@ export default class Dispatcher {
         return !is.null(this.peer);
     }
 
-    configuration() {
+    async configuration() {
         if (is.null(this._configuration)) {
-            this._configuration = new Configuration(this.app);
+            this._configuration = new Configuration();
         }
-        return this._configuration.load();
+        await this._configuration.loadGates();
+        return this._configuration;
     }
 
     async connect(gate = null) {
@@ -115,7 +115,7 @@ export default class Dispatcher {
         if (spiritualWay) {
             return new Promise((resolve, reject) => {
                 this.configuration().then((/*configuration*/) => {
-                    const omnitronConfig = this.app.config.omnitron;
+                    const omnitronConfig = adone.config.omnitron;
                     this.descriptors.stdout = std.fs.openSync(omnitronConfig.logFilePath, "a");
                     this.descriptors.stderr = std.fs.openSync(omnitronConfig.errorLogFilePath, "a");
                     const child = std.child_process.spawn(process.execPath || "node", [std.path.resolve(adone.rootPath, "lib/omnitron/index.js")], {
@@ -147,9 +147,9 @@ export default class Dispatcher {
         const isOnline = await this.isOnline();
         if (isOnline) {
             // Can be used in test environment.
-            if (is.string(this.app.config.omnitron.pidFilePath)) {
+            if (is.string(adone.config.omnitron.pidFilePath)) {
                 try {
-                    const pid = parseInt(std.fs.readFileSync(this.app.config.omnitron.pidFilePath).toString());
+                    const pid = parseInt(std.fs.readFileSync(adone.config.omnitron.pidFilePath).toString());
                     if (is.windows) {
                         try {
                             await this.killSelf();
@@ -163,7 +163,7 @@ export default class Dispatcher {
                         this.peer = null;
 
                         try {
-                            const pid = parseInt(std.fs.readFileSync(this.app.config.omnitron.pidFilePath).toString());
+                            const pid = parseInt(std.fs.readFileSync(adone.config.omnitron.pidFilePath).toString());
                             if (killChildren) {
                                 await this._killProcessChildren(pid);
                             }
@@ -189,7 +189,7 @@ export default class Dispatcher {
             this.descriptors.stderr = null;
         }
         if (clean) {
-            await new adone.fs.Directory(this.app.config.adone.home).clean();
+            await new adone.fs.Directory(adone.homePath).clean();
         }
     }
 

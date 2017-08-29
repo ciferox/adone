@@ -36,3 +36,5 @@ diff.util = lazify({
     convertChangesToDMP: ["./convert", (x) => x.convertChangesToDMP],
     convertChangesToXML: ["./convert", (x) => x.convertChangesToXML]
 }, null, require);
+
+export const __esNamespace = true;

@@ -49,6 +49,7 @@ const config = {
     dirName,
     home,
     configsPath,
+    varPath: join(home, "var"),
 
     cli: {
         extsPath: cliExtsPath,

@@ -43,3 +43,4 @@ export const removeAllListeners = (event) => notifier.instance.removeAllListener
 
 export const listeners = (event) => notifier.instance.listeners(event);
 
+export const __esNamespace = true;

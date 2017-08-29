@@ -22,3 +22,5 @@ adone.lazify({
     mail: "./mail",
     mqtt: "./mqtt"
 }, exports, require);
+
+export const __esNamespace = true;

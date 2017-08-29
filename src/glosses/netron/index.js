@@ -102,3 +102,5 @@ adone.lazify({
         Peer: "./ws/peer"
     }, null, require)
 }, exports, require);
+
+export const __esNamespace = true;

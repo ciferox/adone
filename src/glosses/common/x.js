@@ -1,3 +1,5 @@
+export const __esNamespace = true;
+
 export const exceptionIdMap = {};
 export const stdIdMap = {};
 export const stdExceptions = [];

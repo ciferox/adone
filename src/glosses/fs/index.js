@@ -1,5 +1,7 @@
 const { is, x, promise: { promisify }, std } = adone;
 
+export const __esNamespace = true;
+
 const fs = adone.lazify({
     readlink: () => promisify(std.fs.readlink),
     unlink: () => promisify(std.fs.unlink), // we have rm, should we have this one?

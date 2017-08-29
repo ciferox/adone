@@ -67,3 +67,5 @@ exdate.calendarFormat = getCalendarFormat;
 exdate.prototype = ExDate.prototype;
 
 export default exdate;
+
+export const __esNamespace = true;

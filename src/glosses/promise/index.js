@@ -1,5 +1,7 @@
 const { is } = adone;
 
+export const __esNamespace = true;
+
 const PROMISIFIED = Symbol.for("adone:promise:promisified");
 const PROMISIFY_SOURCE = Symbol.for("adone:promise:promisify_source");
 

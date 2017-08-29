@@ -123,7 +123,7 @@ export default class FileConfiguration extends adone.configuration.Configuration
                 this.merge(confObj);
             }
         } else {
-            throw new x.NotFound(`${conf.path} not exists`);
+            throw new x.NotExists(`${conf.path} not exists`);
         }
     }
 
@@ -165,7 +165,7 @@ export default class FileConfiguration extends adone.configuration.Configuration
             try {
                 st = await fs.stat(path);
             } catch (err) {
-                throw new x.NotFound(`${path} not exists`);
+                throw new x.NotExists(`${path} not exists`);
             }
 
             return { path, ext, serializer, st };

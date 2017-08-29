@@ -558,3 +558,5 @@ export const watchMap = (mappings, {
     }
     return fast;
 };
+
+export const __esNamespace = true;

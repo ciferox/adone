@@ -66,3 +66,5 @@ adone.lazify({
         }, null, require)
     }, null, require)
 }, exports, require);
+
+export const __esNamespace = true;

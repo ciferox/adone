@@ -33,13 +33,8 @@ describe("configuration", "FileConfiguration", () => {
     });
 
     it("should not load config without extension", async () => {
-        try {
-            await conf.load("a", true);
-        } catch (err) {
-            assert.instanceOf(err, adone.x.NotFound);
-            return;
-        }
-        assert.fail("Should throw NotFound exception");
+        const err = await assert.throws(async () => conf.load("a", true));
+        assert.instanceOf(err, adone.x.NotExists);
     });
 
     it("load simple config with specified name", async () => {

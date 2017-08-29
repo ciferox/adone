@@ -12,3 +12,5 @@ adone.lazify({
     util: "./util",
     inline: "./inline"
 }, exports, require);
+
+export const __esNamespace = true;

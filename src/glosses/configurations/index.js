@@ -112,6 +112,8 @@ const lazy = adone.lazify({
 
 export const load = async (path, name, options) => {
     const config = new lazy.FileConfiguration(options);
-    await config.load(path, name);
+    await config.load(path, name, options);
     return config;
 };
+
+export const __esNamespace = true;

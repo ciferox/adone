@@ -28,3 +28,5 @@ export class MasscanScanner extends adone.event.EventEmitter {
         this.worker.stop();
     }
 }
+
+export const __esNamespace = true;

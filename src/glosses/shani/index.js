@@ -1,5 +1,7 @@
 const { is, x, lazify, setTimeout, clearTimeout, hrtime, Date, util } = adone;
 
+export const __esNamespace = true;
+
 const shani = lazify({
     util: "./util"
 }, exports, require);

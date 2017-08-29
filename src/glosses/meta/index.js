@@ -1,5 +1,7 @@
 const { is } = adone;
 
+export const __esNamespace = true;
+
 const GLOBAL_PREFIX_LEN = "global".length + 1;
 const ADONE_PREFIX_LEN = "adone".length + 1;
 export const skipAdoneNs = (namespace) => namespace.substring(ADONE_PREFIX_LEN);

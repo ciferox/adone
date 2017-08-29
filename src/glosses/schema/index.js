@@ -1,5 +1,7 @@
 const { is, x, lazify } = adone;
 
+export const __esNamespace = true;
+
 const JSONSchema = lazify({
     x: "./x",
     $dataMetaSchema: "./data_metaschema",

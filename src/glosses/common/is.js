@@ -139,6 +139,7 @@ const win32PathAbsolute = (path) => {
 const platform = process.platform;
 
 const is = {
+    __esNamespace: true,
     _getTag: getTag,
     // Checks whether given value is `null`.
     null: (value) => value === null,
@@ -226,6 +227,7 @@ const is = {
         const Ctor = hasOwnProperty.call(proto, "constructor") && proto.constructor;
         return typeof Ctor === "function" && Ctor instanceof Ctor && funcToString.call(Ctor) === objectCtorString;
     },
+    namespace: (value) => is.plainObject(value) && value.__esNamespace === true,
     // Checks whether given value is class
     class: (value) => (typeof (value) === "function" && is.propertyOwned(value, "prototype") && value.prototype && is.propertyOwned(value.prototype, "constructor") && value.prototype.constructor.toString().substring(0, 5) === "class"),
     // Checks whether given value is an empty object, i.e, an object without any own, enumerable, string keyed properties.

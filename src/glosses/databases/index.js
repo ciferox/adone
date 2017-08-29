@@ -6,3 +6,5 @@ adone.lazify({
     mongo: "./mongo",
     pouch: "./pouch"
 }, exports, require);
+
+export const __esNamespace = true;

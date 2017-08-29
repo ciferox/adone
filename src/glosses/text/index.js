@@ -1,5 +1,7 @@
 const { is } = adone;
 
+export const __esNamespace = true;
+
 // From Mozilla Developper Network
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
 const escapeControlMap = { "\r": "\\r", "\n": "\\n", "\t": "\\t", "\x7f": "\\x7f" };
