@@ -83,6 +83,10 @@ export const which = async (cmd, opt = {}) => {
         return found;
     }
 
+    if (opt.nothrow) {
+        return null;
+    }
+
     throw getNotFoundError(cmd);
 };
 

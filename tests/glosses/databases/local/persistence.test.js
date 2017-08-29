@@ -249,7 +249,7 @@ describe("database", "local", "Persistence", () => {
         const fakeData = "{\"_id\":\"one\",\"hello\":\"world\"}\n" + "Some corrupt data\n" + "{\"_id\":\"two\",\"hello\":\"earth\"}\n" + "{\"_id\":\"three\",\"hello\":\"you\"}\n";
 
         const corruptFile = await tmpdir.addFile("corruptTest.db", {
-            content: fakeData
+            contents: fakeData
         });
 
         // Default corruptAlertThreshold
@@ -787,7 +787,7 @@ describe("database", "local", "Persistence", () => {
 
         it("Deletes file if it exists", async () => {
             const file = await tmpdir.addFile("existing", {
-                content: "hello world"
+                contents: "hello world"
             });
             await storage.ensureFileDoesntExist(file.path());
             expect(await file.exists()).to.be.false;

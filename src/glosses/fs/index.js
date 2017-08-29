@@ -413,14 +413,14 @@ export const statSync = std.fs.statSync;
 export const writeFileSync = std.fs.writeFileSync;
 export const readdirSync = std.fs.readdirSync;
 
-export const readFile = async (filepath, { check = false, encoding = null } = {}) => {
+export const readFile = async (filepath, { check = false, encoding = null, flags = "r" } = {}) => {
     if (check) {
         if (!await adone.fs.is.file(filepath)) {
             return null;
         }
     }
     return new Promise((resolve, reject) => {
-        return std.fs.readFile(filepath, { encoding }, (err, data) => {
+        return std.fs.readFile(filepath, { encoding, flags }, (err, data) => {
             if (err) {
                 return reject(err);
             }
@@ -429,14 +429,14 @@ export const readFile = async (filepath, { check = false, encoding = null } = {}
     });
 };
 
-export const readFileSync = (filepath, { check = false, encoding = null } = {}) => {
+export const readFileSync = (filepath, { check = false, encoding = null, flags = "r" } = {}) => {
     if (check) {
         if (!adone.fs.is.fileSync(filepath)) {
             return null;
         }
     }
     try {
-        return std.fs.readFileSync(filepath, { encoding });
+        return std.fs.readFileSync(filepath, { encoding, flags });
     } catch (err) {
         return null;
     }
@@ -475,7 +475,17 @@ export const readWordsSync = (filepath, { check = false } = {}) => {
     return content.toString().split(new RegExp("\\s+", "g"));
 };
 
-export const constants = std.fs.constants;
+export const constants = {
+    ...std.fs.constants,
+    SEEK_SET: 0,
+    SEEK_CUR: 1,
+    SEEK_END: 2,
+    LOCK_SH: 1,
+    LOCK_EX: 2,
+    LOCK_NB: 4,
+    LOCK_UN: 8
+};
+
 export const accessSync = std.fs.accessSync;
 
 export const exists = (path) => adone.fs.access(path, constants.F_OK).then(() => true, (err) => {

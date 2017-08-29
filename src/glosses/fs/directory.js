@@ -1,4 +1,4 @@
-const { std: { fs: sfs, path: spath }, vendor: { lodash: _ }, is, fs } = adone;
+const { std: { path: spath }, is, fs } = adone;
 
 export default class Directory {
     constructor(...path) {
@@ -80,24 +80,6 @@ export default class Directory {
         return new Directory(path);
     }
 
-    async addFile(...filename) {
-        let opts = { content: null, mode: 0o666 };
-        if (is.object(filename[filename.length - 1])) {
-            opts = _.defaults(filename.pop(), opts);
-        }
-        let root = this;
-        if (filename.length > 1) {
-            root = await this._ensurePath(filename.slice(0, -1));
-        }
-        filename = filename.pop();
-        const file = new fs.File(spath.join(root.path(), filename));
-        await file.create({ mode: opts.mode });
-        if (opts.content) {
-            await file.write(opts.content);
-        }
-        return file;
-    }
-
     async _ensurePath(path) {
         let root = this;
         for (const part of path) {
@@ -107,6 +89,24 @@ export default class Directory {
             }
         }
         return root;
+    }
+
+    async addFile(...filename) {
+        const opts = { contents: null, mode: 0o666 };
+        if (is.object(filename[filename.length - 1])) {
+            Object.assign(opts, filename.pop());
+        }
+        let root = this;
+        if (filename.length > 1) {
+            root = await this._ensurePath(filename.slice(0, -1));
+        }
+        filename = filename.pop();
+        const file = new fs.File(spath.join(root.path(), filename));
+        await file.create({ mode: opts.mode });
+        if (opts.contents) {
+            await file.write(opts.contents);
+        }
+        return file;
     }
 
     async addDirectory(...filename) {
@@ -125,7 +125,7 @@ export default class Directory {
         const files = await Promise.all(paths.map(async (x) => {
             const path = spath.join(this._path, x);
             const stat = await fs.lstat(path).catch((err) => {
-                if (err.code === "ENOENT") {  // wow
+                if (err.code === "ENOENT") { // wow
                     return null;
                 }
                 return Promise.reject(err);
@@ -150,7 +150,7 @@ export default class Directory {
             try {
                 stat = fs.statSync(path);
             } catch (err) {
-                if (err.code === "ENOENT") {  // wow
+                if (err.code === "ENOENT") { // wow
                     stat = null;
                 }
                 throw err;
@@ -234,8 +234,8 @@ export default class Directory {
         return fs.copy(srcPath, this._path, options);
     }
 
-    static async create(pathName) {
-        const dir = new Directory(pathName);
+    static async create(...path) {
+        const dir = new Directory(...path);
         await dir.create();
         return dir;
     }

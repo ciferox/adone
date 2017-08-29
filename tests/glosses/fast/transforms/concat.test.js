@@ -63,7 +63,7 @@ describe("fast", "transform", "concat", () => {
 
     it("should concat one file", async () => {
         await fromdir.addFile("test.js", {
-            content: "console.log(123);"
+            contents: "console.log(123);"
         });
         await fast.src(srcPath).concat("test.js").dest(todir.path());
         const file = todir.getVirtualFile("test.js");
@@ -73,10 +73,10 @@ describe("fast", "transform", "concat", () => {
 
     it("should concat multiple files", async () => {
         await fromdir.addFile("test.js", {
-            content: "console.log(123);"
+            contents: "console.log(123);"
         });
         await fromdir.addFile("test2.js", {
-            content: "console.log(456);"
+            contents: "console.log(456);"
         });
         const files = await fast.src(srcPath).concat("test.js").dest(todir.path(), { produceFiles: true });
         const file = todir.getVirtualFile("test.js");
@@ -86,7 +86,7 @@ describe("fast", "transform", "concat", () => {
 
     it("should preserve mode from files", async () => {
         await fromdir.addFile("test.js", {
-            content: "consle.log(123);"
+            contents: "consle.log(123);"
         });
         let mode;
         const [file] = await fast.src(srcPath).map((x) => {
@@ -98,13 +98,13 @@ describe("fast", "transform", "concat", () => {
 
     it("should take path from latest file", async () => {
         await fromdir.addFile("test.js", {
-            content: "console.log(123);"
+            contents: "console.log(123);"
         });
         await fromdir.addFile("hello", "test2.js", {
-            content: "console.log(456);"
+            contents: "console.log(456);"
         });
         await fromdir.addFile("hello", "world", "test3.js", {
-            content: "console.log(789);"
+            contents: "console.log(789);"
         });
         let latest;
         const [file] = await fast.src(srcPath).map((x) => latest = x).concat("test.js");
@@ -113,10 +113,10 @@ describe("fast", "transform", "concat", () => {
 
     it("should preserve relative path from files", async () => {
         await fromdir.addFile("test.js", {
-            content: "console.log(123);"
+            contents: "console.log(123);"
         });
         await fromdir.addFile("hello", "test2.js", {
-            content: "console.log(456);"
+            contents: "console.log(456);"
         });
         const [file] = await fast.src(srcPath).concat("all.js");
         expect(file.relative).to.be.equal("all.js");
@@ -124,10 +124,10 @@ describe("fast", "transform", "concat", () => {
 
     it("should support source maps", async () => {
         await fromdir.addFile("test.js", {
-            content: "console.log(123);"
+            contents: "console.log(123);"
         });
         await fromdir.addFile("hello", "test2.js", {
-            content: "console.log(456);"
+            contents: "console.log(456);"
         });
 
         await fast.src(srcPath)
@@ -164,7 +164,7 @@ describe("fast", "transform", "concat", () => {
 
         it("should create file based on path property", async () => {
             await fromdir.addFile("test.js", {
-                content: "console.log(123);"
+                contents: "console.log(123);"
             });
             await fast.src(srcPath).concat({ path: "new.txt" }).dest(todir.path());
             const file = todir.getVirtualFile("new.txt");
@@ -174,7 +174,7 @@ describe("fast", "transform", "concat", () => {
 
         it("should calculate relative path from cwd and path in arguments", async () => {
             await fromdir.addFile("test.js", {
-                content: "console.log(123);"
+                contents: "console.log(123);"
             });
             await fast
                 .src(srcPath)

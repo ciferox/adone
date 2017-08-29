@@ -205,7 +205,7 @@ describe("net", "mail", "Shared Funcs Tests", () => {
                 data: {
                     html: {
                         encoding: "base64",
-                        content: new Buffer(str).toString("base64")
+                        contents: new Buffer(str).toString("base64")
                     }
                 }
             };

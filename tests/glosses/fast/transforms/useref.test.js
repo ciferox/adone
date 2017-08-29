@@ -68,7 +68,7 @@ describe("fast", "transform", "useref", () => {
 
     it("should replace reference in css block and return replaced files", async () => {
         await fromdir.addFile("index.html", {
-            content: [
+            contents: [
                 "<html>",
                 "    <head>",
                 "        <!-- build:css /css/combined.css -->",

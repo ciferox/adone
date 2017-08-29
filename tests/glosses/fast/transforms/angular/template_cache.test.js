@@ -455,8 +455,8 @@ describe("fast", "transform", "angular", "templateCache", () => {
         });
 
         it("should build valid $templateCache from multiple source-files", async () => {
-            await root.addFile("template-a.html", { content: "<h1 id=\"template-a\">I'm template A!</h1>" });
-            await root.addFile("template-b.html", { content: "<h1 id=\"template-b\">I'm template B!</h1>" });
+            await root.addFile("template-a.html", { contents: "<h1 id=\"template-a\">I'm template A!</h1>" });
+            await root.addFile("template-b.html", { contents: "<h1 id=\"template-b\">I'm template B!</h1>" });
 
             const files = await fast.src(root.getVirtualFile("**", "*").path())
                 .angularTemplateCache("templates.js")
@@ -468,7 +468,7 @@ describe("fast", "transform", "angular", "templateCache", () => {
         });
 
         it("should set filename", async () => {
-            await root.addFile("template-a.html", { content: "<h1 id=\"template-a\">I'm template A!</h1>" });
+            await root.addFile("template-a.html", { contents: "<h1 id=\"template-a\">I'm template A!</h1>" });
 
             const files = await fast.src(root.getVirtualFile("**", "*").path())
                 .angularTemplateCache({

@@ -314,7 +314,7 @@ describe("fast", "transform", "wrap", () => {
 
         it("should wrap", async () => {
             await fromdir.addFile("hello.js", {
-                content: "console.log(123);"
+                contents: "console.log(123);"
             });
             await fast.src(srcPath).wrap("function() { <%= file.contents %> }").map((file) => {
                 expect(file.contents.toString()).to.be.equal("function() { console.log(123); }");
@@ -324,7 +324,7 @@ describe("fast", "transform", "wrap", () => {
 
         it("should support variables", async () => {
             await fromdir.addFile("hello.js", {
-                content: "console.log(123);"
+                contents: "console.log(123);"
             });
             await fast.src(srcPath)
                 .wrap("function() { <%= file.contents %> } <%= a %>", { a: 123 })
@@ -336,7 +336,7 @@ describe("fast", "transform", "wrap", () => {
 
         it("should support custom variable names", async () => {
             await fromdir.addFile("hello.js", {
-                content: "console.log(123);"
+                contents: "console.log(123);"
             });
             await fast.src(srcPath)
                 .wrap("function() { <%= d.file.contents %> } <%= d.a %>", { a: 123 }, { variable: "d" })

@@ -1,4 +1,3 @@
-
 const { is, fs, std: { path, constants: c }, x } = adone;
 
 export default class RandomAccessFile extends adone.event.EventEmitter {

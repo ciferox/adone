@@ -26,7 +26,7 @@ describe("fast", "transform", "deleteLines", () => {
 
     it("should delete lines by regex and string", async () => {
         await fromdir.addFile("test.txt", {
-            content: "Hello, World!\nHallo, World!\nScotland!!!\nFreedom!!!\n"
+            contents: "Hello, World!\nHallo, World!\nScotland!!!\nFreedom!!!\n"
         });
 
         await fast.src(srcPath).deleteLines([/H[ae]llo/, "Scotland"]).dest(todir.path());

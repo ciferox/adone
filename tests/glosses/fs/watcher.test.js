@@ -53,8 +53,8 @@ describe("fs", "watcher", function watcherTests() {
         fixtures = await adone.fs.Directory.createTmp({ dir: rootFixtures.path() });
         process.chdir(fixtures.path());
         await Promise.all([
-            fixtures.addFile("change.txt", { content: "b" }),
-            fixtures.addFile("unlink.txt", { content: "b" })
+            fixtures.addFile("change.txt", { contents: "b" }),
+            fixtures.addFile("unlink.txt", { contents: "b" })
         ]);
         await sleep();
     });
@@ -263,7 +263,7 @@ describe("fs", "watcher", function watcherTests() {
                 const unlink = spy();
                 const add = spy();
                 const change = spy();
-                const testFile = await fixtures.addFile("add.txt", { content: "hello" });
+                const testFile = await fixtures.addFile("add.txt", { contents: "hello" });
                 watcher.on("unlink", unlink).on("add", add).on("change", change);
                 if (!readySpy.callCount) {
                     await readySpy.waitForCall();
@@ -460,7 +460,7 @@ describe("fs", "watcher", function watcherTests() {
             it("should emit `add` for a file in a renamed directory", async () => {
                 options.ignoreInitial = true;
                 const dir = await fixtures.addDirectory("subdir");
-                await dir.addFile("add.txt", { content: Date.now() });
+                await dir.addFile("add.txt", { contents: Date.now() });
                 const add = spy();
                 const ready = spy();
 
@@ -590,9 +590,9 @@ describe("fs", "watcher", function watcherTests() {
                 );
                 const subdir = await fix.addDirectory("subdir");
                 const subsub = await subdir.addDirectory("subsub");
-                const a = await subdir.addFile("a.txt", { content: "b" });
-                const b = await subdir.addFile("b.txt", { content: "b" });
-                const ab = await subsub.addFile("ab.txt", { content: "b" });
+                const a = await subdir.addFile("a.txt", { contents: "b" });
+                const b = await subdir.addFile("b.txt", { contents: "b" });
+                const ab = await subsub.addFile("ab.txt", { contents: "b" });
                 const add = fix.getVirtualFile("add.txt");
 
                 const all = spy();
@@ -735,7 +735,7 @@ describe("fs", "watcher", function watcherTests() {
             it("should not confuse glob-like filenames with globs", async () => {
                 const all = spy();
                 const ready = spy();
-                const file = await fixtures.addFile("nota[glob].txt", { content: "b" });
+                const file = await fixtures.addFile("nota[glob].txt", { contents: "b" });
                 await sleep();
                 stdWatcher()
                     .on("all", all)
@@ -821,7 +821,7 @@ describe("fs", "watcher", function watcherTests() {
                     ]]
                 ]);
                 const fix = fixtures.getVirtualDirectory("inner", "one_more");
-                const deepFile = await fix.addFile("sibdir", "subsub", "subsubsub", "a.txt", { content: "b" });
+                const deepFile = await fix.addFile("sibdir", "subsub", "subsubsub", "a.txt", { contents: "b" });
                 const watchPath = adone.std.path.join(fix.path(), "..", "..", "in*er", "one*more", "**", "subsubsub", "*.txt");
                 const all = spy();
                 const ready = spy();
@@ -1449,9 +1449,9 @@ describe("fs", "watcher", function watcherTests() {
                     await ready.waitForCall();
                     await sleep();
 
-                    const vim = await fixtures.addFile(".change.txt.swp", { content: "a" });  // vim
-                    const emacs = await fixtures.addFile("add.txt\~", { content: "a" });  // vim/emacs
-                    const sublime = await fixtures.addFile(".subl5f4.tmp", { content: "a" });  // sublime
+                    const vim = await fixtures.addFile(".change.txt.swp", { contents: "a" });  // vim
+                    const emacs = await fixtures.addFile("add.txt\~", { contents: "a" });  // vim/emacs
+                    const sublime = await fixtures.addFile(".subl5f4.tmp", { contents: "a" });  // sublime
 
                     await sleep(300);
 
@@ -1474,7 +1474,7 @@ describe("fs", "watcher", function watcherTests() {
                     options.ignoreInitial = false;
                     const all = spy();
                     const ready = spy();
-                    const file = await fixtures.addFile("old.txt~", { content: "a" });
+                    const file = await fixtures.addFile("old.txt~", { contents: "a" });
                     await sleep();
 
                     stdWatcher().on("all", all).on("ready", ready);
@@ -1804,7 +1804,7 @@ describe("fs", "watcher", function watcherTests() {
                     const all = spy();
                     const ready = spy();
                     const subdir = await fixtures.addDirectory("subdir");
-                    const file = await subdir.addFile("add.txt", { content: "hello" });
+                    const file = await subdir.addFile("add.txt", { contents: "hello" });
                     options.cwd = file.dirname();
                     stdWatcher().on("all", all).on("ready", ready);
                     await ready.waitForCall();

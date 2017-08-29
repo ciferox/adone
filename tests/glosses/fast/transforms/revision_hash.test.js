@@ -171,7 +171,7 @@ describe("fast", "transform", "revision hash", () => {
     it("should handle sourcemaps transparently", async () => {
         await fromdir.addFile("hello.css");
         await fromdir.addFile("maps", "hello.css.map", {
-            content: Buffer.from(JSON.stringify({ file: "../hello.css" }))
+            contents: Buffer.from(JSON.stringify({ file: "../hello.css" }))
         });
 
         await fast.src(srcPath).revisionHash().map((file) => {
@@ -184,7 +184,7 @@ describe("fast", "transform", "revision hash", () => {
     it("should handle unparseable sourcemaps correctly", async () => {
         await fromdir.addFile("hello.css");
         await fromdir.addFile("hello.css.map", {
-            content: "Not a valid JSON!"
+            contents: "Not a valid JSON!"
         });
 
         await fast.src(srcPath).revisionHash().map((file) => {
@@ -197,7 +197,7 @@ describe("fast", "transform", "revision hash", () => {
     it("should be okay when the optional sourcemap.file is not defined", async () => {
         await fromdir.addFile("hello.css");
         await fromdir.addFile("hello.css.map", {
-            content: Buffer.from("{}")
+            contents: Buffer.from("{}")
         });
 
         await fast.src(srcPath).revisionHash().map((file) => {
