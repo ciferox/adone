@@ -1,11 +1,11 @@
-const adone = require("adone").adone;
+const adone = require(process.env.ADONE_ROOT_PATH).adone;
 
 adone.application.run({
     status: "non configured",
     _: {
         title: "adone compact application"
     },
-    
+
     configure() {
         adone.log(this.status);
         this.status = "configured";

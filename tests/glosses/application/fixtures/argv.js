@@ -1,4 +1,4 @@
-const adone = require("adone").adone;
+const adone = require(process.env.ADONE_ROOT_PATH).adone;
 
 class TestApp extends adone.application.Application {
     main() {

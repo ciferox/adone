@@ -7,6 +7,18 @@ const {
 const fixture = std.path.join.bind(std.path, __dirname, "fixtures");
 
 describe("application", "Application", () => {
+    let prevRoot = null;
+
+    before(() => {
+        // define env var to require correct adone inside fixture apps
+        prevRoot = process.env.ADONE_ROOT_PATH; // ?
+        process.env.ADONE_ROOT_PATH = adone.rootPath;
+    });
+
+    after(() => {
+        process.env.ADONE_ROOT_PATH = prevRoot;
+    });
+
     it("by default should use script name as application name", async () => {
         const name = await execStdout("node", [fixture("test_name.js")]);
         assert.equal(name, "test_name");

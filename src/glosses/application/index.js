@@ -992,6 +992,7 @@ class Command {
         if (!options.handler) {
             options.handler = (args, opts, { command }) => {
                 adone.log(escape(command.getHelpMessage()));
+                return 1;
             };
             options.handler[INTERNAL] = true;
         }
@@ -1066,8 +1067,9 @@ class Command {
         for (const arg of this.arguments) {
             messages.push(arg.getUsageMessage());
         }
-
-        table.push([null, chain, argumentsWrap(messages, argumentsLength)]);
+        if (messages.length || !this.handler[INTERNAL]) {
+            table.push([null, chain, argumentsWrap(messages, argumentsLength)]);
+        }
 
         const commands = this.commands;
         if (commands.length !== 0) {
@@ -1324,7 +1326,7 @@ export class Application extends Subsystem {
         this[VERSION] = null;
         this[REPORT] = null;
         this[INTERACTIVE] = interactive;
-        
+
         this[SUBSYSTEMS] = [];
 
         this.setMaxListeners(Infinity);
@@ -1398,6 +1400,9 @@ export class Application extends Subsystem {
     }
 
     main() {
+        // print usage message by default
+        adone.log(`${escape(this[MAIN_COMMAND].getHelpMessage())}\n`);
+        return 1;
     }
 
     async run({ ignoreArgs = false } = {}) {
@@ -1720,6 +1725,8 @@ export class Application extends Subsystem {
             optionsGroups: [],
             colors: "default"
         }, options);
+
+        options.handler[INTERNAL] = this.main[INTERNAL];
 
         if (!hasColorsSupport) {
             options.colors = false;
@@ -2355,6 +2362,10 @@ export class Application extends Subsystem {
         return this.exit(Application.SUCCESS);
     }
 }
+
+// mark the default main as internal to be able to distinguish internal from user-defined handlers
+Application.prototype.main[INTERNAL] = true;
+
 tag.set(Application, tag.APPLICATION);
 Application.SUCCESS = 0;
 Application.ERROR = 1;
@@ -2378,8 +2389,9 @@ export const run = async (App, ignoreArgs = false) => {
         return app.run({ ignoreArgs });
     }
 
-    // surrogate application
-    const allProps = util.entries(is.class(App) ? App.prototype : App, { all: true });
+    // surrogate application, use only own properties
+    const _App = is.class(App) ? App.prototype : App;
+    const allProps = util.entries(_App, { onlyEnumerable: false });
 
     if (!is.null(instance)) {
         await instance._uninitialize();
@@ -2394,21 +2406,20 @@ export const run = async (App, ignoreArgs = false) => {
 
     class XApplication extends adone.application.Application { }
 
-    const props = new Map();
+    const props = [];
 
     for (const [name, value] of allProps) {
         if (is.function(value)) {
             XApplication.prototype[name] = value;
         } else {
-            props.set(name, value);
+            props.push(name);
         }
     }
 
     const app = new XApplication();
-    if (props.size > 0) {
-        for (const [name, value] of props.entries()) {
-            app[name] = value;
-        }
+    for (const name of props) {
+        const descriptor = Object.getOwnPropertyDescriptor(_App, name);
+        Object.defineProperty(app, name, descriptor);
     }
 
     return app.run({ ignoreArgs });
