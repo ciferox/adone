@@ -97,9 +97,9 @@ export class InstallationManager {
         const subsystemInfo = {
             name: adoneConf.name,
             description: adoneConf.description,
-            path: indexPath
+            subsystem: indexPath
         };
-        const subsystems = ADONE_CONFIG.cli.subsystems;
+        const subsystems = adone.application.instance.config.cli.subsystems;
 
         let i;
         for (i = 0; i < subsystems.length; i++) {
@@ -116,7 +116,7 @@ export class InstallationManager {
 
         subsystems.sort((a, b) => a.name > b.name);
 
-        await ADONE_CONFIG.save(std.path.join(ADONE_CONFIGS_PATH, "cli.json"), "cli", {
+        await adone.application.instance.config.save(std.path.join(ADONE_CONFIGS_PATH, "cli.json"), "cli", {
             space: "    "
         });
     }

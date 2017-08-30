@@ -70,7 +70,52 @@ describe("application", "Application", () => {
         assert.equal(stdout, "ok");
     });
 
+    it("correct application exception handling during uninitialization", async () => {
+        const err = await assert.throws(async () => exec("node", [fixture("exception_on_uninitialization")]));
+        assert.equal(err.code, 1);
+        assert.match(err.stderr, /Something bad happend during uninitialization/);
+    });
+
     describe("Subsystems", () => {
-        
+        for (let i = 1; i <= 3; i++) {
+            it(`Improper subsystem addition ${i}`, async () => {
+                const err = await assert.throws(async () => exec("node", [fixture(`improper_subsystem_addition${i}.js`)]));
+                assert.equal(err.code, 1);
+                assert.match(err.stderr, /Subsystem can be added only during configuration of the application/);
+            });
+        }
+
+        it("add subsystem by instance", async () => {
+            const stdout = await execStdout("node", [fixture("add_subsystem_by_instance.js")]);
+            assert.equal(stdout, "configure\ninitialize\nuninitialize");
+        });
+
+        it("initialization and deinitialization of subsystems in accordance with the order of their addition", async () => {
+            const stdout = await execStdout("node", [fixture("subsystems_order.js")]);
+            assert.equal(stdout, "app_configure\nconfigure1\nconfigure2\napp_initialize\ninitialize1\ninitialize2\napp_uninitialize\nuninitialize2\nuninitialize1");
+        });
+
+        for (let i = 1; i <= 2; i++) {
+            it(`get subsystem by name (${i})`, async () => {
+                const stdout = await execStdout("node", [fixture(`get_subsystem${i}.js`)]);
+                assert.equal(stdout, "test subsystem");
+            });
+        }
+
+        it("get unknown subsystem", async () => {
+            const err = await assert.throws(async () => execStdout("node", [fixture("get_unknown_subsystem.js")]));
+            assert.equal(err.code, 1);
+            assert.match(err.stderr, /Unknown subsystem/);
+        });
+
+        it("subsystem custom initialization", async () => {
+            const stdout = await execStdout("node", [fixture("subsystem_custom_initialize.js")]);
+            assert.equal(stdout, "app_configure\nconfigure1\nconfigure2\napp_initialize\ninitialize2\ninitialize1\napp_uninitialize\nuninitialize2\nuninitialize1");
+        });
+
+        it("subsystem custom deinitialization", async () => {
+            const stdout = await execStdout("node", [fixture("subsystem_custom_uninitialize.js")]);
+            assert.equal(stdout, "app_configure\nconfigure1\nconfigure2\napp_initialize\ninitialize1\ninitialize2\nuninitialize1\napp_uninitialize\nuninitialize2");
+        });
     });
 });

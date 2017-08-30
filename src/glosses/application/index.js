@@ -66,6 +66,7 @@ const MAIN_COMMAND = Symbol.for("adone.application.Application#mainCommand");
 const SUBSYSTEMS = Symbol();
 const VERSION = Symbol();
 const HANDLERS = Symbol();
+const STAGE = Symbol();
 
 
 const escape = (x) => x.replace(/%/g, "%%");
@@ -1309,6 +1310,15 @@ tag.set(Subsystem, tag.SUBSYSTEM);
 
 export let instance = null; // eslint-disable-line
 
+const STAGE_NEW = 0;
+const STAGE_CONFIGURING = 1;
+const STAGE_CONFIGURED = 2;
+const STAGE_INITIALIZING = 3;
+const STAGE_INITIALIZED = 4;
+const STAGE_RUNNING = 5;
+const STAGE_UNINITIALIZING = 6;
+const STAGE_UNINITIALIZED = 7;
+
 export class Application extends Subsystem {
     constructor({
         name = std.path.basename(process.argv[1], std.path.extname(process.argv[1])),
@@ -1320,7 +1330,7 @@ export class Application extends Subsystem {
         this.argv = argv;
         this.name = name;
 
-        this[EXITING] = false;
+        this[EXITING] = null;
         this[IS_MAIN] = false;
         this[MAIN_COMMAND] = null;
         this[HANDLERS] = null;
@@ -1328,6 +1338,7 @@ export class Application extends Subsystem {
         this[VERSION] = null;
         this[REPORT] = null;
         this[INTERACTIVE] = interactive;
+        this[STAGE] = STAGE_NEW;
 
         this[SUBSYSTEMS] = [];
 
@@ -1404,7 +1415,7 @@ export class Application extends Subsystem {
     main() {
         // print usage message by default
         adone.log(`${escape(this[MAIN_COMMAND].getHelpMessage())}\n`);
-        return 1;
+        return Application.SUCCESS;
     }
 
     async run({ ignoreArgs = false } = {}) {
@@ -1414,7 +1425,11 @@ export class Application extends Subsystem {
             }
 
             this[ERROR_SCOPE] = true;
+            this[STAGE] = STAGE_CONFIGURING;
             await this.configure();
+            for (const sysInfo of this[SUBSYSTEMS]) {
+                await this._configureSubsystem(sysInfo); // eslint-disable-line
+            }
             this[ERROR_SCOPE] = false;
 
             let command = this[MAIN_COMMAND];
@@ -1424,21 +1439,29 @@ export class Application extends Subsystem {
             if (!ignoreArgs) {
                 ({ command, errors, rest, match } = await this._parseArgs(this.argv));
             }
+            this[STAGE] = STAGE_CONFIGURED;
 
             if (errors.length) {
                 adone.log(`${escape(command.getUsageMessage())}\n`);
                 for (const error of errors) {
                     adone.log(escape(error.message));
                 }
-                return this.exit(Application.ERROR);
+                await this.exit(Application.ERROR);
+                return;
             }
             this[ERROR_SCOPE] = true;
+            this[STAGE] = STAGE_INITIALIZING;
             await this.initialize();
+            await this.initializeSubsystems();
+            this[STAGE] = STAGE_INITIALIZED;
+            
             const code = await command.execute(rest, match);
             this[ERROR_SCOPE] = false;
             if (is.integer(code)) {
-                return this.exit(code);
+                await this.exit(code);
+                return;
             }
+            this[STAGE] = STAGE_RUNNING;
         } catch (err) {
             if (this[ERROR_SCOPE]) {
                 return this._fireException(err);
@@ -1449,83 +1472,43 @@ export class Application extends Subsystem {
     }
 
     /**
-     * Adds cli subsystem. Depending on root-command associated cli subsystem will be loaded lazily.
-     *
-     * @param {{ name, description = "", group = "subsystem", path } = {}} ssConfig Subsystem object.
-     * @returns {void}
-     */
-    useCliSubsystem({ name, description = "", group = "subsystem", path } = {}) {
-        if (!is.string(name)) {
-            throw new x.NotValid("Invalid name of subsystem");
-        }
-
-        if (!is.string(path)) {
-            throw new x.NotValid("Invalid path of subsystem");
-        }
-
-        if (!std.path.isAbsolute(path)) {
-            throw new x.NotValid("Path must be absolute");
-        }
-
-        this.defineCommand({
-            name,
-            description,
-            group,
-            loader: () => this.loadSubsystem({
-                subsystem: path,
-                configure: false,
-                initialize: false
-            })
-        });
-    }
-
-    /**
-     * Adds cli subsystems.
-     *
-     * @param {*string|array<{ name, description, group, path }>} subsystems Absolute path with subsystems or list of subsystem descriptors
-     */
-    async useCliSubsystems(subsystems, { group = "subsystem" } = {}) {
-        if (is.string(subsystems)) {
-            if (!std.path.isAbsolute(subsystems)) {
-                throw new x.NotValid("Path should be absolute");
-            }
-            const files = await fs.readdir(subsystems);
-            for (const file of files) {
-                const path = std.path.join(subsystems, file);
-                if (await fs.is.directory(path)) { // eslint-disable-line
-                    const adoneConfPath = std.path.join(path, "adone.conf.js");
-                    if (await fs.exists(adoneConfPath)) { // eslint-disable-line
-                        const adoneConf = adone.require(adoneConfPath);
-
-                        this.useCliSubsystem({
-                            name: adoneConf.name,
-                            description: adoneConf.description,
-                            group,
-                            path
-                        });
-                    }
-                }
-            }
-        } else if (is.array(subsystems)) {
-            for (const ss of subsystems) {
-                this.useCliSubsystem(Object.assign({}, ss, {
-                    group
-                }));
-            }
-        } else {
-            throw new x.InvalidArgument("Argument should be a string or an array");
-        }
-    }
-
-    /**
-     * Loads subsystem from specified path.
+     * Adds a new subsystem to the application.
      *
      * @param {string|adone.application.Subsystem} subsystem Subsystem instance or absolute path.
-     * @returns {Promise<adone.application.Subsystem>}
+     * @param {string} name Name of subsystem.
+     * @param {string} description Description of subsystem.
+     * @param {string} group Group of subsystem.
+     * @param {array} configureArgs Arguments sending to configure() method of subsystem.
+     * @param {boolean} addOnCommand If true, the subsystem will be added only if a command 'name' is requested.
+     * @returns {null|Promise<object>}
      */
-    async loadSubsystem({ name = null, subsystem, configure = true, initialize = true } = {}) {
+    async addSubsystem({ subsystem, name = null, description = "", group = "subsystem", configureArgs = [], addOnCommand = false } = {}) {
+        if (this[STAGE] !== STAGE_CONFIGURING) {
+            throw new x.NotAllowed("Subsystem can be added only during configuration of the application");
+        }
+
+        if (addOnCommand === true) {
+            this.defineCommand({
+                name,
+                description,
+                group,
+                loader: () => this.addSubsystem({
+                    subsystem,
+                    name,
+                    description,
+                    group,
+                    configureArgs
+                })
+            });
+            return null;
+        }
+
         let instance;
         if (is.string(subsystem)) {
+            if (!std.path.isAbsolute(subsystem)) {
+                throw new x.NotValid("Path must be absolute");
+            }
+
             let SomeSubsystem = require(subsystem);
             if (SomeSubsystem.__esModule === true) {
                 SomeSubsystem = SomeSubsystem.default;
@@ -1537,26 +1520,24 @@ export class Application extends Subsystem {
             throw new x.NotValid("'subsystem' should be path or instance of adone.application.Subsystem");
         }
 
-        if (is.null(name)) {
+        if (!is.string(name)) {
             name = instance.constructor.name;
         }
 
         instance.app = this;
 
-        this[SUBSYSTEMS].push({
+        const sysInfo = {
             name,
-            instance
-        });
+            description,
+            group,
+            configureArgs,
+            instance,
+            stage: STAGE_NEW
+        };
 
-        if (configure) {
-            await instance.configure();
-        }
+        this[SUBSYSTEMS].push(sysInfo);
 
-        if (initialize) {
-            await instance.initialize();
-        }
-
-        return instance;
+        return sysInfo;
     }
 
     /**
@@ -1564,41 +1545,93 @@ export class Application extends Subsystem {
      *
      * @param {string} path Subsystems path.
      * @param {array|function} filter Array of subsystem names or filter [async] function '(name) => true | false'.
-     * @param {boolean} [initialize = true] Whether subsystems should be initialized.
      * @returns {Promise<void>}
      */
-    async loadSubsystemsFrom(path, filter, { initialize = true } = {}) {
+    async addSubsystemsFrom(path, filter, { group = "subsystem", configureArgs = [], addOnCommand = false } = {}) {
+        if (this[STAGE] !== STAGE_CONFIGURING) {
+            throw new x.NotAllowed("Subsystem can be added only during configuration of the application");
+        }
+
+        if (!std.path.isAbsolute(path)) {
+            throw new x.NotValid("Path should be absolute");
+        }
+
         const names = await fs.readdir(path);
 
         if (is.array(filter)) {
             const targetNames = filter;
             filter = (name) => targetNames.includes(name);
+        } else if (!is.function(filter)) {
+            filter = adone.truly;
         }
 
         for (const name of names) {
             if (await filter(name)) { // eslint-disable-line
                 // eslint-disable-next-line
-                await this.loadSubsystem({
+                await this.addSubsystem({
                     subsystem: std.path.join(path, name),
-                    initialize
+                    group,
+                    configureArgs,
+                    addOnCommand
                 });
             }
         }
     }
 
     /**
-     * Returns subsystems by name
+     * Returns subsystem info by name
      * 
      * @param {Subsystem} name Name of subsystem
      */
     getSubsystem(name) {
-        for (const ss of this[SUBSYSTEMS]) {
-            if (ss.name === name) {
-                return ss.instance;
+        for (const sys of this[SUBSYSTEMS]) {
+            if (sys.name === name) {
+                return sys;
             }
         }
 
         throw new x.Unknown(`Unknown subsystem: ${name}`);
+    }
+
+    /**
+     * Initializes specified subsystem.
+     *
+     * @param {string} name Name of subsystem
+     * @returns {Promise<void>}
+     */
+    async initializeSubsystem(name) {
+        for (const sysInfo of this[SUBSYSTEMS]) {
+            if (sysInfo.name === name) {
+                await this._initializeSubsystem(sysInfo); // eslint-disable-line
+                break;
+            }
+        }
+    }
+
+    /**
+     * Initializes all subsystems.
+     *
+     * @returns {Promise<void>}
+     */
+    async initializeSubsystems() {
+        for (const sys of this[SUBSYSTEMS]) {
+            await this._initializeSubsystem(sys); // eslint-disable-line
+        }
+    }
+
+    /**
+     * Uninitializes specified subsystem.
+     *
+     * @param {string} name Name of subsystem
+     * @returns {Promise<void>}
+     */
+    async uninitializeSubsystem(name) {
+        for (const sysInfo of this[SUBSYSTEMS]) {
+            if (sysInfo.name === name) {
+                await this._uninitializeSubsystem(sysInfo); // eslint-disable-line
+                break;
+            }
+        }
     }
 
     /**
@@ -1608,10 +1641,31 @@ export class Application extends Subsystem {
      */
     async uninitializeSubsystems() {
         for (let i = this[SUBSYSTEMS].length; --i >= 0; ) {
-            const ss = this[SUBSYSTEMS][i];
-            await ss.instance.uninitialize(); // eslint-disable-line
+            await this._uninitializeSubsystem(this[SUBSYSTEMS][i]); // eslint-disable-line
         }
         this[SUBSYSTEMS].length = 0;
+    }
+
+    async _configureSubsystem(sysInfo) {
+        sysInfo.stage = STAGE_CONFIGURING;
+        await sysInfo.instance.configure(...sysInfo.configureArgs);
+        sysInfo.stage = STAGE_CONFIGURED;
+    }
+
+    async _initializeSubsystem(sysInfo) {
+        if (sysInfo.stage === STAGE_CONFIGURED) {
+            sysInfo.stage = STAGE_INITIALIZING;
+            await sysInfo.instance.initialize();
+            sysInfo.stage = STAGE_INITIALIZED;
+        }
+    }
+
+    async _uninitializeSubsystem(sysInfo) {
+        if (sysInfo.stage === STAGE_INITIALIZED) {
+            sysInfo.stage = STAGE_UNINITIALIZING;
+            await sysInfo.instance.uninitialize();
+            sysInfo.stage = STAGE_UNINITIALIZED;
+        }
     }
 
     exitOnSignal(...names) {
@@ -1629,12 +1683,16 @@ export class Application extends Subsystem {
     }
 
     async _uninitialize() {
+        this[STAGE] = STAGE_UNINITIALIZING;
+
         await this.uninitialize();
 
         // Uninitialize subsystems
         await this.uninitializeSubsystems();
 
         this.removeProcessHandlers();
+
+        this[STAGE] = STAGE_UNINITIALIZED;
     }
 
     async exit(code = Application.SUCCESS) {
@@ -1643,9 +1701,13 @@ export class Application extends Subsystem {
         }
         this[EXITING] = true;
 
-        await this._uninitialize();
-
-        await this.emitParallel("exit", code);
+        try {
+            await this._uninitialize();
+            await this.emitParallel("exit", code);
+        } catch (err) {
+            adone.error(err.stack || err.message || err);
+            code = Application.ERROR;
+        }
 
         // Only main application instance can exit process.
         if (this !== instance) {
@@ -2063,10 +2125,9 @@ export class Application extends Subsystem {
                                 command = commands[j];
                                 if (is.function(command.loader)) {
                                     // We have lazy loaded subsystem, try load it and reinit command
-                                    const subsystem = await command.loader(); // eslint-disable-line
-                                    subsystem[COMMAND] = command;
-                                    await subsystem.configure(); // eslint-disable-line
-                                    await subsystem.initialize(); // eslint-disable-line
+                                    const sysInfo = await command.loader(); // eslint-disable-line
+                                    sysInfo.instance[COMMAND] = command;
+                                    await this._configureSubsystem(sysInfo); // eslint-disable-line
                                 }
                                 state.push("start command");
                                 nextPart();

@@ -148,6 +148,14 @@ export default class GenesisPeer extends AsyncEmitter {
         return this.netron.ping(this.uid);
     }
 
+    attachContextRemote(instance, ctxId) {
+        return this.netron.attachContextRemote(this.uid, instance, ctxId);
+    }
+
+    detachContextRemote(ctxId) {
+        return this.netron.detachContextRemote(this.uid, ctxId);
+    }
+
     getContextNames() {
         return Array.from(this._ctxidDefs.keys());
     }

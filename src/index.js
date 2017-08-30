@@ -2,6 +2,10 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
+Object.defineProperty(exports, "__esNamespace", {
+    value: true
+});
+
 if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
     const adone = Object.create({
         null: Symbol(),

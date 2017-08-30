@@ -131,7 +131,12 @@ export default class AdoneCLI extends application.Application {
             ]
         });
 
-        this.useCliSubsystems(this.config.cli.subsystems);
+        for (const ss of this.config.cli.subsystems) {
+            // eslint-disable-next-line
+            await this.addSubsystem(Object.assign({
+                addOnCommand: true
+            }, ss));
+        }
     }
 
     async installCommand(args, opts) {
