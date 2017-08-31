@@ -2,10 +2,10 @@ describe("geoip", "mmdb", "geoip", () => {
     const { geoip: { mmdb }, net: { address: { IP6 } }, std: { assert } } = adone;
 
     const fixtures = new adone.fs.Directory(__dirname, "fixtures");
-    const source = fixtures.getVirtualDirectory("source");
+    const source = fixtures.getDirectory("source");
 
     const actual = async (file) => {
-        const data = JSON.parse(await source.getVirtualFile(file).contents());
+        const data = JSON.parse(await source.getFile(file).contents());
         const hash = {};
         data.forEach((item) => {
             for (const key in item) {
@@ -26,11 +26,11 @@ describe("geoip", "mmdb", "geoip", () => {
     describe("basic functionality", () => {
 
         it("should successfully handle database", () => {
-            assert(mmdb.openSync(fixtures.getVirtualFile("GeoIP2-City-Test.mmdb").path()));
+            assert(mmdb.openSync(fixtures.getFile("GeoIP2-City-Test.mmdb").path()));
         });
 
         it("should fetch geo ip", async () => {
-            const geoIp = await mmdb.open(fixtures.getVirtualFile("GeoIP2-City-Test.mmdb").path());
+            const geoIp = await mmdb.open(fixtures.getFile("GeoIP2-City-Test.mmdb").path());
             const data = await actual("GeoIP2-City-Test.json");
             assert.deepEqual(geoIp.get("1.1.1.1"), null);
 
@@ -52,7 +52,7 @@ describe("geoip", "mmdb", "geoip", () => {
         });
 
         it("should accept cache options", () => {
-            assert(mmdb.openSync(fixtures.getVirtualFile("GeoIP2-City-Test.mmdb").path(), {
+            assert(mmdb.openSync(fixtures.getFile("GeoIP2-City-Test.mmdb").path(), {
                 cache: { max: 1000 }
             }));
         });
@@ -60,7 +60,7 @@ describe("geoip", "mmdb", "geoip", () => {
 
     describe("section: data", () => {
         it("should decode all possible types - complex", () => {
-            const geoIp = mmdb.openSync(fixtures.getVirtualFile("MaxMind-DB-test-decoder.mmdb").path());
+            const geoIp = mmdb.openSync(fixtures.getFile("MaxMind-DB-test-decoder.mmdb").path());
             assert.deepEqual(geoIp.get("::1.1.1.1"), {
                 array: [1, 2, 3],
                 boolean: true,
@@ -79,7 +79,7 @@ describe("geoip", "mmdb", "geoip", () => {
         });
 
         it("should decode all possible types - zero/empty values", () => {
-            const geoIp = mmdb.openSync(fixtures.getVirtualFile("MaxMind-DB-test-decoder.mmdb").path());
+            const geoIp = mmdb.openSync(fixtures.getFile("MaxMind-DB-test-decoder.mmdb").path());
             assert.deepEqual(geoIp.get("::0.0.0.0"), {
                 array: [],
                 boolean: false,
@@ -97,7 +97,7 @@ describe("geoip", "mmdb", "geoip", () => {
         });
 
         it("should return correct value: string entries", () => {
-            const geoIp = mmdb.openSync(fixtures.getVirtualFile("MaxMind-DB-string-value-entries.mmdb").path());
+            const geoIp = mmdb.openSync(fixtures.getFile("MaxMind-DB-string-value-entries.mmdb").path());
             assert.equal(geoIp.get("1.1.1.1"), "1.1.1.1/32");
             assert.equal(geoIp.get("1.1.1.2"), "1.1.1.2/31");
             assert.equal(geoIp.get("175.2.1.1"), null);
@@ -131,7 +131,7 @@ describe("geoip", "mmdb", "geoip", () => {
 
         files.forEach((file) => {
             it(`should test everything: ${file}`, async () => {
-                const geoIp = mmdb.openSync(fixtures.getVirtualFile(`${file}.mmdb`).path());
+                const geoIp = mmdb.openSync(fixtures.getFile(`${file}.mmdb`).path());
                 const data = await actual(`${file}.json`);
                 tester(geoIp, data);
             });

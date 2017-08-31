@@ -74,7 +74,7 @@ describe("util", "iconv", "Full SBCS encoding tests", function () {
                 const testEncName = enc + ((enc !== iconvName) ? ` (${iconvName})` : "");
 
                 it(`Decode SBCS encoding ${testEncName}`, async function () {
-                    const expectedFile = fixtures.getVirtualFile("sbcs", "decode", `${testEncName}.expected`);
+                    const expectedFile = fixtures.getFile("sbcs", "decode", `${testEncName}.expected`);
                     if (!await expectedFile.exists()) {
                         this.skip();
                         return;
@@ -110,7 +110,7 @@ describe("util", "iconv", "Full SBCS encoding tests", function () {
                 });
 
                 it(`Encode SBCS encoding ${testEncName}`, async function () {
-                    const expectedFile = fixtures.getVirtualFile("sbcs", "encode", `${testEncName}.expected`);
+                    const expectedFile = fixtures.getFile("sbcs", "encode", `${testEncName}.expected`);
                     if (!await expectedFile.exists()) {
                         this.skip();
                         return;

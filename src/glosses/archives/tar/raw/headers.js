@@ -11,7 +11,7 @@ const clamp = (index, len, defaultValue) => {
     if (!is.number(index)) {
         return defaultValue;
     }
-    index = ~~index;  // Coerce to integer.
+    index = ~~index; // Coerce to integer.
     if (index >= len) {
         return len;
     }
@@ -156,7 +156,7 @@ const decodeOct = (val, offset, length) => {
     if (val[offset] & 0x80) {
         return parse256(val);
     }
-        // Older versions of tar can prefix with spaces
+    // Older versions of tar can prefix with spaces
     while (offset < val.length && val[offset] === 32) {
         offset++;
     }

@@ -2,7 +2,7 @@ describe("net", "http", "helpers", "send", () => {
     const { net: { http: { server: { Server, helper: { send } } } }, std: { path } } = adone;
 
     const root = new adone.fs.Directory(__dirname);
-    const fixtures = root.getVirtualDirectory("fixtures");
+    const fixtures = root.getDirectory("fixtures");
     let _cwd = null;
 
     before(() => {
@@ -20,7 +20,7 @@ describe("net", "http", "helpers", "send", () => {
                 const server = new Server();
 
                 server.use(async (ctx) => {
-                    await send(ctx, fixtures.getVirtualFile("hello.txt").path());
+                    await send(ctx, fixtures.getFile("hello.txt").path());
                 });
 
                 await request(server)
@@ -67,7 +67,7 @@ describe("net", "http", "helpers", "send", () => {
 
                 server.use(async (ctx) => {
                     const opts = { root: fixtures.relativePath(root) };
-                    await send(ctx, fixtures.getVirtualFile("hello.txt").path(), opts);
+                    await send(ctx, fixtures.getFile("hello.txt").path(), opts);
                 });
 
                 await request(server)

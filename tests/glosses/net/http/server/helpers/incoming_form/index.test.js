@@ -204,7 +204,7 @@ describe("net", "http", "helpers", "incoming form", () => {
     context("integration", () => {
 
         specify("octet stream", (done) => {
-            const testFile = fixtures.getVirtualFile("file", "archive.tar.gz");
+            const testFile = fixtures.getFile("file", "archive.tar.gz");
 
             const server = http.createServer((req, res) => {
                 const form = new IncomingForm();
@@ -331,7 +331,7 @@ describe("net", "http", "helpers", "incoming form", () => {
 
             context("encoding", () => {
                 specify("menu_separator.png", (done) => {
-                    compare(fixtures.getVirtualFile("http", "encoding", "menu_separator.png.http"), [{
+                    compare(fixtures.getFile("http", "encoding", "menu_separator.png.http"), [{
                         type: "file",
                         name: "image",
                         filename: "menu_separator.png",
@@ -340,7 +340,7 @@ describe("net", "http", "helpers", "incoming form", () => {
                 });
 
                 specify("beta-sticker-1.png", (done) => {
-                    compare(fixtures.getVirtualFile("http", "encoding", "beta-sticker-1.png.http"), [{
+                    compare(fixtures.getFile("http", "encoding", "beta-sticker-1.png.http"), [{
                         type: "file",
                         name: "sticker",
                         filename: "beta-sticker-1.png",
@@ -349,7 +349,7 @@ describe("net", "http", "helpers", "incoming form", () => {
                 });
 
                 specify("blank.gif", (done) => {
-                    compare(fixtures.getVirtualFile("http", "encoding", "blank.gif.http"), [{
+                    compare(fixtures.getFile("http", "encoding", "blank.gif.http"), [{
                         type: "file",
                         name: "file",
                         filename: "blank.gif",
@@ -358,7 +358,7 @@ describe("net", "http", "helpers", "incoming form", () => {
                 });
 
                 specify("binaryfile.tar.gz", (done) => {
-                    compare(fixtures.getVirtualFile("http", "encoding", "binaryfile.tar.gz.http"), [{
+                    compare(fixtures.getFile("http", "encoding", "binaryfile.tar.gz.http"), [{
                         type: "file",
                         name: "file",
                         filename: "binaryfile.tar.gz",
@@ -367,7 +367,7 @@ describe("net", "http", "helpers", "incoming form", () => {
                 });
 
                 specify("plain.txt", (done) => {
-                    compare(fixtures.getVirtualFile("http", "encoding", "plain.txt.http"), [{
+                    compare(fixtures.getFile("http", "encoding", "plain.txt.http"), [{
                         type: "file",
                         name: "file",
                         filename: "plain.txt",
@@ -378,29 +378,29 @@ describe("net", "http", "helpers", "incoming form", () => {
 
             context("misc", () => {
                 specify("empty", (done) => {
-                    compare(fixtures.getVirtualFile("http", "misc", "empty.http"), [], done);
+                    compare(fixtures.getFile("http", "misc", "empty.http"), [], done);
                 });
 
                 specify("empty urlencoded", (done) => {
-                    compare(fixtures.getVirtualFile("http", "misc", "empty-urlencoded.http"), [], done);
+                    compare(fixtures.getFile("http", "misc", "empty-urlencoded.http"), [], done);
                 });
 
                 specify("empty multipart", (done) => {
-                    compare(fixtures.getVirtualFile("http", "misc", "empty-multipart.http"), [], done);
+                    compare(fixtures.getFile("http", "misc", "empty-multipart.http"), [], done);
                 });
 
                 specify("empty multipart2", (done) => {
-                    compare(fixtures.getVirtualFile("http", "misc", "empty-multipart2.http"), [], done);
+                    compare(fixtures.getFile("http", "misc", "empty-multipart2.http"), [], done);
                 });
 
                 specify("minimal", (done) => {
-                    compare(fixtures.getVirtualFile("http", "misc", "minimal.http"), [], done);
+                    compare(fixtures.getFile("http", "misc", "minimal.http"), [], done);
                 });
             });
 
             context("no filename", () => {
                 specify("generic", (done) => {
-                    compare(fixtures.getVirtualFile("http", "no-filename", "generic.http"), [{
+                    compare(fixtures.getFile("http", "no-filename", "generic.http"), [{
                         type: "file",
                         name: "upload",
                         filename: "",
@@ -409,7 +409,7 @@ describe("net", "http", "helpers", "incoming form", () => {
                 });
 
                 specify("filename-name", (done) => {
-                    compare(fixtures.getVirtualFile("http", "no-filename", "filename-name.http"), [{
+                    compare(fixtures.getFile("http", "no-filename", "filename-name.http"), [{
                         type: "file",
                         name: "upload",
                         filename: "plain.txt",
@@ -420,7 +420,7 @@ describe("net", "http", "helpers", "incoming form", () => {
 
             context("preamble", () => {
                 specify("crlf", (done) => {
-                    compare(fixtures.getVirtualFile("http", "preamble", "crlf.http"), [{
+                    compare(fixtures.getFile("http", "preamble", "crlf.http"), [{
                         type: "file",
                         name: "upload",
                         filename: "plain.txt",
@@ -429,7 +429,7 @@ describe("net", "http", "helpers", "incoming form", () => {
                 });
 
                 specify("preamble", (done) => {
-                    compare(fixtures.getVirtualFile("http", "preamble", "preamble.http"), [{
+                    compare(fixtures.getFile("http", "preamble", "preamble.http"), [{
                         type: "file",
                         name: "upload",
                         filename: "plain.txt",
@@ -440,21 +440,21 @@ describe("net", "http", "helpers", "incoming form", () => {
 
             context("special chars in filename", () => {
                 specify("webkit", (done) => {
-                    compare(fixtures.getVirtualFile("http", "special-chars-in-filename", "webkit.http"), [
+                    compare(fixtures.getFile("http", "special-chars-in-filename", "webkit.http"), [
                         { type: "field", name: "title", value: "Weird filename" },
                         { type: "file", name: "upload", filename: " ? % * | \" < > . ? ; ' @ # $ ^ & ( ) - _ = + { } [ ] ` ~.txt" }
                     ], done);
                 });
 
                 specify("ff", (done) => {
-                    compare(fixtures.getVirtualFile("http", "special-chars-in-filename", "ff.http"), [
+                    compare(fixtures.getFile("http", "special-chars-in-filename", "ff.http"), [
                         { type: "field", name: "title", value: "Weird filename" },
                         { type: "file", name: "upload", filename: " ? % * | \" < > . ☃ ; ' @ # $ ^ & ( ) - _ = + { } [ ] ` ~.txt" }
                     ], done);
                 });
 
                 specify("safari", (done) => {
-                    compare(fixtures.getVirtualFile("http", "special-chars-in-filename", "safari.http"), [
+                    compare(fixtures.getFile("http", "special-chars-in-filename", "safari.http"), [
                         { type: "field", name: "title", value: "Weird filename" },
                         { type: "file", name: "upload", filename: " ? % * | \" < > . ? ; ' @ # $ ^ & ( ) - _ = + { } [ ] ` ~.txt" }
                     ], done);
@@ -463,7 +463,7 @@ describe("net", "http", "helpers", "incoming form", () => {
 
             context("workarounds", () => {
                 specify("missing hyphens1", (done) => {
-                    compare(fixtures.getVirtualFile("http", "workarounds", "missing-hyphens1.http"), [{
+                    compare(fixtures.getFile("http", "workarounds", "missing-hyphens1.http"), [{
                         type: "file",
                         name: "upload",
                         filename: "plain.txt",
@@ -472,7 +472,7 @@ describe("net", "http", "helpers", "incoming form", () => {
                 });
 
                 specify("missing hyphens2", (done) => {
-                    compare(fixtures.getVirtualFile("http", "workarounds", "missing-hyphens2.http"), [{
+                    compare(fixtures.getFile("http", "workarounds", "missing-hyphens2.http"), [{
                         type: "file",
                         name: "upload",
                         filename: "plain.txt",
@@ -641,7 +641,7 @@ describe("net", "http", "helpers", "incoming form", () => {
 
         specify("multiple files uploading", (done) => {
             const BOUNDARY = "---------------------------10102754414578508781458777923";
-            const video = fixtures.getVirtualFile("multi_video.upload");
+            const video = fixtures.getFile("multi_video.upload");
             const server = http.createServer((req, res) => {
                 const form = new IncomingForm();
                 form.uploadDir = tmpdir.path();

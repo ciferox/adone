@@ -41,7 +41,8 @@ const fs = adone.lazify({
 const lazy = adone.lazify({
     System: () => adone.bind("metrics.node").System,
     seek: () => lazy.System.seek,
-    flock: () => lazy.System.flock
+    flock: () => lazy.System.flock,
+    statVFS: () => lazy.System.statVFS
 });
 
 const stringToFlockFlags = (flag) => {
@@ -415,7 +416,19 @@ export const statSync = std.fs.statSync;
 export const writeFileSync = std.fs.writeFileSync;
 export const readdirSync = std.fs.readdirSync;
 
-export const readFile = async (filepath, { check = false, encoding = null, flags = "r" } = {}) => {
+const expandReadOptions = (options = {}) => {
+    if (is.string(options)) {
+        return { encoding: options };
+    }
+    return options;
+};
+
+export const readFile = async (filepath, options) => {
+    const {
+        check = false,
+        encoding = null,
+        flags = "r"
+    } = expandReadOptions(options);
     if (check) {
         if (!await adone.fs.is.file(filepath)) {
             return null;
@@ -431,7 +444,12 @@ export const readFile = async (filepath, { check = false, encoding = null, flags
     });
 };
 
-export const readFileSync = (filepath, { check = false, encoding = null, flags = "r" } = {}) => {
+export const readFileSync = (filepath, options) => {
+    const {
+        check = false,
+        encoding = null,
+        flags = "r"
+    } = expandReadOptions(options);
     if (check) {
         if (!adone.fs.is.fileSync(filepath)) {
             return null;
@@ -444,16 +462,16 @@ export const readFileSync = (filepath, { check = false, encoding = null, flags =
     }
 };
 
-export const readLines = async (filepath, { check = false } = {}) => {
-    const content = await readFile(filepath, { check });
+export const readLines = async (filepath, options) => {
+    const content = await readFile(filepath, options);
     if (is.null(content)) {
         return null;
     }
     return content.toString().split("\n");
 };
 
-export const readLinesSync = (filepath, { check = false } = {}) => {
-    const content = readFileSync(filepath, { check });
+export const readLinesSync = (filepath, options) => {
+    const content = readFileSync(filepath, options);
     if (is.null(content)) {
         return null;
     }
@@ -461,16 +479,16 @@ export const readLinesSync = (filepath, { check = false } = {}) => {
 };
 
 // Read file (expected one line of text) splitted by whitespaces.
-export const readWords = async (filepath, { check = false } = {}) => {
-    const content = await readFile(filepath, { check });
+export const readWords = async (filepath, options) => {
+    const content = await readFile(filepath, options);
     if (is.null(content)) {
         return null;
     }
     return content.toString().split(new RegExp("\\s+", "g"));
 };
 
-export const readWordsSync = (filepath, { check = false } = {}) => {
-    const content = readFileSync(filepath, { check });
+export const readWordsSync = (filepath, options) => {
+    const content = readFileSync(filepath, options);
     if (is.null(content)) {
         return null;
     }
@@ -509,7 +527,7 @@ export const existsSync = (path) => {
     }
 };
 
-export const mkdirp = (path, mode, fn, made) => {
+const mkdirp = (path, mode, fn, made) => {
     const xfs = std.fs;
     if (is.nil(mode)) {
         mode = 0o777 & (~process.umask());
@@ -656,16 +674,14 @@ export const tail = async (path, n = 10, { separator = is.windows ? "\r\n" : "\n
     return lines.toArray();
 };
 
-export const statVFS = (path) => {
-    return new Promise((resolve, reject) => {
-        lazy.metrics.statVFS(path, (err, result) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(result);
-        });
+export const statVFS = (path) => new Promise((resolve, reject) => {
+    lazy.statVFS(path, (err, result) => {
+        if (err) {
+            return reject(err);
+        }
+        resolve(result);
     });
-};
+});
 
 export const unlinkSync = std.fs.unlinkSync;
 export const createReadStream = std.fs.createReadStream;

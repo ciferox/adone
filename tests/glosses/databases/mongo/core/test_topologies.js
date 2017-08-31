@@ -16,14 +16,14 @@ export class Sharded extends ShardingManager {
                 options: {
                     bind_ip: "localhost",
                     port: 31000,
-                    dbpath: this.configuration.root.getVirtualDirectory("db", "31000").path(),
+                    dbpath: this.configuration.root.getDirectory("db", "31000").path(),
                     shardsvr: null
                 }
             }, {
                 options: {
                     bind_ip: "localhost",
                     port: 31001,
-                    dbpath: this.configuration.root.getVirtualDirectory("db", "31001").path(),
+                    dbpath: this.configuration.root.getDirectory("db", "31001").path(),
                     shardsvr: null
                 }
             }, {
@@ -33,7 +33,7 @@ export class Sharded extends ShardingManager {
                 options: {
                     bind_ip: "localhost",
                     port: 31002,
-                    dbpath: this.configuration.root.getVirtualDirectory("db", "31002").path(),
+                    dbpath: this.configuration.root.getDirectory("db", "31002").path(),
                     shardsvr: null
                 }
             }], { replSet: "rs1" });
@@ -42,7 +42,7 @@ export class Sharded extends ShardingManager {
                 options: {
                     bind_ip: "localhost",
                     port: 31010,
-                    dbpath: this.configuration.root.getVirtualDirectory("db", "31010").path(),
+                    dbpath: this.configuration.root.getDirectory("db", "31010").path(),
                     shardsvr: null
                 }
             }, {
@@ -50,7 +50,7 @@ export class Sharded extends ShardingManager {
                     bind_ip:
                     "localhost",
                     port: 31011,
-                    dbpath: this.configuration.root.getVirtualDirectory("db", "31011").path(),
+                    dbpath: this.configuration.root.getDirectory("db", "31011").path(),
                     shardsvr: null
                 }
             }, {
@@ -60,22 +60,22 @@ export class Sharded extends ShardingManager {
                 options: {
                     bind_ip: "localhost",
                     port: 31012,
-                    dbpath: this.configuration.root.getVirtualDirectory("db", "31012").path(),
+                    dbpath: this.configuration.root.getDirectory("db", "31012").path(),
                     shardsvr: null
                 }
             }], { replSet: "rs2" });
             // Add configuration servers
             await this.addConfigurationServers([{
                 options: {
-                    bind_ip: "localhost", port: 35000, dbpath: this.configuration.root.getVirtualDirectory("db", "35000").path()
+                    bind_ip: "localhost", port: 35000, dbpath: this.configuration.root.getDirectory("db", "35000").path()
                 }
             }, {
                 options: {
-                    bind_ip: "localhost", port: 35001, dbpath: this.configuration.root.getVirtualDirectory("db", "35001").path()
+                    bind_ip: "localhost", port: 35001, dbpath: this.configuration.root.getDirectory("db", "35001").path()
                 }
             }, {
                 options: {
-                    bind_ip: "localhost", port: 35002, dbpath: this.configuration.root.getVirtualDirectory("db", "35002").path()
+                    bind_ip: "localhost", port: 35002, dbpath: this.configuration.root.getDirectory("db", "35002").path()
                 }
             }], { replSet: "rs3" });
             // Add proxies

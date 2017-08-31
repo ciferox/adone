@@ -1454,7 +1454,7 @@ export class Application extends Subsystem {
             await this.initialize();
             await this.initializeSubsystems();
             this[STAGE] = STAGE_INITIALIZED;
-            
+
             const code = await command.execute(rest, match);
             this[ERROR_SCOPE] = false;
             if (is.integer(code)) {
@@ -1580,7 +1580,7 @@ export class Application extends Subsystem {
 
     /**
      * Returns subsystem info by name
-     * 
+     *
      * @param {Subsystem} name Name of subsystem
      */
     getSubsystem(name) {

@@ -27,13 +27,13 @@ describe("fast", () => {
 
     it("correct out file", async () => {
         const file0 = await root.addFile("in", "transpile.js");
-        const out = root.getVirtualDirectory("out");
+        const out = root.getDirectory("out");
         const files = await fast
-            .src(file0.path(), { base: root.getVirtualDirectory("in").path() })
+            .src(file0.path(), { base: root.getDirectory("in").path() })
             .dest(out.path(), { produceFiles: true });
         expect(await out.exists()).to.be.true;
         expect(files).to.have.lengthOf(1);
-        const file = out.getVirtualFile("transpile.js");
+        const file = out.getFile("transpile.js");
         expect(files[0].path).to.be.equal(file.path());
         expect(files[0].relative).to.be.equal(file.relativePath(out));
         expect(files[0].basename).to.be.equal("transpile.js");
@@ -42,11 +42,11 @@ describe("fast", () => {
 
     it("should set correct base", async () => {
         await root.addFile("in", "nested", "transpile.js");
-        const out = root.getVirtualDirectory("out");
+        const out = root.getDirectory("out");
         const files = await fast
-            .src(root.getVirtualFile("in", "**", "*").path(), { base: root.getVirtualDirectory("in").path() })
+            .src(root.getFile("in", "**", "*").path(), { base: root.getDirectory("in").path() })
             .dest(out.path(), { produceFiles: true });
-        const file = out.getVirtualFile("nested", "transpile.js");
+        const file = out.getFile("nested", "transpile.js");
         expect(files).to.have.lengthOf(1);
         expect(files[0].path).to.be.equal(file.path());
         expect(files[0].base).to.be.equal(out.path());
@@ -78,12 +78,12 @@ describe("fast", () => {
             files.sort();
             expect(files).to.have.lengthOf(6);
             expect(files).to.be.deep.equal([
-                root.getVirtualFile("dest1", "test1").path(),
-                root.getVirtualFile("dest1", "test2").path(),
-                root.getVirtualFile("dest1", "test3").path(),
-                root.getVirtualFile("dest2", "test4").path(),
-                root.getVirtualFile("dest2", "test5").path(),
-                root.getVirtualFile("dest2", "test6").path()
+                root.getFile("dest1", "test1").path(),
+                root.getFile("dest1", "test2").path(),
+                root.getFile("dest1", "test3").path(),
+                root.getFile("dest2", "test4").path(),
+                root.getFile("dest2", "test5").path(),
+                root.getFile("dest2", "test6").path()
             ]);
         });
 
@@ -115,18 +115,18 @@ describe("fast", () => {
 
             try {
                 await adone.promise.delay(100); // time to init the watcher
-                const src1 = root.getVirtualDirectory("src1");
-                const dest1 = root.getVirtualDirectory("dest1");
+                const src1 = root.getDirectory("src1");
+                const dest1 = root.getDirectory("dest1");
 
                 await src1.addFile("hello");
                 await adone.promise.delay(100);
                 expect(files).to.have.lengthOf(1);
-                expect(files[0].path).to.be.equal(dest1.getVirtualFile("hello").path());
+                expect(files[0].path).to.be.equal(dest1.getFile("hello").path());
 
                 await src1.addFile("we", "need", "to", "go", "deeper", "index.js");
                 await adone.promise.delay(100);
                 expect(files).to.have.lengthOf(2);
-                expect(files[1].path).to.be.equal(dest1.getVirtualFile("we", "need", "to", "go", "deeper", "index.js").path());
+                expect(files[1].path).to.be.equal(dest1.getFile("we", "need", "to", "go", "deeper", "index.js").path());
             } finally {
                 stream.end();
             }
@@ -146,31 +146,31 @@ describe("fast", () => {
                 { from: "src2/**/*", to: "dest2" }
             ], { cwd: root.path() }).dest();
             await adone.promise.delay(100); // the watcher init
-            const src1 = root.getVirtualDirectory("src1");
-            const src2 = root.getVirtualDirectory("src2");
-            const dest1 = root.getVirtualDirectory("dest1");
-            const dest2 = root.getVirtualDirectory("dest2");
+            const src1 = root.getDirectory("src1");
+            const src2 = root.getDirectory("src2");
+            const dest1 = root.getDirectory("dest1");
+            const dest2 = root.getDirectory("dest2");
             try {
                 expect((await dest1.files()).map((x) => x.filename())).to.be.deep.equal(["test1", "test2", "test3"]);
                 expect((await dest2.files()).map((x) => x.filename())).to.be.deep.equal(["test4", "test5", "test6"]);
 
-                await src1.getVirtualFile("test1").unlink();
+                await src1.getFile("test1").unlink();
                 await adone.promise.delay(100);
                 expect((await dest1.files()).map((x) => x.filename())).to.be.deep.equal(["test2", "test3"]);
                 expect((await dest2.files()).map((x) => x.filename())).to.be.deep.equal(["test4", "test5", "test6"]);
 
-                await src2.getVirtualFile("test5").unlink();
+                await src2.getFile("test5").unlink();
                 await adone.promise.delay(100);
                 expect((await dest1.files()).map((x) => x.filename())).to.be.deep.equal(["test2", "test3"]);
                 expect((await dest2.files()).map((x) => x.filename())).to.be.deep.equal(["test4", "test6"]);
 
                 await src1.addFile("hello", "world");
                 await adone.promise.delay(100);
-                expect(await dest1.getVirtualFile("hello", "world").exists()).to.be.true;
+                expect(await dest1.getFile("hello", "world").exists()).to.be.true;
 
-                await src1.getVirtualDirectory("hello").unlink();
+                await src1.getDirectory("hello").unlink();
                 await adone.promise.delay(100);
-                expect(await dest1.getVirtualDirectory("hello").exists()).to.be.false;
+                expect(await dest1.getDirectory("hello").exists()).to.be.false;
             } finally {
                 stream.end();
             }
@@ -191,11 +191,11 @@ describe("fast", () => {
             ], { cwd: root.path(), unlink: false }).dest();
             await adone.promise.delay(100); // the watcher init
             try {
-                await root.getVirtualFile("src1", "test1").unlink();
-                await root.getVirtualFile("src2", "test4").unlink();
+                await root.getFile("src1", "test1").unlink();
+                await root.getFile("src2", "test4").unlink();
                 await adone.promise.delay(100);
-                expect(await root.getVirtualFile("dest1", "test1").exists()).to.be.true;
-                expect(await root.getVirtualFile("dest2", "test4").exists()).to.be.true;
+                expect(await root.getFile("dest1", "test1").exists()).to.be.true;
+                expect(await root.getFile("dest2", "test4").exists()).to.be.true;
             } finally {
                 stream.end();
             }
@@ -216,11 +216,11 @@ describe("fast", () => {
             ], { cwd: root.path(), unlink: () => true }).dest();
             await adone.promise.delay(100); // the watcher init
             try {
-                await root.getVirtualFile("src1", "test1").unlink();
-                await root.getVirtualFile("src2", "test4").unlink();
+                await root.getFile("src1", "test1").unlink();
+                await root.getFile("src2", "test4").unlink();
                 await adone.promise.delay(100);
-                expect(await root.getVirtualFile("dest1", "test1").exists()).to.be.false;
-                expect(await root.getVirtualFile("dest2", "test4").exists()).to.be.false;
+                expect(await root.getFile("dest1", "test1").exists()).to.be.false;
+                expect(await root.getFile("dest2", "test4").exists()).to.be.false;
             } finally {
                 stream.end();
             }
@@ -241,11 +241,11 @@ describe("fast", () => {
             ], { cwd: root.path(), unlink: () => false }).dest();
             await adone.promise.delay(100); // the watcher init
             try {
-                await root.getVirtualFile("src1", "test1").unlink();
-                await root.getVirtualFile("src2", "test4").unlink();
+                await root.getFile("src1", "test1").unlink();
+                await root.getFile("src2", "test4").unlink();
                 await adone.promise.delay(100);
-                expect(await root.getVirtualFile("dest1", "test1").exists()).to.be.true;
-                expect(await root.getVirtualFile("dest2", "test4").exists()).to.be.true;
+                expect(await root.getFile("dest1", "test1").exists()).to.be.true;
+                expect(await root.getFile("dest2", "test4").exists()).to.be.true;
             } finally {
                 stream.end();
             }
@@ -266,11 +266,11 @@ describe("fast", () => {
             ], { cwd: root.path(), unlink: async () => true }).dest();
             await adone.promise.delay(100); // the watcher init
             try {
-                await root.getVirtualFile("src1", "test1").unlink();
-                await root.getVirtualFile("src2", "test4").unlink();
+                await root.getFile("src1", "test1").unlink();
+                await root.getFile("src2", "test4").unlink();
                 await adone.promise.delay(100);
-                expect(await root.getVirtualFile("dest1", "test1").exists()).to.be.false;
-                expect(await root.getVirtualFile("dest2", "test4").exists()).to.be.false;
+                expect(await root.getFile("dest1", "test1").exists()).to.be.false;
+                expect(await root.getFile("dest2", "test4").exists()).to.be.false;
             } finally {
                 stream.end();
             }
@@ -291,11 +291,11 @@ describe("fast", () => {
             ], { cwd: root.path(), unlink: async () => false }).dest();
             await adone.promise.delay(100); // the watcher init
             try {
-                await root.getVirtualFile("src1", "test1").unlink();
-                await root.getVirtualFile("src2", "test4").unlink();
+                await root.getFile("src1", "test1").unlink();
+                await root.getFile("src2", "test4").unlink();
                 await adone.promise.delay(100);
-                expect(await root.getVirtualFile("dest1", "test1").exists()).to.be.true;
-                expect(await root.getVirtualFile("dest2", "test4").exists()).to.be.true;
+                expect(await root.getFile("dest1", "test1").exists()).to.be.true;
+                expect(await root.getFile("dest2", "test4").exists()).to.be.true;
             } finally {
                 stream.end();
             }
@@ -322,16 +322,16 @@ describe("fast", () => {
             }).dest();
             await adone.promise.delay(100); // the watcher init
             try {
-                const test1 = root.getVirtualFile("src1", "hello", "test1");
+                const test1 = root.getFile("src1", "hello", "test1");
                 await test1.unlink();
                 await adone.promise.delay(100);
-                const hello = root.getVirtualDirectory("src1", "hello");
+                const hello = root.getDirectory("src1", "hello");
                 await hello.unlink();
                 await adone.promise.delay(100);
-                const test2 = root.getVirtualFile("src2", "world", "test2");
+                const test2 = root.getFile("src2", "world", "test2");
                 await test2.unlink();
                 await adone.promise.delay(100);
-                const world = root.getVirtualDirectory("src2", "world");
+                const world = root.getDirectory("src2", "world");
                 await world.unlink();
                 await adone.promise.delay(100);
                 expect(calls).to.be.deep.equal([
@@ -363,7 +363,7 @@ describe("fast", () => {
                 }
             }).dest());
             await adone.promise.delay(100); // the watcher init
-            await root.getVirtualFile("src1", "test1").unlink();
+            await root.getFile("src1", "test1").unlink();
             await result.then(() => {
                 throw new Error("Nothing was thrown");
             }, () => {
@@ -390,7 +390,7 @@ describe("fast", () => {
                 }
             }).dest());
             await adone.promise.delay(100); // the watcher init
-            await root.getVirtualFile("src1", "test1").unlink();
+            await root.getFile("src1", "test1").unlink();
             await result.then(() => {
                 throw new Error("Nothing was thrown");
             }, () => {
@@ -423,30 +423,30 @@ describe("fast", () => {
                 { from: "src2/**/*", to: "dest2" }
             ], { cwd: root.path() }).dest({ produceFiles: true }).through((f) => files.push(f));
             await adone.promise.delay(100); // time to init the watcher
-            const src1 = root.getVirtualDirectory("src1");
-            const src2 = root.getVirtualDirectory("src2");
-            const dest1 = root.getVirtualDirectory("dest1");
-            const dest2 = root.getVirtualDirectory("dest2");
+            const src1 = root.getDirectory("src1");
+            const src2 = root.getDirectory("src2");
+            const dest1 = root.getDirectory("dest1");
+            const dest2 = root.getDirectory("dest2");
 
             await src1.addFile("hello");
             await adone.promise.delay(100);
             expect(files).to.have.lengthOf(1);
-            expect(files[0].path).to.be.equal(dest1.getVirtualFile("hello").path());
+            expect(files[0].path).to.be.equal(dest1.getFile("hello").path());
 
             await src2.addFile("hello");
             await adone.promise.delay(100);
             expect(files).to.have.lengthOf(2);
-            expect(files[1].path).to.be.equal(dest2.getVirtualFile("hello").path());
+            expect(files[1].path).to.be.equal(dest2.getFile("hello").path());
 
             await src1.addFile("we", "need", "to", "go", "deeper", "index.js");
             await adone.promise.delay(100);
             expect(files).to.have.lengthOf(3);
-            expect(files[2].path).to.be.equal(dest1.getVirtualFile("we", "need", "to", "go", "deeper", "index.js").path());
+            expect(files[2].path).to.be.equal(dest1.getFile("we", "need", "to", "go", "deeper", "index.js").path());
 
             await src2.addFile("we", "need", "to", "go", "deeper", "index.js");
             await adone.promise.delay(100);
             expect(files).to.have.lengthOf(4);
-            expect(files[3].path).to.be.equal(dest2.getVirtualFile("we", "need", "to", "go", "deeper", "index.js").path());
+            expect(files[3].path).to.be.equal(dest2.getFile("we", "need", "to", "go", "deeper", "index.js").path());
             stream.end();
         });
 

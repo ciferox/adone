@@ -26,7 +26,7 @@ describe("fast", "transform", "revision hash", () => {
         await fromdir.addFile("hello.css");
         await fast.src(srcPath).revisionHash().map((file) => {
             expect(file.relative).to.be.equal("hello-d41d8cd98f.css");
-            expect(file.revOrigPath).to.be.equal(fromdir.getVirtualFile("hello.css").path());
+            expect(file.revOrigPath).to.be.equal(fromdir.getFile("hello.css").path());
         });
     });
 
@@ -34,7 +34,7 @@ describe("fast", "transform", "revision hash", () => {
         await fromdir.addFile("hello.css.map");
         await fast.src(srcPath).revisionHash().map((file) => {
             expect(file.relative).to.be.equal("hello-d41d8cd98f.css.map");
-            expect(file.revOrigPath).to.be.equal(fromdir.getVirtualFile("hello.css.map").path());
+            expect(file.revOrigPath).to.be.equal(fromdir.getFile("hello.css.map").path());
         });
     });
 
@@ -112,12 +112,12 @@ describe("fast", "transform", "revision hash", () => {
         await fast.src(srcPath).map((file) => {
             if (file.basename.startsWith("hello")) {
                 file.revOrigBase = fromdir.path();
-                file.revOrigPath = fromdir.getVirtualFile("foo", "hello.css").path();
+                file.revOrigPath = fromdir.getFile("foo", "hello.css").path();
                 file.origName = "hello.css";
                 file.revname = "hello-d41d8cd98f.css";
             } else {
                 file.revOrigBase = fromdir.path();
-                file.revOrigPath = fromdir.getVirtualFile("bar", "bombaleilo.css").path();
+                file.revOrigPath = fromdir.getFile("bar", "bombaleilo.css").path();
                 file.origName = "bombaleilo.css";
                 file.revName = "bombaleilo-d41d8cd98f.css";
             }
@@ -138,13 +138,13 @@ describe("fast", "transform", "revision hash", () => {
 
         await fast.src(srcPath).map((file) => {
             if (file.basename.startsWith("scriptfoo")) {
-                file.revOrigBase = fromdir.getVirtualFile("vendor1").path();
-                file.revOrigPath = fromdir.getVirtualFile("vendor1", "foo", "scriptfoo.js").path();
+                file.revOrigBase = fromdir.getFile("vendor1").path();
+                file.revOrigPath = fromdir.getFile("vendor1", "foo", "scriptfoo.js").path();
                 file.origName = "scriptfoo.js";
                 file.revName = "scriptfoo-d41d8cd98f.js";
             } else {
-                file.revOrigBase = fromdir.getVirtualFile("vendor1").path();
-                file.revOrigPath = fromdir.getVirtualFile("vendor1", "bar", "scriptbar.js").path();
+                file.revOrigBase = fromdir.getFile("vendor1").path();
+                file.revOrigPath = fromdir.getFile("vendor1", "bar", "scriptbar.js").path();
                 file.origName = "scriptbar.js";
                 file.revName = "scriptbar-d41d8cd98f.js";
             }
@@ -163,7 +163,7 @@ describe("fast", "transform", "revision hash", () => {
         await fromdir.addFile("hello.css");
         await fast.src(srcPath).revisionHash().map((file) => {
             expect(file.basename).to.be.equal("hello-d41d8cd98f.css");
-            expect(file.revOrigPath).to.be.equal(fromdir.getVirtualFile("hello.css").path());
+            expect(file.revOrigPath).to.be.equal(fromdir.getFile("hello.css").path());
             expect(file.revHash).to.be.equal("d41d8cd98f");
         });
     });
@@ -212,7 +212,7 @@ describe("fast", "transform", "revision hash", () => {
 
         await fast.src(srcPath).revisionHash().map((file) => {
             expect(file.relative).to.be.equal("hello.com/hello-d41d8cd98f.css".split("/").join(path.sep));
-            expect(file.revOrigPath).to.be.equal(fromdir.getVirtualFile("hello.com", "hello.css").path());
+            expect(file.revOrigPath).to.be.equal(fromdir.getFile("hello.com", "hello.css").path());
         });
     });
 
@@ -221,8 +221,8 @@ describe("fast", "transform", "revision hash", () => {
         await fromdir.addFile("assets", "bar", "scriptbar-d41d8cd98f.js");
 
         await fast.src([
-            fromdir.getVirtualDirectory("app", "**", "*").path(),
-            fromdir.getVirtualDirectory("assets", "**", "*").path()
+            fromdir.getDirectory("app", "**", "*").path(),
+            fromdir.getDirectory("assets", "**", "*").path()
         ]).map((file) => {
             if (file.basename.startsWith("scriptfoo")) {
                 file.revOrigPath = "scriptfoo.js";

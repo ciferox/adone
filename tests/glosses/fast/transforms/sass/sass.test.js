@@ -10,7 +10,7 @@ describe("fast", "transform", "sass", () => {
     let root;
 
     const createVinyl = (filename, contents) => {
-        const file = scssdir.getVirtualFile(filename);
+        const file = scssdir.getFile(filename);
         return new File({
             cwd: scssdir.path(),
             base: scssdir.path(),
@@ -22,8 +22,8 @@ describe("fast", "transform", "sass", () => {
     before(async () => {
         root = await adone.fs.Directory.createTmp();
         await generateFixtures(root);
-        scssdir = await root.getVirtualDirectory("scss");
-        expectdir = await root.getVirtualDirectory("expected");
+        scssdir = await root.getDirectory("scss");
+        expectdir = await root.getDirectory("expected");
     });
 
     after(async () => {
@@ -72,7 +72,7 @@ describe("fast", "transform", "sass", () => {
         expect(cssFile.relative).to.be.ok;
         expect(cssFile.contents).to.be.ok;
         expect(cssFile.basename).to.be.equal("empty.css");
-        expect(cssFile.contents.toString()).to.be.equal(await expectdir.getVirtualFile("empty.css").contents());
+        expect(cssFile.contents.toString()).to.be.equal(await expectdir.getFile("empty.css").contents());
     });
 
     it("should compile a single sass file", async () => {
@@ -85,7 +85,7 @@ describe("fast", "transform", "sass", () => {
         expect(cssFile.path).to.be.ok;
         expect(cssFile.relative).to.be.ok;
         expect(cssFile.contents).to.be.ok;
-        expect(cssFile.contents.toString()).to.be.equal(await expectdir.getVirtualFile("mixins.css").contents());
+        expect(cssFile.contents.toString()).to.be.equal(await expectdir.getFile("mixins.css").contents());
     });
 
     it("should compile multiple sass files", (done) => {
@@ -102,7 +102,7 @@ describe("fast", "transform", "sass", () => {
             expect(cssFile.relative).to.be.ok;
             expect(cssFile.contents).to.be.ok;
             expect(cssFile.contents.toString()).to.be.equal(
-                expectdir.getVirtualFile(cssFile.basename).contentsSync()
+                expectdir.getFile(cssFile.basename).contentsSync()
             );
             mustSee--;
             if (mustSee <= 0) {
@@ -124,7 +124,7 @@ describe("fast", "transform", "sass", () => {
             expect(cssFile.relative).to.be.ok;
             expect(cssFile.contents).to.be.ok;
             expect(cssFile.contents.toString()).to.be.equal(
-                expectdir.getVirtualFile(cssFile.basename).contentsSync()
+                expectdir.getFile(cssFile.basename).contentsSync()
             );
             done();
         });
@@ -163,7 +163,7 @@ describe("fast", "transform", "sass", () => {
         const sassFile = createVinyl("mixins.scss");
 
         // Transform file name
-        sassFile.path = scssdir.getVirtualFile("mixin--changed.scss").path();
+        sassFile.path = scssdir.getFile("mixin--changed.scss").path();
 
         const stream = sass();
         stream.on("data", (cssFile) => {
@@ -173,7 +173,7 @@ describe("fast", "transform", "sass", () => {
             expect(cssFile.relative).to.be.ok;
             expect(cssFile.contents).to.be.ok;
             expect(cssFile.contents.toString()).to.be.equal(
-                expectdir.getVirtualFile("mixins.css").contentsSync()
+                expectdir.getFile("mixins.css").contentsSync()
             );
             done();
         });
@@ -193,7 +193,7 @@ describe("fast", "transform", "sass", () => {
             expect(cssFile.relative).to.be.ok;
             expect(cssFile.contents).to.be.ok;
             expect(cssFile.contents.toString()).to.be.equal(`/* Added Dynamically */\n${
-                expectdir.getVirtualFile(cssFile.basename).contentsSync()}`
+                expectdir.getFile(cssFile.basename).contentsSync()}`
             );
             done();
         });
@@ -237,7 +237,7 @@ describe("fast", "transform", "sass", () => {
             expect(cssFile.relative).to.be.ok;
             expect(cssFile.contents).to.be.ok;
             expect(cssFile.contents.toString()).to.be.equal(
-                expectdir.getVirtualFile(cssFile.basename).contentsSync()
+                expectdir.getFile(cssFile.basename).contentsSync()
             );
             done();
         });
@@ -258,7 +258,7 @@ describe("fast", "transform", "sass", () => {
             expect(cssFile.relative).to.be.ok;
             expect(cssFile.contents).to.be.ok;
             expect(cssFile.contents.toString()).to.be.equal(
-                expectdir.getVirtualFile(cssFile.basename).contentsSync()
+                expectdir.getFile(cssFile.basename).contentsSync()
             );
             mustSee--;
             if (mustSee <= 0) {
@@ -272,15 +272,15 @@ describe("fast", "transform", "sass", () => {
     });
 
     it("should work with sourcemaps and a globbed source", async () => {
-        const files = await adone.fs.glob(scssdir.getVirtualFile("globbed", "**", "*.scss").path());
+        const files = await adone.fs.glob(scssdir.getFile("globbed", "**", "*.scss").path());
 
         const filesContent = {};
         files.forEach((file) => {
-            const globPath = new adone.fs.File(file).relativePath(scssdir.getVirtualDirectory("globbed"));
+            const globPath = new adone.fs.File(file).relativePath(scssdir.getDirectory("globbed"));
             filesContent[globPath] = fs.readFileSync(file, "utf8");
         });
 
-        const sfiles = await fast.src(scssdir.getVirtualFile("globbed", "**", "*.scss").path())
+        const sfiles = await fast.src(scssdir.getFile("globbed", "**", "*.scss").path())
             .sourcemapsInit()
             .sass();
         for (const file of sfiles) {
@@ -298,7 +298,7 @@ describe("fast", "transform", "sass", () => {
             "scss/includes/_dogs.sass".split("/").join(path.sep)
         ];
 
-        const files = await fast.src(scssdir.getVirtualFile("inheritance.scss").path(), { base: root.path() })
+        const files = await fast.src(scssdir.getFile("inheritance.scss").path(), { base: root.path() })
             .sourcemapsInit()
             .sass();
         for (const file of files) {
@@ -307,10 +307,10 @@ describe("fast", "transform", "sass", () => {
     });
 
     it("should work with empty files", async () => {
-        await fast.src(scssdir.getVirtualFile("empty.scss").path())
+        await fast.src(scssdir.getFile("empty.scss").path())
             .sass()
-            .dest(root.getVirtualDirectory("results").path(), { produceFiles: true });
-        const file = root.getVirtualFile("results", "empty.css");
+            .dest(root.getDirectory("results").path(), { produceFiles: true });
+        const file = root.getFile("results", "empty.css");
         expect(await file.exists()).to.be.true;
     });
 });

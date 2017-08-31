@@ -31,7 +31,7 @@ describe("schema", "schema", () => {
     });
 
     const thisDir = new adone.fs.Directory(__dirname);
-    const testsDir = thisDir.getVirtualDirectory("tests");
+    const testsDir = thisDir.getDirectory("tests");
     const files = testsDir
         .filesSync()
         .filter((x) => !x.filename().startsWith("draft"))

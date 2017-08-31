@@ -8,12 +8,12 @@ describe("archive", "tar", () => {
     const fixtures = new adone.fs.Directory(std.path.join(__dirname, "fixtures"));
 
     beforeEach(async () => {
-        await fixtures.getVirtualDirectory("copy").unlink().catch(noop);
+        await fixtures.getDirectory("copy").unlink().catch(noop);
     });
 
     specify("copy a -> copy/a", async () => {
-        const a = fixtures.getVirtualDirectory("a");
-        const b = fixtures.getVirtualDirectory("copy", "a");
+        const a = fixtures.getDirectory("a");
+        const b = fixtures.getDirectory("copy", "a");
 
         await new Promise((resolve) => {
             tar.packStream(a.path()).pipe(tar.extractStream(b.path())).on("finish", resolve);
@@ -23,8 +23,8 @@ describe("archive", "tar", () => {
         expect(files).to.have.lengthOf(1);
         expect(files[0].filename()).to.be.equal("hello.txt");
 
-        const fileA = a.getVirtualFile("hello.txt");
-        const fileB = b.getVirtualFile("hello.txt");
+        const fileA = a.getFile("hello.txt");
+        const fileB = b.getFile("hello.txt");
 
         const aStat = await fileA.stat();
         const bStat = await fileB.stat();
@@ -35,8 +35,8 @@ describe("archive", "tar", () => {
     });
 
     specify("copy b -> copy/b", async () => {
-        const a = fixtures.getVirtualDirectory("b");
-        const b = fixtures.getVirtualDirectory("copy", "b");
+        const a = fixtures.getDirectory("b");
+        const b = fixtures.getDirectory("copy", "b");
 
         await new Promise((resolve) => {
             tar.packStream(a.path()).pipe(tar.extractStream(b.path())).on("finish", resolve);
@@ -46,8 +46,8 @@ describe("archive", "tar", () => {
         expect(files).to.have.lengthOf(1);
         expect(files[0].filename()).to.be.equal("a");
 
-        const dirA = a.getVirtualDirectory("a");
-        const dirB = b.getVirtualDirectory("a");
+        const dirA = a.getDirectory("a");
+        const dirB = b.getDirectory("a");
 
         const adStat = await dirA.stat();
         const bdStat = await dirB.stat();
@@ -56,8 +56,8 @@ describe("archive", "tar", () => {
         expect(mtime(adStat)).to.be.equal(mtime(bdStat));
         expect(bdStat.isDirectory()).to.be.true;
 
-        const fileA = dirA.getVirtualFile("test.txt");
-        const fileB = dirB.getVirtualFile("test.txt");
+        const fileA = dirA.getFile("test.txt");
+        const fileB = dirB.getFile("test.txt");
 
         const aStat = await fileA.stat();
         const bStat = await fileB.stat();
@@ -73,11 +73,11 @@ describe("archive", "tar", () => {
             return;
         }
 
-        const a = fixtures.getVirtualDirectory("c");
-        const b = fixtures.getVirtualDirectory("copy", "c");
+        const a = fixtures.getDirectory("c");
+        const b = fixtures.getDirectory("copy", "c");
 
-        const hello = fixtures.getVirtualFile("a", "hello.txt");
-        const link = fixtures.getVirtualFile("c", "link");
+        const hello = fixtures.getFile("a", "hello.txt");
+        const link = fixtures.getFile("c", "link");
         await link.unlink().catch(noop);
         await hello.symbolicLink(link);
 
@@ -90,8 +90,8 @@ describe("archive", "tar", () => {
         expect(files).to.have.lengthOf(2);
         expect(files).to.be.deep.equal([".gitignore", "link"]);
 
-        const linkA = a.getVirtualSymbolicLinkFile("link");
-        const linkB = b.getVirtualSymbolicLinkFile("link");
+        const linkA = a.getSymbolicLinkFile("link");
+        const linkB = b.getSymbolicLinkFile("link");
 
         const lstatA = await linkA.lstat();
         const lstatB = await linkB.lstat();
@@ -106,11 +106,11 @@ describe("archive", "tar", () => {
             return;
         }
 
-        const a = fixtures.getVirtualDirectory("c");
-        const b = fixtures.getVirtualDirectory("copy", "c-dereference");
+        const a = fixtures.getDirectory("c");
+        const b = fixtures.getDirectory("copy", "c-dereference");
 
-        const hello = fixtures.getVirtualFile("a", "hello.txt");
-        const link = fixtures.getVirtualFile("c", "link");
+        const hello = fixtures.getFile("a", "hello.txt");
+        const link = fixtures.getFile("c", "link");
         await link.unlink().catch(noop);
         await hello.symbolicLink(link);
 
@@ -123,8 +123,8 @@ describe("archive", "tar", () => {
         expect(files).to.have.lengthOf(2);
         expect(files).to.be.deep.equal([".gitignore", "link"]);
 
-        const file1 = fixtures.getVirtualFile("a", "hello.txt");
-        const file2 = b.getVirtualFile("link");
+        const file1 = fixtures.getFile("a", "hello.txt");
+        const file2 = b.getFile("link");
 
         const stat1 = await file1.lstat();
         const stat2 = await file2.lstat();
@@ -134,8 +134,8 @@ describe("archive", "tar", () => {
     });
 
     specify("strip", async () => {
-        const a = fixtures.getVirtualDirectory("b");
-        const b = fixtures.getVirtualDirectory("copy", "b-strip");
+        const a = fixtures.getDirectory("b");
+        const b = fixtures.getDirectory("copy", "b-strip");
 
         await new Promise((resolve) => {
             tar.packStream(a.path()).pipe(tar.extractStream(b.path(), { strip: 1 })).on("finish", resolve);
@@ -148,8 +148,8 @@ describe("archive", "tar", () => {
     });
 
     specify("strip + map", async () => {
-        const a = fixtures.getVirtualDirectory("b");
-        const b = fixtures.getVirtualDirectory("copy", "b-strip");
+        const a = fixtures.getDirectory("b");
+        const b = fixtures.getDirectory("copy", "b-strip");
 
         const uppercase = (header) => {
             header.name = header.name.toUpperCase();
@@ -167,8 +167,8 @@ describe("archive", "tar", () => {
     });
 
     specify("map + dir + permissions", async () => {
-        const a = fixtures.getVirtualDirectory("b");
-        const b = fixtures.getVirtualDirectory("copy", "b-perms");
+        const a = fixtures.getDirectory("b");
+        const b = fixtures.getDirectory("copy", "b-perms");
 
         const aWithMode = function (header) {
             if (header.name === "a") {
@@ -191,8 +191,8 @@ describe("archive", "tar", () => {
     });
 
     specify("specific entries", async () => {
-        const a = fixtures.getVirtualDirectory("d");
-        const b = fixtures.getVirtualDirectory("copy", "d-entries");
+        const a = fixtures.getDirectory("d");
+        const b = fixtures.getDirectory("copy", "d-entries");
 
         const entries = ["file1", "sub-files/file3", "sub-dir"];
 
@@ -206,17 +206,17 @@ describe("archive", "tar", () => {
             "file1", "sub-dir", "sub-files"
         ]);
 
-        const subFiles = await b.getVirtualDirectory("sub-files").files();
+        const subFiles = await b.getDirectory("sub-files").files();
         expect(subFiles).to.have.lengthOf(1);
         expect(subFiles[0].filename()).to.be.equal("file3");
 
-        const subDir = await b.getVirtualDirectory("sub-dir").files();
+        const subDir = await b.getDirectory("sub-dir").files();
         expect(subDir).to.have.lengthOf(1);
         expect(subDir[0].filename()).to.be.equal("file5");
     });
 
     specify("check type while mapping header on packing", (done) => {
-        const a = fixtures.getVirtualDirectory("e");
+        const a = fixtures.getDirectory("e");
         let i = 0;
 
         const checkHeaderType = function (header) {

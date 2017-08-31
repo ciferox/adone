@@ -20,7 +20,7 @@ describe("database", "local", "Executor", () => {
         });
 
         beforeEach(async () => {
-            dbFile = await tmpdir.getVirtualFile("db.db");
+            dbFile = await tmpdir.getFile("db.db");
             testDb = dbFile.path();
             d = new Datastore({ filename: testDb, timestampData: true });
             expect(d.filename).to.be.equal(testDb);

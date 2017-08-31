@@ -2,7 +2,7 @@ describe("geoip", "mmdb", "api", () => {
     const { geoip: { mmdb } } = adone;
 
     const fixtures = new adone.fs.Directory(__dirname, "fixtures");
-    const db = fixtures.getVirtualFile("GeoIP2-City-Test.mmdb");
+    const db = fixtures.getFile("GeoIP2-City-Test.mmdb");
     const dbPath = db.path();
 
     describe("open()", () => {

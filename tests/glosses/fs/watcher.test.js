@@ -135,8 +135,8 @@ describe("fs", "watcher", function watcherTests() {
             });
 
             it("should emit `add` event when file was added", async () => {
-                const file = fixtures.getVirtualFile("add.txt");
-                const testFile = fixtures.getVirtualFile("add.txt");
+                const file = fixtures.getFile("add.txt");
+                const testFile = fixtures.getFile("add.txt");
                 const add = spy();
                 watcher.on("add", add);
                 if (readySpy.callCount === 0) {
@@ -153,7 +153,7 @@ describe("fs", "watcher", function watcherTests() {
             });
 
             it("should emit `addDir` event when directory was added", async () => {
-                const dir = fixtures.getVirtualDirectory("subdir");
+                const dir = fixtures.getDirectory("subdir");
                 const addDir = spy();
                 watcher.on("addDir", addDir);
                 if (!readySpy.callCount) {
@@ -171,7 +171,7 @@ describe("fs", "watcher", function watcherTests() {
             });
 
             it("should emit `change` event when file was changed", async () => {
-                const file = fixtures.getVirtualFile("change.txt");
+                const file = fixtures.getFile("change.txt");
                 const change = spy();
                 watcher.on("change", change);
                 if (!readySpy.callCount) {
@@ -191,7 +191,7 @@ describe("fs", "watcher", function watcherTests() {
 
             it("should emit `unlink` event when file was removed", async () => {
                 const unlink = spy();
-                const file = fixtures.getVirtualFile("unlink.txt");
+                const file = fixtures.getFile("unlink.txt");
 
                 watcher.on("unlink", unlink);
                 if (!readySpy.callCount) {
@@ -232,8 +232,8 @@ describe("fs", "watcher", function watcherTests() {
             it("should emit `unlink` and `add` events when a file is renamed", async () => {
                 const unlink = spy();
                 const add = spy();
-                const testFile = fixtures.getVirtualFile("change.txt");
-                const newFile = fixtures.getVirtualFile("moved.txt");
+                const testFile = fixtures.getFile("change.txt");
+                const newFile = fixtures.getFile("moved.txt");
 
                 watcher.on("unlink", unlink).on("add", add);
                 if (!readySpy.callCount) {
@@ -310,7 +310,7 @@ describe("fs", "watcher", function watcherTests() {
             });
 
             it("should survive ENOENT for missing subdirectories", async () => {
-                const testDir = fixtures.getVirtualFile("notadir");
+                const testDir = fixtures.getFile("notadir");
                 if (!readySpy.callCount) {
                     await readySpy.waitForCall();
                 }
@@ -320,8 +320,8 @@ describe("fs", "watcher", function watcherTests() {
 
             it("should notice when a file appears in a new directory", async () => {
                 const add = spy();
-                const testDir = fixtures.getVirtualDirectory("subdir");
-                const testFile = fixtures.getVirtualFile("subdir", "add.txt");
+                const testDir = fixtures.getDirectory("subdir");
+                const testFile = fixtures.getFile("subdir", "add.txt");
                 watcher.on("add", add);
                 if (!readySpy.callCount) {
                     await readySpy.waitForCall();
@@ -341,8 +341,8 @@ describe("fs", "watcher", function watcherTests() {
             it("should watch removed and re-added directories", async () => {
                 const unlinkDir = spy();
                 const addDir = spy();
-                const parentDir = fixtures.getVirtualDirectory("subdir2");
-                const subDir = fixtures.getVirtualDirectory("subdir2", "subsub");
+                const parentDir = fixtures.getDirectory("subdir2");
+                const subDir = fixtures.getDirectory("subdir2", "subsub");
                 watcher.on("unlinkDir", unlinkDir).on("addDir", addDir);
                 if (!readySpy.callCount) {
                     await readySpy.waitForCall();
@@ -371,7 +371,7 @@ describe("fs", "watcher", function watcherTests() {
             before(closeWatchers);
 
             it("should detect changes", async () => {
-                const testFile = fixtures.getVirtualFile("change.txt");
+                const testFile = fixtures.getFile("change.txt");
                 const change = spy();
                 const ready = spy();
                 watcher = watch(testFile.path(), options)
@@ -389,7 +389,7 @@ describe("fs", "watcher", function watcherTests() {
             });
 
             it("should detect unlinks", async () => {
-                const testFile = fixtures.getVirtualFile("unlink.txt");
+                const testFile = fixtures.getFile("unlink.txt");
                 const unlink = spy();
                 const ready = spy();
                 watcher = watch(testFile.path(), options)
@@ -411,7 +411,7 @@ describe("fs", "watcher", function watcherTests() {
                 const unlink = spy();
                 const add = spy();
                 const ready = spy();
-                const file = fixtures.getVirtualFile("unlink.txt");
+                const file = fixtures.getFile("unlink.txt");
                 watcher = watch(file.path(), options)
                     .on("unlink", unlink)
                     .on("add", add)
@@ -438,8 +438,8 @@ describe("fs", "watcher", function watcherTests() {
             it("should ignore unwatched siblings", async () => {
                 const all = spy();
                 const ready = spy();
-                const file = fixtures.getVirtualFile("add.txt");
-                const sibling = fixtures.getVirtualFile("change.txt");
+                const file = fixtures.getFile("add.txt");
+                const sibling = fixtures.getFile("change.txt");
                 watcher = watch(file.path(), options)
                     .on("all", all)
                     .on("ready", ready);
@@ -477,7 +477,7 @@ describe("fs", "watcher", function watcherTests() {
                 ]);
 
                 expect(add.callCount).to.be.equal(1);
-                expect(add.getCall(0).args[0]).to.be.equal(dir.getVirtualFile("add.txt").path());
+                expect(add.getCall(0).args[0]).to.be.equal(dir.getFile("add.txt").path());
             });
         });
 
@@ -485,7 +485,7 @@ describe("fs", "watcher", function watcherTests() {
             it("should watch non-existent file and detect add", async () => {
                 const add = spy();
                 const ready = spy();
-                const file = fixtures.getVirtualFile("add.txt");
+                const file = fixtures.getFile("add.txt");
                 watcher = watch(file.path(), options)
                     .on("add", add)
                     .on("ready", ready);
@@ -502,8 +502,8 @@ describe("fs", "watcher", function watcherTests() {
             it("should watch non-existent dir and detect addDir/add", async () => {
                 const all = spy();
                 const ready = spy();
-                const dir = fixtures.getVirtualDirectory("subdir");
-                const file = dir.getVirtualFile("add.txt");
+                const dir = fixtures.getDirectory("subdir");
+                const file = dir.getFile("add.txt");
                 watcher = watch(dir.path(), options)
                     .on("all", all)
                     .on("ready", ready);
@@ -530,9 +530,9 @@ describe("fs", "watcher", function watcherTests() {
             it("should correctly watch and emit based on glob input", async () => {
                 const all = spy();
                 const ready = spy();
-                const file = fixtures.getVirtualFile("*a*.txt");
-                const addFile = fixtures.getVirtualFile("add.txt");
-                const changeFile = fixtures.getVirtualFile("change.txt");
+                const file = fixtures.getFile("*a*.txt");
+                const addFile = fixtures.getFile("add.txt");
+                const changeFile = fixtures.getFile("change.txt");
                 watcher = watch(file.path(), options)
                     .on("all", all)
                     .on("ready", ready);
@@ -556,9 +556,9 @@ describe("fs", "watcher", function watcherTests() {
             it("should respect negated glob patterns", async () => {
                 const all = spy();
                 const ready = spy();
-                const test = fixtures.getVirtualFile("*");
-                const negated = `!${fixtures.getVirtualFile("*a*.txt").path()}`;
-                const unlink = fixtures.getVirtualFile("unlink.txt");
+                const test = fixtures.getFile("*");
+                const negated = `!${fixtures.getFile("*a*.txt").path()}`;
+                const unlink = fixtures.getFile("unlink.txt");
                 watcher = watch([test.path(), negated], options)
                     .on("all", all)
                     .on("ready", ready);
@@ -593,7 +593,7 @@ describe("fs", "watcher", function watcherTests() {
                 const a = await subdir.addFile("a.txt", { contents: "b" });
                 const b = await subdir.addFile("b.txt", { contents: "b" });
                 const ab = await subsub.addFile("ab.txt", { contents: "b" });
-                const add = fix.getVirtualFile("add.txt");
+                const add = fix.getFile("add.txt");
 
                 const all = spy();
                 const ready = spy();
@@ -647,9 +647,9 @@ describe("fs", "watcher", function watcherTests() {
 
                 const all = spy();
                 const ready = spy();
-                const watchPath = fix.getVirtualFile("*a*.txt").relativePath(fixtures);
-                const add = fix.getVirtualFile("add.txt");
-                const change = fix.getVirtualFile("change.txt");
+                const watchPath = fix.getFile("*a*.txt").relativePath(fixtures);
+                const add = fix.getFile("add.txt");
+                const change = fix.getFile("change.txt");
                 watcher = watch(watchPath, options)
                     .on("all", all)
                     .on("ready", ready);
@@ -677,12 +677,12 @@ describe("fs", "watcher", function watcherTests() {
             it("should correctly handle conflicting glob patterns", async () => {
                 const all = spy();
                 const ready = spy();
-                const change = fixtures.getVirtualFile("change.txt");
-                const unlink = fixtures.getVirtualFile("unlink.txt");
-                const add = fixtures.getVirtualFile("add.txt");
+                const change = fixtures.getFile("change.txt");
+                const unlink = fixtures.getFile("unlink.txt");
+                const add = fixtures.getFile("add.txt");
                 const watchPaths = [
-                    fixtures.getVirtualFile("change*").path(),
-                    fixtures.getVirtualFile("unlink*").path()
+                    fixtures.getFile("change*").path(),
+                    fixtures.getFile("unlink*").path()
                 ];
                 watcher = watch(watchPaths, options)
                     .on("all", all)
@@ -712,10 +712,10 @@ describe("fs", "watcher", function watcherTests() {
             it("should correctly handle intersecting glob patterns", async () => {
                 const all = spy();
                 const ready = spy();
-                const change = fixtures.getVirtualFile("change.txt");
+                const change = fixtures.getFile("change.txt");
                 const watchPaths = [
-                    fixtures.getVirtualFile("cha*").path(),
-                    fixtures.getVirtualFile("*nge.*").path()
+                    fixtures.getFile("cha*").path(),
+                    fixtures.getFile("*nge.*").path()
                 ];
                 watcher = watch(watchPaths, options)
                     .on("all", all)
@@ -753,11 +753,11 @@ describe("fs", "watcher", function watcherTests() {
                 options.disableGlobbing = true;
                 const all = spy();
                 const ready = spy();
-                const filePath = fixtures.getVirtualFile("nota[glob]/a.txt").path();
-                const watchPath = fixtures.getVirtualFile("nota[glob]").path();
-                const matchingDir = fixtures.getVirtualFile("notag").path();
-                const matchingFile = fixtures.getVirtualFile("notag/b.txt").path();
-                const matchingFile2 = fixtures.getVirtualFile("notal").path();
+                const filePath = fixtures.getFile("nota[glob]/a.txt").path();
+                const watchPath = fixtures.getFile("nota[glob]").path();
+                const matchingDir = fixtures.getFile("notag").path();
+                const matchingFile = fixtures.getFile("notag/b.txt").path();
+                const matchingFile2 = fixtures.getFile("notal").path();
                 adone.std.fs.mkdirSync(watchPath, 0x1ed);
                 adone.std.fs.writeFileSync(filePath, "b");
                 adone.std.fs.mkdirSync(matchingDir, 0x1ed);
@@ -783,11 +783,11 @@ describe("fs", "watcher", function watcherTests() {
                 options.disableGlobbing = true;
                 const all = spy();
                 const ready = spy();
-                const filePath = fixtures.getVirtualFile("nota[glob]").path();
-                const watchPath = fixtures.getVirtualFile("nota[glob]").path();
-                const matchingDir = fixtures.getVirtualFile("notag").path();
-                const matchingFile = fixtures.getVirtualFile("notag/a.txt").path();
-                const matchingFile2 = fixtures.getVirtualFile("notal").path();
+                const filePath = fixtures.getFile("nota[glob]").path();
+                const watchPath = fixtures.getFile("nota[glob]").path();
+                const matchingDir = fixtures.getFile("notag").path();
+                const matchingFile = fixtures.getFile("notag/a.txt").path();
+                const matchingFile2 = fixtures.getFile("notal").path();
                 adone.std.fs.writeFileSync(filePath, "b");
                 adone.std.fs.mkdirSync(matchingDir, 0x1ed);
                 adone.std.fs.writeFileSync(matchingFile, "c");
@@ -820,7 +820,7 @@ describe("fs", "watcher", function watcherTests() {
                         ]]
                     ]]
                 ]);
-                const fix = fixtures.getVirtualDirectory("inner", "one_more");
+                const fix = fixtures.getDirectory("inner", "one_more");
                 const deepFile = await fix.addFile("sibdir", "subsub", "subsubsub", "a.txt", { contents: "b" });
                 const watchPath = adone.std.path.join(fix.path(), "..", "..", "in*er", "one*more", "**", "subsubsub", "*.txt");
                 const all = spy();
@@ -840,12 +840,12 @@ describe("fs", "watcher", function watcherTests() {
 
             it("should emit matching dir events", async () => {
                 const watchPaths = [
-                    fixtures.getVirtualFile("*").path(),
-                    fixtures.getVirtualFile("subdir/subsub/**/*").path()
+                    fixtures.getFile("*").path(),
+                    fixtures.getFile("subdir/subsub/**/*").path()
                 ];
                 await fixtures.addDirectory("subdir", "subsub");
-                const deepDir = fixtures.getVirtualDirectory("subdir", "subsub", "subsubsub");
-                const deepFile = deepDir.getVirtualFile("a.txt");
+                const deepDir = fixtures.getDirectory("subdir", "subsub", "subsubsub");
+                const deepFile = deepDir.getFile("a.txt");
                 const all = spy();
                 const ready = spy();
                 watcher = watch(watchPaths, options)
@@ -854,7 +854,7 @@ describe("fs", "watcher", function watcherTests() {
                 await ready.waitForCall();
                 await sleep();
                 expect(all).to.have.been
-                    .calledWith("addDir", fixtures.getVirtualDirectory("subdir").path());
+                    .calledWith("addDir", fixtures.getDirectory("subdir").path());
                 all.reset();
                 await Promise.all([
                     sleep().then(() => deepDir.create())
@@ -898,15 +898,15 @@ describe("fs", "watcher", function watcherTests() {
                     .on("ready", ready);
                 await ready.waitForCall();
                 expect(addDir).to.have.been.calledWith(linkedDir.path());
-                expect(add).to.have.been.calledWith(linkedDir.getVirtualFile("change.txt").path());
-                expect(add).to.have.been.calledWith(linkedDir.getVirtualFile("unlink.txt").path());
+                expect(add).to.have.been.calledWith(linkedDir.getFile("change.txt").path());
+                expect(add).to.have.been.calledWith(linkedDir.getFile("unlink.txt").path());
             });
 
             it("should watch symlinked files", async () => {
                 const all = spy();
                 const ready = spy();
-                const change = fixtures.getVirtualFile("change.txt");
-                const link = await change.symbolicLink(fixtures.getVirtualFile("link.txt"));
+                const change = fixtures.getFile("change.txt");
+                const link = await change.symbolicLink(fixtures.getFile("link.txt"));
                 watcher = watch(link.path(), options)
                     .on("all", all)
                     .on("ready", ready);
@@ -922,8 +922,8 @@ describe("fs", "watcher", function watcherTests() {
             it("should follow symlinked files within a normal dir", async () => {
                 const all = spy();
                 const ready = spy();
-                const change = fixtures.getVirtualFile("change.txt");
-                const link = await change.symbolicLink(subdir.getVirtualFile("link.txt"));
+                const change = fixtures.getFile("change.txt");
+                const link = await change.symbolicLink(subdir.getFile("link.txt"));
                 watcher = watch(subdir.path(), options)
                     .on("all", all)
                     .on("ready", ready);
@@ -939,8 +939,8 @@ describe("fs", "watcher", function watcherTests() {
             it("should watch paths with a symlinked parent", async () => {
                 const all = spy();
                 const ready = spy();
-                const dir = linkedDir.getVirtualDirectory("subdir");
-                const file = dir.getVirtualFile("add.txt");
+                const dir = linkedDir.getDirectory("subdir");
+                const file = dir.getFile("add.txt");
                 watcher = watch(dir.path(), options)
                     .on("all", all)
                     .on("ready", ready);
@@ -955,7 +955,7 @@ describe("fs", "watcher", function watcherTests() {
             });
 
             it("should not recurse indefinitely on circular symlinks", async () => {
-                await fixtures.symbolicLink(fixtures.getVirtualDirectory("subdir", "circular"));
+                await fixtures.symbolicLink(fixtures.getDirectory("subdir", "circular"));
                 const ready = spy();
                 stdWatcher().on("ready", ready);
                 await ready.waitForCall();
@@ -969,9 +969,9 @@ describe("fs", "watcher", function watcherTests() {
                     .on("ready", ready);
                 await ready.waitForCall();
                 await sleep();
-                const linkedFile = linkedDir.getVirtualFile("change.txt");
+                const linkedFile = linkedDir.getFile("change.txt");
                 await Promise.all([
-                    fixtures.getVirtualFile("change.txt").write(Date.now()),
+                    fixtures.getFile("change.txt").write(Date.now()),
                     change.waitForArgs(linkedFile.path())
                 ]);
             });
@@ -985,10 +985,10 @@ describe("fs", "watcher", function watcherTests() {
                     .on("ready", ready);
                 await ready.waitForCall();
                 await sleep();
-                const sublink = fixtures.getVirtualDirectory("link");
+                const sublink = fixtures.getDirectory("link");
                 await Promise.all([
                     sleep().then(() => subdir.symbolicLink(sublink)),
-                    all.waitForArgs("add", sublink.getVirtualFile("add.txt").path()),
+                    all.waitForArgs("add", sublink.getFile("add.txt").path()),
                     all.waitForArgs("addDir", sublink.path())
                 ]);
             });
@@ -1010,7 +1010,7 @@ describe("fs", "watcher", function watcherTests() {
                 options.followSymlinks = false;
                 const all = spy();
                 const ready = spy();
-                const link = await subdir.symbolicLink(fixtures.getVirtualDirectory("link"));
+                const link = await subdir.symbolicLink(fixtures.getDirectory("link"));
                 stdWatcher().on("all", all).on("ready", ready);
 
 
@@ -1023,20 +1023,20 @@ describe("fs", "watcher", function watcherTests() {
                     all.waitForArgs("add", link.path())
                 ]);
                 expect(all).not.to.have.been.calledWith("addDir", link.path());
-                expect(all).not.to.have.been.calledWith("add", link.getVirtualFile("add.txt").path());
+                expect(all).not.to.have.been.calledWith("add", link.getFile("add.txt").path());
             });
 
             it("should not reuse watcher when following a symlink to elsewhere", async () => {
                 const linked = await fixtures.addDirectory("outside");
                 const linkedFile = await linked.addFile("text.txt");
-                const link = await linked.symbolicLink(subdir.getVirtualDirectory("subsub"));
+                const link = await linked.symbolicLink(subdir.getDirectory("subsub"));
 
                 const ready2 = spy();
                 watcher2 = watch(subdir.path(), options)
                     .on("ready", ready2);
                 await ready2.waitForCall();
                 await sleep(options.usePolling ? 900 : undefined);
-                const watched = link.getVirtualFile("text.txt");
+                const watched = link.getFile("text.txt");
                 const all = spy();
                 const ready = spy();
                 watcher = watch(watched.path(), options)
@@ -1066,7 +1066,7 @@ describe("fs", "watcher", function watcherTests() {
                 expect(add).to.have.been.calledWith(adone.std.path.join(watchDir, "change.txt"));
                 expect(add.callCount).to.be.equal(3);  // also unlink.txt & subdir/add.txt
                 expect(addDir).to.have.been.calledWith(adone.std.path.join(watchDir, "subdir"));
-                const addFile = linkedDir.getVirtualFile("add.txt");
+                const addFile = linkedDir.getFile("add.txt");
                 await Promise.all([
                     addFile.write(Date.now()),
                     add.waitForArgs(addFile.relativePath(process.cwd()))
@@ -1080,7 +1080,7 @@ describe("fs", "watcher", function watcherTests() {
             it("should watch all paths in an array", async () => {
                 const all = spy();
                 const ready = spy();
-                const file = fixtures.getVirtualFile("change.txt");
+                const file = fixtures.getFile("change.txt");
                 const dir = await fixtures.addDirectory("subdir");
                 watcher = watch([dir.path(), file.path()], options)
                     .on("all", all)
@@ -1090,7 +1090,7 @@ describe("fs", "watcher", function watcherTests() {
                 expect(all).to.have.been.calledWith("add", file.path());
                 expect(all).to.have.been.calledWith("add", file.path());
                 expect(all).to.have.been.calledWith("addDir", dir.path());
-                expect(all).not.to.have.been.calledWith("add", fixtures.getVirtualFile("unlink.txt").path());
+                expect(all).not.to.have.been.calledWith("add", fixtures.getFile("unlink.txt").path());
 
                 await Promise.all([
                     file.write(Date.now()),
@@ -1101,7 +1101,7 @@ describe("fs", "watcher", function watcherTests() {
             it("should accommodate nested arrays in input", async () => {
                 const all = spy();
                 const ready = spy();
-                const file = fixtures.getVirtualFile("change.txt");
+                const file = fixtures.getFile("change.txt");
                 const dir = await fixtures.addDirectory("subdir");
 
                 watcher = watch([[dir.path()], [file.path()]], options)
@@ -1111,7 +1111,7 @@ describe("fs", "watcher", function watcherTests() {
                 await sleep();
                 expect(all).to.have.been.calledWith("add", file.path());
                 expect(all).to.have.been.calledWith("addDir", dir.path());
-                expect(all).not.to.have.been.calledWith("add", fixtures.getVirtualFile("unlink.txt").path());
+                expect(all).not.to.have.been.calledWith("add", fixtures.getFile("unlink.txt").path());
 
                 await Promise.all([
                     file.write(Date.now()).then(() => sleep()),
@@ -1188,7 +1188,7 @@ describe("fs", "watcher", function watcherTests() {
                         const add = spy();
                         const ready = spy();
 
-                        watcher = watch(fixtures.getVirtualDirectory("subdir").path(), options)
+                        watcher = watch(fixtures.getDirectory("subdir").path(), options)
                             .on("add", add)
                             .on("ready", ready);
                         watcher.add(fixtures.path());
@@ -1198,8 +1198,8 @@ describe("fs", "watcher", function watcherTests() {
                     it("should notice when a file appears in an empty directory", async () => {
                         const add = spy();
                         const ready = spy();
-                        const dir = fixtures.getVirtualDirectory("subdir");
-                        const file = fixtures.getVirtualFile("subdir", "add.txt");
+                        const dir = fixtures.getDirectory("subdir");
+                        const file = fixtures.getFile("subdir", "add.txt");
                         stdWatcher().on("add", add).on("ready", ready);
                         await ready.waitForCall();
                         await sleep();
@@ -1214,7 +1214,7 @@ describe("fs", "watcher", function watcherTests() {
                     it("should emit a change on a preexisting file as a change", async () => {
                         const all = spy();
                         const ready = spy();
-                        const file = fixtures.getVirtualFile("change.txt");
+                        const file = fixtures.getFile("change.txt");
 
                         stdWatcher().on("all", all).on("ready", ready);
                         await ready.waitForCall();
@@ -1229,7 +1229,7 @@ describe("fs", "watcher", function watcherTests() {
                         options.depth = 0;
                         const all = spy();
                         const ready = spy();
-                        const file = fixtures.getVirtualFile("add.txt");
+                        const file = fixtures.getFile("add.txt");
                         await fixtures.addDirectory("subdir");
                         stdWatcher().on("all", all).on("ready", ready);
                         await ready.waitForCall();
@@ -1304,8 +1304,8 @@ describe("fs", "watcher", function watcherTests() {
                     await ready.waitForCall();
                     await sleep();
                     await Promise.all([
-                        fixtures.getVirtualFile("add.txt").write(Date.now()).then(() => sleep()),
-                        fixtures.getVirtualFile("change.txt").write(Date.now()).then(() => sleep()),
+                        fixtures.getFile("add.txt").write(Date.now()).then(() => sleep()),
+                        fixtures.getFile("change.txt").write(Date.now()).then(() => sleep()),
                         all.waitForArgs("change", "change.txt")
                     ]);
                     expect(all).not.to.have.been.calledWith("add", "add.txt");
@@ -1342,8 +1342,8 @@ describe("fs", "watcher", function watcherTests() {
                     }
                     expect(all).to.have.been.calledWith("addDir", fixtures.path());
                     expect(all).to.have.been.calledWith("addDir", subdir.path());
-                    expect(all).to.have.been.calledWith("add", fixtures.getVirtualFile("change.txt").path());
-                    expect(all).to.have.been.calledWith("add", fixtures.getVirtualFile("unlink.txt").path());
+                    expect(all).to.have.been.calledWith("add", fixtures.getFile("change.txt").path());
+                    expect(all).to.have.been.calledWith("add", fixtures.getFile("unlink.txt").path());
                     expect(all).not.to.have.been.calledWith("change");
                 });
 
@@ -1351,9 +1351,9 @@ describe("fs", "watcher", function watcherTests() {
                     options.depth = 1;
                     const all = spy();
                     const ready = spy();
-                    const add = fixtures.getVirtualFile("subdir", "add.txt");
-                    const change = fixtures.getVirtualFile("change.txt");
-                    const ignored = fixtures.getVirtualFile("subdir", "subsub", "ab.txt");
+                    const add = fixtures.getFile("subdir", "add.txt");
+                    const change = fixtures.getFile("change.txt");
+                    const ignored = fixtures.getFile("subdir", "subsub", "ab.txt");
                     stdWatcher().on("all", all).on("ready", ready);
                     await Promise.all([
                         sleep().then(() => Promise.all([
@@ -1379,13 +1379,13 @@ describe("fs", "watcher", function watcherTests() {
                     options.depth = 1;
                     const all = spy();
                     const ready = spy();
-                    const link = await subdir.symbolicLink(fixtures.getVirtualDirectory("link"));
+                    const link = await subdir.symbolicLink(fixtures.getDirectory("link"));
                     stdWatcher().on("all", all).on("ready", ready);
                     await ready.waitForCall();
                     expect(all).to.have.been.calledWith("addDir", link.path());
-                    expect(all).to.have.been.calledWith("addDir", link.getVirtualDirectory("subsub").path());
-                    expect(all).to.have.been.calledWith("add", link.getVirtualFile("add.txt").path());
-                    expect(all).not.to.have.been.calledWith("add", link.getVirtualFile("subsub", "ab.txt").path());
+                    expect(all).to.have.been.calledWith("addDir", link.getDirectory("subsub").path());
+                    expect(all).to.have.been.calledWith("add", link.getFile("add.txt").path());
+                    expect(all).not.to.have.been.calledWith("add", link.getFile("subsub", "ab.txt").path());
                 });
 
                 it("should respect depth setting when following a new symlink", async () => {
@@ -1396,8 +1396,8 @@ describe("fs", "watcher", function watcherTests() {
                     options.ignoreInitial = true;
                     const all = spy();
                     const ready = spy();
-                    const link = fixtures.getVirtualDirectory("link");
-                    const dir = link.getVirtualDirectory("subsub");
+                    const link = fixtures.getDirectory("link");
+                    const dir = link.getDirectory("subsub");
                     stdWatcher().on("all", all).on("ready", ready);
                     await ready.waitForCall();
                     await sleep();
@@ -1405,7 +1405,7 @@ describe("fs", "watcher", function watcherTests() {
                         subdir.symbolicLink(link),
                         all.waitForArgs("addDir", link.path()),
                         all.waitForArgs("addDir", dir.path()),
-                        all.waitForArgs("add", link.getVirtualFile("add.txt").path())
+                        all.waitForArgs("add", link.getFile("add.txt").path())
                     ]);
                     await sleep();
                     expect(all.callCount).to.be.equal(3);
@@ -1415,7 +1415,7 @@ describe("fs", "watcher", function watcherTests() {
                     options.depth = 0;
                     const all = spy();
                     const ready = spy();
-                    const subdir2 = fixtures.getVirtualDirectory("subdir2");
+                    const subdir2 = fixtures.getDirectory("subdir2");
 
                     stdWatcher().on("all", all).on("ready", ready);
                     await ready.waitForCall();
@@ -1490,8 +1490,8 @@ describe("fs", "watcher", function watcherTests() {
                     options.cwd = fixtures.path();
                     const all = spy();
                     const ready = spy();
-                    const change = fixtures.getVirtualFile("change.txt");
-                    const unlink = fixtures.getVirtualFile("unlink.txt");
+                    const change = fixtures.getFile("change.txt");
+                    const unlink = fixtures.getFile("unlink.txt");
                     watcher = watch("**", options).on("all", all).on("ready", ready);
                     await ready.waitForCall();
                     expect(all).to.have.been.calledWith("add", "change.txt");
@@ -1529,10 +1529,10 @@ describe("fs", "watcher", function watcherTests() {
                     Object.keys(options).forEach((key) => {
                         options2[key] = options[key];
                     });
-                    options2.cwd = fixtures.getVirtualDirectory("subdir").path();
+                    options2.cwd = fixtures.getDirectory("subdir").path();
                     const all1 = spy();
                     const ready1 = spy();
-                    watcher = watch(fixtures.getVirtualDirectory("**").path(), options)
+                    watcher = watch(fixtures.getDirectory("**").path(), options)
                         .on("all", all1)
                         .on("ready", ready1);
                     await ready1.waitForCall();
@@ -1544,8 +1544,8 @@ describe("fs", "watcher", function watcherTests() {
                         .on("ready", ready2);
                     await ready2.waitForCall();
                     await sleep();
-                    const change = fixtures.getVirtualFile("change.txt");
-                    const unlink = fixtures.getVirtualFile("unlink.txt");
+                    const change = fixtures.getFile("change.txt");
+                    const unlink = fixtures.getFile("unlink.txt");
                     await Promise.all([
                         change.write(Date.now()).then(() => unlink.unlink()).then(() => sleep()),
                         all1.waitForArgs("unlink"),
@@ -1563,7 +1563,7 @@ describe("fs", "watcher", function watcherTests() {
                     options.cwd = fixtures.path();
                     options.ignored = "ignored-option.txt";
                     const files = ["*.txt", "!ignored.txt"];
-                    const change = fixtures.getVirtualFile("change.txt");
+                    const change = fixtures.getFile("change.txt");
                     const ignored = await fixtures.addFile("ignored.txt");
                     const ignoredOption = await fixtures.addFile("ignored-option.txt");
                     const all = spy();
@@ -1635,7 +1635,7 @@ describe("fs", "watcher", function watcherTests() {
                     });
                     it("should not choke on non-existent files", async () => {
                         const ready = spy();
-                        const watcher = watch(fixtures.getVirtualFile("nope.txt").path(), options)
+                        const watcher = watch(fixtures.getFile("nope.txt").path(), options)
                             .on("ready", ready);
                         await ready.waitForCall();
                         await sleep();
@@ -1661,7 +1661,7 @@ describe("fs", "watcher", function watcherTests() {
                 it("should not emit add event before a file is fully written", async () => {
                     const all = spy();
                     const ready = spy();
-                    const file = fixtures.getVirtualFile("add.txt");
+                    const file = fixtures.getFile("add.txt");
                     stdWatcher().on("all", all).on("ready", ready);
                     await ready.waitForCall();
                     await sleep();
@@ -1674,7 +1674,7 @@ describe("fs", "watcher", function watcherTests() {
                 it("should wait for the file to be fully written before emitting the add event", async () => {
                     const all = spy();
                     const ready = spy();
-                    const file = fixtures.getVirtualFile("add.txt");
+                    const file = fixtures.getFile("add.txt");
                     stdWatcher().on("all", all).on("ready", ready);
                     await ready.waitForCall();
                     await sleep();
@@ -1687,7 +1687,7 @@ describe("fs", "watcher", function watcherTests() {
                 it("should emit with the final stats", async () => {
                     const all = spy();
                     const ready = spy();
-                    const file = fixtures.getVirtualFile("add.txt");
+                    const file = fixtures.getFile("add.txt");
                     stdWatcher().on("all", all).on("ready", ready);
                     await ready.waitForCall();
                     await sleep();
@@ -1701,7 +1701,7 @@ describe("fs", "watcher", function watcherTests() {
                 it("should not emit change event while a file has not been fully written", async () => {
                     const all = spy();
                     const ready = spy();
-                    const file = fixtures.getVirtualFile("add.txt");
+                    const file = fixtures.getFile("add.txt");
                     stdWatcher().on("all", all).on("ready", ready);
                     await ready.waitForCall();
                     await sleep();
@@ -1717,7 +1717,7 @@ describe("fs", "watcher", function watcherTests() {
                 it("should not emit change event before an existing file is fully updated", async () => {
                     const all = spy();
                     const ready = spy();
-                    const file = fixtures.getVirtualFile("change.txt");
+                    const file = fixtures.getFile("change.txt");
                     stdWatcher().on("all", all).on("ready", ready);
                     await ready.waitForCall();
                     await sleep();
@@ -1729,7 +1729,7 @@ describe("fs", "watcher", function watcherTests() {
                 it("should wait for an existing file to be fully updated before emitting the change event", async () => {
                     const all = spy();
                     const ready = spy();
-                    const file = fixtures.getVirtualFile("change.txt");
+                    const file = fixtures.getFile("change.txt");
                     stdWatcher().on("all", all).on("ready", ready);
                     await ready.waitForCall();
                     await sleep();
@@ -1742,7 +1742,7 @@ describe("fs", "watcher", function watcherTests() {
                 it("should emit change event after the file is fully written", async () => {
                     const all = spy();
                     const ready = spy();
-                    const file = fixtures.getVirtualFile("add.txt");
+                    const file = fixtures.getFile("add.txt");
                     stdWatcher().on("all", all).on("ready", ready);
                     await ready.waitForCall();
                     await sleep();
@@ -1759,7 +1759,7 @@ describe("fs", "watcher", function watcherTests() {
                 it("should not raise any event for a file that was deleted before fully written", async () => {
                     const all = spy();
                     const ready = spy();
-                    const file = fixtures.getVirtualFile("add.txt");
+                    const file = fixtures.getFile("add.txt");
                     stdWatcher().on("all", all).on("ready", ready);
                     await ready.waitForCall();
                     await sleep();
@@ -1779,7 +1779,7 @@ describe("fs", "watcher", function watcherTests() {
                     const all = spy();
                     const ready = spy();
                     const subdir = await fixtures.addDirectory("subdir");
-                    const file = subdir.getVirtualFile("add.txt");
+                    const file = subdir.getFile("add.txt");
                     options.cwd = file.dirname();
                     stdWatcher().on("all", all).on("ready", ready);
                     await ready.waitForCall();
@@ -1862,7 +1862,7 @@ describe("fs", "watcher", function watcherTests() {
             it("should stop watching unwatched paths", async () => {
                 const all = spy();
                 const ready = spy();
-                const change = fixtures.getVirtualFile("change.txt");
+                const change = fixtures.getFile("change.txt");
                 const watchPaths = [subdir.path(), change.path()];
 
                 watcher = watch(watchPaths, options).on("all", all).on("ready", ready);
@@ -1871,7 +1871,7 @@ describe("fs", "watcher", function watcherTests() {
                 watcher.unwatch(subdir.path());
                 await Promise.all([
                     sleep().then(() => Promise.all([
-                        subdir.getVirtualFile("add.txt").write(Date.now()),
+                        subdir.getFile("add.txt").write(Date.now()),
                         change.write("change.txt")
                     ])).then(() => sleep()),
                     all.waitForArgs("change", change.path())
@@ -1889,12 +1889,12 @@ describe("fs", "watcher", function watcherTests() {
                 await ready.waitForCall();
                 await sleep();
                 // test with both relative and absolute paths
-                watcher.unwatch([subdir.relativePath(process.cwd()), fixtures.getVirtualFile("unl*").path()]);
-                const change = fixtures.getVirtualFile("change.txt");
-                const add = subdir.getVirtualFile("add.txt");
+                watcher.unwatch([subdir.relativePath(process.cwd()), fixtures.getFile("unl*").path()]);
+                const change = fixtures.getFile("change.txt");
+                const add = subdir.getFile("add.txt");
                 await Promise.all([
                     sleep().then(() => Promise.all([
-                        fixtures.getVirtualFile("unlink.txt").unlink(),
+                        fixtures.getFile("unlink.txt").unlink(),
                         add.write(Date.now()),
                         change.write(Date.now())
                     ])),
@@ -1913,14 +1913,14 @@ describe("fs", "watcher", function watcherTests() {
                 const all = spy();
                 const ready = spy();
                 const subdirPath = subdir.relativePath(process.cwd());
-                const change = fixtures.getVirtualFile("change.txt");
+                const change = fixtures.getFile("change.txt");
                 const changePath = change.relativePath(process.cwd());
                 const watchPaths = [subdirPath, changePath];
                 watcher = watch(watchPaths, options).on("all", all).on("ready", ready);
                 await ready.waitForCall();
                 await sleep(300);
                 watcher.unwatch(subdirPath);
-                const add = subdir.getVirtualFile("add.txt");
+                const add = subdir.getFile("add.txt");
                 await Promise.all([
                     add.write(Date.now()),
                     change.write(Date.now()),
@@ -1935,7 +1935,7 @@ describe("fs", "watcher", function watcherTests() {
             });
 
             it("should watch paths that were unwatched and added again", async () => {
-                const change = fixtures.getVirtualFile("change.txt");
+                const change = fixtures.getFile("change.txt");
                 const watchPaths = [change.path()];
                 const ready = spy();
                 watcher = watch(watchPaths, options).on("ready", ready);
@@ -1962,9 +1962,9 @@ describe("fs", "watcher", function watcherTests() {
                 watcher = watch(".", options).on("all", all).on("ready", ready);
                 await ready.waitForCall();
                 await sleep();
-                const unlink = fixtures.getVirtualFile("unlink.txt");
-                const add = subdir.getVirtualFile("add.txt");
-                const change = fixtures.getVirtualFile("change.txt");
+                const unlink = fixtures.getFile("unlink.txt");
+                const add = subdir.getFile("add.txt");
+                const change = fixtures.getFile("change.txt");
                 watcher.unwatch(["subdir", unlink.path()]);
                 await Promise.all([
                     sleep().then(() => Promise.all([
@@ -1988,7 +1988,7 @@ describe("fs", "watcher", function watcherTests() {
             it("should ignore further events on close", async () => {
                 const add = spy();
                 const ready = spy();
-                const addFile = fixtures.getVirtualFile("add.txt");
+                const addFile = fixtures.getFile("add.txt");
                 watcher = watch(fixtures.path(), options).on("add", add).on("ready", ready);
                 await ready.waitForCall();
                 await sleep();

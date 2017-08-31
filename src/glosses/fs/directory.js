@@ -50,8 +50,20 @@ export default class Directory {
         return spath.resolve(this._path, ...paths);
     }
 
+    getFile(...paths) {
+        return new fs.File(this.resolve(...paths));
+    }
+
     getDirectory(...paths) {
         return new Directory(this.resolve(...paths));
+    }
+
+    getSymbolicLinkFile(...paths) {
+        return new fs.SymbolicLinkFile(this.resolve(...paths));
+    }
+
+    getSymbolicLinkDirectory(...paths) {
+        return new fs.SymbolicLinkDirectory(this.resolve(...paths));
     }
 
     async get(...path) {
@@ -60,31 +72,13 @@ export default class Directory {
         return stat.isDirectory() ? new Directory(path) : new fs.File(path);
     }
 
-    getVirtualSymbolicLinkFile(...path) {
-        path = spath.resolve(this._path, ...path);
-        return new fs.SymbolicLinkFile(path);
-    }
-
-    getVirtualSymbolicLinkDirectory(...path) {
-        path = spath.resolve(this._path, ...path);
-        return new fs.SymbolicLinkDirectory(path);
-    }
-
-    getVirtualFile(...path) {
-        path = spath.resolve(this._path, ...path);
-        return new fs.File(path);
-    }
-
-    getVirtualDirectory(...path) {
-        path = spath.resolve(this._path, ...path);
-        return new Directory(path);
-    }
-
     async _ensurePath(path) {
         let root = this;
         for (const part of path) {
-            root = root.getVirtualDirectory(part);
+            root = root.getDirectory(part);
+            // eslint-disable-next-line no-await-in-loop
             if (!(await root.exists())) {
+                // eslint-disable-next-line no-await-in-loop
                 await root.create();
             }
         }

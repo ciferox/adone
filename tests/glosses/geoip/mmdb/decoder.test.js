@@ -6,7 +6,7 @@ describe("geoip", "mmdb", "Decoder", () => {
 
     before(async () => {
         decoder = new Decoder(
-            await fixtures.getVirtualFile("GeoIP2-City-Test.mmdb"),
+            await fixtures.getFile("GeoIP2-City-Test.mmdb"),
             1
         );
     });

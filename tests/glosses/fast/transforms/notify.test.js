@@ -15,7 +15,7 @@ describe("fast", "transform", "notify", () => {
     const streams = [];
 
     const getFile = (f, { stream } = {}) => {
-        f = fromdir.getVirtualFile(f);
+        f = fromdir.getFile(f);
         const file = new File({
             path: f.path(),
             cwd: root.path(),
@@ -35,7 +35,7 @@ describe("fast", "transform", "notify", () => {
         root = await adone.fs.Directory.createTmp();
         fromdir = await root.addDirectory("from");
         await FS.createStructure(fromdir, ["1.txt", "2.txt", "3.txt"]);
-        srcPath = fromdir.getVirtualFile("**", "*").path();
+        srcPath = fromdir.getFile("**", "*").path();
     });
 
     after(async () => {
@@ -174,7 +174,7 @@ describe("fast", "transform", "notify", () => {
     });
 
     it("should default to notifying file path and default title", (done) => {
-        const srcFile = fromdir.getVirtualFile("1.txt").path();
+        const srcFile = fromdir.getFile("1.txt").path();
         const instream = fast.src(srcFile);
         const outstream = notify({
             notifier: mockGenerator((opts) => {
@@ -198,7 +198,7 @@ describe("fast", "transform", "notify", () => {
 
     it("should take function with file as argument, as message or title", (done) => {
         const testSuffix = "tester";
-        const srcFile = fromdir.getVirtualFile("1.txt").path();
+        const srcFile = fromdir.getFile("1.txt").path();
         const instream = fast.src(srcFile);
         const outstream = notify({
             notifier: mockGenerator((opts) => {

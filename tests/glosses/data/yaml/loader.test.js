@@ -6,12 +6,12 @@ describe("data", "yaml", "loader", () => {
     const files = fs.readdirSync(fixtures.path());
 
     for (const rfile of files) {
-        const file = fixtures.getVirtualFile(rfile);
+        const file = fixtures.getFile(rfile);
         if (file.extname() !== ".js") {
             continue;
         }
         specify(file.filename().slice(0, -3), async () => {
-            const yamlFile = fixtures.getVirtualFile(`${rfile.slice(0, -3)}.yml`);
+            const yamlFile = fixtures.getFile(`${rfile.slice(0, -3)}.yml`);
             const expected = require(file.path());
             let actual = [];
 

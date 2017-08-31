@@ -122,7 +122,7 @@ describe("util", "iconv", "Full DBCS encoding tests", function () {
             (function (enc) {
                 // Create tests for this encoding.
                 it(`Decode DBCS encoding '${enc}'`, async () => {
-                    const expectedFile = fixtures.getVirtualFile("dbcs", "decode", `${enc}.expected`);
+                    const expectedFile = fixtures.getFile("dbcs", "decode", `${enc}.expected`);
                     const iconvChgs = iconvChanges[enc] || {};
                     const iconvCannotDecodeChars = iconvCannotDecode[enc] || {};
                     const errors = [];
@@ -184,7 +184,7 @@ describe("util", "iconv", "Full DBCS encoding tests", function () {
                 });
 
                 it(`Encode DBCS encoding '${enc}'`, async () => {
-                    const expectedFile = fixtures.getVirtualFile("dbcs", "encode", `${enc}.expected`);
+                    const expectedFile = fixtures.getFile("dbcs", "encode", `${enc}.expected`);
                     const iconvChgs = iconvChanges[enc] || {};
                     const iconvCannotDecodeChars = iconvCannotDecode[enc] || {};
                     const errors = [];

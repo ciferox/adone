@@ -179,7 +179,7 @@ describe("fs", () => {
             const tmp = await rootTmp.addDirectory("tmp");
             const file1 = await tmp.addFile("hello1");
             const file2 = await tmp.addFile("hello2");
-            const err = await fs.rm(`${tmp.getVirtualFile("hello").path()}*`).catch((err) => err);
+            const err = await fs.rm(`${tmp.getFile("hello").path()}*`).catch((err) => err);
             expect(await file1.exists()).to.be.false;
             expect(await file2.exists()).to.be.false;
             await tmp.unlink();

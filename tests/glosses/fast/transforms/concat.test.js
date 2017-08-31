@@ -66,7 +66,7 @@ describe("fast", "transform", "concat", () => {
             contents: "console.log(123);"
         });
         await fast.src(srcPath).concat("test.js").dest(todir.path());
-        const file = todir.getVirtualFile("test.js");
+        const file = todir.getFile("test.js");
         expect(await file.exists()).to.be.true;
         expect(await file.contents()).to.be.equal("console.log(123);");
     });
@@ -79,7 +79,7 @@ describe("fast", "transform", "concat", () => {
             contents: "console.log(456);"
         });
         const files = await fast.src(srcPath).concat("test.js").dest(todir.path(), { produceFiles: true });
-        const file = todir.getVirtualFile("test.js");
+        const file = todir.getFile("test.js");
         expect(await file.exists()).to.be.true;
         expect(await file.contents()).to.be.equal(files.map((x) => x.contents.toString()).join("\n"));
     });
@@ -167,7 +167,7 @@ describe("fast", "transform", "concat", () => {
                 contents: "console.log(123);"
             });
             await fast.src(srcPath).concat({ path: "new.txt" }).dest(todir.path());
-            const file = todir.getVirtualFile("new.txt");
+            const file = todir.getFile("new.txt");
             expect(await file.exists()).to.be.true;
             expect(await file.contents()).to.be.equal("console.log(123);");
         });
@@ -180,7 +180,7 @@ describe("fast", "transform", "concat", () => {
                 .src(srcPath)
                 .concat({ cwd: path.normalize("/a/b/c"), path: path.normalize("/a/b/c/d/new.txt") })
                 .dest(todir.path());
-            const file = todir.getVirtualFile("d", "new.txt");
+            const file = todir.getFile("d", "new.txt");
             expect(await file.exists()).to.be.true;
             expect(await file.contents()).to.be.equal("console.log(123);");
         });

@@ -70,31 +70,31 @@ describe("mongodb", function () {
                 options: {
                     bind_ip: "localhost",
                     port: 31000,
-                    dbpath: configuration.root.getVirtualDirectory("db", "31000").path()
+                    dbpath: configuration.root.getDirectory("db", "31000").path()
                 }
             }, {
                 options: {
                     bind_ip: "localhost",
                     port: 31001,
-                    dbpath: configuration.root.getVirtualDirectory("db", "31001").path()
+                    dbpath: configuration.root.getDirectory("db", "31001").path()
                 }
             }, {
                 options: {
                     bind_ip: "localhost",
                     port: 31002,
-                    dbpath: configuration.root.getVirtualDirectory("db", "31002").path()
+                    dbpath: configuration.root.getDirectory("db", "31002").path()
                 }
             }, {
                 options: {
                     bind_ip: "localhost",
                     port: 31003,
-                    dbpath: configuration.root.getVirtualDirectory("db", "31003").path()
+                    dbpath: configuration.root.getDirectory("db", "31003").path()
                 }
             }, {
                 options: {
                     bind_ip: "localhost",
                     port: 31004,
-                    dbpath: configuration.root.getVirtualDirectory("db", "31004").path()
+                    dbpath: configuration.root.getDirectory("db", "31004").path()
                 }
             }];
 

@@ -218,7 +218,7 @@ describe("fast", "transform", "chmod", () => {
 
         before(async () => {
             root = await adone.fs.Directory.createTmp();
-            srcPath = root.getVirtualFile("from", "**", "*").path();
+            srcPath = root.getFile("from", "**", "*").path();
         });
 
         after(async () => {
@@ -241,7 +241,7 @@ describe("fast", "transform", "chmod", () => {
                 group: { read: false, write: false, execute: false },
                 others: { read: false, write: false, execute: false }
             }).dest(todir.path());
-            const file = todir.getVirtualFile("hello.js");
+            const file = todir.getFile("hello.js");
             expect(await file.exists()).to.be.true;
             const mode = await file.mode();
             expect(mode.toOctal()).to.be.equal("0700");
@@ -250,7 +250,7 @@ describe("fast", "transform", "chmod", () => {
         it("should chmod using a number", async () => {
             await fromdir.addFile("hello.js");
             await fast.src(srcPath).chmod(0o700).dest(todir.path());
-            const file = todir.getVirtualFile("hello.js");
+            const file = todir.getFile("hello.js");
             expect(await file.exists()).to.be.true;
             const mode = await file.mode();
             expect(mode.toOctal()).to.be.equal("0700");

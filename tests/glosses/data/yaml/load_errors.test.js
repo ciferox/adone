@@ -6,7 +6,7 @@ describe("data", "yaml", "load errors", () => {
     const files = fs.readdirSync(fixtures.path());
 
     for (const rfile of files) {
-        const file = fixtures.getVirtualFile(rfile);
+        const file = fixtures.getFile(rfile);
         specify(file.filename().slice(0, -3), async () => {
             const yamlSource = await file.contents();
 

@@ -22,7 +22,7 @@ describe("database", "local", "Persistence", () => {
     });
 
     beforeEach(async () => {
-        dbFile = await tmpdir.getVirtualFile("db.db");
+        dbFile = await tmpdir.getFile("db.db");
         testDb = dbFile.path();
         d = new Datastore({ filename: testDb });
         expect(d.filename).to.be.equal(testDb);
@@ -293,7 +293,7 @@ describe("database", "local", "Persistence", () => {
         };
 
         it("Declaring only one hook will throw an exception to prevent data loss", async () => {
-            const hookFile = await tmpdir.getVirtualFile("hookTest.db");
+            const hookFile = await tmpdir.getFile("hookTest.db");
 
             await storage.ensureFileDoesntExist(hookFile.path());
 
@@ -324,7 +324,7 @@ describe("database", "local", "Persistence", () => {
         });
 
         it.skip("Declaring two hooks that are not reverse of one another will cause an exception to prevent data loss", async () => {
-            const hookFile = await tmpdir.getVirtualFile("hookTest.db");
+            const hookFile = await tmpdir.getFile("hookTest.db");
             await storage.ensureFileDoesntExist(hookFile.path());
             await hookFile.write("Some content");
 
@@ -346,7 +346,7 @@ describe("database", "local", "Persistence", () => {
         });
 
         it("A serialization hook can be used to transform data before writing new state to disk", async () => {
-            const hookFile = await tmpdir.getVirtualFile("hookTest.db");
+            const hookFile = await tmpdir.getFile("hookTest.db");
             await storage.ensureFileDoesntExist(hookFile.path());
             const d = new Datastore({ filename: hookFile.path(), afterSerialization: as, beforeDeserialization: bd });
             await d.load();
@@ -415,7 +415,7 @@ describe("database", "local", "Persistence", () => {
         });
 
         it("Use serialization hook when persisting cached database or compacting", async () => {
-            const hookFile = await tmpdir.getVirtualFile("hookTest.db");
+            const hookFile = await tmpdir.getFile("hookTest.db");
             await storage.ensureFileDoesntExist(hookFile.path());
             const d = new Datastore({ filename: hookFile.path(), afterSerialization: as, beforeDeserialization: bd });
             await d.load();
@@ -468,7 +468,7 @@ describe("database", "local", "Persistence", () => {
         });
 
         it("Deserialization hook is correctly used when loading data", async () => {
-            const hookFile = await tmpdir.getVirtualFile("hookTest.db");
+            const hookFile = await tmpdir.getFile("hookTest.db");
             await storage.ensureFileDoesntExist(hookFile.path());
             let d = new Datastore({ filename: hookFile.path(), afterSerialization: as, beforeDeserialization: bd });
             await d.load();
@@ -500,18 +500,18 @@ describe("database", "local", "Persistence", () => {
     describe("Prevent dataloss when persisting data", () => {
 
         it("Creating a datastore with in memory as true and a bad filename wont cause an error", () => {
-            new Datastore({ filename: tmpdir.getVirtualFile("bad.db~").path(), inMemoryOnly: true });
+            new Datastore({ filename: tmpdir.getFile("bad.db~").path(), inMemoryOnly: true });
         });
 
         it("Creating a persistent datastore with a bad filename will cause an error", () => {
             expect(() => {
-                new Datastore({ filename: tmpdir.getVirtualFile("bad.db~").path() });
+                new Datastore({ filename: tmpdir.getFile("bad.db~").path() });
             }).to.throw();
         });
 
         it("If no file exists, ensureDatafileIntegrity creates an empty datafile", async () => {
-            const file = tmpdir.getVirtualFile("it.db");
-            const sfile = tmpdir.getVirtualFile("it.db~");
+            const file = tmpdir.getFile("it.db");
+            const sfile = tmpdir.getFile("it.db~");
             const p = new Persistence({ db: { inMemoryOnly: false, filename: file.path() } });
 
             await file.unlink().catch(adone.noop);
@@ -525,8 +525,8 @@ describe("database", "local", "Persistence", () => {
         });
 
         it("If only datafile exists, ensureDatafileIntegrity will use it", async () => {
-            const file = tmpdir.getVirtualFile("it.db");
-            const sfile = tmpdir.getVirtualFile("it.db~");
+            const file = tmpdir.getFile("it.db");
+            const sfile = tmpdir.getFile("it.db~");
             const p = new Persistence({ db: { inMemoryOnly: false, filename: file.path() } });
 
             await file.unlink().catch(adone.noop);
@@ -546,8 +546,8 @@ describe("database", "local", "Persistence", () => {
         });
 
         it("If temp datafile exists and datafile doesnt, ensureDatafileIntegrity will use it (cannot happen except upon first use)", async () => {
-            const file = tmpdir.getVirtualFile("it.db");
-            const sfile = tmpdir.getVirtualFile("it.db~");
+            const file = tmpdir.getFile("it.db");
+            const sfile = tmpdir.getFile("it.db~");
             const p = new Persistence({ db: { inMemoryOnly: false, filename: file.path() } });
 
             await file.unlink().catch(adone.noop);
@@ -568,8 +568,8 @@ describe("database", "local", "Persistence", () => {
 
         // Technically it could also mean the write was successful but the rename wasn't, but there is in any case no guarantee that the data in the temp file is whole so we have to discard the whole file
         it("If both temp and current datafiles exist, ensureDatafileIntegrity will use the datafile, as it means that the write of the temp file failed", async () => {
-            const file = tmpdir.getVirtualFile("it.db");
-            const sfile = tmpdir.getVirtualFile("it.db~");
+            const file = tmpdir.getFile("it.db");
+            const sfile = tmpdir.getFile("it.db~");
             const theDb = new Datastore({ filename: file.path() });
 
             await file.unlink().catch(adone.noop);
@@ -669,8 +669,8 @@ describe("database", "local", "Persistence", () => {
         });
 
         it("persistCachedDatabase should update the contents of the datafile and leave a clean state even if there is a temp datafile", async () => {
-            const file = tmpdir.getVirtualFile("test2.db");
-            const sfile = tmpdir.getVirtualFile("test2.db~");
+            const file = tmpdir.getFile("test2.db");
+            const sfile = tmpdir.getFile("test2.db~");
 
             await file.unlink().catch(adone.noop);
             await sfile.unlink().catch(adone.noop);
@@ -686,8 +686,8 @@ describe("database", "local", "Persistence", () => {
         });
 
         it("Persistence works as expected when everything goes fine", async () => {
-            const file = tmpdir.getVirtualFile("test2.db");
-            const sfile = tmpdir.getVirtualFile("test2.db~");
+            const file = tmpdir.getFile("test2.db");
+            const sfile = tmpdir.getFile("test2.db~");
 
             await file.unlink().catch(adone.noop);
             await sfile.unlink().catch(adone.noop);
@@ -735,8 +735,8 @@ describe("database", "local", "Persistence", () => {
         // is rewritten to crash the process before it finished (after 5000 bytes), to ensure data was not lost
         it.skip("If system crashes during a loadDatabase, the former version is not lost", async () => {
             const N = 500;
-            const file = tmpdir.getVirtualFile("lac.db");
-            const sfile = tmpdir.getVirtualFile("lac.db~");
+            const file = tmpdir.getFile("lac.db");
+            const sfile = tmpdir.getFile("lac.db~");
 
             await file.unlink().catch(adone.noop);
             await sfile.unlink().catch(adone.noop);
@@ -780,7 +780,7 @@ describe("database", "local", "Persistence", () => {
     describe("ensureFileDoesntExist", () => {
 
         it("Doesnt do anything if file already doesnt exist", async () => {
-            const file = tmpdir.getVirtualFile("nonexisting");
+            const file = tmpdir.getFile("nonexisting");
             await storage.ensureFileDoesntExist(file.path());
             expect(await file.exists()).to.be.false;
         });

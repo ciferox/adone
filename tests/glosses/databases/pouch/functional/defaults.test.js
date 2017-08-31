@@ -13,8 +13,8 @@ describe("database", "pouch", "defaults", () => {
     });
 
     afterEach(async () => {
-        await util.tmpdir.getVirtualDirectory("_pouch_.").unlink();
-        await util.tmpdir.getVirtualDirectory("path").unlink();
+        await util.tmpdir.getDirectory("_pouch_.").unlink();
+        await util.tmpdir.getDirectory("path").unlink();
     });
 
     after(async () => {
@@ -22,7 +22,7 @@ describe("database", "pouch", "defaults", () => {
     });
 
     it("should allow prefixes", async () => {
-        const prefix = util.tmpdir.getVirtualDirectory("path", "to", "db", "1").path();
+        const prefix = util.tmpdir.getDirectory("path", "to", "db", "1").path();
         await adone.fs.mkdir(prefix);
 
         const db = new DB("mydb", { prefix });
@@ -39,7 +39,7 @@ describe("database", "pouch", "defaults", () => {
     });
 
     it("should allow us to set a prefix by default", async () => {
-        const prefix = util.tmpdir.getVirtualDirectory("path", "to", "db", "2").path();
+        const prefix = util.tmpdir.getDirectory("path", "to", "db", "2").path();
         await adone.fs.mkdir(prefix);
 
         const CustomPouch = DB.defaults({

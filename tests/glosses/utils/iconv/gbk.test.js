@@ -16,9 +16,9 @@ describe("util", "iconv", "GBK tests", () => {
     });
 
     it("GBK file read decoded,compare with iconv result", async () => {
-        const contentBuffer = await fixtures.getVirtualFile("gbkfile.txt").contents("buffer");
+        const contentBuffer = await fixtures.getFile("gbkfile.txt").contents("buffer");
         const str = iconv.decode(contentBuffer, "GBK");
-        const expected = await fixtures.getVirtualFile("gbkfile.txt.expected").contents();
+        const expected = await fixtures.getFile("gbkfile.txt.expected").contents();
         assert.strictEqual(expected, str);
     });
 

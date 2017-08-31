@@ -6,12 +6,12 @@ describe("geoip", "mmdb", "reader", () => {
     describe("findAddressInTree()", () => {
 
         it("should work for most basic case", async () => {
-            const reader = new Reader(await fixtures.getVirtualFile("GeoIP2-City-Test.mmdb").contents("buffer"));
+            const reader = new Reader(await fixtures.getFile("GeoIP2-City-Test.mmdb").contents("buffer"));
             assert.equal(reader.findAddressInTree("1.1.1.1"), null);
         });
 
         it("should return correct value: city database", async () => {
-            const reader = new Reader(await fixtures.getVirtualFile("GeoIP2-City-Test.mmdb").contents("buffer"));
+            const reader = new Reader(await fixtures.getFile("GeoIP2-City-Test.mmdb").contents("buffer"));
             assert.equal(reader.findAddressInTree("1.1.1.1"), null);
             assert.equal(reader.findAddressInTree("175.16.199.1"), 3042);
             assert.equal(reader.findAddressInTree("175.16.199.88"), 3042);
@@ -25,7 +25,7 @@ describe("geoip", "mmdb", "reader", () => {
         });
 
         it("should return correct value: string entries", async () => {
-            const reader = new Reader(await fixtures.getVirtualFile("MaxMind-DB-string-value-entries.mmdb").contents("buffer"));
+            const reader = new Reader(await fixtures.getFile("MaxMind-DB-string-value-entries.mmdb").contents("buffer"));
             assert.equal(reader.findAddressInTree("1.1.1.1"), 98);
             assert.equal(reader.findAddressInTree("1.1.1.2"), 87);
             assert.equal(reader.findAddressInTree("175.2.1.1"), null);
@@ -72,7 +72,7 @@ describe("geoip", "mmdb", "reader", () => {
             for (const file in scenarios) {
                 (function (file, ips) {
                     it(`should return correct value: ${file}`, async () => {
-                        const reader = new Reader(await fixtures.getVirtualFile(file).contents("buffer"));
+                        const reader = new Reader(await fixtures.getFile(file).contents("buffer"));
                         for (const ip in ips) {
                             assert.equal(reader.findAddressInTree(ip), ips[ip], `IP: ${ip}`);
                         }
@@ -83,7 +83,7 @@ describe("geoip", "mmdb", "reader", () => {
 
         describe("broken files and search trees", () => {
             it("should behave fine when there is no  ipv4 search tree", async () => {
-                const reader = new Reader(await fixtures.getVirtualFile("MaxMind-DB-no-ipv4-search-tree.mmdb").contents("buffer"));
+                const reader = new Reader(await fixtures.getFile("MaxMind-DB-no-ipv4-search-tree.mmdb").contents("buffer"));
                 assert.equal(reader.findAddressInTree("::1:ffff:ffff"), 80);
                 // TODO: perhaps null should be returned here, note that pointer is larger than file itself
                 assert.equal(reader.findAddressInTree("1.1.1.1"), 4811873);
@@ -91,7 +91,7 @@ describe("geoip", "mmdb", "reader", () => {
 
             it("should behave fine when search tree is broken", async () => {
                 // TODO: find out in what way the file is broken
-                const reader = new Reader(await fixtures.getVirtualFile("MaxMind-DB-test-broken-search-tree-24.mmdb").contents("buffer"));
+                const reader = new Reader(await fixtures.getFile("MaxMind-DB-test-broken-search-tree-24.mmdb").contents("buffer"));
                 assert.equal(reader.findAddressInTree("1.1.1.1"), 102);
                 assert.equal(reader.findAddressInTree("1.1.1.2"), 90);
             });
@@ -99,7 +99,7 @@ describe("geoip", "mmdb", "reader", () => {
 
         describe("invalid database format", () => {
             it("should provide meaningful message when one tries to use unknown format", async () => {
-                const content = await fixtures.getVirtualFile("broken.dat").contents("buffer");
+                const content = await fixtures.getFile("broken.dat").contents("buffer");
                 assert.throws(() => {
                     new Reader(content);
                 }, /Cannot parse binary database/);

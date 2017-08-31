@@ -37,14 +37,14 @@ export default {
                 options: {
                     bind_ip: "localhost",
                     port: 31000,
-                    dbpath: this.root.getVirtualDirectory("db", "31000").path()
+                    dbpath: this.root.getDirectory("db", "31000").path()
                 }
             }, {
                 tags: { loc: "sf" },
                 options: {
                     bind_ip: "localhost",
                     port: 31001,
-                    dbpath: this.root.getVirtualDirectory("db", "31001").path()
+                    dbpath: this.root.getDirectory("db", "31001").path()
                 }
             }, {
                 tags: { loc: "sf" },
@@ -52,21 +52,21 @@ export default {
                 options: {
                     bind_ip: "localhost",
                     port: 31002,
-                    dbpath: this.root.getVirtualDirectory("db", "31002").path()
+                    dbpath: this.root.getDirectory("db", "31002").path()
                 }
             }, {
                 tags: { loc: "sf" },
                 options: {
                     bind_ip: "localhost",
                     port: 31003,
-                    dbpath: this.root.getVirtualDirectory("db", "31003").path()
+                    dbpath: this.root.getDirectory("db", "31003").path()
                 }
             }, {
                 arbiter: true,
                 options: {
                     bind_ip: "localhost",
                     port: 31004,
-                    dbpath: this.root.getVirtualDirectory("db", "31004").path()
+                    dbpath: this.root.getDirectory("db", "31004").path()
                 }
             }], { replSet: "rs" });
         } else if (this.useSharding) {
@@ -85,7 +85,7 @@ export default {
             };
             if (this.useAuth) {
                 const manager = this.manager = new ServerManager("mongod", {
-                    dbpath: this.root.getVirtualDirectory("db", "data-27017").path()
+                    dbpath: this.root.getDirectory("db", "data-27017").path()
                 });
                 await manager.purge();
                 await manager.start();
@@ -105,7 +105,7 @@ export default {
             }
 
             const opts = {
-                dbpath: this.root.getVirtualDirectory("db", "data-27017").path()
+                dbpath: this.root.getDirectory("db", "data-27017").path()
             };
             if (this.useAuth) {
                 opts.auth = null;
@@ -145,7 +145,7 @@ export default {
 
     stop() {
         if (this.skipStop) {
-            return; 
+            return;
         }
         // Stop the servers
         return this.manager.stop();
@@ -153,7 +153,7 @@ export default {
 
     async restart(options = { purge: true, kill: true }) {
         if (this.skipStop) {
-            return; 
+            return;
         }
         // Stop the servers
         await this.manager.restart(options);

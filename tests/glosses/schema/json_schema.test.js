@@ -10,13 +10,13 @@ describe("schema", "json schema", () => {
     };
 
     const thisDir = new adone.fs.Directory(__dirname);
-    const testsDir = thisDir.getVirtualDirectory("tests");
+    const testsDir = thisDir.getDirectory("tests");
 
-    const draft4Dir = testsDir.getVirtualDirectory("draft4");
+    const draft4Dir = testsDir.getDirectory("draft4");
     const draft4Files = draft4Dir.findSync().map((x) => x.relativePath(thisDir));
     runTest(getInstances(adone.util.clone(options, { meta: false })), 4, draft4Files);
 
-    const draft6Dir = testsDir.getVirtualDirectory("draft6");
+    const draft6Dir = testsDir.getDirectory("draft6");
     const draft6Files = draft6Dir.findSync().map((x) => x.relativePath(thisDir));
     runTest(getInstances(adone.util.clone(options)), 6, draft6Files);
 

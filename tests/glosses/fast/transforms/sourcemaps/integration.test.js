@@ -15,7 +15,7 @@ describe("fast", "transform", "sourcemaps", "integration", () => {
         root = await adone.fs.Directory.createTmp();
         fromdir = await root.addDirectory("from");
         await generateFixtures(fromdir);
-        sourceContent = await fromdir.getVirtualFile("helloworld.js").contents();
+        sourceContent = await fromdir.getFile("helloworld.js").contents();
     });
 
     after(async () => {
@@ -23,7 +23,7 @@ describe("fast", "transform", "sourcemaps", "integration", () => {
     });
 
     it("creates inline mapping", async () => {
-        await fast.src(fromdir.getVirtualFile("helloworld.js").path())
+        await fast.src(fromdir.getFile("helloworld.js").path())
             .sourcemapsInit()
             .sourcemapsWrite()
             .map((data) => {
@@ -36,7 +36,7 @@ describe("fast", "transform", "sourcemaps", "integration", () => {
     });
 
     it("creates preExistingComment , no new previous line", async () => {
-        await fast.src(fromdir.getVirtualFile("helloworld.map.js").path())
+        await fast.src(fromdir.getFile("helloworld.map.js").path())
             .sourcemapsInit({ loadMaps: true })
             .sourcemapsWrite()
             .map((data) => {
@@ -52,14 +52,14 @@ describe("fast", "transform", "sourcemaps", "integration", () => {
 
     it("concat files with final combined sourcemap file", async () => {
         await fast.src([
-            fromdir.getVirtualFile("*").path(),
-            `!${fromdir.getVirtualFile("test*.js").path()}`,
-            `!${fromdir.getVirtualFile("*map.js").path()}`
+            fromdir.getFile("*").path(),
+            `!${fromdir.getFile("test*.js").path()}`,
+            `!${fromdir.getFile("*map.js").path()}`
         ])
             .sourcemapsInit()
             .if((file) => file.extname === ".js", fast.transform.concat("index.js"))
             .sourcemapsWrite(".", { sourceRoot: "../from" })
-            .dest(root.getVirtualDirectory("to").path(), { produceFiles: true })
+            .dest(root.getDirectory("to").path(), { produceFiles: true })
             .map((data) => {
                 if (/index\.js$/.test(data.path)) {
                     expect(/\/\/# sourceMappingURL=index.js.map/.test(data.contents.toString())).to.be.true;
@@ -71,14 +71,14 @@ describe("fast", "transform", "sourcemaps", "integration", () => {
 
     it("inline concatenated file", async () => {
         await fast.src([
-            fromdir.getVirtualFile("*").path(),
-            `!${fromdir.getVirtualFile("test*.js").path()}`,
-            `!${fromdir.getVirtualFile("*map.js").path()}`
+            fromdir.getFile("*").path(),
+            `!${fromdir.getFile("test*.js").path()}`,
+            `!${fromdir.getFile("*map.js").path()}`
         ])
             .sourcemapsInit()
             .if((file) => file.extname === ".js", fast.transform.concat("index.js"))
             .sourcemapsWrite({ sourceRoot: "../from" })
-            .dest(root.getVirtualDirectory("to").path(), { produceFiles: true })
+            .dest(root.getDirectory("to").path(), { produceFiles: true })
             .map((data) => {
                 if (/index\.js$/.test(data.path)) {
                     expect(/\/\/# sourceMappingURL=data:application.*/.test(data.contents.toString())).to.be.ok;
@@ -91,13 +91,13 @@ describe("fast", "transform", "sourcemaps", "integration", () => {
 
         await fast.src([
             //picking a file with no existing sourcemap, if we use helloworld2 it will attempt to use helloworld2.js.map
-            fromdir.getVirtualFile("helloworld7.js").path(),  //NO PRE-MAP at all
-            fromdir.getVirtualFile("helloworld.map.js").path()  //INLINE PRE-MAp
+            fromdir.getFile("helloworld7.js").path(),  //NO PRE-MAP at all
+            fromdir.getFile("helloworld.map.js").path()  //INLINE PRE-MAp
         ])
             .sourcemapsInit({ loadMaps: true })
             .if((file) => file.extname === ".js", fast.transform.concat("index.js"))
             .sourcemapsWrite(".", { sourceRoot: "../from" })
-            .dest(root.getVirtualDirectory("to").path(), { produceFiles: true })
+            .dest(root.getDirectory("to").path(), { produceFiles: true })
             .map((data) => {
                 if (/index\.js$/.test(data.path)) {
                     expect(/\/\/# sourceMappingURL=index.js.map/.test(data.contents.toString())).to.be.ok;
@@ -109,13 +109,13 @@ describe("fast", "transform", "sourcemaps", "integration", () => {
     it("inlined preExisting", async () => {
         await fast.src([
             //picking a file with no existing sourcemap, if we use helloworld2 it will attempt to use helloworld2.js.map
-            fromdir.getVirtualFile("helloworld7.js").path(),  //NO PRE-MAP at all
-            fromdir.getVirtualFile("helloworld.map.js").path()  //INLINE PRE-MAp
+            fromdir.getFile("helloworld7.js").path(),  //NO PRE-MAP at all
+            fromdir.getFile("helloworld.map.js").path()  //INLINE PRE-MAp
         ])
             .sourcemapsInit({ loadMaps: true })
             .if((file) => file.extname === ".js", fast.transform.concat("index.js"))
             .sourcemapsWrite({ sourceRoot: "../from" })
-            .dest(root.getVirtualDirectory("to").path(), { produceFiles: true })
+            .dest(root.getDirectory("to").path(), { produceFiles: true })
             .map((data) => {
                 if (/index\.js$/.test(data.path)) {
                     expect(/\/\/# sourceMappingURL=data:application.*/.test(data.contents.toString())).to.be.true;
@@ -125,20 +125,20 @@ describe("fast", "transform", "sourcemaps", "integration", () => {
     });
 
     it("mapped preExisting with two tasks", async () => {
-        await fast.src(fromdir.getVirtualFile("helloworld7.js").path())
+        await fast.src(fromdir.getFile("helloworld7.js").path())
             .sourcemapsInit()
             .if((file) => file.extname === ".js", fast.transform.concat("h7.js"))
             .sourcemapsWrite(".")
-            .dest(root.getVirtualDirectory("to", "tmp").path());
+            .dest(root.getDirectory("to", "tmp").path());
 
         await fast.src([
-            root.getVirtualFile("to", "tmp", "h7.js").path(),
-            fromdir.getVirtualFile("helloworld.map.js").path()
+            root.getFile("to", "tmp", "h7.js").path(),
+            fromdir.getFile("helloworld.map.js").path()
         ])
             .sourcemapsInit({ loadMaps: true })
             .if((file) => file.extname === ".js", fast.transform.concat("index.js"))
             .sourcemapsWrite(".", { sourceRoot: "../from" })
-            .dest(root.getVirtualDirectory("to").path(), { produceFiles: true })
+            .dest(root.getDirectory("to").path(), { produceFiles: true })
             .map((data) => {
                 if (/index\.js$/.test(data.path)) {
                     expect(/\/\/# sourceMappingURL=index.js.map/.test(data.contents.toString())).to.be.true;
@@ -148,7 +148,7 @@ describe("fast", "transform", "sourcemaps", "integration", () => {
     });
 
     it("should be valid with concat", async () => {
-        const files = await fast.src(fromdir.getVirtualFile("test{3,4}.js").path())
+        const files = await fast.src(fromdir.getFile("test{3,4}.js").path())
             .sourcemapsInit()
             .concat("index.js")
             .sourcemapsWrite(".")
@@ -163,7 +163,7 @@ describe("fast", "transform", "sourcemaps", "integration", () => {
     });
 
     it("should be valid with concat and mapSourcesAbsolute=true", async () => {
-        const files = await fast.src(fromdir.getVirtualFile("test{3,4}.js").path())
+        const files = await fast.src(fromdir.getFile("test{3,4}.js").path())
             .sourcemapsInit()
             .concat("index.js")
             .sourcemapsWrite(".", { mapSourcesAbsolute: true })
@@ -173,8 +173,8 @@ describe("fast", "transform", "sourcemaps", "integration", () => {
                 }
                 const contents = JSON.parse(file.contents.toString());
                 expect(contents.sources.sort()).to.be.deep.equal([
-                    fromdir.getVirtualFile("test3.js").path().replace(/\\/g, "/"),
-                    fromdir.getVirtualFile("test4.js").path().replace(/\\/g, "/")
+                    fromdir.getFile("test3.js").path().replace(/\\/g, "/"),
+                    fromdir.getFile("test4.js").path().replace(/\\/g, "/")
                 ]);
             });
         expect(files).to.have.lengthOf(2);  // index + map

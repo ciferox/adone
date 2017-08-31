@@ -132,7 +132,7 @@ describe("database", "local", "Model", () => {
         it("Can serialize string fields with a new line without breaking the DB", async () => {
             const badString = "world\r\nearth\nother\rline";
 
-            const file = tmpdir.getVirtualFile("test1.db");
+            const file = tmpdir.getFile("test1.db");
 
             await file.unlink().catch(adone.noop);
 

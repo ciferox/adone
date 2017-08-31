@@ -458,11 +458,11 @@ describe("fast", "transform", "angular", "templateCache", () => {
             await root.addFile("template-a.html", { contents: "<h1 id=\"template-a\">I'm template A!</h1>" });
             await root.addFile("template-b.html", { contents: "<h1 id=\"template-b\">I'm template B!</h1>" });
 
-            const files = await fast.src(root.getVirtualFile("**", "*").path())
+            const files = await fast.src(root.getFile("**", "*").path())
                 .angularTemplateCache("templates.js")
                 .dest(root.path(), { produceFiles: true });
             expect(files).to.have.lengthOf(1);
-            const file = root.getVirtualFile("templates.js");
+            const file = root.getFile("templates.js");
             expect(await file.exists()).to.be.true;
             expect(await file.contents()).to.be.equal("angular.module('templates').run(['$templateCache', function($templateCache) {$templateCache.put('/template-a.html','<h1 id=\"template-a\">I\\'m template A!</h1>');\n$templateCache.put('/template-b.html','<h1 id=\"template-b\">I\\'m template B!</h1>');}]);");
         });
@@ -470,7 +470,7 @@ describe("fast", "transform", "angular", "templateCache", () => {
         it("should set filename", async () => {
             await root.addFile("template-a.html", { contents: "<h1 id=\"template-a\">I'm template A!</h1>" });
 
-            const files = await fast.src(root.getVirtualFile("**", "*").path())
+            const files = await fast.src(root.getFile("**", "*").path())
                 .angularTemplateCache({
                     standalone: true,
                     root: "/views",
@@ -478,7 +478,7 @@ describe("fast", "transform", "angular", "templateCache", () => {
                 })
                 .dest(root.path(), { produceFiles: true });
             expect(files).to.have.lengthOf(1);
-            const file = root.getVirtualFile("foobar.js");
+            const file = root.getFile("foobar.js");
             expect(await file.exists()).to.be.true;
             expect(await file.contents()).to.be.equal("angular.module('templates', []).run(['$templateCache', function($templateCache) {$templateCache.put('/views/template-a.html','<h1 id=\"template-a\">I\\'m template A!</h1>');}]);");
         });

@@ -53,7 +53,7 @@ describe("archive", "tar", "raw", () => {
 
             const data = await pack.pipe(concat());
             expect(data.length & 511).to.be.equal(0);
-            expect(data).to.be.deep.equal(await fixtures.getVirtualFile("multi-file.tar").contents("buffer"));
+            expect(data).to.be.deep.equal(await fixtures.getFile("multi-file.tar").contents("buffer"));
         });
 
         specify("pax", async () => {
@@ -74,7 +74,7 @@ describe("archive", "tar", "raw", () => {
 
             const data = await pack.pipe(concat());
             expect(data.length & 511).to.be.equal(0);
-            expect(data).to.be.deep.equal(await fixtures.getVirtualFile("pax.tar").contents("buffer"));
+            expect(data).to.be.deep.equal(await fixtures.getFile("pax.tar").contents("buffer"));
         });
 
         specify("types", async () => {
@@ -108,7 +108,7 @@ describe("archive", "tar", "raw", () => {
 
             const data = await pack.pipe(concat());
             expect(data.length & 511).to.be.equal(0);
-            expect(data).to.be.deep.equal(await fixtures.getVirtualFile("types.tar").contents("buffer"));
+            expect(data).to.be.deep.equal(await fixtures.getFile("types.tar").contents("buffer"));
         });
 
         specify("long name", async () => {
@@ -129,7 +129,7 @@ describe("archive", "tar", "raw", () => {
 
             const data = await pack.pipe(concat());
             expect(data.length & 511).to.be.equal(0);
-            expect(data).to.be.deep.equal(await fixtures.getVirtualFile("long-name.tar").contents("buffer"));
+            expect(data).to.be.deep.equal(await fixtures.getFile("long-name.tar").contents("buffer"));
         });
 
         specify("large uid gid", async () => {
@@ -150,7 +150,7 @@ describe("archive", "tar", "raw", () => {
             const data = await pack.pipe(concat());
 
             expect(data.length & 511).to.be.equal(0);
-            expect(data).to.be.deep.equal(await fixtures.getVirtualFile("large-uid-gid.tar").contents("buffer"));
+            expect(data).to.be.deep.equal(await fixtures.getFile("large-uid-gid.tar").contents("buffer"));
         });
 
         specify("unicode", async () => {
@@ -172,7 +172,7 @@ describe("archive", "tar", "raw", () => {
             const data = await pack.pipe(concat());
 
             expect(data.length & 511).to.be.equal(0);
-            expect(data).to.be.deep.equal(await fixtures.getVirtualFile("unicode.tar").contents("buffer"));
+            expect(data).to.be.deep.equal(await fixtures.getFile("unicode.tar").contents("buffer"));
         });
     });
 
@@ -209,7 +209,7 @@ describe("archive", "tar", "raw", () => {
                 extract.on("finish", () => resolve(entries));
             });
 
-            extract.end(await fixtures.getVirtualFile("one-file.tar").contents("buffer"));
+            extract.end(await fixtures.getFile("one-file.tar").contents("buffer"));
 
             entries = await entries;
 
@@ -245,7 +245,7 @@ describe("archive", "tar", "raw", () => {
                 extract.on("finish", () => resolve(entries));
             });
 
-            const b = await fixtures.getVirtualFile("one-file.tar").contents("buffer");
+            const b = await fixtures.getFile("one-file.tar").contents("buffer");
 
             for (let i = 0; i < b.length; i += 321) {
                 extract.write(b.slice(i, clamp(i + 321, b.length, b.length)));
@@ -286,7 +286,7 @@ describe("archive", "tar", "raw", () => {
                 extract.on("finish", () => resolve(entries));
             });
 
-            extract.end(await fixtures.getVirtualFile("multi-file.tar").contents("buffer"));
+            extract.end(await fixtures.getFile("multi-file.tar").contents("buffer"));
 
             entries = await entries;
 
@@ -339,7 +339,7 @@ describe("archive", "tar", "raw", () => {
                 extract.on("finish", () => resolve(entries));
             });
 
-            const b = await fixtures.getVirtualFile("multi-file.tar").contents("buffer");
+            const b = await fixtures.getFile("multi-file.tar").contents("buffer");
             for (let i = 0; i < b.length; i += 321) {
                 extract.write(b.slice(i, clamp(i + 321, b.length, b.length)));
             }
@@ -396,7 +396,7 @@ describe("archive", "tar", "raw", () => {
                 extract.on("finish", () => resolve(entries));
             });
 
-            extract.end(await fixtures.getVirtualFile("pax.tar").contents("buffer"));
+            extract.end(await fixtures.getFile("pax.tar").contents("buffer"));
 
             entries = await entries;
 
@@ -434,7 +434,7 @@ describe("archive", "tar", "raw", () => {
                 extract.on("finish", () => resolve(entries));
             });
 
-            extract.end(await fixtures.getVirtualFile("types.tar").contents("buffer"));
+            extract.end(await fixtures.getFile("types.tar").contents("buffer"));
 
             entries = await entries;
 
@@ -487,7 +487,7 @@ describe("archive", "tar", "raw", () => {
                 extract.on("finish", () => resolve(entries));
             });
 
-            extract.end(await fixtures.getVirtualFile("long-name.tar").contents("buffer"));
+            extract.end(await fixtures.getFile("long-name.tar").contents("buffer"));
 
             entries = await entries;
 
@@ -524,7 +524,7 @@ describe("archive", "tar", "raw", () => {
                 extract.on("finish", () => resolve(entries));
             });
 
-            extract.end(await fixtures.getVirtualFile("unicode-bsd.tar").contents("buffer"));
+            extract.end(await fixtures.getFile("unicode-bsd.tar").contents("buffer"));
 
             entries = await entries;
 
@@ -562,7 +562,7 @@ describe("archive", "tar", "raw", () => {
                 extract.on("finish", () => resolve(entries));
             });
 
-            extract.end(await fixtures.getVirtualFile("unicode.tar").contents("buffer"));
+            extract.end(await fixtures.getFile("unicode.tar").contents("buffer"));
 
             entries = await entries;
 
@@ -600,7 +600,7 @@ describe("archive", "tar", "raw", () => {
                 extract.on("finish", () => resolve(entries));
             });
 
-            extract.end(await fixtures.getVirtualFile("name-is-100.tar").contents("buffer"));
+            extract.end(await fixtures.getFile("name-is-100.tar").contents("buffer"));
 
             entries = await entries;
 
@@ -617,7 +617,7 @@ describe("archive", "tar", "raw", () => {
                 extract.destroy();
                 done();
             });
-            fixtures.getVirtualFile("invalid.tgz").contents("buffer").then((data) => {
+            fixtures.getFile("invalid.tgz").contents("buffer").then((data) => {
                 extract.end(data);
             });
         });
@@ -636,7 +636,7 @@ describe("archive", "tar", "raw", () => {
                 extract.on("finish", () => resolve(entries));
             });
 
-            extract.end(await fixtures.getVirtualFile("space.tar").contents("buffer"));
+            extract.end(await fixtures.getFile("space.tar").contents("buffer"));
 
             entries = await entries;
 
@@ -657,7 +657,7 @@ describe("archive", "tar", "raw", () => {
                 extract.on("finish", () => resolve(entries));
             });
 
-            extract.end(await fixtures.getVirtualFile("gnu-long-path.tar").contents("binary"));
+            extract.end(await fixtures.getFile("gnu-long-path.tar").contents("binary"));
 
             entries = await entries;
 
@@ -678,8 +678,7 @@ describe("archive", "tar", "raw", () => {
                 });
                 extract.on("finish", () => resolve(entries));
             });
-
-            extract.end(await fixtures.getVirtualFile("base-256-uid-gid.tar").contents("binary"));
+            extract.end(await fixtures.getFile("base-256-uid-gid.tar").contents("binary"));
 
             entries = await entries;
 
@@ -710,7 +709,7 @@ describe("archive", "tar", "raw", () => {
                 });
                 extract.on("finish", resolve);
             });
-            extract.end(await fixtures.getVirtualFile("base-256-size.tar").contents("binary"));
+            extract.end(await fixtures.getFile("base-256-size.tar").contents("binary"));
             await p;
         });
     });

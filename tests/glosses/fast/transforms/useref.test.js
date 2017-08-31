@@ -79,7 +79,7 @@ describe("fast", "transform", "useref", () => {
                 "</html>"
             ].join("\n")
         });
-        const [file] = await fast.src(fromdir.getVirtualFile("index.html").path()).useref();
+        const [file] = await fast.src(fromdir.getFile("index.html").path()).useref();
         expect(file.contents.toString()).to.be.equal([
             "<html>",
             "    <head>",

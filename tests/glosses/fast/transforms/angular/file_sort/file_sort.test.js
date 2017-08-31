@@ -138,7 +138,7 @@ describe("fast", "transform", "angular", "fileSort", () => {
 
     describe("integration", () => {
         it("should sort files alphabetically when no ordering is required", async () => {
-            const files = await fast.src(root.getVirtualFile("{module,circular3,module-controller,circular,circular2}.js").path())
+            const files = await fast.src(root.getFile("{module,circular3,module-controller,circular,circular2}.js").path())
                 .angularFilesort();
             expect(files).to.have.lengthOf(5);
             const resultFiles = files.map((x) => x.basename);

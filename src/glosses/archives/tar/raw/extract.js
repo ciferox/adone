@@ -73,7 +73,7 @@ export default class RawExtractStream extends Writable {
 
         const ondrain = function () {
             self._buffer.consume(overflow(self._header.size));
-            self._parse(512, onheader);  // eslint-disable-line no-use-before-define
+            self._parse(512, onheader); // eslint-disable-line no-use-before-define
             oncontinue();
         };
 
@@ -83,7 +83,7 @@ export default class RawExtractStream extends Writable {
             if (drain) {
                 self._parse(drain, ondrain);
             } else {
-                self._parse(512, onheader);  // eslint-disable-line no-use-before-define
+                self._parse(512, onheader); // eslint-disable-line no-use-before-define
             }
             if (!self._locked) {
                 oncontinue();

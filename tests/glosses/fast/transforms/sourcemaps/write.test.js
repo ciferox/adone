@@ -33,7 +33,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
         const file = new File({
             cwd: root.path(),
             base: fromdir.path(),
-            path: fromdir.getVirtualFile("helloworld.js").path(),
+            path: fromdir.getFile("helloworld.js").path(),
             contents: Buffer.from(sourceContent)
         });
         file.sourceMap = makeSourceMap(custom);
@@ -44,7 +44,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
         const file = new File({
             cwd: root.path(),
             base: fromdir.path(),
-            path: fromdir.getVirtualFile("dir1", "dir2", "helloworld.js").path(),
+            path: fromdir.getFile("dir1", "dir2", "helloworld.js").path(),
             contents: Buffer.from(sourceContent)
         });
         file.sourceMap = makeSourceMap();
@@ -55,7 +55,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
         const file = new File({
             cwd: root.path(),
             base: fromdir.path(),
-            path: fromdir.getVirtualFile("helloworld.map.js").path(),
+            path: fromdir.getFile("helloworld.map.js").path(),
             contents: Buffer.from(mappedContent)
         });
         file.sourceMap = makeSourceMap({ preExisting: util.getInlinePreExisting(mappedContent) });
@@ -66,7 +66,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
         const file = new File({
             cwd: root.path(),
             base: fromdir.path(),
-            path: fromdir.getVirtualFile("helloworld.js").path(),
+            path: fromdir.getFile("helloworld.js").path(),
             contents: new Readable()
         });
         file.sourceMap = {};
@@ -77,8 +77,8 @@ describe("fast", "transform", "sourcemaps", "write", () => {
         root = await adone.fs.Directory.createTmp();
         fromdir = await root.addDirectory("from");
         await generateFixtures(fromdir);
-        sourceContent = await fromdir.getVirtualFile("helloworld.js").contents();
-        mappedContent = await fromdir.getVirtualFile("helloworld.map.js").contents();
+        sourceContent = await fromdir.getFile("helloworld.js").contents();
+        mappedContent = await fromdir.getFile("helloworld.map.js").contents();
     });
 
     after(async () => {
@@ -184,7 +184,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
             fileCount++;
             if (fileCount === 2) {
                 outFiles.reverse().map((data) => {
-                    if (data.path === fromdir.getVirtualFile("helloworld.js").path()) {
+                    if (data.path === fromdir.getFile("helloworld.js").path()) {
                         sourceMap = data.sourceMap;
                         expect(data instanceof File).to.be.ok;
                         expect(data).to.be.deep.equal(file);
@@ -192,7 +192,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
                         expect(sourceMap.file).to.be.equal("../dist/helloworld.js");
                     } else {
                         expect(data instanceof File).to.be.ok;
-                        expect(data.path).to.be.equal(root.getVirtualFile("maps", "helloworld.js.map").path());
+                        expect(data.path).to.be.equal(root.getFile("maps", "helloworld.js.map").path());
                         expect(JSON.parse(data.contents)).to.be.deep.equal(sourceMap);
                         expect(data.stat.isFile()).to.be.equal(true);
                         expect(data.stat.isDirectory()).to.be.equal(false);
@@ -220,8 +220,8 @@ describe("fast", "transform", "sourcemaps", "write", () => {
                 fileCount++;
                 if (fileCount === 2) {
                     outFiles.reverse().map((data) => {
-                        if (data.path === root.getVirtualFile("maps", "helloworld.js.map").path()) {
-                            expect(data.history[0]).to.be.equal(fromdir.getVirtualFile("helloworld.js").path());
+                        if (data.path === root.getFile("maps", "helloworld.js.map").path()) {
+                            expect(data.history[0]).to.be.equal(fromdir.getFile("helloworld.js").path());
                         }
                         return data;
                     });
@@ -244,7 +244,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
             fileCount++;
             if (fileCount === 2) {
                 outFiles.reverse().map((data) => {
-                    if (data.path === fromdir.getVirtualFile("helloworld.js").path()) {
+                    if (data.path === fromdir.getFile("helloworld.js").path()) {
                         sourceMap = data.sourceMap;
                         expect(data).to.be.instanceof(File);
                         expect(data).to.be.deep.equal(file);
@@ -252,7 +252,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
                         expect(sourceMap.file).to.be.equal("../dist/helloworld.js");
                     } else {
                         expect(data).to.be.instanceof(File);
-                        expect(data.path).to.be.equal(root.getVirtualFile("maps", "helloworld.map").path());
+                        expect(data.path).to.be.equal(root.getFile("maps", "helloworld.map").path());
                         expect(JSON.parse(data.contents)).to.be.deep.equal(sourceMap);
                     }
                     return data;
@@ -272,7 +272,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
             fileCount++;
             if (fileCount === 2) {
                 outFiles.reverse().map((data) => {
-                    if (data.path === fromdir.getVirtualFile("dir1", "dir2", "helloworld.js").path()) {
+                    if (data.path === fromdir.getFile("dir1", "dir2", "helloworld.js").path()) {
                         expect(String(data.contents)).to.be.equal(`${sourceContent}\n//# ${"sourceMappingURL"}=../maps/dir1/dir2/helloworld.js.map\n`);
                     }
                     return data;
@@ -379,11 +379,11 @@ describe("fast", "transform", "sourcemaps", "write", () => {
             fileCount++;
             if (fileCount === 2) {
                 outFiles.reverse().map((data) => {
-                    if (data.path === root.getVirtualFile("from", "dir1", "dir2", "helloworld.js").path()) {
+                    if (data.path === root.getFile("from", "dir1", "dir2", "helloworld.js").path()) {
                         expect(data.sourceMap.sourceRoot).to.be.equal("../../../from", "should set correct sourceRoot");
                         expect(data.sourceMap.file).to.be.equal("helloworld.js");
                     } else {
-                        expect(data.path).to.be.equal(root.getVirtualFile("from", "dir1", "dir2", "helloworld.js.map").path());
+                        expect(data.path).to.be.equal(root.getFile("from", "dir1", "dir2", "helloworld.js.map").path());
                     }
                     return data;
                 });
@@ -403,11 +403,11 @@ describe("fast", "transform", "sourcemaps", "write", () => {
             fileCount++;
             if (fileCount === 2) {
                 outFiles.reverse().map((data) => {
-                    if (data.path === root.getVirtualFile("from", "dir1", "dir2", "helloworld.js").path()) {
+                    if (data.path === root.getFile("from", "dir1", "dir2", "helloworld.js").path()) {
                         expect(data.sourceMap.sourceRoot).to.be.equal("../../../src");
                         expect(data.sourceMap.file).to.be.equal("helloworld.js");
                     } else {
-                        expect(data.path).to.be.equal(root.getVirtualFile("from", "dir1", "dir2", "helloworld.js.map").path());
+                        expect(data.path).to.be.equal(root.getFile("from", "dir1", "dir2", "helloworld.js.map").path());
                     }
                     return data;
                 });
@@ -427,11 +427,11 @@ describe("fast", "transform", "sourcemaps", "write", () => {
             fileCount++;
             if (fileCount === 2) {
                 outFiles.reverse().map((data) => {
-                    if (data.path === root.getVirtualFile("from", "dir1", "dir2", "helloworld.js").path()) {
+                    if (data.path === root.getFile("from", "dir1", "dir2", "helloworld.js").path()) {
                         expect(data.sourceMap.sourceRoot).to.be.equal("../..");
                         expect(data.sourceMap.file).to.be.equal("helloworld.js");
                     } else {
-                        expect(data.path).to.be.equal(root.getVirtualFile("from", "dir1", "dir2", "helloworld.js.map").path());
+                        expect(data.path).to.be.equal(root.getFile("from", "dir1", "dir2", "helloworld.js.map").path());
                     }
                     return data;
                 });
@@ -451,11 +451,11 @@ describe("fast", "transform", "sourcemaps", "write", () => {
             fileCount++;
             if (fileCount === 2) {
                 outFiles.reverse().map((data) => {
-                    if (data.path === root.getVirtualFile("from", "dir1", "dir2", "helloworld.js").path()) {
+                    if (data.path === root.getFile("from", "dir1", "dir2", "helloworld.js").path()) {
                         expect(data.sourceMap.sourceRoot).to.be.equal("../../../../src");
                         expect(data.sourceMap.file).to.be.equal("../../../dir1/dir2/helloworld.js");
                     } else {
-                        expect(data.path).to.be.equal(root.getVirtualFile("from", "maps", "dir1", "dir2", "helloworld.js.map").path());
+                        expect(data.path).to.be.equal(root.getFile("from", "maps", "dir1", "dir2", "helloworld.js.map").path());
                     }
                     return data;
                 });
@@ -478,11 +478,11 @@ describe("fast", "transform", "sourcemaps", "write", () => {
             fileCount++;
             if (fileCount === 2) {
                 outFiles.reverse().map((data) => {
-                    if (data.path === root.getVirtualFile("from", "dir1", "dir2", "helloworld.js").path()) {
+                    if (data.path === root.getFile("from", "dir1", "dir2", "helloworld.js").path()) {
                         expect(data.sourceMap.sourceRoot).to.be.equal("../../../src");
                         expect(data.sourceMap.file).to.be.equal("../../../dist/dir1/dir2/helloworld.js");
                     } else {
-                        expect(data.path).to.be.equal(root.getVirtualFile("maps", "dir1", "dir2", "helloworld.js.map").path());
+                        expect(data.path).to.be.equal(root.getFile("maps", "dir1", "dir2", "helloworld.js.map").path());
                     }
                     return data;
                 });

@@ -305,7 +305,7 @@ describe("fast", "transform", "wrap", () => {
 
         beforeEach(async () => {
             fromdir = await root.addDirectory("from");
-            srcPath = fromdir.getVirtualFile("**", "*.js").path();
+            srcPath = fromdir.getFile("**", "*.js").path();
         });
 
         afterEach(async () => {

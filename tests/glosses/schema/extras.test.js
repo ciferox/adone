@@ -10,7 +10,7 @@ describe("schema", "extras", () => {
     });
 
     const thisDir = new adone.fs.Directory(__dirname);
-    const extrasDir = thisDir.getVirtualDirectory("extras");
+    const extrasDir = thisDir.getDirectory("extras");
     const extrasFiles = extrasDir.findSync().map((x) => x.relativePath(thisDir));
 
 

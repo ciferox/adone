@@ -20,7 +20,7 @@ describe("database", "local", "Datastore", () => {
     });
 
     beforeEach(async () => {
-        dbFile = tmpdir.getVirtualFile("db.db");
+        dbFile = tmpdir.getFile("db.db");
         testDb = dbFile.path();
         d = new Datastore({ filename: testDb });
         expect(d.filename).to.be.equal(testDb);
@@ -2008,7 +2008,7 @@ describe("database", "local", "Datastore", () => {
 
         describe("Persisting indexes", () => {
             it("Indexes are persisted to a separate file and recreated upon reload", async () => {
-                const persDb = tmpdir.getVirtualFile("persistIndexes.db");
+                const persDb = tmpdir.getFile("persistIndexes.db");
 
                 await persDb.unlink().catch(adone.noop);
 
@@ -2058,7 +2058,7 @@ describe("database", "local", "Datastore", () => {
             });
 
             it("Indexes are persisted with their options and recreated even if some db operation happen between loads", async () => {
-                const persDb = tmpdir.getVirtualFile("persistIndexes.db");
+                const persDb = tmpdir.getFile("persistIndexes.db");
 
                 await persDb.unlink().catch(adone.noop);
 
@@ -2133,7 +2133,7 @@ describe("database", "local", "Datastore", () => {
             });
 
             it("Indexes can also be removed and the remove persisted", async () => {
-                const persDb = tmpdir.getVirtualFile("persistIndexes.db");
+                const persDb = tmpdir.getFile("persistIndexes.db");
 
                 await persDb.unlink().catch(adone.noop);
                 let db = new Datastore({ filename: persDb.path() });

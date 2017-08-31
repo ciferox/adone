@@ -67,7 +67,7 @@ describe("archive", "zip", "unpack", () => {
     describe("success", () => {
         const files = [];
         for (const d of ["success", "wrong-entry-sizes"]) {
-            const dir = thisDir.getVirtualDirectory(d);
+            const dir = thisDir.getDirectory(d);
             files.push(...dir.filesSync().filter((x) => x instanceof adone.fs.File));
         }
         for (const file of files) {
@@ -95,7 +95,7 @@ describe("archive", "zip", "unpack", () => {
                         const expectedArchiveContents = {};
                         const DIRECTORY = Symbol("directory");
 
-                        const unpackedDir = new adone.fs.Directory(file.dirname()).getVirtualDirectory(file.stem());
+                        const unpackedDir = new adone.fs.Directory(file.dirname()).getDirectory(file.stem());
 
                         (function find(dir) {
                             for (const file of dir.filesSync()) {
@@ -186,7 +186,7 @@ describe("archive", "zip", "unpack", () => {
     });
 
     describe("failure", () => {
-        const files = thisDir.getVirtualDirectory("failure")
+        const files = thisDir.getDirectory("failure")
             .filesSync()
             .filter((x) => x instanceof adone.fs.File);
         for (const file of files) {
@@ -357,8 +357,8 @@ describe("archive", "zip", "unpack", () => {
             return readStream;
         };
         const makeRandomAccessReader = () => {
-            const dir = thisDir.getVirtualDirectory("zip64");
-            const file = dir.getVirtualFile("zip64.zip_fragment");
+            const dir = thisDir.getDirectory("zip64");
+            const file = dir.getFile("zip64.zip_fragment");
             const backendContents = file.contentsSync(null);
             if (backendContents.length <= 4) {
                 throw new Error("unexpected EOF");
