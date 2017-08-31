@@ -16,7 +16,7 @@ class TestApp extends adone.application.Application {
     }
 
     main() {
-        const sysInfo = this.getSubsystem("AppSubsystem");
+        const sysInfo = this.getSubsystemInfo("AppSubsystem");
         adone.log(sysInfo.description);
         return 0;
     }

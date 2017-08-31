@@ -1330,7 +1330,7 @@ export class Application extends Subsystem {
         this.argv = argv;
         this.name = name;
 
-        this[EXITING] = null;
+        this[EXITING] = false;
         this[IS_MAIN] = false;
         this[MAIN_COMMAND] = null;
         this[HANDLERS] = null;
@@ -1541,13 +1541,13 @@ export class Application extends Subsystem {
     }
 
     /**
-     * Loads subsystems from specified path.
+     * Adds subsystems from specified path.
      *
      * @param {string} path Subsystems path.
      * @param {array|function} filter Array of subsystem names or filter [async] function '(name) => true | false'.
      * @returns {Promise<void>}
      */
-    async addSubsystemsFrom(path, filter, { group = "subsystem", configureArgs = [], addOnCommand = false } = {}) {
+    async addSubsystemsFrom(path, { useFilename = false, filter, group = "subsystem", configureArgs = [], addOnCommand = false } = {}) {
         if (this[STAGE] !== STAGE_CONFIGURING) {
             throw new x.NotAllowed("Subsystem can be added only during configuration of the application");
         }
@@ -1556,7 +1556,7 @@ export class Application extends Subsystem {
             throw new x.NotValid("Path should be absolute");
         }
 
-        const names = await fs.readdir(path);
+        const files = await fs.readdir(path);
 
         if (is.array(filter)) {
             const targetNames = filter;
@@ -1565,11 +1565,16 @@ export class Application extends Subsystem {
             filter = adone.truly;
         }
 
-        for (const name of names) {
-            if (await filter(name)) { // eslint-disable-line
+        for (const file of files) {
+            if (await filter(file)) { // eslint-disable-line
+                let name = null;
+                if (useFilename) {
+                    name = std.path.basename(file);
+                }
                 // eslint-disable-next-line
                 await this.addSubsystem({
-                    subsystem: std.path.join(path, name),
+                    name,
+                    subsystem: std.path.join(path, file),
                     group,
                     configureArgs,
                     addOnCommand
@@ -1583,7 +1588,7 @@ export class Application extends Subsystem {
      *
      * @param {Subsystem} name Name of subsystem
      */
-    getSubsystem(name) {
+    getSubsystemInfo(name) {
         for (const sys of this[SUBSYSTEMS]) {
             if (sys.name === name) {
                 return sys;
@@ -1591,6 +1596,17 @@ export class Application extends Subsystem {
         }
 
         throw new x.Unknown(`Unknown subsystem: ${name}`);
+    }
+
+    /**
+     * Returns subsystem instance by name
+     * 
+     * @param {string} name Name of subsystem
+     * @returns {adone.application.Subsystem}
+     */
+    subsystem(name) {
+        const sysInfo = this.getSubsystemInfo(name);
+        return sysInfo.instance;
     }
 
     /**

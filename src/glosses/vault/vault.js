@@ -20,16 +20,7 @@ export default class Vault {
             this.Valuable = Valuable;
         }
         this.backend = new adone.database.level.DB(this.options);
-        this.vids = undefined; // valuable ids
-        this.tids = undefined; // tag ids
-        this.nameIdMap = new Map();
-        this.tagsMap = new Map();
-        this.nextTagId = undefined;
-        this.nextValuableId = undefined;
-        this._vcache = new Map();
-        this.notes = "";
-        this.created = null;
-        this.updated = null;
+        this._reset();
     }
 
     async open() {
@@ -91,8 +82,17 @@ export default class Vault {
         }
     }
 
-    close() {
-        return this.backend.close();
+    async close() {
+        for (const name of this.keys()) {
+            await this.release(name); // eslint-disable-line
+        }
+
+        await this.backend.close();
+
+        this.nameIdMap.clear();
+        this.tagsMap.clear();
+
+        this._reset();
     }
 
     location() {
@@ -132,7 +132,7 @@ export default class Vault {
             valuable = new this.Valuable(this, id, metaData, await this.tags(metaData.tids));
 
             for (const kid of metaData.kids) {
-                const keyMeta = await this._getMeta(__.vkey(id, kid));
+                const keyMeta = await this._getMeta(__.vkey(id, kid)); // eslint-disable-line
                 valuable._keys.set(keyMeta.name, keyMeta);
             }
             this._vcache.set(id, valuable);
@@ -351,5 +351,18 @@ export default class Vault {
             await this._setMeta(TIDS, this.tids);
         }
         return ids;
+    }
+
+    _reset() {
+        this.vids = undefined; // valuable ids
+        this.tids = undefined; // tag ids
+        this.nameIdMap = new Map();
+        this.tagsMap = new Map();
+        this.nextTagId = undefined;
+        this.nextValuableId = undefined;
+        this._vcache = new Map();
+        this.notes = "";
+        this.created = null;
+        this.updated = null;
     }
 }

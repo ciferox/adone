@@ -38,7 +38,12 @@ export class InstallationManager {
             if (std.path.isAbsolute(this.name)) {
                 adoneConf = await this.installLocal(this.name, { symlink });
             } else {
-                //
+                if (this.name.startsWith("adone.")) {
+                    //
+                } else {
+                    const fullPath = std.path.join(process.cwd(), this.name);
+                    adoneConf = await this.installLocal(fullPath, { symlink });
+                }
             }
             this.bar.setSchema(` :spinner ${adoneConf.project.type} {green-fg}${adoneConf.name} v${adoneConf.version}{/green-fg} successfully installed`);
             this.bar.complete(true);
@@ -80,7 +85,7 @@ export class InstallationManager {
     }
 
     async _installCliSubsystem(adoneConf, cwd, { symlink } = {}) {
-        const destPath = std.path.join(CLI_SUBSYSTEMS_PATH, adoneConf.name); 
+        const destPath = std.path.join(CLI_SUBSYSTEMS_PATH, adoneConf.name);
         if (symlink) {
             await this._installSymlink(destPath, cwd);
         } else {
@@ -122,8 +127,8 @@ export class InstallationManager {
     }
 
     async _installOmnitronService(adoneConf, cwd, { symlink } = {}) {
-        const destPath = std.path.join(OMNITRON_SERVICES_PATH, adoneConf.name); 
-        
+        const destPath = std.path.join(OMNITRON_SERVICES_PATH, adoneConf.name);
+
         // force create dir
         await fs.mkdir(OMNITRON_SERVICES_PATH);
 
@@ -166,7 +171,7 @@ export class InstallationManager {
             }
 
             const subPath = std.path.join(destPath, name);
-            
+
             if (await fs.exists(subPath)) { // eslint-disable-line
                 await fs.rm(subPath); // eslint-disable-line
             }
@@ -197,22 +202,22 @@ export class InstallationManager {
                 value: adoneConf.author
             }
         ], {
-            noHeader: true,
-            borderless: true,
-            style: {
-                compact: true
-            },
-            model: [
-                {
-                    id: "name",
-                    style: "{green-fg}",
-                    align: "right",
-                    format: (val) => `${val} `
+                noHeader: true,
+                borderless: true,
+                style: {
+                    compact: true
                 },
-                {
-                    id: "value"
-                }
-            ]
-        }));
+                model: [
+                    {
+                        id: "name",
+                        style: "{green-fg}",
+                        align: "right",
+                        format: (val) => `${val} `
+                    },
+                    {
+                        id: "value"
+                    }
+                ]
+            }));
     }
 }

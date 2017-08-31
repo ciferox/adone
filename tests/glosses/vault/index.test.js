@@ -722,4 +722,36 @@ describe("Vault", () => {
             assert.equal(val.getNotes(), notes);
         });
     });
+
+    it("Valuable#keys() with regexp matcher", async () => {
+        await openVault();
+        const val = await vault.create("valuable2");
+        await val.fromJSON({
+            entries: [
+                {
+                    name: "__.name1",
+                    value: "__value1"
+                },
+                {
+                    name: "key1",
+                    value: "value1"
+                },
+                {
+                    name: "__.nam2",
+                    value: "__value2"
+                },
+                {
+                    name: "__.na3",
+                    value: "__value3"
+                },
+                {
+                    name: "key",
+                    value: "val"
+                }
+            ]
+        });
+
+        const names = val.keys(/^__.(.+)/);
+        assert.sameMembers(names, ["name1", "nam2", "na3"]);
+    });
 });

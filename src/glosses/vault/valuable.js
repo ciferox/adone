@@ -82,8 +82,19 @@ export default class Valuable {
         return this._keys.has(name);
     }
 
-    keys() {
-        return [...this._keys.keys()];
+    keys(re) {
+        const keys = [...this._keys.keys()];
+        if (is.regexp(re)) {
+            const filteredKeys = [];
+            for (const key of keys) {
+                const result = re.exec(key);
+                if (!is.null(result)) {
+                    filteredKeys.push(result[1]);
+                }
+            }
+            return filteredKeys;
+        }
+        return keys;
     }
 
     async entries({ includeEntryId = false, entriesAsArray = false } = {}) {
