@@ -6,14 +6,63 @@ const {
     fs,
     std,
     omnitron: { const: { ENABLED, DISABLED } },
-    vault
+    vault,
+    system: { process: { exec } }
 } = adone;
 
 const SERVICE_NAME_PREFIX = "service.";
+const SERVICE_APP_PATH = std.path.join(__dirname, "service_application.js");
+
+class ServiceMaintainer {
+    constructor({ group, services, port } = {}) {
+        this.group = group;
+        this.services = services;
+        this.port = port;
+        this.process = null;
+        this.restarts = 0;
+        this.maxRestarts = 3;
+    }
+
+    async start() {
+        const serviceProcess = exec("node", [SERVICE_APP_PATH], {
+            stdout: std.fs.openSync(adone.config.omnitron.logFilePath, "a"),
+            stderr: std.fs.openSync(adone.config.omnitron.errorLogFilePath, "a"),
+            env: {
+                OMNITRON_PORT: this.port,
+                OMNITRON_SERVICE_GROUP: this.group,
+                OMNITRON_SERVICES: this.services.map((x) => x.path).join(";")
+            }
+        });
+
+        serviceProcess.then((result) => {
+            if (result.code !== 0) {
+                this.process = null;
+                if (++this.restarts <= this.maxRestarts) {
+                    this.start();
+                }
+            }
+        });
+
+        this.process = serviceProcess;
+    }
+
+    async stop() {
+        if (!is.null(this.process)) {
+            this.process.kill("SIGTERM");
+            const result = await this.process;
+            return result.code;
+        }
+    }
+
+    isRunning() {
+        return !is.null(this.process);
+    }
+}
 
 export default class ServiceManager extends application.Subsystem {
     async configure() {
         this.meta = null;
+        this.maintainers = new Map();
         this.servicesDb = new vault.Vault({
             location: std.path.join(adone.config.varPath, "omnitron", "services.db")
         });
@@ -94,6 +143,43 @@ export default class ServiceManager extends application.Subsystem {
         }
 
         return services;
+    }
+
+    async enumerateGroups() {
+        const services = await this.enumerate();
+        const groups = new Map();
+
+        for (const service of services) {
+            if (is.string(service.group)) {
+                let list = groups.get(service.group);
+                if (is.undefined(list)) {
+                    list = [];
+                    groups.set(service.group, list);
+                }
+                list.push(service);
+            } else {
+                groups.set(adone.text.random(10), [service]);
+            }
+        }
+
+        return groups;
+    }
+
+    async startAll() {
+        const groups = await this.enumerateGroups();
+        const port = this.app.subsystem("netron").getServicePort();
+
+        for (const [group, services] of groups.entries()) {
+            const maintainer = new ServiceMaintainer({ group, services, port });
+            this.maintainers.set(group, maintainer);
+            await maintainer.start(); // eslint-disable-line
+        }
+    }
+
+    async stopAll() {
+        for (const maintainer of this.maintainers.values()) {
+            await maintainer.stop(); // eslint-disable-line
+        }
     }
 
     getGroups() {

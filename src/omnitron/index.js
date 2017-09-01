@@ -6,8 +6,7 @@ const {
     std,
     fs,
     netron: { decorator: { Contextable, Public, Private, Description, Type } },
-    omnitron,
-    system: { process: { exec } }
+    omnitron
 } = adone;
 
 const {
@@ -21,6 +20,8 @@ export default class Omnitron extends application.Application {
     async configure() {
         // Force create home directory
         await fs.mkdir(adone.homePath);
+
+        this.logsPath = std.path.join(adone.config.varPath, "logs", "omnitron");
 
         // Load omnitron configuration
         this.config = new omnitron.Configuration();
@@ -56,9 +57,13 @@ export default class Omnitron extends application.Application {
     async main() {
         // Attach common omnitron context
         this.subsystem("netron").netron.attachContext(this, "omnitron");
+
+        await this.subsystem("services").startAll();
     }
 
     async uninitialize() {
+        await this.subsystem("services").stopAll();
+
         return this.deletePidFile();
     }
 

@@ -27,6 +27,8 @@ export default class NetronManager extends application.Subsystem {
         for (const gate of this.app.config.gates) {
             await this.netron.bind(gate); // eslint-disable-line
         }
+
+        this.servicePort = this.app.config.gates[0].port;
     }
 
     async unintialize() {
@@ -43,5 +45,9 @@ export default class NetronManager extends application.Subsystem {
         } finally {
             this.netron = null;
         }
+    }
+
+    getServicePort() {
+        return this.servicePort;
     }
 }
