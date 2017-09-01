@@ -165,6 +165,15 @@ describe("Vault", () => {
         assert.instanceOf(err, adone.x.NotExists);
     });
 
+    it("valuabe set/get null or undefined value", async () => {
+        await openVault();
+        const val = await vault.create("val");
+        await val.set("undefined", undefined);
+        expect(await val.get("undefined")).to.be.undefined;
+        await val.set("null", null);
+        expect(await val.get("null")).to.be.null;
+    });
+
     it("valuable add/delete simple tags", async () => {
         await openVault();
         const tags = ["tag1", "tag3"];

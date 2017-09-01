@@ -41,7 +41,7 @@ export default class Valuable {
             this.meta.kids.push(id);
             await this._updateMeta();
             this._keys.set(name, keyMeta);
-            if (is.number(value.length)) {
+            if (value && is.number(value.length)) {
                 keyMeta.size = value.length;
             }
             shouldUpdateMeta = true;
@@ -51,7 +51,7 @@ export default class Valuable {
                 keyMeta.type = type;
                 shouldUpdateMeta = true;
             }
-            if (is.number(value.length) && (is.undefined(keyMeta.size) || keyMeta.size !== value.length)) {
+            if (value && is.number(value.length) && (is.undefined(keyMeta.size) || keyMeta.size !== value.length)) {
                 keyMeta.size = value.length;
                 shouldUpdateMeta = true;
             }
