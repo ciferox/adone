@@ -1,5 +1,9 @@
 describe("net", "mail", "Sendmail Transport Tests", () => {
-    const { net: { mail: { __: { SendmailTransport } } }, EventEmitter, std: { stream: { PassThrough } } } = adone;
+    const {
+        net: { mail: { __: { SendmailTransport } } },
+        event: { EventEmitter },
+        std: { stream: { PassThrough } }
+    } = adone;
 
     class MockBuilder {
         constructor(envelope, message, messageId) {
