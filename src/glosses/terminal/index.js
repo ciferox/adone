@@ -8110,5 +8110,3 @@ function applyStyle(...args) {
 }
 
 defineProps(Terminal.prototype, styles_);
-
-export const __esNamespace = true;

@@ -1,4 +1,4 @@
 adone.lazify({
     lodash: "./lodash",
     Benchmark: "./benchmark"
-}, exports, require);
+}, adone.asNamespace(exports), require);

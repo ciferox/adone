@@ -101,6 +101,4 @@ adone.lazify({
         Netron: "./ws/netron",
         Peer: "./ws/peer"
     }, null, require)
-}, exports, require);
-
-export const __esNamespace = true;
+}, adone.asNamespace(exports), require);

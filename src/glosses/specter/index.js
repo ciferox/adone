@@ -118,5 +118,3 @@ export default async function () {
     await specter.addMethodsPath(adone.std.path.join(__dirname, "methods"));
     return specter;
 }
-
-export const __esNamespace = true;

@@ -2,7 +2,7 @@ const { lazify, std, util, is, x, core: { Core } } = adone;
 
 const fast = lazify({
     File: "./file"
-}, exports, require);
+}, adone.asNamespace(exports), require);
 
 fast.__ = lazify({
     Concat: "./__/concat",
@@ -558,5 +558,3 @@ export const watchMap = (mappings, {
     }
     return fast;
 };
-
-export const __esNamespace = true;

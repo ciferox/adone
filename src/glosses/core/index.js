@@ -436,5 +436,3 @@ core.Core = Core;
 core.Filter = Filter;
 core.merge = Core.merge;
 adone.tag.set(Core, adone.tag.CORE_STREAM);
-
-export const __esNamespace = true;

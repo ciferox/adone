@@ -13,6 +13,4 @@ adone.lazify({
     Stack: "./stack",
     BufferList: "./buffer_list",
     ArraySet: "./array_set"
-}, exports, require);
-
-export const __esNamespace = true;
+}, adone.asNamespace(exports), require);

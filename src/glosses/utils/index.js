@@ -1,7 +1,5 @@
 const { is, std, noop, collection } = adone;
 
-export const __esNamespace = true;
-
 const irregularPlurals = {
     addendum: "addenda",
     aircraft: "aircraft",
@@ -1008,4 +1006,4 @@ adone.lazify({
     throttle: "./throttle",
     fakeClock: "./fake_clock",
     ltgt: "./ltgt"
-}, exports, require);
+}, adone.asNamespace(exports), require);

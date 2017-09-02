@@ -1,5 +1,3 @@
-export const __esNamespace = true;
-
 adone.lazify({
     tar: () => adone.lazify({
         RawPackStream: "./tar/raw/pack",
@@ -11,4 +9,4 @@ adone.lazify({
         pack: "./zip/pack",
         unpack: "./zip/unpack"
     }, null, require)
-}, exports, require);
+}, adone.asNamespace(exports), require);

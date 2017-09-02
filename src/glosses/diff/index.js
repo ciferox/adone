@@ -10,7 +10,7 @@ const diff = lazify({
     css: ["./diff/css", (x) => x.diffCSS],
     json: ["./diff/json", (x) => x.diffJson],
     arrays: ["./diff/array", (x) => x.diffArrays]
-}, exports, require);
+}, adone.asNamespace(exports), require);
 
 diff._ = lazify({
     Diff: "./diff/base",
@@ -36,5 +36,3 @@ diff.util = lazify({
     convertChangesToDMP: ["./convert", (x) => x.convertChangesToDMP],
     convertChangesToXML: ["./convert", (x) => x.convertChangesToXML]
 }, null, require);
-
-export const __esNamespace = true;

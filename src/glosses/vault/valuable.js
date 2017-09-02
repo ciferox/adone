@@ -1,4 +1,9 @@
-const { is, vault: { __ } } = adone;
+const {
+    is,
+    vault
+} = adone;
+
+const __ = adone.private(vault);
 
 export default class Valuable {
     constructor(vault, id, metaData, tags) {
@@ -66,7 +71,7 @@ export default class Valuable {
 
     async setMulti(entries) {
         for (const [name, value] of Object.entries(entries)) {
-            await this.set(name, value);
+            await this.set(name, value); // eslint-disable-line
         }
     }
 
@@ -217,7 +222,7 @@ export default class Valuable {
         if (!__.hasTag(this._tags, tag)) {
             const tagId = await this.vault.addTag(tag, this.id);
             this.meta.tids.push(tagId);
-            this._tags.push(adone.vault.normalizeTag(tag));
+            this._tags.push(__.normalizeTag(tag));
             if (!_isWeak) {
                 await this._updateMeta();
             }
@@ -232,7 +237,7 @@ export default class Valuable {
 
     async deleteTag(tag) {
         if (__.hasTag(this._tags, tag)) {
-            tag = adone.vault.normalizeTag(tag);
+            tag = __.normalizeTag(tag);
             const index = this._tags.findIndex((t) => t.name === tag.name);
             this._tags.splice(index, 1);
             this.meta.tids.splice(this.meta.tids.indexOf(this.vault.tagsMap.get(tag.name).id), 1);

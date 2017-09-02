@@ -1,10 +1,8 @@
 const { is, x, lazify, setTimeout, clearTimeout, hrtime, Date, util } = adone;
 
-export const __esNamespace = true;
-
 const shani = lazify({
     util: "./util"
-}, exports, require);
+}, adone.asNamespace(exports), require);
 
 const SET_TIMEOUT_MAX = 2 ** 31 - 1;
 

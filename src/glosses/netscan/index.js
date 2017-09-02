@@ -29,4 +29,4 @@ export class MasscanScanner extends adone.event.EventEmitter {
     }
 }
 
-export const __esNamespace = true;
+adone.asNamespace(exports);

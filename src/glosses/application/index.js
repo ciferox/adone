@@ -10,11 +10,9 @@ const {
     tag
 } = adone;
 
-export const __esNamespace = true;
-
 const lazy = lazify({
     report: "./report"
-}, exports, require);
+}, adone.asNamespace(exports), require);
 
 const noStyleLength = (x) => text.ansi.stripEscapeCodes(x).length;
 

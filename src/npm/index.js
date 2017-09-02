@@ -1,3 +1,3 @@
 adone.lazify({
 
-}, exports, require);
+}, adone.asNamespace(exports), require);

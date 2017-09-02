@@ -1,7 +1,5 @@
 const { is, x, promise: { promisify }, std } = adone;
 
-export const __esNamespace = true;
-
 const fs = adone.lazify({
     readlink: () => promisify(std.fs.readlink),
     unlink: () => promisify(std.fs.unlink), // we have rm, should we have this one?
@@ -36,7 +34,7 @@ const fs = adone.lazify({
     }, null, require),
     which: ["./which", (mod) => mod.which],
     whichSync: ["./which", (mod) => mod.whichSync]
-}, exports, require);
+}, adone.asNamespace(exports), require);
 
 const lazy = adone.lazify({
     System: () => adone.bind("metrics.node").System,

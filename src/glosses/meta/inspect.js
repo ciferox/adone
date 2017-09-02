@@ -1,4 +1,8 @@
-const { is, identity, terminal: { styles } } = adone;
+const {
+    is,
+    identity,
+    terminal
+} = adone;
 
 /*
     * style:
@@ -44,25 +48,25 @@ const defaultInspectStyle = {
 const inspectStyle = {
     none: defaultInspectStyle,
     color: adone.o(defaultInspectStyle, {
-        limit: (str) => (styles.bold.open + styles.brightRed.open + str + styles.reset.open),
-        type: (str) => (styles.italic.open + styles.gray.open + str + styles.reset.open),
-        constant: (str) => (styles.cyan.open + str + styles.reset.open),
-        funcName: (str) => (styles.italic.open + styles.magenta.open + str + styles.reset.open),
-        constructorName: (str) => (styles.magenta.open + str + styles.reset.open),
-        length: (str) => (styles.italic.open + styles.gray.open + str + styles.reset.open),
-        key: (str) => (styles.green.open + str + styles.reset.open),
-        index: (str) => (styles.blue.open + str + styles.reset.open),
-        number: (str) => (styles.cyan.open + str + styles.reset.open),
-        inspect: (str) => (styles.cyan.open + str + styles.reset.open),
-        string: (str) => (styles.blue.open + str + styles.reset.open),
-        errorType: (str) => (styles.red.open + styles.bold.open + str + styles.reset.open),
-        errorMessage: (str) => (styles.red.open + styles.italic.open + str + styles.reset.open),
-        errorStack: (str) => (styles.gray.open + str + styles.reset.open),
-        errorStackMethod: (str) => (styles.brightYellow.open + str + styles.reset.open),
-        errorStackMethodAs: (str) => (styles.yellow.open + str + styles.reset.open),
-        errorStackFile: (str) => (styles.brightCyan.open + str + styles.reset.open),
-        errorStackLine: (str) => (styles.blue.open + str + styles.reset.open),
-        errorStackColumn: (str) => (styles.magenta.open + str + styles.reset.open)
+        limit: (str) => (terminal.styles.bold.open + terminal.styles.brightRed.open + str + terminal.styles.reset.open),
+        type: (str) => (terminal.styles.italic.open + terminal.styles.gray.open + str + terminal.styles.reset.open),
+        constant: (str) => (terminal.styles.cyan.open + str + terminal.styles.reset.open),
+        funcName: (str) => (terminal.styles.italic.open + terminal.styles.magenta.open + str + terminal.styles.reset.open),
+        constructorName: (str) => (terminal.styles.magenta.open + str + terminal.styles.reset.open),
+        length: (str) => (terminal.styles.italic.open + terminal.styles.gray.open + str + terminal.styles.reset.open),
+        key: (str) => (terminal.styles.green.open + str + terminal.styles.reset.open),
+        index: (str) => (terminal.styles.blue.open + str + terminal.styles.reset.open),
+        number: (str) => (terminal.styles.cyan.open + str + terminal.styles.reset.open),
+        inspect: (str) => (terminal.styles.cyan.open + str + terminal.styles.reset.open),
+        string: (str) => (terminal.styles.blue.open + str + terminal.styles.reset.open),
+        errorType: (str) => (terminal.styles.red.open + terminal.styles.bold.open + str + terminal.styles.reset.open),
+        errorMessage: (str) => (terminal.styles.red.open + terminal.styles.italic.open + str + terminal.styles.reset.open),
+        errorStack: (str) => (terminal.styles.gray.open + str + terminal.styles.reset.open),
+        errorStackMethod: (str) => (terminal.styles.brightYellow.open + str + terminal.styles.reset.open),
+        errorStackMethodAs: (str) => (terminal.styles.yellow.open + str + terminal.styles.reset.open),
+        errorStackFile: (str) => (terminal.styles.brightCyan.open + str + terminal.styles.reset.open),
+        errorStackLine: (str) => (terminal.styles.blue.open + str + terminal.styles.reset.open),
+        errorStackColumn: (str) => (terminal.styles.magenta.open + str + terminal.styles.reset.open)
     })
 };
 
@@ -130,7 +134,7 @@ const inspect_ = (runtime, options, variable) => {
         return "";
     }
 
-    if (runtime.key !== undefined) {
+    if (!is.undefined(runtime.key)) {
         if (runtime.descriptor) {
             descriptorStr = [];
 
@@ -174,9 +178,9 @@ const inspect_ = (runtime, options, variable) => {
 
     // Describe the current variable
 
-    if (variable === undefined) {
+    if (is.undefined(variable)) {
         str += pre + options.style.constant("undefined") + descriptorStr + options.style.nl;
-    } else if (variable === null) {
+    } else if (is.null(variable)) {
         str += pre + options.style.constant("null") + descriptorStr + options.style.nl;
     } else if (variable === false) {
         str += pre + options.style.constant("false") + descriptorStr + options.style.nl;
@@ -187,10 +191,8 @@ const inspect_ = (runtime, options, variable) => {
     } else if (type === "string") {
         str += `${pre}"${options.style.string(adone.text.escape.control(variable))}" ${
             options.noType ? "" : options.style.type("string") + options.style.length(`(${variable.length})`)}${descriptorStr}${options.style.nl}`;
-    } else if (Buffer.isBuffer(variable)) {
-        str += `${pre + options.style.inspect(variable.inspect())} ${
-            options.noType ? "" : options.style.type("Buffer") + options.style.length(`(${variable.length})`)
-            }${descriptorStr}${options.style.nl}`;
+    } else if (is.buffer(variable)) {
+        str += `${pre + options.style.inspect(variable.inspect())} ${options.noType ? "" : options.style.type("Buffer") + options.style.length(`(${variable.length})`)}${descriptorStr}${options.style.nl}`;
     } else if (type === "global" || type === "Array" || type === "Object" || type === "class" || type === "function") {
         funcName = length = "";
         isFunc = false;
@@ -201,7 +203,7 @@ const inspect_ = (runtime, options, variable) => {
         }
 
         isArray = false;
-        if (Array.isArray(variable)) {
+        if (is.array(variable)) {
             isArray = true;
             length = options.style.length(`(${variable.length})`);
         }
@@ -241,15 +243,12 @@ const inspect_ = (runtime, options, variable) => {
         // Special Objects
         specialObject = specialObjectSubstitution(variable);
 
-        if (specialObject !== undefined) {
+        if (!is.undefined(specialObject)) {
             str += `=> ${inspect_({
                 depth: runtime.depth,
                 ancestors: runtime.ancestors,
                 noPre: true
-            },
-                options,
-                specialObject
-            )}`;
+            }, options, specialObject)}`;
         } else if (isFunc && !options.funcDetails) {
             str += options.style.nl;
         } else if (!propertyList.length && !options.proto) {
@@ -289,10 +288,10 @@ const inspect_ = (runtime, options, variable) => {
                             keyIsProperty,
                             descriptor,
                             forceType: "getter/setter"
-                        },
-                            options,
-                            { get: descriptor.get, set: descriptor.set }
-                        );
+                        }, options, {
+                                get: descriptor.get,
+                                set: descriptor.set
+                            });
                     } else {
                         str += inspect_({
                             depth: runtime.depth + 1,

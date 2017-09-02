@@ -29,7 +29,7 @@ const notifier = lazify({
         }
     },
     instance: () => new notifier.Notification({ withFallback: true })
-}, exports, require);
+}, adone.asNamespace(exports), require);
 
 export const notify = (...args) => notifier.instance.notify(...args);
 
@@ -42,5 +42,3 @@ export const removeListener = (event, listener) => notifier.instance.removeListe
 export const removeAllListeners = (event) => notifier.instance.removeAllListeners(event);
 
 export const listeners = (event) => notifier.instance.listeners(event);
-
-export const __esNamespace = true;

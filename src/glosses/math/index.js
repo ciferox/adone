@@ -4,7 +4,7 @@ adone.lazify({
     BigNumber: "./bignumber",
     simd: "./simd",
     matrix: "./matrix"
-}, exports, require);
+}, adone.asNamespace(exports), require);
 
 export const random = (min = 0, max = 0xFFFFFFFF) => {
     min >>>= 0;
@@ -13,5 +13,3 @@ export const random = (min = 0, max = 0xFFFFFFFF) => {
     const val = (b[0] | b[1] << 8 | b[2] << 16 | b[3] << 24) >>> 0;
     return min + (val % (max - min));
 };
-
-export const __esNamespace = true;

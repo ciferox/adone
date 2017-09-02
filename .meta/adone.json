@@ -11,6 +11,9 @@
                 "glosses/common/**/*"
             ],
             "namespace": {
+                "global": {
+                    "description": "Global namespace"
+                },
                 "std": {
                     "description": "Node.js standard modules"
                 },

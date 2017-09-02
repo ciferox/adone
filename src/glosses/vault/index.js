@@ -8,17 +8,20 @@
 // nextTagId - Identifier for new tag
 
 adone.lazify({
-    __: () => ({
-        valuable: (id) => `v:${id}`,
-        tag: (id) => `t:${id}`,
-        vkey: (vid, kid) => `v:${vid}:${kid}`,
-        vvalue: (vid, kid) => `v:${vid}:${kid}:`,
-        hasTag(tags, tag) {
-            const tagName = (adone.is.string(tag) ? tag : tag.name);
-            return tags.findIndex((t) => t.name === tagName) !== -1;
-        }
-    }),
-    normalizeTags: () => (tags) => {
+    Vault: "./vault",
+    Valuable: "./valuable"
+}, adone.asNamespace(exports), require);
+
+adone.definePrivate({
+    valuable: (id) => `v:${id}`,
+    tag: (id) => `t:${id}`,
+    vkey: (vid, kid) => `v:${vid}:${kid}`,
+    vvalue: (vid, kid) => `v:${vid}:${kid}:`,
+    hasTag(tags, tag) {
+        const tagName = (adone.is.string(tag) ? tag : tag.name);
+        return tags.findIndex((t) => t.name === tagName) !== -1;
+    },
+    normalizeTags: (tags) => {
         const result = [];
 
         for (const tag of tags) {
@@ -35,7 +38,7 @@ adone.lazify({
 
         return result;
     },
-    normalizeTag: () => (tag) => {
+    normalizeTag: (tag) => {
         if (adone.is.string(tag)) {
             return {
                 name: tag
@@ -44,9 +47,11 @@ adone.lazify({
             return tag;
         }
         return undefined;
-    },
-    Vault: "./vault",
-    Valuable: "./valuable"
-}, exports, require);
+    }
+}, exports);
 
-export const __esNamespace = true;
+export const open = async (options) => {
+    const vault = new adone.vault.Vault(options);
+    await vault.open();
+    return vault;
+};

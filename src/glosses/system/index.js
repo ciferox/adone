@@ -1,5 +1,3 @@
 adone.lazify({
     process: "./process"
-}, exports, require);
-
-export const __esNamespace = true;
+}, adone.asNamespace(exports), require);

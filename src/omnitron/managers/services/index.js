@@ -62,6 +62,7 @@ class ServiceMaintainer {
 export default class ServiceManager extends application.Subsystem {
     async configure() {
         this.meta = null;
+        // this.services = null;
         this.maintainers = new Map();
         this.servicesDb = new vault.Vault({
             location: std.path.join(adone.config.varPath, "omnitron", "services.db")
@@ -80,6 +81,8 @@ export default class ServiceManager extends application.Subsystem {
         } else {
             this.meta = await this.servicesDb.get("$meta");
         }
+
+        // this.services = this.meta.sliceFor("service.");
     }
 
     async uninitialize() {

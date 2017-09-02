@@ -1,4 +1,9 @@
-const { is, vault: { __, Valuable } } = adone;
+const {
+    is,
+    vault
+} = adone;
+
+const __ = adone.private(vault);
 
 const VIDS = "vids";
 const TIDS = "tids";
@@ -17,7 +22,7 @@ export default class Vault {
             this.Valuable = this.options.ValuableClass;
             delete this.options.ValuableClass;
         } else {
-            this.Valuable = Valuable;
+            this.Valuable = vault.Valuable;
         }
         this.backend = new adone.database.level.DB(this.options);
         this._reset();
@@ -108,7 +113,7 @@ export default class Vault {
         this.vids.push(id);
         await this._setMeta(VIDS, this.vids);
         this.nameIdMap.set(name, id);
-        const normTags = adone.vault.normalizeTags(tags);
+        const normTags = __.normalizeTags(tags);
         const metaData = {
             name,
             notes: "",
@@ -222,7 +227,7 @@ export default class Vault {
     async addTag(tag, vid = null) {
         const tags = this._getTags();
         if (!__.hasTag(tags, tag)) {
-            const tagIds = await this._getTids([adone.vault.normalizeTag(tag)], vid);
+            const tagIds = await this._getTids([__.normalizeTag(tag)], vid);
             return tagIds[0];
         }
         return null;
@@ -235,7 +240,7 @@ export default class Vault {
             for (const val of valuables) {
                 await val.deleteTag(tag);
             }
-            tag = adone.vault.normalizeTag(tag);
+            tag = __.normalizeTag(tag);
             const tagId = this.tagsMap.get(tag.name).id;
             this.tids.splice(this.tids.indexOf(tagId), 1);
             await this._setMeta(TIDS, this.tids);

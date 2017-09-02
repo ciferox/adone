@@ -14,7 +14,7 @@ const lazy = adone.lazify({
     InstallationManager: ["../lib/cli/manager", (x) => x.InstallationManager]
 }, exports, require);
 
-export default class AdoneCLI extends application.Application {
+class AdoneCLI extends application.Application {
     async configure() {
         // load default config
         this.config = await configuration.load("cli.json", true, {
@@ -80,6 +80,12 @@ export default class AdoneCLI extends application.Application {
                             type: String,
                             default: "",
                             help: "Name of class/object/function/namespace"
+                        }
+                    ],
+                    options: [
+                        {
+                            name: "--all",
+                            help: "Show all properties"
                         }
                     ],
                     handler: this.inspectCommand
@@ -196,7 +202,7 @@ export default class AdoneCLI extends application.Application {
         return 0;
     }
 
-    async inspectCommand(args) {
+    async inspectCommand(args, opts) {
         try {
             const name = args.get("name");
             const { namespace, objectName } = adone.meta.parseName(name);
@@ -214,7 +220,64 @@ export default class AdoneCLI extends application.Application {
             }
 
             if (objectName === "") {
-                adone.log(adone.meta.inspect(ns, inspectOptions));
+                const { util } = adone;
+
+                const styleType = (type) => `{magenta-fg}${type}{/magenta-fg}`;
+                const styleName = (name) => `{green-fg}{bold}${name}{/bold}{/green-fg}`;
+                const styleArgs = (args) => `{green-fg}(${args.join(", ")}){/green-fg}`;
+                const styleLiteral = (type, name) => `${styleName(name)}: ${styleType(type)}`;
+                const styleLiteralArgs = (type, name, args) => `${styleName(name)}${styleArgs(args)}: ${styleType(type)}`;
+                const styleLiteralValue = (type, name, value) => {
+                    if (is.string(value)) {
+                        value = `"${value}"`;
+                    }
+
+                    return `${styleName(name)}: ${styleType(type)} = {blue-fg}${value}{/blue-fg}`;
+                };
+
+                terminal.print(`${styleType("namespace")} ${styleName(namespace)}\n`);
+                for (const [key, value] of util.entries(ns, { all: opts.has("all") })) {
+                    const type = util.typeOf(value);
+                    terminal.print("    ");
+                    switch (type) {
+                        case "string": {
+                            terminal.print(`${styleLiteralValue(type, key, value)} {italic}{grey-fg}(${value.length}){/grey-fg}{/italic}`);
+                            break;
+                        }
+                        case "number":
+                        case "boolean":
+                            terminal.print(`${styleLiteralValue(type, key, value)}`);
+                            break;
+                        case "function": {
+                            if (is.asyncFunction(value)) {
+                                terminal.print(styleLiteralArgs("async function", key, []/*adone.meta.functionArgs(value)*/));
+                            } else {
+                                terminal.print(styleLiteralArgs("function", key, []/*adone.meta.functionArgs(value)*/));
+                            }
+                            break;
+                        }
+                        case "class": {
+                            terminal.print(styleLiteralArgs(type, key, []/*adone.meta.functionArgs(value)*/));
+                            break;
+                        }
+                        case "namespace": {
+                            terminal.print(styleLiteral(type, key));
+                            break;
+                        }
+                        case "Object": {
+                            if (is.class(value.constructor)) {
+                                terminal.print(styleLiteral(value.constructor.name, key));
+                            } else {
+                                terminal.print(styleLiteral("object", key));
+                            }
+                            break;
+                        }
+                        default:
+                            terminal.print(styleLiteral(type, key));
+                    }
+                    terminal.print("\n");
+                }
+                // adone.log(adone.meta.inspect(ns, inspectOptions));
             } else if (adone.vendor.lodash.has(ns, objectName)) {
                 const obj = adone.vendor.lodash.get(ns, objectName);
                 const type = adone.util.typeOf(obj);
@@ -234,6 +297,4 @@ export default class AdoneCLI extends application.Application {
     }
 }
 
-if (require.main === module) {
-    application.run(AdoneCLI);
-}
+application.run(AdoneCLI);

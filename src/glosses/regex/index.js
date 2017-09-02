@@ -1,4 +1,4 @@
-export const __esNamespace = true;
+adone.asNamespace(exports);
 
 export const filename = /^[\w\-. ]+$/;
 

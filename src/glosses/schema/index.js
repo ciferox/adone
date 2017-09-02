@@ -1,12 +1,10 @@
 const { is, x, lazify } = adone;
 
-export const __esNamespace = true;
-
 const JSONSchema = lazify({
     x: "./x",
     $dataMetaSchema: "./data_metaschema",
     traverse: "./traverse"
-}, exports, require);
+}, adone.asNamespace(exports), require);
 
 export const __ = lazify({
     compileSchema: "./__/compile",

@@ -3,7 +3,7 @@ const { lazify } = adone;
 const assertion = lazify({
     AssertionError: "./assertion_error",
     config: "./config"
-}, exports, require);
+}, adone.asNamespace(exports), require);
 
 export const __ = lazify({
     util: "./__/utils",
@@ -44,5 +44,3 @@ export const loadExpectInterface = () => {
         .use(__.core)
         .use(__.expectInterface);
 };
-
-export const __esNamespace = true;

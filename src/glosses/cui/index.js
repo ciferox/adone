@@ -65,6 +65,4 @@ adone.lazify({
             Line: "./widgets/charts/line"
         }, null, require)
     }, null, require)
-}, exports, require);
-
-export const __esNamespace = true;
+}, adone.asNamespace(exports), require);

@@ -84,6 +84,4 @@ adone.lazify({
     board: () => adone.lazify({
         rpi: "./boards/rpi"
     }, null, require)
-}, exports, require);
-
-export const __esNamespace = true;
+}, adone.asNamespace(exports), require);

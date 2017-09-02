@@ -5,6 +5,4 @@ adone.lazify({
     bson: "./bson",
     base64: "./base64",
     yaml: "./yaml"
-}, exports, require);
-
-export const __esNamespace = true;
+}, adone.asNamespace(exports), require);

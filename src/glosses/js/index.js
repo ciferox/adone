@@ -31,6 +31,4 @@ adone.lazify({
     coverage: "./coverage",
     Module: "./module",
     adone: "./adone"
-}, exports, require);
-
-export const __esNamespace = true;
+}, adone.asNamespace(exports), require);

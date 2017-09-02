@@ -66,6 +66,4 @@ exdate.relativeTimeThreshold = relativeTimeThreshold;
 exdate.calendarFormat = getCalendarFormat;
 exdate.prototype = ExDate.prototype;
 
-export default exdate;
-
-export const __esNamespace = true;
+export default adone.asNamespace(exdate);

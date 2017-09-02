@@ -27,18 +27,18 @@ export default function typeOf(obj) {
         return typeofObj;
     }
 
+    if (is.namespace(obj)) {
+        return "namespace";
+    }
+
     /* ! Speed optimisation
      * Pre:
      *   null               x 28,645,765 ops/sec ±1.17% (82 runs sampled)
      * Post:
      *   null               x 36,428,962 ops/sec ±1.37% (84 runs sampled)
      */
-    if (obj === null) {
+    if (is.null(obj)) {
         return "null";
-    }
-
-    if (obj === global) {
-        return "global";
     }
 
     /* ! Speed optimisation
@@ -121,7 +121,7 @@ export default function typeOf(obj) {
         return "String Iterator";
     }
 
-    if (objPrototype === null) {
+    if (is.null(objPrototype)) {
         return "Object";
     }
 

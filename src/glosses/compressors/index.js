@@ -5,6 +5,4 @@ adone.lazify({
     lzma: "./lzma",
     xz: "./xz",
     snappy: "./snappy"
-}, exports, require);
-
-export const __esNamespace = true;
+}, adone.asNamespace(exports), require);

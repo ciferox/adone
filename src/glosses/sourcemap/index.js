@@ -11,6 +11,4 @@ adone.lazify({
     MappingList: "./mapping_list",
     util: "./util",
     inline: "./inline"
-}, exports, require);
-
-export const __esNamespace = true;
+}, adone.asNamespace(exports), require);

@@ -1,6 +1,6 @@
-const { is } = adone;
-
-export const __esNamespace = true;
+const {
+    is
+} = adone;
 
 const GLOBAL_PREFIX_LEN = "global".length + 1;
 const ADONE_PREFIX_LEN = "adone".length + 1;
@@ -13,7 +13,7 @@ adone.lazify({
     inspectError: ["./inspect", (mod) => mod.inspectError],
     inspectStack: ["./inspect", (mod) => mod.inspectStack],
     nsNames: () => adone.meta.namespaces.map((ns) => ns.name).sort((a, b) => a.localeCompare(b))
-}, exports, require);
+}, adone.asNamespace(exports), require);
 
 const metaNamespace = require("../../../.meta/adone.json");
 
@@ -63,7 +63,7 @@ export const getNamespaceInfo = (nsName) => {
     return namespace;
 };
 
-export const listNamespaces = (keyword = "", { threshold = 0.3 } = { }) => {
+export const listNamespaces = (keyword = "", { threshold = 0.3 } = {}) => {
     let result;
     if (keyword === "" || keyword === "global") {
         result = [

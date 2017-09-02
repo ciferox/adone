@@ -5,6 +5,4 @@ adone.lazify({
     redis: "./redis",
     mongo: "./mongo",
     pouch: "./pouch"
-}, exports, require);
-
-export const __esNamespace = true;
+}, adone.asNamespace(exports), require);

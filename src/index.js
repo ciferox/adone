@@ -2,13 +2,18 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-Object.defineProperty(exports, "__esNamespace", {
-    value: true
-});
-
 if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
+    const namespaceSymbol = Symbol.for("adone::namespace");
+    const privateSymbol = Symbol.for("adone::private");
+
+    const asNamespace = (obj) => {
+        obj[namespaceSymbol] = true;
+        return obj;
+    };
+
     const adone = Object.create({
-        null: Symbol(),
+        [namespaceSymbol]: true,
+        null: Symbol.for("adone::null"),
         noop: () => { },
         identity: (x) => x,
         truly: () => true,
@@ -79,6 +84,25 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
 
             return obj;
         },
+        lazifyPrivate: (modules, obj, _require = require, options) => {
+            if (adone.is.plainObject(obj[privateSymbol])) {
+                return adone.lazify(modules, obj[privateSymbol], _require, options);
+            }
+
+            obj[privateSymbol] = adone.lazify(modules, null, _require, options);
+            return obj;
+        },
+        definePrivate: (modules, obj) => {
+            if (adone.is.plainObject(obj[privateSymbol])) {
+                Object.assign(obj[privateSymbol], modules);
+            } else {
+                obj[privateSymbol] = modules;
+            }
+
+            return obj;
+        },
+        private: (obj) => obj[privateSymbol],
+        asNamespace,
         tag: {
             set(Class, tag) {
                 Class.prototype[tag] = 1;
@@ -159,13 +183,13 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         },
         global: {
             enumerable: true,
-            value: global
+            value: asNamespace(global)
         }
     });
 
     adone.lazify({
         // NodeJS embedded modules
-        std: () => adone.lazify({
+        std: () => asNamespace(adone.lazify({
             assert: "assert",
             fs: "fs",
             path: "path",
@@ -198,7 +222,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             dns: "dns",
             timers: "timers",
             dgram: "dgram"
-        }),
+        })),
 
         // Glosses
         require: () => {
@@ -305,13 +329,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         regex: "./glosses/regex",
 
         // Omnitron
-        omnitron: () => adone.lazify({
-            const: "./omnitron/consts",
-            HostManager: "./omnitron/host_manager",
-            Configuration: "./omnitron/configuration",
-            Omnitron: "./omnitron",
-            Dispatcher: "./omnitron/dispatcher"
-        }),
+        omnitron: "./omnitron",
 
         // Vendor
         vendor: "./vendor",
