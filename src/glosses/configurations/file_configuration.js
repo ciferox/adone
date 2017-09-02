@@ -133,9 +133,12 @@ export default class FileConfiguration extends adone.configuration.Configuration
         let obj;
         if (is.nil(name)) {
             obj = Object.assign({}, this);
-        } else {
+        } else if (name === true) {
+            obj = this.get(std.path.basename(conf.path, conf.ext));
+        } else if (is.string(name) || is.array(name)) {
             obj = this.get(name);
         }
+        await fs.mkdir(std.path.dirname(conf.path));
         await fs.writeFile(conf.path, await conf.serializer.encode(obj, options));
     }
 

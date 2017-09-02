@@ -86,6 +86,10 @@ export class InstallationManager {
 
     async _installCliSubsystem(adoneConf, cwd, { symlink } = {}) {
         const destPath = std.path.join(CLI_SUBSYSTEMS_PATH, adoneConf.name);
+        
+        // force create dir
+        await fs.mkdir(CLI_SUBSYSTEMS_PATH);
+
         if (symlink) {
             await this._installSymlink(destPath, cwd);
         } else {
@@ -202,22 +206,22 @@ export class InstallationManager {
                 value: adoneConf.author
             }
         ], {
-                noHeader: true,
-                borderless: true,
-                style: {
-                    compact: true
+            noHeader: true,
+            borderless: true,
+            style: {
+                compact: true
+            },
+            model: [
+                {
+                    id: "name",
+                    style: "{green-fg}",
+                    align: "right",
+                    format: (val) => `${val} `
                 },
-                model: [
-                    {
-                        id: "name",
-                        style: "{green-fg}",
-                        align: "right",
-                        format: (val) => `${val} `
-                    },
-                    {
-                        id: "value"
-                    }
-                ]
-            }));
+                {
+                    id: "value"
+                }
+            ]
+        }));
     }
 }

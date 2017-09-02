@@ -158,10 +158,21 @@ describe("configuration", "FileConfiguration", () => {
         assert.fail("Should throw NotSupported exception");
     });
 
-    it("save nested object", async () => {
+    it("save nested object (string)", async () => {
         const conf = new configuration.FileConfiguration(options);
         await conf.load("b.json5", true);
         await conf.save("nested.json", "b.nested");
+        const savedConf = new configuration.FileConfiguration(options);
+        await savedConf.load("nested.json");
+        await adone.fs.unlink(adone.std.path.resolve(options.base, "nested.json"));
+        assert.equal(savedConf.str2, "val2");
+        assert.equal(savedConf.num2, 8);
+    });
+
+    it("save nested object (array)", async () => {
+        const conf = new configuration.FileConfiguration(options);
+        await conf.load("b.json5", true);
+        await conf.save("nested.json", ["b", "nested"]);
         const savedConf = new configuration.FileConfiguration(options);
         await savedConf.load("nested.json");
         await adone.fs.unlink(adone.std.path.resolve(options.base, "nested.json"));
@@ -177,5 +188,12 @@ describe("configuration", "FileConfiguration", () => {
         assert.equal(conf.a.name, "adone");
         assert.equal(conf.b.name, "omnitron");
         assert.equal(conf.c.name, "specter");
+    });
+
+    it("should create destination directory while save", async () => {
+        const conf = new configuration.FileConfiguration(options);
+        await conf.load("a.json", true);
+        await conf.save(std.path.join(options.base, "1", "2", "3", "a.json"), true);
+        await adone.fs.rm(adone.std.path.join(options.base, "1"));
     });
 });
