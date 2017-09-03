@@ -1,6 +1,6 @@
 const { Codec } = adone.database.level;
 
-describe("db", "level", "codec", () => {
+describe("database", "level", "codec", () => {
     it("codec", () => {
         let codec = new Codec({ keyEncoding: "hex" });
         assert.ok(codec.keyAsBuffer());

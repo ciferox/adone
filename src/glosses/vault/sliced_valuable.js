@@ -21,7 +21,7 @@ export default class SlicedValuable {
                 }
             }
 
-            prefix = `${prefix.join(separator)}.`;
+            prefix = `${prefix.join(separator)}${separator}`;
         } else {
             throw new x.NotValid("Not valid prefix");
         }

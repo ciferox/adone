@@ -1,5 +1,5 @@
 const { is } = adone;
-const { Default } = adone.database.level.backend;
+const { LevelDB } = adone.database.level.backend;
 const testCommon = require("../testCommon");
 const cleanup = testCommon.cleanup;
 const location = testCommon.location;
@@ -8,7 +8,7 @@ const makeTest = (name, testFn) => {
     it(name, async () => {
         await cleanup();
         const loc = location();
-        const db = new adone.database.level.backend.Default(loc);
+        const db = new LevelDB(loc);
         const done = async function (close) {
             if (close === false) {
                 return cleanup();
@@ -27,8 +27,8 @@ const makeTest = (name, testFn) => {
 };
 
 
-describe("db", "level", "backend", "default", () => {
-    const factory = (location, options) => new Default(location, options);
+describe("database", "level", "backend", "default", () => {
+    const factory = (location, options) => new LevelDB(location, options);
 
     require("../common/open").all(factory, testCommon);
     require("../common/put").all(factory, testCommon);
@@ -279,7 +279,7 @@ describe("db", "level", "backend", "default", () => {
         it("setUp common", testCommon.setUp);
 
         it("setUp db", async () => {
-            db = new adone.database.level.backend.Default(testCommon.location());
+            db = new LevelDB(testCommon.location());
             await db.open();
         });
 

@@ -154,7 +154,7 @@ const fetchAttachments = (results, stores, opts) => {
 
 export const adapter = function (opts, callback) {
     opts = {
-        db: adone.database.level.backend.Default,
+        db: adone.database.level.backend.LevelDB,
         migrate,
         ...opts
     };

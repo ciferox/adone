@@ -3,7 +3,7 @@ const { Memory } = adone.database.level.backend;
 const testCommon = require("../testCommon");
 const testBuffer = require("./testdata_b64");
 
-describe("db", "level", "backend", "memory", () => {
+describe("database", "level", "backend", "memory", () => {
     const factory = (location, options) => new Memory(location, options);
 
     require("../common/open").open(factory, testCommon);

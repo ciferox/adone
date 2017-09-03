@@ -102,7 +102,7 @@ export const iterator = function (leveldown, testCommon, collectEntries) {
         /** the following tests are mirroring the same series of tests in LevelUP read-stream-test.js */
         it("setUp #2", async () => {
             await db.close();
-            db = new adone.database.level.backend.Default(testCommon.location());
+            db = new adone.database.level.backend.LevelDB(testCommon.location());
             await db.open();
             await db.batch(sourceData);
         });

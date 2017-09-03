@@ -1,4 +1,8 @@
-const { x, database: { level: { DB, Batch, backend: { Default } } } } = adone;
+const {
+    is,
+    x,
+    database: { level: { DB, Batch, backend: { LevelDB } } }
+} = adone;
 const delayed = require("delayed").delayed;
 
 let dbidx = 0;
@@ -12,9 +16,9 @@ class Manager {
         return adone.std.path.join(__dirname, `_levelup_test_db_${dbidx++}`);
     }
 
-    async openTestDatabase({ location = this.nextLocation(), createIfMissing = true, errorIfExists = true, keyEncoding = "utf8", valueEncoding = "utf8" } = {}) {
+    async openTestDatabase({ location = this.nextLocation(), keyEncoding = "utf8", valueEncoding = "utf8" } = {}) {
         await adone.fs.rm(location);
-        const db = new DB({ location, createIfMissing, errorIfExists, keyEncoding, valueEncoding });
+        const db = new DB({ location, keyEncoding, valueEncoding });
         await db.open();
         this.closeableDatabases.push(db);
         return db;
@@ -113,7 +117,7 @@ class Manager {
 }
 
 
-describe("db", "level", () => {
+describe("database", "level", () => {
     describe("Initialization", () => {
         let manager;
         beforeEach(() => {
@@ -130,11 +134,11 @@ describe("db", "level", () => {
         });
 
         for (let encMode = 0; encMode <= 1; encMode++) {
+            // eslint-disable-next-line
             it(`default options${encMode ? " - encryption mode" : ""}`, async () => {
                 const location = manager.nextLocation();
                 const options = {
-                    location,
-                    errorIfExists: true
+                    location
                 };
 
                 if (encMode === 1) {
@@ -148,11 +152,7 @@ describe("db", "level", () => {
                 await db.close();
                 assert.isFalse(db.isOpen());
 
-                options.errorIfExists = false;
                 db = await Manager.open(options);
-                assert.isTrue(db.options.createIfMissing);
-                assert.isFalse(db.options.errorIfExists);
-                assert.isTrue(db.options.compression);
                 if (encMode) {
                     assert.equal(db.options.keyEncoding, "binary");
                     assert.equal(db.options.valueEncoding, "binary");
@@ -180,7 +180,6 @@ describe("db", "level", () => {
             const key = Buffer.from("test");
             const db = await Manager.open({
                 location: manager.nextLocation(),
-                errorIfExists: true,
                 encryption: {
                     key
                 }
@@ -198,7 +197,7 @@ describe("db", "level", () => {
 
         it("read-only properties", async () => {
             const location = manager.nextLocation();
-            const db = await Manager.open({ location, errorIfExists: true });
+            const db = await Manager.open({ location });
 
             try {
                 db.location = "foo";
@@ -209,9 +208,7 @@ describe("db", "level", () => {
 
         it("basic options", async () => {
             const location = manager.nextLocation();
-            const db = await Manager.open({ location, errorIfExists: true, valueEncoding: "binary" });
-            assert.isTrue(db.options.createIfMissing);
-            assert.isTrue(db.options.errorIfExists);
+            const db = await Manager.open({ location, valueEncoding: "binary" });
             assert.equal(db.options.keyEncoding, "utf8");
             assert.equal(db.options.valueEncoding, "binary");
             assert.equal(db.location, location);
@@ -220,9 +217,7 @@ describe("db", "level", () => {
 
         it("options with encoding", async () => {
             const location = manager.nextLocation();
-            const db = await Manager.open({ location, errorIfExists: true, keyEncoding: "ascii", valueEncoding: "json" });
-            assert.isTrue(db.options.createIfMissing);
-            assert.isTrue(db.options.errorIfExists);
+            const db = await Manager.open({ location, keyEncoding: "ascii", valueEncoding: "json" });
             assert.equal(db.options.keyEncoding, "ascii");
             assert.equal(db.options.valueEncoding, "json");
             assert.equal(db.location, location);
@@ -237,47 +232,6 @@ describe("db", "level", () => {
                 return;
             }
             assert.fail("NotValid exeption hasn't been thrown");
-        });
-
-        it("open() with !createIfMissing expects error", async () => {
-            try {
-                await Manager.open({ location: manager.nextLocation(), createIfMissing: false, errorIfExists: true });
-            } catch (err) {
-                assert.instanceOf(err, x.DatabaseOpen);
-                return;
-            }
-            assert.fail("DatabaseOpen exeption hasn't been thrown");
-        });
-
-        it("open() with createIfMissing expects directory to be created", async () => {
-            const location = manager.nextLocation();
-            const db = await Manager.open({ location, errorIfExists: true });
-            assert.isTrue(db.isOpen());
-            assert(await adone.fs.is.directory(location));
-            await db.close();
-        });
-
-        it("open() with errorIfExists expects error if exists", async () => {
-            const location = manager.nextLocation();
-            const db = await Manager.open({ location, errorIfExists: true });
-            try {
-                await Manager.open({ location, errorIfExists: true });
-            } catch (err) {
-                assert.instanceOf(err, x.DatabaseOpen);
-                await db.close();
-            }
-        });
-
-        it("open() with !errorIfExists does not expect error if exists", async () => {
-            const location = manager.nextLocation();
-            let db = await Manager.open({ location, errorIfExists: true });
-            assert.isTrue(db.isOpen());
-            await db.close();
-            assert.isFalse(db.isOpen());
-
-            db = await Manager.open({ location });
-            assert.isTrue(db.isOpen());
-            await db.close();
         });
     });
 
@@ -312,7 +266,7 @@ describe("db", "level", () => {
 
         it("put() and get() multiple values", async () => {
             const location = manager.nextLocation();
-            const db = await Manager.open({ location, createIfMissing: true, errorIfExists: true });
+            const db = await Manager.open({ location });
             assert.equal(db.location, location);
 
             await db.put("k1", "v1");
@@ -363,7 +317,7 @@ describe("db", "level", () => {
         describe("null and undefined", () => {
             let _db;
             beforeEach(async () => {
-                const db = await Manager.open({ location: manager.nextLocation(), createIfMissing: true });
+                const db = await Manager.open({ location: manager.nextLocation() });
                 manager.closeableDatabases.push(db);
                 assert.isTrue(db.isOpen());
                 _db = db;
@@ -436,7 +390,7 @@ describe("db", "level", () => {
             await db.batch(manager.sourceData.slice());
             await db.close();
 
-            db = await Manager.open({ location, createIfMissing: false });
+            db = await Manager.open({ location });
             const rs = db.createReadStream();
             rs.on("data", manager.dataSpy);
             rs.on("end", () => {
@@ -446,28 +400,29 @@ describe("db", "level", () => {
         });
 
         it("test safe decode in get()", async () => {
-            let db = await manager.openTestDatabase({ createIfMissing: true, errorIfExists: true });
+            let db = await manager.openTestDatabase({ valueEncoding: "utf8" });
             await db.put("foo", "this {} is [] not : json");
             await db.close();
-            db = await Manager.open({ location: db.location, createIfMissing: false, errorIfExists: false, valueEncoding: "json" });
+            db = await Manager.open({ location: db.location, valueEncoding: "json" });
             await Manager.shouldThrows(() => db.get("foo"), x.Encoding);
             await db.close();
         });
 
         it("test safe decode in readStream()", async (done) => {
-            let db = await manager.openTestDatabase({ createIfMissing: true, errorIfExists: true });
+            let db = await manager.openTestDatabase({ valueEncoding: "utf8" });
             await db.put("foo", "this {} is [] not : json");
             await db.close();
             const dataSpy = spy();
             const errorSpy = spy();
 
-            db = await Manager.open({ location: db.location, createIfMissing: false, errorIfExists: false, valueEncoding: "json" });
+            db = await Manager.open({ location: db.location, valueEncoding: "json" });
             db.createReadStream()
                 .on("data", dataSpy)
                 .on("error", errorSpy)
                 .on("end", () => {
                     assert.equal(dataSpy.callCount, 0, "no data");
                     assert.equal(errorSpy.callCount, 1, "error emitted");
+
                     assert.equal("Encoding", errorSpy.getCall(0).args[0].name);
                     db.close().then(done);
                 });
@@ -477,14 +432,14 @@ describe("db", "level", () => {
             // write a value as JSON, read as utf8 and check
             // the fact that we can get with keyEncoding of utf8 should demonstrate that
             // the key is not encoded as JSON
-            const db = await manager.openTestDatabase({ createIfMissing: true, valueEncoding: "json" });
+            const db = await manager.openTestDatabase({ valueEncoding: "json" });
             await db.put("foo:foo", { bar: "bar" });
             const value = await db.get("foo:foo", { keyEncoding: "utf8", valueEncoding: "utf8" });
             assert.equal(value, '{"bar":"bar"}');
         });
 
         it("test batch op encoding", async () => {
-            const db = await manager.openTestDatabase({ createIfMissing: true, valueEncoding: "json" });
+            const db = await manager.openTestDatabase({ valueEncoding: "json" });
             await db.batch([
                 {
                     type: "put",
@@ -525,7 +480,7 @@ describe("db", "level", () => {
         });
 
         it("sanity check on test data", () => {
-            assert.isOk(Buffer.isBuffer(testData));
+            assert.isOk(is.buffer(testData));
             manager.checkBinaryTestData(testData);
         });
 
@@ -538,7 +493,7 @@ describe("db", "level", () => {
         });
 
         it("test put() and get() with binary value {valueEncoding:binary} on createDatabase()", async () => {
-            const db = await manager.openTestDatabase({ createIfMissing: true, errorIfExists: true, valueEncoding: "binary" });
+            const db = await manager.openTestDatabase({ valueEncoding: "binary" });
             await db.put("binarydata", testData);
             const value = await db.get("binarydata");
             assert(value);
@@ -562,7 +517,7 @@ describe("db", "level", () => {
         });
 
         it("test put() and get() with binary value {keyEncoding:utf8,valueEncoding:binary} on createDatabase()", async () => {
-            const db = await manager.openTestDatabase({ createIfMissing: true, errorIfExists: true, valueEncoding: "binary" });
+            const db = await manager.openTestDatabase({ valueEncoding: "binary" });
             await db.put("binarydata", testData);
             const value = await db.get("binarydata");
             assert(value);
@@ -623,7 +578,7 @@ describe("db", "level", () => {
 
         it("batch() with multiple puts", async () => {
             const location = manager.nextLocation();
-            const db = await Manager.open({ location, createIfMissing: true, errorIfExists: true });
+            const db = await Manager.open({ location });
             assert.equal(db.location, location);
 
             await db.batch([
@@ -836,51 +791,51 @@ describe("db", "level", () => {
 
     describe("Destroy & Repair", () => {
         it("destroy() passes on arguments", () => {
-            const ldmock = mock(Default);
+            const ldmock = mock(LevelDB);
             const args = ["location", function () { }];
             const expect = ldmock
                 .expects("destroy")
                 .once()
                 .withExactArgs(args[0], args[1]);
 
-            Default.destroy(...args);
+            LevelDB.destroy(...args);
             ldmock.verify();
         });
 
         it("repair() passes on arguments", () => {
-            const ldmock = mock(Default);
+            const ldmock = mock(LevelDB);
             const args = ["location", function () { }];
             const expect = ldmock
                 .expects("repair")
                 .once()
                 .withExactArgs(args[0], args[1]);
 
-            Default.repair(...args);
+            LevelDB.repair(...args);
             ldmock.verify();
         });
 
         it("destroy() substitutes missing callback argument", () => {
-            const ldmock = mock(Default);
+            const ldmock = mock(LevelDB);
             const args = ["location"];
             const expect = ldmock
                 .expects("destroy")
                 .once()
                 .withArgs(args[0]);
 
-            Default.destroy(...args);
+            LevelDB.destroy(...args);
             ldmock.verify();
             assert.equal(1, expect.getCall(0).args.length);
         });
 
         it("repair() substitutes missing callback argument", () => {
-            const ldmock = mock(Default);
+            const ldmock = mock(LevelDB);
             const args = ["location"];
             const expect = ldmock
                 .expects("repair")
                 .once()
                 .withArgs(args[0]);
 
-            Default.repair(...args);
+            LevelDB.repair(...args);
             ldmock.verify();
             assert.equal(1, expect.getCall(0).args.length);
         });
@@ -894,7 +849,7 @@ describe("db", "level", () => {
             await manager.setUp();
             runTest = async (testData, assertType) => {
                 const location = manager.nextLocation();
-                const db = await Manager.open({ location, createIfMissing: true, errorIfExists: true, valueEncoding: { encode: JSON.stringify, decode: JSON.parse } });
+                const db = await Manager.open({ location, valueEncoding: { encode: JSON.stringify, decode: JSON.parse } });
                 manager.closeableDatabases.push(db);
                 const promises = testData.map((d) => db.put(d.key, d.value));
                 await Promise.all(promises);
@@ -1060,8 +1015,6 @@ describe("db", "level", () => {
                 runTest = function (testData, assertType, done) {
                     const location = manager.nextLocation();
                     levelup(location, {
-                        createIfMissing: true,
-                        errorIfExists: true,
                         valueEncoding: {
                             encode: msgpack.encode,
                             decode: msgpack.decode,
@@ -1084,8 +1037,7 @@ describe("db", "level", () => {
                             async.forEach(testData, (d, callback) => {
                                 db.get(d.key, (err, value) => {
                                     if (err) {
-                                        console.error(err.stack)
-                                            ;
+                                        console.error(err.stack);
                                     }
                                     assert(!err);
                                     assert[assertType](d.value, value);

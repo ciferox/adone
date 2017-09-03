@@ -153,7 +153,13 @@
                     "description": "Databases",
                     "index": "glosses/databases/index",
                     "src": "glosses/databases/**/*",
-                    "namespace": {}
+                    "namespace": {
+                        "level": {
+                            "description": "Implementation of LevelDB",
+                            "index": "glosses/databases/level/index",
+                            "src": "glosses/databases/level/**/*"
+                        }
+                    }
                 },
                 "datetime": {
                     "description": "Datetime utilites",

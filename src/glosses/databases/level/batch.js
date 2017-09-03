@@ -1,18 +1,14 @@
 const { x } = adone;
 
 export default class Batch {
-    constructor(db, codec) {
+    constructor(db) {
         this._levelup = db;
-        this._codec = codec || db._codec;
         this.batch = db.db.chainedBatch();
         this.ops = [];
         this.length = 0;
     }
 
-    put(key_, value_, options = {}) {
-        const key = this._codec.encodeKey(key_, options);
-        const value = this._codec.encodeValue(value_, options);
-
+    put(key, value) {
         try {
             this.batch.put(key, value);
         } catch (err) {
@@ -24,9 +20,7 @@ export default class Batch {
         return this;
     }
 
-    del(key_, options = {}) {
-        const key = this._codec.encodeKey(key_, options);
-
+    del(key) {
         try {
             this.batch.del(key);
         } catch (err) {

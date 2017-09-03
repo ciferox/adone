@@ -1,11 +1,16 @@
-const { is, database: { level: { AbstractBackend, _: { native } } } } = adone;
+const {
+    is,
+    database: { level: { AbstractBackend } }
+} = adone;
+
+const native = adone.bind("leveldown.node").leveldown;
 
 const imports = adone.lazify({
     ChainedBatch: "./chained-batch",
     Iterator: "./iterator"
 }, null, require);
 
-export default class Default extends AbstractBackend {
+export default class LevelDB extends AbstractBackend {
     constructor(location) {
         super(location);
         this.native = native(location);
