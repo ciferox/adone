@@ -1462,13 +1462,38 @@ describe("util", () => {
             expect(max([-1, -2, -2])).to.be.equal(-1);
         });
 
-        it("should reutrn undefined for empty array", () => {
+        it("should return undefined for empty array", () => {
             expect(max([])).to.be.undefined;
         });
 
         it("should support score evaluator", () => {
             const f = (x) => x[0] + x[1];
             expect(max([[1, 2], [3, 4], [-1, 7]], f)).to.be.deep.equal([3, 4]);
+        });
+    });
+
+    describe("parseTime", () => {
+        const { parseTime } = util;
+
+        it("should return ms", () => {
+            expect(parseTime("1 second")).to.be.equal(1000);
+        });
+
+        it("should the given number", () => {
+            expect(parseTime(1000)).to.be.equal(1000);
+        });
+
+        it("should null if not a string given", () => {
+            expect(parseTime({})).to.be.null;
+        });
+
+        it("should return null if format is invalid", () => {
+            expect(parseTime("hehe")).to.be.null;
+            expect(parseTime("10 hehe")).to.be.null;
+        });
+
+        it("should work with no spaces", () => {
+            expect(parseTime("10minutes")).to.be.equal(10 * 60 * 1000);
         });
     });
 });

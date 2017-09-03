@@ -743,6 +743,27 @@ export const parseSize = (str) => {
     return Math.floor(value * units.get(unit.toLowerCase()));
 };
 
+const timeRegExp = /^(\d+|\d*\.\d+|\d+\.\d*)\s?([^\d]*)$/i;
+
+export const parseTime = (str) => {
+    if (is.number(str)) {
+        return Math.floor(str);
+    }
+    if (!is.string(str)) {
+        return null;
+    }
+    const match = str.match(timeRegExp);
+    if (is.null(match)) {
+        return null;
+    }
+    const value = Number(match[1]);
+    const unit = adone.datetime.normalizeUnits(match[2]);
+    if (!unit) {
+        return null;
+    }
+    return adone.datetime.duration(value, unit).as("milliseconds");
+};
+
 export const clone = (obj, { deep = true, nonPlainObjects = false, onlyEnumerable = true } = {}) => {
     if (!is.object(obj)) {
         return obj;
@@ -1005,5 +1026,6 @@ adone.lazify({
     RateLimiter: "./rate_limiter",
     throttle: "./throttle",
     fakeClock: "./fake_clock",
-    ltgt: "./ltgt"
+    ltgt: "./ltgt",
+    LogRotator: "./log_rotator"
 }, adone.asNamespace(exports), require);

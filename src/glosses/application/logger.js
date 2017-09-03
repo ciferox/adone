@@ -99,14 +99,14 @@ export default class Logger {
     toFile(options) {
         this._pipeTransform(Object.assign({
             type: "file"
-        }), options);
+        }, options));
         return this;
     }
 
     toStream(options) {
         this._pipeTransform(Object.assign({
             type: "stream"
-        }), options);
+        }, options));
         return this;
     }
 

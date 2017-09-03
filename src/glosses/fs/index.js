@@ -13,6 +13,7 @@ const fs = adone.lazify({
     appendFile: () => promisify(std.fs.appendFile),
     access: () => promisify(std.fs.access),
     symlink: () => promisify(std.fs.symlink),
+    truncate: () => promisify(std.fs.truncate),
     // realpath: () => promisify(std.fs.realpath),
     rm: "./rm",
     File: "./file",
