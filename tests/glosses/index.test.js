@@ -1,5 +1,6 @@
 describe("Adone common", () => {
     describe("tags", () => {
+
         const TAG1 = 1000;
         const TAG2 = 1001;
         const TAG3 = 1002;
@@ -15,6 +16,8 @@ describe("Adone common", () => {
 
         class TestC extends TestB {
         }
+        adone.tag.define("_TESTС", "_testc");
+        adone.tag.set(TestC, adone.tag._TESTС);
         adone.tag.set(TestC, TAG3);
 
         it("should be correct for single class", () => {
@@ -38,6 +41,11 @@ describe("Adone common", () => {
             assert.isFalse(adone.tag.has(new TestA(), UNKNOWN_TAG));
             assert.isFalse(adone.tag.has(new TestB(), UNKNOWN_TAG));
             assert.isFalse(adone.tag.has(new TestC(), UNKNOWN_TAG));
+        });
+
+        it("should be registered in predicates", () => {
+            const c = new TestC();
+            assert.isTrue(adone.is._testc(c));
         });
     });
 

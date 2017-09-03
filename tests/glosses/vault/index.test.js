@@ -84,6 +84,12 @@ describe("Vault", () => {
         assert.equal(notes, NOTES);
     });
 
+    it("Predicate 'adone.is.vaultValuable' should be exists", async () => {
+        await openVault();
+        const valuable = await vInstance.create("v1");
+        assert.isTrue(adone.is.vaultValuable(valuable));
+    });
+
     it("create/get valuable with tags", async () => {
         await openVault();
         assert.equal(vInstance.location(), location);
@@ -738,35 +744,229 @@ describe("Vault", () => {
         });
     });
 
-    it("Valuable#keys() with regexp matcher", async () => {
-        await openVault();
-        const val = await vInstance.create("valuable2");
-        await val.fromJSON({
-            entries: [
-                {
-                    name: "__.name1",
-                    value: "__value1"
-                },
-                {
-                    name: "key1",
-                    value: "value1"
-                },
-                {
-                    name: "__.nam2",
-                    value: "__value2"
-                },
-                {
-                    name: "__.na3",
-                    value: "__value3"
-                },
-                {
-                    name: "key",
-                    value: "val"
-                }
-            ]
+    describe("Sliced valuables", () => {
+        let i = 0;
+        for (const prefix of ["", [], "\n  ", "  .", "\t\t\r\n", ["  ", ""], [". .", "\r\n", "\t\t  ", "  \t. \n"]]) {
+            // eslint-disable-next-line
+            it(`should throw on invalid prefix (${++i})`, async () => {
+                await openVault();
+                const val = await vInstance.create("val1");
+                const err = assert.throws(() => vault.slice(val, prefix));
+                assert.instanceOf(err, adone.x.NotValid);
+            });
+        }
+
+        it("should be predicate compatible", async () => {
+            await openVault();
+            const val = await vInstance.create("val1");
+            const slicedVal = vault.slice(val, "__");
+            assert.isTrue(is.vaultValuable(slicedVal));
         });
 
-        const names = val.keys(/^__.(.+)/);
-        assert.sameMembers(names, ["name1", "nam2", "na3"]);
+        it("sliced valuable should be same as parent", async () => {
+            await openVault();
+            const val = await vInstance.create("val1");
+            await val.setNotes("123");
+            const slicedVal = vault.slice(val, "__");
+            assert.equal(val.name(), slicedVal.name());
+            assert.equal(val.internalId(), slicedVal.internalId());
+            assert.equal(val.getNotes(), slicedVal.getNotes());
+        });
+
+        it("enumerate sliced keys", async () => {
+            await openVault();
+            const val = await vInstance.create("val1");
+            await val.fromJSON({
+                entries: [
+                    {
+                        name: "__.name1",
+                        value: "__value1"
+                    },
+                    {
+                        name: "key1",
+                        value: "value1"
+                    },
+                    {
+                        name: "__.nam2",
+                        value: "__value2"
+                    },
+                    {
+                        name: "__.na3",
+                        value: "__value3"
+                    },
+                    {
+                        name: "key",
+                        value: "val"
+                    }
+                ]
+            });
+
+            const slicedVal = vault.slice(val, "__");
+
+            const names = slicedVal.keys();
+            assert.sameMembers(names, ["name1", "nam2", "na3"]);
+        });
+
+        it("set()", async () => {
+            await openVault();
+            const val = await vInstance.create("val1");
+            const slicedVal = vault.slice(val, "__");
+            await slicedVal.set("key1", 8);
+            assert.equal(await val.get("__.key1"), 8);
+        });
+
+        it("setMulti()", async () => {
+            await openVault();
+            const val = await vInstance.create("val1");
+            const slicedVal = vault.slice(val, "__");
+            await slicedVal.setMulti({
+                key1: 8,
+                key2: "adone"
+            });
+            assert.equal(await val.get("__.key1"), 8);
+            assert.equal(await val.get("__.key2"), "adone");
+        });
+
+        it("get()", async () => {
+            await openVault();
+            const val = await vInstance.create("val1");
+            await val.set("__.key1", 8);
+
+            const slicedVal = vault.slice(val, "__");
+            assert.equal(await slicedVal.get("key1"), 8);
+        });
+
+        it("type()", async () => {
+            await openVault();
+            const val = await vInstance.create("val1");
+            await val.set("__.key1", true);
+
+            const slicedVal = vault.slice(val, "__");
+            assert.equal(await slicedVal.type("key1"), "boolean");
+        });
+
+        it("has()", async () => {
+            await openVault();
+            const val = await vInstance.create("val1");
+            await val.set("__.key1", "adone");
+
+            const slicedVal = vault.slice(val, "__");
+            assert.isTrue(await slicedVal.has("key1"));
+        });
+
+        it("delete()", async () => {
+            await openVault();
+            const val = await vInstance.create("val1");
+            await val.set("__.key1", "adone");
+
+            const slicedVal = vault.slice(val, "__");
+            assert.isTrue(await val.has("__.key1"));
+            assert.isTrue(await slicedVal.has("key1"));
+            await slicedVal.delete("key1");
+            assert.isFalse(await val.has("__.key1"));
+            assert.isFalse(await slicedVal.has("key1"));
+        });
+
+        it("fromJSON()", async () => {
+            await openVault();
+            const val = await vInstance.create("val1");
+            await val.fromJSON({
+                entries: [
+                    {
+                        name: "key1",
+                        value: "value1"
+                    },
+                    {
+                        name: "key2",
+                        value: 7
+                    }
+                ]
+            });
+
+            let names = val.keys();
+            assert.sameMembers(names, ["key1", "key2"]);
+
+            const slicedVal = vault.slice(val, "__");
+            await slicedVal.fromJSON({
+                entries: [
+                    {
+                        name: "name1",
+                        value: "__value1"
+                    },
+                    {
+                        name: "nam2",
+                        value: "__value2"
+                    },
+                    {
+                        name: "na3",
+                        value: "__value3"
+                    }
+                ]
+            });
+
+            names = slicedVal.keys();
+            assert.sameMembers(names, ["name1", "nam2", "na3"]);
+
+            names = val.keys();
+            assert.sameMembers(names, ["__.name1", "__.nam2", "__.na3"]);
+        });
+
+        it("toJSON()", async () => {
+            await openVault();
+            const val = await vInstance.create("val1");
+            await val.fromJSON({
+                entries: [
+                    {
+                        name: "__.name1",
+                        value: "__value1"
+                    },
+                    {
+                        name: "key1",
+                        value: "value1"
+                    },
+                    {
+                        name: "__.nam2",
+                        value: "__value2"
+                    },
+                    {
+                        name: "__.na3",
+                        value: "__value3"
+                    },
+                    {
+                        name: "key",
+                        value: "val"
+                    }
+                ]
+            });
+
+            let json = await val.toJSON();
+
+            assert.deepEqual(json, {
+                name: "val1",
+                notes: "",
+                entries: {
+                    key: "val",
+                    key1: "value1",
+                    "__.name1": "__value1",
+                    "__.nam2": "__value2",
+                    "__.na3": "__value3"
+                },
+                tags: []
+            });
+
+            const slicedVal = vault.slice(val, "__");
+            json = await slicedVal.toJSON();
+
+            assert.deepEqual(json, {
+                name: "val1",
+                notes: "",
+                entries: {
+                    name1: "__value1",
+                    nam2: "__value2",
+                    na3: "__value3"
+                },
+                tags: []
+            });
+        });
     });
 });

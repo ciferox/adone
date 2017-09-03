@@ -1,5 +1,6 @@
 const {
     is,
+    x,
     vault
 } = adone;
 
@@ -87,19 +88,8 @@ export default class Valuable {
         return this._keys.has(name);
     }
 
-    keys(re) {
-        const keys = [...this._keys.keys()];
-        if (is.regexp(re)) {
-            const filteredKeys = [];
-            for (const key of keys) {
-                const result = re.exec(key);
-                if (!is.null(result)) {
-                    filteredKeys.push(result[1]);
-                }
-            }
-            return filteredKeys;
-        }
-        return keys;
+    keys() {
+        return [...this._keys.keys()];
     }
 
     async entries({ includeEntryId = false, entriesAsArray = false } = {}) {
@@ -111,7 +101,7 @@ export default class Valuable {
             for (const name of keys) {
                 const entry = {
                     name,
-                    value: await this.get(name),
+                    value: await this.get(name), // eslint-disable-line
                     type: this.type(name)
                 };
 
@@ -124,7 +114,7 @@ export default class Valuable {
         } else {
             result = {};
             for (const key of keys) {
-                result[key] = await this.get(key);
+                result[key] = await this.get(key); // eslint-disable-line
             }
         }
 
@@ -139,7 +129,7 @@ export default class Valuable {
     async clear({ includeNotes = true, includeTags = true } = {}) {
         const names = this.keys();
         for (const name of names) {
-            await this._delete(name);
+            await this._delete(name); // eslint-disable-line
         }
 
         if (includeTags) {
@@ -192,7 +182,7 @@ export default class Valuable {
         if (is.array(json.entries)) {
             const order = [];
             for (const entry of json.entries) {
-                const id = await this.set(entry.name, entry.value);
+                const id = await this.set(entry.name, entry.value); // eslint-disable-line
                 order.push(id);
             }
             this.meta.order = order;
@@ -202,7 +192,7 @@ export default class Valuable {
 
         if (is.array(json.tags)) {
             for (const tag of json.tags) {
-                await this.addTag(tag, true);
+                await this.addTag(tag, true); // eslint-disable-line
             }
         }
 
@@ -214,7 +204,7 @@ export default class Valuable {
             const result = [];
             for (const t of tag) {
                 if (!__.hasTag(this._tags, t)) {
-                    result.push(await this.addTag(t));
+                    result.push(await this.addTag(t)); // eslint-disable-line
                 }
             }
             return result;
@@ -281,7 +271,7 @@ export default class Valuable {
     _getKey(name) {
         const keyMeta = this._getKeyUnsafe(name);
         if (is.undefined(keyMeta)) {
-            throw new adone.x.NotExists(`Key not exists: ${name}`);
+            throw new x.NotExists(`Key not exists: ${name}`);
         }
         return keyMeta;
     }

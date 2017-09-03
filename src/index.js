@@ -122,7 +122,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
                 if (typeof (predicate) === "string") { // eslint-disable-line
                     Object.defineProperty(adone.is, predicate, {
                         enumerable: true,
-                        value: (obj) => adone.tag.has(obj, tag)
+                        value: (obj) => adone.tag.has(obj, adone.tag[tag])
                     });
                 }
             },

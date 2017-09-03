@@ -58,11 +58,19 @@ export default class Omnitron extends application.Application {
         // Attach common omnitron context
         this.subsystem("netron").netron.attachContext(this, "omnitron");
 
-        await this.subsystem("services").startAll();
+        try {
+            await this.subsystem("services").startAll();
+        } catch (err) {
+            adone.error(err);
+        }
     }
 
     async uninitialize() {
-        await this.subsystem("services").stopAll();
+        try {
+            await this.subsystem("services").stopAll();
+        } catch (err) {
+            adone.error(err);
+        }
 
         return this.deletePidFile();
     }

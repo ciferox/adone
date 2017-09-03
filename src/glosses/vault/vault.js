@@ -13,7 +13,14 @@ const NOTES = "notes";
 const NEXT_TAG_ID = "nextTagId";
 const NEXT_VALUABLE_ID = "nextValuableId";
 
+/**
+ * Vault main class
+ */
 export default class Vault {
+    /**
+     * Creates vault instance
+     * @param {{ location, ValuableClass } = {}} options 
+     */
     constructor(options) {
         this.options = Object.assign({}, options, {
             valueEncoding: "mpak"

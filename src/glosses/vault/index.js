@@ -12,6 +12,10 @@ adone.lazify({
     Valuable: "./valuable"
 }, adone.asNamespace(exports), require);
 
+adone.lazifyPrivate({
+    SlicedValuable: "./sliced_valuable"
+}, exports, require);
+
 adone.definePrivate({
     valuable: (id) => `v:${id}`,
     tag: (id) => `t:${id}`,
@@ -55,3 +59,5 @@ export const open = async (options) => {
     await vault.open();
     return vault;
 };
+
+export const slice = (valuable, prefix, separator) => new (adone.private(adone.vault).SlicedValuable)(valuable, prefix, separator);
