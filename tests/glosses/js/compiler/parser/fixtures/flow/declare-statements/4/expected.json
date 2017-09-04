@@ -54,7 +54,8 @@
             "end": {
               "line": 1,
               "column": 28
-            }
+            },
+            "identifierName": "foo"
           },
           "name": "foo",
           "typeAnnotation": {
@@ -105,9 +106,10 @@
               }
             }
           }
-        }
+        },
+        "predicate": null
       }
-    ]
-  },
-  "comments": []
+    ],
+    "directives": []
+  }
 }

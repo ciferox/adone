@@ -97,7 +97,8 @@
                     "end": {
                       "line": 1,
                       "column": 14
-                    }
+                    },
+                    "identifierName": "props"
                   },
                   "name": "props"
                 }
@@ -146,7 +147,10 @@
                       "column": 32
                     }
                   },
-                  "extra": null,
+                  "extra": {
+                    "rawValue": "attribute",
+                    "raw": "\"attribute\""
+                  },
                   "value": "attribute"
                 }
               }

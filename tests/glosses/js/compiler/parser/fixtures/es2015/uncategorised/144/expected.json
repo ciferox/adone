@@ -72,7 +72,6 @@
                 }
               },
               "method": false,
-              "shorthand": false,
               "computed": true,
               "key": {
                 "type": "Identifier",
@@ -86,10 +85,12 @@
                   "end": {
                     "line": 1,
                     "column": 4
-                  }
+                  },
+                  "identifierName": "x"
                 },
                 "name": "x"
               },
+              "shorthand": false,
               "value": {
                 "type": "NumericLiteral",
                 "start": 7,
@@ -126,7 +127,6 @@
                 }
               },
               "method": false,
-              "shorthand": false,
               "computed": false,
               "key": {
                 "type": "Identifier",
@@ -140,10 +140,12 @@
                   "end": {
                     "line": 1,
                     "column": 12
-                  }
+                  },
+                  "identifierName": "y"
                 },
                 "name": "y"
               },
+              "shorthand": false,
               "value": {
                 "type": "NumericLiteral",
                 "start": 14,
@@ -167,7 +169,8 @@
             }
           ],
           "extra": {
-            "parenthesized": true
+            "parenthesized": true,
+            "parenStart": 0
           }
         }
       }

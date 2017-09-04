@@ -69,7 +69,8 @@
                 "end": {
                   "line": 1,
                   "column": 33
-                }
+                },
+                "identifierName": "a"
               },
               "name": "a",
               "typeAnnotation": {
@@ -128,10 +129,13 @@
                           "end": {
                             "line": 1,
                             "column": 14
-                          }
+                          },
+                          "identifierName": "subObj"
                         },
                         "name": "subObj"
                       },
+                      "static": false,
+                      "kind": "init",
                       "value": {
                         "type": "ObjectTypeAnnotation",
                         "start": 16,
@@ -174,10 +178,13 @@
                                 "end": {
                                   "line": 1,
                                   "column": 23
-                                }
+                                },
+                                "identifierName": "strVal"
                               },
                               "name": "strVal"
                             },
+                            "static": false,
+                            "kind": "init",
                             "value": {
                               "type": "StringTypeAnnotation",
                               "start": 25,
@@ -193,17 +200,19 @@
                                 }
                               }
                             },
-                            "optional": false,
-                            "variance": null
+                            "variance": null,
+                            "optional": false
                           }
                         ],
-                        "indexers": []
+                        "indexers": [],
+                        "exact": false
                       },
-                      "optional": false,
-                      "variance": null
+                      "variance": null,
+                      "optional": false
                     }
                   ],
-                  "indexers": []
+                  "indexers": [],
+                  "exact": false
                 }
               }
             },
@@ -212,7 +221,7 @@
         ],
         "kind": "var"
       }
-    ]
-  },
-  "comments": []
+    ],
+    "directives": []
+  }
 }

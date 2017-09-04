@@ -1,13 +1,13 @@
 // This file contains methods responsible for maintaining a TraversalContext.
 
-const { is } = adone;
-
 import traverse from "../index";
 
-export const call = function (key) {
-    const opts = this.opts;
+const {
+    is
+} = adone;
 
-    this.debug(() => key);
+export const call = function (key): boolean {
+    const opts = this.opts;
 
     if (this.node) {
         if (this._call(opts[key])) {
@@ -22,7 +22,7 @@ export const call = function (key) {
     return false;
 };
 
-export const _call = function (fns) {
+export const _call = function (fns?: Array<Function>): boolean {
     if (!fns) {
         return false;
     }
@@ -55,12 +55,12 @@ export const _call = function (fns) {
     return false;
 };
 
-export const isBlacklisted = function () {
+export const isBlacklisted = function (): boolean {
     const blacklist = this.opts.blacklist;
     return blacklist && blacklist.indexOf(this.node.type) > -1;
 };
 
-export const visit = function () {
+export const visit = function (): boolean {
     if (!this.node) {
         return false;
     }
@@ -74,12 +74,17 @@ export const visit = function () {
     }
 
     if (this.call("enter") || this.shouldSkip) {
-        this.debug(() => "Skip...");
         return this.shouldStop;
     }
 
-    this.debug(() => "Recursing into...");
-    traverse.node(this.node, this.opts, this.scope, this.state, this, this.skipKeys);
+    traverse.node(
+        this.node,
+        this.opts,
+        this.scope,
+        this.state,
+        this,
+        this.skipKeys,
+    );
 
     this.call("exit");
 
@@ -209,7 +214,11 @@ export const _resyncList = function () {
 };
 
 export const _resyncRemoved = function () {
-    if (is.nil(this.key) || !this.container || this.container[this.key] !== this.node) {
+    if (
+        is.nil(this.key) ||
+        !this.container ||
+        this.container[this.key] !== this.node
+    ) {
         this._markRemoved();
     }
 };
@@ -260,6 +269,9 @@ export const _getQueueContexts = function () {
     let contexts = this.contexts;
     while (!contexts.length) {
         path = path.parentPath;
+        if (!path) {
+            break;
+        }
         contexts = path.contexts;
     }
     return contexts;

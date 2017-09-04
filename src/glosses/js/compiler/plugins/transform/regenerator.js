@@ -1,4 +1,8 @@
-const { assert, is, js: { compiler: { types: t, } } } = adone;
+const {
+    assert,
+    is,
+    js: { compiler: { types: t } }
+} = adone;
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
@@ -107,7 +111,7 @@ const makePredicate = (propertyName, knownTypes) => {
 const meta = {
     hasSideEffects: makePredicate("hasSideEffects", sideEffectTypes),
     containsLeap: makePredicate("containsLeap", leapTypes)
-}
+};
 
 const util = {
     runtimeProperty(name) {

@@ -69,7 +69,8 @@
                 "end": {
                   "line": 1,
                   "column": 39
-                }
+                },
+                "identifierName": "a"
               },
               "name": "a",
               "typeAnnotation": {
@@ -105,7 +106,7 @@
                     {
                       "type": "ObjectTypeProperty",
                       "start": 8,
-                      "end": 23,
+                      "end": 22,
                       "loc": {
                         "start": {
                           "line": 1,
@@ -113,7 +114,7 @@
                         },
                         "end": {
                           "line": 1,
-                          "column": 23
+                          "column": 22
                         }
                       },
                       "key": {
@@ -128,10 +129,13 @@
                           "end": {
                             "line": 1,
                             "column": 14
-                          }
+                          },
+                          "identifierName": "numVal"
                         },
                         "name": "numVal"
                       },
+                      "static": false,
+                      "kind": "init",
                       "value": {
                         "type": "NumberTypeAnnotation",
                         "start": 16,
@@ -147,8 +151,8 @@
                           }
                         }
                       },
-                      "optional": false,
-                      "variance": null
+                      "variance": null,
+                      "optional": false
                     },
                     {
                       "type": "ObjectTypeProperty",
@@ -176,10 +180,13 @@
                           "end": {
                             "line": 1,
                             "column": 30
-                          }
+                          },
+                          "identifierName": "strVal"
                         },
                         "name": "strVal"
                       },
+                      "static": false,
+                      "kind": "init",
                       "value": {
                         "type": "StringTypeAnnotation",
                         "start": 32,
@@ -195,11 +202,12 @@
                           }
                         }
                       },
-                      "optional": false,
-                      "variance": null
+                      "variance": null,
+                      "optional": false
                     }
                   ],
-                  "indexers": []
+                  "indexers": [],
+                  "exact": false
                 }
               }
             },
@@ -208,7 +216,7 @@
         ],
         "kind": "var"
       }
-    ]
-  },
-  "comments": []
+    ],
+    "directives": []
+  }
 }

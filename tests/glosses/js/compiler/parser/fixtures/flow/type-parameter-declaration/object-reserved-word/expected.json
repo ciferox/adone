@@ -104,7 +104,6 @@
                     }
                   },
                   "method": true,
-                  "shorthand": false,
                   "computed": false,
                   "key": {
                     "type": "Identifier",
@@ -175,7 +174,8 @@
                             "column": 10
                           }
                         },
-                        "name": "T"
+                        "name": "T",
+                        "variance": null
                       }
                     ]
                   }
@@ -195,7 +195,6 @@
                     }
                   },
                   "method": true,
-                  "shorthand": false,
                   "computed": false,
                   "key": {
                     "type": "Identifier",
@@ -266,7 +265,8 @@
                             "column": 10
                           }
                         },
-                        "name": "T"
+                        "name": "T",
+                        "variance": null
                       }
                     ]
                   }
@@ -286,7 +286,6 @@
                     }
                   },
                   "method": true,
-                  "shorthand": false,
                   "computed": false,
                   "key": {
                     "type": "Identifier",
@@ -357,7 +356,8 @@
                             "column": 9
                           }
                         },
-                        "name": "T"
+                        "name": "T",
+                        "variance": null
                       }
                     ]
                   }
@@ -377,7 +377,6 @@
                     }
                   },
                   "method": true,
-                  "shorthand": false,
                   "computed": false,
                   "key": {
                     "type": "Identifier",
@@ -448,7 +447,8 @@
                             "column": 6
                           }
                         },
-                        "name": "T"
+                        "name": "T",
+                        "variance": null
                       }
                     ]
                   }

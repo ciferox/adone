@@ -1,32 +1,13 @@
-import rewriteForAwait from "./for_await";
+/* @noflow */
 
-const { js: { compiler: { types: t, template, helpers: { functionName } } } } = adone;
+import rewriteForAwait from "./for-await";
 
-const buildWrapper = template(`
-  (() => {
-    var REF = FUNCTION;
-    return function NAME(PARAMS) {
-      return REF.apply(this, arguments);
-    };
-  })
-`);
-
-const namedBuildWrapper = template(`
-  (() => {
-    var REF = FUNCTION;
-    function NAME(PARAMS) {
-      return REF.apply(this, arguments);
-    }
-    return NAME;
-  })
-`);
+const {
+    js: { compiler: { types: t } }
+} = adone;
 
 const awaitVisitor = {
     Function(path) {
-        if (path.isArrowFunctionExpression() && !path.node.async) {
-            path.arrowFunctionToShadowed();
-            return;
-        }
         path.skip();
     },
 
@@ -37,8 +18,11 @@ const awaitVisitor = {
         }
     },
 
-    ForAwaitStatement(path, { file, wrapAwait }) {
+    ForOfStatement(path, { file, wrapAwait }) {
         const { node } = path;
+        if (!node.await) { 
+            return; 
+        }
 
         const build = rewriteForAwait(path, {
             getAsyncIterator: file.addHelper("asyncIterator"),
@@ -64,110 +48,13 @@ const awaitVisitor = {
 
         if (build.replaceParent) {
             path.parentPath.replaceWithMultiple(build.node);
-            path.remove();
         } else {
             path.replaceWithMultiple(build.node);
         }
     }
-
 };
 
-const classOrObjectMethod = (path, callId) => {
-    const node = path.node;
-    const body = node.body;
-
-    node.async = false;
-
-    const container = t.functionExpression(null, [], t.blockStatement(body.body), true);
-    container.shadow = true;
-    body.body = [
-        t.returnStatement(t.callExpression(
-            t.callExpression(callId, [container]),
-            []
-        ))
-    ];
-
-    // Regardless of whether or not the wrapped function is a an async method
-    // or generator the outer function should not be
-    node.generator = false;
-};
-
-const plainFunction = (path, callId) => {
-    const node = path.node;
-    const isDeclaration = path.isFunctionDeclaration();
-    const asyncFnId = node.id;
-    let wrapper = buildWrapper;
-
-    if (path.isArrowFunctionExpression()) {
-        path.arrowFunctionToShadowed();
-    } else if (!isDeclaration && asyncFnId) {
-        wrapper = namedBuildWrapper;
-    }
-
-    node.async = false;
-    node.generator = true;
-
-    node.id = null;
-
-    if (isDeclaration) {
-        node.type = "FunctionExpression";
-    }
-
-    const built = t.callExpression(callId, [node]);
-    const container = wrapper({
-        NAME: asyncFnId,
-        REF: path.scope.generateUidIdentifier("ref"),
-        FUNCTION: built,
-        PARAMS: node.params.reduce((acc, param) => {
-            acc.done = acc.done || t.isAssignmentPattern(param) || t.isRestElement(param);
-
-            if (!acc.done) {
-                acc.params.push(path.scope.generateUidIdentifier("x"));
-            }
-
-            return acc;
-        }, {
-            params: [],
-            done: false
-        }).params
-    }).expression;
-
-    if (isDeclaration) {
-        const id = asyncFnId ? t.identifier(asyncFnId.name) : path.scope.generateUidIdentifier("ref");
-        const declar = t.variableDeclaration("let", [
-            t.variableDeclarator(
-                id,
-                t.callExpression(container, [])
-            )
-        ]);
-        declar._blockHoist = true;
-        if (path.parentPath.isExportDefaultDeclaration()) {
-            path.parentPath.insertBefore(declar);
-            path.parent.declaration = id;
-        } else {
-            path.replaceWith(declar);
-        }
-    } else {
-        const retFunction = container.body.body[1].argument;
-        if (!asyncFnId) {
-            functionName({
-                node: retFunction,
-                parent: path.parent,
-                scope: path.scope
-            });
-        }
-
-        if (!retFunction || retFunction.id || node.params.length) {
-            // we have an inferred function id or params so we need this wrapper
-            path.replaceWith(t.callExpression(container, []));
-        } else {
-            // we can omit this wrapper as the conditions it protects for do not apply
-            path.replaceWith(built);
-        }
-    }
-};
-
-export default function (path, file, helpers) {
+export default function (path, file: Object, helpers: Object) {
     if (!helpers) {
         // bc for 6.15 and earlier
         helpers = { wrapAsync: file };
@@ -178,9 +65,8 @@ export default function (path, file, helpers) {
         wrapAwait: helpers.wrapAwait
     });
 
-    if (path.isClassMethod() || path.isObjectMethod()) {
-        classOrObjectMethod(path, helpers.wrapAsync);
-    } else {
-        plainFunction(path, helpers.wrapAsync);
-    }
+    path.node.async = false;
+    path.node.generator = true;
+
+    adone.js.compiler.helper.wrapFunction(path, helpers.wrapAsync);
 }

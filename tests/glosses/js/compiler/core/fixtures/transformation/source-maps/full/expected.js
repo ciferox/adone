@@ -1,1 +1,3 @@
-arr.map(x => x * x);
+arr.map(function (x) {
+  return x * x;
+});

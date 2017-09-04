@@ -87,7 +87,6 @@
                     }
                   },
                   "method": false,
-                  "shorthand": true,
                   "computed": false,
                   "key": {
                     "type": "Identifier",
@@ -101,10 +100,12 @@
                       "end": {
                         "line": 1,
                         "column": 6
-                      }
+                      },
+                      "identifierName": "a"
                     },
                     "name": "a"
                   },
+                  "shorthand": true,
                   "value": {
                     "type": "Identifier",
                     "start": 5,
@@ -117,9 +118,13 @@
                       "end": {
                         "line": 1,
                         "column": 6
-                      }
+                      },
+                      "identifierName": "a"
                     },
                     "name": "a"
+                  },
+                  "extra": {
+                    "shorthand": true
                   }
                 },
                 {
@@ -137,7 +142,6 @@
                     }
                   },
                   "method": false,
-                  "shorthand": true,
                   "computed": false,
                   "key": {
                     "type": "Identifier",
@@ -151,10 +155,12 @@
                       "end": {
                         "line": 1,
                         "column": 8
-                      }
+                      },
+                      "identifierName": "b"
                     },
                     "name": "b"
                   },
+                  "shorthand": true,
                   "value": {
                     "type": "AssignmentPattern",
                     "start": 7,
@@ -181,7 +187,8 @@
                         "end": {
                           "line": 1,
                           "column": 8
-                        }
+                        },
+                        "identifierName": "b"
                       },
                       "name": "b"
                     },
@@ -205,6 +212,9 @@
                       },
                       "value": 0
                     }
+                  },
+                  "extra": {
+                    "shorthand": true
                   }
                 },
                 {
@@ -222,7 +232,6 @@
                     }
                   },
                   "method": false,
-                  "shorthand": false,
                   "computed": false,
                   "key": {
                     "type": "Identifier",
@@ -236,10 +245,12 @@
                       "end": {
                         "line": 1,
                         "column": 12
-                      }
+                      },
+                      "identifierName": "c"
                     },
                     "name": "c"
                   },
+                  "shorthand": false,
                   "value": {
                     "type": "Identifier",
                     "start": 13,
@@ -252,7 +263,8 @@
                       "end": {
                         "line": 1,
                         "column": 14
-                      }
+                      },
+                      "identifierName": "d"
                     },
                     "name": "d"
                   }
@@ -272,7 +284,6 @@
                     }
                   },
                   "method": false,
-                  "shorthand": false,
                   "computed": false,
                   "key": {
                     "type": "Identifier",
@@ -286,10 +297,12 @@
                       "end": {
                         "line": 1,
                         "column": 16
-                      }
+                      },
+                      "identifierName": "e"
                     },
                     "name": "e"
                   },
+                  "shorthand": false,
                   "value": {
                     "type": "AssignmentPattern",
                     "start": 17,
@@ -316,7 +329,8 @@
                         "end": {
                           "line": 1,
                           "column": 18
-                        }
+                        },
+                        "identifierName": "f"
                       },
                       "name": "f"
                     },
@@ -357,7 +371,6 @@
                     }
                   },
                   "method": false,
-                  "shorthand": false,
                   "computed": true,
                   "key": {
                     "type": "Identifier",
@@ -371,10 +384,12 @@
                       "end": {
                         "line": 1,
                         "column": 23
-                      }
+                      },
+                      "identifierName": "g"
                     },
                     "name": "g"
                   },
+                  "shorthand": false,
                   "value": {
                     "type": "ArrayPattern",
                     "start": 25,
@@ -402,7 +417,8 @@
                           "end": {
                             "line": 1,
                             "column": 27
-                          }
+                          },
+                          "identifierName": "h"
                         },
                         "name": "h"
                       }

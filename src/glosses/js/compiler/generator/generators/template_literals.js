@@ -1,18 +1,18 @@
-export const TaggedTemplateExpression = function (node) {
+export function TaggedTemplateExpression(node: Object) {
     this.print(node.tag, node);
     this.print(node.quasi, node);
-};
+}
 
-export const TemplateElement = function (node, parent) {
+export function TemplateElement(node: Object, parent: Object) {
     const isFirst = parent.quasis[0] === node;
     const isLast = parent.quasis[parent.quasis.length - 1] === node;
 
     const value = (isFirst ? "`" : "}") + node.value.raw + (isLast ? "`" : "${");
 
     this.token(value);
-};
+}
 
-export const TemplateLiteral = function (node) {
+export function TemplateLiteral(node: Object) {
     const quasis = node.quasis;
 
     for (let i = 0; i < quasis.length; i++) {
@@ -22,4 +22,4 @@ export const TemplateLiteral = function (node) {
             this.print(node.expressions[i], node);
         }
     }
-};
+}

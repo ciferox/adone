@@ -2,11 +2,9 @@ import * as t from "./index";
 
 export const isReactComponent = t.buildMatchMemberExpression("React.Component");
 
-export const isCompatTag = (tagName) => {
-    return Boolean(tagName) && /^[a-z]|\-/.test(tagName);
-};
+export const isCompatTag = (tagName?: string): boolean => Boolean(tagName) && /^[a-z]|\-/.test(tagName);
 
-const cleanJSXElementLiteralChild = (child, args) => {
+const cleanJSXElementLiteralChild = (child: { value: string }, args: Array<Object>) => {
     const lines = child.value.split(/\r\n|\n|\r/);
 
     let lastNonEmptyLine = 0;
@@ -53,7 +51,7 @@ const cleanJSXElementLiteralChild = (child, args) => {
     }
 };
 
-export const buildChildren = (node) => {
+export const buildChildren = (node: Object): Array<Object> => {
     const elems = [];
 
     for (let i = 0; i < node.children.length; i++) {

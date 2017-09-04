@@ -1,108 +1,10 @@
-const { is, js: { compiler: { messages } } } = adone;
-import detectIndent from "./detect_indent";
 import SourceMap from "./source_map";
-import Printer from "./printer";
+import Printer, { type Format } from "./printer";
 
- /**
-  * Determine if input code uses more single or double quotes.
-  */
-const findCommonStringDelimiter = (code, tokens) => {
-    const DEFAULT_STRING_DELIMITER = "double";
-    if (!code) {
-        return DEFAULT_STRING_DELIMITER;
-    }
-
-    const occurrences = {
-        single: 0,
-        double: 0
-    };
-
-    let checked = 0;
-
-    for (let i = 0; i < tokens.length; i++) {
-        const token = tokens[i];
-        if (token.type.label !== "string") {
-            continue;
-        }
-
-        const raw = code.slice(token.start, token.end);
-        if (raw[0] === "'") {
-            occurrences.single++;
-        } else {
-            occurrences.double++;
-        }
-
-        checked++;
-        if (checked >= 3) {
-            break;
-        }
-    }
-    if (occurrences.single > occurrences.double) {
-        return "single";
-    }
-    return "double";
-
-};
-
- /**
-  * Normalize generator options, setting defaults.
-  *
-  * - Detects code indentation.
-  * - If `opts.compact = "auto"` and the code is over 500KB, `compact` will be set to `true`.
-  */
-
-const normalizeOptions = (code, opts, tokens) => {
-    let style = "  ";
-    if (code && is.string(code)) {
-        const indent = detectIndent(code).indent;
-        if (indent && indent !== " ") {
-            style = indent;
-        }
-    }
-
-    const format = {
-        auxiliaryCommentBefore: opts.auxiliaryCommentBefore,
-        auxiliaryCommentAfter: opts.auxiliaryCommentAfter,
-        shouldPrintComment: opts.shouldPrintComment,
-        retainLines: opts.retainLines,
-        retainFunctionParens: opts.retainFunctionParens,
-        comments: adone.is.nil(opts.comments) || opts.comments,
-        compact: opts.compact,
-        minified: opts.minified,
-        concise: opts.concise,
-        quotes: opts.quotes || findCommonStringDelimiter(code, tokens),
-        jsonCompatibleStrings: opts.jsonCompatibleStrings,
-        indent: {
-            adjustMultilineComment: true,
-            style,
-            base: 0
-        },
-        flowCommaSeparator: opts.flowCommaSeparator
-    };
-
-    if (format.minified) {
-        format.compact = true;
-
-        format.shouldPrintComment = format.shouldPrintComment || (() => format.comments);
-    } else {
-        format.shouldPrintComment = format.shouldPrintComment || ((value) => format.comments ||
-             (value.indexOf("@license") >= 0 || value.indexOf("@preserve") >= 0));
-    }
-
-    if (format.compact === "auto") {
-        format.compact = code.length > 500000; // 500KB
-
-        if (format.compact) {
-            console.error(`[BABEL] ${messages.get("codeGeneratorDeopt", opts.filename, "500KB")}`);
-        }
-    }
-
-    if (format.compact) {
-        format.indent.adjustMultilineComment = false;
-    }
-
-    return format;
-};
+const {
+    is,
+    js: { compiler: { messages } }
+} = adone;
 
 /**
  * Babel's code generator, turns an ast into code, maintaining sourcemaps,
@@ -111,13 +13,14 @@ const normalizeOptions = (code, opts, tokens) => {
 
 class Generator extends Printer {
     constructor(ast, opts = {}, code) {
-        const tokens = ast.tokens || [];
-        const format = normalizeOptions(code, opts, tokens);
+        const format = normalizeOptions(code, opts);
         const map = opts.sourceMaps ? new SourceMap(opts, code) : null;
-        super(format, map, tokens);
+        super(format, map);
 
         this.ast = ast;
     }
+
+    ast: Object;
 
     /**
      * Generate code and sourcemap from ast.
@@ -129,6 +32,63 @@ class Generator extends Printer {
         return super.generate(this.ast);
     }
 }
+
+/**
+ * Normalize generator options, setting defaults.
+ *
+ * - Detects code indentation.
+ * - If `opts.compact = "auto"` and the code is over 500KB, `compact` will be set to `true`.
+ */
+
+const normalizeOptions = function (code, opts): Format {
+    const format = {
+        auxiliaryCommentBefore: opts.auxiliaryCommentBefore,
+        auxiliaryCommentAfter: opts.auxiliaryCommentAfter,
+        shouldPrintComment: opts.shouldPrintComment,
+        retainLines: opts.retainLines,
+        retainFunctionParens: opts.retainFunctionParens,
+        comments: is.nil(opts.comments) || opts.comments,
+        compact: opts.compact,
+        minified: opts.minified,
+        concise: opts.concise,
+        quotes: "double",
+        jsonCompatibleStrings: opts.jsonCompatibleStrings,
+        indent: {
+            adjustMultilineComment: true,
+            style: "  ",
+            base: 0
+        }
+    };
+
+    if (format.minified) {
+        format.compact = true;
+
+        format.shouldPrintComment =
+            format.shouldPrintComment || (() => format.comments);
+    } else {
+        format.shouldPrintComment =
+            format.shouldPrintComment ||
+            ((value) =>
+                format.comments ||
+                (value.indexOf("@license") >= 0 || value.indexOf("@preserve") >= 0));
+    }
+
+    if (format.compact === "auto") {
+        format.compact = code.length > 500000; // 500KB
+
+        if (format.compact) {
+            console.error(
+                `[BABEL] ${messages.get("codeGeneratorDeopt", opts.filename, "500KB")}`,
+            );
+        }
+    }
+
+    if (format.compact) {
+        format.indent.adjustMultilineComment = false;
+    }
+
+    return format;
+};
 
 /**
  * We originally exported the Generator class above, but to make it extra clear that it is a private API,
@@ -145,7 +105,7 @@ export class CodeGenerator {
     }
 }
 
-export default function (ast, opts, code) {
+export default function (ast: Object, opts: Object, code: string): Object {
     const gen = new Generator(ast, opts, code);
     return gen.generate();
 }

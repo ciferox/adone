@@ -106,7 +106,7 @@
                     {
                       "type": "ObjectTypeProperty",
                       "start": 11,
-                      "end": 21,
+                      "end": 20,
                       "loc": {
                         "start": {
                           "line": 1,
@@ -114,7 +114,7 @@
                         },
                         "end": {
                           "line": 1,
-                          "column": 21
+                          "column": 20
                         }
                       },
                       "key": {
@@ -134,6 +134,8 @@
                         },
                         "name": "x"
                       },
+                      "static": false,
+                      "kind": "init",
                       "value": {
                         "type": "NumberTypeAnnotation",
                         "start": 14,
@@ -149,8 +151,8 @@
                           }
                         }
                       },
-                      "optional": false,
-                      "variance": null
+                      "variance": null,
+                      "optional": false
                     },
                     {
                       "type": "ObjectTypeProperty",
@@ -183,6 +185,8 @@
                         },
                         "name": "y"
                       },
+                      "static": false,
+                      "kind": "init",
                       "value": {
                         "type": "StringTypeAnnotation",
                         "start": 25,
@@ -198,8 +202,8 @@
                           }
                         }
                       },
-                      "optional": false,
-                      "variance": null
+                      "variance": null,
+                      "optional": false
                     }
                   ],
                   "indexers": [],
@@ -237,7 +241,6 @@
                     }
                   },
                   "method": false,
-                  "shorthand": false,
                   "computed": false,
                   "key": {
                     "type": "Identifier",
@@ -256,6 +259,7 @@
                     },
                     "name": "x"
                   },
+                  "shorthand": false,
                   "value": {
                     "type": "NumericLiteral",
                     "start": 42,
@@ -292,7 +296,6 @@
                     }
                   },
                   "method": false,
-                  "shorthand": false,
                   "computed": false,
                   "key": {
                     "type": "Identifier",
@@ -311,6 +314,7 @@
                     },
                     "name": "y"
                   },
+                  "shorthand": false,
                   "value": {
                     "type": "StringLiteral",
                     "start": 48,
@@ -416,7 +420,7 @@
                     {
                       "type": "ObjectTypeProperty",
                       "start": 68,
-                      "end": 78,
+                      "end": 77,
                       "loc": {
                         "start": {
                           "line": 2,
@@ -424,7 +428,7 @@
                         },
                         "end": {
                           "line": 2,
-                          "column": 21
+                          "column": 20
                         }
                       },
                       "key": {
@@ -444,6 +448,8 @@
                         },
                         "name": "x"
                       },
+                      "static": false,
+                      "kind": "init",
                       "value": {
                         "type": "NumberTypeAnnotation",
                         "start": 71,
@@ -459,13 +465,13 @@
                           }
                         }
                       },
-                      "optional": false,
-                      "variance": null
+                      "variance": null,
+                      "optional": false
                     },
                     {
                       "type": "ObjectTypeProperty",
                       "start": 79,
-                      "end": 89,
+                      "end": 88,
                       "loc": {
                         "start": {
                           "line": 2,
@@ -473,7 +479,7 @@
                         },
                         "end": {
                           "line": 2,
-                          "column": 32
+                          "column": 31
                         }
                       },
                       "key": {
@@ -493,6 +499,8 @@
                         },
                         "name": "y"
                       },
+                      "static": false,
+                      "kind": "init",
                       "value": {
                         "type": "StringTypeAnnotation",
                         "start": 82,
@@ -508,8 +516,8 @@
                           }
                         }
                       },
-                      "optional": false,
-                      "variance": null
+                      "variance": null,
+                      "optional": false
                     }
                   ],
                   "indexers": [],
@@ -547,7 +555,6 @@
                     }
                   },
                   "method": false,
-                  "shorthand": false,
                   "computed": false,
                   "key": {
                     "type": "Identifier",
@@ -566,6 +573,7 @@
                     },
                     "name": "x"
                   },
+                  "shorthand": false,
                   "value": {
                     "type": "NumericLiteral",
                     "start": 100,
@@ -602,7 +610,6 @@
                     }
                   },
                   "method": false,
-                  "shorthand": false,
                   "computed": false,
                   "key": {
                     "type": "Identifier",
@@ -621,6 +628,7 @@
                     },
                     "name": "y"
                   },
+                  "shorthand": false,
                   "value": {
                     "type": "StringLiteral",
                     "start": 106,
@@ -826,7 +834,7 @@
                     {
                       "type": "ObjectTypeProperty",
                       "start": 145,
-                      "end": 175,
+                      "end": 174,
                       "loc": {
                         "start": {
                           "line": 4,
@@ -834,7 +842,7 @@
                         },
                         "end": {
                           "line": 4,
-                          "column": 40
+                          "column": 39
                         }
                       },
                       "key": {
@@ -854,6 +862,8 @@
                         },
                         "name": "a"
                       },
+                      "static": false,
+                      "kind": "init",
                       "value": {
                         "type": "ObjectTypeAnnotation",
                         "start": 148,
@@ -873,7 +883,7 @@
                           {
                             "type": "ObjectTypeProperty",
                             "start": 151,
-                            "end": 161,
+                            "end": 160,
                             "loc": {
                               "start": {
                                 "line": 4,
@@ -881,7 +891,7 @@
                               },
                               "end": {
                                 "line": 4,
-                                "column": 26
+                                "column": 25
                               }
                             },
                             "key": {
@@ -901,6 +911,8 @@
                               },
                               "name": "x"
                             },
+                            "static": false,
+                            "kind": "init",
                             "value": {
                               "type": "NumberTypeAnnotation",
                               "start": 154,
@@ -916,8 +928,8 @@
                                 }
                               }
                             },
-                            "optional": false,
-                            "variance": null
+                            "variance": null,
+                            "optional": false
                           },
                           {
                             "type": "ObjectTypeProperty",
@@ -950,6 +962,8 @@
                               },
                               "name": "y"
                             },
+                            "static": false,
+                            "kind": "init",
                             "value": {
                               "type": "StringTypeAnnotation",
                               "start": 165,
@@ -965,15 +979,15 @@
                                 }
                               }
                             },
-                            "optional": false,
-                            "variance": null
+                            "variance": null,
+                            "optional": false
                           }
                         ],
                         "indexers": [],
                         "exact": true
                       },
-                      "optional": false,
-                      "variance": null
+                      "variance": null,
+                      "optional": false
                     },
                     {
                       "type": "ObjectTypeProperty",
@@ -1006,6 +1020,8 @@
                         },
                         "name": "b"
                       },
+                      "static": false,
+                      "kind": "init",
                       "value": {
                         "type": "BooleanTypeAnnotation",
                         "start": 179,
@@ -1021,8 +1037,8 @@
                           }
                         }
                       },
-                      "optional": false,
-                      "variance": null
+                      "variance": null,
+                      "optional": false
                     }
                   ],
                   "indexers": [],
@@ -1060,7 +1076,6 @@
                     }
                   },
                   "method": false,
-                  "shorthand": false,
                   "computed": false,
                   "key": {
                     "type": "Identifier",
@@ -1079,6 +1094,7 @@
                     },
                     "name": "a"
                   },
+                  "shorthand": false,
                   "value": {
                     "type": "ObjectExpression",
                     "start": 196,
@@ -1109,7 +1125,6 @@
                           }
                         },
                         "method": false,
-                        "shorthand": false,
                         "computed": false,
                         "key": {
                           "type": "Identifier",
@@ -1128,6 +1143,7 @@
                           },
                           "name": "x"
                         },
+                        "shorthand": false,
                         "value": {
                           "type": "NumericLiteral",
                           "start": 201,
@@ -1164,7 +1180,6 @@
                           }
                         },
                         "method": false,
-                        "shorthand": false,
                         "computed": false,
                         "key": {
                           "type": "Identifier",
@@ -1183,6 +1198,7 @@
                           },
                           "name": "y"
                         },
+                        "shorthand": false,
                         "value": {
                           "type": "StringLiteral",
                           "start": 207,
@@ -1222,7 +1238,6 @@
                     }
                   },
                   "method": false,
-                  "shorthand": false,
                   "computed": false,
                   "key": {
                     "type": "Identifier",
@@ -1241,6 +1256,7 @@
                     },
                     "name": "b"
                   },
+                  "shorthand": false,
                   "value": {
                     "type": "BooleanLiteral",
                     "start": 219,
@@ -1342,7 +1358,7 @@
                     {
                       "type": "ObjectTypeProperty",
                       "start": 239,
-                      "end": 267,
+                      "end": 266,
                       "loc": {
                         "start": {
                           "line": 5,
@@ -1350,7 +1366,7 @@
                         },
                         "end": {
                           "line": 5,
-                          "column": 39
+                          "column": 38
                         }
                       },
                       "key": {
@@ -1370,6 +1386,8 @@
                         },
                         "name": "a"
                       },
+                      "static": false,
+                      "kind": "init",
                       "value": {
                         "type": "ObjectTypeAnnotation",
                         "start": 242,
@@ -1389,7 +1407,7 @@
                           {
                             "type": "ObjectTypeProperty",
                             "start": 244,
-                            "end": 254,
+                            "end": 253,
                             "loc": {
                               "start": {
                                 "line": 5,
@@ -1397,7 +1415,7 @@
                               },
                               "end": {
                                 "line": 5,
-                                "column": 26
+                                "column": 25
                               }
                             },
                             "key": {
@@ -1417,6 +1435,8 @@
                               },
                               "name": "x"
                             },
+                            "static": false,
+                            "kind": "init",
                             "value": {
                               "type": "NumberTypeAnnotation",
                               "start": 247,
@@ -1432,8 +1452,8 @@
                                 }
                               }
                             },
-                            "optional": false,
-                            "variance": null
+                            "variance": null,
+                            "optional": false
                           },
                           {
                             "type": "ObjectTypeProperty",
@@ -1466,6 +1486,8 @@
                               },
                               "name": "y"
                             },
+                            "static": false,
+                            "kind": "init",
                             "value": {
                               "type": "StringTypeAnnotation",
                               "start": 258,
@@ -1481,15 +1503,15 @@
                                 }
                               }
                             },
-                            "optional": false,
-                            "variance": null
+                            "variance": null,
+                            "optional": false
                           }
                         ],
                         "indexers": [],
                         "exact": false
                       },
-                      "optional": false,
-                      "variance": null
+                      "variance": null,
+                      "optional": false
                     },
                     {
                       "type": "ObjectTypeProperty",
@@ -1522,6 +1544,8 @@
                         },
                         "name": "b"
                       },
+                      "static": false,
+                      "kind": "init",
                       "value": {
                         "type": "BooleanTypeAnnotation",
                         "start": 271,
@@ -1537,8 +1561,8 @@
                           }
                         }
                       },
-                      "optional": false,
-                      "variance": null
+                      "variance": null,
+                      "optional": false
                     }
                   ],
                   "indexers": [],
@@ -1576,7 +1600,6 @@
                     }
                   },
                   "method": false,
-                  "shorthand": false,
                   "computed": false,
                   "key": {
                     "type": "Identifier",
@@ -1595,6 +1618,7 @@
                     },
                     "name": "a"
                   },
+                  "shorthand": false,
                   "value": {
                     "type": "ObjectExpression",
                     "start": 289,
@@ -1625,7 +1649,6 @@
                           }
                         },
                         "method": false,
-                        "shorthand": false,
                         "computed": false,
                         "key": {
                           "type": "Identifier",
@@ -1644,6 +1667,7 @@
                           },
                           "name": "x"
                         },
+                        "shorthand": false,
                         "value": {
                           "type": "NumericLiteral",
                           "start": 294,
@@ -1680,7 +1704,6 @@
                           }
                         },
                         "method": false,
-                        "shorthand": false,
                         "computed": false,
                         "key": {
                           "type": "Identifier",
@@ -1699,6 +1722,7 @@
                           },
                           "name": "y"
                         },
+                        "shorthand": false,
                         "value": {
                           "type": "StringLiteral",
                           "start": 300,
@@ -1738,7 +1762,6 @@
                     }
                   },
                   "method": false,
-                  "shorthand": false,
                   "computed": false,
                   "key": {
                     "type": "Identifier",
@@ -1757,6 +1780,7 @@
                     },
                     "name": "b"
                   },
+                  "shorthand": false,
                   "value": {
                     "type": "BooleanLiteral",
                     "start": 312,

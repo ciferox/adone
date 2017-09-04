@@ -292,7 +292,8 @@ class AdoneCLI extends application.Application {
                 throw new adone.x.Unknown(`Unknown object: ${name}`);
             }
         } catch (err) {
-            adone.error(err.message);
+            adone.log(err);
+            // adone.error(err.message);
             return 1;
         }
         return 0;

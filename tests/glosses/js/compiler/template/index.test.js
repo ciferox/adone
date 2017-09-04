@@ -1,8 +1,10 @@
-const { generate, template } = adone.js.compiler;
+const {
+    js: { compiler: { generate, template } }
+} = adone;
 
 const comments = "// Sum two numbers\nconst add = (a, b) => a + b;";
 
-describe("js", "compiler", "template", () => {
+describe("js", "compiler", "templating", () => {
     it("import statement will cause parser to throw by default", () => {
         expect(() => {
             template("import foo from 'foo'")({});

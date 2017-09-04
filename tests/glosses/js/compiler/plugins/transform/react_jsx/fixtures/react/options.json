@@ -1,3 +1,0 @@
-{
-  "plugins": ["externalHelpers", "syntax.jsx", "transform.reactJsx", "transform.reactDisplayName", "transform.arrowFunctions"]
-}

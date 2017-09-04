@@ -1,13 +1,16 @@
 import { multiple as getFixtures } from "../helper_fixture";
-const { is, std: { fs, path } } = adone;
 
+const {
+    is,
+    std: { path }
+} = adone;
 
 const save = (test, ast) => {
-    delete ast.tokens;
-    if (ast.comments && !ast.comments.length) {
-        delete ast.comments;
-    }
-    fs.writeFileSync(test.expect.loc, JSON.stringify(ast, null, "  "));
+    // Ensure that RegExp are serialized as strings
+    const toJSON = RegExp.prototype.toJSON;
+    RegExp.prototype.toJSON = RegExp.prototype.toString;
+    require("fs").writeFileSync(test.expect.loc, JSON.stringify(ast, null, "  "));
+    RegExp.prototype.toJSON = toJSON;
 };
 
 const ppJSON = (v) => {
@@ -16,7 +19,7 @@ const ppJSON = (v) => {
 };
 
 const addPath = (str, pt) => {
-    if (str[str.length - 1] === ")") {
+    if (str.charAt(str.length - 1) === ")") {
         return `${str.slice(0, str.length - 1)}/${pt})`;
     }
     return `${str} (${pt})`;
@@ -43,7 +46,7 @@ const misMatch = (exp, act) => {
                 return addPath(mis, i);
             }
         }
-    } else if (!exp || !act || (!is.object(exp)) || (!is.object(act))) {
+    } else if (!exp || !act || !is.object(exp) || !is.object(act)) {
         if (exp !== act && !is.function(exp)) {
             return `${ppJSON(exp)} !== ${ppJSON(act)}`;
         }
@@ -54,18 +57,28 @@ const misMatch = (exp, act) => {
                 return addPath(mis, prop);
             }
         }
+
+        for (const prop in act) {
+            if (is.function(act[prop])) {
+                continue;
+            }
+
+            if (!(prop in exp) && !is.undefined(act[prop])) {
+                return `Did not expect a property '${prop}'`;
+            }
+        }
     }
 };
 
-
 const runTest = (test, parseFunction) => {
     const opts = test.options;
-    opts.locations = true;
-    opts.ranges = true;
 
     if (opts.throws && test.expect.code) {
-        throw new Error("File expected.json exists although options specify throws. Remove expected.json.");
+        throw new Error(
+            "File expected.json exists although options specify throws. Remove expected.json.",
+        );
     }
+
     let ast;
     try {
         ast = parseFunction(test.actual.code, opts);
@@ -74,12 +87,17 @@ const runTest = (test, parseFunction) => {
             if (err.message === opts.throws) {
                 return;
             }
-            err.message = `Expected error message: ${opts.throws}. Got error message: ${err.message}`;
+            err.message =
+                `Expected error message: ${opts.throws}. Got error message: ${err.message}`;
             throw err;
 
         }
 
         throw err;
+    }
+
+    if (ast.comments && !ast.comments.length) {
+        delete ast.comments;
     }
 
     if (!test.expect.code && !opts.throws && !process.env.CI) {
@@ -88,11 +106,13 @@ const runTest = (test, parseFunction) => {
     }
 
     if (opts.throws) {
-        throw new Error(`Expected error message: ${opts.throws}. But parsing succeeded.`);
+        throw new Error(
+            `Expected error message: ${opts.throws}. But parsing succeeded.`,
+        );
     } else {
         const mis = misMatch(JSON.parse(test.expect.code), ast);
+
         if (mis) {
-            //save(test, ast);
             throw new Error(mis);
         }
     }

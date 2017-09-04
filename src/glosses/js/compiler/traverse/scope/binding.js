@@ -1,3 +1,5 @@
+import type NodePath from "../path";
+
 /**
  * This class is responsible for a binding inside of a scope.
  *
@@ -11,6 +13,14 @@
 
 export default class Binding {
     constructor({ existing, identifier, scope, path, kind }) {
+        // this if condition is true only if the re-binding does not result in an error
+        // e.g. if rebinding kind is 'var' or 'hoisted', and previous was 'param'
+        if (existing) {
+            // we maintain the original binding but update constantViolations
+            existing.constantViolations = existing.constantViolations.concat(path);
+            return existing;
+        }
+
         this.identifier = identifier;
         this.scope = scope;
         this.path = path;
@@ -24,25 +34,27 @@ export default class Binding {
         this.references = 0;
 
         this.clearValue();
-
-        if (existing) {
-            this.constantViolations = [].concat(
-                existing.path,
-                existing.constantViolations,
-                this.constantViolations
-            );
-        }
     }
 
+    constantViolations: Array<NodePath>;
+    constant: boolean;
+
+    referencePaths: Array<NodePath>;
+    referenced: boolean;
+    references: number;
+
+    hasDeoptedValue: boolean;
+    hasValue: boolean;
+    value: any;
 
     deoptValue() {
         this.clearValue();
         this.hasDeoptedValue = true;
     }
 
-    setValue(value) {
-        if (this.hasDeoptedValue) {
-            return;
+    setValue(value: any) {
+        if (this.hasDeoptedValue) { 
+            return; 
         }
         this.hasValue = true;
         this.value = value;
@@ -57,7 +69,8 @@ export default class Binding {
     /**
      * Register a constant violation with the provided `path`.
      */
-    reassign(path) {
+
+    reassign(path: Object) {
         this.constant = false;
         if (this.constantViolations.indexOf(path) !== -1) {
             return;
@@ -68,7 +81,8 @@ export default class Binding {
     /**
      * Increment the amount of references to this binding.
      */
-    reference(path) {
+
+    reference(path: NodePath) {
         if (this.referencePaths.indexOf(path) !== -1) {
             return;
         }
@@ -80,6 +94,7 @@ export default class Binding {
     /**
      * Decrement the amount of references to this binding.
      */
+
     dereference() {
         this.references--;
         this.referenced = Boolean(this.references);

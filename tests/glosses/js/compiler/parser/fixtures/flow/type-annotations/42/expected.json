@@ -69,7 +69,8 @@
                 "end": {
                   "line": 1,
                   "column": 48
-                }
+                },
+                "identifierName": "a"
               },
               "name": "a",
               "typeAnnotation": {
@@ -116,6 +117,25 @@
                           "column": 47
                         }
                       },
+                      "key": {
+                        "type": "Identifier",
+                        "start": 8,
+                        "end": 11,
+                        "loc": {
+                          "start": {
+                            "line": 1,
+                            "column": 8
+                          },
+                          "end": {
+                            "line": 1,
+                            "column": 11
+                          },
+                          "identifierName": "add"
+                        },
+                        "name": "add"
+                      },
+                      "static": false,
+                      "kind": "init",
                       "value": {
                         "type": "FunctionTypeAnnotation",
                         "start": 8,
@@ -157,7 +177,8 @@
                                 "end": {
                                   "line": 1,
                                   "column": 13
-                                }
+                                },
+                                "identifierName": "x"
                               },
                               "name": "x"
                             },
@@ -205,7 +226,8 @@
                               "end": {
                                 "line": 1,
                                 "column": 26
-                              }
+                              },
+                              "identifierName": "y"
                             },
                             "name": "y"
                           },
@@ -268,7 +290,8 @@
                                 "end": {
                                   "line": 1,
                                   "column": 32
-                                }
+                                },
+                                "identifierName": "Array"
                               },
                               "name": "Array"
                             }
@@ -291,26 +314,11 @@
                           }
                         }
                       },
-                      "key": {
-                        "type": "Identifier",
-                        "start": 8,
-                        "end": 11,
-                        "loc": {
-                          "start": {
-                            "line": 1,
-                            "column": 8
-                          },
-                          "end": {
-                            "line": 1,
-                            "column": 11
-                          }
-                        },
-                        "name": "add"
-                      },
                       "optional": false
                     }
                   ],
-                  "indexers": []
+                  "indexers": [],
+                  "exact": false
                 }
               }
             },
@@ -319,7 +327,7 @@
         ],
         "kind": "var"
       }
-    ]
-  },
-  "comments": []
+    ],
+    "directives": []
+  }
 }

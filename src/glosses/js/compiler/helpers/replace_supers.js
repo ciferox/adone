@@ -1,7 +1,10 @@
-const { is, js: { compiler: { messages, types: t, helpers: { optimiseCallExpression } } } } = adone;
+const {
+    is,
+    js: { compiler: { types: t, messages } }
+} = adone;
 
 // ✌️
-const HARDCORE_THIS_REF = Symbol();
+const HARDCORE_THIS_REF = new WeakSet();
 
 const isIllegalBareSuper = (node, parent) => {
     if (!t.isSuper(node)) {
@@ -37,29 +40,36 @@ const getPrototypeOfExpression = (objectRef, isStatic) => {
         "||",
         t.memberExpression(targetRef, t.identifier("__proto__")),
         t.callExpression(
-            t.memberExpression(t.identifier("Object"), t.identifier("getPrototypeOf")),
-            [
-                targetRef
-            ]
+            t.memberExpression(
+                t.identifier("Object"),
+                t.identifier("getPrototypeOf"),
+            ),
+            [targetRef],
         ),
     );
 };
 
 const visitor = {
     Function(path) {
-        if (!path.inShadow("this")) {
+        if (!path.isArrowFunctionExpression()) {
+            path.skip();
+        }
+    },
+
+    ClassProperty(path) {
+        if (!path.node.static) {
             path.skip();
         }
     },
 
     ReturnStatement(path, state) {
-        if (!path.inShadow("this")) {
+        if (!path.getFunctionParent().isArrowFunctionExpression()) {
             state.returns.push(path);
         }
     },
 
     ThisExpression(path, state) {
-        if (!path.node[HARDCORE_THIS_REF]) {
+        if (!HARDCORE_THIS_REF.has(path.node)) {
             state.thises.push(path);
         }
     },
@@ -115,17 +125,26 @@ export default class ReplaceSupers {
         this.thises = [];
     }
 
-    forceSuperMemoisation;
-    methodPath;
-    methodNode;
-    superRef;
-    isStatic;
-    hasSuper;
-    inClass;
-    isLoose;
-    scope;
+    forceSuperMemoisation: boolean;
+    methodPath: NodePath;
+    methodNode: Object;
+    superRef: Object;
+    isStatic: boolean;
+    hasSuper: boolean;
+    inClass: boolean;
+    isLoose: boolean;
+    scope: Scope;
     file;
-    opts;
+    opts: {
+        forceSuperMemoisation: boolean,
+        getObjetRef: Function,
+        methodPath: NodePath,
+        methodNode: Object,
+        superRef: Object,
+        isStatic: boolean,
+        isLoose: boolean,
+        file: any,
+    };
 
     getObjectRef() {
         return this.opts.objectRef || this.opts.getObjectRef();
@@ -141,16 +160,17 @@ export default class ReplaceSupers {
      *
      */
 
-    setSuperProperty(property: Object, value: Object, isComputed: boolean): Object {
-        return t.callExpression(
-            this.file.addHelper("set"),
-            [
-                getPrototypeOfExpression(this.getObjectRef(), this.isStatic),
-                isComputed ? property : t.stringLiteral(property.name),
-                value,
-                t.thisExpression()
-            ]
-        );
+    setSuperProperty(
+        property: Object,
+        value: Object,
+        isComputed: boolean,
+    ): Object {
+        return t.callExpression(this.file.addHelper("set"), [
+            getPrototypeOfExpression(this.getObjectRef(), this.isStatic),
+            isComputed ? property : t.stringLiteral(property.name),
+            value,
+            t.thisExpression()
+        ]);
     }
 
     /**
@@ -163,28 +183,25 @@ export default class ReplaceSupers {
      */
 
     getSuperProperty(property: Object, isComputed: boolean): Object {
-        return t.callExpression(
-            this.file.addHelper("get"),
-            [
-                getPrototypeOfExpression(this.getObjectRef(), this.isStatic),
-                isComputed ? property : t.stringLiteral(property.name),
-                t.thisExpression()
-            ]
-        );
+        return t.callExpression(this.file.addHelper("get"), [
+            getPrototypeOfExpression(this.getObjectRef(), this.isStatic),
+            isComputed ? property : t.stringLiteral(property.name),
+            t.thisExpression()
+        ]);
     }
 
     replace() {
         this.methodPath.traverse(visitor, this);
     }
 
-    getLooseSuperProperty(id, parent) {
+    getLooseSuperProperty(id: Object, parent: Object) {
         const methodNode = this.methodNode;
         const superRef = this.superRef || t.identifier("Function");
 
         if (parent.property === id) {
-            //
+
         } else if (t.isCallExpression(parent, { callee: id })) {
-            //
+
         } else if (t.isMemberExpression(parent) && !methodNode.static) {
             // super.test -> objectRef.prototype.test
             return t.memberExpression(superRef, t.identifier("prototype"));
@@ -193,7 +210,7 @@ export default class ReplaceSupers {
         }
     }
 
-    looseHandle(path) {
+    looseHandle(path: NodePath) {
         const node = path.node;
         if (path.isSuper()) {
             return this.getLooseSuperProperty(node, path.parent);
@@ -216,21 +233,28 @@ export default class ReplaceSupers {
     specHandleAssignmentExpression(ref, path, node) {
         if (node.operator === "=") {
             // super.name = "val"; -> _set(Object.getPrototypeOf(objectRef.prototype), "name", this);
-            return this.setSuperProperty(node.left.property, node.right, node.left.computed);
+            return this.setSuperProperty(
+                node.left.property,
+                node.right,
+                node.left.computed,
+            );
         }
         // super.age += 2; -> let _ref = super.age; super.age = _ref + 2;
         ref = ref || path.scope.generateUidIdentifier("ref");
         return [
-            t.variableDeclaration("var", [
-                t.variableDeclarator(ref, node.left)
-            ]),
-            t.expressionStatement(t.assignmentExpression("=", node.left,
-                t.binaryExpression(node.operator[0], ref, node.right)))
+            t.variableDeclaration("var", [t.variableDeclarator(ref, node.left)]),
+            t.expressionStatement(
+                t.assignmentExpression(
+                    "=",
+                    node.left,
+                    t.binaryExpression(node.operator.slice(0, -1), ref, node.right),
+                ),
+            )
         ];
 
     }
 
-    specHandle(path) {
+    specHandle(path: NodePath) {
         let property;
         let computed;
         let args;
@@ -260,8 +284,15 @@ export default class ReplaceSupers {
             // _get(Object.getPrototypeOf(objectRef.prototype), "name", this);
             property = node.property;
             computed = node.computed;
-        } else if (t.isUpdateExpression(node) && isMemberExpressionSuper(node.argument)) {
-            const binary = t.binaryExpression(node.operator[0], node.argument, t.numericLiteral(1));
+        } else if (
+            t.isUpdateExpression(node) &&
+            isMemberExpressionSuper(node.argument)
+        ) {
+            const binary = t.assignmentExpression(
+                `${node.operator[0]}=`,
+                node.argument,
+                t.numericLiteral(1),
+            );
             if (node.prefix) {
                 // ++super.foo;
                 // to
@@ -272,9 +303,14 @@ export default class ReplaceSupers {
             // to
             // let _ref = super.foo; super.foo = _ref + 1;
             const ref = path.scope.generateUidIdentifier("ref");
-            return this.specHandleAssignmentExpression(ref, path, binary).concat(t.expressionStatement(ref));
+            return this.specHandleAssignmentExpression(ref, path, binary).concat(
+                t.expressionStatement(ref),
+            );
 
-        } else if (t.isAssignmentExpression(node) && isMemberExpressionSuper(node.left)) {
+        } else if (
+            t.isAssignmentExpression(node) &&
+            isMemberExpressionSuper(node.left)
+        ) {
             return this.specHandleAssignmentExpression(null, path, node);
         }
 
@@ -293,7 +329,7 @@ export default class ReplaceSupers {
 
     optimiseCall(callee, args) {
         const thisNode = t.thisExpression();
-        thisNode[HARDCORE_THIS_REF] = true;
-        return optimiseCallExpression(callee, thisNode, args);
+        HARDCORE_THIS_REF.add(thisNode);
+        return adone.js.compiler.helper.optimiseCallExpression(callee, thisNode, args);
     }
 }

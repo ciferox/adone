@@ -1,5 +1,8 @@
-const { parse, traverse } = adone.js.compiler;
-const hop = adone.is.propertyOwned;
+const {
+    js: { compiler: { parse, traverse } }
+} = adone;
+
+const hop = (o, key) => Object.hasOwnProperty.call(o, key);
 
 describe("js", "compiler", "traverse", "path/family", () => {
     describe("getBindingIdentifiers", () => {
@@ -8,7 +11,6 @@ describe("js", "compiler", "traverse", "path/family", () => {
         let paths = {};
         let outerNodes = {};
         let outerPaths = {};
-
         traverse(ast, {
             VariableDeclaration(path) {
                 nodes = path.getBindingIdentifiers();
@@ -34,13 +36,21 @@ describe("js", "compiler", "traverse", "path/family", () => {
 
         it("should return paths", () => {
             Object.keys(paths).forEach((id) => {
-                assert.strictEqual(Boolean(paths[id].node), true, "Has a property node that's not falsy");
+                assert.strictEqual(
+                    Boolean(paths[id].node),
+                    true,
+                    "Has a property node that's not falsy",
+                );
                 assert.strictEqual(paths[id].type, paths[id].node.type, "type matches");
             });
 
             Object.keys(outerPaths).forEach((id) => {
                 assert.strictEqual(Boolean(outerPaths[id].node), true, "has property node");
-                assert.strictEqual(outerPaths[id].type, outerPaths[id].node.type, "type matches");
+                assert.strictEqual(
+                    outerPaths[id].type,
+                    outerPaths[id].node.type,
+                    "type matches",
+                );
             });
         });
 
@@ -56,9 +66,10 @@ describe("js", "compiler", "traverse", "path/family", () => {
             });
         });
     });
-
     describe("getSibling", () => {
-        const ast = parse("var a = 1, {b} = c, [d] = e; function f() {} function g() {}");
+        const ast = parse(
+            "var a = 1, {b} = c, [d] = e; function f() {} function g() {}",
+        );
         let sibling = {};
         let lastSibling = {};
         traverse(ast, {
@@ -78,8 +89,16 @@ describe("js", "compiler", "traverse", "path/family", () => {
         it("should return all preceding and succeeding sibling nodes", () => {
             assert.ok(sibling.getAllNextSiblings().length, "Has next sibling");
             assert.ok(lastSibling.getAllPrevSiblings().length, "Has prev sibling");
-            assert.equal(sibling.getAllNextSiblings().length, 2, "Has 2 succeeding sibling");
-            assert.equal(lastSibling.getAllPrevSiblings().length, 2, "Has 2 preceeding sibling");
+            assert.equal(
+                sibling.getAllNextSiblings().length,
+                2,
+                "Has 2 succeeding sibling",
+            );
+            assert.equal(
+                lastSibling.getAllPrevSiblings().length,
+                2,
+                "Has 2 preceeding sibling",
+            );
         });
     });
 });

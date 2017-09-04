@@ -1,8 +1,8 @@
-const { parse, types: t } = adone.js.compiler;
+const {
+    js: { compiler: { types: t, parse } }
+} = adone;
 
-const getBody = (program) => {
-    return parse(program, { sourceType: "module" }).program.body;
-};
+const getBody = (program) => parse(program, { sourceType: "module" }).program.body;
 
 describe("js", "compiler", "types", "retrievers", () => {
     describe("getBindingIdentifiers", () => {

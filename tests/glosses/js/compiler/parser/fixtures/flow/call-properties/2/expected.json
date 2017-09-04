@@ -69,7 +69,8 @@
                 "end": {
                   "line": 1,
                   "column": 23
-                }
+                },
+                "identifierName": "a"
               },
               "name": "a",
               "typeAnnotation": {
@@ -104,7 +105,7 @@
                     {
                       "type": "ObjectTypeCallProperty",
                       "start": 10,
-                      "end": 21,
+                      "end": 20,
                       "loc": {
                         "start": {
                           "line": 1,
@@ -112,9 +113,10 @@
                         },
                         "end": {
                           "line": 1,
-                          "column": 21
+                          "column": 20
                         }
                       },
+                      "static": false,
                       "value": {
                         "type": "FunctionTypeAnnotation",
                         "start": 10,
@@ -151,7 +153,8 @@
                     }
                   ],
                   "properties": [],
-                  "indexers": []
+                  "indexers": [],
+                  "exact": false
                 }
               }
             },
@@ -160,7 +163,7 @@
         ],
         "kind": "var"
       }
-    ]
-  },
-  "comments": []
+    ],
+    "directives": []
+  }
 }

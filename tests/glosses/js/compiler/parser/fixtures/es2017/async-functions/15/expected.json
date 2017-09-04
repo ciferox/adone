@@ -69,7 +69,8 @@
                 "end": {
                   "line": 1,
                   "column": 5
-                }
+                },
+                "identifierName": "o"
               },
               "name": "o"
             },
@@ -103,7 +104,6 @@
                     }
                   },
                   "method": false,
-                  "shorthand": false,
                   "computed": false,
                   "key": {
                     "type": "Identifier",
@@ -117,10 +117,12 @@
                       "end": {
                         "line": 1,
                         "column": 11
-                      }
+                      },
+                      "identifierName": "a"
                     },
                     "name": "a"
                   },
+                  "shorthand": false,
                   "value": {
                     "type": "NumericLiteral",
                     "start": 13,
@@ -157,7 +159,6 @@
                     }
                   },
                   "method": true,
-                  "shorthand": false,
                   "computed": false,
                   "key": {
                     "type": "Identifier",
@@ -171,7 +172,8 @@
                       "end": {
                         "line": 1,
                         "column": 25
-                      }
+                      },
+                      "identifierName": "foo"
                     },
                     "name": "foo"
                   },
@@ -193,7 +195,8 @@
                         "end": {
                           "line": 1,
                           "column": 33
-                        }
+                        },
+                        "identifierName": "promise"
                       },
                       "name": "promise"
                     }
@@ -253,7 +256,8 @@
                               "end": {
                                 "line": 1,
                                 "column": 50
-                              }
+                              },
+                              "identifierName": "promise"
                             },
                             "name": "promise"
                           }

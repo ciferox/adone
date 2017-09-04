@@ -90,6 +90,25 @@
                   "column": 29
                 }
               },
+              "key": {
+                "type": "Identifier",
+                "start": 11,
+                "end": 12,
+                "loc": {
+                  "start": {
+                    "line": 1,
+                    "column": 11
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 12
+                  },
+                  "identifierName": "m"
+                },
+                "name": "m"
+              },
+              "static": false,
+              "kind": "init",
               "value": {
                 "type": "FunctionTypeAnnotation",
                 "start": 11,
@@ -205,24 +224,6 @@
                     }
                   }
                 }
-              },
-              "static": false,
-              "key": {
-                "type": "Identifier",
-                "start": 11,
-                "end": 12,
-                "loc": {
-                  "start": {
-                    "line": 1,
-                    "column": 11
-                  },
-                  "end": {
-                    "line": 1,
-                    "column": 12
-                  },
-                  "identifierName": "m"
-                },
-                "name": "m"
               },
               "optional": false
             }

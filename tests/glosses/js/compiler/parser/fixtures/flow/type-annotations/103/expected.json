@@ -69,7 +69,8 @@
                 "end": {
                   "line": 1,
                   "column": 12
-                }
+                },
+                "identifierName": "parser"
               },
               "name": "parser"
             },
@@ -87,6 +88,7 @@
                   "column": 73
                 }
               },
+              "predicate": null,
               "returnType": {
                 "type": "TypeAnnotation",
                 "start": 65,
@@ -128,7 +130,8 @@
                       "end": {
                         "line": 1,
                         "column": 67
-                      }
+                      },
+                      "identifierName": "a"
                     },
                     "name": "a"
                   }
@@ -151,7 +154,8 @@
                     "end": {
                       "line": 1,
                       "column": 32
-                    }
+                    },
+                    "identifierName": "rootPath"
                   },
                   "name": "rootPath",
                   "typeAnnotation": {
@@ -211,7 +215,8 @@
                       "end": {
                         "line": 1,
                         "column": 49
-                      }
+                      },
+                      "identifierName": "filesToParse"
                     },
                     "name": "filesToParse"
                   },
@@ -287,7 +292,8 @@
                           "end": {
                             "line": 1,
                             "column": 56
-                          }
+                          },
+                          "identifierName": "Array"
                         },
                         "name": "Array"
                       }

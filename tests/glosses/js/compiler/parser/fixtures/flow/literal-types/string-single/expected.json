@@ -54,12 +54,14 @@
             "end": {
               "line": 1,
               "column": 22
-            }
+            },
+            "identifierName": "createElement"
           },
           "name": "createElement"
         },
         "generator": false,
         "expression": false,
+        "async": false,
         "params": [
           {
             "type": "Identifier",
@@ -73,7 +75,8 @@
               "end": {
                 "line": 1,
                 "column": 37
-              }
+              },
+              "identifierName": "tagName"
             },
             "name": "tagName",
             "typeAnnotation": {
@@ -104,15 +107,16 @@
                     "column": 37
                   }
                 },
-                "value": "div",
                 "extra": {
                   "rawValue": "div",
                   "raw": "'div'"
-                }
+                },
+                "value": "div"
               }
             }
           }
         ],
+        "predicate": null,
         "returnType": {
           "type": "TypeAnnotation",
           "start": 38,
@@ -154,7 +158,8 @@
                 "end": {
                   "line": 1,
                   "column": 54
-                }
+                },
+                "identifierName": "HTMLDivElement"
               },
               "name": "HTMLDivElement"
             }

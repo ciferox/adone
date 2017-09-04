@@ -69,7 +69,8 @@
               "end": {
                 "line": 1,
                 "column": 1
-              }
+              },
+              "identifierName": "x"
             },
             "name": "x"
           },
@@ -103,7 +104,6 @@
                   }
                 },
                 "method": false,
-                "shorthand": false,
                 "computed": false,
                 "key": {
                   "type": "Identifier",
@@ -117,10 +117,12 @@
                     "end": {
                       "line": 1,
                       "column": 7
-                    }
+                    },
+                    "identifierName": "x"
                   },
                   "name": "x"
                 },
+                "shorthand": false,
                 "value": {
                   "type": "NumericLiteral",
                   "start": 9,
@@ -157,7 +159,6 @@
                   }
                 },
                 "method": false,
-                "shorthand": false,
                 "computed": false,
                 "key": {
                   "type": "Identifier",
@@ -171,10 +172,12 @@
                     "end": {
                       "line": 1,
                       "column": 13
-                    }
+                    },
+                    "identifierName": "x"
                   },
                   "name": "x"
                 },
+                "shorthand": false,
                 "value": {
                   "type": "NumericLiteral",
                   "start": 15,

@@ -2,12 +2,16 @@ import { getBindingIdentifiers } from "./retrievers";
 import * as t from "./index";
 import { BLOCK_SCOPED_SYMBOL } from "./constants";
 
-const { is, js: { compiler: { esutils } } } = adone;
+const {
+    is,
+    js: { compiler: { esutils } }
+} = adone;
 
 /**
  * Check if the input `node` is a binding identifier.
  */
-export const isBinding = (node, parent) => {
+
+export const isBinding = (node: Object, parent: Object): boolean => {
     const keys = getBindingIdentifiers.keys[parent.type];
     if (keys) {
         for (let i = 0; i < keys.length; i++) {
@@ -31,7 +35,8 @@ export const isBinding = (node, parent) => {
 /**
  * Check if the input `node` is a reference to a bound variable.
  */
-export const isReferenced = (node, parent) => {
+
+export const isReferenced = (node: Object, parent: Object): boolean => {
     switch (parent.type) {
         // yes: object::NODE
         // yes: NODE::callee
@@ -74,7 +79,7 @@ export const isReferenced = (node, parent) => {
         case "ArrowFunctionExpression":
         case "FunctionDeclaration":
         case "FunctionExpression":
-            for (const param of parent.params) {
+            for (const param of (parent.params: Array<any>)) {
                 if (param === node) {
                     return false;
                 }
@@ -168,8 +173,12 @@ export const isReferenced = (node, parent) => {
  * Check if the input `name` is a valid identifier name
  * and isn't a reserved word.
  */
-export const isValidIdentifier = (name) => {
-    if (!is.string(name) || esutils.keyword.isReservedWordES6(name, true)) {
+
+export const isValidIdentifier = (name: string): boolean => {
+    if (
+        !is.string(name) ||
+        esutils.keyword.isReservedWordES6(name, true)
+    ) {
         return false;
     } else if (name === "await") {
         // invalid in module, valid in script; better be safe (see #4952)
@@ -178,41 +187,60 @@ export const isValidIdentifier = (name) => {
     return esutils.keyword.isIdentifierNameES6(name);
 };
 
-
 /**
  * Check if the input `node` is a `let` variable declaration.
  */
-export const isLet = (node) => {
-    return t.isVariableDeclaration(node) && (node.kind !== "var" || node[BLOCK_SCOPED_SYMBOL]);
+
+export const isLet = (node: Object): boolean => {
+    return (
+        t.isVariableDeclaration(node) &&
+        (node.kind !== "var" || node[BLOCK_SCOPED_SYMBOL])
+    );
 };
 
 /**
  * Check if the input `node` is block scoped.
  */
-export const isBlockScoped = (node) => {
-    return t.isFunctionDeclaration(node) || t.isClassDeclaration(node) || t.isLet(node);
+
+export const isBlockScoped = (node: Object): boolean => {
+    return (
+        t.isFunctionDeclaration(node) || t.isClassDeclaration(node) || t.isLet(node)
+    );
 };
 
 /**
  * Check if the input `node` is a variable declaration.
  */
-export const isVar = (node) => {
-    return t.isVariableDeclaration(node, { kind: "var" }) && !node[BLOCK_SCOPED_SYMBOL];
+
+export const isVar = (node: Object): boolean => {
+    return (
+        t.isVariableDeclaration(node, { kind: "var" }) && !node[BLOCK_SCOPED_SYMBOL]
+    );
 };
 
 /**
  * Check if the input `specifier` is a `default` import or export.
  */
-export const isSpecifierDefault = (specifier) => {
-    return t.isImportDefaultSpecifier(specifier) ||
-        t.isIdentifier(specifier.imported || specifier.exported, { name: "default" });
+
+export const isSpecifierDefault = (specifier: Object): boolean => {
+    return (
+        t.isImportDefaultSpecifier(specifier) ||
+        t.isIdentifier(specifier.imported || specifier.exported, {
+            name: "default"
+        })
+    );
 };
 
 /**
  * Check if the input `node` is a scope.
  */
-export const isScope = (node, parent) => {
+
+export const isScope = (node: Object, parent: Object): boolean => {
     if (t.isBlockStatement(node) && t.isFunction(parent, { body: node })) {
+        return false;
+    }
+
+    if (t.isBlockStatement(node) && t.isCatchClause(parent, { body: node })) {
         return false;
     }
 
@@ -222,7 +250,8 @@ export const isScope = (node, parent) => {
 /**
  * Check if the input `node` is definitely immutable.
  */
-export const isImmutable = (node) => {
+
+export const isImmutable = (node: Object): boolean => {
     if (t.isType(node.type, "Immutable")) {
         return true;
     }
@@ -243,8 +272,9 @@ export const isImmutable = (node) => {
 /**
  * Check if two nodes are equivalent
  */
+
 export const isNodesEquivalent = (a, b) => {
-    if (!is.object(a) || !is.object(a)) {
+    if (typeof a !== "object" || typeof b !== "object" || is.nil(a) || is.nil(b)) {
         return a === b;
     }
 
@@ -255,7 +285,7 @@ export const isNodesEquivalent = (a, b) => {
     const fields = Object.keys(t.NODE_FIELDS[a.type] || a.type);
 
     for (const field of fields) {
-        if (!is.sameType(a[field], b[field])) {
+        if (typeof a[field] !== typeof b[field]) {
             return false;
         }
 

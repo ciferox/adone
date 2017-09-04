@@ -1,3 +1,0 @@
-{
-  "plugins": ["externalHelpers", "transform.constantElements", "transform.classes", "syntax.jsx"]
-}

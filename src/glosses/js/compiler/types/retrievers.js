@@ -3,7 +3,8 @@ import * as t from "./index";
 /**
  * Return a list of binding identifiers associated with the input `node`.
  */
-export const getBindingIdentifiers = (node, duplicates, outerOnly) => {
+
+export const getBindingIdentifiers = (node: Object, duplicates?: boolean, outerOnly?: boolean): Object => {
     let search = [].concat(node);
     const ids = Object.create(null);
 
@@ -17,7 +18,7 @@ export const getBindingIdentifiers = (node, duplicates, outerOnly) => {
 
         if (t.isIdentifier(id)) {
             if (duplicates) {
-                const _ids = ids[id.name] = ids[id.name] || [];
+                const _ids = (ids[id.name] = ids[id.name] || []);
                 _ids.push(id);
             } else {
                 ids[id.name] = id;
@@ -67,6 +68,7 @@ getBindingIdentifiers.keys = {
     DeclareVariable: ["id"],
     InterfaceDeclaration: ["id"],
     TypeAlias: ["id"],
+    OpaqueType: ["id"],
 
     CatchClause: ["param"],
     LabeledStatement: ["label"],
@@ -85,13 +87,15 @@ getBindingIdentifiers.keys = {
     FunctionDeclaration: ["id", "params"],
     FunctionExpression: ["id", "params"],
 
+    ForInStatement: ["left"],
+    ForOfStatement: ["left"],
+
     ClassDeclaration: ["id"],
     ClassExpression: ["id"],
 
     RestElement: ["argument"],
     UpdateExpression: ["argument"],
 
-    RestProperty: ["argument"],
     ObjectProperty: ["value"],
 
     AssignmentPattern: ["left"],
@@ -99,9 +103,7 @@ getBindingIdentifiers.keys = {
     ObjectPattern: ["properties"],
 
     VariableDeclaration: ["declarations"],
-    VariableDeclarator: ["id"]
+    VariableDeclarator: ["id"],
 };
 
-export const getOuterBindingIdentifiers = (node, duplicates) => {
-    return getBindingIdentifiers(node, duplicates, true);
-};
+export const getOuterBindingIdentifiers = (node: Object, duplicates?: boolean): Object => getBindingIdentifiers(node, duplicates, true);

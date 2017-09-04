@@ -84,7 +84,8 @@
                   "end": {
                     "line": 1,
                     "column": 2
-                  }
+                  },
+                  "identifierName": "a"
                 },
                 "name": "a"
               },
@@ -118,7 +119,6 @@
                       }
                     },
                     "method": false,
-                    "shorthand": false,
                     "computed": false,
                     "key": {
                       "type": "Identifier",
@@ -132,10 +132,12 @@
                         "end": {
                           "line": 1,
                           "column": 6
-                        }
+                        },
+                        "identifierName": "b"
                       },
                       "name": "b"
                     },
+                    "shorthand": false,
                     "value": {
                       "type": "ObjectPattern",
                       "start": 8,
@@ -166,7 +168,6 @@
                             }
                           },
                           "method": false,
-                          "shorthand": true,
                           "computed": false,
                           "key": {
                             "type": "Identifier",
@@ -180,10 +181,12 @@
                               "end": {
                                 "line": 1,
                                 "column": 10
-                              }
+                              },
+                              "identifierName": "c"
                             },
                             "name": "c"
                           },
+                          "shorthand": true,
                           "value": {
                             "type": "AssignmentPattern",
                             "start": 9,
@@ -210,7 +213,8 @@
                                 "end": {
                                   "line": 1,
                                   "column": 10
-                                }
+                                },
+                                "identifierName": "c"
                               },
                               "name": "c"
                             },
@@ -234,6 +238,9 @@
                               },
                               "value": 1
                             }
+                          },
+                          "extra": {
+                            "shorthand": true
                           }
                         }
                       ]
@@ -255,7 +262,8 @@
               "end": {
                 "line": 1,
                 "column": 23
-              }
+              },
+              "identifierName": "arr"
             },
             "name": "arr"
           }

@@ -1,11 +1,29 @@
-import * as virtualTypes from "./lib/virtual_types";
+import type Hub from "../hub";
+import type TraversalContext from "../context";
+import * as virtualTypes from "./lib/virtual-types";
 import traverse from "../index";
 import Scope from "../scope";
-const { x, js: { compiler: { types } } } = adone;
 import { path as pathCache } from "../cache";
 
+// NodePath is split across many files.
+import * as NodePath_ancestry from "./ancestry";
+import * as NodePath_inference from "./inference";
+import * as NodePath_replacement from "./replacement";
+import * as NodePath_evaluation from "./evaluation";
+import * as NodePath_conversion from "./conversion";
+import * as NodePath_introspection from "./introspection";
+import * as NodePath_context from "./context";
+import * as NodePath_removal from "./removal";
+import * as NodePath_modification from "./modification";
+import * as NodePath_family from "./family";
+import * as NodePath_comments from "./comments";
+
+const {
+    js: { compiler: { types: t } }
+} = adone;
+
 export default class NodePath {
-    constructor(hub, parent) {
+    constructor(hub: Hub, parent: Object) {
         this.parent = parent;
         this.hub = hub;
         this.contexts = [];
@@ -29,13 +47,35 @@ export default class NodePath {
         this.typeAnnotation = null;
     }
 
-    static get({ hub, parentPath, parent, container, listKey, key }) {
+    parent: Object;
+    hub: Hub;
+    contexts: Array<TraversalContext>;
+    data: Object;
+    shouldSkip: boolean;
+    shouldStop: boolean;
+    removed: boolean;
+    state: any;
+    opts: ?Object;
+    skipKeys: ?Object;
+    parentPath: ?NodePath;
+    context: TraversalContext;
+    container: ?Object | Array<Object>;
+    listKey: ?string;
+    inList: boolean;
+    parentKey: ?string;
+    key: ?string;
+    node: ?Object;
+    scope: Scope;
+    type: ?string;
+    typeAnnotation: ?Object;
+
+    static get({ hub, parentPath, parent, container, listKey, key }): NodePath {
         if (!hub && parentPath) {
             hub = parentPath.hub;
         }
 
         if (!parent) {
-            throw new x.Exception("To get a node path the parent needs to exist");
+            throw new adone.x.Exception("To get a node path the parent needs to exist");
         }
 
         const targetNode = container[key];
@@ -65,7 +105,7 @@ export default class NodePath {
         return path;
     }
 
-    getScope(scope) {
+    getScope(scope: Scope) {
         let ourScope = scope;
 
         // we're entering a new scope so let's construct it!
@@ -76,11 +116,11 @@ export default class NodePath {
         return ourScope;
     }
 
-    setData(key, val) {
-        return this.data[key] = val;
+    setData(key: string, val: any): any {
+        return (this.data[key] = val);
     }
 
-    getData(key, def) {
+    getData(key: string, def?: any): any {
         let val = this.data[key];
         if (!val && def) {
             val = this.data[key] = def;
@@ -88,15 +128,15 @@ export default class NodePath {
         return val;
     }
 
-    buildCodeFrameError(msg, Error = SyntaxError) {
+    buildCodeFrameError(msg: string, Error: typeof Error = SyntaxError): Error {
         return this.hub.file.buildCodeFrameError(this.node, msg, Error);
     }
 
-    traverse(visitor, state) {
+    traverse(visitor: Object, state?: any) {
         traverse(this.node, visitor, this.scope, state, this);
     }
 
-    mark(type, message) {
+    mark(type: string, message: string) {
         this.hub.file.metadata.marked.push({
             type,
             message,
@@ -104,50 +144,44 @@ export default class NodePath {
         });
     }
 
-    set(key, node) {
-        types.validate(this.node, key, node);
+    set(key: string, node: Object) {
+        t.validate(this.node, key, node);
         this.node[key] = node;
     }
 
-    getPathLocation() {
+    getPathLocation(): string {
         const parts = [];
         let path = this;
-        for ( ; ; ) {
+        do {
             let key = path.key;
             if (path.inList) {
                 key = `${path.listKey}[${key}]`;
             }
             parts.unshift(key);
-            path = path.parentPath;
-            if (!path) {
-                break;
-            }
-        }
+        } while ((path = path.parentPath));
         return parts.join(".");
-    }
-
-    debug(buildMessage) {
-        // TODO
-        // adone.log(`${this.getPathLocation()} ${this.type}: ${buildMessage()}`);
     }
 }
 
-Object.assign(NodePath.prototype, require("./ancestry"));
-Object.assign(NodePath.prototype, require("./inference"));
-Object.assign(NodePath.prototype, require("./replacement"));
-Object.assign(NodePath.prototype, require("./evaluation"));
-Object.assign(NodePath.prototype, require("./conversion"));
-Object.assign(NodePath.prototype, require("./introspection"));
-Object.assign(NodePath.prototype, require("./context"));
-Object.assign(NodePath.prototype, require("./removal"));
-Object.assign(NodePath.prototype, require("./modification"));
-Object.assign(NodePath.prototype, require("./family"));
-Object.assign(NodePath.prototype, require("./comments"));
+Object.assign(
+    NodePath.prototype,
+    NodePath_ancestry,
+    NodePath_inference,
+    NodePath_replacement,
+    NodePath_evaluation,
+    NodePath_conversion,
+    NodePath_introspection,
+    NodePath_context,
+    NodePath_removal,
+    NodePath_modification,
+    NodePath_family,
+    NodePath_comments,
+);
 
-for (const type of types.TYPES) {
+for (const type of (t.TYPES: Array<string>)) {
     const typeKey = `is${type}`;
     NodePath.prototype[typeKey] = function (opts) {
-        return types[typeKey](this.node, opts);
+        return t[typeKey](this.node, opts);
     };
 
     NodePath.prototype[`assert${type}`] = function (opts) {
@@ -161,8 +195,8 @@ for (const type in virtualTypes) {
     if (type[0] === "_") {
         continue;
     }
-    if (types.TYPES.indexOf(type) < 0) {
-        types.TYPES.push(type);
+    if (t.TYPES.indexOf(type) < 0) {
+        t.TYPES.push(type);
     }
 
     const virtualType = virtualTypes[type];

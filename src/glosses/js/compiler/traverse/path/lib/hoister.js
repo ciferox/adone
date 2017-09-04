@@ -1,4 +1,7 @@
-const { is, js: { compiler: { types: t } } } = adone;
+const {
+    js: { compiler: { types: t } }
+} = adone;
+
 const { react } = t;
 
 const referenceVisitor = {
@@ -17,36 +20,34 @@ const referenceVisitor = {
         // If the identifier refers to `this`, we need to break on the closest non-arrow scope.
         if (path.node.name === "this") {
             let scope = path.scope;
-            for ( ; ; ) {
-                if (scope.path.isFunction() && !scope.path.isArrowFunctionExpression()) {
+            do {
+                if (
+                    scope.path.isFunction() &&
+                    !scope.path.isArrowFunctionExpression()
+                ) {
                     break;
                 }
-                scope = scope.parent;
-                if (!scope) {
-                    break;
-                }
-            }
-            if (scope) {
-                state.breakOnScopePaths.push(scope.path);
+            } while ((scope = scope.parent));
+            if (scope) { 
+                state.breakOnScopePaths.push(scope.path); 
             }
         }
 
         // direct references that we need to track to hoist this to the highest scope we can
         const binding = path.scope.getBinding(path.node.name);
-        if (!binding) {
+        if (!binding) { 
             return;
         }
 
         // this binding isn't accessible from the parent scope so we can safely ignore it
         // eg. it's in a closure etc
-        if (binding !== state.scope.getBinding(path.node.name)) {
+        if (binding !== state.scope.getBinding(path.node.name)) { 
             return;
         }
 
         state.bindings[path.node.name] = binding;
     }
 };
-
 
 export default class PathHoister {
     constructor(path, scope) {
@@ -79,7 +80,7 @@ export default class PathHoister {
     // Look through all scopes and push compatible ones.
     getCompatibleScopes() {
         let scope = this.path.scope;
-        for ( ; ; ) {
+        do {
             if (this.isCompatibleScope(scope)) {
                 this.scopes.push(scope);
             } else {
@@ -90,17 +91,13 @@ export default class PathHoister {
             if (this.breakOnScopePaths.indexOf(scope.path) >= 0) {
                 break;
             }
-            scope = scope.parent;
-            if (!scope) {
-                break;
-            }
-        }
+        } while ((scope = scope.parent));
     }
 
     getAttachmentPath() {
         let path = this._getAttachmentPath();
-        if (!path) {
-            return;
+        if (!path) { 
+            return; 
         }
 
         let targetScope = path.scope;
@@ -120,18 +117,22 @@ export default class PathHoister {
 
                 const binding = this.bindings[name];
 
-                // allow parameter references
-                if (binding.kind === "param") {
+                // allow parameter references and expressions in params (like destructuring rest)
+                if (binding.kind === "param" || binding.path.parentKey === "params") {
                     continue;
                 }
 
-                // if this binding appears after our attachment point, then we move after it.
-                if (this.getAttachmentParentForPath(binding.path).key > path.key) {
+                // For each binding, get its attachment parent. This gives us an idea of where we might
+                // introduce conflicts.
+                const bindingParentPath = this.getAttachmentParentForPath(binding.path);
+
+                // If the binding's attachment appears at or after our attachment point, then we move after it.
+                if (bindingParentPath.key >= path.key) {
                     this.attachAfter = true;
                     path = binding.path;
 
                     // We also move past any constant violations.
-                    for (const violationPath of binding.constantViolations) {
+                    for (const violationPath of (binding.constantViolations: Array)) {
                         if (this.getAttachmentParentForPath(violationPath).key > path.key) {
                             path = violationPath;
                         }
@@ -154,23 +155,32 @@ export default class PathHoister {
 
         const scope = scopes.pop();
         // deopt: no compatible scopes
-        if (!scope) {
-            return;
+        if (!scope) { 
+            return; 
         }
 
         if (scope.path.isFunction()) {
             if (this.hasOwnParamBindings(scope)) {
                 // deopt: should ignore this scope since it's ourselves
-                if (this.scope === scope) {
-                    return;
+                if (this.scope === scope) { 
+                    return; 
                 }
 
                 // needs to be attached to the body
-                return scope.path.get("body").get("body")[0];
-            }
+                const bodies = scope.path.get("body").get("body");
+                for (let i = 0; i < bodies.length; i++) {
+                    // Don't attach to something that's going to get hoisted,
+                    // like a default parameter
+                    if (bodies[i].node._blockHoist) { 
+                        continue;
+                    }
+                    return bodies[i];
+                }
+                // deopt: If here, no attachment path found
+            } else {
                 // doesn't need to be be attached to this scope
-            return this.getNextScopeAttachmentParent();
-
+                return this.getNextScopeAttachmentParent();
+            }
         } else if (scope.path.isProgram()) {
             return this.getNextScopeAttachmentParent();
         }
@@ -178,8 +188,8 @@ export default class PathHoister {
 
     getNextScopeAttachmentParent() {
         const scope = this.scopes.pop();
-        if (scope) {
-            return this.getAttachmentParentForPath(scope.path);
+        if (scope) { 
+            return this.getAttachmentParentForPath(scope.path); 
         }
     }
 
@@ -190,13 +200,7 @@ export default class PathHoister {
                 // Beginning of the scope
                 !path.parentPath ||
                 // Has siblings and is a statement
-                (is.array(path.container) && path.isStatement()) ||
-                // Is part of multiple var declarations
-                (
-                    path.isVariableDeclarator() &&
-                    !is.null(path.parentPath.node) &&
-                    path.parentPath.node.declarations.length > 1
-                )
+                (adone.is.array(path.container) && path.isStatement())
             ) {
                 return path;
             }
@@ -206,13 +210,13 @@ export default class PathHoister {
     // Returns true if a scope has param bindings.
     hasOwnParamBindings(scope) {
         for (const name in this.bindings) {
-            if (!scope.hasOwnBinding(name)) {
-                continue;
+            if (!scope.hasOwnBinding(name)) { 
+                continue; 
             }
 
             const binding = this.bindings[name];
             // Ensure constant; without it we could place behind a reassignment
-            if (binding.kind === "param" && binding.constant) {
+            if (binding.kind === "param" && binding.constant) { 
                 return true;
             }
         }
@@ -220,12 +224,6 @@ export default class PathHoister {
     }
 
     run() {
-        const node = this.path.node;
-        if (node._hoisted) {
-            return;
-        }
-        node._hoisted = true;
-
         this.path.traverse(referenceVisitor, this);
 
         this.getCompatibleScopes();
@@ -238,7 +236,7 @@ export default class PathHoister {
         // don't bother hoisting to the same function as this will cause multiple branches to be
         // evaluated more than once leading to a bad optimisation
         if (attachTo.getFunctionParent() === this.path.getFunctionParent()) {
-            return;
+            return; 
         }
 
         // generate declaration and insert it to our point
@@ -247,7 +245,9 @@ export default class PathHoister {
 
         const insertFn = this.attachAfter ? "insertAfter" : "insertBefore";
         attachTo[insertFn]([
-            attachTo.isVariableDeclarator() ? declarator : t.variableDeclaration("var", [declarator])
+            attachTo.isVariableDeclarator()
+                ? declarator
+                : t.variableDeclaration("var", [declarator])
         ]);
 
         const parent = this.path.parentPath;

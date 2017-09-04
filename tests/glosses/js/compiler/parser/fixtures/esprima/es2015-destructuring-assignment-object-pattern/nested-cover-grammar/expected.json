@@ -387,7 +387,6 @@
                                                                                                   }
                                                                                                 },
                                                                                                 "method": false,
-                                                                                                "shorthand": true,
                                                                                                 "computed": false,
                                                                                                 "key": {
                                                                                                   "type": "Identifier",
@@ -401,10 +400,12 @@
                                                                                                     "end": {
                                                                                                       "line": 1,
                                                                                                       "column": 22
-                                                                                                    }
+                                                                                                    },
+                                                                                                    "identifierName": "a"
                                                                                                   },
                                                                                                   "name": "a"
                                                                                                 },
+                                                                                                "shorthand": true,
                                                                                                 "value": {
                                                                                                   "type": "AssignmentPattern",
                                                                                                   "start": 21,
@@ -431,7 +432,8 @@
                                                                                                       "end": {
                                                                                                         "line": 1,
                                                                                                         "column": 22
-                                                                                                      }
+                                                                                                      },
+                                                                                                      "identifierName": "a"
                                                                                                     },
                                                                                                     "name": "a"
                                                                                                   },
@@ -461,7 +463,8 @@
                                                                                                         "end": {
                                                                                                           "line": 1,
                                                                                                           "column": 24
-                                                                                                        }
+                                                                                                        },
+                                                                                                        "identifierName": "b"
                                                                                                       },
                                                                                                       "name": "b"
                                                                                                     },
@@ -487,6 +490,9 @@
                                                                                                     },
                                                                                                     "computed": true
                                                                                                   }
+                                                                                                },
+                                                                                                "extra": {
+                                                                                                  "shorthand": true
                                                                                                 }
                                                                                               }
                                                                                             ]

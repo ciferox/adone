@@ -1,9 +1,9 @@
 const {
-    js: { compiler: { types: t, helpers: { functionName } } },
+    js: { compiler: { types: t } },
     vendor: { lodash: { has } }
 } = adone;
 
-const toKind = (node) => {
+function toKind(node: Object) {
     if (t.isClassMethod(node) || t.isObjectMethod(node)) {
         if (node.kind === "get" || node.kind === "set") {
             return node.kind;
@@ -11,17 +11,21 @@ const toKind = (node) => {
     }
 
     return "value";
-};
+}
 
-export const push = (mutatorMap, node, kind, file, scope) => {
+export function push(
+    mutatorMap: Object,
+    node: Object,
+    kind: string,
+    file,
+    scope?,
+): Object {
     const alias = t.toKeyAlias(node);
 
     //
 
     let map = {};
-    if (has(mutatorMap, alias)) {
-        map = mutatorMap[alias];
-    }
+    if (has(mutatorMap, alias)) map = mutatorMap[alias];
     mutatorMap[alias] = map;
 
     //
@@ -36,27 +40,38 @@ export const push = (mutatorMap, node, kind, file, scope) => {
     }
 
     if (node.decorators) {
-        const decorators = map.decorators = map.decorators || t.arrayExpression([]);
+        const decorators = (map.decorators =
+            map.decorators || t.arrayExpression([]));
         decorators.elements = decorators.elements.concat(
-            node.decorators.map((dec) => dec.expression).reverse());
+            node.decorators.map(dec => dec.expression).reverse(),
+        );
     }
 
     if (map.value || map.initializer) {
         throw file.buildCodeFrameError(node, "Key conflict with sibling node");
     }
 
-    let key;
-    let value;
+    let key, value;
 
     // save the key so we can possibly do function name inferences
-    if (t.isObjectProperty(node) || t.isObjectMethod(node) || t.isClassMethod(node)) {
+    if (
+        t.isObjectProperty(node) ||
+        t.isObjectMethod(node) ||
+        t.isClassMethod(node)
+    ) {
         key = t.toComputedKey(node, node.key);
     }
 
     if (t.isObjectProperty(node) || t.isClassProperty(node)) {
         value = node.value;
     } else if (t.isObjectMethod(node) || t.isClassMethod(node)) {
-        value = t.functionExpression(null, node.params, node.body, node.generator, node.async);
+        value = t.functionExpression(
+            null,
+            node.params,
+            node.body,
+            node.generator,
+            node.async,
+        );
         value.returnType = node.returnType;
     }
 
@@ -66,9 +81,13 @@ export const push = (mutatorMap, node, kind, file, scope) => {
     }
 
     // infer function name
-    if (scope && t.isStringLiteral(key) && (kind === "value" || kind === "initializer") &&
-        t.isFunctionExpression(value)) {
-        value = functionName({ id: key, node: value, scope });
+    if (
+        scope &&
+        t.isStringLiteral(key) &&
+        (kind === "value" || kind === "initializer") &&
+        t.isFunctionExpression(value)
+    ) {
+        value = adone.js.compiler.helper.functionName({ id: key, node: value, scope });
     }
 
     if (value) {
@@ -77,49 +96,47 @@ export const push = (mutatorMap, node, kind, file, scope) => {
     }
 
     return map;
-};
+}
 
-export const hasComputed = (mutatorMap) => {
+export function hasComputed(mutatorMap: Object): boolean {
     for (const key in mutatorMap) {
         if (mutatorMap[key]._computed) {
             return true;
         }
     }
     return false;
-};
+}
 
-export const toComputedObjectFromClass = (obj) => {
+export function toComputedObjectFromClass(obj: Object): Object {
     const objExpr = t.arrayExpression([]);
 
     for (let i = 0; i < obj.properties.length; i++) {
         const prop = obj.properties[i];
         const val = prop.value;
-        val.properties.unshift(t.objectProperty(t.identifier("key"), t.toComputedKey(prop)));
+        val.properties.unshift(
+            t.objectProperty(t.identifier("key"), t.toComputedKey(prop)),
+        );
         objExpr.elements.push(val);
     }
 
     return objExpr;
-};
+}
 
-export const toClassObject = (mutatorMap) => {
+export function toClassObject(mutatorMap: Object): Object {
     const objExpr = t.objectExpression([]);
 
-    Object.keys(mutatorMap).forEach((mutatorMapKey) => {
+    Object.keys(mutatorMap).forEach(function (mutatorMapKey) {
         const map = mutatorMap[mutatorMapKey];
         const mapNode = t.objectExpression([]);
 
         const propNode = t.objectProperty(map._key, mapNode, map._computed);
 
-        Object.keys(map).forEach((key) => {
+        Object.keys(map).forEach(function (key) {
             let node = map[key];
-            if (key[0] === "_") {
-                return;
-            }
+            if (key[0] === "_") return;
 
             const inheritNode = node;
-            if (t.isClassMethod(node) || t.isClassProperty(node)) {
-                node = node.value;
-            }
+            if (t.isClassMethod(node) || t.isClassProperty(node)) node = node.value;
 
             const prop = t.objectProperty(t.identifier(key), node);
             t.inheritsComments(prop, inheritNode);
@@ -132,17 +149,15 @@ export const toClassObject = (mutatorMap) => {
     });
 
     return objExpr;
-};
+}
 
-export const toDefineObject = (mutatorMap) => {
-    Object.keys(mutatorMap).forEach((key) => {
+export function toDefineObject(mutatorMap: Object): Object {
+    Object.keys(mutatorMap).forEach(function (key) {
         const map = mutatorMap[key];
-        if (map.value) {
-            map.writable = t.booleanLiteral(true);
-        }
+        if (map.value) map.writable = t.booleanLiteral(true);
         map.configurable = t.booleanLiteral(true);
         map.enumerable = t.booleanLiteral(true);
     });
 
     return toClassObject(mutatorMap);
-};
+}

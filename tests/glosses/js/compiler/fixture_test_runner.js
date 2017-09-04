@@ -1,9 +1,11 @@
 // @flow
-const { codeFrame, core, helpers } = adone.js.compiler;
-const { sourcemap } = adone;
+const {
+    sourcemap,
+    js: { compiler: { codeFrame, core, helpers } },
+    vendor: { lodash },
+    std: { fs, path }
+} = adone;
 const { buildExternalHelpers } = core;
-const { lodash } = adone.vendor;
-const { fs, path } = adone.std;
 import helperFixture from "./helper_fixture";
 
 const babelHelpers = eval(buildExternalHelpers(null, "var"));
@@ -148,7 +150,7 @@ export default function (
                         sourceFileName: task.actual.filename,
                         sourceMapTarget: task.expect.filename,
                         suppressDeprecationMessages: true,
-                        rc: false,
+                        babelrc: false,
                         sourceMap: Boolean(task.sourceMappings || task.sourceMap)
                     });
 

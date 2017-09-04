@@ -69,7 +69,8 @@
               "end": {
                 "line": 1,
                 "column": 1
-              }
+              },
+              "identifierName": "f"
             },
             "name": "f"
           },
@@ -90,6 +91,7 @@
             "id": null,
             "generator": false,
             "expression": false,
+            "async": false,
             "params": [
               {
                 "type": "AssignmentPattern",
@@ -135,7 +137,6 @@
                         }
                       },
                       "method": false,
-                      "shorthand": true,
                       "computed": false,
                       "key": {
                         "type": "Identifier",
@@ -149,10 +150,12 @@
                           "end": {
                             "line": 1,
                             "column": 15
-                          }
+                          },
+                          "identifierName": "x"
                         },
                         "name": "x"
                       },
+                      "shorthand": true,
                       "value": {
                         "type": "Identifier",
                         "start": 14,
@@ -165,9 +168,13 @@
                           "end": {
                             "line": 1,
                             "column": 15
-                          }
+                          },
+                          "identifierName": "x"
                         },
                         "name": "x"
+                      },
+                      "extra": {
+                        "shorthand": true
                       }
                     }
                   ]
@@ -202,7 +209,6 @@
                         }
                       },
                       "method": false,
-                      "shorthand": false,
                       "computed": false,
                       "key": {
                         "type": "Identifier",
@@ -216,10 +222,12 @@
                           "end": {
                             "line": 1,
                             "column": 21
-                          }
+                          },
+                          "identifierName": "x"
                         },
                         "name": "x"
                       },
+                      "shorthand": false,
                       "value": {
                         "type": "NumericLiteral",
                         "start": 23,

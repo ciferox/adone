@@ -72,7 +72,6 @@
                 }
               },
               "method": true,
-              "shorthand": false,
               "computed": false,
               "key": {
                 "type": "Identifier",
@@ -86,7 +85,8 @@
                   "end": {
                     "line": 1,
                     "column": 4
-                  }
+                  },
+                  "identifierName": "x"
                 },
                 "name": "x"
               },
@@ -94,6 +94,7 @@
               "id": null,
               "generator": false,
               "expression": false,
+              "async": false,
               "params": [
                 {
                   "type": "ArrayPattern",
@@ -122,7 +123,8 @@
                         "end": {
                           "line": 1,
                           "column": 8
-                        }
+                        },
+                        "identifierName": "a"
                       },
                       "name": "a"
                     },
@@ -138,7 +140,8 @@
                         "end": {
                           "line": 1,
                           "column": 11
-                        }
+                        },
+                        "identifierName": "b"
                       },
                       "name": "b"
                     }
@@ -165,7 +168,8 @@
             }
           ],
           "extra": {
-            "parenthesized": true
+            "parenthesized": true,
+            "parenStart": 0
           }
         }
       }

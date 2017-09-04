@@ -87,7 +87,6 @@
                     }
                   },
                   "method": false,
-                  "shorthand": true,
                   "computed": false,
                   "key": {
                     "type": "Identifier",
@@ -101,10 +100,12 @@
                       "end": {
                         "line": 1,
                         "column": 6
-                      }
+                      },
+                      "identifierName": "x"
                     },
                     "name": "x"
                   },
+                  "shorthand": true,
                   "value": {
                     "type": "Identifier",
                     "start": 5,
@@ -117,9 +118,13 @@
                       "end": {
                         "line": 1,
                         "column": 6
-                      }
+                      },
+                      "identifierName": "x"
                     },
                     "name": "x"
+                  },
+                  "extra": {
+                    "shorthand": true
                   }
                 }
               ],
@@ -156,7 +161,7 @@
                     {
                       "type": "ObjectTypeProperty",
                       "start": 10,
-                      "end": 20,
+                      "end": 19,
                       "loc": {
                         "start": {
                           "line": 1,
@@ -164,7 +169,7 @@
                         },
                         "end": {
                           "line": 1,
-                          "column": 20
+                          "column": 19
                         }
                       },
                       "key": {
@@ -179,10 +184,13 @@
                           "end": {
                             "line": 1,
                             "column": 11
-                          }
+                          },
+                          "identifierName": "x"
                         },
                         "name": "x"
                       },
+                      "static": false,
+                      "kind": "init",
                       "value": {
                         "type": "StringTypeAnnotation",
                         "start": 13,
@@ -198,11 +206,12 @@
                           }
                         }
                       },
-                      "optional": false,
-                      "variance": null
+                      "variance": null,
+                      "optional": false
                     }
                   ],
-                  "indexers": []
+                  "indexers": [],
+                  "exact": false
                 }
               }
             },
@@ -236,7 +245,6 @@
                     }
                   },
                   "method": false,
-                  "shorthand": false,
                   "computed": false,
                   "key": {
                     "type": "Identifier",
@@ -250,10 +258,12 @@
                       "end": {
                         "line": 1,
                         "column": 28
-                      }
+                      },
+                      "identifierName": "x"
                     },
                     "name": "x"
                   },
+                  "shorthand": false,
                   "value": {
                     "type": "StringLiteral",
                     "start": 30,

@@ -123,7 +123,6 @@
                       }
                     },
                     "method": false,
-                    "shorthand": false,
                     "computed": false,
                     "key": {
                       "type": "Identifier",
@@ -142,6 +141,7 @@
                       },
                       "name": "id"
                     },
+                    "shorthand": false,
                     "value": {
                       "type": "ArrowFunctionExpression",
                       "start": 55,
@@ -156,6 +156,7 @@
                           "column": 80
                         }
                       },
+                      "predicate": null,
                       "returnType": {
                         "type": "TypeAnnotation",
                         "start": 68,
@@ -202,8 +203,7 @@
                             },
                             "name": "T"
                           }
-                        },
-                        "predicate": null
+                        }
                       },
                       "id": null,
                       "generator": false,

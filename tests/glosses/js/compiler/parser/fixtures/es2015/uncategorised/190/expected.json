@@ -102,7 +102,6 @@
                         }
                       },
                       "method": false,
-                      "shorthand": true,
                       "computed": false,
                       "key": {
                         "type": "Identifier",
@@ -116,10 +115,12 @@
                           "end": {
                             "line": 1,
                             "column": 8
-                          }
+                          },
+                          "identifierName": "a"
                         },
                         "name": "a"
                       },
+                      "shorthand": true,
                       "value": {
                         "type": "Identifier",
                         "start": 7,
@@ -132,9 +133,13 @@
                           "end": {
                             "line": 1,
                             "column": 8
-                          }
+                          },
+                          "identifierName": "a"
                         },
                         "name": "a"
+                      },
+                      "extra": {
+                        "shorthand": true
                       }
                     },
                     {
@@ -152,7 +157,6 @@
                         }
                       },
                       "method": false,
-                      "shorthand": true,
                       "computed": false,
                       "key": {
                         "type": "Identifier",
@@ -166,10 +170,12 @@
                           "end": {
                             "line": 1,
                             "column": 11
-                          }
+                          },
+                          "identifierName": "b"
                         },
                         "name": "b"
                       },
+                      "shorthand": true,
                       "value": {
                         "type": "Identifier",
                         "start": 10,
@@ -182,9 +188,13 @@
                           "end": {
                             "line": 1,
                             "column": 11
-                          }
+                          },
+                          "identifierName": "b"
                         },
                         "name": "b"
+                      },
+                      "extra": {
+                        "shorthand": true
                       }
                     }
                   ]
@@ -215,7 +225,8 @@
                       "end": {
                         "line": 1,
                         "column": 19
-                      }
+                      },
+                      "identifierName": "c"
                     },
                     "name": "c"
                   }
@@ -234,7 +245,8 @@
                 "end": {
                   "line": 1,
                   "column": 24
-                }
+                },
+                "identifierName": "d"
               },
               "name": "d"
             }

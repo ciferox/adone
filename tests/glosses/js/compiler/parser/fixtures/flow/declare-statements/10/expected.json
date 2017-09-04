@@ -54,12 +54,14 @@
             "end": {
               "line": 1,
               "column": 15
-            }
+            },
+            "identifierName": "A"
           },
           "name": "A"
         },
         "typeParameters": null,
         "extends": [],
+        "mixins": [],
         "body": {
           "type": "ObjectTypeAnnotation",
           "start": 16,
@@ -79,7 +81,7 @@
             {
               "type": "ObjectTypeProperty",
               "start": 18,
-              "end": 39,
+              "end": 38,
               "loc": {
                 "start": {
                   "line": 1,
@@ -87,9 +89,28 @@
                 },
                 "end": {
                   "line": 1,
-                  "column": 39
+                  "column": 38
                 }
               },
+              "key": {
+                "type": "Identifier",
+                "start": 25,
+                "end": 28,
+                "loc": {
+                  "start": {
+                    "line": 1,
+                    "column": 25
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 28
+                  },
+                  "identifierName": "foo"
+                },
+                "name": "foo"
+              },
+              "static": true,
+              "kind": "init",
               "value": {
                 "type": "FunctionTypeAnnotation",
                 "start": 18,
@@ -123,23 +144,6 @@
                   }
                 }
               },
-              "static": true,
-              "key": {
-                "type": "Identifier",
-                "start": 25,
-                "end": 28,
-                "loc": {
-                  "start": {
-                    "line": 1,
-                    "column": 25
-                  },
-                  "end": {
-                    "line": 1,
-                    "column": 28
-                  }
-                },
-                "name": "foo"
-              },
               "optional": false
             },
             {
@@ -168,10 +172,13 @@
                   "end": {
                     "line": 1,
                     "column": 48
-                  }
+                  },
+                  "identifierName": "x"
                 },
                 "name": "x"
               },
+              "static": true,
+              "kind": "init",
               "value": {
                 "type": "StringTypeAnnotation",
                 "start": 51,
@@ -187,15 +194,15 @@
                   }
                 }
               },
-              "optional": false,
-              "static": true,
-              "variance": null
+              "variance": null,
+              "optional": false
             }
           ],
-          "indexers": []
+          "indexers": [],
+          "exact": false
         }
       }
-    ]
-  },
-  "comments": []
+    ],
+    "directives": []
+  }
 }

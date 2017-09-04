@@ -1,7 +1,0 @@
-{
-  "plugins": [
-    "externalHelpers",
-    "transform.asyncToGenerator",
-    "transform.classProperties"
-  ]
-}

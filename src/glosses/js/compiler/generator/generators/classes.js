@@ -1,5 +1,27 @@
-export const ClassDeclaration = function (node) {
-    this.printJoin(node.decorators, node);
+const {
+    js: { compiler: { types: t } }
+} = adone;
+
+export function ClassDeclaration(node: Object, parent: Object) {
+    if (
+        !t.isExportDefaultDeclaration(parent) &&
+        !t.isExportNamedDeclaration(parent)
+    ) {
+        this.printJoin(node.decorators, node);
+    }
+
+    if (node.declare) {
+        // TS
+        this.word("declare");
+        this.space();
+    }
+
+    if (node.abstract) {
+        // TS
+        this.word("abstract");
+        this.space();
+    }
+
     this.word("class");
 
     if (node.id) {
@@ -26,11 +48,11 @@ export const ClassDeclaration = function (node) {
 
     this.space();
     this.print(node.body, node);
-};
+}
 
 export { ClassDeclaration as ClassExpression };
 
-export const ClassBody = function (node) {
+export function ClassBody(node: Object) {
     this.token("{");
     this.printInnerComments(node);
     if (node.body.length === 0) {
@@ -42,19 +64,34 @@ export const ClassBody = function (node) {
         this.printSequence(node.body, node);
         this.dedent();
 
-        if (!this.endsWith("\n")) {
-            this.newline();
+        if (!this.endsWith("\n")) { 
+            this.newline(); 
         }
 
         this.rightBrace();
     }
-};
+}
 
-export const ClassProperty = function (node) {
+export function ClassProperty(node: Object) {
     this.printJoin(node.decorators, node);
 
+    if (node.accessibility) {
+        // TS
+        this.word(node.accessibility);
+        this.space();
+    }
     if (node.static) {
         this.word("static");
+        this.space();
+    }
+    if (node.abstract) {
+        // TS
+        this.word("abstract");
+        this.space();
+    }
+    if (node.readonly) {
+        // TS
+        this.word("readonly");
         this.space();
     }
     if (node.computed) {
@@ -65,6 +102,12 @@ export const ClassProperty = function (node) {
         this._variance(node);
         this.print(node.key, node);
     }
+
+    if (node.optional) {
+        // TS
+        this.token("?");
+    }
+
     this.print(node.typeAnnotation, node);
     if (node.value) {
         this.space();
@@ -73,20 +116,33 @@ export const ClassProperty = function (node) {
         this.print(node.value, node);
     }
     this.semicolon();
-};
+}
 
-export const ClassMethod = function (node) {
+export function ClassMethod(node: Object) {
+    this._classMethodHead(node);
+    this.space();
+    this.print(node.body, node);
+}
+
+export function _classMethodHead(node) {
     this.printJoin(node.decorators, node);
+
+    if (node.accessibility) {
+        // TS
+        this.word(node.accessibility);
+        this.space();
+    }
+
+    if (node.abstract) {
+        // TS
+        this.word("abstract");
+        this.space();
+    }
 
     if (node.static) {
         this.word("static");
         this.space();
     }
 
-    if (node.kind === "constructorCall") {
-        this.word("call");
-        this.space();
-    }
-
-    this._method(node);
-};
+    this._methodHead(node);
+}

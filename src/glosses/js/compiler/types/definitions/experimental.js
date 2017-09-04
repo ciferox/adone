@@ -11,22 +11,6 @@ defineType("AwaitExpression", {
     }
 });
 
-defineType("ForAwaitStatement", {
-    visitor: ["left", "right", "body"],
-    aliases: ["Scopable", "Statement", "For", "BlockParent", "Loop", "ForXStatement"],
-    fields: {
-        left: {
-            validate: assertNodeType("VariableDeclaration", "LVal")
-        },
-        right: {
-            validate: assertNodeType("Expression")
-        },
-        body: {
-            validate: assertNodeType("Statement")
-        }
-    }
-});
-
 defineType("BindExpression", {
     visitor: ["object", "callee"],
     aliases: ["Expression"],
@@ -74,26 +58,6 @@ defineType("ExportNamespaceSpecifier", {
     fields: {
         exported: {
             validate: assertNodeType("Identifier")
-        }
-    }
-});
-
-defineType("RestProperty", {
-    visitor: ["argument"],
-    aliases: ["UnaryLike"],
-    fields: {
-        argument: {
-            validate: assertNodeType("LVal")
-        }
-    }
-});
-
-defineType("SpreadProperty", {
-    visitor: ["argument"],
-    aliases: ["UnaryLike"],
-    fields: {
-        argument: {
-            validate: assertNodeType("Expression")
         }
     }
 });

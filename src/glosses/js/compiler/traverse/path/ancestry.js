@@ -1,16 +1,19 @@
-const { is, js: { compiler: { types: t } } } = adone;
+// This file contains that retrieve or validate anything related to the current paths ancestry.
+
+import NodePath from "./index";
+
+const {
+    js: { compiler: { types: t } }
+} = adone;
 
 /**
  * Call the provided `callback` with the `NodePath`s of all the parents.
  * When the `callback` returns a truthy value, we return that node path.
  */
-export const findParent = function (callback) {
+
+export const findParent = function (callback): ?NodePath {
     let path = this;
-    for ( ; ; ) {
-        path = path.parentPath;
-        if (!path) {
-            break;
-        }
+    while ((path = path.parentPath)) {
         if (callback(path)) {
             return path;
         }
@@ -19,19 +22,17 @@ export const findParent = function (callback) {
 };
 
 /**
- * Description
+ * Starting at current `NodePath` and going up the tree, return the first
+ * `NodePath` that causes the provided `callback` to return a truthy value.
  */
-export const find = function (callback) {
+
+export const find = function (callback): ?NodePath {
     let path = this;
-    for ( ; ; ) {
+    do {
         if (callback(path)) {
             return path;
         }
-        path = path.parentPath;
-        if (!path) {
-            break;
-        }
-    }
+    } while ((path = path.parentPath));
     return null;
 };
 
@@ -39,25 +40,35 @@ export const find = function (callback) {
  * Get the parent function of the current path.
  */
 
-export const getFunctionParent = function () {
-    return this.findParent((path) => path.isFunction() || path.isProgram());
+export const getFunctionParent = function (): ?NodePath {
+    return this.findParent((p) => p.isFunction());
 };
 
 /**
  * Walk up the tree until we hit a parent node path in a list.
  */
 
-export const getStatementParent = function () {
+export const getStatementParent = function (): NodePath {
     let path = this;
-    for ( ; ; ) {
-        if (is.array(path.container)) {
-            return path;
-        }
-        path = path.parentPath;
-        if (!path) {
+
+    do {
+        if (
+            !path.parentPath ||
+            (adone.is.array(path.container) && path.isStatement())
+        ) {
             break;
+        } else {
+            path = path.parentPath;
         }
+    } while (path);
+
+    if (path && (path.isProgram() || path.isFile())) {
+        throw new Error(
+            "File/Program node, we can't possibly find a statement parent to this",
+        );
     }
+
+    return path;
 };
 
 /**
@@ -67,12 +78,19 @@ export const getStatementParent = function () {
  * Earliest is defined as being "before" all the other nodes in terms of list container
  * position and visiting key.
  */
-export const getEarliestCommonAncestorFrom = function (paths) {
-    return this.getDeepestCommonAncestorFrom(paths, (deepest, i, ancestries) => {
+
+export const getEarliestCommonAncestorFrom = function (
+    paths: Array<NodePath>,
+): NodePath {
+    return this.getDeepestCommonAncestorFrom(paths, (
+        deepest,
+        i,
+        ancestries,
+    ) => {
         let earliest;
         const keys = t.VISITOR_KEYS[deepest.type];
 
-        for (const ancestry of ancestries) {
+        for (const ancestry of (ancestries: Array)) {
             const path = ancestry[i + 1];
 
             // first path
@@ -108,7 +126,11 @@ export const getEarliestCommonAncestorFrom = function (paths) {
  *
  * TODO: Possible optimisation target.
  */
-export const getDeepestCommonAncestorFrom = function (paths, filter) {
+
+export const getDeepestCommonAncestorFrom = function (
+    paths: Array<NodePath>,
+    filter?: Function,
+): NodePath {
     if (!paths.length) {
         return this;
     }
@@ -147,7 +169,7 @@ export const getDeepestCommonAncestorFrom = function (paths, filter) {
     depthLoop: for (let i = 0; i < minDepth; i++) {
         const shouldMatch = first[i];
 
-        for (const ancestry of ancestries) {
+        for (const ancestry of (ancestries: Array)) {
             if (ancestry[i] !== shouldMatch) {
                 // we've hit a snag
                 break depthLoop;
@@ -176,37 +198,33 @@ export const getDeepestCommonAncestorFrom = function (paths, filter) {
  * NOTE: The current node path is included in this.
  */
 
-export const getAncestry = function () {
+export const getAncestry = function (): Array<NodePath> {
     let path = this;
     const paths = [];
-    for ( ; ; ) {
+    do {
         paths.push(path);
-        path = path.parentPath;
-        if (!path) {
-            break;
-        }
-    }
+    } while ((path = path.parentPath));
     return paths;
 };
 
 /**
  * A helper to find if `this` path is an ancestor of @param maybeDescendant
  */
-export const isAncestor = function (maybeDescendant) {
+export const isAncestor = function (maybeDescendant: NodePath): boolean {
     return maybeDescendant.isDescendant(this);
 };
 
 /**
  * A helper to find if `this` path is a descendant of @param maybeAncestor
  */
-export const isDescendant = function (maybeAncestor) {
+export const isDescendant = function (maybeAncestor: NodePath): boolean {
     return Boolean(this.findParent((parent) => parent === maybeAncestor));
 };
 
-export const inType = function (...args) {
+export const inType = function (): boolean {
     let path = this;
     while (path) {
-        for (const type of args) {
+        for (const type of (arguments: Array)) {
             if (path.node.type === type) {
                 return true;
             }
@@ -215,61 +233,4 @@ export const inType = function (...args) {
     }
 
     return false;
-};
-
-/**
- * Checks whether the binding for 'key' is a local binding in its current function context.
- *
- * Checks if the current path either is, or has a direct parent function that is, inside
- * of a function that is marked for shadowing of a binding matching 'key'. Also returns
- * the parent path if the parent path is an arrow, since arrow functions pass through
- * binding values to their parent, meaning they have no local bindings.
- *
- * Shadowing means that when the given binding is transformed, it will read the binding
- * value from the container containing the shadow function, rather than from inside the
- * shadow function.
- *
- * Function shadowing is acheieved by adding a "shadow" property on "FunctionExpression"
- * and "FunctionDeclaration" node types.
- *
- * Node's "shadow" props have the following behavior:
- *
- * - Boolean true will cause the function to shadow both "this" and "arguments".
- * - {this: false} Shadows "arguments" but not "this".
- * - {arguments: false} Shadows "this" but not "arguments".
- *
- * Separately, individual identifiers can be flagged with two flags:
- *
- * - _forceShadow - If truthy, this specific identifier will be bound in the closest
- *    Function that is not flagged "shadow", or the Program.
- * - _shadowedFunctionLiteral - When set to a NodePath, this specific identifier will be bound
- *    to this NodePath/Node or the Program. If this path is not found relative to the
- *    starting location path, the closest function will be used.
- *
- * Please Note, these flags are for private internal use only and should be avoided.
- * Only "shadow" is a public property that other transforms may manipulate.
- */
-export const inShadow = function (key) {
-    const parentFn = this.isFunction() ? this : this.findParent((p) => p.isFunction());
-    if (!parentFn) {
-        return;
-    }
-
-    if (parentFn.isFunctionExpression() || parentFn.isFunctionDeclaration()) {
-        const shadow = parentFn.node.shadow;
-
-        // this is because sometimes we may have a `shadow` value of:
-        //
-        //   { this: false }
-        //
-        // we need to catch this case if `inShadow` has been passed a `key`
-        if (shadow && (!key || shadow[key] !== false)) {
-            return parentFn;
-        }
-    } else if (parentFn.isArrowFunctionExpression()) {
-        return parentFn;
-    }
-
-    // normal function, we've found our function context
-    return null;
 };

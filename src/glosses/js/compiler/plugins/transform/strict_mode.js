@@ -1,4 +1,6 @@
-const { js: { compiler: { types: t } } } = adone;
+const {
+    js: { compiler: { types: t } }
+} = adone;
 
 export default function () {
     return {
@@ -10,13 +12,16 @@ export default function () {
 
                 const { node } = path;
 
-                for (const directive of node.directives) {
+                for (const directive of (node.directives: Array<Object>)) {
                     if (directive.value.value === "use strict") {
                         return;
                     }
                 }
 
-                path.unshiftContainer("directives", t.directive(t.directiveLiteral("use strict")));
+                path.unshiftContainer(
+                    "directives",
+                    t.directive(t.directiveLiteral("use strict")),
+                );
             }
         }
     };

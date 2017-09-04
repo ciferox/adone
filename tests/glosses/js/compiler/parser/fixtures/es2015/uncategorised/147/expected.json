@@ -87,7 +87,6 @@
                     }
                   },
                   "method": false,
-                  "shorthand": false,
                   "computed": true,
                   "key": {
                     "type": "Identifier",
@@ -101,10 +100,12 @@
                       "end": {
                         "line": 1,
                         "column": 7
-                      }
+                      },
+                      "identifierName": "x"
                     },
                     "name": "x"
                   },
+                  "shorthand": false,
                   "value": {
                     "type": "Identifier",
                     "start": 10,
@@ -117,7 +118,8 @@
                       "end": {
                         "line": 1,
                         "column": 11
-                      }
+                      },
+                      "identifierName": "y"
                     },
                     "name": "y"
                   }
@@ -154,7 +156,6 @@
                     }
                   },
                   "method": false,
-                  "shorthand": true,
                   "computed": false,
                   "key": {
                     "type": "Identifier",
@@ -168,10 +169,12 @@
                       "end": {
                         "line": 1,
                         "column": 17
-                      }
+                      },
+                      "identifierName": "y"
                     },
                     "name": "y"
                   },
+                  "shorthand": true,
                   "value": {
                     "type": "Identifier",
                     "start": 16,
@@ -184,9 +187,13 @@
                       "end": {
                         "line": 1,
                         "column": 17
-                      }
+                      },
+                      "identifierName": "y"
                     },
                     "name": "y"
+                  },
+                  "extra": {
+                    "shorthand": true
                   }
                 }
               ]

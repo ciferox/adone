@@ -123,7 +123,6 @@
                         }
                       },
                       "method": false,
-                      "shorthand": false,
                       "key": {
                         "type": "Identifier",
                         "start": 21,
@@ -141,6 +140,8 @@
                         },
                         "name": "async"
                       },
+                      "computed": false,
+                      "shorthand": false,
                       "value": {
                         "type": "Identifier",
                         "start": 28,

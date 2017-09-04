@@ -1,3 +1,0 @@
-{
-  "plugins": ["externalHelpers", "transform.parameters", "transform.asyncToGenerator"]
-}

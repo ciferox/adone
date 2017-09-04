@@ -54,7 +54,8 @@
             "end": {
               "line": 1,
               "column": 12
-            }
+            },
+            "identifierName": "foo"
           },
           "name": "foo"
         },
@@ -92,7 +93,6 @@
                   }
                 },
                 "method": false,
-                "shorthand": true,
                 "computed": false,
                 "key": {
                   "type": "Identifier",
@@ -106,10 +106,12 @@
                     "end": {
                       "line": 1,
                       "column": 15
-                    }
+                    },
+                    "identifierName": "x"
                   },
                   "name": "x"
                 },
+                "shorthand": true,
                 "value": {
                   "type": "Identifier",
                   "start": 14,
@@ -122,9 +124,13 @@
                     "end": {
                       "line": 1,
                       "column": 15
-                    }
+                    },
+                    "identifierName": "x"
                   },
                   "name": "x"
+                },
+                "extra": {
+                  "shorthand": true
                 }
               }
             ],
@@ -161,7 +167,7 @@
                   {
                     "type": "ObjectTypeProperty",
                     "start": 20,
-                    "end": 30,
+                    "end": 29,
                     "loc": {
                       "start": {
                         "line": 1,
@@ -169,7 +175,7 @@
                       },
                       "end": {
                         "line": 1,
-                        "column": 30
+                        "column": 29
                       }
                     },
                     "key": {
@@ -184,10 +190,13 @@
                         "end": {
                           "line": 1,
                           "column": 21
-                        }
+                        },
+                        "identifierName": "x"
                       },
                       "name": "x"
                     },
+                    "static": false,
+                    "kind": "init",
                     "value": {
                       "type": "StringTypeAnnotation",
                       "start": 23,
@@ -203,11 +212,12 @@
                         }
                       }
                     },
-                    "optional": false,
-                    "variance": null
+                    "variance": null,
+                    "optional": false
                   }
                 ],
-                "indexers": []
+                "indexers": [],
+                "exact": false
               }
             }
           }

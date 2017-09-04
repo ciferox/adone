@@ -1,4 +1,11 @@
-const { is, sourcemap } = adone;
+const {
+    is,
+    sourcemap
+} = adone;
+
+/**
+ * Build a sourcemap.
+ */
 
 export default class SourceMap {
     constructor(opts, code) {
@@ -8,17 +15,21 @@ export default class SourceMap {
         this._rawMappings = [];
     }
 
+    /**
+     * Get the sourcemap.
+     */
+
     get() {
         if (!this._cachedMap) {
-            const map = this._cachedMap = new sourcemap.Generator({
+            const map = (this._cachedMap = sourcemap.createGenerator({
                 file: this._opts.sourceMapTarget,
                 sourceRoot: this._opts.sourceRoot
-            });
+            }));
 
             const code = this._code;
             if (is.string(code)) {
                 map.setSourceContent(this._opts.sourceFileName, code);
-            } else if (is.object(code)) {
+            } else if (typeof code === "object") {
                 Object.keys(code).forEach((sourceFileName) => {
                     map.setSourceContent(sourceFileName, code[sourceFileName]);
                 });
@@ -40,22 +51,25 @@ export default class SourceMap {
      */
 
     mark(
-        generatedLine,
-        generatedColumn,
-        line,
-        column,
-        identifierName,
-        filename
+        generatedLine: number,
+        generatedColumn: number,
+        line: number,
+        column: number,
+        identifierName: ?string,
+        filename: ?string,
     ) {
         // Adding an empty mapping at the start of a generated line just clutters the map.
-        if (this._lastGenLine !== generatedLine && is.null(line)) {
-            return;
+        if (this._lastGenLine !== generatedLine && is.null(line)) { 
+            return; 
         }
 
         // If this mapping points to the same source location as the last one, we can ignore it since
         // the previous one covers it.
-        if (this._lastGenLine === generatedLine && this._lastSourceLine === line &&
-            this._lastSourceColumn === column) {
+        if (
+            this._lastGenLine === generatedLine &&
+            this._lastSourceLine === line &&
+            this._lastSourceColumn === column
+        ) {
             return;
         }
 
@@ -73,11 +87,14 @@ export default class SourceMap {
                 line: generatedLine,
                 column: generatedColumn
             },
-            source: adone.is.nil(line) ? undefined : filename || this._opts.sourceFileName,
-            original: adone.is.nil(line) ? undefined : {
-                line,
-                column
-            }
+            source: is.nil(line) ? undefined : filename || this._opts.sourceFileName,
+            original:
+            is.nil(line)
+                ? undefined
+                : {
+                    line,
+                    column
+                }
         });
     }
 }

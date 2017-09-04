@@ -69,7 +69,8 @@
               "end": {
                 "line": 1,
                 "column": 1
-              }
+              },
+              "identifierName": "x"
             },
             "name": "x"
           },
@@ -103,7 +104,6 @@
                   }
                 },
                 "method": true,
-                "shorthand": false,
                 "computed": false,
                 "key": {
                   "type": "Identifier",
@@ -117,7 +117,8 @@
                     "end": {
                       "line": 1,
                       "column": 12
-                    }
+                    },
+                    "identifierName": "method"
                   },
                   "name": "method"
                 },
@@ -125,6 +126,7 @@
                 "id": null,
                 "generator": false,
                 "expression": false,
+                "async": false,
                 "params": [
                   {
                     "type": "Identifier",
@@ -138,7 +140,8 @@
                       "end": {
                         "line": 1,
                         "column": 17
-                      }
+                      },
+                      "identifierName": "test"
                     },
                     "name": "test"
                   }

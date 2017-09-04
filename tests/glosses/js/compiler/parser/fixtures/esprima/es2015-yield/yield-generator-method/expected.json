@@ -72,7 +72,6 @@
                 }
               },
               "method": true,
-              "shorthand": false,
               "computed": false,
               "key": {
                 "type": "Identifier",
@@ -86,7 +85,8 @@
                   "end": {
                     "line": 1,
                     "column": 9
-                  }
+                  },
+                  "identifierName": "yield"
                 },
                 "name": "yield"
               },
@@ -94,6 +94,7 @@
               "id": null,
               "generator": true,
               "expression": false,
+              "async": false,
               "params": [],
               "body": {
                 "type": "BlockStatement",
@@ -115,7 +116,8 @@
             }
           ],
           "extra": {
-            "parenthesized": true
+            "parenthesized": true,
+            "parenStart": 0
           }
         }
       }

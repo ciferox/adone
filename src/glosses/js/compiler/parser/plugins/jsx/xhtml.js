@@ -1,4 +1,6 @@
-export default {
+// @flow
+
+const entities: { [name: string]: string } = {
     quot: "\u0022",
     amp: "&",
     apos: "\u0027",
@@ -251,5 +253,6 @@ export default {
     spades: "\u2660",
     clubs: "\u2663",
     hearts: "\u2665",
-    diams: "\u2666"
+    diams: "\u2666",
 };
+export default entities;

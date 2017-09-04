@@ -1,19 +1,21 @@
-
-const { core, transformation: { Plugin } } = adone.js.compiler;
-const transform = core.transform;
+const {
+    js: { compiler: { core: { transform, Plugin } } }
+} = adone;
 
 describe("js", "compiler", "core", "traversal path", () => {
     it("replaceWithSourceString", () => {
         const expectCode = "function foo() {}";
 
         const actualCode = transform(expectCode, {
-            plugins: [new Plugin({
-                visitor: {
-                    FunctionDeclaration(path) {
-                        path.replaceWithSourceString("console.whatever()");
+            plugins: [
+                new Plugin({
+                    visitor: {
+                        FunctionDeclaration(path) {
+                            path.replaceWithSourceString("console.whatever()");
+                        }
                     }
-                }
-            })]
+                })
+            ]
         }).code;
 
         expect(actualCode).to.be.equal("console.whatever();");
@@ -23,22 +25,26 @@ describe("js", "compiler", "core", "traversal path", () => {
         const expectCode = "var fn = () => true;";
 
         const actualCode = transform(expectCode, {
-            plugins: [new Plugin({
-                visitor: {
-                    ArrowFunctionExpression(path) {
-                        path.get("body").replaceWith({
-                            type: "BlockStatement",
-                            body: [{
-                                type: "ReturnStatement",
-                                argument: {
-                                    type: "BooleanLiteral",
-                                    value: true
-                                }
-                            }]
-                        });
+            plugins: [
+                new Plugin({
+                    visitor: {
+                        ArrowFunctionExpression(path) {
+                            path.get("body").replaceWith({
+                                type: "BlockStatement",
+                                body: [
+                                    {
+                                        type: "ReturnStatement",
+                                        argument: {
+                                            type: "BooleanLiteral",
+                                            value: true
+                                        }
+                                    }
+                                ]
+                            });
+                        }
                     }
-                }
-            })]
+                })
+            ]
         }).code;
 
         expect(actualCode).to.be.equal("var fn = () => {\n  return true;\n};");
@@ -48,16 +54,18 @@ describe("js", "compiler", "core", "traversal path", () => {
         const expectCode = "var fn = () => { return true; }";
 
         const actualCode = transform(expectCode, {
-            plugins: [new Plugin({
-                visitor: {
-                    ArrowFunctionExpression(path) {
-                        path.get("body").replaceWith({
-                            type: "BooleanLiteral",
-                            value: true
-                        });
+            plugins: [
+                new Plugin({
+                    visitor: {
+                        ArrowFunctionExpression(path) {
+                            path.get("body").replaceWith({
+                                type: "BooleanLiteral",
+                                value: true
+                            });
+                        }
                     }
-                }
-            })]
+                })
+            ]
         }).code;
 
         expect(actualCode).to.be.equal("var fn = () => true;");
@@ -67,23 +75,27 @@ describe("js", "compiler", "core", "traversal path", () => {
         const expectCode = "for (KEY in right);";
 
         const actualCode = transform(expectCode, {
-            plugins: [new Plugin({
-                visitor: {
-                    ForInStatement(path) {
-                        path.get("left").replaceWith({
-                            type: "VariableDeclaration",
-                            kind: "var",
-                            declarations: [{
-                                type: "VariableDeclarator",
-                                id: {
-                                    type: "Identifier",
-                                    name: "KEY"
-                                }
-                            }]
-                        });
+            plugins: [
+                new Plugin({
+                    visitor: {
+                        ForInStatement(path) {
+                            path.get("left").replaceWith({
+                                type: "VariableDeclaration",
+                                kind: "var",
+                                declarations: [
+                                    {
+                                        type: "VariableDeclarator",
+                                        id: {
+                                            type: "Identifier",
+                                            name: "KEY"
+                                        }
+                                    }
+                                ]
+                            });
+                        }
                     }
-                }
-            })]
+                })
+            ]
         }).code;
 
         expect(actualCode).to.be.equal("for (var KEY in right);");
@@ -93,16 +105,18 @@ describe("js", "compiler", "core", "traversal path", () => {
         const expectCode = "for (var KEY in right);";
 
         const actualCode = transform(expectCode, {
-            plugins: [new Plugin({
-                visitor: {
-                    ForInStatement(path) {
-                        path.get("left").replaceWith({
-                            type: "Identifier",
-                            name: "KEY"
-                        });
+            plugins: [
+                new Plugin({
+                    visitor: {
+                        ForInStatement(path) {
+                            path.get("left").replaceWith({
+                                type: "Identifier",
+                                name: "KEY"
+                            });
+                        }
                     }
-                }
-            })]
+                })
+            ]
         }).code;
 
         expect(actualCode).to.be.equal("for (KEY in right);");
@@ -112,23 +126,27 @@ describe("js", "compiler", "core", "traversal path", () => {
         const expectCode = "for (KEY;;);";
 
         const actualCode = transform(expectCode, {
-            plugins: [new Plugin({
-                visitor: {
-                    ForStatement(path) {
-                        path.get("init").replaceWith({
-                            type: "VariableDeclaration",
-                            kind: "var",
-                            declarations: [{
-                                type: "VariableDeclarator",
-                                id: {
-                                    type: "Identifier",
-                                    name: "KEY"
-                                }
-                            }]
-                        });
+            plugins: [
+                new Plugin({
+                    visitor: {
+                        ForStatement(path) {
+                            path.get("init").replaceWith({
+                                type: "VariableDeclaration",
+                                kind: "var",
+                                declarations: [
+                                    {
+                                        type: "VariableDeclarator",
+                                        id: {
+                                            type: "Identifier",
+                                            name: "KEY"
+                                        }
+                                    }
+                                ]
+                            });
+                        }
                     }
-                }
-            })]
+                })
+            ]
         }).code;
 
         expect(actualCode).to.be.equal("for (var KEY;;);");
@@ -138,16 +156,18 @@ describe("js", "compiler", "core", "traversal path", () => {
         const expectCode = "for (var KEY;;);";
 
         const actualCode = transform(expectCode, {
-            plugins: [new Plugin({
-                visitor: {
-                    ForStatement(path) {
-                        path.get("init").replaceWith({
-                            type: "Identifier",
-                            name: "KEY"
-                        });
+            plugins: [
+                new Plugin({
+                    visitor: {
+                        ForStatement(path) {
+                            path.get("init").replaceWith({
+                                type: "Identifier",
+                                name: "KEY"
+                            });
+                        }
                     }
-                }
-            })]
+                })
+            ]
         }).code;
 
         expect(actualCode).to.be.equal("for (KEY;;);");

@@ -87,7 +87,6 @@
                   }
                 },
                 "method": false,
-                "shorthand": true,
                 "computed": false,
                 "key": {
                   "type": "Identifier",
@@ -101,10 +100,12 @@
                     "end": {
                       "line": 2,
                       "column": 5
-                    }
+                    },
+                    "identifierName": "a"
                   },
                   "name": "a"
                 },
+                "shorthand": true,
                 "value": {
                   "type": "Identifier",
                   "start": 7,
@@ -117,9 +118,13 @@
                     "end": {
                       "line": 2,
                       "column": 5
-                    }
+                    },
+                    "identifierName": "a"
                   },
                   "name": "a"
+                },
+                "extra": {
+                  "shorthand": true
                 }
               },
               {
@@ -137,7 +142,6 @@
                   }
                 },
                 "method": false,
-                "shorthand": false,
                 "computed": false,
                 "key": {
                   "type": "Identifier",
@@ -151,10 +155,12 @@
                     "end": {
                       "line": 3,
                       "column": 5
-                    }
+                    },
+                    "identifierName": "a"
                   },
                   "name": "a"
                 },
+                "shorthand": false,
                 "value": {
                   "type": "Identifier",
                   "start": 16,
@@ -167,7 +173,8 @@
                     "end": {
                       "line": 3,
                       "column": 7
-                    }
+                    },
+                    "identifierName": "a"
                   },
                   "name": "a"
                 }
@@ -187,7 +194,6 @@
                   }
                 },
                 "method": false,
-                "shorthand": false,
                 "computed": false,
                 "key": {
                   "type": "Identifier",
@@ -201,10 +207,12 @@
                     "end": {
                       "line": 4,
                       "column": 5
-                    }
+                    },
+                    "identifierName": "a"
                   },
                   "name": "a"
                 },
+                "shorthand": false,
                 "value": {
                   "type": "AssignmentPattern",
                   "start": 25,
@@ -231,7 +239,8 @@
                       "end": {
                         "line": 4,
                         "column": 7
-                      }
+                      },
+                      "identifierName": "a"
                     },
                     "name": "a"
                   },
@@ -247,7 +256,8 @@
                       "end": {
                         "line": 4,
                         "column": 9
-                      }
+                      },
+                      "identifierName": "a"
                     },
                     "name": "a"
                   }
@@ -268,7 +278,6 @@
                   }
                 },
                 "method": false,
-                "shorthand": false,
                 "computed": true,
                 "key": {
                   "type": "Identifier",
@@ -282,10 +291,12 @@
                     "end": {
                       "line": 5,
                       "column": 6
-                    }
+                    },
+                    "identifierName": "a"
                   },
                   "name": "a"
                 },
+                "shorthand": false,
                 "value": {
                   "type": "ObjectPattern",
                   "start": 38,
@@ -316,7 +327,6 @@
                         }
                       },
                       "method": false,
-                      "shorthand": true,
                       "computed": false,
                       "key": {
                         "type": "Identifier",
@@ -330,10 +340,12 @@
                           "end": {
                             "line": 5,
                             "column": 10
-                          }
+                          },
+                          "identifierName": "a"
                         },
                         "name": "a"
                       },
+                      "shorthand": true,
                       "value": {
                         "type": "Identifier",
                         "start": 39,
@@ -346,9 +358,13 @@
                           "end": {
                             "line": 5,
                             "column": 10
-                          }
+                          },
+                          "identifierName": "a"
                         },
                         "name": "a"
+                      },
+                      "extra": {
+                        "shorthand": true
                       }
                     }
                   ]
@@ -369,7 +385,6 @@
                   }
                 },
                 "method": false,
-                "shorthand": false,
                 "computed": false,
                 "key": {
                   "type": "Identifier",
@@ -383,10 +398,12 @@
                     "end": {
                       "line": 6,
                       "column": 5
-                    }
+                    },
+                    "identifierName": "a"
                   },
                   "name": "a"
                 },
+                "shorthand": false,
                 "value": {
                   "type": "MemberExpression",
                   "start": 49,
@@ -427,7 +444,8 @@
                         "end": {
                           "line": 6,
                           "column": 15
-                        }
+                        },
+                        "identifierName": "some_call"
                       },
                       "name": "some_call"
                     },
@@ -445,7 +463,8 @@
                       "end": {
                         "line": 6,
                         "column": 19
-                      }
+                      },
+                      "identifierName": "a"
                     },
                     "name": "a"
                   },
@@ -467,7 +486,6 @@
                   }
                 },
                 "method": false,
-                "shorthand": false,
                 "computed": false,
                 "key": {
                   "type": "Identifier",
@@ -481,10 +499,12 @@
                     "end": {
                       "line": 7,
                       "column": 5
-                    }
+                    },
+                    "identifierName": "a"
                   },
                   "name": "a"
                 },
+                "shorthand": false,
                 "value": {
                   "type": "MemberExpression",
                   "start": 71,
@@ -526,7 +546,8 @@
                       "end": {
                         "line": 7,
                         "column": 12
-                      }
+                      },
+                      "identifierName": "a"
                     },
                     "name": "a"
                   },
@@ -556,7 +577,8 @@
             "value": 0
           },
           "extra": {
-            "parenthesized": true
+            "parenthesized": true,
+            "parenStart": 0
           }
         }
       }

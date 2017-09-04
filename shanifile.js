@@ -21,9 +21,9 @@ export default {
     transpiler: {
         plugins: [
             "transform.flowStripTypes",
-            "transform.decoratorsLegacy",
+            "transform.decorators",
             "transform.classProperties",
-            "transform.ESModules",
+            "transform.es2015ModulesCommonjs",
             "transform.functionBind",
             "transform.objectRestSpread",
             ["transform.importReplace", {
@@ -44,7 +44,7 @@ export default {
             }]
         ],
         compact: false,
-        ignore: /glosses.vendor/
+        ignore: [/glosses.vendor/]
     },
     mapping: async (p) => {
         if (await fs.exists(p)) {

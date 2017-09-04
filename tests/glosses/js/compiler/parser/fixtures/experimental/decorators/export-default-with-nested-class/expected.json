@@ -44,34 +44,17 @@
         },
         "declaration": {
           "type": "ClassDeclaration",
-          "start": 32,
+          "start": 0,
           "end": 109,
           "loc": {
             "start": {
-              "line": 2,
-              "column": 15
+              "line": 1,
+              "column": 0
             },
             "end": {
               "line": 7,
               "column": 1
             }
-          },
-          "id": {
-            "type": "Identifier",
-            "start": 38,
-            "end": 49,
-            "loc": {
-              "start": {
-                "line": 2,
-                "column": 21
-              },
-              "end": {
-                "line": 2,
-                "column": 32
-              },
-              "identifierName": "ParentClass"
-            },
-            "name": "ParentClass"
           },
           "decorators": [
             {
@@ -107,6 +90,23 @@
               }
             }
           ],
+          "id": {
+            "type": "Identifier",
+            "start": 38,
+            "end": 49,
+            "loc": {
+              "start": {
+                "line": 2,
+                "column": 21
+              },
+              "end": {
+                "line": 2,
+                "column": 32
+              },
+              "identifierName": "ParentClass"
+            },
+            "name": "ParentClass"
+          },
           "superClass": null,
           "body": {
             "type": "ClassBody",
@@ -137,6 +137,7 @@
                     "column": 3
                   }
                 },
+                "static": false,
                 "computed": false,
                 "key": {
                   "type": "Identifier",
@@ -155,7 +156,6 @@
                   },
                   "name": "makeNestedClass"
                 },
-                "static": false,
                 "kind": "method",
                 "id": null,
                 "generator": false,

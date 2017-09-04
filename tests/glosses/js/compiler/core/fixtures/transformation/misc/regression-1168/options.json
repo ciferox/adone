@@ -1,0 +1,3 @@
+{
+  "plugins": ["syntax.flow", "transform.flowStripTypes", "transform.es2015Parameters", "transform.es2015BlockScoping"]
+}

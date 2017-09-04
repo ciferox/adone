@@ -1,61 +1,64 @@
-const { fs } = adone.std;
-
 import File from "./transformation/file";
-import options from "./transformation/file/options/config";
 import buildExternalHelpers from "./tools/build_external_helpers";
-export { File, options, buildExternalHelpers };
 
-import * as util from "./util";
-export { util };
+import { getEnv } from "./config/helpers/environment";
+import Plugin from "./config/plugin";
+import { makeStrongCache, makeWeakCache } from "./config/caching";
+import buildConfigChain from "./config/build_config_chain";
+import manageOptions from "./config/option_manager";
 
-const { messages, types, traverse, template } = adone.js.compiler;
-export { messages, types, traverse, template };
+const {
+    js: { compiler: { types, messages } }
+} = adone;
 
-import OptionManager from "./transformation/file/options/option_manager";
-export { OptionManager };
+export {
+    File,
+    Plugin,
+    buildExternalHelpers,
+    getEnv,
+    types,
+    messages,
+    makeStrongCache,
+    makeWeakCache,
+    buildConfigChain,
+    manageOptions
+};
 
-export class Plugin {
-    constructor(alias) {
-        throw new Error(`The (${alias}) Babel 5 plugin is being run with Babel 6.`);
+import loadConfig from "./config";
+
+export const loadOptions = (opts): Object | null => {
+    const config = loadConfig(opts);
+
+    return config ? config.options : null;
+};
+
+// For easier backward-compatibility, provide an API like the one we exposed in Babel 6.
+export class OptionManager {
+    init(opts) {
+        return loadOptions(opts);
     }
 }
 
-import Pipeline from "./transformation/pipeline";
-export { Pipeline };
+// export function Plugin(alias) {
+//     throw new Error(`The (${alias}) Babel 5 plugin is being run with Babel 6.`);
+// }
 
-const pipeline = new Pipeline();
-export const analyse = pipeline.analyse.bind(pipeline);
-export const transform = pipeline.transform.bind(pipeline);
-export const transformFromAst = pipeline.transformFromAst.bind(pipeline);
+export {
+    transform,
+    analyse,
+    transformFromAst,
+    transformFile,
+    transformFileSync
+} from "./transformation/pipeline";
 
-export const transformFile = (filename, opts, callback) => {
-    if (adone.is.function(opts)) {
-        callback = opts;
-        opts = {};
-    }
-
-    opts.filename = filename;
-
-    fs.readFile(filename, (err, code) => {
-        let result;
-
-        if (!err) {
-            try {
-                result = transform(code, opts);
-            } catch (_err) {
-                err = _err;
-            }
-        }
-
-        if (err) {
-            callback(err);
-        } else {
-            callback(null, result);
-        }
-    });
-};
-
-export const transformFileSync = (filename, opts = {}) => {
-    opts.filename = filename;
-    return transform(fs.readFileSync(filename, "utf8"), opts);
-};
+/**
+ * Recommended set of compilable extensions. Not used in babel-core directly, but meant as
+ * as an easy source for tooling making use of babel-core.
+ */
+export const DEFAULT_EXTENSIONS = Object.freeze([
+    ".js",
+    ".jsx",
+    ".es6",
+    ".es",
+    ".mjs"
+]);

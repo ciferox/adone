@@ -42,6 +42,7 @@
             "column": 18
           }
         },
+        "await": false,
         "left": {
           "type": "ObjectPattern",
           "start": 5,
@@ -72,7 +73,6 @@
                 }
               },
               "method": false,
-              "shorthand": true,
               "computed": false,
               "key": {
                 "type": "Identifier",
@@ -86,10 +86,12 @@
                   "end": {
                     "line": 1,
                     "column": 7
-                  }
+                  },
+                  "identifierName": "x"
                 },
                 "name": "x"
               },
+              "shorthand": true,
               "value": {
                 "type": "Identifier",
                 "start": 6,
@@ -102,9 +104,13 @@
                   "end": {
                     "line": 1,
                     "column": 7
-                  }
+                  },
+                  "identifierName": "x"
                 },
                 "name": "x"
+              },
+              "extra": {
+                "shorthand": true
               }
             },
             {
@@ -122,7 +128,6 @@
                 }
               },
               "method": false,
-              "shorthand": true,
               "computed": false,
               "key": {
                 "type": "Identifier",
@@ -136,10 +141,12 @@
                   "end": {
                     "line": 1,
                     "column": 10
-                  }
+                  },
+                  "identifierName": "y"
                 },
                 "name": "y"
               },
+              "shorthand": true,
               "value": {
                 "type": "Identifier",
                 "start": 9,
@@ -152,9 +159,13 @@
                   "end": {
                     "line": 1,
                     "column": 10
-                  }
+                  },
+                  "identifierName": "y"
                 },
                 "name": "y"
+              },
+              "extra": {
+                "shorthand": true
               }
             }
           ]
@@ -171,7 +182,8 @@
             "end": {
               "line": 1,
               "column": 16
-            }
+            },
+            "identifierName": "z"
           },
           "name": "z"
         },

@@ -68,7 +68,8 @@
               "end": {
                 "line": 1,
                 "column": 3
-              }
+              },
+              "identifierName": "foo"
             },
             "name": "foo"
           },
@@ -103,7 +104,6 @@
                     }
                   },
                   "method": false,
-                  "shorthand": true,
                   "key": {
                     "type": "Identifier",
                     "start": 6,
@@ -116,10 +116,13 @@
                       "end": {
                         "line": 1,
                         "column": 11
-                      }
+                      },
+                      "identifierName": "async"
                     },
                     "name": "async"
                   },
+                  "computed": false,
+                  "shorthand": true,
                   "value": {
                     "type": "Identifier",
                     "start": 6,
@@ -132,9 +135,13 @@
                       "end": {
                         "line": 1,
                         "column": 11
-                      }
+                      },
+                      "identifierName": "async"
                     },
                     "name": "async"
+                  },
+                  "extra": {
+                    "shorthand": true
                   }
                 }
               ]

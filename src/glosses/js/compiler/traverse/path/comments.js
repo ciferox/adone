@@ -1,13 +1,12 @@
 // This file contains methods responsible for dealing with comments.
 
-const { is } = adone;
-
 /**
  * Share comments amongst siblings.
  */
+
 export const shareCommentsWithSiblings = function () {
     // NOTE: this assumes numbered keys
-    if (is.string(this.key)) {
+    if (adone.is.string(this.key)) {
         return;
     }
 
@@ -22,32 +21,32 @@ export const shareCommentsWithSiblings = function () {
         return;
     }
 
-    let prev = this.getSibling(this.key - 1);
-    let next = this.getSibling(this.key + 1);
-
-    if (!prev.node) {
-        prev = next;
+    const prev = this.getSibling(this.key - 1);
+    const next = this.getSibling(this.key + 1);
+    const hasPrev = Boolean(prev.node);
+    const hasNext = Boolean(next.node);
+    if (hasPrev && hasNext) {
+    } else if (hasPrev) {
+        prev.addComments("trailing", trailing);
+    } else if (hasNext) {
+        next.addComments("leading", leading);
     }
-    if (!next.node) {
-        next = prev;
-    }
-
-    prev.addComments("trailing", leading);
-    next.addComments("leading", trailing);
 };
 
-export const addComment = function (type, content, line) {
-    this.addComments(type, [{
-        type: line ? "CommentLine" : "CommentBlock",
-        value: content
-    }]);
+export const addComment = function (type, content, line?) {
+    this.addComments(type, [
+        {
+            type: line ? "CommentLine" : "CommentBlock",
+            value: content
+        }
+    ]);
 };
 
 /**
  * Give node `comments` of the specified `type`.
  */
 
-export const addComments = function (type, comments) {
+export const addComments = function (type: string, comments: Array) {
     if (!comments) {
         return;
     }
@@ -60,7 +59,11 @@ export const addComments = function (type, comments) {
     const key = `${type}Comments`;
 
     if (node[key]) {
-        node[key] = node[key].concat(comments);
+        if (type === "leading") {
+            node[key] = comments.concat(node[key]);
+        } else {
+            node[key] = node[key].concat(comments);
+        }
     } else {
         node[key] = comments;
     }

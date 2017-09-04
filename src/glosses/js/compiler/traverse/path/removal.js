@@ -1,8 +1,10 @@
 // This file contains methods responsible for removing a node.
 
-import { hooks } from "./lib/removal_hooks";
+import { hooks } from "./lib/removal-hooks";
 
-const { is } = adone;
+const {
+    is
+} = adone;
 
 export const remove = function () {
     this._assertUnremoved();
@@ -20,7 +22,7 @@ export const remove = function () {
 };
 
 export const _callRemovalHooks = function () {
-    for (const fn of hooks) {
+    for (const fn of (hooks: Array<Function>)) {
         if (fn(this, this.parentPath)) {
             return true;
         }
@@ -44,6 +46,8 @@ export const _markRemoved = function () {
 
 export const _assertUnremoved = function () {
     if (this.removed) {
-        throw this.buildCodeFrameError("NodePath has been removed so is read-only.");
+        throw this.buildCodeFrameError(
+            "NodePath has been removed so is read-only.",
+        );
     }
 };

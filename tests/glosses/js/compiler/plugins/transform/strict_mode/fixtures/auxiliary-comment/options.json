@@ -1,5 +1,0 @@
-{
-  "plugins": ["transform.strictMode"],
-  "auxiliaryCommentBefore": "before",
-  "auxiliaryCommentAfter": "after"
-}

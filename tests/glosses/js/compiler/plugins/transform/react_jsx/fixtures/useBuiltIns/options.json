@@ -1,3 +1,0 @@
-{
-  "plugins": [["transform.reactJsx", { "useBuiltIns": true }]]
-}

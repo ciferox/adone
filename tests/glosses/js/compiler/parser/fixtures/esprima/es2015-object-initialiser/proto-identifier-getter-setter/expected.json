@@ -72,7 +72,6 @@
                 }
               },
               "method": false,
-              "shorthand": false,
               "computed": false,
               "key": {
                 "type": "Identifier",
@@ -86,10 +85,12 @@
                   "end": {
                     "line": 1,
                     "column": 12
-                  }
+                  },
+                  "identifierName": "__proto__"
                 },
                 "name": "__proto__"
               },
+              "shorthand": false,
               "value": {
                 "type": "NullLiteral",
                 "start": 14,
@@ -121,7 +122,6 @@
                 }
               },
               "method": false,
-              "shorthand": false,
               "computed": false,
               "key": {
                 "type": "Identifier",
@@ -135,7 +135,8 @@
                   "end": {
                     "line": 1,
                     "column": 33
-                  }
+                  },
+                  "identifierName": "__proto__"
                 },
                 "name": "__proto__"
               },
@@ -143,6 +144,7 @@
               "id": null,
               "generator": false,
               "expression": false,
+              "async": false,
               "params": [],
               "body": {
                 "type": "BlockStatement",
@@ -177,7 +179,6 @@
                 }
               },
               "method": false,
-              "shorthand": false,
               "computed": false,
               "key": {
                 "type": "Identifier",
@@ -191,7 +192,8 @@
                   "end": {
                     "line": 1,
                     "column": 52
-                  }
+                  },
+                  "identifierName": "__proto__"
                 },
                 "name": "__proto__"
               },
@@ -199,6 +201,7 @@
               "id": null,
               "generator": false,
               "expression": false,
+              "async": false,
               "params": [
                 {
                   "type": "Identifier",
@@ -212,7 +215,8 @@
                     "end": {
                       "line": 1,
                       "column": 54
-                    }
+                    },
+                    "identifierName": "x"
                   },
                   "name": "x"
                 }
@@ -237,7 +241,8 @@
             }
           ],
           "extra": {
-            "parenthesized": true
+            "parenthesized": true,
+            "parenStart": 0
           }
         }
       }

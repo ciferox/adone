@@ -1,13 +1,17 @@
-const { js: { compiler: { types: t, template, helpers: { getFunctionArity } } } } = adone;
+const {
+    js: { compiler: { types: t, template, helper: { getFunctionArity } } }
+} = adone;
 
 const buildPropertyMethodAssignmentWrapper = template(`
   (function (FUNCTION_KEY) {
     function FUNCTION_ID() {
       return FUNCTION_KEY.apply(this, arguments);
     }
+
     FUNCTION_ID.toString = function () {
       return FUNCTION_KEY.toString();
     }
+
     return FUNCTION_ID;
   })(FUNCTION)
 `);
@@ -17,9 +21,11 @@ const buildGeneratorPropertyMethodAssignmentWrapper = template(`
     function* FUNCTION_ID() {
       return yield* FUNCTION_KEY.apply(this, arguments);
     }
+
     FUNCTION_ID.toString = function () {
       return FUNCTION_KEY.toString();
     };
+
     return FUNCTION_ID;
   })(FUNCTION)
 `);
@@ -64,7 +70,6 @@ const wrap = (state, method, id, scope) => {
                 FUNCTION_ID: id,
                 FUNCTION_KEY: scope.generateUidIdentifier(id.name)
             }).expression;
-            template.callee._skipModulesRemap = true;
 
             // shim in dummy params to retain function arity, if you try to read the
             // source then you'll get the original since it's proxied so it's all good
@@ -133,7 +138,11 @@ export default function ({ node, parent, scope, id }) {
         return;
     }
 
-    if ((t.isObjectProperty(parent) || t.isObjectMethod(parent, { kind: "method" })) && (!parent.computed || t.isLiteral(parent.key))) {
+    if (
+        (t.isObjectProperty(parent) ||
+            t.isObjectMethod(parent, { kind: "method" })) &&
+        (!parent.computed || t.isLiteral(parent.key))
+    ) {
         // { foo() {} };
         id = parent.key;
     } else if (t.isVariableDeclarator(parent)) {
@@ -142,7 +151,11 @@ export default function ({ node, parent, scope, id }) {
 
         if (t.isIdentifier(id)) {
             const binding = scope.parent.getBinding(id.name);
-            if (binding && binding.constant && scope.getBinding(id.name) === binding) {
+            if (
+                binding &&
+                binding.constant &&
+                scope.getBinding(id.name) === binding
+            ) {
                 // always going to reference this method
                 node.id = id;
                 node.id[t.NOT_LOCAL_BINDING] = true;

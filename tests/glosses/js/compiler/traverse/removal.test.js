@@ -1,4 +1,6 @@
-const { parse, generate, traverse } = adone.js.compiler;
+const {
+    js: { compiler: { parse, generate, traverse } }
+} = adone;
 
 const getPath = (code) => {
     const ast = parse(code);
@@ -13,9 +15,7 @@ const getPath = (code) => {
     return path;
 };
 
-const generateCode = (path) => {
-    return generate(path.node).code;
-};
+const generateCode = (path) => generate(path.node).code;
 
 describe("js", "compiler", "traverse", "removal", () => {
     describe("ArrowFunction", () => {
@@ -25,7 +25,11 @@ describe("js", "compiler", "traverse", "removal", () => {
             const body = path.get("body");
             body.remove();
 
-            assert.equal(generateCode(rootPath), "x = () => {};", "body should be replaced with BlockStatement");
+            assert.equal(
+                generateCode(rootPath),
+                "x = () => {};",
+                "body should be replaced with BlockStatement",
+            );
         });
     });
 });

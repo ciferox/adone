@@ -87,7 +87,6 @@
                   }
                 },
                 "method": false,
-                "shorthand": true,
                 "computed": false,
                 "key": {
                   "type": "Identifier",
@@ -101,10 +100,12 @@
                     "end": {
                       "line": 1,
                       "column": 3
-                    }
+                    },
+                    "identifierName": "x"
                   },
                   "name": "x"
                 },
+                "shorthand": true,
                 "value": {
                   "type": "AssignmentPattern",
                   "start": 2,
@@ -131,7 +132,8 @@
                       "end": {
                         "line": 1,
                         "column": 3
-                      }
+                      },
+                      "identifierName": "x"
                     },
                     "name": "x"
                   },
@@ -155,6 +157,9 @@
                     },
                     "value": 0
                   }
+                },
+                "extra": {
+                  "shorthand": true
                 }
               }
             ]
@@ -171,12 +176,14 @@
               "end": {
                 "line": 1,
                 "column": 14
-              }
+              },
+              "identifierName": "obj"
             },
             "name": "obj"
           },
           "extra": {
-            "parenthesized": true
+            "parenthesized": true,
+            "parenStart": 0
           }
         }
       }

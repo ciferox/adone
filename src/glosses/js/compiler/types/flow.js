@@ -3,7 +3,8 @@ import * as t from "./index";
 /**
  * Dedupe type annotations.
  */
-export const removeTypeDuplicates = (nodes) => {
+
+export const removeTypeDuplicates = (nodes: Array<Object>): Array<Object> => {
     const generics = {};
     const bases = {};
 
@@ -52,7 +53,7 @@ export const removeTypeDuplicates = (nodes) => {
                 if (existing.typeParameters) {
                     if (node.typeParameters) {
                         existing.typeParameters.params = removeTypeDuplicates(
-                            existing.typeParameters.params.concat(node.typeParameters.params)
+                            existing.typeParameters.params.concat(node.typeParameters.params),
                         );
                     }
                 } else {
@@ -85,20 +86,22 @@ export const removeTypeDuplicates = (nodes) => {
  * Takes an array of `types` and flattens them, removing duplicates and
  * returns a `UnionTypeAnnotation` node containg them.
  */
-export const createUnionTypeAnnotation = (types) => {
+
+export const createUnionTypeAnnotation = (types: Array<Object>) => {
     const flattened = removeTypeDuplicates(types);
 
     if (flattened.length === 1) {
         return flattened[0];
     }
     return t.unionTypeAnnotation(flattened);
+
 };
 
 /**
  * Create a type anotation based on typeof expression.
  */
 
-export const createTypeAnnotationBasedOnTypeof = (type) => {
+export const createTypeAnnotationBasedOnTypeof = (type: string) => {
     if (type === "string") {
         return t.stringTypeAnnotation();
     } else if (type === "number") {

@@ -2,9 +2,18 @@ import TraversalContext from "./context";
 import * as visitors from "./visitors";
 import * as cache from "./cache";
 
-const { js: { compiler: { types: t, messages } }, vendor: { lodash: { includes } } } = adone;
+const {
+    js: { compiler: { messages, types: t } },
+    vendor: { lodash: { includes } }
+} = adone;
 
-export default function traverse(parent, opts, scope, state, parentPath) {
+export default function traverse(
+    parent: Object | Array<Object>,
+    opts?: Object,
+    scope?: Object,
+    state: Object,
+    parentPath: Object,
+) {
     if (!parent) {
         return;
     }
@@ -27,16 +36,28 @@ traverse.visitors = visitors;
 traverse.verify = visitors.verify;
 traverse.explode = visitors.explode;
 
-traverse.NodePath = require("./path");
-traverse.Scope = require("./scope");
-traverse.Hub = require("./hub");
+import NodePath from "./path";
+import Scope from "./scope";
+import Hub from "./hub";
+
+traverse.NodePath = NodePath;
+traverse.Scope = Scope;
+traverse.Hub = Hub;
+traverse.visitors = visitors;
 
 traverse.cheap = function (node, enter) {
     return t.traverseFast(node, enter);
 };
 
-traverse.node = function (node, opts, scope, state, parentPath, skipKeys) {
-    const keys = t.VISITOR_KEYS[node.type];
+traverse.node = function (
+    node: Object,
+    opts: Object,
+    scope: Object,
+    state: Object,
+    parentPath: Object,
+    skipKeys?,
+) {
+    const keys: Array = t.VISITOR_KEYS[node.type];
     if (!keys) {
         return;
     }
@@ -70,7 +91,12 @@ const hasBlacklistedType = (path, state) => {
     }
 };
 
-traverse.hasType = function (tree, scope, type, blacklistTypes) {
+traverse.hasType = function (
+    tree: Object,
+    scope: Object,
+    type: Object,
+    blacklistTypes: Array<string>,
+): boolean {
     // the node we're searching in is blacklisted
     if (includes(blacklistTypes, tree.type)) {
         return false;
@@ -86,31 +112,17 @@ traverse.hasType = function (tree, scope, type, blacklistTypes) {
         type
     };
 
-    traverse(tree, {
-        blacklist: blacklistTypes,
-        enter: hasBlacklistedType
-    }, scope, state);
+    traverse(
+        tree,
+        {
+            blacklist: blacklistTypes,
+            enter: hasBlacklistedType
+        },
+        scope,
+        state,
+    );
 
     return state.has;
 };
 
-traverse.clearCache = function () {
-    cache.clear();
-};
-
-traverse.clearCache.clearPath = cache.clearPath;
-traverse.clearCache.clearScope = cache.clearScope;
-
-traverse.copyCache = function (source, destination) {
-    if (cache.path.has(source)) {
-        cache.path.set(destination, cache.path.get(source));
-    }
-};
-import NodePath from "./path";
-import Scope from "./scope";
-import Hub from "./hub";
-
-traverse.NodePath = NodePath;
-traverse.Scope = Scope;
-traverse.Hub = Hub;
-traverse.visitors = visitors;
+traverse.cache = cache;

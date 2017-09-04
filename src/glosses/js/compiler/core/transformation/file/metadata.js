@@ -1,4 +1,6 @@
-const { js: { compiler: { types } } } = adone;
+const {
+    js: { compiler: { types: t } }
+} = adone;
 
 export const ModuleDeclaration = {
     enter(path, file) {
@@ -21,7 +23,7 @@ export const ImportDeclaration = {
             specifiers
         });
 
-        for (const specifier of path.get("specifiers")) {
+        for (const specifier of (path.get("specifiers"): Array<Object>)) {
             const local = specifier.node.local.name;
 
             if (specifier.isImportDefaultSpecifier()) {
@@ -77,12 +79,12 @@ export const ExportDeclaration = (path, file) => {
     }
 
     if (path.isExportNamedDeclaration() && node.specifiers) {
-        for (const specifier of node.specifiers) {
+        for (const specifier of (node.specifiers: Array<Object>)) {
             const exported = specifier.exported.name;
             exports.exported.push(exported);
 
             // export foo from "bar";
-            if (types.isExportDefaultSpecifier(specifier)) {
+            if (t.isExportDefaultSpecifier(specifier)) {
                 exports.specifiers.push({
                     kind: "external",
                     local: exported,
@@ -92,7 +94,7 @@ export const ExportDeclaration = (path, file) => {
             }
 
             // export * as foo from "bar";
-            if (types.isExportNamespaceSpecifier(specifier)) {
+            if (t.isExportNamespaceSpecifier(specifier)) {
                 exports.specifiers.push({
                     kind: "external-namespace",
                     exported,
@@ -137,6 +139,6 @@ export const ExportDeclaration = (path, file) => {
     }
 };
 
-export const Scope = (path) => {
+export function Scope(path) {
     path.skip();
-};
+}

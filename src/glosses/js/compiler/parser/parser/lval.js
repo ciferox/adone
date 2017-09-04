@@ -1,76 +1,143 @@
-import { types as tt } from "../tokenizer/types";
-import Parser from "./index";
+// @flow
 
-const pp = Parser.prototype;
+import { types as tt, type TokenType } from "../tokenizer/types";
+import type {
+    TSParameterProperty,
+    Decorator,
+    Expression,
+    Identifier,
+    Node,
+    ObjectExpression,
+    ObjectPattern,
+    Pattern,
+    RestElement,
+    SpreadElement
+} from "../types";
+import type { Pos, Position } from "../util/location";
+import { NodeUtils } from "./node";
+
+export default class LValParser extends NodeUtils {
+  // Forward-declaration: defined in expression.js
+  +checkReservedWord: (
+    word: string,
+    startLoc: number,
+    checkKeywords: boolean,
+    isBinding: boolean,
+) => void;
++parseIdentifier: (liberal?: boolean) => Identifier;
++parseMaybeAssign: (
+    noIn?: ?boolean,
+    refShorthandDefaultPos?: ?Pos,
+    afterLeftParse?: Function,
+    refNeedsArrowPos?: ?Pos,
+) => Expression;
++parseObj: <T: ObjectPattern | ObjectExpression > (
+    isPattern: boolean,
+        refShorthandDefaultPos ?: ?Pos,
+  ) => T;
+// Forward-declaration: defined in statement.js
++parseDecorator: () => Decorator;
 
 // Convert existing expression atom to assignable pattern
 // if possible.
 
-pp.toAssignable = function (node, isBinding, contextDescription) {
+toAssignable(
+    node: Node,
+    isBinding: ?boolean,
+    contextDescription: string,
+): Node {
     if (node) {
         switch (node.type) {
             case "Identifier":
             case "ObjectPattern":
             case "ArrayPattern":
-            case "AssignmentPattern": {
+            case "AssignmentPattern":
                 break;
-            }
-            case "ObjectExpression": {
+
+            case "ObjectExpression":
                 node.type = "ObjectPattern";
-                for (const prop of node.properties) {
-                    if (prop.type === "ObjectMethod") {
-                        if (prop.kind === "get" || prop.kind === "set") {
-                            this.raise(prop.key.start, "Object pattern can't contain getter or setter");
-                        } else {
-                            this.raise(prop.key.start, "Object pattern can't contain methods");
-                        }
-                    } else {
-                        this.toAssignable(prop, isBinding, "object destructuring pattern");
-                    }
+                for (const [index, prop] of node.properties.entries()) {
+                    this.toAssignableObjectExpressionProp(
+                        prop,
+                        isBinding,
+                        index === node.properties.length - 1,
+                    );
                 }
                 break;
-            }
-            case "ObjectProperty": {
+
+            case "ObjectProperty":
                 this.toAssignable(node.value, isBinding, contextDescription);
                 break;
-            }
-            case "SpreadProperty": {
-                node.type = "RestProperty";
+
+            case "SpreadElement": {
+                this.checkToRestConversion(node);
+
+                node.type = "RestElement";
                 const arg = node.argument;
                 this.toAssignable(arg, isBinding, contextDescription);
                 break;
             }
-            case "ArrayExpression": {
+
+            case "ArrayExpression":
                 node.type = "ArrayPattern";
                 this.toAssignableList(node.elements, isBinding, contextDescription);
                 break;
-            }
-            case "AssignmentExpression": {
+
+            case "AssignmentExpression":
                 if (node.operator === "=") {
                     node.type = "AssignmentPattern";
                     delete node.operator;
                 } else {
-                    this.raise(node.left.end, "Only '=' operator can be used for specifying default value.");
+                    this.raise(
+                        node.left.end,
+                        "Only '=' operator can be used for specifying default value.",
+                    );
                 }
                 break;
-            }
-            case "MemberExpression": {
+
+            case "MemberExpression":
                 if (!isBinding) {
                     break;
                 }
-            }
+
             default: {
-                const message = `Invalid left-hand side${contextDescription ? ` in ${contextDescription}` : "expression"}`;
+                const message = `Invalid left-hand side${contextDescription ? ` in ${contextDescription}` : /* istanbul ignore next */ "expression"}`;
                 this.raise(node.start, message);
             }
         }
     }
     return node;
-};
+}
+
+toAssignableObjectExpressionProp(
+    prop: Node,
+    isBinding: ?boolean,
+    isLast: boolean,
+) {
+    if (prop.type === "ObjectMethod") {
+        const error =
+            prop.kind === "get" || prop.kind === "set"
+                ? "Object pattern can't contain getter or setter"
+                : "Object pattern can't contain methods";
+
+        this.raise(prop.key.start, error);
+    } else if (prop.type === "SpreadElement" && !isLast) {
+        this.raise(
+            prop.start,
+            "The rest element has to be the last element when destructuring",
+        );
+    } else {
+        this.toAssignable(prop, isBinding, "object destructuring pattern");
+    }
+}
 
 // Convert list of expression atoms to binding list.
 
-pp.toAssignableList = function (exprList, isBinding, contextDescription) {
+toAssignableList(
+    exprList: Expression[],
+    isBinding: ?boolean,
+    contextDescription: string,
+): $ReadOnlyArray < Pattern > {
     let end = exprList.length;
     if (end) {
         const last = exprList[end - 1];
@@ -80,7 +147,11 @@ pp.toAssignableList = function (exprList, isBinding, contextDescription) {
             last.type = "RestElement";
             const arg = last.argument;
             this.toAssignable(arg, isBinding, contextDescription);
-            if (arg.type !== "Identifier" && arg.type !== "MemberExpression" && arg.type !== "ArrayPattern") {
+            if (
+                arg.type !== "Identifier" &&
+                arg.type !== "MemberExpression" &&
+                arg.type !== "ArrayPattern"
+            ) {
                 this.unexpected(arg.start);
             }
             --end;
@@ -88,73 +159,81 @@ pp.toAssignableList = function (exprList, isBinding, contextDescription) {
     }
     for (let i = 0; i < end; i++) {
         const elt = exprList[i];
+        if (elt && elt.type === "SpreadElement") {
+            this.raise(
+                elt.start,
+                "The rest element has to be the last element when destructuring",
+            );
+        }
         if (elt) {
-            this.toAssignable(elt, isBinding, contextDescription);
+            this.toAssignable(elt, isBinding, contextDescription); 
         }
     }
     return exprList;
-};
+}
 
 // Convert list of expression atoms to a list of
 
-pp.toReferencedList = function (exprList) {
+toReferencedList(
+    exprList: $ReadOnlyArray <?Expression >,
+): $ReadOnlyArray <?Expression > {
     return exprList;
-};
+}
 
-// Parses spread element.
+    // Parses spread element.
 
-pp.parseSpread = function (refShorthandDefaultPos) {
+parseSpread< T: RestElement | SpreadElement >(refShorthandDefaultPos: ?Pos): T {
     const node = this.startNode();
     this.next();
     node.argument = this.parseMaybeAssign(false, refShorthandDefaultPos);
     return this.finishNode(node, "SpreadElement");
-};
+}
 
-pp.parseRest = function () {
+parseRest(): RestElement {
     const node = this.startNode();
     this.next();
-    node.argument = this.parseBindingIdentifier();
+    node.argument = this.parseBindingAtom();
     return this.finishNode(node, "RestElement");
-};
+}
 
-pp.shouldAllowYieldIdentifier = function () {
-    return this.match(tt._yield) && !this.state.strict && !this.state.inGenerator;
-};
+shouldAllowYieldIdentifier(): boolean {
+    return (
+        this.match(tt._yield) && !this.state.strict && !this.state.inGenerator
+    );
+}
 
-pp.parseBindingIdentifier = function () {
+parseBindingIdentifier(): Identifier {
     return this.parseIdentifier(this.shouldAllowYieldIdentifier());
-};
+}
 
 // Parses lvalue (assignable) atom.
-
-pp.parseBindingAtom = function () {
+parseBindingAtom(): Pattern {
     switch (this.state.type) {
-        case tt._yield: {
-            if (this.state.strict || this.state.inGenerator) {
-                this.unexpected();
-            }
-        }
-        // fall-through
-        case tt.name: {
-            return this.parseIdentifier(true);
-        }
+        case tt._yield:
+        case tt.name:
+            return this.parseBindingIdentifier();
+
         case tt.bracketL: {
             const node = this.startNode();
             this.next();
             node.elements = this.parseBindingList(tt.bracketR, true);
             return this.finishNode(node, "ArrayPattern");
         }
-        case tt.braceL: {
-            return this.parseObj(true);
-        }
-        default: {
-            this.unexpected();
-        }
-    }
-};
 
-pp.parseBindingList = function (close, allowEmpty) {
-    const elts = [];
+        case tt.braceL:
+            return this.parseObj(true);
+
+        default:
+            throw this.unexpected();
+    }
+}
+
+parseBindingList(
+    close: TokenType,
+    allowEmpty ?: boolean,
+    allowModifiers ?: boolean,
+): $ReadOnlyArray < Pattern | TSParameterProperty > {
+    const elts: Array<Pattern | TSParameterProperty > = [];
     let first = true;
     while (!this.eat(close)) {
         if (first) {
@@ -163,6 +242,7 @@ pp.parseBindingList = function (close, allowEmpty) {
             this.expect(tt.comma);
         }
         if (allowEmpty && this.match(tt.comma)) {
+        // $FlowFixMe This method returns `$ReadOnlyArray<?Pattern>` if `allowEmpty` is set.
             elts.push(null);
         } else if (this.eat(close)) {
             break;
@@ -172,46 +252,69 @@ pp.parseBindingList = function (close, allowEmpty) {
             break;
         } else {
             const decorators = [];
+            if (this.match(tt.at) && this.hasPlugin("decorators2")) {
+                this.raise(
+                    this.state.start,
+                    "Stage 2 decorators cannot be used to decorate parameters",
+                );
+            }
             while (this.match(tt.at)) {
                 decorators.push(this.parseDecorator());
             }
-            const left = this.parseMaybeDefault();
-            if (decorators.length) {
-                left.decorators = decorators;
-            }
-            this.parseAssignableListItemTypes(left);
-            elts.push(this.parseMaybeDefault(left.start, left.loc.start, left));
+            elts.push(this.parseAssignableListItem(allowModifiers, decorators));
         }
     }
     return elts;
-};
+}
 
-pp.parseAssignableListItemTypes = function (param) {
+parseAssignableListItem(
+    allowModifiers: ?boolean,
+    decorators: Decorator[],
+): Pattern | TSParameterProperty {
+    const left = this.parseMaybeDefault();
+    this.parseAssignableListItemTypes(left);
+    const elt = this.parseMaybeDefault(left.start, left.loc.start, left);
+    if (decorators.length) {
+        left.decorators = decorators;
+    }
+    return elt;
+}
+
+parseAssignableListItemTypes(param: Pattern): Pattern {
     return param;
-};
+}
 
 // Parses assignment pattern around given atom if possible.
 
-pp.parseMaybeDefault = function (startPos, startLoc, left) {
+parseMaybeDefault(
+    startPos ?: ?number,
+    startLoc ?: ?Position,
+    left ?: ?Pattern,
+): Pattern {
     startLoc = startLoc || this.state.startLoc;
     startPos = startPos || this.state.start;
     left = left || this.parseBindingAtom();
     if (!this.eat(tt.eq)) {
-        return left;
+        return left; 
     }
 
     const node = this.startNodeAt(startPos, startLoc);
     node.left = left;
     node.right = this.parseMaybeAssign();
     return this.finishNode(node, "AssignmentPattern");
-};
+}
 
 // Verify that a node is an lval — something that can be assigned
 // to.
 
-pp.checkLVal = function (expr, isBinding, checkClashes, contextDescription) {
+checkLVal(
+    expr: Expression,
+    isBinding: ?boolean,
+    checkClashes: ?{ [key: string]: boolean },
+    contextDescription: string,
+): void {
     switch (expr.type) {
-        case "Identifier": {
+        case "Identifier":
             this.checkReservedWord(expr.name, expr.start, false, true);
 
             if (checkClashes) {
@@ -235,45 +338,74 @@ pp.checkLVal = function (expr, isBinding, checkClashes, contextDescription) {
                 }
             }
             break;
-        }
-        case "MemberExpression": {
+
+        case "MemberExpression":
             if (isBinding) {
-                this.raise(expr.start, `${isBinding ? "Binding" : "Assigning to"} member expression`);
+                this.raise(expr.start, "Binding member expression"); 
             }
             break;
-        }
-        case "ObjectPattern": {
+
+        case "ObjectPattern":
             for (let prop of expr.properties) {
                 if (prop.type === "ObjectProperty") {
-                    prop = prop.value;
+                    prop = prop.value; 
                 }
-                this.checkLVal(prop, isBinding, checkClashes, "object destructuring pattern");
+                this.checkLVal(
+                    prop,
+                    isBinding,
+                    checkClashes,
+                    "object destructuring pattern",
+                );
             }
             break;
-        }
-        case "ArrayPattern": {
+
+        case "ArrayPattern":
             for (const elem of expr.elements) {
                 if (elem) {
-                    this.checkLVal(elem, isBinding, checkClashes, "array destructuring pattern");
+                    this.checkLVal(
+                        elem,
+                        isBinding,
+                        checkClashes,
+                        "array destructuring pattern",
+                    );
                 }
             }
             break;
-        }
-        case "AssignmentPattern": {
-            this.checkLVal(expr.left, isBinding, checkClashes, "assignment pattern");
+
+        case "AssignmentPattern":
+            this.checkLVal(
+                expr.left,
+                isBinding,
+                checkClashes,
+                "assignment pattern",
+            );
             break;
-        }
-        case "RestProperty": {
-            this.checkLVal(expr.argument, isBinding, checkClashes, "rest property");
-            break;
-        }
-        case "RestElement": {
+
+        case "RestElement":
             this.checkLVal(expr.argument, isBinding, checkClashes, "rest element");
             break;
-        }
+
         default: {
-            const message = `${isBinding ? "Binding invalid" : "Invalid"} left-hand side${contextDescription ? ` in ${contextDescription}` : "expression"}`;
+            const message =
+        `${isBinding
+            ? /* istanbul ignore next */ "Binding invalid"
+            : "Invalid"
+        } left-hand side${
+            contextDescription
+                ? ` in ${contextDescription}`
+                : /* istanbul ignore next */ "expression"}`;
             this.raise(expr.start, message);
         }
     }
-};
+}
+
+checkToRestConversion(node: SpreadElement): void {
+    const validArgumentTypes = ["Identifier", "MemberExpression"];
+
+    if (validArgumentTypes.indexOf(node.argument.type) !== -1) {
+        return;
+    }
+
+    this.raise(node.argument.start, "Invalid rest operator's argument");
+}
+}

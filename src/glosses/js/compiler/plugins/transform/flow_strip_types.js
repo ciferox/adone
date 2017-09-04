@@ -1,13 +1,20 @@
 export default function ({ types: t }) {
     const FLOW_DIRECTIVE = "@flow";
 
+    let skipStrip = false;
+
     return {
         inherits: adone.js.compiler.plugin.syntax.flow,
 
         visitor: {
-            Program(path, { file: { ast: { comments } } }) {
-                for (const comment of comments) {
+            Program(path, { file: { ast: { comments } }, opts }) {
+                skipStrip = false;
+                let directiveFound = false;
+
+                for (const comment of (comments: Array<Object>)) {
                     if (comment.value.indexOf(FLOW_DIRECTIVE) >= 0) {
+                        directiveFound = true;
+
                         // remove flow directive
                         comment.value = comment.value.replace(FLOW_DIRECTIVE, "");
 
@@ -17,21 +24,58 @@ export default function ({ types: t }) {
                         }
                     }
                 }
-            },
 
-            Flow(path) {
-                path.remove();
+                if (!directiveFound && opts.requireDirective) {
+                    skipStrip = true;
+                }
             },
+            ImportDeclaration(path) {
+                if (skipStrip) { 
+                    return; 
+                }
+                if (!path.node.specifiers.length) { 
+                    return;
+                }
 
-            ClassProperty(path) {
-                path.node.variance = null;
-                path.node.typeAnnotation = null;
-                if (!path.node.value) {
+                let typeCount = 0;
+
+                path.node.specifiers.forEach(({ importKind }) => {
+                    if (importKind === "type" || importKind === "typeof") {
+                        typeCount++;
+                    }
+                });
+
+                if (typeCount === path.node.specifiers.length) {
                     path.remove();
                 }
             },
 
+            Flow(path) {
+                if (skipStrip) {
+                    throw path.buildCodeFrameError(
+                        "A @flow directive is required when using Flow annotations with " +
+                        "the `requireDirective` option.",
+                    );
+                }
+
+                path.remove();
+            },
+
+            ClassProperty(path) {
+                if (skipStrip) {
+                    return;
+                }
+                path.node.variance = null;
+                path.node.typeAnnotation = null;
+                if (!path.node.value) { 
+                    path.remove(); 
+                }
+            },
+
             Class(path) {
+                if (skipStrip) { 
+                    return;
+                }
                 path.node.implements = null;
 
                 // We do this here instead of in a `ClassProperty` visitor because the class transform
@@ -39,25 +83,39 @@ export default function ({ types: t }) {
                 path.get("body.body").forEach((child) => {
                     if (child.isClassProperty()) {
                         child.node.typeAnnotation = null;
-                        if (!child.node.value) {
-                            child.remove();
+                        if (!child.node.value) { 
+                            child.remove(); 
                         }
                     }
                 });
             },
 
             AssignmentPattern({ node }) {
+                if (skipStrip) { 
+                    return; 
+                }
                 node.left.optional = false;
             },
 
             Function({ node }) {
+                if (skipStrip) { 
+                    return;
+                }
                 for (let i = 0; i < node.params.length; i++) {
                     const param = node.params[i];
                     param.optional = false;
+                    if (param.type === "AssignmentPattern") {
+                        param.left.optional = false;
+                    }
                 }
+
+                node.predicate = null;
             },
 
             TypeCastExpression(path) {
+                if (skipStrip) { 
+                    return; 
+                }
                 let { node } = path;
                 do {
                     node = node.expression;

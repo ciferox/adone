@@ -1,4 +1,6 @@
-const { parse, traverse } = adone.js.compiler;
+const {
+    js: { compiler: { parse, traverse } }
+} = adone;
 
 describe("js", "compiler", "traverse", "path/ancestry", () => {
     describe("isAncestor", () => {
@@ -58,6 +60,19 @@ describe("js", "compiler", "traverse", "path/ancestry", () => {
             const [, numberPath, stringPath] = paths;
 
             assert(!numberPath.isDescendant(stringPath));
+        });
+    });
+
+    describe("getStatementParent", () => {
+        const ast = parse("var a = 1;");
+        it("should throw", () => {
+            expect(() => {
+                traverse(ast, {
+                    Program(path) {
+                        path.getStatementParent();
+                    }
+                });
+            }).to.throw(/File\/Program node/);
         });
     });
 });

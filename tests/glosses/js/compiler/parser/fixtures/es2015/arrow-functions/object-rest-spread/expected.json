@@ -69,7 +69,8 @@
                 "end": {
                   "line": 1,
                   "column": 7
-                }
+                },
+                "identifierName": "foo"
               },
               "name": "foo"
             },
@@ -90,6 +91,7 @@
               "id": null,
               "generator": false,
               "expression": false,
+              "async": false,
               "params": [
                 {
                   "type": "ObjectPattern",
@@ -121,7 +123,6 @@
                         }
                       },
                       "method": false,
-                      "shorthand": true,
                       "computed": false,
                       "key": {
                         "type": "Identifier",
@@ -135,10 +136,12 @@
                           "end": {
                             "line": 1,
                             "column": 19
-                          }
+                          },
+                          "identifierName": "title"
                         },
                         "name": "title"
                       },
+                      "shorthand": true,
                       "value": {
                         "type": "Identifier",
                         "start": 14,
@@ -151,7 +154,8 @@
                           "end": {
                             "line": 1,
                             "column": 19
-                          }
+                          },
+                          "identifierName": "title"
                         },
                         "name": "title"
                       },
@@ -160,7 +164,7 @@
                       }
                     },
                     {
-                      "type": "RestProperty",
+                      "type": "RestElement",
                       "start": 21,
                       "end": 29,
                       "loc": {
@@ -185,7 +189,8 @@
                           "end": {
                             "line": 1,
                             "column": 29
-                          }
+                          },
+                          "identifierName": "other"
                         },
                         "name": "other"
                       }

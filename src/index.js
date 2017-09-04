@@ -228,25 +228,25 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         require: () => {
             const plugins = [
                 "transform.flowStripTypes",
-                "transform.decoratorsLegacy",
+                "transform.decorators",
                 "transform.classProperties",
-                "transform.ESModules",
+                "transform.es2015ModulesCommonjs",
                 "transform.functionBind",
                 "transform.objectRestSpread"
             ];
             if (process.env.ADONE_COVERAGE) {
                 plugins.unshift(
+                    "syntax.flow",
                     "syntax.decorators",
+                    "syntax.classProperties",
                     "syntax.objectRestSpread",
                     "syntax.functionBind",
-                    "syntax.classProperties",
-                    "syntax.flow",
                     adone.js.coverage.plugin
                 );
             }
             const options = {
                 compact: false,
-                only: /\.js$/,
+                only: [/\.js$/],
                 sourceMaps: "inline",
                 plugins
             };

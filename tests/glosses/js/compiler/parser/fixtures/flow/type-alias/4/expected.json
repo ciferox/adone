@@ -122,6 +122,8 @@
                     },
                     "name": "type"
                   },
+                  "static": false,
+                  "kind": "init",
                   "value": {
                     "type": "StringLiteralTypeAnnotation",
                     "start": 23,
@@ -136,15 +138,14 @@
                         "column": 13
                       }
                     },
-                    "value": "A",
                     "extra": {
                       "rawValue": "A",
                       "raw": "\"A\""
-                    }
+                    },
+                    "value": "A"
                   },
-                  "optional": false,
-                  "static": false,
-                  "variance": null
+                  "variance": null,
+                  "optional": false
                 }
               ],
               "indexers": [],
@@ -197,6 +198,8 @@
                     },
                     "name": "type"
                   },
+                  "static": false,
+                  "kind": "init",
                   "value": {
                     "type": "StringLiteralTypeAnnotation",
                     "start": 38,
@@ -211,15 +214,14 @@
                         "column": 13
                       }
                     },
-                    "value": "B",
                     "extra": {
                       "rawValue": "B",
                       "raw": "\"B\""
-                    }
+                    },
+                    "value": "B"
                   },
-                  "optional": false,
-                  "static": false,
-                  "variance": null
+                  "variance": null,
+                  "optional": false
                 }
               ],
               "indexers": [],
@@ -521,6 +523,8 @@
                 },
                 "name": "x"
               },
+              "static": false,
+              "kind": "init",
               "value": {
                 "type": "UnionTypeAnnotation",
                 "start": 147,
@@ -583,6 +587,8 @@
                           },
                           "name": "type"
                         },
+                        "static": false,
+                        "kind": "init",
                         "value": {
                           "type": "StringLiteralTypeAnnotation",
                           "start": 156,
@@ -597,15 +603,14 @@
                               "column": 16
                             }
                           },
-                          "value": "A",
                           "extra": {
                             "rawValue": "A",
                             "raw": "\"A\""
-                          }
+                          },
+                          "value": "A"
                         },
-                        "optional": false,
-                        "static": false,
-                        "variance": null
+                        "variance": null,
+                        "optional": false
                       }
                     ],
                     "indexers": [],
@@ -658,6 +663,8 @@
                           },
                           "name": "type"
                         },
+                        "static": false,
+                        "kind": "init",
                         "value": {
                           "type": "StringLiteralTypeAnnotation",
                           "start": 174,
@@ -672,15 +679,14 @@
                               "column": 16
                             }
                           },
-                          "value": "B",
                           "extra": {
                             "rawValue": "B",
                             "raw": "\"B\""
-                          }
+                          },
+                          "value": "B"
                         },
-                        "optional": false,
-                        "static": false,
-                        "variance": null
+                        "variance": null,
+                        "optional": false
                       }
                     ],
                     "indexers": [],
@@ -688,9 +694,8 @@
                   }
                 ]
               },
-              "optional": false,
-              "static": false,
-              "variance": null
+              "variance": null,
+              "optional": false
             }
           ],
           "indexers": [],
@@ -776,6 +781,8 @@
                 },
                 "name": "x"
               },
+              "static": false,
+              "kind": "init",
               "value": {
                 "type": "IntersectionTypeAnnotation",
                 "start": 212,
@@ -838,6 +845,8 @@
                           },
                           "name": "type"
                         },
+                        "static": false,
+                        "kind": "init",
                         "value": {
                           "type": "StringLiteralTypeAnnotation",
                           "start": 221,
@@ -852,15 +861,14 @@
                               "column": 16
                             }
                           },
-                          "value": "A",
                           "extra": {
                             "rawValue": "A",
                             "raw": "\"A\""
-                          }
+                          },
+                          "value": "A"
                         },
-                        "optional": false,
-                        "static": false,
-                        "variance": null
+                        "variance": null,
+                        "optional": false
                       }
                     ],
                     "indexers": [],
@@ -913,6 +921,8 @@
                           },
                           "name": "type"
                         },
+                        "static": false,
+                        "kind": "init",
                         "value": {
                           "type": "StringLiteralTypeAnnotation",
                           "start": 239,
@@ -927,15 +937,14 @@
                               "column": 16
                             }
                           },
-                          "value": "B",
                           "extra": {
                             "rawValue": "B",
                             "raw": "\"B\""
-                          }
+                          },
+                          "value": "B"
                         },
-                        "optional": false,
-                        "static": false,
-                        "variance": null
+                        "variance": null,
+                        "optional": false
                       }
                     ],
                     "indexers": [],
@@ -943,9 +952,8 @@
                   }
                 ]
               },
-              "optional": false,
-              "static": false,
-              "variance": null
+              "variance": null,
+              "optional": false
             }
           ],
           "indexers": [],

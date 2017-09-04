@@ -1,4 +1,6 @@
-const { js: { compiler: { types: t } } } = adone;
+const {
+    js: { compiler: { types: t } }
+} = adone;
 
 const visitor = {
     Scope(path, state) {
@@ -25,9 +27,11 @@ const visitor = {
             firstId = declar.node.id;
 
             if (declar.node.init) {
-                nodes.push(t.expressionStatement(
-                    t.assignmentExpression("=", declar.node.id, declar.node.init)
-                ));
+                nodes.push(
+                    t.expressionStatement(
+                        t.assignmentExpression("=", declar.node.id, declar.node.init),
+                    ),
+                );
             }
 
             for (const name in declar.getBindingIdentifiers()) {

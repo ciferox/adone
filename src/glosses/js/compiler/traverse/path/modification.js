@@ -1,42 +1,48 @@
 // This file contains methods that modify the path/node in some ways.
+
 import { path as pathCache } from "../cache";
 import PathHoister from "./lib/hoister";
 import NodePath from "./index";
 
-
-const { is, js: { compiler: { types: t } } } = adone;
+const {
+    is,
+    js: { compiler: { types: t } }
+} = adone;
 
 /**
  * Insert the provided nodes before the current one.
  */
+
 export const insertBefore = function (nodes) {
     this._assertUnremoved();
 
     nodes = this._verifyNodeList(nodes);
 
-    if (this.parentPath.isExpressionStatement() || this.parentPath.isLabeledStatement()) {
+    if (
+        this.parentPath.isExpressionStatement() ||
+        this.parentPath.isLabeledStatement()
+    ) {
         return this.parentPath.insertBefore(nodes);
     } else if (
-        this.isNodeType("Expression") ||
+        (this.isNodeType("Expression") && this.listKey !== "params") ||
         (this.parentPath.isForStatement() && this.key === "init")
     ) {
         if (this.node) {
             nodes.push(this.node);
         }
         this.replaceExpressionWithStatements(nodes);
-    } else {
-        this._maybePopFromStatements(nodes);
-        if (is.array(this.container)) {
-            return this._containerInsertBefore(nodes);
-        } else if (this.isStatementOrBlock()) {
-            if (this.node) {
-                nodes.push(this.node);
-            }
-            this._replaceWith(t.blockStatement(nodes));
-        } else {
-            throw new Error("We don't know what to do with this node type. " +
-                "We were previously a Statement but we can't fit in here?");
+    } else if (is.array(this.container)) {
+        return this._containerInsertBefore(nodes);
+    } else if (this.isStatementOrBlock()) {
+        if (this.node) {
+            nodes.push(this.node);
         }
+        this._replaceWith(t.blockStatement(nodes));
+    } else {
+        throw new Error(
+            "We don't know what to do with this node type. " +
+            "We were previously a Statement but we can't fit in here?",
+        );
     }
 
     return [this];
@@ -53,7 +59,12 @@ export const _containerInsert = function (from, nodes) {
         this.container.splice(to, 0, node);
 
         if (this.context) {
-            const path = this.context.create(this.parent, this.container, to, this.listKey);
+            const path = this.context.create(
+                this.parent,
+                this.container,
+                to,
+                this.listKey,
+            );
 
             // While this path may have a context, there is currently no guarantee that the context
             // will be the active context, because `popContext` may leave a final context in place.
@@ -63,13 +74,15 @@ export const _containerInsert = function (from, nodes) {
             }
             paths.push(path);
         } else {
-            paths.push(NodePath.get({
-                parentPath: this.parentPath,
-                parent: this.parent,
-                container: this.container,
-                listKey: this.listKey,
-                key: to
-            }));
+            paths.push(
+                NodePath.get({
+                    parentPath: this.parentPath,
+                    parent: this.parent,
+                    container: this.container,
+                    listKey: this.listKey,
+                    key: to
+                }),
+            );
         }
     }
 
@@ -77,7 +90,6 @@ export const _containerInsert = function (from, nodes) {
 
     for (const path of paths) {
         path.setScope();
-        path.debug(() => "Inserted.");
 
         for (const context of contexts) {
             context.maybeQueue(path, true);
@@ -95,51 +107,59 @@ export const _containerInsertAfter = function (nodes) {
     return this._containerInsert(this.key + 1, nodes);
 };
 
-export const _maybePopFromStatements = function (nodes) {
-    const last = nodes[nodes.length - 1];
-    const isIdentifier = t.isIdentifier(last) ||
-        (t.isExpressionStatement(last) && t.isIdentifier(last.expression));
-
-    if (isIdentifier && !this.isCompletionRecord()) {
-        nodes.pop();
-    }
-};
-
 /**
  * Insert the provided nodes after the current one. When inserting nodes after an
  * expression, ensure that the completion record is correct by pushing the current node.
  */
 
 export const insertAfter = function (nodes) {
+    this._insertAfter(nodes);
+};
+
+export const _insertAfter = function (nodes, shouldRequeue = false) {
     this._assertUnremoved();
 
     nodes = this._verifyNodeList(nodes);
 
-    if (this.parentPath.isExpressionStatement() || this.parentPath.isLabeledStatement()) {
-        return this.parentPath.insertAfter(nodes);
+    if (
+        this.parentPath.isExpressionStatement() ||
+        this.parentPath.isLabeledStatement()
+    ) {
+        // `replaceWithMultiple` requeues if there's a replacement for this.node,
+        // but not for an ancestor's. Set `shouldRequeue` to true so that any replacement
+        // for an ancestor node can be enqueued. Fix #5628 and #5023.
+        return this.parentPath._insertAfter(nodes, true);
     } else if (
         this.isNodeType("Expression") ||
         (this.parentPath.isForStatement() && this.key === "init")
     ) {
         if (this.node) {
             const temp = this.scope.generateDeclaredUidIdentifier();
-            nodes.unshift(t.expressionStatement(t.assignmentExpression("=", temp, this.node)));
+            nodes.unshift(
+                t.expressionStatement(t.assignmentExpression("=", temp, this.node)),
+            );
             nodes.push(t.expressionStatement(temp));
         }
         this.replaceExpressionWithStatements(nodes);
-    } else {
-        this._maybePopFromStatements(nodes);
-        if (is.array(this.container)) {
-            return this._containerInsertAfter(nodes);
-        } else if (this.isStatementOrBlock()) {
-            if (this.node) {
-                nodes.unshift(this.node);
-            }
-            this._replaceWith(t.blockStatement(nodes));
-        } else {
-            throw new Error("We don't know what to do with this node type. " +
-                "We were previously a Statement but we can't fit in here?");
+    } else if (is.array(this.container)) {
+        return this._containerInsertAfter(nodes);
+    } else if (this.isStatementOrBlock()) {
+        // Unshift current node if it's not an empty expression
+        if (
+            this.node &&
+            (!this.isExpressionStatement() || !is.nil(this.node.expression))
+        ) {
+            nodes.unshift(this.node);
         }
+        this._replaceWith(t.blockStatement(nodes));
+        if (shouldRequeue) {
+            this.requeue();
+        }
+    } else {
+        throw new Error(
+            "We don't know what to do with this node type. " +
+            "We were previously a Statement but we can't fit in here?",
+        );
     }
 
     return [this];
@@ -148,6 +168,7 @@ export const insertAfter = function (nodes) {
 /**
  * Update all sibling node paths after `fromIndex` by `incrementBy`.
  */
+
 export const updateSiblingKeys = function (fromIndex, incrementBy) {
     if (!this.parent) {
         return;
@@ -177,7 +198,7 @@ export const _verifyNodeList = function (nodes) {
 
         if (!node) {
             msg = "has falsy node";
-        } else if (!is.object(node)) {
+        } else if (typeof node !== "object") {
             msg = "contains a non-object node";
         } else if (!node.type) {
             msg = "without a type";
@@ -187,7 +208,9 @@ export const _verifyNodeList = function (nodes) {
 
         if (msg) {
             const type = is.array(node) ? "array" : typeof node;
-            throw new Error(`Node list ${msg} with the index of ${i} and type of ${type}`);
+            throw new Error(
+                `Node list ${msg} with the index of ${i} and type of ${type}`,
+            );
         }
     }
 
@@ -236,6 +259,7 @@ export const pushContainer = function (listKey, nodes) {
  * Hoist the current node to the highest scope possible and return a UID
  * referencing it.
  */
+
 export const hoist = function (scope = this.scope) {
     const hoister = new PathHoister(this, scope);
     return hoister.run();

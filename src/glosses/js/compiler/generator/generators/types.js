@@ -1,33 +1,20 @@
-const { js: { compiler: { types } } } = adone;
+const {
+    is,
+    js: { compiler: { types: t } }
+} = adone;
 
-export const Identifier = function (node) {
-    // FIXME: We hang variance off Identifer to support Flow's def-site variance.
-    // This is a terrible hack, but changing type annotations to use a new,
-    // dedicated node would be a breaking change. This should be cleaned up in
-    // the next major.
-    if (node.variance) {
-        if (node.variance === "plus") {
-            this.token("+");
-        } else if (node.variance === "minus") {
-            this.token("-");
-        }
-    }
-
+export function Identifier(node: Object) {
     this.word(node.name);
-};
+}
 
-export const RestElement = function (node) {
+export function RestElement(node: Object) {
     this.token("...");
     this.print(node.argument, node);
-};
+}
 
-export {
-    RestElement as SpreadElement,
-    RestElement as SpreadProperty,
-    RestElement as RestProperty
-};
+export { RestElement as SpreadElement };
 
-export const ObjectExpression = function (node) {
+export function ObjectExpression(node: Object) {
     const props = node.properties;
 
     this.token("{");
@@ -40,16 +27,18 @@ export const ObjectExpression = function (node) {
     }
 
     this.token("}");
-};
+}
 
 export { ObjectExpression as ObjectPattern };
 
-export const ObjectMethod = function (node) {
+export function ObjectMethod(node: Object) {
     this.printJoin(node.decorators, node);
-    this._method(node);
-};
+    this._methodHead(node);
+    this.space();
+    this.print(node.body, node);
+}
 
-export const ObjectProperty = function (node) {
+export function ObjectProperty(node: Object) {
     this.printJoin(node.decorators, node);
 
     if (node.computed) {
@@ -59,8 +48,8 @@ export const ObjectProperty = function (node) {
     } else {
         // print `({ foo: foo = 5 } = {})` as `({ foo = 5 } = {});`
         if (
-            types.isAssignmentPattern(node.value) &&
-            types.isIdentifier(node.key) &&
+            t.isAssignmentPattern(node.value) &&
+            t.isIdentifier(node.key) &&
             node.key.name === node.value.left.name
         ) {
             this.print(node.value, node);
@@ -70,10 +59,12 @@ export const ObjectProperty = function (node) {
         this.print(node.key, node);
 
         // shorthand!
-        if (node.shorthand &&
-            (types.isIdentifier(node.key) &&
-                types.isIdentifier(node.value) &&
-                node.key.name === node.value.name)) {
+        if (
+            node.shorthand &&
+            (t.isIdentifier(node.key) &&
+                t.isIdentifier(node.value) &&
+                node.key.name === node.value.name)
+        ) {
             return;
         }
     }
@@ -81,9 +72,9 @@ export const ObjectProperty = function (node) {
     this.token(":");
     this.space();
     this.print(node.value, node);
-};
+}
 
-export const ArrayExpression = function (node) {
+export function ArrayExpression(node: Object) {
     const elems = node.elements;
     const len = elems.length;
 
@@ -93,12 +84,12 @@ export const ArrayExpression = function (node) {
     for (let i = 0; i < elems.length; i++) {
         const elem = elems[i];
         if (elem) {
-            if (i > 0) {
+            if (i > 0) { 
                 this.space();
             }
             this.print(elem, node);
-            if (i < len - 1) {
-                this.token(",");
+            if (i < len - 1) { 
+                this.token(","); 
             }
         } else {
             // If the array expression ends with a hole, that hole
@@ -111,44 +102,44 @@ export const ArrayExpression = function (node) {
     }
 
     this.token("]");
-};
+}
 
 export { ArrayExpression as ArrayPattern };
 
-export const RegExpLiteral = function (node) {
+export function RegExpLiteral(node: Object) {
     this.word(`/${node.pattern}/${node.flags}`);
-};
+}
 
-export const BooleanLiteral = function (node) {
+export function BooleanLiteral(node: Object) {
     this.word(node.value ? "true" : "false");
-};
+}
 
-export const NullLiteral = function () {
+export function NullLiteral() {
     this.word("null");
-};
+}
 
-export const NumericLiteral = function (node) {
+export function NumericLiteral(node: Object) {
     const raw = this.getPossibleRaw(node);
     const value = `${node.value}`;
-    if (adone.is.nil(raw)) {
-        this.number(value);  // normalize
+    if (is.nil(raw)) {
+        this.number(value); // normalize
     } else if (this.format.minified) {
         this.number(raw.length < value.length ? raw : value);
     } else {
         this.number(raw);
     }
-};
+}
 
-export const StringLiteral = function (node, parent) {
+export function StringLiteral(node: Object, parent: Object) {
     const raw = this.getPossibleRaw(node);
-    if (!this.format.minified && adone.is.exist(raw)) {
+    if (!this.format.minified && !is.nil(raw)) {
         this.token(raw);
         return;
     }
 
     // ensure the output is ASCII-safe
     const opts = {
-        quotes: types.isJSX(parent) ? "double" : this.format.quotes,
+        quotes: t.isJSX(parent) ? "double" : this.format.quotes,
         wrap: true
     };
     if (this.format.jsonCompatibleStrings) {
@@ -157,4 +148,4 @@ export const StringLiteral = function (node, parent) {
     const val = adone.util.jsesc(node.value, opts);
 
     return this.token(val);
-};
+}

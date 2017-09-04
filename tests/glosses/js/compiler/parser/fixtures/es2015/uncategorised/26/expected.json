@@ -87,7 +87,6 @@
                     }
                   },
                   "method": false,
-                  "shorthand": false,
                   "computed": false,
                   "key": {
                     "type": "Identifier",
@@ -101,10 +100,12 @@
                       "end": {
                         "line": 1,
                         "column": 10
-                      }
+                      },
+                      "identifierName": "x"
                     },
                     "name": "x"
                   },
+                  "shorthand": false,
                   "value": {
                     "type": "ObjectExpression",
                     "start": 12,
@@ -135,7 +136,6 @@
                           }
                         },
                         "method": false,
-                        "shorthand": false,
                         "computed": false,
                         "key": {
                           "type": "Identifier",
@@ -149,10 +149,12 @@
                             "end": {
                               "line": 1,
                               "column": 14
-                            }
+                            },
+                            "identifierName": "y"
                           },
                           "name": "y"
                         },
+                        "shorthand": false,
                         "value": {
                           "type": "NumericLiteral",
                           "start": 16,
@@ -211,6 +213,7 @@
                   "id": null,
                   "generator": false,
                   "expression": false,
+                  "async": false,
                   "params": [],
                   "body": {
                     "type": "BlockStatement",

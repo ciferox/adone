@@ -69,7 +69,8 @@
                 "end": {
                   "line": 1,
                   "column": 7
-                }
+                },
+                "identifierName": "foo"
               },
               "name": "foo"
             },
@@ -87,43 +88,7 @@
                   "column": 30
                 }
               },
-              "id": null,
-              "generator": false,
-              "expression": true,
-              "params": [
-                {
-                  "type": "Identifier",
-                  "start": 11,
-                  "end": 14,
-                  "loc": {
-                    "start": {
-                      "line": 1,
-                      "column": 11
-                    },
-                    "end": {
-                      "line": 1,
-                      "column": 14
-                    }
-                  },
-                  "name": "bar"
-                }
-              ],
-              "body": {
-                "type": "Identifier",
-                "start": 27,
-                "end": 30,
-                "loc": {
-                  "start": {
-                    "line": 1,
-                    "column": 27
-                  },
-                  "end": {
-                    "line": 1,
-                    "column": 30
-                  }
-                },
-                "name": "bar"
-              },
+              "predicate": null,
               "returnType": {
                 "type": "TypeAnnotation",
                 "start": 15,
@@ -153,6 +118,46 @@
                     }
                   }
                 }
+              },
+              "id": null,
+              "generator": false,
+              "expression": true,
+              "async": false,
+              "params": [
+                {
+                  "type": "Identifier",
+                  "start": 11,
+                  "end": 14,
+                  "loc": {
+                    "start": {
+                      "line": 1,
+                      "column": 11
+                    },
+                    "end": {
+                      "line": 1,
+                      "column": 14
+                    },
+                    "identifierName": "bar"
+                  },
+                  "name": "bar"
+                }
+              ],
+              "body": {
+                "type": "Identifier",
+                "start": 27,
+                "end": 30,
+                "loc": {
+                  "start": {
+                    "line": 1,
+                    "column": 27
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 30
+                  },
+                  "identifierName": "bar"
+                },
+                "name": "bar"
               }
             }
           }

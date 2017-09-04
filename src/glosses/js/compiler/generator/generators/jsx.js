@@ -1,73 +1,76 @@
-
-export const JSXAttribute = function (node) {
+export function JSXAttribute(node: Object) {
     this.print(node.name, node);
     if (node.value) {
         this.token("=");
         this.print(node.value, node);
     }
-};
+}
 
-export const JSXIdentifier = function (node) {
+export function JSXIdentifier(node: Object) {
     this.word(node.name);
-};
+}
 
-export const JSXNamespacedName = function (node) {
+export function JSXNamespacedName(node: Object) {
     this.print(node.namespace, node);
     this.token(":");
     this.print(node.name, node);
-};
+}
 
-export const JSXMemberExpression = function (node) {
+export function JSXMemberExpression(node: Object) {
     this.print(node.object, node);
     this.token(".");
     this.print(node.property, node);
-};
+}
 
-export const JSXSpreadAttribute = function (node) {
+export function JSXSpreadAttribute(node: Object) {
     this.token("{");
     this.token("...");
     this.print(node.argument, node);
     this.token("}");
-};
+}
 
-export const JSXExpressionContainer = function (node) {
+export function JSXExpressionContainer(node: Object) {
     this.token("{");
     this.print(node.expression, node);
     this.token("}");
-};
+}
 
-export const JSXSpreadChild = function (node) {
+export function JSXSpreadChild(node: Object) {
     this.token("{");
     this.token("...");
     this.print(node.expression, node);
     this.token("}");
-};
+}
 
-export const JSXText = function (node) {
-    this.token(node.value);
-};
+export function JSXText(node: Object) {
+    const raw = this.getPossibleRaw(node);
 
-export const JSXElement = function (node) {
+    if (raw != null) {
+        this.token(raw);
+    } else {
+        this.token(node.value);
+    }
+}
+
+export function JSXElement(node: Object) {
     const open = node.openingElement;
     this.print(open, node);
-    if (open.selfClosing) {
-        return;
-    }
+    if (open.selfClosing) return;
 
     this.indent();
-    for (const child of node.children) {
+    for (const child of (node.children: Array<Object>)) {
         this.print(child, node);
     }
     this.dedent();
 
     this.print(node.closingElement, node);
-};
+}
 
-const spaceSeparator = function () {
+function spaceSeparator() {
     this.space();
-};
+}
 
-export const JSXOpeningElement = function (node) {
+export function JSXOpeningElement(node: Object) {
     this.token("<");
     this.print(node.name, node);
     if (node.attributes.length > 0) {
@@ -80,12 +83,12 @@ export const JSXOpeningElement = function (node) {
     } else {
         this.token(">");
     }
-};
+}
 
-export const JSXClosingElement = function (node) {
+export function JSXClosingElement(node: Object) {
     this.token("</");
     this.print(node.name, node);
     this.token(">");
-};
+}
 
-export const JSXEmptyExpression = function () { };
+export function JSXEmptyExpression() { }

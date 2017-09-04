@@ -1,263 +1,283 @@
-const { types, parse, generate, Printer, Whitespace } = adone.js.compiler;
-const { fs, path } = adone.std;
 import helperFixture from "../helper_fixture";
 
+const {
+    std: { fs, path },
+    js: { compiler: { types: t, parse, generate, Printer, CodeGenerator } }
+} = adone;
+
 describe("js", "compiler", "generator", () => {
-    it("completeness", () => {
-        Object.keys(types.VISITOR_KEYS).forEach((type) => {
-            assert.isOk(Boolean(Printer.prototype[type]), `${type} should exist`);
+    describe("generation", () => {
+        it("completeness", () => {
+            Object.keys(t.VISITOR_KEYS).forEach((type) => {
+                assert.ok(Boolean(Printer.prototype[type]), `${type} should exist`);
+            });
+
+            Object.keys(Printer.prototype).forEach((type) => {
+                if (!/[A-Z]/.test(type[0])) {
+                    return;
+                }
+                assert.ok(t.VISITOR_KEYS[type], `${type} should not exist`);
+            });
         });
 
-        Object.keys(Printer.prototype).forEach((type) => {
-            if (!/[A-Z]/.test(type[0])) {
-                return;
-            }
-            assert.isOk(types.VISITOR_KEYS[type], `${type} should not exist`);
-        });
-    });
+        it("multiple sources", () => {
+            const sources = {
+                "a.js": "function hi (msg) { console.log(msg); }\n",
+                "b.js": "hi('hello');\n"
+            };
+            const parsed = Object.keys(sources).reduce((_parsed, filename) => {
+                _parsed[filename] = parse(sources[filename], {
+                    sourceFilename: filename
+                });
+                return _parsed;
+            }, {});
 
-    it("multiple sources", () => {
-        const sources = {
-            "a.js": "function hi (msg) { console.log(msg); }\n",
-            "b.js": "hi('hello');\n"
-        };
-        const parsed = Object.keys(sources).reduce((_parsed, filename) => {
-            _parsed[filename] = parse(sources[filename], { sourceFilename: filename });
-            return _parsed;
-        }, {});
+            const combinedAst = {
+                type: "File",
+                program: {
+                    type: "Program",
+                    sourceType: "module",
+                    body: [].concat(
+                        parsed["a.js"].program.body,
+                        parsed["b.js"].program.body,
+                    )
+                }
+            };
 
-        const combinedAst = {
-            type: "File",
-            program: {
-                type: "Program",
-                sourceType: "module",
-                body: [].concat(parsed["a.js"].program.body, parsed["b.js"].program.body)
-            }
-        };
+            const generated = generate(combinedAst, { sourceMaps: true }, sources);
 
-        const generated = generate(combinedAst, { sourceMaps: true }, sources);
+            expect(generated.map).to.deep.equal(
+                {
+                    version: 3,
+                    sources: ["a.js", "b.js"],
+                    mappings:
+                    "AAAA,SAASA,EAAT,CAAaC,GAAb,EAAkB;AAAEC,UAAQC,GAAR,CAAYF,GAAZ;AAAmB;;ACAvCD,GAAG,OAAH",
+                    names: ["hi", "msg", "console", "log"],
+                    sourcesContent: [
+                        "function hi (msg) { console.log(msg); }\n",
+                        "hi('hello');\n"
+                    ]
+                },
+                "sourcemap was incorrectly generated",
+            );
 
-        expect(generated.map).to.deep.equal({
-            version: 3,
-            sources: ["a.js", "b.js"],
-            mappings: "AAAA,SAASA,EAAT,CAAaC,GAAb,EAAkB;AAAEC,UAAQC,GAAR,CAAYF,GAAZ;AAAmB;;ACAvCD,GAAG,OAAH",
-            names: [
-                "hi",
-                "msg",
-                "console",
-                "log"
-            ],
-            sourcesContent: [
-                "function hi (msg) { console.log(msg); }\n",
-                "hi('hello');\n"
-            ]
-        }, "sourcemap was incorrectly generated");
+            expect(generated.rawMappings).to.deep.equal(
+                [
+                    {
+                        name: undefined,
+                        generated: { line: 1, column: 0 },
+                        source: "a.js",
+                        original: { line: 1, column: 0 }
+                    },
+                    {
+                        name: "hi",
+                        generated: { line: 1, column: 9 },
+                        source: "a.js",
+                        original: { line: 1, column: 9 }
+                    },
+                    {
+                        name: undefined,
+                        generated: { line: 1, column: 11 },
+                        source: "a.js",
+                        original: { line: 1, column: 0 }
+                    },
+                    {
+                        name: "msg",
+                        generated: { line: 1, column: 12 },
+                        source: "a.js",
+                        original: { line: 1, column: 13 }
+                    },
+                    {
+                        name: undefined,
+                        generated: { line: 1, column: 15 },
+                        source: "a.js",
+                        original: { line: 1, column: 0 }
+                    },
+                    {
+                        name: undefined,
+                        generated: { line: 1, column: 17 },
+                        source: "a.js",
+                        original: { line: 1, column: 18 }
+                    },
+                    {
+                        name: "console",
+                        generated: { line: 2, column: 0 },
+                        source: "a.js",
+                        original: { line: 1, column: 20 }
+                    },
+                    {
+                        name: "log",
+                        generated: { line: 2, column: 10 },
+                        source: "a.js",
+                        original: { line: 1, column: 28 }
+                    },
+                    {
+                        name: undefined,
+                        generated: { line: 2, column: 13 },
+                        source: "a.js",
+                        original: { line: 1, column: 20 }
+                    },
+                    {
+                        name: "msg",
+                        generated: { line: 2, column: 14 },
+                        source: "a.js",
+                        original: { line: 1, column: 32 }
+                    },
+                    {
+                        name: undefined,
+                        generated: { line: 2, column: 17 },
+                        source: "a.js",
+                        original: { line: 1, column: 20 }
+                    },
+                    {
+                        name: undefined,
+                        generated: { line: 3, column: 0 },
+                        source: "a.js",
+                        original: { line: 1, column: 39 }
+                    },
+                    {
+                        name: "hi",
+                        generated: { line: 5, column: 0 },
+                        source: "b.js",
+                        original: { line: 1, column: 0 }
+                    },
+                    {
+                        name: undefined,
+                        generated: { line: 5, column: 3 },
+                        source: "b.js",
+                        original: { line: 1, column: 3 }
+                    },
+                    {
+                        name: undefined,
+                        generated: { line: 5, column: 10 },
+                        source: "b.js",
+                        original: { line: 1, column: 0 }
+                    }
+                ],
+                "raw mappings were incorrectly generated",
+            );
 
-        expect(generated.rawMappings).to.deep.equal([
-            {
-                name: undefined,
-                generated: { line: 1, column: 0 },
-                source: "a.js",
-                original: { line: 1, column: 0 }
-            },
-            {
-                name: "hi",
-                generated: { line: 1, column: 9 },
-                source: "a.js",
-                original: { line: 1, column: 9 }
-            },
-            {
-                name: undefined,
-                generated: { line: 1, column: 11 },
-                source: "a.js",
-                original: { line: 1, column: 0 }
-            },
-            {
-                name: "msg",
-                generated: { line: 1, column: 12 },
-                source: "a.js",
-                original: { line: 1, column: 13 }
-            },
-            {
-                name: undefined,
-                generated: { line: 1, column: 15 },
-                source: "a.js",
-                original: { line: 1, column: 0 }
-            },
-            {
-                name: undefined,
-                generated: { line: 1, column: 17 },
-                source: "a.js",
-                original: { line: 1, column: 18 }
-            },
-            {
-                name: "console",
-                generated: { line: 2, column: 0 },
-                source: "a.js",
-                original: { line: 1, column: 20 }
-            },
-            {
-                name: "log",
-                generated: { line: 2, column: 10 },
-                source: "a.js",
-                original: { line: 1, column: 28 }
-            },
-            {
-                name: undefined,
-                generated: { line: 2, column: 13 },
-                source: "a.js",
-                original: { line: 1, column: 20 }
-            },
-            {
-                name: "msg",
-                generated: { line: 2, column: 14 },
-                source: "a.js",
-                original: { line: 1, column: 32 }
-            },
-            {
-                name: undefined,
-                generated: { line: 2, column: 17 },
-                source: "a.js",
-                original: { line: 1, column: 20 }
-            },
-            {
-                name: undefined,
-                generated: { line: 3, column: 0 },
-                source: "a.js",
-                original: { line: 1, column: 39 }
-            },
-            {
-                name: "hi",
-                generated: { line: 5, column: 0 },
-                source: "b.js",
-                original: { line: 1, column: 0 }
-            },
-            {
-                name: undefined,
-                generated: { line: 5, column: 3 },
-                source: "b.js",
-                original: { line: 1, column: 3 }
-            },
-            {
-                name: undefined,
-                generated: { line: 5, column: 10 },
-                source: "b.js",
-                original: { line: 1, column: 0 }
-            }
-        ], "raw mappings were incorrectly generated");
-
-        expect(generated.code).to.equal(
-            "function hi(msg) {\n  console.log(msg);\n}\n\nhi('hello');",
-            "code was incorrectly generated"
-        );
-    });
-
-    it("identifierName", () => {
-        const code = "function foo() { bar; }\n";
-
-        const ast = parse(code, { filename: "inline" }).program;
-        const fn = ast.body[0];
-
-        const id = fn.id;
-        id.name += "2";
-        id.loc.identifierName = "foo";
-
-        const id2 = fn.body.body[0].expression;
-        id2.name += "2";
-        id2.loc.identiferName = "bar";
-
-        const generated = generate(ast, {
-            filename: "inline",
-            sourceFileName: "inline",
-            sourceMaps: true
-        }, code);
-
-        expect(generated.map).to.deep.equal({
-            version: 3,
-            sources: ["inline"],
-            names: ["foo", "bar"],
-            mappings: "AAAA,SAASA,IAAT,GAAe;AAAEC;AAAM",
-            sourcesContent: ["function foo() { bar; }\n"]
-        }, "sourcemap was incorrectly generated");
-
-        expect(generated.rawMappings).to.deep.equal([
-            {
-                name: undefined,
-                generated: { line: 1, column: 0 },
-                source: "inline",
-                original: { line: 1, column: 0 }
-            },
-            {
-                name: "foo",
-                generated: { line: 1, column: 9 },
-                source: "inline",
-                original: { line: 1, column: 9 }
-            },
-            {
-                name: undefined,
-                generated: { line: 1, column: 13 },
-                source: "inline",
-                original: { line: 1, column: 0 }
-            },
-            {
-                name: undefined,
-                generated: { line: 1, column: 16 },
-                source: "inline",
-                original: { line: 1, column: 15 }
-            },
-            {
-                name: "bar",
-                generated: { line: 2, column: 0 },
-                source: "inline",
-                original: { line: 1, column: 17 }
-            },
-            {
-                name: undefined,
-                generated: { line: 3, column: 0 },
-                source: "inline",
-                original: { line: 1, column: 23 }
-            }
-        ], "raw mappings were incorrectly generated");
-
-        expect(generated.code).to.equal(
-            "function foo2() {\n  bar2;\n}",
-            "code was incorrectly generated"
-        );
-    });
-    it("lazy source map generation", () => {
-        const code = "function hi (msg) { console.log(msg); }\n";
-
-        const ast = parse(code, { filename: "a.js" }).program;
-        const generated = generate(ast, {
-            sourceFileName: "a.js",
-            sourceMaps: true
+            expect(generated.code).to.equal("function hi(msg) {\n  console.log(msg);\n}\n\nhi('hello');", "code was incorrectly generated");
         });
 
-        expect(generated.rawMappings).to.be.an("array");
+        it("identifierName", () => {
+            const code = "function foo() { bar; }\n";
 
-        expect(generated).ownPropertyDescriptor("map").not.to.have.property("value");
+            const ast = parse(code, { filename: "inline" }).program;
+            const fn = ast.body[0];
 
-        expect(generated.map).to.be.an("object");
+            const id = fn.id;
+            id.name += "2";
+            id.loc.identifierName = "foo";
+
+            const id2 = fn.body.body[0].expression;
+            id2.name += "2";
+            id2.loc.identiferName = "bar";
+
+            const generated = generate(
+                ast,
+                {
+                    filename: "inline",
+                    sourceFileName: "inline",
+                    sourceMaps: true
+                },
+                code,
+            );
+
+            expect(generated.map).to.deep.equal(
+                {
+                    version: 3,
+                    sources: ["inline"],
+                    names: ["foo", "bar"],
+                    mappings: "AAAA,SAASA,IAAT,GAAe;AAAEC;AAAM",
+                    sourcesContent: ["function foo() { bar; }\n"]
+                },
+                "sourcemap was incorrectly generated",
+            );
+
+            expect(generated.rawMappings).to.deep.equal(
+                [
+                    {
+                        name: undefined,
+                        generated: { line: 1, column: 0 },
+                        source: "inline",
+                        original: { line: 1, column: 0 }
+                    },
+                    {
+                        name: "foo",
+                        generated: { line: 1, column: 9 },
+                        source: "inline",
+                        original: { line: 1, column: 9 }
+                    },
+                    {
+                        name: undefined,
+                        generated: { line: 1, column: 13 },
+                        source: "inline",
+                        original: { line: 1, column: 0 }
+                    },
+                    {
+                        name: undefined,
+                        generated: { line: 1, column: 16 },
+                        source: "inline",
+                        original: { line: 1, column: 15 }
+                    },
+                    {
+                        name: "bar",
+                        generated: { line: 2, column: 0 },
+                        source: "inline",
+                        original: { line: 1, column: 17 }
+                    },
+                    {
+                        name: undefined,
+                        generated: { line: 3, column: 0 },
+                        source: "inline",
+                        original: { line: 1, column: 23 }
+                    }
+                ],
+                "raw mappings were incorrectly generated",
+            );
+
+            expect(generated.code).to.equal("function foo2() {\n  bar2;\n}", "code was incorrectly generated");
+        });
+
+        it("lazy source map generation", () => {
+            const code = "function hi (msg) { console.log(msg); }\n";
+
+            const ast = parse(code, { filename: "a.js" }).program;
+            const generated = generate(ast, {
+                sourceFileName: "a.js",
+                sourceMaps: true
+            });
+
+            expect(generated.rawMappings).to.be.an("array");
+
+            expect(generated).ownPropertyDescriptor("map").not.to.have.property("value");
+
+            expect(generated.map).to.be.an("object");
+        });
     });
 
     describe("programmatic generation", () => {
         it("numeric member expression", () => {
             // Should not generate `0.foo`
-            const mem = types.memberExpression(types.numericLiteral(60702), types.identifier("foo"));
+            const mem = t.memberExpression(
+                t.numericLiteral(60702),
+                t.identifier("foo"),
+            );
             new Function(generate(mem).code);
         });
 
         it("nested if statements needs block", () => {
-            const ifStatement = types.ifStatement(
-                types.stringLiteral("top cond"),
-                types.whileStatement(
-                    types.stringLiteral("while cond"),
-                    types.ifStatement(
-                        types.stringLiteral("nested"),
-                        types.expressionStatement(types.numericLiteral(1))
-                    )
+            const ifStatement = t.ifStatement(
+                t.stringLiteral("top cond"),
+                t.whileStatement(
+                    t.stringLiteral("while cond"),
+                    t.ifStatement(
+                        t.stringLiteral("nested"),
+                        t.expressionStatement(t.numericLiteral(1)),
+                    ),
                 ),
-                types.expressionStatement(types.stringLiteral("alt"))
+                t.expressionStatement(t.stringLiteral("alt")),
             );
 
             const ast = parse(generate(ifStatement).code);
@@ -265,73 +285,67 @@ describe("js", "compiler", "generator", () => {
         });
 
         it("prints directives in block with empty body", () => {
-            const blockStatement = types.blockStatement(
+            const blockStatement = t.blockStatement(
                 [],
-                [types.directive(types.directiveLiteral("use strict"))]
+                [t.directive(t.directiveLiteral("use strict"))],
             );
 
             const output = generate(blockStatement).code;
-            assert.equal(output, [
-                "{",
-                "  \"use strict\";",
-                "}"
-            ].join("\n"));
+            assert.equal(output, `{
+  "use strict";
+}`,
+            );
         });
 
         it("flow object indentation", () => {
-            const objectStatement = types.objectTypeAnnotation(
-                [
-                    types.objectTypeProperty(
-                        types.identifier("bar"),
-                        types.stringTypeAnnotation()
-                    )
-                ],
+            const objectStatement = t.objectTypeAnnotation(
+                [t.objectTypeProperty(t.identifier("bar"), t.stringTypeAnnotation())],
                 null,
-                null
+                null,
             );
 
             const output = generate(objectStatement).code;
-            assert.equal(output, [
-                "{",
-                "  bar: string;",
-                "}"
-            ].join("\n"));
+            assert.equal(output, `{
+  bar: string
+}`,
+            );
         });
 
         it("flow object indentation with empty leading ObjectTypeProperty", () => {
-            const objectStatement = types.objectTypeAnnotation(
-                [], [
-                    types.objectTypeIndexer(
-                        types.identifier("key"),
-                        types.anyTypeAnnotation(),
-                        types.identifier("Test"),
+            const objectStatement = t.objectTypeAnnotation(
+                [],
+                [
+                    t.objectTypeIndexer(
+                        t.identifier("key"),
+                        t.anyTypeAnnotation(),
+                        t.identifier("Test"),
                     )
-                ]
+                ],
             );
 
             const output = generate(objectStatement).code;
 
-            assert.equal(output, [
-                "{",
-                "  [key: any]: Test;",
-                "}"
-            ].join("\n"));
+            assert.equal(output, `{
+  [key: any]: Test
+}`,
+            );
         });
     });
 
-    describe("whitespace", () => {
-        it("empty token list", () => {
-            const w = new Whitespace([]);
-            assert.equal(w.getNewlinesBefore(types.stringLiteral("1")), 0);
+    describe("CodeGenerator", () => {
+        it("generate", () => {
+            const codeGen = new CodeGenerator(t.numericLiteral(123));
+            const code = codeGen.generate().code;
+            assert.equal(parse(code).program.body[0].expression.value, 123);
         });
     });
 
     const suites = helperFixture(`${__dirname}/fixtures`);
 
     suites.forEach((testSuite) => {
-        describe("fixtures", testSuite.title, () => {
+        describe(`***generation/${testSuite.title}`, () => {
             testSuite.tests.forEach((task) => {
-                it(task.title, task.disabled ? adone.noop : () => {
+                it(task.title, task.disabled ? adone.noop : (() => {
                     const taskExpect = task.expect;
                     const actual = task.actual;
                     const actualCode = actual.code;
@@ -339,29 +353,21 @@ describe("js", "compiler", "generator", () => {
                     if (actualCode) {
                         const actualAst = parse(actualCode, {
                             filename: actual.loc,
-                            plugins: ["*"],
+                            plugins: task.options.plugins || [],
                             strictMode: false,
                             sourceType: "module"
                         });
                         const result = generate(actualAst, task.options, actualCode);
 
-                        if (
-                            !taskExpect.code && result.code &&
-                            fs.statSync(path.dirname(taskExpect.loc)).isDirectory() &&
-                            !process.env.CI
-                        ) {
+                        if (!taskExpect.code && result.code && fs.statSync(path.dirname(taskExpect.loc)).isDirectory() && !process.env.CI) {
                             console.log(`New test file created: ${taskExpect.loc}`);
                             fs.writeFileSync(taskExpect.loc, result.code);
                         } else {
                             expect(result.code).to.be.equal(taskExpect.code, `${actual.loc} !== ${taskExpect.loc}`);
                         }
                     }
-                });
+                }));
             });
         });
     });
 });
-
-
-
-

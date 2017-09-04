@@ -210,6 +210,7 @@
                     }
                   }
                 ],
+                "predicate": null,
                 "returnType": {
                   "type": "TypeAnnotation",
                   "start": 74,
@@ -256,8 +257,7 @@
                       },
                       "name": "T"
                     }
-                  },
-                  "predicate": null
+                  }
                 },
                 "body": {
                   "type": "BlockStatement",

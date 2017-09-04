@@ -1,7 +1,0 @@
-{
-  "plugins": [
-    "syntax.asyncGenerators",
-    "transform.objectRestSpread",
-    "externalHelpers"
-  ]
-}

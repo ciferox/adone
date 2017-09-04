@@ -1,5 +1,11 @@
 // This file contains methods responsible for introspecting the current path for certain values.
-const { is, js: { compiler: { types: t } } } = adone;
+
+import type NodePath from "./index";
+
+const {
+    js: { compiler: { types: t } },
+    vendor: { lodash: { includes } }
+} = adone;
 
 /**
  * Match the current node if it matches the provided `pattern`.
@@ -7,72 +13,19 @@ const { is, js: { compiler: { types: t } } } = adone;
  * For example, given the match `React.createClass` it would match the
  * parsed nodes of `React.createClass` and `React["createClass"]`.
  */
-export const matchesPattern = function (pattern, allowPartial) {
-    // not a member expression
-    if (!this.isMemberExpression()) {
-        return false;
-    }
 
-    const parts = pattern.split(".");
-    const search = [this.node];
-    let i = 0;
-
-    const matches = function (name) {
-        const part = parts[i];
-        return part === "*" || name === part;
-    };
-
-    while (search.length) {
-        const node = search.shift();
-
-        if (allowPartial && i === parts.length) {
-            return true;
-        }
-
-        if (t.isIdentifier(node)) {
-            // this part doesn't match
-            if (!matches(node.name)) {
-                return false;
-            }
-        } else if (t.isLiteral(node)) {
-            // this part doesn't match
-            if (!matches(node.value)) {
-                return false;
-            }
-        } else if (t.isMemberExpression(node)) {
-            if (node.computed && !t.isLiteral(node.property)) {
-                // we can't deal with this
-                return false;
-            }
-            search.unshift(node.property);
-            search.unshift(node.object);
-            continue;
-
-        } else if (t.isThisExpression(node)) {
-            if (!matches("this")) {
-                return false;
-            }
-        } else {
-            // we can't deal with this
-            return false;
-        }
-
-        // too many parts
-        if (++i > parts.length) {
-            return false;
-        }
-    }
-
-    return i === parts.length;
+export const matchesPattern = function (pattern: string, allowPartial?: boolean): boolean {
+    return t.matchesPattern(this.node, pattern, allowPartial);
 };
 
 /**
  * Check whether we have the input `key`. If the `key` references an array then we check
  * if the array has any items, otherwise we just check if it's falsy.
  */
-export const has = function (key) {
+
+export const has = function (key): boolean {
     const val = this.node && this.node[key];
-    if (val && is.array(val)) {
+    if (val && adone.is.array(val)) {
         return Boolean(val.length);
     }
     return Boolean(val);
@@ -82,26 +35,30 @@ export const has = function (key) {
 /**
  * Description
  */
+
 export const isStatic = function () {
     return this.scope.isStatic(this.node);
 };
 
-/**
- * Alias of `has`.
- */
-export { has as is };
+// /**
+//  * Alias of `has`.
+//  */
+
+export const is = has;
 
 /**
  * Opposite of `has`.
  */
-export const isnt = function (key) {
+
+export const isnt = function (key): boolean {
     return !this.has(key);
 };
 
 /**
  * Check whether the path node `key` strict equals `value`.
  */
-export const equals = function (key, value) {
+
+export const equals = function (key, value): boolean {
     return this.node[key] === value;
 };
 
@@ -109,7 +66,8 @@ export const equals = function (key, value) {
  * Check the type against our stored internal type of the node. This is handy when a node has
  * been removed yet we still internally know the type and need it to calculate node replacement.
  */
-export const isNodeType = function (type) {
+
+export const isNodeType = function (type: string): boolean {
     return t.isType(this.type, type);
 };
 
@@ -122,8 +80,11 @@ export const isNodeType = function (type) {
  * This is because these spots allow VariableDeclarations AND normal expressions so we need
  * to tell the path replacement that it's ok to replace this with an expression.
  */
+
 export const canHaveVariableDeclarationOrExpression = function () {
-    return (this.key === "init" || this.key === "left") && this.parentPath.isFor();
+    return (
+        (this.key === "init" || this.key === "left") && this.parentPath.isFor()
+    );
 };
 
 /**
@@ -133,6 +94,7 @@ export const canHaveVariableDeclarationOrExpression = function () {
  * This is because arrow functions may implicitly return an expression, which
  * is the same as containing a block statement.
  */
+
 export const canSwapBetweenExpressionAndStatement = function (replacement) {
     if (this.key !== "body" || !this.parentPath.isArrowFunctionExpression()) {
         return false;
@@ -150,11 +112,12 @@ export const canSwapBetweenExpressionAndStatement = function (replacement) {
 /**
  * Check whether the current path references a completion record
  */
-export const isCompletionRecord = function (allowInsideFunction) {
+
+export const isCompletionRecord = function (allowInsideFunction?) {
     let path = this;
     let first = true;
 
-    for ( ; ; ) {
+    do {
         const container = path.container;
 
         // we're in a function so can't be a completion record
@@ -169,14 +132,7 @@ export const isCompletionRecord = function (allowInsideFunction) {
         if (is.array(container) && path.key !== container.length - 1) {
             return false;
         }
-        path = path.parentPath;
-        if (!path) {
-            break;
-        }
-        if (path.isProgram()) {
-            break;
-        }
-    }
+    } while ((path = path.parentPath) && !path.isProgram());
 
     return true;
 };
@@ -185,17 +141,22 @@ export const isCompletionRecord = function (allowInsideFunction) {
  * Check whether or not the current `key` allows either a single statement or block statement
  * so we can explode it if necessary.
  */
+
 export const isStatementOrBlock = function () {
-    if (this.parentPath.isLabeledStatement() || t.isBlockStatement(this.container)) {
+    if (
+        this.parentPath.isLabeledStatement() ||
+        t.isBlockStatement(this.container)
+    ) {
         return false;
     }
-    return Object.keys(t.STATEMENT_OR_BLOCK_KEYS).includes(this.key);
+    return includes(t.STATEMENT_OR_BLOCK_KEYS, this.key);
 
 };
 
 /**
  * Check if the currently assigned path references the `importName` of `moduleSource`.
  */
+
 export const referencesImport = function (moduleSource, importName) {
     if (!this.isReferencedIdentifier()) {
         return false;
@@ -239,6 +200,7 @@ export const referencesImport = function (moduleSource, importName) {
 /**
  * Get the source code associated with this node.
  */
+
 export const getSource = function () {
     const node = this.node;
     if (node.end) {
@@ -258,15 +220,20 @@ export const willIMaybeExecuteBefore = function (target) {
  * "Execution status" simply refers to where or not we **think** this will execuete
  * before or after the input `target` element.
  */
+
 export const _guessExecutionStatusRelativeTo = function (target) {
     // check if the two paths are in different functions, we can't track execution of these
-    const targetFuncParent = target.scope.getFunctionParent();
-    const selfFuncParent = this.scope.getFunctionParent();
+    const targetFuncParent =
+        target.scope.getFunctionParent() || target.scope.getProgramParent();
+    const selfFuncParent =
+        this.scope.getFunctionParent() || target.scope.getProgramParent();
 
     // here we check the `node` equality as sometimes we may have different paths for the
     // same node due to path thrashing
     if (targetFuncParent.node !== selfFuncParent.node) {
-        const status = this._guessExecutionStatusRelativeToDifferentFunctions(targetFuncParent);
+        const status = this._guessExecutionStatusRelativeToDifferentFunctions(
+            targetFuncParent,
+        );
         if (status) {
             return status;
         }
@@ -276,7 +243,7 @@ export const _guessExecutionStatusRelativeTo = function (target) {
 
     const targetPaths = target.getAncestry();
     if (targetPaths.indexOf(this) >= 0) {
-        return "after";
+        return "after"; 
     }
 
     const selfPaths = this.getAncestry();
@@ -305,13 +272,17 @@ export const _guessExecutionStatusRelativeTo = function (target) {
     }
 
     // container list so let's see which one is after the other
-    if (targetRelationship.listKey && targetRelationship.container === selfRelationship.container) {
+    if (
+        targetRelationship.listKey &&
+        targetRelationship.container === selfRelationship.container
+    ) {
         return targetRelationship.key > selfRelationship.key ? "before" : "after";
     }
 
     // otherwise we're associated by a parent node, check which key comes before the other
-    const targetKeyPosition = t.VISITOR_KEYS[targetRelationship.type].indexOf(targetRelationship.key);
-    const selfKeyPosition = t.VISITOR_KEYS[selfRelationship.type].indexOf(selfRelationship.key);
+    const keys = t.VISITOR_KEYS[commonPath.type];
+    const targetKeyPosition = keys.indexOf(targetRelationship.key);
+    const selfKeyPosition = keys.indexOf(selfRelationship.key);
     return targetKeyPosition > selfKeyPosition ? "before" : "after";
 };
 
@@ -332,7 +303,7 @@ export const _guessExecutionStatusRelativeToDifferentFunctions = function (targe
         return "before";
     }
 
-    const referencePaths = binding.referencePaths;
+    const referencePaths: Array<NodePath> = binding.referencePaths;
 
     // verify that all of the references are calls
     for (const path of referencePaths) {
@@ -347,7 +318,9 @@ export const _guessExecutionStatusRelativeToDifferentFunctions = function (targe
     for (const path of referencePaths) {
         // if a reference is a child of the function we're checking against then we can
         // safelty ignore it
-        const childOfFunction = Boolean(path.find((path) => path.node === targetFuncPath.node));
+        const childOfFunction = Boolean(path.find(
+            (path) => path.node === targetFuncPath.node,
+        ));
         if (childOfFunction) {
             continue;
         }
@@ -369,15 +342,16 @@ export const _guessExecutionStatusRelativeToDifferentFunctions = function (targe
 /**
  * Resolve a "pointer" `NodePath` to it's absolute path.
  */
+
 export const resolve = function (dangerous, resolved) {
     return this._resolve(dangerous, resolved) || this;
 };
 
-export const _resolve = function (dangerous, resolved) {
+export const _resolve = function (dangerous?, resolved?): ?NodePath {
     // detect infinite recursion
     // todo: possibly have a max length on this just to be safe
     if (resolved && resolved.indexOf(this) >= 0) {
-        return;
+        return; 
     }
 
     // we store all the paths we've "resolved" in this array to prevent infinite recursion
@@ -388,29 +362,29 @@ export const _resolve = function (dangerous, resolved) {
         if (this.get("id").isIdentifier()) {
             return this.get("init").resolve(dangerous, resolved);
         }
-            // otherwise it's a request for a pattern and that's a bit more tricky
+        // otherwise it's a request for a pattern and that's a bit more tricky
 
     } else if (this.isReferencedIdentifier()) {
         const binding = this.scope.getBinding(this.node.name);
         if (!binding) {
-            return;
+            return; 
         }
 
         // reassigned so we can't really resolve it
         if (!binding.constant) {
-            return;
+            return; 
         }
 
         // todo - lookup module in dependency graph
         if (binding.kind === "module") {
-            return;
+            return; 
         }
 
         if (binding.path !== this) {
             const ret = binding.path.resolve(dangerous, resolved);
             // If the identifier resolves to parent node then we can't really resolve it.
             if (this.find((parent) => parent.node === ret.node)) {
-                return;
+                return; 
             }
             return ret;
         }
@@ -422,7 +396,7 @@ export const _resolve = function (dangerous, resolved) {
 
         const targetKey = this.toComputedKey();
         if (!t.isLiteral(targetKey)) {
-            return;
+            return; 
         }
 
         const targetName = targetKey.value;
@@ -431,28 +405,29 @@ export const _resolve = function (dangerous, resolved) {
 
         if (target.isObjectExpression()) {
             const props = target.get("properties");
-            for (const prop of props) {
+            for (const prop of (props: Array)) {
                 if (!prop.isProperty()) {
-                    continue;
+                    continue; 
                 }
 
                 const key = prop.get("key");
 
                 // { foo: obj }
-                let match = prop.isnt("computed") && key.isIdentifier({ name: targetName });
+                let match =
+                    prop.isnt("computed") && key.isIdentifier({ name: targetName });
 
                 // { "foo": "obj" } or { ["foo"]: "obj" }
                 match = match || key.isLiteral({ value: targetName });
 
                 if (match) {
-                    return prop.get("value").resolve(dangerous, resolved);
+                    return prop.get("value").resolve(dangerous, resolved); 
                 }
             }
-        } else if (target.isArrayExpression() && !is.nan(Number(targetName))) {
+        } else if (target.isArrayExpression() && !isNaN(Number(targetName))) {
             const elems = target.get("elements");
             const elem = elems[targetName];
             if (elem) {
-                return elem.resolve(dangerous, resolved);
+                return elem.resolve(dangerous, resolved); 
             }
         }
     }

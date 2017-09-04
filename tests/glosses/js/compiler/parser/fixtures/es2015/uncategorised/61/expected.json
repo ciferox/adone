@@ -69,7 +69,8 @@
               "end": {
                 "line": 1,
                 "column": 1
-              }
+              },
+              "identifierName": "x"
             },
             "name": "x"
           },
@@ -103,7 +104,6 @@
                   }
                 },
                 "method": false,
-                "shorthand": true,
                 "computed": false,
                 "key": {
                   "type": "Identifier",
@@ -117,10 +117,12 @@
                     "end": {
                       "line": 1,
                       "column": 7
-                    }
+                    },
+                    "identifierName": "y"
                   },
                   "name": "y"
                 },
+                "shorthand": true,
                 "value": {
                   "type": "Identifier",
                   "start": 6,
@@ -133,9 +135,13 @@
                     "end": {
                       "line": 1,
                       "column": 7
-                    }
+                    },
+                    "identifierName": "y"
                   },
                   "name": "y"
+                },
+                "extra": {
+                  "shorthand": true
                 }
               },
               {
@@ -153,7 +159,6 @@
                   }
                 },
                 "method": false,
-                "shorthand": true,
                 "computed": false,
                 "key": {
                   "type": "Identifier",
@@ -167,10 +172,12 @@
                     "end": {
                       "line": 1,
                       "column": 10
-                    }
+                    },
+                    "identifierName": "z"
                   },
                   "name": "z"
                 },
+                "shorthand": true,
                 "value": {
                   "type": "Identifier",
                   "start": 9,
@@ -183,9 +190,13 @@
                     "end": {
                       "line": 1,
                       "column": 10
-                    }
+                    },
+                    "identifierName": "z"
                   },
                   "name": "z"
+                },
+                "extra": {
+                  "shorthand": true
                 }
               }
             ]

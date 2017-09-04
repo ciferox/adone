@@ -54,13 +54,16 @@
             "end": {
               "line": 1,
               "column": 12
-            }
+            },
+            "identifierName": "foo"
           },
           "name": "foo"
         },
         "generator": false,
         "expression": false,
+        "async": false,
         "params": [],
+        "predicate": null,
         "returnType": {
           "type": "TypeAnnotation",
           "start": 14,
@@ -91,7 +94,8 @@
             },
             "callProperties": [],
             "properties": [],
-            "indexers": []
+            "indexers": [],
+            "exact": false
           }
         },
         "body": {

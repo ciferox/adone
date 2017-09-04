@@ -1,5 +1,6 @@
-
-const { parse, traverse } = adone.js.compiler;
+const {
+    js: { compiler: { parse, traverse } }
+} = adone;
 
 describe("js", "compiler", "core", "evaluation", () => {
     const addTest = (code, type, value, notConfident) => {
@@ -12,9 +13,12 @@ describe("js", "compiler", "core", "evaluation", () => {
                 assert.deepEqual(evaluate.value, value);
             };
 
-            traverse(parse(code, {
-                plugins: ["*"]
-            }), visitor);
+            traverse(
+                parse(code, {
+                    plugins: ["*"]
+                }),
+                visitor,
+            );
         });
     };
 
@@ -55,14 +59,39 @@ describe("js", "compiler", "core", "evaluation", () => {
     addTest("'abc' === 'xyz' || 1 === 1", "LogicalExpression", true);
     addTest("'abc' === 'xyz' || 1 === 10", "LogicalExpression", false);
     addTest("'abc' === 'abc' || config.flag === 1", "LogicalExpression", true);
-    addTest("obj.a === 'abc' || config.flag === 1", "LogicalExpression", undefined, true);
+    addTest(
+        "obj.a === 'abc' || config.flag === 1",
+        "LogicalExpression",
+        undefined,
+        true,
+    );
     addTest("'abc' !== 'abc' && config.flag === 1", "LogicalExpression", false);
     addTest("obj.a === 'abc' && 1 === 1", "LogicalExpression", undefined, true);
-    addTest("'abc' === 'abc' && (1 === 1 || config.flag)", "LogicalExpression", true);
-    addTest("'abc' === 'xyz' || (1 === 1 && config.flag)", "LogicalExpression", undefined, true);
-    addTest("'abc' === 'xyz' || (1 === 1 && 'four' === 'four')", "LogicalExpression", true);
-    addTest("'abc' === 'abc' && (1 === 1 && 'four' === 'four')", "LogicalExpression", true);
+    addTest(
+        "'abc' === 'abc' && (1 === 1 || config.flag)",
+        "LogicalExpression",
+        true,
+    );
+    addTest(
+        "'abc' === 'xyz' || (1 === 1 && config.flag)",
+        "LogicalExpression",
+        undefined,
+        true,
+    );
+    addTest(
+        "'abc' === 'xyz' || (1 === 1 && 'four' === 'four')",
+        "LogicalExpression",
+        true,
+    );
+    addTest(
+        "'abc' === 'abc' && (1 === 1 && 'four' === 'four')",
+        "LogicalExpression",
+        true,
+    );
     addTest("({})", "ObjectExpression", {});
     addTest("({a: '1'})", "ObjectExpression", { a: "1" });
-    addTest("({['a' + 'b']: 10 * 20, 'z': [1, 2, 3]})", "ObjectExpression", { ab: 200, z: [1, 2, 3] });
+    addTest("({['a' + 'b']: 10 * 20, 'z': [1, 2, 3]})", "ObjectExpression", {
+        ab: 200,
+        z: [1, 2, 3]
+    });
 });

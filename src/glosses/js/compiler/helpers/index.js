@@ -1,50 +1,28 @@
-const { lazify } = adone;
+import helpers from "./common_helpers";
 
-const e = lazify({
-    expressions: "./expressions"
-}, null, require);
-
-const helpers = {
-    // expressions
-    get(name) {
-        const fn = e.expressions[name];
-        if (!fn) {
-            throw new ReferenceError(`Unknown helper ${name}`);
-        }
-
-        return fn().expression;
-    }
-};
-
-export default helpers;
-
-lazify({
-    remapAsyncToGenerator: "./remap_async_to_generator",
-    functionName: "./function_name",
+adone.lazify({
     getFunctionArity: "./get_function_arity",
+    functionName: "./function_name",
+    remapAsyncToGenerator: "./remap_async_to_generator",
     callDelegate: "./call_delegate",
     hoistVariables: "./hoist_variables",
-    explodeAssignableExpression: "./explode_assignable_expression",
-    builderBinaryAssignmentOperatorVisitor: "./builder_binary_assignment_operator_visitor",
+    // explodeAssignableExpression: "./explode_assignable_expression",
+    // builderBinaryAssignmentOperatorVisitor: "./builder_binary_assignment_operator_visitor",
     optimiseCallExpression: "./optimise_call_expression",
     ReplaceSupers: "./replace_supers",
     defineMap: "./define_map",
-    builderReactJsx: "./builder_react_jsx"
-}, helpers, require);
+    wrapFunction: "./wrap_function",
+    // builderReactJsx: "./builder_react_jsx"
+}, exports, require);
 
 
-// $FlowIgnore: strange behaviour with getters
-Object.defineProperty(helpers, "list", {
-    configurable: true,
-    get: () => {
-        const value = Object.keys(e.expressions)
-            .map((name) => name.replace(/^_/, ""))
-            .filter((name) => !["__esModule", "_filename__"].includes(name));
-
-        Object.defineProperty(helpers, "list", {
-            configurable: false,
-            value
-        });
-        return value;
+export const get = (name) => {
+    const fn = helpers[name];
+    if (!fn) { 
+        throw new ReferenceError(`Unknown helper ${name}`); 
     }
-});
+
+    return fn().expression;
+};
+
+export const list = Object.keys(helpers).map((name) => name.replace(/^_/, "")).filter((name) => name !== "__esModule");

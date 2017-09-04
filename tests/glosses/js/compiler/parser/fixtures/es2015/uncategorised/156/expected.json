@@ -72,7 +72,6 @@
                 }
               },
               "method": true,
-              "shorthand": false,
               "computed": false,
               "key": {
                 "type": "Identifier",
@@ -86,7 +85,8 @@
                   "end": {
                     "line": 1,
                     "column": 3
-                  }
+                  },
+                  "identifierName": "f"
                 },
                 "name": "f"
               },
@@ -94,6 +94,7 @@
               "id": null,
               "generator": false,
               "expression": false,
+              "async": false,
               "params": [
                 {
                   "type": "AssignmentPattern",
@@ -139,7 +140,6 @@
                           }
                         },
                         "method": false,
-                        "shorthand": true,
                         "computed": false,
                         "key": {
                           "type": "Identifier",
@@ -153,10 +153,12 @@
                             "end": {
                               "line": 1,
                               "column": 6
-                            }
+                            },
+                            "identifierName": "x"
                           },
                           "name": "x"
                         },
+                        "shorthand": true,
                         "value": {
                           "type": "Identifier",
                           "start": 5,
@@ -169,9 +171,13 @@
                             "end": {
                               "line": 1,
                               "column": 6
-                            }
+                            },
+                            "identifierName": "x"
                           },
                           "name": "x"
+                        },
+                        "extra": {
+                          "shorthand": true
                         }
                       }
                     ]
@@ -206,7 +212,6 @@
                           }
                         },
                         "method": false,
-                        "shorthand": false,
                         "computed": false,
                         "key": {
                           "type": "Identifier",
@@ -220,10 +225,12 @@
                             "end": {
                               "line": 1,
                               "column": 12
-                            }
+                            },
+                            "identifierName": "x"
                           },
                           "name": "x"
                         },
+                        "shorthand": false,
                         "value": {
                           "type": "NumericLiteral",
                           "start": 14,
@@ -269,7 +276,8 @@
             }
           ],
           "extra": {
-            "parenthesized": true
+            "parenthesized": true,
+            "parenStart": 0
           }
         }
       }

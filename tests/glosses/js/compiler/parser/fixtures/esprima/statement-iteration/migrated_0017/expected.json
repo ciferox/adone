@@ -54,7 +54,8 @@
             "end": {
               "line": 1,
               "column": 5
-            }
+            },
+            "identifierName": "x"
           },
           "name": "x"
         },
@@ -70,7 +71,8 @@
             "end": {
               "line": 1,
               "column": 13
-            }
+            },
+            "identifierName": "list"
           },
           "name": "list"
         },
@@ -114,7 +116,8 @@
                 "end": {
                   "line": 1,
                   "column": 22
-                }
+                },
+                "identifierName": "process"
               },
               "name": "process"
             },
@@ -131,7 +134,8 @@
                   "end": {
                     "line": 1,
                     "column": 24
-                  }
+                  },
+                  "identifierName": "x"
                 },
                 "name": "x"
               }
@@ -139,6 +143,7 @@
           }
         }
       }
-    ]
+    ],
+    "directives": []
   }
 }

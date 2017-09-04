@@ -54,7 +54,8 @@
             "end": {
               "line": 1,
               "column": 19
-            }
+            },
+            "identifierName": "I"
           },
           "name": "I"
         },
@@ -103,10 +104,13 @@
                   "end": {
                     "line": 1,
                     "column": 25
-                  }
+                  },
+                  "identifierName": "foo"
                 },
                 "name": "foo"
               },
+              "static": false,
+              "kind": "init",
               "value": {
                 "type": "StringTypeAnnotation",
                 "start": 27,
@@ -122,11 +126,12 @@
                   }
                 }
               },
-              "optional": false,
-              "variance": null
+              "variance": null,
+              "optional": false
             }
           ],
-          "indexers": []
+          "indexers": [],
+          "exact": false
         }
       },
       {
@@ -155,7 +160,8 @@
             "end": {
               "line": 2,
               "column": 19
-            }
+            },
+            "identifierName": "I"
           },
           "name": "I"
         },
@@ -188,7 +194,8 @@
                   "column": 21
                 }
               },
-              "name": "T"
+              "name": "T",
+              "variance": null
             }
           ]
         },
@@ -236,10 +243,13 @@
                   "end": {
                     "line": 2,
                     "column": 28
-                  }
+                  },
+                  "identifierName": "foo"
                 },
                 "name": "foo"
               },
+              "static": false,
+              "kind": "init",
               "value": {
                 "type": "GenericTypeAnnotation",
                 "start": 66,
@@ -267,16 +277,18 @@
                     "end": {
                       "line": 2,
                       "column": 31
-                    }
+                    },
+                    "identifierName": "T"
                   },
                   "name": "T"
                 }
               },
-              "optional": false,
-              "variance": null
+              "variance": null,
+              "optional": false
             }
           ],
-          "indexers": []
+          "indexers": [],
+          "exact": false
         }
       }
     ],

@@ -104,7 +104,6 @@
                     }
                   },
                   "method": true,
-                  "shorthand": false,
                   "computed": false,
                   "key": {
                     "type": "Identifier",
@@ -258,7 +257,8 @@
                             "column": 10
                           }
                         },
-                        "name": "T"
+                        "name": "T",
+                        "variance": null
                       }
                     ]
                   }

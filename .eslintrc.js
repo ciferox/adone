@@ -79,7 +79,7 @@ module.exports = {
         "strict": "error",
         "space-before-function-paren": [
             "error",
-            {"anonymous": "always", "named": "never"}
+            { "anonymous": "always", "named": "never" }
         ],
         "template-curly-spacing": ["error", "never"],
         "prefer-template": "error",
@@ -159,9 +159,15 @@ module.exports = {
     "plugins": [
         "adone",
         "babel",
-        "import"
+        "import",
+        "flowtype"
     ],
     "globals": {
         "adone": true,
+    },
+    "settings": {
+        "flowtype": {
+            "onlyFilesWithFlowAnnotation": true
+        }
     }
 };

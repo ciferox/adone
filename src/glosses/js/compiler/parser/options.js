@@ -1,7 +1,22 @@
+// @flow
+
 // A second optional argument can be given to further configure
 // the parser process. These options are recognized:
 
-export const defaultOptions = {
+export type Options = {
+    sourceType: "script" | "module",
+    sourceFilename?: string,
+    startLine: number,
+    allowReturnOutsideFunction: boolean,
+    allowImportExportEverywhere: boolean,
+    allowSuperOutsideMethod: boolean,
+    plugins: $ReadOnlyArray<string>,
+    strictMode: ?boolean,
+    ranges: boolean,
+    tokens: boolean,
+};
+
+export const defaultOptions: Options = {
     // Source type ("script" or "module") for different semantics
     sourceType: "script",
     // Source filename.
@@ -20,13 +35,24 @@ export const defaultOptions = {
     // An array of plugins to enable
     plugins: [],
     // TODO
-    strictMode: null
+    strictMode: null,
+    // Nodes have their start and end characters offsets recorded in
+    // `start` and `end` properties (directly on the node, rather than
+    // the `loc` object, which holds line/column data. To also add a
+    // [semi-standardized][range] `range` property holding a `[start,
+    // end]` array with the same numbers, set the `ranges` option to
+    // `true`.
+    //
+    // [range]: https://bugzilla.mozilla.org/show_bug.cgi?id=745678
+    ranges: false,
+    // Adds all parsed tokens to a `tokens` property on the `File` node
+    tokens: false,
 };
 
 // Interpret and default an options object
 
-export const getOptions = (opts) => {
-    const options = {};
+export const getOptions = (opts: ?Options): Options => {
+    const options: any = {};
     for (const key in defaultOptions) {
         options[key] = opts && key in opts ? opts[key] : defaultOptions[key];
     }

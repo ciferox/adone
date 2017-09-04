@@ -1,3 +1,4 @@
 {
+  "plugins": ["transform.es2015ArrowFunctions"],
   "sourceMap": "inline"
 }

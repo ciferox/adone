@@ -69,7 +69,8 @@
                 "end": {
                   "line": 1,
                   "column": 23
-                }
+                },
+                "identifierName": "a"
               },
               "name": "a",
               "typeAnnotation": {
@@ -128,10 +129,13 @@
                           "end": {
                             "line": 1,
                             "column": 14
-                          }
+                          },
+                          "identifierName": "numVal"
                         },
                         "name": "numVal"
                       },
+                      "static": false,
+                      "kind": "init",
                       "value": {
                         "type": "NumberTypeAnnotation",
                         "start": 16,
@@ -147,11 +151,12 @@
                           }
                         }
                       },
-                      "optional": false,
-                      "variance": null
+                      "variance": null,
+                      "optional": false
                     }
                   ],
-                  "indexers": []
+                  "indexers": [],
+                  "exact": false
                 }
               }
             },
@@ -160,7 +165,7 @@
         ],
         "kind": "var"
       }
-    ]
-  },
-  "comments": []
+    ],
+    "directives": []
+  }
 }

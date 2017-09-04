@@ -115,7 +115,10 @@
                       "column": 18
                     }
                   },
-                  "extra": null,
+                  "extra": {
+                    "rawValue": "leading",
+                    "raw": "\"leading\""
+                  },
                   "value": "leading"
                 }
               },
@@ -145,7 +148,8 @@
                     "end": {
                       "line": 1,
                       "column": 28
-                    }
+                    },
+                    "identifierName": "props"
                   },
                   "name": "props"
                 }

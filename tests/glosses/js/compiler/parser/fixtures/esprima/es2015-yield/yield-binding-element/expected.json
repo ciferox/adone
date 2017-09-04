@@ -87,7 +87,6 @@
                     }
                   },
                   "method": false,
-                  "shorthand": false,
                   "computed": false,
                   "key": {
                     "type": "Identifier",
@@ -101,10 +100,12 @@
                       "end": {
                         "line": 1,
                         "column": 7
-                      }
+                      },
+                      "identifierName": "x"
                     },
                     "name": "x"
                   },
+                  "shorthand": false,
                   "value": {
                     "type": "Identifier",
                     "start": 9,
@@ -117,7 +118,8 @@
                       "end": {
                         "line": 1,
                         "column": 14
-                      }
+                      },
+                      "identifierName": "yield"
                     },
                     "name": "yield"
                   }
@@ -136,7 +138,8 @@
                 "end": {
                   "line": 1,
                   "column": 22
-                }
+                },
+                "identifierName": "foo"
               },
               "name": "foo"
             }

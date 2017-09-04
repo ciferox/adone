@@ -1,5 +1,7 @@
-const { parse, traverse } = adone.js.compiler;
-const { lodash } = adone.vendor;
+const {
+    js: { compiler: { parse, traverse } },
+    vendor: { lodash: { cloneDeep } }
+} = adone;
 
 describe("js", "compiler", "traverse", "traverse", () => {
     const code = `
@@ -15,7 +17,7 @@ describe("js", "compiler", "traverse", "traverse", () => {
             type: "StringLiteral",
             value: "foo"
         };
-        const ast2 = lodash.cloneDeep(program);
+        const ast2 = cloneDeep(program);
 
         traverse(ast2, {
             enter(path) {
@@ -34,12 +36,12 @@ describe("js", "compiler", "traverse", "traverse", () => {
             body[0].declarations[0],
             body[0].declarations[0].id,
             body[0].declarations[0].init,
-
             body[1],
             body[1].expression,
             body[1].expression.left,
             body[1].expression.left.object,
-            body[1].expression.left.property, body[1].expression.right
+            body[1].expression.left.property,
+            body[1].expression.right
         ];
 
         const actual = [];
@@ -67,7 +69,6 @@ describe("js", "compiler", "traverse", "traverse", () => {
             body[0].declarations[0],
             body[0].declarations[0].id,
             body[0].declarations[0].init,
-
             body[1],
             body[1].expression,
             body[1].expression.right
@@ -87,12 +88,16 @@ describe("js", "compiler", "traverse", "traverse", () => {
 
     it("hasType", () => {
         assert.ok(traverse.hasType(ast, null, "ThisExpression"));
-        assert.ok(!traverse.hasType(ast, null, "ThisExpression", ["AssignmentExpression"]));
+        assert.ok(
+            !traverse.hasType(ast, null, "ThisExpression", ["AssignmentExpression"]),
+        );
 
         assert.ok(traverse.hasType(ast, null, "ThisExpression"));
         assert.ok(traverse.hasType(ast, null, "Program"));
 
-        assert.ok(!traverse.hasType(ast, null, "ThisExpression", ["MemberExpression"]));
+        assert.ok(
+            !traverse.hasType(ast, null, "ThisExpression", ["MemberExpression"]),
+        );
         assert.ok(!traverse.hasType(ast, null, "ThisExpression", ["Program"]));
 
         assert.ok(!traverse.hasType(ast, null, "ArrowFunctionExpression"));
@@ -109,7 +114,7 @@ describe("js", "compiler", "traverse", "traverse", () => {
             }
         });
 
-        traverse.clearCache();
+        traverse.cache.clear();
 
         const paths2 = [];
         const scopes2 = [];
@@ -121,7 +126,7 @@ describe("js", "compiler", "traverse", "traverse", () => {
             }
         });
 
-        scopes2.forEach((lodash, i) => {
+        scopes2.forEach((_, i) => {
             assert.notStrictEqual(scopes[i], scopes2[i]);
             assert.notStrictEqual(paths[i], paths2[i]);
         });
@@ -135,7 +140,7 @@ describe("js", "compiler", "traverse", "traverse", () => {
             }
         });
 
-        traverse.clearCache.clearPath();
+        traverse.cache.clearPath();
 
         const paths2 = [];
         traverse(ast, {
@@ -158,7 +163,7 @@ describe("js", "compiler", "traverse", "traverse", () => {
             }
         });
 
-        traverse.clearCache.clearScope();
+        traverse.cache.clearScope();
 
         const scopes2 = [];
         traverse(ast, {

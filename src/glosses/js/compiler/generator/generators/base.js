@@ -1,19 +1,19 @@
-export const File = function (node) {
+export function File(node: Object) {
     this.print(node.program, node);
-};
+}
 
-export const Program = function (node) {
+export function Program(node: Object) {
     this.printInnerComments(node, false);
 
     this.printSequence(node.directives, node);
-    if (node.directives && node.directives.length) {
-        this.newline();
+    if (node.directives && node.directives.length) { 
+        this.newline(); 
     }
 
     this.printSequence(node.body, node);
-};
+}
 
-export const BlockStatement = function (node) {
+export function BlockStatement(node: Object) {
     this.token("{");
     this.printInnerComments(node);
 
@@ -23,8 +23,8 @@ export const BlockStatement = function (node) {
         this.newline();
 
         this.printSequence(node.directives, node, { indent: true });
-        if (hasDirectives) {
-            this.newline();
+        if (hasDirectives) { 
+            this.newline(); 
         }
 
         this.printSequence(node.body, node, { indent: true });
@@ -32,8 +32,8 @@ export const BlockStatement = function (node) {
 
         this.source("end", node.loc);
 
-        if (!this.endsWith("\n")) {
-            this.newline();
+        if (!this.endsWith("\n")) { 
+            this.newline(); 
         }
 
         this.rightBrace();
@@ -41,13 +41,13 @@ export const BlockStatement = function (node) {
         this.source("end", node.loc);
         this.token("}");
     }
-};
+}
 
-export const Noop = function () { };
+export function Noop() { }
 
-export const Directive = function (node) {
+export function Directive(node: Object) {
     this.print(node.value, node);
     this.semicolon();
-};
+}
 
 export { StringLiteral as DirectiveLiteral } from "./types";

@@ -3,7 +3,10 @@
 import traverse from "../index";
 import NodePath from "./index";
 
-const { is, js: { compiler: { parse, codeFrame, types: t } } } = adone;
+const {
+    is,
+    js: { compiler: { types: t, parse, codeFrameColumns } }
+} = adone;
 
 const hoistVariablesVisitor = {
     Function(path) {
@@ -22,11 +25,13 @@ const hoistVariablesVisitor = {
 
         const exprs = [];
 
-        for (const declar of path.node.declarations) {
+        for (const declar of (path.node.declarations: Array<Object>)) {
             if (declar.init) {
-                exprs.push(t.expressionStatement(
-                    t.assignmentExpression("=", declar.id, declar.init)
-                ));
+                exprs.push(
+                    t.expressionStatement(
+                        t.assignmentExpression("=", declar.id, declar.init),
+                    ),
+                );
             }
         }
 
@@ -42,7 +47,7 @@ const hoistVariablesVisitor = {
  *  - Remove the current node.
  */
 
-export const replaceWithMultiple = function (nodes) {
+export const replaceWithMultiple = function (nodes: Array<Object>) {
     this.resync();
 
     nodes = this._verifyNodeList(nodes);
@@ -75,8 +80,14 @@ export const replaceWithSourceString = function (replacement) {
     } catch (err) {
         const loc = err.loc;
         if (loc) {
+            const location = {
+                start: {
+                    line: loc.line,
+                    column: loc.column + 1
+                }
+            };
             err.message += " - make sure this is an expression.";
-            err.message += `\n${codeFrame(replacement, loc.line, loc.column + 1)}`;
+            err.message += `\n${codeFrameColumns(replacement, location)}`;
         }
         throw err;
     }
@@ -102,7 +113,9 @@ export const replaceWith = function (replacement) {
     }
 
     if (!replacement) {
-        throw new Error("You passed `path.replaceWith()` a falsy node, use `path.remove()` instead");
+        throw new Error(
+            "You passed `path.replaceWith()` a falsy node, use `path.remove()` instead",
+        );
     }
 
     if (this.node === replacement) {
@@ -110,23 +123,28 @@ export const replaceWith = function (replacement) {
     }
 
     if (this.isProgram() && !t.isProgram(replacement)) {
-        throw new Error("You can only replace a Program root node with another Program node");
+        throw new Error(
+            "You can only replace a Program root node with another Program node",
+        );
     }
 
     if (is.array(replacement)) {
         throw new Error(
-            "Don't use `path.replaceWith()` with an array of nodes, use `path.replaceWithMultiple()`");
+            "Don't use `path.replaceWith()` with an array of nodes, use `path.replaceWithMultiple()`",
+        );
     }
 
     if (is.string(replacement)) {
         throw new Error(
-            "Don't use `path.replaceWith()` with a source string, use `path.replaceWithSourceString()`");
+            "Don't use `path.replaceWith()` with a source string, use `path.replaceWithSourceString()`",
+        );
     }
 
     if (this.isNodeType("Statement") && t.isExpression(replacement)) {
         if (
             !this.canHaveVariableDeclarationOrExpression() &&
-            !this.canSwapBetweenExpressionAndStatement(replacement)
+            !this.canSwapBetweenExpressionAndStatement(replacement) &&
+            !this.parentPath.isExportDefaultDeclaration()
         ) {
             // replacing a statement with an expression so wrap it in an expression statement
             replacement = t.expressionStatement(replacement);
@@ -175,8 +193,6 @@ export const _replaceWith = function (node) {
         t.validate(this.parent, this.key, node);
     }
 
-    this.debug(() => `Replace with ${node && node.type}`);
-
     this.node = this.container[this.key] = node;
 };
 
@@ -186,35 +202,23 @@ export const _replaceWith = function (node) {
  * extremely important to retain original semantics.
  */
 
-export const replaceExpressionWithStatements = function (nodes) {
+export const replaceExpressionWithStatements = function (nodes: Array<Object>) {
     this.resync();
 
     const toSequenceExpression = t.toSequenceExpression(nodes, this.scope);
 
-    if (t.isSequenceExpression(toSequenceExpression)) {
-        const exprs = toSequenceExpression.expressions;
-
-        if (exprs.length >= 2 && this.parentPath.isExpressionStatement()) {
-            this._maybePopFromStatements(exprs);
-        }
-
-        // could be just one element due to the previous maybe popping
-        if (exprs.length === 1) {
-            this.replaceWith(exprs[0]);
-        } else {
-            this.replaceWith(toSequenceExpression);
-        }
-    } else if (toSequenceExpression) {
+    if (toSequenceExpression) {
         this.replaceWith(toSequenceExpression);
     } else {
-        const container = t.functionExpression(null, [], t.blockStatement(nodes));
-        container.shadow = true;
+        const container = t.arrowFunctionExpression([], t.blockStatement(nodes));
 
         this.replaceWith(t.callExpression(container, []));
         this.traverse(hoistVariablesVisitor);
 
         // add implicit returns to all ending expression statements
-        const completionRecords = this.get("callee").getCompletionRecords();
+        const completionRecords: Array<NodePath> = this.get(
+            "callee",
+        ).getCompletionRecords();
         for (const path of completionRecords) {
             if (!path.isExpressionStatement()) {
                 continue;
@@ -233,19 +237,21 @@ export const replaceExpressionWithStatements = function (nodes) {
                     uid = t.identifier(uid.name);
                 }
 
-                path.get("expression").replaceWith(
-                    t.assignmentExpression("=", uid, path.node.expression)
-                );
+                path
+                    .get("expression")
+                    .replaceWith(t.assignmentExpression("=", uid, path.node.expression));
             } else {
                 path.replaceWith(t.returnStatement(path.node.expression));
             }
         }
 
+        this.get("callee").arrowFunctionToExpression();
+
         return this.node;
     }
 };
 
-export const replaceInline = function (nodes) {
+export const replaceInline = function (nodes: Object | Array<Object>) {
     this.resync();
 
     if (is.array(nodes)) {
