@@ -1,7 +1,7 @@
 export default class extends adone.Transform {
     constructor() {
         super();
-        this.buf = new adone.ExBuffer(0);
+        this.buf = new adone.collection.ByteArray(0);
         this.lpsz = null;
     }
 
@@ -15,7 +15,7 @@ export default class extends adone.Transform {
                 break;
             }
             let packetSize = this.lpsz;
-            if (packetSize === null) {
+            if (adone.is.null(packetSize)) {
                 this.lpsz = packetSize = buffer.readUInt32BE();
                 buffer.compact();
             }

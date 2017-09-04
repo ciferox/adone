@@ -6,7 +6,7 @@ const {
     text,
     lazify,
     util,
-    terminal,
+    runtime: { term },
     tag
 } = adone;
 
@@ -19,34 +19,34 @@ const noStyleLength = (x) => text.ansi.stripEscapeCodes(x).length;
 const hasColorsSupport = Boolean(process.stdout.isTTY);
 
 const defaultColors = {
-    commandName: (x) => terminal.parse(`{#4CAF50-fg}${x}{/}`),
-    commandHelpMessage: (x) => terminal.italic.italic(x),
+    commandName: (x) => term.parse(`{#4CAF50-fg}${x}{/}`),
+    commandHelpMessage: (x) => term.italic.italic(x),
     commandSeparator: (x) => x,
-    optionName: (x) => terminal.parse(`{#00B0FF-fg}${x}{/}`),
+    optionName: (x) => term.parse(`{#00B0FF-fg}${x}{/}`),
     optionVariable: (x) => x,
-    optionHelpMessage: (x) => terminal.italic.italic(x),
+    optionHelpMessage: (x) => term.italic.italic(x),
     // argumentName: (x) => x,
-    argumentName: (x) => terminal.parse(`{#F44336-fg}${x}{/}`),
-    argumentHelpMessage: (x) => terminal.italic(x),
-    default: (x) => terminal.grey(x),
-    // angleBracket: (x) => terminal.green(x),
-    angleBracket: (x) => terminal.parse(`{#F44336-fg}${x}{/}`),
-    squareBracket: (x) => terminal.yellow(x),
-    curlyBracket: (x) => terminal.yellow(x),
-    ellipsis: (x) => terminal.dim(x),
-    usage: (x) => terminal.underline(x),
-    commandGroupHeading: (x) => terminal.underline(x),
-    argumentGroupHeading: (x) => terminal.underline(x),
-    optionGroupHeading: (x) => terminal.underline(x),
+    argumentName: (x) => term.parse(`{#F44336-fg}${x}{/}`),
+    argumentHelpMessage: (x) => term.italic(x),
+    default: (x) => term.grey(x),
+    // angleBracket: (x) => term.green(x),
+    angleBracket: (x) => term.parse(`{#F44336-fg}${x}{/}`),
+    squareBracket: (x) => term.yellow(x),
+    curlyBracket: (x) => term.yellow(x),
+    ellipsis: (x) => term.dim(x),
+    usage: (x) => term.underline(x),
+    commandGroupHeading: (x) => term.underline(x),
+    argumentGroupHeading: (x) => term.underline(x),
+    optionGroupHeading: (x) => term.underline(x),
     value: {
-        string: (x) => terminal.green(x),
-        null: (x) => terminal.yellow(x),
-        number: (x) => terminal.yellow(x),
-        undefined: (x) => terminal.yellow(x),
-        boolean: (x) => terminal.yellow(x),
+        string: (x) => term.green(x),
+        null: (x) => term.yellow(x),
+        number: (x) => term.yellow(x),
+        undefined: (x) => term.yellow(x),
+        boolean: (x) => term.yellow(x),
         object: {
             key: (x) => x,
-            separator: (x) => terminal.cyan(x)
+            separator: (x) => term.cyan(x)
         }
     }
 };
@@ -1048,7 +1048,7 @@ class Command {
 
     getUsageMessage() {
         const chain = this.getCommandChain();
-        const argumentsLength = terminal.cols - chain.length - 1 - 4;
+        const argumentsLength = term.cols - chain.length - 1 - 4;
         const table = new text.table.BorderlessTable({
             colWidths: [4, chain.length + 1, argumentsLength]
         });
@@ -1108,7 +1108,7 @@ class Command {
     getHelpMessage() {
         const helpMessage = [this.getUsageMessage()];
 
-        const totalWidth = terminal.cols;
+        const totalWidth = term.cols;
 
         if (is.string(this.description)) {
             helpMessage.push("", text.wordwrap(this.description, totalWidth));
@@ -1147,16 +1147,16 @@ class Command {
                         message: arg.getShortHelpMessage()
                     };
                 }), {
-                    model: [
-                        { id: "left-spacing", width: 4 },
-                        { id: "names", maxWidth: 40, wordwrap: true },
-                        { id: "between-cells", width: 2 },
-                        { id: "message", wordwrap: false }
-                    ],
-                    width: "100%",
-                    borderless: true,
-                    noHeader: true
-                }));
+                        model: [
+                            { id: "left-spacing", width: 4 },
+                            { id: "names", maxWidth: 40, wordwrap: true },
+                            { id: "between-cells", width: 2 },
+                            { id: "message", wordwrap: false }
+                        ],
+                        width: "100%",
+                        borderless: true,
+                        noHeader: true
+                    }));
             }
             if (options.length) {
                 if (this.arguments.length) {
@@ -1187,16 +1187,16 @@ class Command {
                             message: opt.getShortHelpMessage()
                         };
                     }), {
-                        model: [
-                            { id: "left-spacing", width: 4 },
-                            { id: "names", maxWidth: 40, wordwrap: true },
-                            { id: "between-cells", width: 2 },
-                            { id: "message", wordwrap: false }
-                        ],
-                        width: "100%",
-                        borderless: true,
-                        noHeader: true
-                    }));
+                            model: [
+                                { id: "left-spacing", width: 4 },
+                                { id: "names", maxWidth: 40, wordwrap: true },
+                                { id: "between-cells", width: 2 },
+                                { id: "message", wordwrap: false }
+                            ],
+                            width: "100%",
+                            borderless: true,
+                            noHeader: true
+                        }));
                 }
             }
             if (commands.length) {
@@ -1228,16 +1228,16 @@ class Command {
                             message: cmd.getShortHelpMessage()
                         };
                     }), {
-                        model: [
-                            { id: "left-spacing", width: 4 },
-                            { id: "names", maxWidth: 40, wordwrap: true },
-                            { id: "between-cells", width: 2 },
-                            { id: "message", wordwrap: true }
-                        ],
-                        width: "100%",
-                        borderless: true,
-                        noHeader: true
-                    }));
+                            model: [
+                                { id: "left-spacing", width: 4 },
+                                { id: "names", maxWidth: 40, wordwrap: true },
+                                { id: "between-cells", width: 2 },
+                                { id: "message", wordwrap: true }
+                            ],
+                            width: "100%",
+                            borderless: true,
+                            noHeader: true
+                        }));
                 }
             }
         }
@@ -1305,9 +1305,6 @@ export class Subsystem extends adone.event.AsyncEmitter {
 }
 tag.set(Subsystem, tag.SUBSYSTEM);
 
-
-export let instance = null; // eslint-disable-line
-
 const STAGE_NEW = 0;
 const STAGE_CONFIGURING = 1;
 const STAGE_CONFIGURED = 2;
@@ -1352,10 +1349,10 @@ export class Application extends Subsystem {
         // setup the main application
         // Prevent double initialization of global application instance
         // (for cases where two or more Applications run in-process, the first app will be common).
-        if (!is.null(instance)) {
+        if (!is.null(adone.runtime.app)) {
             throw new x.IllegalState("It is impossible to have several main applications");
         }
-        instance = this;
+        adone.runtime.app = this;
 
         if (process.env.ADONE_REPORT) {
             this.enableReport();
@@ -1380,8 +1377,8 @@ export class Application extends Subsystem {
         this[IS_MAIN] = true;
 
         // Track cursor if interactive application (by default) and if tty mode
-        if (this[INTERACTIVE] && terminal.output.isTTY) {
-            return new Promise((resolve) => terminal.trackCursor(resolve));
+        if (this[INTERACTIVE] && term.output.isTTY) {
+            return new Promise((resolve) => term.trackCursor(resolve));
         }
     }
 
@@ -1418,7 +1415,7 @@ export class Application extends Subsystem {
 
     async run({ ignoreArgs = false } = {}) {
         try {
-            if (is.null(instance)) {
+            if (is.null(adone.runtime.app)) {
                 await this._setupMain();
             }
 
@@ -1654,7 +1651,7 @@ export class Application extends Subsystem {
      * @returns {Promise<void>}
      */
     async uninitializeSubsystems() {
-        for (let i = this[SUBSYSTEMS].length; --i >= 0; ) {
+        for (let i = this[SUBSYSTEMS].length; --i >= 0;) {
             await this._uninitializeSubsystem(this[SUBSYSTEMS][i]); // eslint-disable-line
         }
         this[SUBSYSTEMS].length = 0;
@@ -1724,7 +1721,7 @@ export class Application extends Subsystem {
         }
 
         // Only main application instance can exit process.
-        if (this !== instance) {
+        if (this !== adone.runtime.app) {
             return;
         }
 
@@ -1732,7 +1729,7 @@ export class Application extends Subsystem {
             let fds = 0;
 
             // end the logger & waiting for completion
-            adone.defaultLogger.done(() => {
+            adone.runtime.logger.done(() => {
                 [process.stdout, process.stderr].forEach((std) => {
                     const fd = std.fd;
                     if (!std.bufferSize) {
@@ -1757,7 +1754,7 @@ export class Application extends Subsystem {
         });
 
         if (this[IS_MAIN]) {
-            terminal.destroy();
+            term.destroy();
         }
 
         process.exit(code);
@@ -2483,10 +2480,10 @@ adone.lazify({
 }, exports, require);
 
 export const run = async (App, ignoreArgs = false) => {
-    if (is.null(instance) && is.class(App)) {
+    if (is.null(adone.runtime.app) && is.class(App)) {
         const app = new App();
         if (!is.application(app)) {
-            console.error(`${adone.terminal.styles.red.open}Invalid application class (should be derivative of 'adone.application.Application')${adone.terminal.styles.red.close}`);
+            console.error(`${adone.runtime.term.styles.red.open}Invalid application class (should be derivative of 'adone.application.Application')${adone.runtime.term.styles.red.close}`);
             process.exit(1);
             return;
         }
@@ -2497,9 +2494,9 @@ export const run = async (App, ignoreArgs = false) => {
     const _App = is.class(App) ? App.prototype : App;
     const allProps = util.entries(_App, { onlyEnumerable: false });
 
-    if (!is.null(instance)) {
-        await instance._uninitialize();
-        instance = null;
+    if (!is.null(adone.runtime.app)) {
+        await adone.runtime.app._uninitialize();
+        adone.runtime.app = null;
     }
 
     // redefine argv

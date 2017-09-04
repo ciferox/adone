@@ -1,6 +1,6 @@
 adone.application.run({
     main() {
-        adone.terminal.prompt().run([
+        adone.runtime.term.prompt().run([
             {
                 type: "list",
                 name: "theme",
@@ -8,7 +8,7 @@ adone.application.run({
                 choices: [
                     "Order a pizza",
                     "Make a reservation",
-                    adone.terminal.separator(),
+                    adone.runtime.term.separator(),
                     "Ask for opening hours",
                     {
                         name: "Contact support",

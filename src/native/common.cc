@@ -1,300 +1,14 @@
 #include "adone.h"
 #include <sys/types.h>
 
-#if ADONE_OS_WINDOWS
-
-#include <time.h>
-
-// Pick GetSystemTimePreciseAsFileTime or GetSystemTimeAsFileTime depending on which is available at runtime.
-typedef VOID(WINAPI *WinGetSystemTime)(LPFILETIME);
-static WinGetSystemTime getSystemTime = NULL;
-
-struct timezone
-{
-    int tz_minuteswest;
-    int tz_dsttime;
-};
-
-int gettimeofday(struct timeval *tv, struct timezone *tz)
-{
-    FILETIME ft;
-    (*getSystemTime)(&ft);
-    unsigned long long t = ft.dwHighDateTime;
-    t <<= 32;
-    t |= ft.dwLowDateTime;
-    t /= 10;
-    t -= 11644473600000000ULL;
-    tv->tv_sec = (long)(t / 1000000UL);
-    tv->tv_usec = (long)(t % 1000000UL);
-
-    return 0;
-}
-
-int getCursorPosition(int *const rowptr, int *const colptr)
-{
-    HANDLE hConsole;
-    CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
-
-    hConsole = CreateFileW(L"CONOUT$", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-
-    if (hConsole == INVALID_HANDLE_VALUE)
-    {
-        return GetLastError();
-    }
-
-    if (!GetConsoleScreenBufferInfo(hConsole, &consoleInfo))
-    {
-        return GetLastError();
-    }
-
-    if (rowptr)
-    {
-        *rowptr = consoleInfo.dwCursorPosition.Y + 1;
-    }
-
-    if (colptr)
-    {
-        *colptr = consoleInfo.dwCursorPosition.X + 1;
-    }
-
-    return 0;
-}
-
-#else
+#if ADONE_OS_WINDOWS == 0
 
 #include <grp.h>
 #include <pwd.h>
-#include <errno.h>
-#include <sys/time.h>
-#include <fcntl.h>
-#include <termios.h>
-
-#define RD_EOF -1
-#define RD_EIO -2
-
-static inline int rd(const int fd)
-{
-    unsigned char buffer[4];
-    ssize_t n;
-
-    while (1)
-    {
-        n = read(fd, buffer, 1);
-
-        if (n > (ssize_t)0)
-        {
-            return buffer[0];
-        }
-        else if (n == (ssize_t)0)
-        {
-            return RD_EOF;
-        }
-        else if (n != (ssize_t)-1)
-        {
-            return RD_EIO;
-        }
-        else if (errno != EINTR && errno != EAGAIN && errno != EWOULDBLOCK)
-        {
-            return RD_EIO;
-        }
-    }
-}
-
-static inline int wr(const int fd, const char *const data, const size_t bytes)
-{
-    const char *head = data;
-    const char *const tail = data + bytes;
-    ssize_t n;
-
-    while (head < tail)
-    {
-        n = write(fd, head, (size_t)(tail - head));
-
-        if (n > (ssize_t)0)
-        {
-            head += n;
-        }
-        else if (n != (ssize_t)-1)
-        {
-            return EIO;
-        }
-        else if (errno != EINTR && errno != EAGAIN && errno != EWOULDBLOCK)
-        {
-            return errno;
-        }
-    }
-
-    return 0;
-}
-
-int getCursorPosition(int *const rowptr, int *const colptr)
-{
-    struct termios saved;
-    struct termios temporary;
-    int tty;
-    int retval;
-    int result;
-    int rows;
-    int cols;
-    int saved_errno;
-    const char *dev;
-
-    dev = ttyname(STDIN_FILENO);
-    if (!dev)
-    {
-        dev = ttyname(STDOUT_FILENO);
-    }
-
-    if (!dev)
-    {
-        dev = ttyname(STDERR_FILENO);
-    }
-
-    if (!dev)
-    {
-        errno = ENOTTY;
-        return errno;
-    }
-
-    do
-    {
-        tty = open(dev, O_RDWR | O_NOCTTY);
-    } while (tty == -1 && errno == EINTR);
-
-    if (tty == -1)
-    {
-        return ENOTTY;
-    }
-
-    saved_errno = errno;
-
-    /* Save current terminal settings. */
-    do
-    {
-        result = tcgetattr(tty, &saved);
-    } while (result == -1 && errno == EINTR);
-
-    if (result == -1)
-    {
-        retval = errno;
-        errno = saved_errno;
-        return retval;
-    }
-
-    /* Get current terminal settings for basis, too. */
-    do
-    {
-        result = tcgetattr(tty, &temporary);
-    } while (result == -1 && errno == EINTR);
-
-    if (result == -1)
-    {
-        retval = errno;
-        errno = saved_errno;
-        return retval;
-    }
-
-    /* Disable ICANON, ECHO, and CREAD. */
-    temporary.c_lflag &= ~ICANON;
-    temporary.c_lflag &= ~ECHO;
-    temporary.c_cflag &= ~CREAD;
-
-    /* This loop is only executed once. When broken out,
-     * the terminal settings will be restored, and the function
-     * will return retval to caller. It's better than goto.
-     */
-    do
-    {
-        /* Set modified settings. */
-        do
-        {
-            result = tcsetattr(tty, TCSANOW, &temporary);
-        } while (result == -1 && errno == EINTR);
-
-        if (result == -1)
-        {
-            retval = errno;
-            break;
-        }
-
-        /* Request cursor coordinates from the terminal. */
-        retval = wr(tty, "\033[6n", 4);
-        if (retval)
-        {
-            break;
-        }
-
-        /* Assume coordinate reponse parsing fails. */
-        retval = EIO;
-
-        /* Expect an ESC. */
-        result = rd(tty);
-        if (result != 27)
-        {
-            break;
-        }
-
-        /* Expect [ after the ESC. */
-        result = rd(tty);
-        if (result != '[')
-        {
-            break;
-        }
-
-        /* Parse rows. */
-        rows = 0;
-        result = rd(tty);
-        while (result >= '0' && result <= '9')
-        {
-            rows = 10 * rows + result - '0';
-            result = rd(tty);
-        }
-
-        if (result != ';')
-        {
-            break;
-        }
-
-        /* Parse cols. */
-        cols = 0;
-        result = rd(tty);
-        while (result >= '0' && result <= '9')
-        {
-            cols = 10 * cols + result - '0';
-            result = rd(tty);
-        }
-
-        if (result != 'R')
-        {
-            break;
-        }
-
-        if (rowptr)
-        {
-            *rowptr = rows;
-        }
-
-        if (colptr)
-        {
-            *colptr = cols;
-        }
-
-        retval = 0;
-    } while (0);
-
-    /* Restore saved terminal settings. */
-    do
-    {
-        result = tcsetattr(tty, TCSANOW, &saved);
-    } while (result == -1 && errno == EINTR);
-
-    if (result == -1 && !retval)
-    {
-        retval = errno;
-    }
-
-    return retval;
-}
+// #include <errno.h>
+// #include <sys/time.h>
+// #include <fcntl.h>
+// #include <termios.h>
 
 class UserId : public node::ObjectWrap
 {
@@ -485,52 +199,6 @@ class UserId : public node::ObjectWrap
 };
 
 #endif // ADONE_OS_WINDOWS
-
-class Terminal : public node::ObjectWrap
-{
-  public:
-    static void Initialize(v8::Handle<v8::Object> target)
-    {
-        Nan::HandleScope scope;
-        v8::Local<v8::FunctionTemplate> t = Nan::New<v8::FunctionTemplate>(New);
-        t->InstanceTemplate()->SetInternalFieldCount(1);
-        Nan::SetMethod(t, "getCursorPos", Terminal::GetCursorPos);
-        Nan::Set(target, Nan::New<v8::String>("Terminal").ToLocalChecked(), t->GetFunction());
-    }
-
-  protected:
-    static NAN_METHOD(New)
-    {
-        Nan::HandleScope scope;
-        Terminal *term = new Terminal();
-        term->Wrap(info.This());
-        info.GetReturnValue().Set(info.This());
-    }
-
-    static NAN_METHOD(GetCursorPos)
-    {
-        Nan::HandleScope scope;
-        int row = 0;
-        int col = 0;
-
-        if (getCursorPosition(&row, &col))
-        {
-            info.GetReturnValue().SetUndefined();
-            return;
-        }
-
-        if (row < 1 || col < 1)
-        {
-            info.GetReturnValue().SetUndefined();
-            return;
-        }
-
-        v8::Local<v8::Object> result = Nan::New<Object>();
-        result->Set(NanStr("y"), Nan::New<Integer>(row));
-        result->Set(NanStr("x"), Nan::New<Integer>(col));
-        info.GetReturnValue().Set(result);
-    }
-};
 
 // Descriptions:
 //
@@ -869,9 +537,6 @@ class Common : public node::ObjectWrap
         Nan::SetMethod(t, "isValidUTF8", Common::IsValidUTF8);
         Nan::SetMethod(t, "maskBuffer", Common::MaskBuffer);
         Nan::SetMethod(t, "unmaskBuffer", Common::UnmaskBuffer);
-        Nan::SetMethod(t, "now", Common::Now);
-        Nan::SetMethod(t, "nowDouble", Common::NowDouble);
-        Nan::SetMethod(t, "nowStruct", Common::NowStruct);
         Nan::Set(target, Nan::New<v8::String>("Common").ToLocalChecked(), t->GetFunction());
     }
 
@@ -1077,67 +742,19 @@ class Common : public node::ObjectWrap
         common->Wrap(info.This());
         info.GetReturnValue().Set(info.This());
     }
-
-    static NAN_METHOD(Now)
-    {
-        timeval t;
-        int r = gettimeofday(&t, NULL);
-        if (r < 0)
-        {
-            return Nan::ThrowError(Nan::ErrnoException(errno, "gettimeofday"));
-        }
-
-        info.GetReturnValue().Set(Nan::New<v8::Number>((t.tv_sec * 1000000.0) + t.tv_usec));
-    }
-
-    static NAN_METHOD(NowDouble)
-    {
-        timeval t;
-        int r = gettimeofday(&t, NULL);
-        if (r < 0)
-        {
-            return Nan::ThrowError(Nan::ErrnoException(errno, "gettimeofday"));
-        }
-
-        info.GetReturnValue().Set(Nan::New<v8::Number>(t.tv_sec + (t.tv_usec * 0.000001)));
-    }
-
-    static NAN_METHOD(NowStruct)
-    {
-        timeval t;
-        int r = gettimeofday(&t, NULL);
-        if (r < 0)
-        {
-            return Nan::ThrowError(Nan::ErrnoException(errno, "gettimeofday"));
-        }
-
-        v8::Local<v8::Array> array = Nan::New<v8::Array>(2);
-        array->Set(Nan::New<v8::Integer>(0), Nan::New<v8::Number>((double)t.tv_sec));
-        array->Set(Nan::New<v8::Integer>(1), Nan::New<v8::Number>((double)t.tv_usec));
-
-        info.GetReturnValue().Set(array);
-    }
 };
 
 NAN_MODULE_INIT(init)
 {
     Nan::HandleScope scope;
 
-#if ADONE_OS_WINDOWS
-    getSystemTime = (WinGetSystemTime)GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), "GetSystemTimePreciseAsFileTime");
-    if (getSystemTime == NULL)
-    {
-        getSystemTime = &GetSystemTimeAsFileTime;
-    }
-
-#else
+#if ADONE_OS_WINDOWS == 0
 
     UserId::Initialize(target);
 
 #endif
 
     Common::Initialize(target);
-    Terminal::Initialize(target);
     Memory::Initialize(target);
 }
 

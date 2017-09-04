@@ -1,4 +1,7 @@
-const { is, Terminal } = adone;
+const {
+    is,
+    terminal: { Terminal }
+} = adone;
 
 const mask = (input, maskChar) => {
     input = String(input);

@@ -1,12 +1,12 @@
 adone.application.run({
     main() {
-        adone.terminal.prompt().run([
+        adone.runtime.term.prompt().run([
             {
                 type: "checkbox",
                 message: "Select toppings",
                 name: "toppings",
                 choices: [
-                    adone.terminal.separator(" = The Meats = "),
+                    adone.runtime.term.separator(" = The Meats = "),
                     {
                         name: "Pepperoni"
                     },
@@ -19,7 +19,7 @@ adone.application.run({
                     {
                         name: "Bacon"
                     },
-                    adone.terminal.separator(" = The Cheeses = "),
+                    adone.runtime.term.separator(" = The Cheeses = "),
                     {
                         name: "Mozzarella",
                         checked: true
@@ -30,14 +30,14 @@ adone.application.run({
                     {
                         name: "Parmesan"
                     },
-                    adone.terminal.separator(" = The usual ="),
+                    adone.runtime.term.separator(" = The usual ="),
                     {
                         name: "Mushroom"
                     },
                     {
                         name: "Tomato"
                     },
-                    adone.terminal.separator(" = The extras = "),
+                    adone.runtime.term.separator(" = The extras = "),
                     {
                         name: "Pineapple"
                     },

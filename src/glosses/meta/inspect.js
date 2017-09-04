@@ -1,13 +1,13 @@
 const {
     is,
     identity,
-    terminal
+    runtime: { term }
 } = adone;
 
 /*
     * style:
         * 'none': (default) normal output suitable for console.log() or writing in a file
-        * 'color': colorful output suitable for terminal
+        * 'color': colorful output suitable for term
     * depth: depth limit, default: 3
     * noFunc: do not display functions
     * noNotices: do not display '[depth limit]'/'[circular]'
@@ -48,25 +48,25 @@ const defaultInspectStyle = {
 const inspectStyle = {
     none: defaultInspectStyle,
     color: adone.o(defaultInspectStyle, {
-        limit: (str) => (terminal.styles.bold.open + terminal.styles.brightRed.open + str + terminal.styles.reset.open),
-        type: (str) => (terminal.styles.italic.open + terminal.styles.gray.open + str + terminal.styles.reset.open),
-        constant: (str) => (terminal.styles.cyan.open + str + terminal.styles.reset.open),
-        funcName: (str) => (terminal.styles.italic.open + terminal.styles.magenta.open + str + terminal.styles.reset.open),
-        constructorName: (str) => (terminal.styles.magenta.open + str + terminal.styles.reset.open),
-        length: (str) => (terminal.styles.italic.open + terminal.styles.gray.open + str + terminal.styles.reset.open),
-        key: (str) => (terminal.styles.green.open + str + terminal.styles.reset.open),
-        index: (str) => (terminal.styles.blue.open + str + terminal.styles.reset.open),
-        number: (str) => (terminal.styles.cyan.open + str + terminal.styles.reset.open),
-        inspect: (str) => (terminal.styles.cyan.open + str + terminal.styles.reset.open),
-        string: (str) => (terminal.styles.blue.open + str + terminal.styles.reset.open),
-        errorType: (str) => (terminal.styles.red.open + terminal.styles.bold.open + str + terminal.styles.reset.open),
-        errorMessage: (str) => (terminal.styles.red.open + terminal.styles.italic.open + str + terminal.styles.reset.open),
-        errorStack: (str) => (terminal.styles.gray.open + str + terminal.styles.reset.open),
-        errorStackMethod: (str) => (terminal.styles.brightYellow.open + str + terminal.styles.reset.open),
-        errorStackMethodAs: (str) => (terminal.styles.yellow.open + str + terminal.styles.reset.open),
-        errorStackFile: (str) => (terminal.styles.brightCyan.open + str + terminal.styles.reset.open),
-        errorStackLine: (str) => (terminal.styles.blue.open + str + terminal.styles.reset.open),
-        errorStackColumn: (str) => (terminal.styles.magenta.open + str + terminal.styles.reset.open)
+        limit: (str) => (term.styles.bold.open + term.styles.brightRed.open + str + term.styles.reset.open),
+        type: (str) => (term.styles.italic.open + term.styles.gray.open + str + term.styles.reset.open),
+        constant: (str) => (term.styles.cyan.open + str + term.styles.reset.open),
+        funcName: (str) => (term.styles.italic.open + term.styles.magenta.open + str + term.styles.reset.open),
+        constructorName: (str) => (term.styles.magenta.open + str + term.styles.reset.open),
+        length: (str) => (term.styles.italic.open + term.styles.gray.open + str + term.styles.reset.open),
+        key: (str) => (term.styles.green.open + str + term.styles.reset.open),
+        index: (str) => (term.styles.blue.open + str + term.styles.reset.open),
+        number: (str) => (term.styles.cyan.open + str + term.styles.reset.open),
+        inspect: (str) => (term.styles.cyan.open + str + term.styles.reset.open),
+        string: (str) => (term.styles.blue.open + str + term.styles.reset.open),
+        errorType: (str) => (term.styles.red.open + term.styles.bold.open + str + term.styles.reset.open),
+        errorMessage: (str) => (term.styles.red.open + term.styles.italic.open + str + term.styles.reset.open),
+        errorStack: (str) => (term.styles.gray.open + str + term.styles.reset.open),
+        errorStackMethod: (str) => (term.styles.brightYellow.open + str + term.styles.reset.open),
+        errorStackMethodAs: (str) => (term.styles.yellow.open + str + term.styles.reset.open),
+        errorStackFile: (str) => (term.styles.brightCyan.open + str + term.styles.reset.open),
+        errorStackLine: (str) => (term.styles.blue.open + str + term.styles.reset.open),
+        errorStackColumn: (str) => (term.styles.magenta.open + str + term.styles.reset.open)
     })
 };
 
@@ -103,7 +103,7 @@ const specialObjectSubstitution = (variable) => {
         case "ObjectId":
             if (variable._bsontype) {
                 // This is a MongoDB ObjectId, rather boring to display in its original form
-                // due to esoteric characters that confuse both the user and the terminal displaying it.
+                // due to esoteric characters that confuse both the user and the term displaying it.
                 // Substitute it to its string representation
                 return variable.toString();
             }

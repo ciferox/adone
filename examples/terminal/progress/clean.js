@@ -1,6 +1,6 @@
 adone.application.run({
     main() {
-        const bar = adone.terminal.progress({
+        const bar = adone.runtime.term.progress({
             clean: true,
             schema: " [:bar] \n:current/:total \n:percent \n:elapsed :eta",
             callback() {

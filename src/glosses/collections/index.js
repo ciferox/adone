@@ -12,5 +12,6 @@ adone.lazify({
     RedBlackTree: "./rb_tree",
     Stack: "./stack",
     BufferList: "./buffer_list",
-    ArraySet: "./array_set"
+    ArraySet: "./array_set",
+    ByteArray: "./byte_array"
 }, adone.asNamespace(exports), require);

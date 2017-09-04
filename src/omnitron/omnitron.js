@@ -284,7 +284,7 @@ export default class Omnitron extends application.Application {
 
 if (require.main === module) {
     if (!is.function(process.send)) {
-        console.log(`${adone.terminal.styles.red.open}Omnitron cannot be launched directly${adone.terminal.styles.red.close}`);
+        console.log(`${adone.runtime.term.styles.red.open}Omnitron cannot be launched directly${adone.runtime.term.styles.red.close}`);
         process.exit(application.Application.ERROR);
     }
     application.run(Omnitron);

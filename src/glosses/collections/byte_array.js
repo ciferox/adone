@@ -1,4 +1,9 @@
-const { is, math: { Long }, util: { memcpy: { utoa, atou } }, x } = adone;
+const {
+    is,
+    math: { Long },
+    util: { memcpy: { utoa, atou } },
+    x
+} = adone;
 
 const stringSource = (s) => {
     let i = 0;
@@ -188,8 +193,8 @@ const utfx = {
     }
 };
 
-export default class ExBuffer {
-    constructor(capacity = ExBuffer.DEFAULT_CAPACITY, noAssert = ExBuffer.DEFAULT_NOASSERT) {
+export default class ByteArray {
+    constructor(capacity = ByteArray.DEFAULT_CAPACITY, noAssert = ByteArray.DEFAULT_NOASSERT) {
         if (!noAssert) {
             capacity = capacity | 0;
             if (capacity < 0) {
@@ -249,8 +254,8 @@ export default class ExBuffer {
     /**
      * Reads the specified number of bytes.
      * @param {number} length Number of bytes to read
-     * @param {number=} offset Offset to read from. Will use and increase {@link ExBuffer#offset} by `length` if omitted.
-     * @returns {!ExBuffer}
+     * @param {number=} offset Offset to read from. Will use and increase {@link ByteArray#offset} by `length` if omitted.
+     * @returns {!ByteArray}
      * @expose
      */
     read(length, offset) {
@@ -452,7 +457,7 @@ export default class ExBuffer {
         return this.buffer.readDoubleBE(offset, true);
     }
 
-    // Appends some data to this ExBuffer. This will overwrite any contents behind the specified offset up to the appended data's length.
+    // Appends some data to this ByteArray. This will overwrite any contents behind the specified offset up to the appended data's length.
     write(source, offset, length, encoding) {
         const relative = is.undefined(offset);
         if (relative) {
@@ -473,7 +478,7 @@ export default class ExBuffer {
             length = length || Buffer.byteLength(source);
         } else {
             if (!is.exbuffer(source)) {
-                source = ExBuffer.wrap(source, encoding);
+                source = ByteArray.wrap(source, encoding);
             }
             length = source.limit - source.offset;
         }
@@ -824,7 +829,7 @@ export default class ExBuffer {
                 throw new x.IllegalState(`Illegal offset: 0 <= ${offset} (0) <= ${this.buffer.length}`);
             }
         }
-        const size = ExBuffer.calculateVarint32(value);
+        const size = ByteArray.calculateVarint32(value);
         let b;
         offset += size;
         let capacity10 = this.buffer.length;
@@ -847,7 +852,7 @@ export default class ExBuffer {
     }
 
     writeVarint32ZigZag(value, offset) {
-        return this.writeVarint32(ExBuffer.zigZagEncode32(value), offset);
+        return this.writeVarint32(ByteArray.zigZagEncode32(value), offset);
     }
 
     readVarint32(offset) {
@@ -890,9 +895,9 @@ export default class ExBuffer {
     readVarint32ZigZag(offset) {
         let val = this.readVarint32(offset);
         if (is.object(val)) {
-            val.value = ExBuffer.zigZagDecode32(val.value);
+            val.value = ByteArray.zigZagDecode32(val.value);
         } else {
-            val = ExBuffer.zigZagDecode32(val);
+            val = ByteArray.zigZagDecode32(val);
         }
         return val;
     }
@@ -925,7 +930,7 @@ export default class ExBuffer {
         } else if (value.unsigned !== false) {
             value = value.toSigned();
         }
-        const size = ExBuffer.calculateVarint64(value);
+        const size = ByteArray.calculateVarint64(value);
         const part0 = value.toInt() >>> 0;
         const part1 = value.shru(28).toInt() >>> 0;
         const part2 = value.shru(56).toInt() >>> 0;
@@ -975,7 +980,7 @@ export default class ExBuffer {
     }
 
     writeVarint64ZigZag(value, offset) {
-        return this.writeVarint64(ExBuffer.zigZagEncode64(value), offset);
+        return this.writeVarint64(ByteArray.zigZagEncode64(value), offset);
     }
 
     readVarint64(offset) {
@@ -1050,9 +1055,9 @@ export default class ExBuffer {
     readVarint64ZigZag(offset) {
         let val = this.readVarint64(offset);
         if (val && val.value instanceof Long) {
-            val.value = ExBuffer.zigZagDecode64(val.value);
+            val.value = ByteArray.zigZagDecode64(val.value);
         } else {
-            val = ExBuffer.zigZagDecode64(val);
+            val = ByteArray.zigZagDecode64(val);
         }
         return val;
     }
@@ -1170,7 +1175,7 @@ export default class ExBuffer {
             offset = this.offset;
         }
         if (is.undefined(metrics)) {
-            metrics = ExBuffer.METRICS_CHARS;
+            metrics = ByteArray.METRICS_CHARS;
         }
         if (!this.noAssert) {
             if (!is.number(length) || length % 1 !== 0) {
@@ -1189,7 +1194,7 @@ export default class ExBuffer {
         const start = offset;
         let temp;
         let sd;
-        if (metrics === ExBuffer.METRICS_CHARS) { // The same for node and the browser
+        if (metrics === ByteArray.METRICS_CHARS) { // The same for node and the browser
             sd = stringDestination();
             utfx.decodeUTF8(() => {
                 return i < length && offset < this.limit ? this.buffer[offset++] : null;
@@ -1206,7 +1211,7 @@ export default class ExBuffer {
             }
             return { string: sd(), length: offset - start };
 
-        } else if (metrics === ExBuffer.METRICS_BYTES) {
+        } else if (metrics === ByteArray.METRICS_BYTES) {
             if (!this.noAssert) {
                 if (!is.number(offset) || offset % 1 !== 0) {
                     throw new x.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
@@ -1247,7 +1252,7 @@ export default class ExBuffer {
         }
         const start = offset;
         const k = Buffer.byteLength(str, "utf8");
-        const l = ExBuffer.calculateVarint32(k);
+        const l = ByteArray.calculateVarint32(k);
         offset += l + k;
         let capacity15 = this.buffer.length;
         if (offset > capacity15) {
@@ -1279,7 +1284,7 @@ export default class ExBuffer {
         }
         const start = offset;
         const len = this.readVarint32(offset);
-        const str = this.readString(len.value, ExBuffer.METRICS_BYTES, offset += len.length);
+        const str = this.readString(len.value, ByteArray.METRICS_BYTES, offset += len.length);
         offset += str.length;
         if (relative) {
             this.offset = offset;
@@ -1310,7 +1315,7 @@ export default class ExBuffer {
     }
 
     clone(copy) {
-        const bb = new ExBuffer(0, this.noAssert);
+        const bb = new ByteArray(0, this.noAssert);
         if (copy) {
             const buffer = Buffer.allocUnsafe(this.buffer.length);
             this.buffer.copy(buffer);
@@ -1381,10 +1386,10 @@ export default class ExBuffer {
             }
         }
         if (begin === end) {
-            return new ExBuffer(0, this.noAssert);
+            return new ByteArray(0, this.noAssert);
         }
         const capacity = end - begin;
-        const bb = new ExBuffer(capacity, this.noAssert);
+        const bb = new ByteArray(capacity, this.noAssert);
         bb.offset = 0;
         bb.limit = capacity;
         if (bb.markedOffset >= 0) {
@@ -1399,7 +1404,7 @@ export default class ExBuffer {
         let targetRelative;
         if (!this.noAssert) {
             if (!is.exbuffer(target)) {
-                throw new x.InvalidArgument("Illegal target: Not a ExBuffer");
+                throw new x.InvalidArgument("Illegal target: Not a ByteArray");
             }
         }
         targetOffset = (targetRelative = is.undefined(targetOffset)) ? target.offset : targetOffset | 0;
@@ -1482,15 +1487,15 @@ export default class ExBuffer {
         return this;
     }
 
-    // Makes this ExBuffer ready for a new sequence of write or relative read operations. Sets `limit = offset` and `offset = 0`.
-    // Make sure always to flip a ExBuffer when all relative read or write operations are complete.
+    // Makes this ByteArray ready for a new sequence of write or relative read operations. Sets `limit = offset` and `offset = 0`.
+    // Make sure always to flip a ByteArray when all relative read or write operations are complete.
     flip() {
         this.limit = this.offset;
         this.offset = 0;
         return this;
     }
 
-    // Marks an offset on this ExBuffer to be used later.
+    // Marks an offset on this ByteArray to be used later.
     mark(offset) {
         offset = is.undefined(offset) ? this.offset : offset;
         if (!this.noAssert) {
@@ -1524,8 +1529,8 @@ export default class ExBuffer {
                 throw new x.IllegalState(`Illegal offset: 0 <= ${offset} (0) <= ${this.buffer.length}`);
             }
         }
-        if (!(source instanceof ExBuffer)) {
-            source = ExBuffer.wrap(source, encoding);
+        if (!(source instanceof ByteArray)) {
+            source = ByteArray.wrap(source, encoding);
         }
         const len = source.limit - source.offset;
         if (len <= 0) {
@@ -1645,12 +1650,12 @@ export default class ExBuffer {
                 throw new x.IllegalState(`Illegal range: 0 <= ${begin} <= ${end} <= ${this.buffer.length}`);
             }
         }
-        const bb = new ExBuffer(end - begin);
+        const bb = new ByteArray(end - begin);
         bb.buffer = this.buffer.slice(begin, end);
         return bb;
     }
 
-    // Returns a copy of the backing buffer that contains this ExBuffer's contents.
+    // Returns a copy of the backing buffer that contains this ByteArray's contents.
     toBuffer(forceCopy, begin, end) {
         begin = is.undefined(begin) ? this.offset : begin;
         end = is.undefined(end) ? this.limit : end;
@@ -1834,7 +1839,7 @@ export default class ExBuffer {
     }
 
     static allocate(capacity, noAssert) {
-        return new ExBuffer(capacity, noAssert);
+        return new ByteArray(capacity, noAssert);
     }
 
     static concat(buffers, encoding, noAssert) {
@@ -1848,7 +1853,7 @@ export default class ExBuffer {
         let length;
         for (; i < k; ++i) {
             if (!is.exbuffer(buffers[i])) {
-                buffers[i] = ExBuffer.wrap(buffers[i], encoding);
+                buffers[i] = ByteArray.wrap(buffers[i], encoding);
             }
             length = buffers[i].limit - buffers[i].offset;
             if (length > 0) {
@@ -1856,9 +1861,9 @@ export default class ExBuffer {
             }
         }
         if (capacity === 0) {
-            return new ExBuffer(0, noAssert);
+            return new ByteArray(0, noAssert);
         }
-        const bb = new ExBuffer(capacity, noAssert);
+        const bb = new ByteArray(capacity, noAssert);
         let bi;
         i = 0;
 
@@ -1887,15 +1892,15 @@ export default class ExBuffer {
             }
             switch (encoding) {
                 case "base64":
-                    return ExBuffer.fromBase64(buffer);
+                    return ByteArray.fromBase64(buffer);
                 case "hex":
-                    return ExBuffer.fromHex(buffer);
+                    return ByteArray.fromHex(buffer);
                 case "binary":
-                    return ExBuffer.fromBinary(buffer);
+                    return ByteArray.fromBinary(buffer);
                 case "utf8":
-                    return ExBuffer.fromUTF8(buffer);
+                    return ByteArray.fromUTF8(buffer);
                 case "debug":
-                    return ExBuffer.fromDebug(buffer);
+                    return ByteArray.fromDebug(buffer);
                 default:
                     throw new x.NotSupported(`Unsupported encoding: ${encoding}`);
             }
@@ -1924,7 +1929,7 @@ export default class ExBuffer {
             }
             buffer = Buffer.from(buffer);
         }
-        bb = new ExBuffer(0, noAssert);
+        bb = new ByteArray(0, noAssert);
         if (buffer.length > 0) { // Avoid references to more than one EMPTY_BUFFER
             bb.buffer = buffer;
             bb.limit = buffer.length;
@@ -2023,30 +2028,30 @@ export default class ExBuffer {
         return Buffer.byteLength(str, "utf8");
     }
 
-    // Decodes a base64 encoded string to a ExBuffer.
+    // Decodes a base64 encoded string to a ByteArray.
     static fromBase64(str) {
-        return ExBuffer.wrap(Buffer.from(str, "base64"));
+        return ByteArray.wrap(Buffer.from(str, "base64"));
     }
 
     // Encodes a binary string to base64 like `window.btoa` does.
     static btoa(str) {
-        return ExBuffer.fromBinary(str).toBase64();
+        return ByteArray.fromBinary(str).toBase64();
     }
 
     // Decodes a base64 encoded string to binary like `window.atob` does.
     static atob(b64) {
-        return ExBuffer.fromBase64(b64).toBinary();
+        return ByteArray.fromBase64(b64).toBinary();
     }
 
-    // Decodes a binary encoded string, that is using only characters 0x00-0xFF as bytes, to a ExBuffer.
+    // Decodes a binary encoded string, that is using only characters 0x00-0xFF as bytes, to a ByteArray.
     static fromBinary(str) {
-        return ExBuffer.wrap(Buffer.from(str, "binary"));
+        return ByteArray.wrap(Buffer.from(str, "binary"));
     }
 
-    // Decodes a hex encoded string with marked offsets to a ExBuffer.
+    // Decodes a hex encoded string with marked offsets to a ByteArray.
     static fromDebug(str, noAssert) {
         const k = str.length;
-        const bb = new ExBuffer(((k + 1) / 3) | 0, noAssert);
+        const bb = new ByteArray(((k + 1) / 3) | 0, noAssert);
         let i = 0;
         let j = 0;
         let ch;
@@ -2169,7 +2174,7 @@ export default class ExBuffer {
         return bb;
     }
 
-    // Decodes a hex encoded string to a ExBuffer.
+    // Decodes a hex encoded string to a ByteArray.
     static fromHex(str, noAssert) {
         if (!noAssert) {
             if (!is.string(str)) {
@@ -2179,29 +2184,29 @@ export default class ExBuffer {
                 throw new x.InvalidArgument("Illegal str: Length not a multiple of 2");
             }
         }
-        const bb = new ExBuffer(0, true);
+        const bb = new ByteArray(0, true);
         bb.buffer = Buffer.from(str, "hex");
         bb.limit = bb.buffer.length;
         return bb;
     }
 
-    // Decodes an UTF8 encoded string to a ExBuffer.
+    // Decodes an UTF8 encoded string to a ByteArray.
     static fromUTF8(str, noAssert) {
         if (!noAssert) {
             if (!is.string(str)) {
                 throw new x.InvalidArgument("Illegal str: Not a string");
             }
         }
-        const bb = new ExBuffer(0, noAssert);
+        const bb = new ByteArray(0, noAssert);
         bb.buffer = Buffer.from(str, "utf8");
         bb.limit = bb.buffer.length;
         return bb;
     }
 }
-adone.tag.set(ExBuffer, adone.tag.EXBUFFER);
-ExBuffer.DEFAULT_CAPACITY = 64;
-ExBuffer.DEFAULT_NOASSERT = false;
-ExBuffer.MAX_VARINT32_BYTES = 5; // Maximum number of bytes required to store a 32bit base 128 variable-length integer
-ExBuffer.MAX_VARINT64_BYTES = 10; // Maximum number of bytes required to store a 64bit base 128 variable-length integer
-ExBuffer.METRICS_CHARS = "c"; // Metrics representing number of UTF8 characters. Evaluates to `c`.
-ExBuffer.METRICS_BYTES = "b"; // Metrics representing number of bytes. Evaluates to `b`.
+adone.tag.set(ByteArray, adone.tag.EXBUFFER);
+ByteArray.DEFAULT_CAPACITY = 64;
+ByteArray.DEFAULT_NOASSERT = false;
+ByteArray.MAX_VARINT32_BYTES = 5; // Maximum number of bytes required to store a 32bit base 128 variable-length integer
+ByteArray.MAX_VARINT64_BYTES = 10; // Maximum number of bytes required to store a 64bit base 128 variable-length integer
+ByteArray.METRICS_CHARS = "c"; // Metrics representing number of UTF8 characters. Evaluates to `c`.
+ByteArray.METRICS_BYTES = "b"; // Metrics representing number of bytes. Evaluates to `b`.

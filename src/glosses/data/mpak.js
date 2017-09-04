@@ -1,4 +1,7 @@
-const { is, ExBuffer } = adone;
+const {
+    is,
+    collection: { ByteArray }
+} = adone;
 
 // Encoder
 
@@ -8,7 +11,7 @@ export class Encoder {
     }
 
     encode(x, buf) {
-        buf = buf || new ExBuffer(1024, true);
+        buf = buf || new ByteArray(1024, true);
         this._encode(x, buf);
         return buf;
     }
@@ -220,7 +223,7 @@ export class Decoder {
 
     decode(buf) {
         if (!is.exbuffer(buf)) {
-            buf = ExBuffer.wrap(buf, undefined, true);
+            buf = ByteArray.wrap(buf, undefined, true);
         }
 
         const result = this.tryDecode(buf);
@@ -521,7 +524,7 @@ export class Serializer {
         this.registerEncoder(type, (obj) => {
             return (obj instanceof constructor);
         }, (obj) => {
-            const extBuf = new ExBuffer(1024, true);
+            const extBuf = new ByteArray(1024, true);
             encode(obj, extBuf);
             return extBuf;
         });
@@ -566,7 +569,7 @@ adone.lazify({
         // 110-118 - reserved for other adone types
         // 100-109 - reserved for netron types
         // 1-99 - user-defined types
-        
+
         const s = new adone.data.mpak.Serializer();
 
         const decodeException = (buf) => {
@@ -644,7 +647,7 @@ adone.lazify({
         }, (buf) => {
             const unsigned = Boolean(buf.readInt8());
             return (unsigned ? buf.readUInt64BE() : buf.readInt64BE());
-        });        
+        });
 
         return s;
     }

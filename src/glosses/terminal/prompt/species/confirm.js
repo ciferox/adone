@@ -1,4 +1,8 @@
-const { is, vendor: { lodash: _ }, Terminal } = adone;
+const {
+    is,
+    vendor: { lodash: _ },
+    terminal: { Terminal }
+} = adone;
 
 export default class ConfirmPrompt extends Terminal.BasePrompt {
     constructor(terminal, question, answers) {

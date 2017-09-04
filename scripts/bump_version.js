@@ -2,7 +2,7 @@ const {
     std: { path },
     semver,
     configuration,
-    terminal
+    runtimr: { term }
 } = adone;
 
 adone.application.run({
@@ -55,10 +55,10 @@ adone.application.run({
 
             await packageJson.save(packageJsonPath, null, { space: "  " });
 
-            terminal.print(`{green-fg}Original: {/green-fg}{bold}${version}{/}\n`);
-            terminal.print(`{green-fg}Incremented: {/green-fg}{bold}${packageJson.version}{/}\n`);
+            term.print(`{green-fg}Original: {/green-fg}{bold}${version}{/}\n`);
+            term.print(`{green-fg}Incremented: {/green-fg}{bold}${packageJson.version}{/}\n`);
         } catch (err) {
-            terminal.print(`{red-fg}${err.message}{/}\n`);
+            term.print(`{red-fg}${err.message}{/}\n`);
         }
     }
 });

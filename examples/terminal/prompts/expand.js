@@ -1,6 +1,6 @@
 adone.application.run({
     main() {
-        adone.terminal.prompt().run([
+        adone.runtime.term.prompt().run([
             {
                 type: "expand",
                 message: "Conflict on `file.js`: ",
@@ -21,7 +21,7 @@ adone.application.run({
                         name: "Show diff",
                         value: "diff"
                     },
-                    adone.terminal.separator(),
+                    adone.runtime.term.separator(),
                     {
                         key: "x",
                         name: "Abort",

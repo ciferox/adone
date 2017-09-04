@@ -1,7 +1,7 @@
 describe("util", "iconv", "Full DBCS encoding tests", function () {
     this.timeout(10000);
 
-    const { util: { iconv }, std: { path }, ExBuffer } = adone;
+    const { util: { iconv }, std: { path }, collection: { ByteArray } } = adone;
 
     const fixtures = new adone.fs.Directory(path.resolve(__dirname, "fixtures"));
 
@@ -126,7 +126,7 @@ describe("util", "iconv", "Full DBCS encoding tests", function () {
                     const iconvChgs = iconvChanges[enc] || {};
                     const iconvCannotDecodeChars = iconvCannotDecode[enc] || {};
                     const errors = [];
-                    const buffer = ExBuffer.wrap(await expectedFile.contents("buffer"));
+                    const buffer = ByteArray.wrap(await expectedFile.contents("buffer"));
                     while (buffer.remaining() > 0) {
                         const valid = buffer.readUInt8();
                         const inpLength = buffer.readUInt8();
@@ -188,7 +188,7 @@ describe("util", "iconv", "Full DBCS encoding tests", function () {
                     const iconvChgs = iconvChanges[enc] || {};
                     const iconvCannotDecodeChars = iconvCannotDecode[enc] || {};
                     const errors = [];
-                    const buffer = ExBuffer.wrap(await expectedFile.contents("buffer"));
+                    const buffer = ByteArray.wrap(await expectedFile.contents("buffer"));
                     for (let i = 0; i < 0x10000; i++) {
                         if (i === 0xD800) {
                             i = 0xF900;

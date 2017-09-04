@@ -1,5 +1,5 @@
 describe("terminal", "prompt", () => {
-    const { promise: { delay }, Terminal } = adone;
+    const { promise: { delay }, terminal: { Terminal } } = adone;
 
     class TerminfoMock extends adone.Terminal.Terminfo {
         setup() {

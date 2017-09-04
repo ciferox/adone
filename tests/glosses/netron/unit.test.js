@@ -1940,7 +1940,7 @@ describe("netron", "native", "unit test", () => {
                     rStream.on("end", resolve);
                 });
 
-                const buff = new adone.ExBuffer();
+                const buff = new adone.collection.ByteArray();
                 let remaining = dataSize;
 
                 while (remaining > 0) {

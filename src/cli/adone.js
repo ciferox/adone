@@ -8,7 +8,7 @@ const {
     std,
     application,
     configuration,
-    terminal
+    runtime: { term }
 } = adone;
 
 const lazy = adone.lazify({
@@ -159,7 +159,7 @@ class AdoneCLI extends application.Application {
 
             return 0;
         } catch (err) {
-            terminal.print(`{red-fg}${err.message}{/}`);
+            term.print(`{red-fg}${err.message}{/}`);
             return 1;
         }
     }
@@ -237,47 +237,47 @@ class AdoneCLI extends application.Application {
                     return `${styleName(name)}: ${styleType(type)} = {blue-fg}${value}{/blue-fg}`;
                 };
 
-                terminal.print(`${styleType("namespace")} ${styleName(namespace)}\n`);
+                term.print(`${styleType("namespace")} ${styleName(namespace)}\n`);
                 for (const [key, value] of util.entries(ns, { all: opts.has("all") })) {
                     const type = util.typeOf(value);
-                    terminal.print("    ");
+                    term.print("    ");
                     switch (type) {
                         case "string": {
-                            terminal.print(`${styleLiteralValue(type, key, value)} {italic}{grey-fg}(${value.length}){/grey-fg}{/italic}`);
+                            term.print(`${styleLiteralValue(type, key, value)} {italic}{grey-fg}(${value.length}){/grey-fg}{/italic}`);
                             break;
                         }
                         case "number":
                         case "boolean":
-                            terminal.print(`${styleLiteralValue(type, key, value)}`);
+                            term.print(`${styleLiteralValue(type, key, value)}`);
                             break;
                         case "function": {
                             if (is.asyncFunction(value)) {
-                                terminal.print(styleLiteralArgs("async function", key, []/*adone.meta.functionArgs(value)*/));
+                                term.print(styleLiteralArgs("async function", key, []/*adone.meta.functionArgs(value)*/));
                             } else {
-                                terminal.print(styleLiteralArgs("function", key, []/*adone.meta.functionArgs(value)*/));
+                                term.print(styleLiteralArgs("function", key, []/*adone.meta.functionArgs(value)*/));
                             }
                             break;
                         }
                         case "class": {
-                            terminal.print(styleLiteralArgs(type, key, []/*adone.meta.functionArgs(value)*/));
+                            term.print(styleLiteralArgs(type, key, []/*adone.meta.functionArgs(value)*/));
                             break;
                         }
                         case "namespace": {
-                            terminal.print(styleLiteral(type, key));
+                            term.print(styleLiteral(type, key));
                             break;
                         }
                         case "Object": {
                             if (is.class(value.constructor)) {
-                                terminal.print(styleLiteral(value.constructor.name, key));
+                                term.print(styleLiteral(value.constructor.name, key));
                             } else {
-                                terminal.print(styleLiteral("object", key));
+                                term.print(styleLiteral("object", key));
                             }
                             break;
                         }
                         default:
-                            terminal.print(styleLiteral(type, key));
+                            term.print(styleLiteral(type, key));
                     }
-                    terminal.print("\n");
+                    term.print("\n");
                 }
                 // adone.log(adone.meta.inspect(ns, inspectOptions));
             } else if (adone.vendor.lodash.has(ns, objectName)) {

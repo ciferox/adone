@@ -21,13 +21,13 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         ok: "OK",
         bad: "BAD",
         exts: [".js", ".tjs", ".ajs"], // .js - es6 js; .tjs - transpiled js, .ajs - adone-specific js
-        log: (...args) => adone.defaultLogger.stdoutLogNoFmt(...args),
-        fatal: (...args) => adone.defaultLogger.fatal(...args),
-        error: (...args) => adone.defaultLogger.error(...args),
-        warn: (...args) => adone.defaultLogger.warn(...args),
-        info: (...args) => adone.defaultLogger.info(...args),
-        debug: (...args) => adone.defaultLogger.debug(...args),
-        trace: (...args) => adone.defaultLogger.trace(...args),
+        log: (...args) => adone.runtime.logger.stdoutLogNoFmt(...args),
+        fatal: (...args) => adone.runtime.logger.fatal(...args),
+        error: (...args) => adone.runtime.logger.error(...args),
+        warn: (...args) => adone.runtime.logger.warn(...args),
+        info: (...args) => adone.runtime.logger.info(...args),
+        debug: (...args) => adone.runtime.logger.debug(...args),
+        trace: (...args) => adone.runtime.logger.trace(...args),
         o: (...props) => Object.assign.apply(null, [Object.create(null)].concat(props)),
         Date: global.Date,
         hrtime: process.hrtime,
@@ -188,43 +188,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
     });
 
     adone.lazify({
-        // NodeJS embedded modules
-        std: () => asNamespace(adone.lazify({
-            assert: "assert",
-            fs: "fs",
-            path: "path",
-            util: "util",
-            events: "events",
-            stream: "stream",
-            url: "url",
-            net: "net",
-            http: "http",
-            https: "https",
-            child_process: "child_process", // eslint-disable-line
-            os: "os",
-            cluster: "cluster",
-            repl: "repl",
-            punycode: "punycode",
-            readline: "readline",
-            string_decoder: "string_decoder",  // eslint-disable-line
-            querystring: "querystring",
-            crypto: "crypto",
-            vm: "vm",
-            v8: "v8",
-            domain: "domain",
-            module: "module",
-            tty: "tty",
-            buffer: "buffer",
-            constants: "constants",
-            zlib: "zlib",
-            tls: "tls",
-            console: "console",
-            dns: "dns",
-            timers: "timers",
-            dgram: "dgram"
-        })),
-
-        // Glosses
+        // es2015 require
         require: () => {
             const plugins = [
                 "transform.flowStripTypes",
@@ -260,19 +224,80 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             $require.resolve = (request) => adone.js.Module._resolveFilename(request, module);
             return $require;
         },
+
+        // Adone package
         package: "../package.json",
+
+        // Runtime stuff
+        runtime: () => {
+            const runtime = Object.create(null, {
+                app: {
+                    enumerable: true,
+                    writable: true,
+                    value: null
+                }
+            });
+
+            adone.lazify({
+                term: () => new adone.terminal.Terminal(),
+                logger: () => adone.application.Logger.default()
+            }, runtime);
+
+            return runtime;
+        },
         homePath: () => adone.config.home,
         rootPath: () => adone.std.path.join(__dirname, ".."),
         etcPath: () => adone.std.path.join(adone.rootPath, "etc"),
         config: () => require(adone.std.path.join(adone.etcPath, "configs", "adone.js")),
+
+        emptyBuffer: () => Buffer.allocUnsafe(0),
+        assert: () => adone.assertion.loadAssertInterface().assert,
+        expect: () => adone.assertion.loadExpectInterface().expect,
+
+        // Namespaces 
+
+        // NodeJS
+        std: () => asNamespace(adone.lazify({
+            assert: "assert",
+            fs: "fs",
+            path: "path",
+            util: "util",
+            events: "events",
+            stream: "stream",
+            url: "url",
+            net: "net",
+            http: "http",
+            https: "https",
+            child_process: "child_process", // eslint-disable-line
+            os: "os",
+            cluster: "cluster",
+            repl: "repl",
+            punycode: "punycode",
+            readline: "readline",
+            string_decoder: "string_decoder",  // eslint-disable-line
+            querystring: "querystring",
+            crypto: "crypto",
+            vm: "vm",
+            v8: "v8",
+            domain: "domain",
+            module: "module",
+            tty: "tty",
+            buffer: "buffer",
+            constants: "constants",
+            zlib: "zlib",
+            tls: "tls",
+            console: "console",
+            dns: "dns",
+            timers: "timers",
+            dgram: "dgram"
+        })),
+
+        // Adone
         native: () => adone.bind("common.node"),
         assertion: "./glosses/assertion",
-        assert: () => adone.assertion.loadAssertInterface().assert,
         event: "./glosses/events",
-        expect: () => adone.assertion.loadExpectInterface().expect,
-        defaultLogger: () => adone.application.Logger.default(),
-        emptyBuffer: () => Buffer.allocUnsafe(0),
-        is: "./glosses/common/is",
+        is: "./glosses/is",
+        x: "./glosses/exceptions",
         cui: "./glosses/cui",
         application: "./glosses/application",
         configuration: "./glosses/configurations",
@@ -289,16 +314,13 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         js: "./glosses/js",
         punycode: "./glosses/punycode",
         sourcemap: "./glosses/sourcemap",
-        ExBuffer: "./glosses/common/exbuffer",
-        x: "./glosses/common/x",
         URI: "./glosses/uri",
         semver: "./glosses/semver",
         sprintf: "./glosses/text/sprintf",
         core: "./glosses/core",
         Transform: "./glosses/core/transform",
         text: "./glosses/text",
-        Terminal: "./glosses/terminal",
-        terminal: () => new adone.Terminal(),
+        terminal: "./glosses/terminal",
         stream: "./glosses/streams",
         transform: "./glosses/core/transforms",
         templating: "./glosses/templating",
@@ -317,11 +339,6 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         vault: "./glosses/vault",
         specter: "./glosses/specter",
         netscan: "./glosses/netscan",
-        timing: () => ({
-            now: adone.native.Common.now,
-            nowDouble: adone.native.Common.nowDouble,
-            nowStruct: adone.native.Common.nowStruct
-        }),
         schema: "./glosses/schema",
         geoip: "./glosses/geoip",
         notifier: "./glosses/notifier",
@@ -333,6 +350,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
 
         // Vendor
         vendor: "./vendor",
+
         // Npm
         npm: "./npm"
     }, adone);

@@ -1,4 +1,7 @@
-const { is, vendor: { lodash: _ } } = adone;
+const {
+    is,
+    vendor: { lodash: _ }
+} = adone;
 
 export default class Prompt {
     constructor(terminal) {

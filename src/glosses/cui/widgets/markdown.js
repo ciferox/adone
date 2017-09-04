@@ -1,4 +1,6 @@
-const { terminal } = adone;
+const {
+    terminal
+} = adone;
 const marked = require("marked");
 const TerminalRenderer = require("marked-terminal");
 

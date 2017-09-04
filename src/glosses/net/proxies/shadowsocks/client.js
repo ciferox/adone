@@ -212,7 +212,7 @@ export class Client extends EventEmitter {
         const cipher = adone.std.crypto.createCipheriv(this._cipher, this._cipherKey, cipherIV);
         socket.write(cipherIV);
         cipher.pipe(socket);
-        const header = new adone.ExBuffer();
+        const header = new adone.collection.ByteArray();
         switch (adone.std.net.isIP(this._dstaddr)) {
             case 4: {
                 header.writeUInt8(0x01);

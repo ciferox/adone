@@ -1,4 +1,7 @@
-const { terminal } = adone;
+const {
+    is,
+    runtime: { term }
+} = adone;
 
 /**
  * Creates a string with the same length as `numSpaces` parameter
@@ -15,7 +18,7 @@ const getMaxIndexLength = function (input) {
 
     Object.getOwnPropertyNames(input).forEach((key) => {
         // Skip undefined values.
-        if (input[key] === undefined) {
+        if (is.undefined(input[key])) {
             return;
         }
 
@@ -28,20 +31,20 @@ const getMaxIndexLength = function (input) {
 // Helper function to detect if an object can be directly serializable
 const isSerializable = function (input, onlyPrimitives, options) {
     if (
-        typeof input === "boolean" ||
-        typeof input === "number" ||
-        typeof input === "function" ||
-        input === null ||
+        is.boolean(input) ||
+        is.number(input) ||
+        is.function(input) ||
+        is.null(input) ||
         input instanceof Date
     ) {
         return true;
     }
-    if (typeof input === "string" && input.indexOf("\n") === -1) {
+    if (is.string(input) && input.indexOf("\n") === -1) {
         return true;
     }
 
     if (options.inlineArrays && !onlyPrimitives) {
-        if (Array.isArray(input) && isSerializable(input[0], true, options)) {
+        if (is.array(input) && isSerializable(input[0], true, options)) {
             return true;
         }
     }
@@ -54,30 +57,30 @@ const addColorToData = function (input, options) {
         return input;
     }
 
-    if (typeof input === "string") {
-        // Print strings in regular terminal color
-        return options.stringColor ? terminal[options.stringColor](input) : input;
+    if (is.string(input)) {
+        // Print strings in regular term color
+        return options.stringColor ? term[options.stringColor](input) : input;
     }
 
     const sInput = String(input);
 
     if (input === true) {
-        return terminal.green(sInput);
+        return term.green(sInput);
     }
     if (input === false) {
-        return terminal.red(sInput);
+        return term.red(sInput);
     }
-    if (input === null) {
-        return terminal.grey(sInput);
+    if (is.null(input)) {
+        return term.grey(sInput);
     }
-    if (typeof input === "number") {
-        return terminal[options.numberColor](sInput);
+    if (is.number(input)) {
+        return term[options.numberColor](sInput);
     }
-    if (typeof input === "function") {
+    if (is.function(input)) {
         return "function() {}";
     }
 
-    if (Array.isArray(input)) {
+    if (is.array(input)) {
         return input.join(", ");
     }
 
@@ -98,7 +101,7 @@ const renderToArray = function (data, options, indentation) {
     }
 
     // Unserializable string means it's multiline
-    if (typeof data === "string") {
+    if (is.string(data)) {
         return [
             `${indent(indentation)}"""`,
             indentLines(data, indentation + options.defaultIndentation),
@@ -107,7 +110,7 @@ const renderToArray = function (data, options, indentation) {
     }
 
 
-    if (Array.isArray(data)) {
+    if (is.array(data)) {
         // If the array is empty, render the `emptyArrayMsg`
         if (data.length === 0) {
             return [indent(indentation) + options.emptyArrayMsg];
@@ -119,7 +122,7 @@ const renderToArray = function (data, options, indentation) {
             // Prepend the dash at the begining of each array's element line
             let line = "- ";
             if (!options.noColor) {
-                line = terminal[options.dashColor](line);
+                line = term[options.dashColor](line);
             }
             line = indent(indentation) + line;
 
@@ -165,12 +168,12 @@ const renderToArray = function (data, options, indentation) {
         // Prepend the index at the beginning of the line
         key = (`${i}: `);
         if (!options.noColor) {
-            key = terminal[options.keysColor](key);
+            key = term[options.keysColor](key);
         }
         key = indent(indentation) + key;
 
         // Skip `undefined`, it's not a valid JSON value.
-        if (data[i] === undefined) {
+        if (is.undefined(data[i])) {
             return;
         }
 

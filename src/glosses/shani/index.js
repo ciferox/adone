@@ -1143,7 +1143,7 @@ export const consoleReporter = ({
     showHooks = false,
     keepHooks = false
 } = {}) => {
-    const term = adone.terminal;
+    const term = adone.runtime.term;
 
     const { isTTY } = process.stdout;
 
@@ -1211,7 +1211,7 @@ export const consoleReporter = ({
                     if (timers || allTimings) {
                         options.timeFormatter = (x) => elapsedToString(x, hook.timeout());
                     }
-                    bar = adone.terminal.progress(options);
+                    bar = adone.runtime.term.progress(options);
                     bar.update(0, {
                         suffix: timers ? " (:elapsed)" : ""
                     });
@@ -1256,7 +1256,7 @@ export const consoleReporter = ({
             if (timers || allTimings) {
                 options.timeFormatter = (x) => elapsedToString(x, test.timeout());
             }
-            return adone.terminal.progress(options);
+            return adone.runtime.term.progress(options);
         };
 
         let firstBlock = true;
@@ -1447,7 +1447,7 @@ export const consoleReporter = ({
 };
 
 export const minimalReporter = () => {
-    const term = adone.terminal;
+    const term = adone.runtime.term;
 
     const { isTTY } = process.stdout;
 
@@ -1478,11 +1478,11 @@ export const minimalReporter = () => {
 
         console.log();
 
-        const totalBar = adone.terminal.progress({
+        const totalBar = adone.runtime.term.progress({
             schema: "    :spinner {green-fg}:passed{/green-fg} {red-fg}:failed{/red-fg} {cyan-fg}:pending{/cyan-fg} :elapsed"
         });
 
-        const testsBar = adone.terminal.progress({
+        const testsBar = adone.runtime.term.progress({
             schema: "    :path"
         });
 
@@ -1498,7 +1498,7 @@ export const minimalReporter = () => {
             }
         };
 
-        // const currentBar = adone.terminal.progress({
+        // const currentBar = adone.runtime.term.progress({
         //     schema: ":path"
         // });
 
@@ -1693,7 +1693,7 @@ export const simpleReporter = ({
     allTimings = false,
     showHooks = false
 } = {}) => {
-    const term = adone.terminal;
+    const term = adone.runtime.term;
     const { text: { unicode: { symbol } } } = adone;
 
     const { isTTY } = process.stdout;

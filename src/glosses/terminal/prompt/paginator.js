@@ -1,4 +1,6 @@
-const { vendor: { lodash: _ } } = adone;
+const {
+    vendor: { lodash: _ }
+} = adone;
 
 /**
  * The paginator keep trakcs of a pointer index in a list and return

@@ -1,33 +1,33 @@
 adone.application.run({
     main() {
-        const bar0 = adone.terminal.progress({
+        const bar0 = adone.runtime.term.progress({
             schema: " Bar-0: [:bar]",
             current: 0
         });
 
-        const bar1 = adone.terminal.progress({
+        const bar1 = adone.runtime.term.progress({
             schema: " Bar-1: [:bar]",
             current: 10
         });
 
-        const bar2 = adone.terminal.progress({
+        const bar2 = adone.runtime.term.progress({
             schema: " Bar-2: [:bar]",
             current: 20,
             tough: true
         });
 
-        const bar3 = adone.terminal.progress({
+        const bar3 = adone.runtime.term.progress({
             schema: " Bar-3: [:bar]",
             current: 30
 
         });
 
-        const bar4 = adone.terminal.progress({
+        const bar4 = adone.runtime.term.progress({
             schema: " Bar-4: [:bar]",
             current: 40
         });
 
-        const bar5 = adone.terminal.progress({
+        const bar5 = adone.runtime.term.progress({
             schema: " Bar-5: [:bar]",
             current: 50,
             tough: true

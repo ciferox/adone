@@ -1,4 +1,8 @@
-const { is, vendor: { lodash: _ }, Terminal } = adone;
+const {
+    is,
+    vendor: { lodash: _ },
+    terminal: { Terminal }
+} = adone;
 
 /**
  * Get the checkbox

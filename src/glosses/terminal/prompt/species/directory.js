@@ -1,4 +1,6 @@
-const { Terminal } = adone;
+const {
+    terminal: { Terminal }
+} = adone;
 
 /**
  * Constants

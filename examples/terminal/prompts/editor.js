@@ -15,7 +15,7 @@ adone.application.run({
             }
         ];
 
-        adone.terminal.prompt().run(this.questions).then((answers) => {
+        adone.runtime.term.prompt().run(this.questions).then((answers) => {
             adone.log(JSON.stringify(answers, null, "  "));
         });
     }

@@ -1,7 +1,7 @@
 const {
     is,
     x,
-    ExBuffer,
+    collection: { ByteArray },
     netron: { GenesisPeer },
     net,
     std
@@ -50,7 +50,7 @@ export default class Peer extends GenesisPeer {
 
     write(data) {
         return new Promise((resolve, reject) => {
-            const buf = new ExBuffer().skip(4);
+            const buf = new ByteArray().skip(4);
             const encoded = adone.data.mpak.serializer.encode(data, buf).flip();
             encoded.writeUInt32BE(encoded.remaining() - 4, 0);
             const ws = this._ws;
@@ -95,7 +95,7 @@ export default class Peer extends GenesisPeer {
     }
 
     _onMessage(data) {
-        const buffer = ExBuffer.wrap(data);
+        const buffer = ByteArray.wrap(data);
         const packetSize = buffer.readUInt32BE();
         buffer.compact();
         const result = adone.data.mpak.tryDecode(buffer);

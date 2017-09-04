@@ -112,7 +112,7 @@ export default class Screen extends adone.cui.Node {
 
         Screen.bind(this);
 
-        this.terminal = adone.terminal;
+        this.terminal = adone.runtime.term;
         // Redefine process.stderr to null.
         this._devNull = new DevNull();
         this._oldStderrGetter = Object.getOwnPropertyDescriptor(process, "stderr").get;

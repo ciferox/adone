@@ -1,6 +1,6 @@
 adone.application.run({
     main() {
-        adone.terminal.prompt().run([
+        adone.runtime.term.prompt().run([
             {
                 type: "directory",
                 name: "path",

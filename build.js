@@ -82,7 +82,7 @@ adone.application.run({
                 .unstash();
         };
         if (build) {
-            const bar = adone.terminal.progress({
+            const bar = adone.runtime.term.progress({
                 schema: ":spinner [bin] :done / :total :elapsed"
             });
             let total = 0;
@@ -223,7 +223,7 @@ adone.application.run({
             return files.length;
         };
         if (build) {
-            const bar = adone.terminal.progress({
+            const bar = adone.runtime.term.progress({
                 schema: ":spinner [glosses] :done / :total :elapsed"
             });
             let done = 0;
@@ -331,7 +331,7 @@ adone.application.run({
             return s;
         };
         if (build) {
-            const bar = adone.terminal.progress({
+            const bar = adone.runtime.term.progress({
                 schema: ":spinner [index] :done / :total :elapsed"
             });
             let total = 0;
@@ -417,7 +417,7 @@ adone.application.run({
             return s;
         };
         if (build) {
-            const bar = adone.terminal.progress({
+            const bar = adone.runtime.term.progress({
                 schema: ":spinner [omnitron] :done / :total :elapsed"
             });
             let total = 0;

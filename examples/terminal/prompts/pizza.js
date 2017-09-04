@@ -88,7 +88,7 @@ adone.application.run({
             }
         ];
 
-        adone.terminal.prompt().run(questions).then((answers) => {
+        adone.runtime.term.prompt().run(questions).then((answers) => {
             adone.log("\nOrder receipt:");
             adone.log(JSON.stringify(answers, null, "  "));
         });

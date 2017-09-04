@@ -1,7 +1,7 @@
 const {
     is,
     vendor: { lodash: _ },
-    Terminal,
+    terminal: { Terminal },
     event: { EventEmitter }
 } = adone;
 

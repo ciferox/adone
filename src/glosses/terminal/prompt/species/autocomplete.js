@@ -1,4 +1,8 @@
-const { x, is, Terminal } = adone;
+const {
+    x,
+    is,
+    terminal: { Terminal }
+} = adone;
 
 /**
  * Function for rendering list choices

@@ -343,7 +343,7 @@ describe("net", "proxy", "shadowsocks", "server", "parser", () => {
                 });
                 const onRequest = spy();
                 parser.on("request", onRequest);
-                const header = new adone.ExBuffer();
+                const header = new adone.collection.ByteArray();
                 header.writeUInt8(0x01);
                 header.write("\x08".repeat(4));
                 header.writeUInt16BE(31337);
@@ -364,7 +364,7 @@ describe("net", "proxy", "shadowsocks", "server", "parser", () => {
                 });
                 const onRequest = spy();
                 parser.on("request", onRequest);
-                const header = new adone.ExBuffer();
+                const header = new adone.collection.ByteArray();
                 header.writeUInt8(0x04);
                 header.write("\x08".repeat(16));
                 header.writeUInt16BE(31337);
@@ -385,7 +385,7 @@ describe("net", "proxy", "shadowsocks", "server", "parser", () => {
                 });
                 const onRequest = spy();
                 parser.on("request", onRequest);
-                const header = new adone.ExBuffer();
+                const header = new adone.collection.ByteArray();
                 header.writeUInt8(0x03);
                 const address = "www.google.com";
                 header.writeUInt8(address.length);
@@ -408,7 +408,7 @@ describe("net", "proxy", "shadowsocks", "server", "parser", () => {
                 });
                 const onRequest = spy();
                 parser.on("request", onRequest);
-                const header = new adone.ExBuffer();
+                const header = new adone.collection.ByteArray();
                 header.writeUInt8(0x03);
                 const address = "www.google.com";
                 header.writeUInt8(address.length);

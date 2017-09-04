@@ -1,4 +1,7 @@
-const { x, Terminal } = adone;
+const {
+    x,
+    terminal: { Terminal }
+} = adone;
 
 
 const yearTokens = new Set(["YY", "YYYY", "Y"]);

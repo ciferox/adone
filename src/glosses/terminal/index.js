@@ -4044,7 +4044,7 @@ const emitKeys = (stream, s) => {
     });
 };
 
-export default class Terminal extends adone.event.EventEmitter {
+export class Terminal extends adone.event.EventEmitter {
     constructor() {
         super();
 
@@ -4180,13 +4180,6 @@ export default class Terminal extends adone.event.EventEmitter {
         this.setMaxListeners(Infinity);
     }
 
-    get native() {
-        if (is.null(this._native)) {
-            this._native = adone.native.Terminal;
-        }
-        return this._native;
-    }
-
     get readline() {
         if (is.null(this._rl)) {
             const output = new adone.stream.MuteStream();
@@ -4240,20 +4233,16 @@ export default class Terminal extends adone.event.EventEmitter {
                 done();
             };
 
-            if (is.function(done)) {
-                this.input.once("data", (data) => {
-                    this.emit("data", data);
-                });
-                if (is.function(this.input.setRawMode) && !this.input.isRaw) {
-                    this.input.setRawMode(true);
-                }
-                if (is.function(this.input.resume)) {
-                    this.input.resume();
-                }
-                this.getCursorPos(curPosHandler);
-            } else {
-                curPosHandler(null, this.getCursorPos());
+            this.input.once("data", (data) => {
+                this.emit("data", data);
+            });
+            if (is.function(this.input.setRawMode) && !this.input.isRaw) {
+                this.input.setRawMode(true);
             }
+            if (is.function(this.input.resume)) {
+                this.input.resume();
+            }
+            this.getCursorPos(curPosHandler);
         } else if (is.function(done)) {
             process.nextTick(done);
         }
@@ -6488,9 +6477,11 @@ export default class Terminal extends adone.event.EventEmitter {
 
     getCursorPos(callback) {
         if (is.function(callback)) {
-            return this.deviceStatus(6, callback, false, true);
+            this.deviceStatus(6, callback, false, true);
         }
-        return this.native.getCursorPos();
+        return new Promise((resolve) => {
+            this.deviceStatus(6, resolve, false, true);
+        });
     }
 
     saveCursor(key) {

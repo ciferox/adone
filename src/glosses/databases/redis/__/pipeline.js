@@ -1,4 +1,10 @@
-const { database: { redis: { __ } }, util, promise, is, ExBuffer } = adone;
+const {
+    database: { redis: { __ } },
+    util,
+    promise,
+    is,
+    collection: { ByteArray }
+} = adone;
 
 export default class Pipeline extends __.Commander {
     constructor(redis) {
@@ -73,13 +79,13 @@ export default class Pipeline extends __.Commander {
                             message: error.message
                         };
                     } else if (commonError.name !== error.name ||
-                               commonError.message !== error.message) {
+                        commonError.message !== error.message) {
                         retriable = false;
                         break;
                     }
                 } else if (!inTransaction) {
                     const isReadOnly = __.commands.exists(command.name) &&
-                                       __.commands.hasFlag(command.name, "readonly");
+                        __.commands.hasFlag(command.name, "readonly");
                     if (!isReadOnly) {
                         retriable = false;
                         break;
@@ -255,7 +261,7 @@ export default class Pipeline extends __.Commander {
                     }
                     if (bufferMode) {
                         if (is.string(data)) {
-                            const flexBuffer = new ExBuffer(0);
+                            const flexBuffer = new ByteArray(0);
                             flexBuffer.write(data);
                             data = flexBuffer;
                         }

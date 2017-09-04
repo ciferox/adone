@@ -1,4 +1,7 @@
-const { Terminal, promise } = adone;
+const {
+    terminal: { Terminal },
+    promise
+} = adone;
 
 export default class EditorPrompt extends Terminal.BasePrompt {
     /**

@@ -1,6 +1,6 @@
 adone.application.run({
     async main() {
-        const bars = adone.util.range(100).map(() => adone.terminal.progress({
+        const bars = adone.util.range(100).map(() => adone.runtime.term.progress({
             schema: "hello"
         }));
         for (const bar of bars) {
@@ -8,7 +8,7 @@ adone.application.run({
             await adone.promise.delay(20);
         }
         for (const [idx, bar] of adone.util.enumerate(bars)) {
-            if (idx > bars.length - adone.terminal.rows + 10) {
+            if (idx > bars.length - adone.runtime.term.rows + 10) {
                 break;
             }
             bar.setSchema(`${idx} hello`);

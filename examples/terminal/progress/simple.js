@@ -1,6 +1,6 @@
 adone.application.run({
     main() {
-        const bar = adone.terminal.progress();
+        const bar = adone.runtime.term.progress();
 
         const iv = setInterval(() => {
             bar.tick();

@@ -1,7 +1,7 @@
 // import adone from "adone";
 
 async function shi() {
-    const term = adone.terminal;
+    const term = adone.runtime.term;
     const system = adone.metrics.system;
     console.log(term.parse("{white-fg}{bold}Operating system:{/}\n"));
     console.log(term.parse(`{green-fg}Manufaturer: {/}{white-fg}${system.manufacturer}{/}`));

@@ -73,7 +73,7 @@ export default class Socket extends adone.event.EventEmitter {
         if (this.isConnected()) {
             if (is.null(this._buf)) {
                 handler = handler || this.onPacketHandler();
-                this._buf = new adone.ExBuffer(0);
+                this._buf = new adone.collection.ByteArray(0);
                 let lpsz = null;
                 this.nodeSocket.on("data", (x) => {
                     const buffer = this._buf;
@@ -190,7 +190,7 @@ export default class Socket extends adone.event.EventEmitter {
         return new Promise((resolve, reject) => {
             const nodeSocket = this.nodeSocket;
             if (!is.null(nodeSocket) && nodeSocket.writable) {
-                const buf = new adone.ExBuffer().skip(4);
+                const buf = new adone.collection.ByteArray().skip(4);
                 const encoded = adone.data.mpak.serializer.encode(data, buf).flip();
                 encoded.writeUInt32BE(encoded.remaining() - 4, 0);
                 nodeSocket.write(encoded.toBuffer(), resolve);

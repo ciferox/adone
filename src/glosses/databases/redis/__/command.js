@@ -1,4 +1,12 @@
-const { database: { redis: { __ } }, is, util, promise, identity, noop, ExBuffer } = adone;
+const {
+    database: { redis: { __ } },
+    is,
+    util,
+    promise,
+    identity,
+    noop,
+    collection: { ByteArray }
+} = adone;
 
 export default class Command {
     constructor(name, args, options, callback) {
@@ -85,7 +93,7 @@ export default class Command {
         let result;
         const commandStr = `*${this.args.length + 1}\r\n$${this.name.length}\r\n${this.name}\r\n`;
         if (bufferMode) {
-            const resultBuffer = new ExBuffer(0);
+            const resultBuffer = new ByteArray(0);
             resultBuffer.write(commandStr);
             for (let i = 0; i < this.args.length; ++i) {
                 const arg = this.args[i];

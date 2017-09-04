@@ -170,8 +170,8 @@ export default class Logger {
                 const hasStyle = ((type === "stdout" && process.stdout && process.stdout.isTTY) || (type === "stderr" && process.stderr && process.stderr.isTTY)) && is.propertyDefined(argSchema, "style");
                 if (hasStyle) {
                     if (!is.propertyDefined(LogTransform.prototype, "_parseStyle")) {
-                        suffixStyle = adone.terminal.parse("{/}");
-                        LogTransform.prototype._parseStyle = adone.terminal.parse.bind(adone.terminal);
+                        suffixStyle = adone.runtime.term.parse("{/}");
+                        LogTransform.prototype._parseStyle = adone.runtime.term.parse.bind(adone.runtime.term);
                     }
                     let styleArg = `args[${i}]`;
                     if (is.function(argSchema.styleArgTransform)) {
@@ -183,10 +183,10 @@ export default class Logger {
                         definitions += `const origArg${i} = ${styleArg};`;
                         formatString += `" + this._parseStyle(this._styleFn${i}(origArg${i})) + "`;
                     } else if (is.string(argSchema.style)) {
-                        formatString += adone.terminal.parse(argSchema.style);
+                        formatString += adone.runtime.term.parse(argSchema.style);
                     } else if (is.object(argSchema.style)) {
                         for (const [id, val] of adone.util.entries(argSchema.style)) {
-                            argSchema.style[id] = adone.terminal.parse(val);
+                            argSchema.style[id] = adone.runtime.term.parse(val);
                         }
                         LogTransform.prototype[`_styleObj${i}`] = argSchema.style;
                         definitions += `const origArg${i} = ${styleArg};`;

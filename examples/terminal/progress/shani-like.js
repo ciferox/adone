@@ -6,7 +6,7 @@ adone.application.run({
             const tabs = " ".repeat(adone.math.random(4, 20));
             const message = adone.text.random(adone.math.random(20, 80));
             const schema = adone.sprintf(progressFormat, tabs, message);
-            const bar = adone.terminal.progress({
+            const bar = adone.runtime.term.progress({
                 schema
             });
 

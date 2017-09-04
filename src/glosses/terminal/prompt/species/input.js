@@ -1,4 +1,7 @@
-const { is, Terminal } = adone;
+const {
+    is,
+    terminal: { Terminal }
+} = adone;
 
 export default class InputPrompt extends Terminal.BasePrompt {
     /**

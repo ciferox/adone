@@ -1,33 +1,35 @@
-const { ExBuffer } = adone;
-const { Long } = adone.math;
+const {
+    math: { Long },
+    collection: { ByteArray }
+} = adone;
 
-describe("ExBuffer", () => {
-    const type = ExBuffer.type();
-    const accessor = ExBuffer.accessor();
+describe("ByteArray", () => {
+    const type = ByteArray.type();
+    const accessor = ByteArray.accessor();
 
     it("init", () => {
-        assert.ok(adone.ExBuffer);
+        assert.ok(ByteArray);
         assert.strictEqual(type, Buffer);
-        assert.equal(typeof ExBuffer, "function");
+        assert.equal(typeof ByteArray, "function");
     });
 
     describe("base", () => {
 
         it("allocate", () => {
-            let bb = new ExBuffer();
+            let bb = new ByteArray();
             assert.ok(bb.buffer instanceof type);
             assert.strictEqual(bb.offset, 0);
-            assert.strictEqual(bb.limit, ExBuffer.DEFAULT_CAPACITY);
-            assert.strictEqual(bb.noAssert, ExBuffer.DEFAULT_NOASSERT);
+            assert.strictEqual(bb.limit, ByteArray.DEFAULT_CAPACITY);
+            assert.strictEqual(bb.noAssert, ByteArray.DEFAULT_NOASSERT);
             if (type === Buffer) {
                 assert.strictEqual(bb.buffer.length, bb.capacity());
             } else {
                 assert.strictEqual(bb.buffer.byteLength, bb.capacity());
             }
-            assert.strictEqual(bb.capacity(), ExBuffer.DEFAULT_CAPACITY);
-            bb = ExBuffer.allocate(undefined, !ExBuffer.DEFAULT_NOASSERT);
-            assert.strictEqual(bb.capacity(), ExBuffer.DEFAULT_CAPACITY);
-            assert.strictEqual(bb.noAssert, !ExBuffer.DEFAULT_NOASSERT);
+            assert.strictEqual(bb.capacity(), ByteArray.DEFAULT_CAPACITY);
+            bb = ByteArray.allocate(undefined, !ByteArray.DEFAULT_NOASSERT);
+            assert.strictEqual(bb.capacity(), ByteArray.DEFAULT_CAPACITY);
+            assert.strictEqual(bb.noAssert, !ByteArray.DEFAULT_NOASSERT);
 
             // Fixed set of properties
             for (const i in bb) {
@@ -38,7 +40,7 @@ describe("ExBuffer", () => {
         });
 
         it("clone", () => {
-            const bb = new ExBuffer(1, true, false);
+            const bb = new ByteArray(1, true, false);
             const bb2 = bb.clone();
             assert.strictEqual(bb.buffer, bb2.buffer);
             assert.equal(bb.offset, bb2.offset);
@@ -50,7 +52,7 @@ describe("ExBuffer", () => {
         });
 
         it("assert", () => {
-            const bb = new ExBuffer();
+            const bb = new ByteArray();
             assert.strictEqual(bb.noAssert, false);
             assert.strictEqual(bb.assert(false), bb);
             assert.strictEqual(bb.noAssert, true);
@@ -65,7 +67,7 @@ describe("ExBuffer", () => {
         it("Buffer", () => {
             const buf = new Buffer(1);
             buf[0] = 0x01;
-            const bb = ExBuffer.wrap(buf);
+            const bb = ByteArray.wrap(buf);
             assert.strictEqual(bb.capacity(), 1);
             assert.equal(Buffer.compare(bb.buffer, buf), 0);
             assert.strictEqual(bb.toDebug(), "<01>");
@@ -73,7 +75,7 @@ describe("ExBuffer", () => {
 
         it("ArrayBuffer", () => {
             const buf = new ArrayBuffer(1);
-            const bb = ExBuffer.wrap(buf);
+            const bb = ByteArray.wrap(buf);
             assert.strictEqual(bb.capacity(), 1);
             if (type === ArrayBuffer) {
                 assert.strictEqual(bb.buffer, buf);
@@ -88,7 +90,7 @@ describe("ExBuffer", () => {
             // Full view
             let buf = new Uint8Array(1);
             buf[0] = 0x01;
-            let bb = ExBuffer.wrap(buf);
+            let bb = ByteArray.wrap(buf);
             assert.strictEqual(bb.capacity(), 1);
             if (type === ArrayBuffer) {
                 assert.strictEqual(bb.buffer, buf.buffer);
@@ -102,7 +104,7 @@ describe("ExBuffer", () => {
                 buf = new Uint8Array(3);
                 buf[0] = 0x01; buf[1] = 0x02; buf[2] = 0x03;
                 buf = new Uint8Array(buf.buffer, 1, 1);
-                bb = ExBuffer.wrap(buf);
+                bb = ByteArray.wrap(buf);
                 assert.strictEqual(bb.capacity(), 3);
                 assert.strictEqual(bb.toDebug(), "01<02>03");
             }
@@ -110,15 +112,15 @@ describe("ExBuffer", () => {
 
         it("Array", () => {
             const arr = [1, 255, -1];
-            const bb = ExBuffer.wrap(arr);
+            const bb = ByteArray.wrap(arr);
             assert.strictEqual(bb.capacity(), 3);
             assert.strictEqual(bb.toDebug(), "<01 FF FF>");
         });
 
-        it("ExBuffer", () => {
-            const bb2 = ExBuffer.wrap("\x12\x34\x56\x78", "binary");
+        it("ByteArray", () => {
+            const bb2 = ByteArray.wrap("\x12\x34\x56\x78", "binary");
             bb2.offset = 1;
-            const bb = ExBuffer.wrap(bb2);
+            const bb = ByteArray.wrap(bb2);
             assert.strictEqual(bb2.offset, bb.offset);
             assert.strictEqual(bb2.limit, bb.limit);
             assert.strictEqual(bb2.capacity(), bb.capacity());
@@ -126,7 +128,7 @@ describe("ExBuffer", () => {
         });
 
         it("string", () => {
-            const bb = ExBuffer.wrap("\u0061\u0062");
+            const bb = ByteArray.wrap("\u0061\u0062");
             assert.equal(bb.toDebug(), "<61 62>");
         });
 
@@ -136,7 +138,7 @@ describe("ExBuffer", () => {
 
         it("UTF8", () => {
             ["aäöüß€b", ""].forEach((str) => {
-                const bb = ExBuffer.wrap(str, "utf8"); // Calls ExBuffer#fromUTF8
+                const bb = ByteArray.wrap(str, "utf8"); // Calls ByteArray#fromUTF8
                 assert.strictEqual(bb.toUTF8(), str);
                 if (str.length > 2) {
                     bb.offset = 1;
@@ -148,14 +150,14 @@ describe("ExBuffer", () => {
 
         it("debug", () => {
             ["60<61 62]63", "<60 61 62 63]", "|", "|61", "<61>", "!12"].forEach((str) => {
-                const bb = ExBuffer.wrap(str, "debug"); // Calls ExBuffer#fromDebug
+                const bb = ByteArray.wrap(str, "debug"); // Calls ByteArray#fromDebug
                 assert.equal(bb.toDebug(), str);
             });
         });
 
         it("binary", () => {
             ["\x61\x62\x63\x64", "", "  "].forEach((str) => {
-                const bb = ExBuffer.wrap(str, "binary"); // Calls ExBuffer#fromBinary
+                const bb = ByteArray.wrap(str, "binary"); // Calls ByteArray#fromBinary
                 assert.strictEqual(bb.toBinary(), str);
                 if (str.length > 2) {
                     bb.offset = 1;
@@ -167,7 +169,7 @@ describe("ExBuffer", () => {
 
         it("hex", () => {
             ["61626364", "61", ""].forEach((str) => {
-                const bb = ExBuffer.wrap(str, "hex"); // Calls ExBuffer#fromHex
+                const bb = ByteArray.wrap(str, "hex"); // Calls ByteArray#fromHex
                 assert.strictEqual(bb.toHex(), str);
                 if (str.length > 2) {
                     bb.offset = 1;
@@ -179,7 +181,7 @@ describe("ExBuffer", () => {
 
         it("base64", () => {
             ["", "YWI=", "YWJjZGVmZw==", "YWJjZGVmZ2g=", "YWJjZGVmZ2hp"].forEach((str) => {
-                const bb = ExBuffer.wrap(str, "base64"); // Calls ExBuffer#fromBase64
+                const bb = ByteArray.wrap(str, "base64"); // Calls ByteArray#fromBase64
                 assert.strictEqual(bb.toBase64(), str);
                 if (str.length > 8) {
                     bb.offset = 3;
@@ -196,23 +198,23 @@ describe("ExBuffer", () => {
         it("concat", () => {
             const bbs = [
                 new ArrayBuffer(1),
-                ExBuffer.fromDebug("00<01 02>"),
-                ExBuffer.fromDebug("00 01 02<03>00"),
-                ExBuffer.fromDebug("00|"),
-                ExBuffer.fromDebug("<04>"),
+                ByteArray.fromDebug("00<01 02>"),
+                ByteArray.fromDebug("00 01 02<03>00"),
+                ByteArray.fromDebug("00|"),
+                ByteArray.fromDebug("<04>"),
                 type === Buffer ? new Buffer(0) : new ArrayBuffer(0),
                 new Uint8Array(0),
                 "05"
             ];
-            let bb = ExBuffer.concat(bbs, "hex", !ExBuffer.DEFAULT_NOASSERT);
-            assert.strictEqual(bb.noAssert, !ExBuffer.DEFAULT_NOASSERT);
+            let bb = ByteArray.concat(bbs, "hex", !ByteArray.DEFAULT_NOASSERT);
+            assert.strictEqual(bb.noAssert, !ByteArray.DEFAULT_NOASSERT);
             assert.equal(bb.toDebug(), "<00 01 02 03 04 05>");
-            bb = ExBuffer.concat([]);
-            assert.strictEqual(bb.buffer, new ExBuffer(0).buffer); // EMPTY_BUFFER
+            bb = ByteArray.concat([]);
+            assert.strictEqual(bb.buffer, new ByteArray(0).buffer); // EMPTY_BUFFER
         });
 
         it("resize", () => {
-            const bb = new ExBuffer(1);
+            const bb = new ByteArray(1);
             bb.offset = 1;
             bb.resize(2);
             bb.fill(0, 0, 2);
@@ -221,7 +223,7 @@ describe("ExBuffer", () => {
         });
 
         it("ensureCapacity", () => {
-            const bb = new ExBuffer(5);
+            const bb = new ByteArray(5);
             assert.equal(bb.capacity(), 5);
             bb.ensureCapacity(6); // Doubles
             assert.equal(bb.capacity(), 10);
@@ -230,14 +232,14 @@ describe("ExBuffer", () => {
         });
 
         it("slice", () => {
-            const b = ExBuffer.wrap("\x12\x34\x56");
+            const b = ByteArray.wrap("\x12\x34\x56");
             const b2 = b.slice(1, 3);
-            const b3 = ExBuffer.wrap("\x34\x56");
+            const b3 = ByteArray.wrap("\x34\x56");
             assert.equal(Buffer.compare(b2.buffer, b3.buffer), 0);
         });
 
         it("flip", () => {
-            const bb = ExBuffer.wrap("\x12\x34\x56\x78");
+            const bb = ByteArray.wrap("\x12\x34\x56\x78");
             bb.offset = 4;
             assert.equal(bb.offset, 4);
             assert.equal(bb.limit, 4);
@@ -247,7 +249,7 @@ describe("ExBuffer", () => {
         });
 
         it("mark", () => {
-            const bb = ExBuffer.wrap("\x12\x34\x56\x78");
+            const bb = ByteArray.wrap("\x12\x34\x56\x78");
             assert.equal(bb.offset, 0);
             assert.equal(bb.limit, 4);
             assert.equal(bb.markedOffset, -1);
@@ -256,7 +258,7 @@ describe("ExBuffer", () => {
         });
 
         it("reset", () => {
-            const bb = ExBuffer.wrap("\x12\x34\x56\x78");
+            const bb = ByteArray.wrap("\x12\x34\x56\x78");
             bb.reset();
             assert.equal(bb.offset, 0);
             assert.equal(bb.limit, 4);
@@ -269,7 +271,7 @@ describe("ExBuffer", () => {
         });
 
         it("copy", () => {
-            const bb = ExBuffer.wrap("\x01");
+            const bb = ByteArray.wrap("\x01");
             const bb2 = bb.copy();
             assert.equal(bb.offset, 0);
             assert.notStrictEqual(bb, bb2);
@@ -282,8 +284,8 @@ describe("ExBuffer", () => {
         });
 
         it("copyTo", () => {
-            const bb = ExBuffer.wrap("\x01");
-            const bb2 = new ExBuffer(2).fill(0).flip();
+            const bb = ByteArray.wrap("\x01");
+            const bb2 = new ByteArray(2).fill(0).flip();
             assert.equal(bb.toDebug(), "<01>");
             // Modifies source and target offsets
             bb.copyTo(bb2 /* all offsets omitted */);
@@ -310,7 +312,7 @@ describe("ExBuffer", () => {
         });
 
         it("compact", () => {
-            const bb = ExBuffer.wrap("\x01\x02");
+            const bb = ByteArray.wrap("\x01\x02");
             bb.limit = 1;
             bb.markedOffset = 2;
             let prevBuffer = bb.buffer;
@@ -330,7 +332,7 @@ describe("ExBuffer", () => {
             prevBuffer = bb.buffer;
             bb.compact();
             assert.notStrictEqual(bb.buffer, prevBuffer);
-            assert.strictEqual(bb.buffer, new adone.ExBuffer(0).buffer); // EMPTY_BUFFER
+            assert.strictEqual(bb.buffer, new ByteArray(0).buffer); // EMPTY_BUFFER
             if (type === ArrayBuffer) {
                 assert.strictEqual(bb.view, null);
             }
@@ -340,7 +342,7 @@ describe("ExBuffer", () => {
         });
 
         it("reverse", () => {
-            const bb = ExBuffer.wrap("\x12\x34\x56\x78");
+            const bb = ByteArray.wrap("\x12\x34\x56\x78");
             bb.reverse(1, 3);
             assert.equal(bb.toString("debug"), "<12 56 34 78>");
             bb.reverse();
@@ -354,8 +356,8 @@ describe("ExBuffer", () => {
         });
 
         it("write", () => {
-            const bb = ExBuffer.wrap("\x12\x34");
-            const bb2 = ExBuffer.wrap("\x56\x78");
+            const bb = ByteArray.wrap("\x12\x34");
+            const bb2 = ByteArray.wrap("\x56\x78");
             bb.offset = 2;
             bb.write(bb2); // Modifies offsets of both
             assert.equal(bb.toString("debug"), "12 34>56 78<");
@@ -367,8 +369,8 @@ describe("ExBuffer", () => {
         });
 
         it("prepend", () => {
-            const bb = ExBuffer.wrap("\x12\x34");
-            const bb2 = ExBuffer.wrap("\x56\x78");
+            const bb = ByteArray.wrap("\x12\x34");
+            const bb2 = ByteArray.wrap("\x56\x78");
             assert.strictEqual(bb.prepend(bb2), bb); // Relative prepend at 0, 2 bytes (2 overflow)
             assert.equal(bb.toDebug(), "<56 78 12 34>");
             assert.equal(bb2.toDebug(), "56 78|");
@@ -391,15 +393,15 @@ describe("ExBuffer", () => {
         });
 
         it("prependTo", () => {
-            const bb = ExBuffer.wrap("\x12\x34");
-            const bb2 = ExBuffer.wrap("\x56\x78");
+            const bb = ByteArray.wrap("\x12\x34");
+            const bb2 = ByteArray.wrap("\x56\x78");
             assert.strictEqual(bb2.prependTo(bb), bb2);
             assert.equal(bb.toDebug(), "<56 78 12 34>");
             assert.equal(bb2.toDebug(), "56 78|");
         });
 
         it("remaining", () => {
-            const bb = ExBuffer.wrap("\x12\x34");
+            const bb = ByteArray.wrap("\x12\x34");
             assert.strictEqual(bb.remaining(), 2);
             bb.offset = 2;
             assert.strictEqual(bb.remaining(), 0);
@@ -408,7 +410,7 @@ describe("ExBuffer", () => {
         });
 
         it("skip", () => {
-            const bb = ExBuffer.wrap("\x12\x34\x56");
+            const bb = ByteArray.wrap("\x12\x34\x56");
             assert.strictEqual(bb.offset, 0);
             bb.skip(3);
             assert.strictEqual(bb.offset, 3);
@@ -425,9 +427,9 @@ describe("ExBuffer", () => {
         });
 
         it("order", () => {
-            // assert.strictEqual(ExBuffer.LITTLE_ENDIAN, true);
-            // assert.strictEqual(ExBuffer.BIG_ENDIAN, false);
-            const bb = new ExBuffer(2);
+            // assert.strictEqual(ByteArray.LITTLE_ENDIAN, true);
+            // assert.strictEqual(ByteArray.BIG_ENDIAN, false);
+            const bb = new ByteArray(2);
             // assert.strictEqual(bb.littleEndian, false);
             bb.writeInt32BE(0x12345678);
             bb.flip();
@@ -471,7 +473,7 @@ describe("ExBuffer", () => {
                 le += be.substr(i - 2, 2);
             }
             it(name.toLowerCase(), () => {
-                const bb = new ExBuffer(size);
+                const bb = new ByteArray(size);
                 let writeLE;
                 let readLE;
                 let writeBE;
@@ -549,7 +551,7 @@ describe("ExBuffer", () => {
         });
 
         it("bitset", () => {
-            const bb = new ExBuffer(2);
+            const bb = new ByteArray(2);
 
             const run = (data) => {
                 bb.reset();
@@ -576,8 +578,8 @@ describe("ExBuffer", () => {
         });
 
         it("calculateVarint", () => {
-            assert.equal(ExBuffer.MAX_VARINT32_BYTES, 5);
-            assert.equal(ExBuffer.MAX_VARINT64_BYTES, 10);
+            assert.equal(ByteArray.MAX_VARINT32_BYTES, 5);
+            assert.equal(ByteArray.MAX_VARINT64_BYTES, 10);
             let values = [
                 [0, 1],
                 [-1, 5, 10],
@@ -590,8 +592,8 @@ describe("ExBuffer", () => {
                 [0xFFFFFFFF | 0, 5, 10]
             ];
             for (let i = 0; i < values.length; i++) {
-                assert.equal(ExBuffer.calculateVarint32(values[i][0]), values[i][1]);
-                assert.equal(ExBuffer.calculateVarint64(values[i][0]), values[i].length > 2 ? values[i][2] : values[i][1]);
+                assert.equal(ByteArray.calculateVarint32(values[i][0]), values[i][1]);
+                assert.equal(ByteArray.calculateVarint64(values[i][0]), values[i].length > 2 ? values[i][2] : values[i][1]);
             }
             values = [
                 [Long.fromNumber(1).shl(35), 6],
@@ -602,7 +604,7 @@ describe("ExBuffer", () => {
                 [Long.fromNumber(1, true).shl(63), 10]
             ];
             for (let i = 0; i < values.length; i++) {
-                assert.equal(ExBuffer.calculateVarint64(values[i][0]), values[i][1]);
+                assert.equal(ByteArray.calculateVarint64(values[i][0]), values[i][1]);
             }
         });
 
@@ -619,10 +621,10 @@ describe("ExBuffer", () => {
                 [-2147483648, 4294967295]
             ];
             for (let i = 0; i < values.length; i++) {
-                assert.equal(ExBuffer.zigZagEncode32(values[i][0]), values[i][1]);
-                assert.equal(ExBuffer.zigZagDecode32(values[i][1]), values[i][0]);
-                assert.equal(ExBuffer.zigZagEncode64(values[i][0]).toNumber(), values[i][1]);
-                assert.equal(ExBuffer.zigZagDecode64(values[i][1]).toNumber(), values[i][0]);
+                assert.equal(ByteArray.zigZagEncode32(values[i][0]), values[i][1]);
+                assert.equal(ByteArray.zigZagDecode32(values[i][1]), values[i][0]);
+                assert.equal(ByteArray.zigZagEncode64(values[i][0]).toNumber(), values[i][1]);
+                assert.equal(ByteArray.zigZagDecode64(values[i][1]).toNumber(), values[i][0]);
             }
             values = [
                 [Long.MAX_VALUE, Long.MAX_UNSIGNED_VALUE.sub(Long.ONE)],
@@ -630,8 +632,8 @@ describe("ExBuffer", () => {
             ];
             // NOTE: Even 64bit doubles from toNumber() fail for these values so we are using toString() here
             for (let i = 0; i < values.length; i++) {
-                assert.equal(ExBuffer.zigZagEncode64(values[i][0]).toString(), values[i][1].toString());
-                assert.equal(ExBuffer.zigZagDecode64(values[i][1]).toString(), values[i][0].toString());
+                assert.equal(ByteArray.zigZagEncode64(values[i][0]).toString(), values[i][1].toString());
+                assert.equal(ByteArray.zigZagDecode64(values[i][1]).toString(), values[i][0].toString());
             }
 
             // 32 bit ZZ
@@ -643,7 +645,7 @@ describe("ExBuffer", () => {
                 2147483647,
                 -2147483648
             ];
-            let bb = new ExBuffer(10);
+            let bb = new ByteArray(10);
             for (let i = 0; i < values.length; i++) {
                 const encLen = bb.writeVarint32ZigZag(values[i], 0);
                 bb.limit = encLen;
@@ -665,7 +667,7 @@ describe("ExBuffer", () => {
                 Long.fromBits(0xFFFFFFFF, 0x7FFFFFFF),
                 Long.fromBits(0xFFFFFFFF, 0xFFFFFFFF)
             ];
-            bb = new ExBuffer(10);
+            bb = new ByteArray(10);
             for (let i = 0; i < values.length; i++) {
                 const encLen = bb.writeVarint64ZigZag(values[i], 0);
                 const dec = bb.readVarint64ZigZag(0);
@@ -675,7 +677,7 @@ describe("ExBuffer", () => {
         });
 
         it("utf8string", () => {
-            const bb = new ExBuffer(2);
+            const bb = new ByteArray(2);
             const str = "ä☺𠜎️☁️";
             let str2;
             // Writing
@@ -683,17 +685,17 @@ describe("ExBuffer", () => {
             bb.flip();
             // bb.printDebug();
             // Reading
-            str2 = bb.readString(ExBuffer.calculateUTF8Chars(str), ExBuffer.METRICS_CHARS);
+            str2 = bb.readString(ByteArray.calculateUTF8Chars(str), ByteArray.METRICS_CHARS);
             // bb.printDebug();
             assert.strictEqual(str2.length, str.length);
             assert.strictEqual(str2, str);
             bb.reset();
-            str2 = bb.readString(bb.limit, ExBuffer.METRICS_BYTES);
+            str2 = bb.readString(bb.limit, ByteArray.METRICS_BYTES);
             assert.strictEqual(str2, str);
         });
 
         it.skip("istring", () => {
-            const bb = new ExBuffer(2);
+            const bb = new ByteArray(2);
             assert.strictEqual(bb.writeIString("ab"), bb); // resizes to 4+2=6
             assert.strictEqual(bb.capacity(), 6);
             assert.strictEqual(bb.offset, 6);
@@ -709,7 +711,7 @@ describe("ExBuffer", () => {
         });
 
         it("vstring", () => {
-            const bb = new ExBuffer(2);
+            const bb = new ByteArray(2);
             bb.writeVString("ab"); // resizes to 2*2=4
             assert.strictEqual(bb.capacity(), 4);
             assert.strictEqual(bb.offset, 3);
@@ -723,7 +725,7 @@ describe("ExBuffer", () => {
         });
 
         it("cstring", () => {
-            const bb = new ExBuffer(2);
+            const bb = new ByteArray(2);
             bb.writeCString("a");
             assert.equal(bb.capacity(), 2);
             assert.equal(bb.offset, 2);
@@ -746,7 +748,7 @@ describe("ExBuffer", () => {
     describe("convert", () => {
 
         it("toHex", () => {
-            const bb = new ExBuffer(4);
+            const bb = new ByteArray(4);
             bb.writeUInt16BE(0x1234);
             bb.writeUInt8(0x56);
             bb.flip();
@@ -761,7 +763,7 @@ describe("ExBuffer", () => {
         });
 
         it("toBase64", () => {
-            const bb = new ExBuffer(8);
+            const bb = new ByteArray(8);
             bb.writeString("abcdefg"); // 7 chars
             bb.flip();
             assert.equal(bb.toBase64(), "YWJjZGVmZw==");
@@ -775,7 +777,7 @@ describe("ExBuffer", () => {
         });
 
         it("toBinary", () => {
-            const bb = new ExBuffer(5);
+            const bb = new ByteArray(5);
             bb.writeUInt32BE(0x001234FF);
             bb.flip();
             assert.strictEqual(bb.toBinary(), "\x00\x12\x34\xFF");
@@ -783,7 +785,7 @@ describe("ExBuffer", () => {
         });
 
         it("toString", () => {
-            const bb = new ExBuffer(3);
+            const bb = new ByteArray(3);
             bb.writeUInt16BE(0x6162).flip();
             assert.equal(bb.toString("hex"), "6162");
             assert.equal(bb.toString("base64"), "YWI=");
@@ -794,7 +796,7 @@ describe("ExBuffer", () => {
         });
 
         it("toBuffer", () => {
-            const bb = new ExBuffer(2);
+            const bb = new ByteArray(2);
             bb.writeUInt16BE(0x1234).flip();
             let buf = bb.toBuffer();
             assert.strictEqual(buf, bb.buffer);
@@ -818,7 +820,7 @@ describe("ExBuffer", () => {
         });
 
         it("toArrayBuffer", () => {
-            const bb = new ExBuffer(3);
+            const bb = new ByteArray(3);
             if (type === ArrayBuffer) {
                 assert.strictEqual(bb.toArrayBuffer, bb.toBuffer);
             } else {
@@ -837,7 +839,7 @@ describe("ExBuffer", () => {
 
         it("pbjsi19", () => {
             // assert that this issue is fixed: https://github.com/dcodeIO/ProtoBuf.js/issues/19
-            const bb = new ExBuffer(9); // Trigger resize to 18 in writeVarint64
+            const bb = new ByteArray(9); // Trigger resize to 18 in writeVarint64
             bb.writeVarint32(16);
             bb.writeVarint32(2);
             bb.writeVarint32(24);
@@ -851,7 +853,7 @@ describe("ExBuffer", () => {
         });
 
         it("NaN", () => {
-            const bb = new ExBuffer(4);
+            const bb = new ByteArray(4);
             assert.ok(isNaN(bb.writeFloatBE(NaN).flip().readFloatBE(0)));
             assert.strictEqual(bb.writeFloatBE(Number(Infinity)).flip().readFloatBE(0), Number(Infinity));
             assert.strictEqual(bb.writeFloatBE(-Infinity).flip().readFloatBE(0), -Infinity);

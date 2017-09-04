@@ -27,7 +27,7 @@ export class InstallationManager {
     }
 
     async install({ symlink = false } = {}) {
-        this.bar = adone.terminal.progress({
+        this.bar = adone.runtime.term.progress({
             schema: " :spinner preparing"
         });
         this.bar.update(0);
@@ -108,7 +108,7 @@ export class InstallationManager {
             description: adoneConf.description,
             subsystem: indexPath
         };
-        const subsystems = adone.application.instance.config.cli.subsystems;
+        const subsystems = adone.runtime.app.config.cli.subsystems;
 
         let i;
         for (i = 0; i < subsystems.length; i++) {
@@ -125,7 +125,7 @@ export class InstallationManager {
 
         subsystems.sort((a, b) => a.name > b.name);
 
-        await adone.application.instance.config.save(std.path.join(ADONE_CONFIGS_PATH, "cli.json"), "cli", {
+        await adone.runtime.app.config.save(std.path.join(ADONE_CONFIGS_PATH, "cli.json"), "cli", {
             space: "    "
         });
     }

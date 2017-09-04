@@ -1,4 +1,9 @@
-const { is, math: { BigNumber }, ExBuffer, std: { net } } = adone;
+const {
+    is,
+    math: { BigNumber },
+    collection: { ByteArray },
+    std: { net }
+} = adone;
 
 const datatypes = {
     pointer: 1,
@@ -175,7 +180,7 @@ export default class Generator {
     }
 
     genDataType(data) {
-        const buf = new ExBuffer();
+        const buf = new ByteArray();
         const type = datatypes[data.type];
         let cbyte = 0;
         if (type < 8) {
@@ -299,7 +304,7 @@ export default class Generator {
     }
 
     genArray(array) {
-        const buf = new ExBuffer();
+        const buf = new ByteArray();
         for (const i of array) {
             buf.write(this.genData(i));
         }
@@ -311,7 +316,7 @@ export default class Generator {
     }
 
     genMap(obj) {
-        const buf = new ExBuffer();
+        const buf = new ByteArray();
         let length = 0;
         for (const key of Object.keys(obj)) {
             buf.write(this.genData(key));
@@ -383,7 +388,7 @@ export default class Generator {
 
         const numNodes = list.length;
 
-        const dataBuf = new ExBuffer();
+        const dataBuf = new ByteArray();
         const dataRef = [];
         for (const i of data) {
             dataRef.push(dataBuf.offset);
@@ -411,7 +416,7 @@ export default class Generator {
             }
         }
 
-        const treeBuf = new ExBuffer();
+        const treeBuf = new ByteArray();
         for (const node of list) {
             switch (this.metadata.recordSize) {
                 case 24:
@@ -434,7 +439,7 @@ export default class Generator {
             }
         }
 
-        const metadataBuf = new ExBuffer();
+        const metadataBuf = new ByteArray();
 
         /* eslint-disable camelcase */
         metadataBuf.write(this.genData({
