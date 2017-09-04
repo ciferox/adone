@@ -28,9 +28,9 @@ const breakLines = (lines, width) => {
 const forceLineReturn = (content, width) => _.flatten(breakLines(content.split("\n"), width)).join("\n");
 
 class Observer extends EventEmitter {
-    constructor(terminal) {
+    constructor(term) {
         super();
-        this.readline = terminal.readline;
+        this.readline = term.readline;
         this.keypressHandler = (value, key = {}) => {
             // Ignore `enter` key. On the readline, we only care about the `line` event.
             if (key.name === "enter" || key.name === "return") {
@@ -76,8 +76,8 @@ class Observer extends EventEmitter {
 }
 
 class ScreenManager {
-    constructor(terminal) {
-        this.term = terminal;
+    constructor(term) {
+        this.term = term;
 
         // These variables are keeping information to allow correct prompt re-rendering
         this.height = 0;

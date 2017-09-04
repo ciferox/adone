@@ -100,18 +100,6 @@
                         }
                     }
                 },
-                "cui": {
-                    "description": "Console user interface framework",
-                    "index": "glosses/cui/index",
-                    "src": "glosses/cui/**/*",
-                    "namespace": {
-                        "widget": {
-                            "description": "Implementations of CUI widgets",
-                            "index": "glosses/cui/widgets/index",
-                            "src": "glosses/cui/widgets/**/*"
-                        }
-                    }
-                },
                 "data": {
                     "description": "Data generic manipulation utilites and serializers",
                     "index": "glosses/data/index",
@@ -386,7 +374,21 @@
                 "terminal": {
                     "description": "Terminal stuff",
                     "index": "glosses/terminal/index",
-                    "src": "glosses/terminal/**/*"
+                    "src": "glosses/terminal/**/*",
+                    "namespace": {
+                        "ui": {
+                            "description": "Console user interface framework",
+                            "index": "glosses/cui/index",
+                            "src": "glosses/cui/**/*",
+                            "namespace": {
+                                "widget": {
+                                    "description": "Implementations of CUI widgets",
+                                    "index": "glosses/cui/widgets/index",
+                                    "src": "glosses/cui/widgets/**/*"
+                                }
+                            }
+                        }
+                    }
                 },
                 "text": {
                     "description": "Text utilites",

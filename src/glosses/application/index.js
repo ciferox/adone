@@ -21,11 +21,11 @@ const hasColorsSupport = Boolean(process.stdout.isTTY);
 
 const defaultColors = {
     commandName: (x) => term.parse(`{#4CAF50-fg}${x}{/}`),
-    commandHelpMessage: (x) => styler.italic.italic(x),
+    commandHelpMessage: (x) => styler.italic(x),
     commandSeparator: (x) => x,
     optionName: (x) => term.parse(`{#00B0FF-fg}${x}{/}`),
     optionVariable: (x) => x,
-    optionHelpMessage: (x) => styler.italic.italic(x),
+    optionHelpMessage: (x) => styler.italic(x),
     // argumentName: (x) => x,
     argumentName: (x) => term.parse(`{#F44336-fg}${x}{/}`),
     argumentHelpMessage: (x) => styler.italic(x),

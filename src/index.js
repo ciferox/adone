@@ -298,7 +298,6 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         event: "./glosses/events",
         is: "./glosses/is",
         x: "./glosses/exceptions",
-        cui: "./glosses/cui",
         application: "./glosses/application",
         configuration: "./glosses/configurations",
         collection: "./glosses/collections",

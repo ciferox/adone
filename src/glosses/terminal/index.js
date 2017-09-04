@@ -6730,5 +6730,6 @@ adone.lazify({
     esc: ["./styles.js", (x) => x.esc],
     color: ["./styles.js", (x) => x.color],
     bgColor: ["./styles.js", (x) => x.bgColor],
-    styler: ["./styles.js", (x) => x.styler]
+    styler: ["./styles.js", (x) => x.styler],
+    ui: "./ui"    
 }, exports, require);
