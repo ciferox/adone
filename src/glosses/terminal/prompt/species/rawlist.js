@@ -1,8 +1,12 @@
 const {
     is,
     vendor: { lodash: _ },
-    terminal: { Terminal }
+    terminal
 } = adone;
+
+const {
+    styler
+} = terminal;
 
 /**
  * Function for rendering list choices
@@ -25,7 +29,7 @@ const renderChoices = (terminal, choices, pointer) => {
         const index = i - separatorOffset;
         let display = `${index + 1}) ${choice.name}`;
         if (index === pointer) {
-            display = terminal.cyan(display);
+            display = styler.cyan(display);
         }
         output += display;
     });
@@ -33,14 +37,14 @@ const renderChoices = (terminal, choices, pointer) => {
     return output;
 };
 
-export default class RawlistPrompt extends Terminal.BasePrompt {
-    constructor(terminal, question, answers) {
-        super(terminal, question, answers);
+export default class RawlistPrompt extends terminal.BasePrompt {
+    constructor(term, question, answers) {
+        super(term, question, answers);
         if (!this.opt.choices) {
             this.throwParamError("choices");
         }
 
-        this.opt.validChoices = this.opt.choices.filter(Terminal.Separator.exclude);
+        this.opt.validChoices = this.opt.choices.filter(terminal.Separator.exclude);
 
         this.selected = 0;
         this.rawDefault = 0;
@@ -59,7 +63,7 @@ export default class RawlistPrompt extends Terminal.BasePrompt {
         // Make sure no default is set (so it won't be printed)
         this.opt.default = null;
 
-        this.paginator = new Terminal.Paginator(this.terminal);
+        this.paginator = new terminal.Paginator(this.term);
     }
 
     /**
@@ -101,17 +105,17 @@ export default class RawlistPrompt extends Terminal.BasePrompt {
         let bottomContent = "";
 
         if (this.status === "answered") {
-            message += this.terminal.cyan(this.answer);
+            message += styler.cyan(this.answer);
         } else {
-            const choicesStr = renderChoices(this.terminal, this.opt.choices, this.selected);
+            const choicesStr = renderChoices(this.term, this.opt.choices, this.selected);
             message += this.paginator.paginate(choicesStr, this.selected, this.opt.pageSize);
             message += "\n  Answer: ";
         }
 
-        message += this.terminal.readline.line;
+        message += this.term.readline.line;
 
         if (error) {
-            bottomContent = `\n${this.terminal.red(">> ")}${error}`;
+            bottomContent = `\n${styler.red(">> ")}${error}`;
         }
 
         this.screen.render(message, bottomContent);
@@ -150,7 +154,7 @@ export default class RawlistPrompt extends Terminal.BasePrompt {
      * When user press a key
      */
     onKeypress() {
-        const index = this.terminal.readline.line.length ? Number(this.terminal.readline.line) - 1 : 0;
+        const index = this.term.readline.line.length ? Number(this.term.readline.line) - 1 : 0;
 
         if (this.opt.choices.getChoice(index)) {
             this.selected = index;

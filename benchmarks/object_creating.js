@@ -1,7 +1,5 @@
-"use strict";
-
 export default {
-    "Object": {
+    Object: {
         "new Object()"() {
             return new Object({ a: 1, b: "abc" });
         },
@@ -10,9 +8,30 @@ export default {
         },
         "adone.o()"() {
             return adone.o({ a: 1, b: "abc" });
+        },
+        "Object.create()"() {
+            return Object.create(null, {
+                a: {
+                    value: 1
+                },
+                b: {
+                    value: "abc"
+                }
+            });
         }
     },
-    "Array": {
+    "Empty object": {
+        "{}"() {
+            return {};
+        },
+        "adone.o()"() {
+            return adone.o();
+        },
+        "Object.create(null)"() {
+            return Object.create(null);
+        }
+    },
+    Array: {
         "new Array()"() {
             return new Array(1, 2, 3);
         },

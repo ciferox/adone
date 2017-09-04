@@ -28,7 +28,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         info: (...args) => adone.runtime.logger.info(...args),
         debug: (...args) => adone.runtime.logger.debug(...args),
         trace: (...args) => adone.runtime.logger.trace(...args),
-        o: (...props) => Object.assign.apply(null, [Object.create(null)].concat(props)),
+        o: (...props) => props.length > 0 ? Object.assign({}, ...props) : {},
         Date: global.Date,
         hrtime: process.hrtime,
         setTimeout: global.setTimeout,

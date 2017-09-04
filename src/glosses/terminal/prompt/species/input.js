@@ -1,9 +1,13 @@
 const {
     is,
-    terminal: { Terminal }
+    terminal
 } = adone;
 
-export default class InputPrompt extends Terminal.BasePrompt {
+const {
+    styler
+} = terminal;
+
+export default class InputPrompt extends terminal.BasePrompt {
     /**
      * Start the Inquiry session
      * @param  {Function} cb      Callback when prompt is done
@@ -42,13 +46,13 @@ export default class InputPrompt extends Terminal.BasePrompt {
         let message = this.getQuestion();
 
         if (this.status === "answered") {
-            message += this.terminal.cyan(this.answer);
+            message += styler.cyan(this.answer);
         } else {
-            message += this.terminal.readline.line;
+            message += this.term.readline.line;
         }
 
         if (error) {
-            bottomContent = this.terminal.red(">> ") + error;
+            bottomContent = styler.red(">> ") + error;
         }
 
         this.screen.render(message, bottomContent);

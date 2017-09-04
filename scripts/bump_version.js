@@ -2,7 +2,7 @@ const {
     std: { path },
     semver,
     configuration,
-    runtimr: { term }
+    runtime: { term }
 } = adone;
 
 adone.application.run({

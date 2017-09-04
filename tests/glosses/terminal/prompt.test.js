@@ -1,13 +1,16 @@
 describe("terminal", "prompt", () => {
-    const { promise: { delay }, terminal: { Terminal } } = adone;
+    const {
+        promise: { delay },
+        terminal
+    } = adone;
 
-    class TerminfoMock extends adone.Terminal.Terminfo {
+    class TerminfoMock extends terminal.Terminfo {
         setup() {
             //
         }
     }
 
-    class TerminalMock extends adone.Terminal {
+    class TerminalMock extends terminal.Terminal {
         initialize() {
             this.cols = 120;
             this.rows = 120;
@@ -36,16 +39,16 @@ describe("terminal", "prompt", () => {
         }
     }
 
-    const getOutputCollector = () => new Collector(terminal.readline.output);
+    let term;
 
-    let terminal;
+    const getOutputCollector = () => new Collector(term.readline.output);
 
     beforeEach(() => {
-        terminal = new TerminalMock();
+        term = new TerminalMock();
     });
 
     const emitKeypress = async (...args) => {
-        terminal.readline.input.emit("keypress", ...args);
+        term.readline.input.emit("keypress", ...args);
     };
 
     const emitLines = async (lines, _delay = 50) => {
@@ -53,7 +56,7 @@ describe("terminal", "prompt", () => {
             lines = adone.util.range(lines).fill("");
         }
         for (const s of lines) {
-            terminal.input.write(`${s}\n`);
+            term.input.write(`${s}\n`);
             await delay(_delay);
         }
     };
@@ -84,7 +87,7 @@ describe("terminal", "prompt", () => {
                 default: false
             }];
 
-            const promise = terminal.prompt().run(prompts);
+            const promise = term.prompt().run(prompts);
 
             await emitLines(2);
 
@@ -106,7 +109,7 @@ describe("terminal", "prompt", () => {
                 default: false
             }];
 
-            const promise = terminal.prompt().run(prompts);
+            const promise = term.prompt().run(prompts);
 
             await emitLines(2);
 
@@ -130,7 +133,7 @@ describe("terminal", "prompt", () => {
                 default: "bar"
             };
 
-            const promise = terminal.prompt().run(prompt);
+            const promise = term.prompt().run(prompt);
             await emitLines(1);
             const answers = await promise;
             expect(answers.q1).to.equal("bar");
@@ -149,7 +152,7 @@ describe("terminal", "prompt", () => {
                 default: "foo"
             }];
             const collector = getOutputCollector();
-            const promise = terminal.prompt().run(prompts);
+            const promise = term.prompt().run(prompts);
             await emitLines(2);
             const answers = await promise;
             collector.stop();
@@ -177,7 +180,7 @@ describe("terminal", "prompt", () => {
                 default: "foo"
             }];
             const collector = getOutputCollector();
-            const promise = terminal.prompt().run(prompts);
+            const promise = term.prompt().run(prompts);
             await emitLines(2, 300);
             const answers = await promise;
             collector.stop();
@@ -199,7 +202,7 @@ describe("terminal", "prompt", () => {
                 default: mock().withExactArgs({ name1: "bar" }).returns("foo")
             }];
 
-            const promise = terminal.prompt().run(prompts);
+            const promise = term.prompt().run(prompts);
             await emitLines(2);
             const answers = await promise;
             expect(prompts[1].default).to.have.been.calledOnce;
@@ -222,7 +225,7 @@ describe("terminal", "prompt", () => {
                 })
             }];
 
-            const promise = terminal.prompt().run(prompts);
+            const promise = term.prompt().run(prompts);
             await emitLines(2);
             const answers = await promise;
             expect(prompts[1].default).to.have.been.calledOnce;
@@ -245,7 +248,7 @@ describe("terminal", "prompt", () => {
             }];
 
             const collector = getOutputCollector();
-            const promise = terminal.prompt().run(prompts);
+            const promise = term.prompt().run(prompts);
             await emitLines([
                 "hello",
                 "foo"
@@ -269,7 +272,7 @@ describe("terminal", "prompt", () => {
                     when: mock().withExactArgs({ q1: true }).returns(false)
                 }];
 
-                const promise = terminal.prompt().run(prompts);
+                const promise = term.prompt().run(prompts);
                 await emitLines([
                     "Y"
                 ]);
@@ -291,7 +294,7 @@ describe("terminal", "prompt", () => {
                     when: mock().withExactArgs({ q1: true }).returns(true)
                 }];
 
-                const promise = terminal.prompt().run(prompts);
+                const promise = term.prompt().run(prompts);
                 await emitLines([
                     "Y",
                     ""
@@ -314,7 +317,7 @@ describe("terminal", "prompt", () => {
                     when: true
                 }];
 
-                const promise = terminal.prompt().run(prompts);
+                const promise = term.prompt().run(prompts);
                 await emitLines([
                     "Y",
                     "hello"
@@ -340,7 +343,7 @@ describe("terminal", "prompt", () => {
                     default: "foo"
                 }];
 
-                const promise = terminal.prompt().run(prompts);
+                const promise = term.prompt().run(prompts);
                 await emitLines([
                     "Y",
                     ""
@@ -367,7 +370,7 @@ describe("terminal", "prompt", () => {
                     default: "foo"
                 }];
 
-                const promise = terminal.prompt().run(prompts);
+                const promise = term.prompt().run(prompts);
                 await emitLines([
                     "Y",
                     "bar"
@@ -392,7 +395,7 @@ describe("terminal", "prompt", () => {
                     })
                 }];
 
-                const promise = terminal.prompt().run(prompts);
+                const promise = term.prompt().run(prompts);
                 await emitLines([
                     "Y",
                     ""
@@ -426,13 +429,13 @@ describe("terminal", "prompt", () => {
             list: {
                 message: "message",
                 name: "name",
-                choices: ["foo", terminal.separator(), "bar", "bum"]
+                choices: ["foo", term.separator(), "bar", "bum"]
             },
 
             rawlist: {
                 message: "message",
                 name: "name",
-                choices: ["foo", "bar", terminal.separator(), "bum"]
+                choices: ["foo", "bar", term.separator(), "bum"]
             },
 
             expand: {
@@ -440,7 +443,7 @@ describe("terminal", "prompt", () => {
                 name: "name",
                 choices: [
                     { key: "a", name: "acab" },
-                    terminal.separator(),
+                    term.separator(),
                     { key: "b", name: "bar" },
                     { key: "c", name: "chile" },
                     { key: "d", name: "d", value: false }
@@ -452,7 +455,7 @@ describe("terminal", "prompt", () => {
                 name: "name",
                 choices: [
                     "choice 1",
-                    terminal.separator(),
+                    term.separator(),
                     "choice 2",
                     "choice 3"
                 ]
@@ -466,7 +469,7 @@ describe("terminal", "prompt", () => {
             autocomplete: {
                 message: "message",
                 name: "name",
-                source: async () => ["foo", terminal.separator(), "bar", "bum"]
+                source: async () => ["foo", term.separator(), "bar", "bum"]
             }
         };
     });
@@ -546,7 +549,7 @@ describe("terminal", "prompt", () => {
                             return "pass";
                         };
 
-                        const prompt = new this.Prompt(terminal, this.fixture);
+                        const prompt = new this.Prompt(term, this.fixture);
                         const promise = prompt.run();
                         await emitLines(1);
                         const answer = await promise;
@@ -559,7 +562,7 @@ describe("terminal", "prompt", () => {
                             return "pass";
                         };
 
-                        const prompt = new this.Prompt(terminal, this.fixture);
+                        const prompt = new this.Prompt(term, this.fixture);
                         const promise = prompt.run();
                         await emitLines(1);
                         const answer = await promise;
@@ -582,7 +585,7 @@ describe("terminal", "prompt", () => {
                             throw new Error("fail");
                         };
 
-                        const prompt = new this.Prompt(terminal, this.fixture);
+                        const prompt = new this.Prompt(term, this.fixture);
                         const promise = prompt.run();
                         await emitLines(1);
                         const answer = await promise;
@@ -605,7 +608,7 @@ describe("terminal", "prompt", () => {
                             throw new Error("fail");
                         };
 
-                        const prompt = new this.Prompt(terminal, this.fixture);
+                        const prompt = new this.Prompt(term, this.fixture);
                         const promise = prompt.run();
                         await emitLines(1);
                         const answer = await promise;
@@ -625,7 +628,7 @@ describe("terminal", "prompt", () => {
                             default: false
                         }];
 
-                        const promise = terminal.prompt().run(questions);
+                        const promise = term.prompt().run(questions);
                         await emitLines([
                             "Y",
                             ""
@@ -652,7 +655,7 @@ describe("terminal", "prompt", () => {
                             return false;
                         };
 
-                        const prompt = new this.Prompt(terminal, this.fixture);
+                        const prompt = new this.Prompt(term, this.fixture);
                         const promise = prompt.run();
                         emitLines(1);
                         await promise;
@@ -674,7 +677,7 @@ describe("terminal", "prompt", () => {
                             return errorMessage;
                         };
 
-                        const prompt = new this.Prompt(terminal, this.fixture);
+                        const prompt = new this.Prompt(term, this.fixture);
                         const promise = prompt.run();
                         await emitLines(1);
                         await promise;
@@ -696,7 +699,7 @@ describe("terminal", "prompt", () => {
                             return Promise.reject(errorMessage);
                         };
 
-                        const prompt = new this.Prompt(terminal, this.fixture);
+                        const prompt = new this.Prompt(term, this.fixture);
                         const promise = prompt.run();
                         await emitLines(1);
                         await promise;
@@ -706,7 +709,7 @@ describe("terminal", "prompt", () => {
                     it("should accept input if boolean true is returned", async function () {
                         const validate = this.fixture.validate = stub().returns(true);
 
-                        const prompt = new this.Prompt(terminal, this.fixture);
+                        const prompt = new this.Prompt(term, this.fixture);
                         const promise = prompt.run();
                         await emitLines(1);
                         await promise;
@@ -725,7 +728,7 @@ describe("terminal", "prompt", () => {
                             return false;
                         };
 
-                        const prompt = new this.Prompt(terminal, this.fixture);
+                        const prompt = new this.Prompt(term, this.fixture);
                         const promise = prompt.run();
                         await emitLines(1);
                         await promise;
@@ -737,7 +740,7 @@ describe("terminal", "prompt", () => {
                             return Promise.resolve(true);
                         };
 
-                        const prompt = new this.Prompt(terminal, this.fixture);
+                        const prompt = new this.Prompt(term, this.fixture);
                         const promise = prompt.run();
                         await emitLines(1);
                         await promise;
@@ -756,7 +759,7 @@ describe("terminal", "prompt", () => {
                             default: false
                         }];
 
-                        const promise = terminal.prompt().run(questions);
+                        const promise = term.prompt().run(questions);
                         await emitLines(2);
                         const answer = await promise;
                         expect(answer).to.be.deep.equal({ q1: true, q2: false });
@@ -769,7 +772,7 @@ describe("terminal", "prompt", () => {
                     it("should allow a default value", async function () {
                         this.fixture.default = "pass";
 
-                        const prompt = new this.Prompt(terminal, this.fixture);
+                        const prompt = new this.Prompt(term, this.fixture);
                         const collector = getOutputCollector();
                         const promise = prompt.run();
                         await emitLines(1);
@@ -781,7 +784,7 @@ describe("terminal", "prompt", () => {
 
                     it("should allow a falsy default value", async function () {
                         this.fixture.default = 0;
-                        const prompt = new this.Prompt(terminal, this.fixture);
+                        const prompt = new this.Prompt(term, this.fixture);
                         const collector = getOutputCollector();
                         const promise = prompt.run();
                         await emitLines(1);
@@ -798,7 +801,7 @@ describe("terminal", "prompt", () => {
                     it("should print message on screen", async function () {
                         this.fixture.message = "Foo bar bar foo bar";
 
-                        const prompt = new this.Prompt(terminal, this.fixture);
+                        const prompt = new this.Prompt(term, this.fixture);
                         const collector = getOutputCollector();
                         prompt.run();
                         await delay(50);
@@ -811,12 +814,12 @@ describe("terminal", "prompt", () => {
             choices() {
                 describe("choices API", () => {
                     it("should print choices to screen", async function () {
-                        const prompt = new this.Prompt(terminal, this.fixture);
+                        const prompt = new this.Prompt(term, this.fixture);
                         const choices = prompt.opt.choices;
                         const collector = getOutputCollector();
                         prompt.run();
                         await delay(50);
-                        for (const choice of choices.filter(Terminal.Separator.exclude)) {
+                        for (const choice of choices.filter(terminal.Separator.exclude)) {
                             expect(collector.data()).to.include(choice.name);
                         }
                     });
@@ -828,7 +831,7 @@ describe("terminal", "prompt", () => {
                     it("`message` should throw", function () {
                         const mkPrompt = () => {
                             delete this.fixture.message;
-                            return new this.Prompt(terminal, this.fixture);
+                            return new this.Prompt(term, this.fixture);
                         };
                         expect(mkPrompt).to.throw(/message/);
                     });
@@ -836,7 +839,7 @@ describe("terminal", "prompt", () => {
                     it("`name` should throw", function () {
                         const mkPrompt = () => {
                             delete this.fixture.name;
-                            return new this.Prompt(terminal, this.fixture);
+                            return new this.Prompt(term, this.fixture);
                         };
                         expect(mkPrompt).to.throw(/name/);
                     });
@@ -849,7 +852,7 @@ describe("terminal", "prompt", () => {
             describe(`on ${detail.name} prompt`, () => {
                 beforeEach(function () {
                     this.fixture = adone.util.clone(fixtures[detail.name]);
-                    this.Prompt = adone.Terminal.Prompt.prompts[detail.name];
+                    this.Prompt = terminal.Prompt.prompts[detail.name];
                 });
 
                 for (const apiName of detail.apis) {
@@ -866,7 +869,7 @@ describe("terminal", "prompt", () => {
                     message: "foo bar",
                     name: "name"
                 };
-                const base = new Terminal.BasePrompt(terminal, question);
+                const base = new terminal.BasePrompt(term, question);
                 expect(question).to.not.equal(base.opt);
                 expect(question.name).to.equal(base.opt.name);
                 expect(question.message).to.equal(base.opt.message);
@@ -874,7 +877,7 @@ describe("terminal", "prompt", () => {
         });
 
         describe("checkbox", () => {
-            const createCheckbox = (fixture, answers) => new Terminal.Prompt.prompts.checkbox(terminal, fixture, answers);
+            const createCheckbox = (fixture, answers) => new terminal.Prompt.prompts.checkbox(term, fixture, answers);
 
             beforeEach(function () {
                 this.fixture = adone.util.clone(fixtures.checkbox);
@@ -1083,7 +1086,7 @@ describe("terminal", "prompt", () => {
         });
 
         describe("confirm", () => {
-            const createConfirm = (fixture) => new Terminal.Prompt.prompts.confirm(terminal, fixture);
+            const createConfirm = (fixture) => new terminal.Prompt.prompts.confirm(term, fixture);
 
             beforeEach(function () {
                 this.fixture = adone.util.clone(fixtures.confirm);
@@ -1153,7 +1156,7 @@ describe("terminal", "prompt", () => {
         });
 
         describe("editor", () => {
-            class EditorPrompt extends Terminal.Prompt.prompts.editor {
+            class EditorPrompt extends terminal.Prompt.prompts.editor {
                 async startExternalEditor() {
                     return "Hello world!";
                 }
@@ -1164,7 +1167,7 @@ describe("terminal", "prompt", () => {
             });
 
             it("should retrieve temporary files contents", async function () {
-                const prompt = new EditorPrompt(terminal, this.fixture);
+                const prompt = new EditorPrompt(term, this.fixture);
                 const promise = prompt.run();
                 emitLines(2);
                 const answer = await promise;
@@ -1173,7 +1176,7 @@ describe("terminal", "prompt", () => {
         });
 
         describe("expand", () => {
-            const createExpand = (fixture) => new Terminal.Prompt.prompts.expand(terminal, fixture);
+            const createExpand = (fixture) => new terminal.Prompt.prompts.expand(term, fixture);
 
             beforeEach(function () {
                 this.fixture = adone.util.clone(fixtures.expand);
@@ -1310,7 +1313,7 @@ describe("terminal", "prompt", () => {
         });
 
         describe("input", () => {
-            const createInput = (fixture) => new Terminal.Prompt.prompts.input(terminal, fixture);
+            const createInput = (fixture) => new terminal.Prompt.prompts.input(term, fixture);
 
             beforeEach(function () {
                 this.fixture = adone.util.clone(fixtures.input);
@@ -1340,7 +1343,7 @@ describe("terminal", "prompt", () => {
         });
 
         describe("list", () => {
-            const createList = (fixture) => new Terminal.Prompt.prompts.list(terminal, fixture);
+            const createList = (fixture) => new terminal.Prompt.prompts.list(term, fixture);
 
             beforeEach(function () {
                 this.fixture = adone.util.clone(fixtures.list);
@@ -1475,7 +1478,7 @@ describe("terminal", "prompt", () => {
         });
 
         describe("password", () => {
-            const createPassword = (fixture) => new Terminal.Prompt.prompts.password(terminal, fixture);
+            const createPassword = (fixture) => new terminal.Prompt.prompts.password(term, fixture);
 
             beforeEach(function () {
                 this.fixture = adone.util.clone(fixtures.password);
@@ -1518,7 +1521,7 @@ describe("terminal", "prompt", () => {
         });
 
         describe("rawlist", () => {
-            const createRawlist = (fixture) => new Terminal.Prompt.prompts.rawlist(terminal, fixture);
+            const createRawlist = (fixture) => new terminal.Prompt.prompts.rawlist(term, fixture);
 
             beforeEach(function () {
                 this.fixture = adone.util.clone(fixtures.rawlist);
@@ -1575,7 +1578,7 @@ describe("terminal", "prompt", () => {
         });
 
         describe("autocomplete", () => {
-            const createAutocomplete = (fixture) => new Terminal.Prompt.prompts.autocomplete(terminal, fixture);
+            const createAutocomplete = (fixture) => new terminal.Prompt.prompts.autocomplete(term, fixture);
 
             const runAutocomplete = async (prompt) => {
                 const promise = prompt.run();
@@ -1867,7 +1870,7 @@ describe("terminal", "prompt", () => {
 
     describe("objects", () => {
         describe("Choice", () => {
-            const { Choices: { Choice }, Separator } = Terminal;
+            const { Choices: { Choice }, Separator } = terminal;
 
             it("should normalize accept String as value", () => {
                 const choice = new Choice("foo");
@@ -1896,7 +1899,7 @@ describe("terminal", "prompt", () => {
             });
 
             it("shouldn't process Separator object", () => {
-                const sep = new Choice(new Separator(terminal));
+                const sep = new Choice(new Separator(term));
                 expect(sep).to.be.instanceOf(Separator);
             });
 
@@ -1908,24 +1911,24 @@ describe("terminal", "prompt", () => {
         });
 
         describe("Choices", () => {
-            const { Choices, Separator } = Terminal;
+            const { Choices, Separator } = terminal;
             const { Choice } = Choices;
 
             it("should create Choice object from array member", () => {
-                const choices = new Choices(terminal, ["bar", { name: "foo" }]);
+                const choices = new Choices(term, ["bar", { name: "foo" }]);
                 expect(choices.getChoice(0)).to.be.instanceOf(Choice);
                 expect(choices.getChoice(1)).to.be.instanceOf(Choice);
             });
 
             it("should not process Separator object", () => {
-                const sep = new Separator(terminal);
-                const choices = new Choices(terminal, ["Bar", sep]);
+                const sep = new Separator(term);
+                const choices = new Choices(term, ["Bar", sep]);
                 expect(choices.get(0).name).to.equal("Bar");
                 expect(choices.get(1)).to.equal(sep);
             });
 
             it("should provide access to length information", () => {
-                const choices = new Choices(terminal, ["Bar", new Separator(terminal), "foo"]);
+                const choices = new Choices(term, ["Bar", new Separator(term), "foo"]);
                 expect(choices.length).to.equal(3);
                 expect(choices.realLength).to.equal(2);
 
@@ -1938,12 +1941,12 @@ describe("terminal", "prompt", () => {
             });
 
             it("should allow plucking choice content", () => {
-                const choices = new Choices(terminal, [{ name: "n", key: "foo" }, { name: "a", key: "lab" }]);
+                const choices = new Choices(term, [{ name: "n", key: "foo" }, { name: "a", key: "lab" }]);
                 expect(choices.pluck("key")).to.eql(["foo", "lab"]);
             });
 
             it("should allow filtering value with where", () => {
-                const choices = new Choices(terminal, [{ name: "n", key: "foo" }, { name: "a", key: "lab" }]);
+                const choices = new Choices(term, [{ name: "n", key: "foo" }, { name: "a", key: "lab" }]);
                 expect(choices.where({ key: "lab" })).to.eql([{
                     name: "a",
                     value: "a",
@@ -1955,14 +1958,14 @@ describe("terminal", "prompt", () => {
 
             it("should façade forEach", () => {
                 const raw = ["a", "b", "c"];
-                const choices = new Choices(terminal, raw);
+                const choices = new Choices(term, raw);
                 choices.forEach((val, i) => {
                     expect(val.name).to.equal(raw[i]);
                 });
             });
 
             it("should façade filter", () => {
-                const choices = new Choices(terminal, ["a", "b", "c"]);
+                const choices = new Choices(term, ["a", "b", "c"]);
                 const filtered = choices.filter((val) => {
                     return val.name === "a";
                 });
@@ -1971,8 +1974,8 @@ describe("terminal", "prompt", () => {
             });
 
             it("should façade push and update the realChoices internally", () => {
-                const choices = new Choices(terminal, ["a"]);
-                choices.push("b", new Separator(terminal));
+                const choices = new Choices(term, ["a"]);
+                choices.push("b", new Separator(term));
                 expect(choices.length).to.equal(3);
                 expect(choices.realLength).to.equal(2);
                 expect(choices.getChoice(1)).to.be.instanceOf(Choice);
@@ -1981,32 +1984,32 @@ describe("terminal", "prompt", () => {
         });
 
         describe("Separator", () => {
-            const { Separator } = Terminal;
+            const { Separator } = terminal;
 
             const { stripEscapeCodes } = adone.text.ansi;
 
             it("should set a default", () => {
-                const sep = new Separator(terminal);
+                const sep = new Separator(term);
                 expect(stripEscapeCodes(sep.toString())).to.equal("──────────────");
             });
 
             it("should set user input as separator", () => {
-                const sep = new Separator(terminal, "foo bar");
+                const sep = new Separator(term, "foo bar");
                 expect(stripEscapeCodes(sep.toString())).to.equal("foo bar");
             });
 
             it("instances should be stringified when appended to a string", () => {
-                const sep = new Separator(terminal, "foo bar");
+                const sep = new Separator(term, "foo bar");
                 expect(stripEscapeCodes(String(sep))).to.equal("foo bar");
             });
 
             it("should expose a helper function to check for separator", () => {
                 expect(Separator.exclude({})).to.be.true;
-                expect(Separator.exclude(new Separator(terminal))).to.be.false;
+                expect(Separator.exclude(new Separator(term))).to.be.false;
             });
 
             it("give the type 'separator' to its object", () => {
-                const sep = new Separator(terminal);
+                const sep = new Separator(term);
                 expect(sep.type).to.equal("separator");
             });
         });

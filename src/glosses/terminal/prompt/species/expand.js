@@ -1,8 +1,12 @@
 const {
     is,
     vendor: { lodash: _ },
-    terminal: { Terminal }
+    terminal
 } = adone;
+
+const {
+    styler
+} = terminal;
 
 /**
  * Function for rendering checkbox choices
@@ -22,7 +26,7 @@ const renderChoices = (terminal, choices, pointer) => {
 
         let choiceStr = `${choice.key}) ${choice.name}`;
         if (pointer === choice.key) {
-            choiceStr = terminal.cyan(choiceStr);
+            choiceStr = styler.cyan(choiceStr);
         }
         output += choiceStr;
     });
@@ -30,9 +34,9 @@ const renderChoices = (terminal, choices, pointer) => {
     return output;
 };
 
-export default class ExpandPrompt extends Terminal.BasePrompt {
-    constructor(terminal, question, answers) {
-        super(terminal, question, answers);
+export default class ExpandPrompt extends terminal.BasePrompt {
+    constructor(term, question, answers) {
+        super(term, question, answers);
         if (!this.opt.choices) {
             this.throwParamError("choices");
         }
@@ -57,7 +61,7 @@ export default class ExpandPrompt extends Terminal.BasePrompt {
         // Setup the default string (capitalize the default key)
         this.opt.default = this.generateChoicesString(this.opt.choices, this.opt.default);
 
-        this.paginator = new Terminal.Paginator(this.terminal);
+        this.paginator = new terminal.Paginator(this.term);
     }
 
     /**
@@ -98,21 +102,21 @@ export default class ExpandPrompt extends Terminal.BasePrompt {
         let bottomContent = "";
 
         if (this.status === "answered") {
-            message += this.terminal.cyan(this.answer);
+            message += styler.cyan(this.answer);
         } else if (this.status === "expanded") {
-            const choicesStr = renderChoices(this.terminal, this.opt.choices, this.selectedKey);
+            const choicesStr = renderChoices(this.term, this.opt.choices, this.selectedKey);
             message += this.paginator.paginate(choicesStr, this.selectedKey, this.opt.pageSize);
             message += "\n  Answer: ";
         }
 
-        message += this.terminal.readline.line;
+        message += this.term.readline.line;
 
         if (error) {
-            bottomContent = this.terminal.red(">> ") + error;
+            bottomContent = styler.red(">> ") + error;
         }
 
         if (hint) {
-            bottomContent = this.terminal.cyan(">> ") + hint;
+            bottomContent = styler.cyan(">> ") + hint;
         }
 
         this.screen.render(message, bottomContent);
@@ -147,7 +151,7 @@ export default class ExpandPrompt extends Terminal.BasePrompt {
 
             let choiceStr = `${choice.key}) ${choice.name}`;
             if (this.selectedKey === choice.key) {
-                choiceStr = this.terminal.cyan(choiceStr);
+                choiceStr = styler.cyan(choiceStr);
             }
             output += choiceStr;
         });
@@ -183,7 +187,7 @@ export default class ExpandPrompt extends Terminal.BasePrompt {
      * When user press a key
      */
     onKeypress() {
-        this.selectedKey = this.terminal.readline.line.toLowerCase();
+        this.selectedKey = this.term.readline.line.toLowerCase();
         const selected = this.opt.choices.where({ key: this.selectedKey })[0];
         if (this.status === "expanded") {
             this.render();
@@ -200,7 +204,7 @@ export default class ExpandPrompt extends Terminal.BasePrompt {
         let formatError;
         const errors = [];
         const keymap = {};
-        choices.filter(Terminal.Separator.exclude).forEach((choice) => {
+        choices.filter(terminal.Separator.exclude).forEach((choice) => {
             if (!choice.key || choice.key.length !== 1) {
                 formatError = true;
             }

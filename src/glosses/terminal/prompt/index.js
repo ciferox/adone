@@ -4,9 +4,9 @@ const {
 } = adone;
 
 export default class Prompt {
-    constructor(terminal) {
-        this.terminal = terminal;
-        this.rl = terminal.readline;
+    constructor(term) {
+        this.term = term;
+        this.rl = term.readline;
         this.rl.resume();
         this.answers = {};
     }
@@ -50,7 +50,7 @@ export default class Prompt {
             }
 
             const Cls = Prompt.prompts[question.type];
-            this.activePrompt = new Cls(this.terminal, question, answers);
+            this.activePrompt = new Cls(this.term, question, answers);
             // eslint-disable-next-line no-await-in-loop
             const answer = await this.activePrompt.run();
             _.set(answers, question.name, answer);
@@ -71,8 +71,8 @@ export default class Prompt {
             this.activePrompt.close();
         }
 
-        this.terminal.resetReadline();
-        this.terminal.activePrompt = null;
+        this.term.resetReadline();
+        this.term.activePrompt = null;
     }
 
     onCompletion(answers) {

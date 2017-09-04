@@ -7,7 +7,8 @@ const {
     lazify,
     util,
     runtime: { term },
-    tag
+    tag,
+    terminal: { styler }
 } = adone;
 
 const lazy = lazify({
@@ -20,33 +21,33 @@ const hasColorsSupport = Boolean(process.stdout.isTTY);
 
 const defaultColors = {
     commandName: (x) => term.parse(`{#4CAF50-fg}${x}{/}`),
-    commandHelpMessage: (x) => term.italic.italic(x),
+    commandHelpMessage: (x) => styler.italic.italic(x),
     commandSeparator: (x) => x,
     optionName: (x) => term.parse(`{#00B0FF-fg}${x}{/}`),
     optionVariable: (x) => x,
-    optionHelpMessage: (x) => term.italic.italic(x),
+    optionHelpMessage: (x) => styler.italic.italic(x),
     // argumentName: (x) => x,
     argumentName: (x) => term.parse(`{#F44336-fg}${x}{/}`),
-    argumentHelpMessage: (x) => term.italic(x),
-    default: (x) => term.grey(x),
+    argumentHelpMessage: (x) => styler.italic(x),
+    default: (x) => styler.grey(x),
     // angleBracket: (x) => term.green(x),
     angleBracket: (x) => term.parse(`{#F44336-fg}${x}{/}`),
-    squareBracket: (x) => term.yellow(x),
-    curlyBracket: (x) => term.yellow(x),
-    ellipsis: (x) => term.dim(x),
-    usage: (x) => term.underline(x),
-    commandGroupHeading: (x) => term.underline(x),
-    argumentGroupHeading: (x) => term.underline(x),
-    optionGroupHeading: (x) => term.underline(x),
+    squareBracket: (x) => styler.yellow(x),
+    curlyBracket: (x) => styler.yellow(x),
+    ellipsis: (x) => styler.dim(x),
+    usage: (x) => styler.underline(x),
+    commandGroupHeading: (x) => styler.underline(x),
+    argumentGroupHeading: (x) => styler.underline(x),
+    optionGroupHeading: (x) => styler.underline(x),
     value: {
-        string: (x) => term.green(x),
-        null: (x) => term.yellow(x),
-        number: (x) => term.yellow(x),
-        undefined: (x) => term.yellow(x),
-        boolean: (x) => term.yellow(x),
+        string: (x) => styler.green(x),
+        null: (x) => styler.yellow(x),
+        number: (x) => styler.yellow(x),
+        undefined: (x) => styler.yellow(x),
+        boolean: (x) => styler.yellow(x),
         object: {
             key: (x) => x,
-            separator: (x) => term.cyan(x)
+            separator: (x) => styler.cyan(x)
         }
     }
 };
@@ -2488,7 +2489,7 @@ export const run = async (App, ignoreArgs = false) => {
     if (is.null(adone.runtime.app) && is.class(App)) {
         const app = new App();
         if (!is.application(app)) {
-            console.error(`${adone.runtime.term.styles.red.open}Invalid application class (should be derivative of 'adone.application.Application')${adone.runtime.term.styles.red.close}`);
+            console.error(`${adone.terminal.esc.red.open}Invalid application class (should be derivative of 'adone.application.Application')${adone.terminal.esc.red.close}`);
             process.exit(1);
             return;
         }

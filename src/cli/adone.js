@@ -228,7 +228,7 @@ class AdoneCLI extends application.Application {
                 const styleName = (name) => `{green-fg}{bold}${name}{/bold}{/green-fg}`;
                 const styleArgs = (args) => `{green-fg}(${args.join(", ")}){/green-fg}`;
                 const styleLiteral = (type, name) => `${styleName(name)}: ${styleType(type)}`;
-                const styleLiteralArgs = (type, name, args) => `${styleName(name)}${styleArgs(args)}: ${styleType(type)}`;
+                const styleLiteralArgs = (type, name, args) => `${styleName(name)}: ${styleType(type)}${styleArgs(args)}`;
                 const styleLiteralValue = (type, name, value) => {
                     if (is.string(value)) {
                         value = `"${value}"`;
@@ -251,15 +251,27 @@ class AdoneCLI extends application.Application {
                             term.print(`${styleLiteralValue(type, key, value)}`);
                             break;
                         case "function": {
-                            if (is.asyncFunction(value)) {
-                                term.print(styleLiteralArgs("async function", key, []/*adone.meta.functionArgs(value)*/));
-                            } else {
-                                term.print(styleLiteralArgs("function", key, []/*adone.meta.functionArgs(value)*/));
+                            try {
+                                const result = adone.js.parseFunction(value);
+                                let type = "";
+                                if (result.isAsync) {
+                                    type += "async ";
+                                }
+                                if (!result.isArrow) {
+                                    type += "function ";
+                                }
+
+                                term.print(styleLiteralArgs(type, key, result.args));
+                            } catch (err) {
+                                if (!value.toString().includes("[native code]")) {
+                                    throw err;
+                                }
+                                term.print(styleLiteralArgs("native function ", key, []));
                             }
                             break;
                         }
                         case "class": {
-                            term.print(styleLiteralArgs(type, key, []/*adone.meta.functionArgs(value)*/));
+                            term.print(styleLiteral(type, key));
                             break;
                         }
                         case "namespace": {

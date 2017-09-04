@@ -1,9 +1,13 @@
 const {
     is,
     vendor: { lodash: _ },
-    terminal: { Terminal },
+    terminal,
     event: { EventEmitter }
 } = adone;
+
+const {
+    styler
+} = terminal;
 
 const height = (content) => content.split("\n").length;
 const lastLine = (content) => _.last(content.split("\n"));
@@ -73,13 +77,13 @@ class Observer extends EventEmitter {
 
 class ScreenManager {
     constructor(terminal) {
-        this.terminal = terminal;
+        this.term = terminal;
 
         // These variables are keeping information to allow correct prompt re-rendering
         this.height = 0;
         this.extraLinesUnderPrompt = 0;
 
-        this.rl = this.terminal.readline;
+        this.rl = this.term.readline;
     }
 
     render(content, bottomContent) {
@@ -128,14 +132,14 @@ class ScreenManager {
         const promptLineUpDiff = Math.floor(rawPromptLine.length / width) - cursorPos.rows;
         const bottomContentHeight = promptLineUpDiff + (bottomContent ? height(bottomContent) : 0);
         if (bottomContentHeight > 0) {
-            this.terminal.up(bottomContentHeight);
+            this.term.up(bottomContentHeight);
         }
 
         // Reset cursor at the beginning of the line
-        this.terminal.left(adone.text.width(lastLine(fullContent)));
+        this.term.left(adone.text.width(lastLine(fullContent)));
 
         // Adjust cursor on the right
-        this.terminal.right(cursorPos.cols);
+        this.term.right(cursorPos.cols);
 
         /**
          * Set up state for next re-rendering
@@ -148,9 +152,9 @@ class ScreenManager {
 
     clean(extraLines) {
         if (extraLines > 0) {
-            this.terminal.down(extraLines);
+            this.term.down(extraLines);
         }
-        this.terminal.eraseLines(this.height);
+        this.term.eraseLines(this.height);
     }
 
     done() {
@@ -161,12 +165,12 @@ class ScreenManager {
 
     releaseCursor() {
         if (this.extraLinesUnderPrompt > 0) {
-            this.terminal.down(this.extraLinesUnderPrompt);
+            this.term.down(this.extraLinesUnderPrompt);
         }
     }
 
     normalizedCliWidth() {
-        const width = this.terminal.cols;
+        const width = this.term.cols;
         if (is.windows) {
             return width - 1;
         }
@@ -175,8 +179,8 @@ class ScreenManager {
 }
 
 export default class BasePrompt {
-    constructor(terminal, question, answers) {
-        this.terminal = terminal;
+    constructor(term, question, answers) {
+        this.term = term;
 
         // Setup instance defaults property
         _.assign(this, {
@@ -207,10 +211,10 @@ export default class BasePrompt {
 
         // Normalize choices
         if (is.array(this.opt.choices)) {
-            this.opt.choices = new Terminal.Choices(this.terminal, this.opt.choices, answers);
+            this.opt.choices = new terminal.Choices(this.term, this.opt.choices, answers);
         }
 
-        this.screen = new ScreenManager(this.terminal);
+        this.screen = new ScreenManager(this.term);
     }
 
     /**
@@ -257,7 +261,7 @@ export default class BasePrompt {
     }
 
     observe() {
-        return new Observer(this.terminal);
+        return new Observer(this.term);
     }
 
     /**
@@ -301,11 +305,11 @@ export default class BasePrompt {
      * @return {String} prompt question string
      */
     getQuestion() {
-        let message = `${this.terminal.green("?")} ${this.terminal.bold(this.opt.message)}${this.terminal.reset(" ")}`;
+        let message = `${styler.green("?")} ${styler.bold(this.opt.message)}${styler.reset(" ")}`;
 
         // Append the default if available, and if question isn't answered
         if (is.exist(this.opt.default) && this.status !== "answered") {
-            message += this.terminal.dim(`(${this.opt.default}) `);
+            message += styler.dim(`(${this.opt.default}) `);
         }
 
         return message;

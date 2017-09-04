@@ -7,8 +7,8 @@ const {
  * a subset of the choices if the list is too long.
  */
 export default class Paginator {
-    constructor(terminal) {
-        this.terminal = terminal;
+    constructor(term) {
+        this.term = term;
         this.pointer = 0;
         this.lastIndex = 0;
     }
@@ -34,6 +34,6 @@ export default class Paginator {
         const topIndex = Math.max(0, active + lines.length - this.pointer);
 
         const section = infinite.splice(topIndex, pageSize).join("\n");
-        return `${section}\n${this.terminal.dim("(Move up and down to reveal more choices)")}`;
+        return `${section}\n${adone.terminal.styler.dim("(Move up and down to reveal more choices)")}`;
     }
 }

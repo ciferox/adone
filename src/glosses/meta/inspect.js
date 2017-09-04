@@ -1,7 +1,7 @@
 const {
     is,
     identity,
-    runtime: { term }
+    terminal: { esc }
 } = adone;
 
 /*
@@ -48,25 +48,25 @@ const defaultInspectStyle = {
 const inspectStyle = {
     none: defaultInspectStyle,
     color: adone.o(defaultInspectStyle, {
-        limit: (str) => (term.styles.bold.open + term.styles.brightRed.open + str + term.styles.reset.open),
-        type: (str) => (term.styles.italic.open + term.styles.gray.open + str + term.styles.reset.open),
-        constant: (str) => (term.styles.cyan.open + str + term.styles.reset.open),
-        funcName: (str) => (term.styles.italic.open + term.styles.magenta.open + str + term.styles.reset.open),
-        constructorName: (str) => (term.styles.magenta.open + str + term.styles.reset.open),
-        length: (str) => (term.styles.italic.open + term.styles.gray.open + str + term.styles.reset.open),
-        key: (str) => (term.styles.green.open + str + term.styles.reset.open),
-        index: (str) => (term.styles.blue.open + str + term.styles.reset.open),
-        number: (str) => (term.styles.cyan.open + str + term.styles.reset.open),
-        inspect: (str) => (term.styles.cyan.open + str + term.styles.reset.open),
-        string: (str) => (term.styles.blue.open + str + term.styles.reset.open),
-        errorType: (str) => (term.styles.red.open + term.styles.bold.open + str + term.styles.reset.open),
-        errorMessage: (str) => (term.styles.red.open + term.styles.italic.open + str + term.styles.reset.open),
-        errorStack: (str) => (term.styles.gray.open + str + term.styles.reset.open),
-        errorStackMethod: (str) => (term.styles.brightYellow.open + str + term.styles.reset.open),
-        errorStackMethodAs: (str) => (term.styles.yellow.open + str + term.styles.reset.open),
-        errorStackFile: (str) => (term.styles.brightCyan.open + str + term.styles.reset.open),
-        errorStackLine: (str) => (term.styles.blue.open + str + term.styles.reset.open),
-        errorStackColumn: (str) => (term.styles.magenta.open + str + term.styles.reset.open)
+        limit: (str) => (esc.bold.open + esc.brightRed.open + str + esc.reset.open),
+        type: (str) => (esc.italic.open + esc.gray.open + str + esc.reset.open),
+        constant: (str) => (esc.cyan.open + str + esc.reset.open),
+        funcName: (str) => (esc.italic.open + esc.magenta.open + str + esc.reset.open),
+        constructorName: (str) => (esc.magenta.open + str + esc.reset.open),
+        length: (str) => (esc.italic.open + esc.gray.open + str + esc.reset.open),
+        key: (str) => (esc.green.open + str + esc.reset.open),
+        index: (str) => (esc.blue.open + str + esc.reset.open),
+        number: (str) => (esc.cyan.open + str + esc.reset.open),
+        inspect: (str) => (esc.cyan.open + str + esc.reset.open),
+        string: (str) => (esc.blue.open + str + esc.reset.open),
+        errorType: (str) => (esc.red.open + esc.bold.open + str + esc.reset.open),
+        errorMessage: (str) => (esc.red.open + esc.italic.open + str + esc.reset.open),
+        errorStack: (str) => (esc.gray.open + str + esc.reset.open),
+        errorStackMethod: (str) => (esc.brightYellow.open + str + esc.reset.open),
+        errorStackMethodAs: (str) => (esc.yellow.open + str + esc.reset.open),
+        errorStackFile: (str) => (esc.brightCyan.open + str + esc.reset.open),
+        errorStackLine: (str) => (esc.blue.open + str + esc.reset.open),
+        errorStackColumn: (str) => (esc.magenta.open + str + esc.reset.open)
     })
 };
 

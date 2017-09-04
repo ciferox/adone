@@ -1,6 +1,6 @@
 const {
     x,
-    terminal: { Terminal }
+    terminal
 } = adone;
 
 
@@ -212,11 +212,11 @@ class TokenState {
 
 const defaultFormat = ["DD", ".", "MM", ".", "YYYY", " ", "HH", ":", "mm", ":", "ss"];
 
-export default class ConfirmPrompt extends Terminal.BasePrompt {
-    constructor(terminal, question, answers) {
+export default class ConfirmPrompt extends terminal.BasePrompt {
+    constructor(term, question, answers) {
         const { default: defaultValue } = question;
         delete question.default;
-        super(terminal, question, answers);
+        super(term, question, answers);
         this.selection = {
             index: -1,
             hasDefault: Boolean(defaultValue),
@@ -289,7 +289,7 @@ export default class ConfirmPrompt extends Terminal.BasePrompt {
         });
 
         // Init
-        this.terminal.hideCursor();
+        this.term.hideCursor();
         this.render();
 
         return this;
@@ -304,7 +304,7 @@ export default class ConfirmPrompt extends Terminal.BasePrompt {
                 message += token;
             } else {
                 if (i === selection.index) {
-                    message += this.terminal.inverse(selection.date.format(token));
+                    message += this.term.inverse(selection.date.format(token));
                 } else {
                     message += selection.date.format(token);
                 }
@@ -319,7 +319,7 @@ export default class ConfirmPrompt extends Terminal.BasePrompt {
         this.selection.index = -1;
         this.render();
         this.screen.done();
-        this.terminal.showCursor();
+        this.term.showCursor();
         this.done(this.selection.date);
     }
 

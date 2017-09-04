@@ -13,7 +13,7 @@ export default class Markdown extends terminal.widget.Element {
                 }
 
                 const tokens = options.style[st].split(".");
-                options.style[st] = terminal.style;
+                options.style[st] = terminal.esc;
                 for (let j = 1; j < tokens.length; j++) {
                     options.style[st] = options.style[st][tokens[j]];
                 }

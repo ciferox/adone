@@ -112,7 +112,7 @@ export default class Screen extends adone.cui.Node {
 
         Screen.bind(this);
 
-        this.terminal = adone.runtime.term;
+        this.term = adone.runtime.term;
         // Redefine process.stderr to null.
         this._devNull = new DevNull();
         this._oldStderrGetter = Object.getOwnPropertyDescriptor(process, "stderr").get;
@@ -123,12 +123,12 @@ export default class Screen extends adone.cui.Node {
         Object.defineProperty(process, "stdout", {
             get: () => this._devNull
         });
-        this.terminal.listen();
-        this.terminal.enableDebug(options.debug);
-        this.terminal.setupLogger(options.log, options.dump);
-        this.terminal.useBuffer = true;
-        this.terminal.setResizeTimeout(options.resizeTimeout || 300);
-        this.terminfo = this.terminal.terminfo;
+        this.term.listen();
+        this.term.enableDebug(options.debug);
+        this.term.setupLogger(options.log, options.dump);
+        this.term.useBuffer = true;
+        this.term.setResizeTimeout(options.resizeTimeout || 300);
+        this.terminfo = this.term.terminfo;
 
         this.autoPadding = options.autoPadding !== false;
         this.tabc = Array((options.tabSize || 4) + 1).join(" ");
@@ -202,7 +202,7 @@ export default class Screen extends adone.cui.Node {
             _hidden: true
         };
 
-        this.terminal.on("resize", () => {
+        this.term.on("resize", () => {
             this.alloc();
             this.render();
             (function emit(el) {
@@ -231,31 +231,31 @@ export default class Screen extends adone.cui.Node {
     }
 
     get title() {
-        return this.terminal.title;
+        return this.term.title;
     }
 
     set title(title) {
-        return this.terminal.title = title;
+        return this.term.title = title;
     }
 
     get terminalId() {
-        return this.terminal.terminal;
+        return this.term.terminal;
     }
 
     get cols() {
-        return this.terminal.cols;
+        return this.term.cols;
     }
 
     get rows() {
-        return this.terminal.rows;
+        return this.term.rows;
     }
 
     get width() {
-        return this.terminal.cols;
+        return this.term.cols;
     }
 
     get height() {
-        return this.terminal.rows;
+        return this.term.rows;
     }
 
     get focused() {
@@ -267,7 +267,7 @@ export default class Screen extends adone.cui.Node {
     }
 
     enter() {
-        if (this.terminal.isAlt) {
+        if (this.term.isAlt) {
             return;
         }
         if (!this.cursor._set) {
@@ -285,33 +285,33 @@ export default class Screen extends adone.cui.Node {
                 //
             }
         }
-        this.terminal.alternateScreenBuffer(true);
-        this.terminal.applicationKeypad(true);
-        this.terminal.setScrollRegion(0, this.height - 1);
-        this.terminal.hideCursor();
-        this.terminal.moveTo(0, 0);
+        this.term.alternateScreenBuffer(true);
+        this.term.applicationKeypad(true);
+        this.term.setScrollRegion(0, this.height - 1);
+        this.term.hideCursor();
+        this.term.moveTo(0, 0);
         this.alloc();
     }
 
     leave() {
-        if (!this.terminal.isAlt) {
+        if (!this.term.isAlt) {
             return;
         }
-        this.terminal.applicationKeypad(false);
-        if (this.terminal.scrollTop !== 0 || this.terminal.scrollBottom !== this.rows - 1) {
-            this.terminal.setScrollRegion(0, this.height - 1);
+        this.term.applicationKeypad(false);
+        if (this.term.scrollTop !== 0 || this.term.scrollBottom !== this.rows - 1) {
+            this.term.setScrollRegion(0, this.height - 1);
         }
         // XXX For some reason if alloc/clear() is before this line, it doesn't work on linux console.
-        this.terminal.showCursor();
+        this.term.showCursor();
         this.alloc();
         if (this._listenedMouse) {
-            this.terminal.disableMouse();
+            this.term.disableMouse();
         }
-        this.terminal.alternateScreenBuffer(false);
+        this.term.alternateScreenBuffer(false);
         if (this.cursor._set) {
             this.cursorReset();
         }
-        this.terminal.flush();
+        this.term.flush();
         if (is.windows) {
             try {
                 adone.std.child_process.execSync("cls", { stdio: "ignore", timeout: 1000 });
@@ -436,18 +436,18 @@ export default class Screen extends adone.cui.Node {
             super.destroy();
         }
 
-        this.terminal.destroy();
+        this.term.destroy();
     }
 
     log() {
-        return this.terminal.log.apply(this.terminal, arguments);
+        return this.term.log.apply(this.term, arguments);
     }
 
     debug() {
         if (this.debugLog) {
             this.debugLog.log.apply(this.debugLog, arguments);
         }
-        return this.terminal.debug.apply(this.terminal, arguments);
+        return this.term.debug.apply(this.term, arguments);
     }
 
     _listenMouse(el) {
@@ -461,16 +461,16 @@ export default class Screen extends adone.cui.Node {
         }
         this._listenedMouse = true;
 
-        this.terminal.enableMouse();
+        this.term.enableMouse();
         if (this.options.sendFocus) {
-            this.terminal.setMouse({ sendFocus: true }, true);
+            this.term.setMouse({ sendFocus: true }, true);
         }
 
         this.on("render", () => {
             this._needsClickableSort = true;
         });
 
-        this.terminal.on("mouse", (data) => {
+        this.term.on("mouse", (data) => {
             if (this.lockKeys) {
                 return;
             }
@@ -573,7 +573,7 @@ export default class Screen extends adone.cui.Node {
         // They are now:
         // screen + element
         // After the first keypress emitted, the handler checks to make sure grabKeys, lockKeys, and focused weren't changed, and handles those situations appropriately.
-        this.terminal.on("keypress", (ch, key) => {
+        this.term.on("keypress", (ch, key) => {
             if (this.lockKeys && !~this.ignoreLocked.indexOf(key.full)) {
                 return;
             }
@@ -696,7 +696,7 @@ export default class Screen extends adone.cui.Node {
             }
         }
 
-        this.terminal.clear();
+        this.term.clear();
     }
 
     realloc() {
@@ -1108,7 +1108,7 @@ export default class Screen extends adone.cui.Node {
             line = this.lines[y];
             o = this.olines[y];
 
-            if (!line.dirty && !(this.cursor.artificial && y === this.terminal.y)) {
+            if (!line.dirty && !(this.cursor.artificial && y === this.term.y)) {
                 continue;
             }
             line.dirty = false;
@@ -1121,7 +1121,7 @@ export default class Screen extends adone.cui.Node {
                 ch = line[x][1];
 
                 // Render the artificial cursor.
-                if (this.cursor.artificial && !this.cursor._hidden && this.cursor._state && x === this.terminal.x && y === this.terminal.y) {
+                if (this.cursor.artificial && !this.cursor._hidden && this.cursor._state && x === this.term.x && y === this.term.y) {
                     const cattr = this._cursorAttr(this.cursor, data);
                     if (cattr.ch) {
                         ch = cattr.ch;
@@ -1392,14 +1392,14 @@ export default class Screen extends adone.cui.Node {
             pre += this.terminfo.saveCursor();
             post += this.terminfo.restoreCursor();
 
-            if (!this.terminal.cursorHidden) {
+            if (!this.term.cursorHidden) {
                 pre += this.terminfo.hideCursor(true);
                 post += this.terminfo.hideCursor(false);
             }
 
-            // this.terminal.flush();
-            // this.terminal._owrite(pre + main + post);
-            this.terminal.write(pre + main + post);
+            // this.term.flush();
+            // this.term._owrite(pre + main + post);
+            this.term.write(pre + main + post);
         }
 
         // this.emit('draw');
@@ -1754,15 +1754,15 @@ export default class Screen extends adone.cui.Node {
     }
 
     key() {
-        return this.terminal.key.apply(this, arguments);
+        return this.term.key.apply(this, arguments);
     }
 
     onceKey() {
-        return this.terminal.onceKey.apply(this, arguments);
+        return this.term.onceKey.apply(this, arguments);
     }
 
     unkey() {
-        return this.terminal.unkey.apply(this, arguments);
+        return this.term.unkey.apply(this, arguments);
     }
 
     spawn(file, args, options) {
@@ -2017,10 +2017,10 @@ export default class Screen extends adone.cui.Node {
     }
 
     sigtstp(callback) {
-        this.terminal.sigtstp(() => {
+        this.term.sigtstp(() => {
             this.alloc();
             this.render();
-            this.terminal.lrestoreCursor("pause", true);
+            this.term.lrestoreCursor("pause", true);
             if (callback) {
                 callback();
             }
@@ -2028,7 +2028,7 @@ export default class Screen extends adone.cui.Node {
     }
 
     copyToClipboard(text) {
-        return this.terminal.copyToClipboard(text);
+        return this.term.copyToClipboard(text);
     }
 
     cursorShape(shape, blink) {
@@ -2039,10 +2039,10 @@ export default class Screen extends adone.cui.Node {
         this.cursor._set = true;
 
         if (this.cursor.artificial) {
-            if (!this.terminal.hideCursor_old) {
-                const hideCursor = this.terminal.hideCursor;
-                this.terminal.hideCursor_old = this.terminal.hideCursor;
-                this.terminal.hideCursor = function () {
+            if (!this.term.hideCursor_old) {
+                const hideCursor = this.term.hideCursor;
+                this.term.hideCursor_old = this.term.hideCursor;
+                this.term.hideCursor = function () {
                     hideCursor.call(self.terminal);
                     self.cursor._hidden = true;
                     if (self.renders) {
@@ -2050,10 +2050,10 @@ export default class Screen extends adone.cui.Node {
                     }
                 };
             }
-            if (!this.terminal.showCursor_old) {
-                const showCursor = this.terminal.showCursor;
-                this.terminal.showCursor_old = this.terminal.showCursor;
-                this.terminal.showCursor = function () {
+            if (!this.term.showCursor_old) {
+                const showCursor = this.term.showCursor;
+                this.term.showCursor_old = this.term.showCursor;
+                this.term.showCursor = function () {
                     self.cursor._hidden = false;
                     if (self.terminal._exiting) {
                         showCursor.call(self.terminal);
@@ -2080,7 +2080,7 @@ export default class Screen extends adone.cui.Node {
             return true;
         }
 
-        return this.terminal.cursorShape(this.cursor.shape, this.cursor.blink);
+        return this.term.cursorShape(this.cursor.shape, this.cursor.blink);
     }
 
     cursorColor(color) {
@@ -2091,7 +2091,7 @@ export default class Screen extends adone.cui.Node {
             return true;
         }
 
-        return this.terminal.cursorColor(colors.ncolors[this.cursor.color]);
+        return this.term.cursorColor(colors.ncolors[this.cursor.color]);
     }
 
     cursorReset() {
@@ -2102,13 +2102,13 @@ export default class Screen extends adone.cui.Node {
 
         if (this.cursor.artificial) {
             this.cursor.artificial = false;
-            if (this.terminal.hideCursor_old) {
-                this.terminal.hideCursor = this.terminal.hideCursor_old;
-                delete this.terminal.hideCursor_old;
+            if (this.term.hideCursor_old) {
+                this.term.hideCursor = this.term.hideCursor_old;
+                delete this.term.hideCursor_old;
             }
-            if (this.terminal.showCursor_old) {
-                this.terminal.showCursor = this.terminal.showCursor_old;
-                delete this.terminal.showCursor_old;
+            if (this.term.showCursor_old) {
+                this.term.showCursor = this.term.showCursor_old;
+                delete this.term.showCursor_old;
             }
             if (this._cursorBlink) {
                 clearInterval(this._cursorBlink);
@@ -2117,7 +2117,7 @@ export default class Screen extends adone.cui.Node {
             return true;
         }
 
-        return this.terminal.cursorReset();
+        return this.term.cursorReset();
     }
 
     _cursorAttr(cursor, dattr) {

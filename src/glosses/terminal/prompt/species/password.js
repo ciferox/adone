@@ -1,7 +1,11 @@
 const {
     is,
-    terminal: { Terminal }
+    terminal
 } = adone;
+
+const {
+    styler
+} = terminal;
 
 const mask = (input, maskChar) => {
     input = String(input);
@@ -13,7 +17,7 @@ const mask = (input, maskChar) => {
     return new Array(input.length + 1).join(maskChar);
 };
 
-export default class PasswordPrompt extends Terminal.BasePrompt {
+export default class PasswordPrompt extends terminal.BasePrompt {
     /**
      * Start the Inquiry session
      * @param  {Function} cb      Callback when prompt is done
@@ -55,15 +59,15 @@ export default class PasswordPrompt extends Terminal.BasePrompt {
         let bottomContent = "";
 
         if (this.status === "answered") {
-            message += this.opt.mask ? this.terminal.cyan(mask(this.answer, this.opt.mask)) : this.terminal.italic.dim("[hidden]");
+            message += this.opt.mask ? styler.cyan(mask(this.answer, this.opt.mask)) : styler.italic.dim("[hidden]");
         } else if (this.opt.mask) {
-            message += mask(this.terminal.readline.line || "", this.opt.mask);
+            message += mask(this.term.readline.line || "", this.opt.mask);
         } else {
-            message += this.terminal.italic.dim("[input is hidden] ");
+            message += styler.italic.dim("[input is hidden] ");
         }
 
         if (error) {
-            bottomContent = `\n${this.terminal.red(">> ")}${error}`;
+            bottomContent = `\n${styler.red(">> ")}${error}`;
         }
 
         this.screen.render(message, bottomContent);

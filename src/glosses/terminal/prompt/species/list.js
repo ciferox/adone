@@ -1,7 +1,11 @@
 const {
     is,
-    terminal: { Terminal }
+    terminal
 } = adone;
+
+const {
+    styler
+} = terminal;
 
 /**
  * Function for rendering list choices
@@ -30,7 +34,7 @@ const listRender = (terminal, choices, pointer) => {
         const isSelected = (i - separatorOffset === pointer);
         let line = (isSelected ? `${adone.text.unicode.symbol.pointer} ` : "  ") + choice.name;
         if (isSelected) {
-            line = terminal.cyan(line);
+            line = styler.cyan(line);
         }
         output += `${line} \n`;
     });
@@ -38,9 +42,9 @@ const listRender = (terminal, choices, pointer) => {
     return output.replace(/\n$/, "");
 };
 
-export default class ListPrompt extends Terminal.BasePrompt {
-    constructor(terminal, question, answers) {
-        super(terminal, question, answers);
+export default class ListPrompt extends terminal.BasePrompt {
+    constructor(term, question, answers) {
+        super(term, question, answers);
         if (!this.opt.choices) {
             this.throwParamError("choices");
         }
@@ -60,7 +64,7 @@ export default class ListPrompt extends Terminal.BasePrompt {
         // Make sure no default is set (so it won't be printed)
         this.opt.default = null;
 
-        this.paginator = new Terminal.Paginator(this.terminal);
+        this.paginator = new terminal.Paginator(this.term);
     }
 
     /**
@@ -93,7 +97,7 @@ export default class ListPrompt extends Terminal.BasePrompt {
         });
 
         // Init the prompt
-        this.terminal.hideCursor();
+        this.term.hideCursor();
         this.render();
 
         return this;
@@ -108,14 +112,14 @@ export default class ListPrompt extends Terminal.BasePrompt {
         let message = this.getQuestion();
 
         if (this.firstRender) {
-            message += this.terminal.dim("(Use arrow keys)");
+            message += styler.dim("(Use arrow keys)");
         }
 
         // Render choices or answer depending on the state
         if (this.status === "answered") {
-            message += this.terminal.cyan(this.opt.choices.getChoice(this.selected).short);
+            message += styler.cyan(this.opt.choices.getChoice(this.selected).short);
         } else {
-            const choicesStr = listRender(this.terminal, this.opt.choices, this.selected);
+            const choicesStr = listRender(this.term, this.opt.choices, this.selected);
             const indexPosition = this.opt.choices.indexOf(this.opt.choices.getChoice(this.selected));
             message += `\n${this.paginator.paginate(choicesStr, indexPosition, this.opt.pageSize)}`;
         }
@@ -135,7 +139,7 @@ export default class ListPrompt extends Terminal.BasePrompt {
         this.render();
 
         this.screen.done();
-        this.terminal.showCursor();
+        this.term.showCursor();
         this.done(value);
     }
 

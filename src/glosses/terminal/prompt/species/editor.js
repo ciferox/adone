@@ -1,9 +1,13 @@
 const {
-    terminal: { Terminal },
+    terminal,
     promise
 } = adone;
 
-export default class EditorPrompt extends Terminal.BasePrompt {
+const {
+    styler
+} = terminal;
+
+export default class EditorPrompt extends terminal.BasePrompt {
     /**
      * Start the Inquiry session
      * @param  {Function} cb      Callback when prompt is done
@@ -16,10 +20,10 @@ export default class EditorPrompt extends Terminal.BasePrompt {
         const events = this.observe();
 
         events.on("line", async () => {
-            this.terminal.readline.pause();
+            this.term.readline.pause();
             try {
                 const result = await this.startExternalEditor();
-                this.terminal.readline.resume();
+                this.term.readline.resume();
                 // resume required some delay o_O
                 // Without a delay it requires a new line when I use vim or nano
                 await promise.delay(10);
@@ -30,7 +34,7 @@ export default class EditorPrompt extends Terminal.BasePrompt {
                 }
                 return this.onError(state);
             } catch (err) {
-                this.terminal.readline.resume();
+                this.term.readline.resume();
                 // ?
                 return this.onError({ isValid: err.message });
             }
@@ -55,13 +59,13 @@ export default class EditorPrompt extends Terminal.BasePrompt {
         let message = this.getQuestion();
 
         if (this.status === "answered") {
-            message += this.terminal.dim("Received");
+            message += styler.dim("Received");
         } else {
-            message += this.terminal.dim("Press <enter> to launch your preferred editor.");
+            message += styler.dim("Press <enter> to launch your preferred editor.");
         }
 
         if (error) {
-            bottomContent = this.terminal.red(">> ") + error;
+            bottomContent = styler.red(">> ") + error;
         }
 
         this.screen.render(message, bottomContent);

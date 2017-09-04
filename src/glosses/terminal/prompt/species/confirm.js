@@ -1,12 +1,16 @@
 const {
     is,
     vendor: { lodash: _ },
-    terminal: { Terminal }
+    terminal
 } = adone;
 
-export default class ConfirmPrompt extends Terminal.BasePrompt {
-    constructor(terminal, question, answers) {
-        super(terminal, question, answers);
+const {
+    styler
+} = terminal;
+
+export default class ConfirmPrompt extends terminal.BasePrompt {
+    constructor(term, question, answers) {
+        super(term, question, answers);
         let rawDefault = true;
 
         _.extend(this.opt, {
@@ -60,9 +64,9 @@ export default class ConfirmPrompt extends Terminal.BasePrompt {
         let message = this.getQuestion();
 
         if (is.boolean(answer)) {
-            message += this.terminal.cyan(answer ? "Yes" : "No");
+            message += styler.cyan(answer ? "Yes" : "No");
         } else {
-            message += this.terminal.readline.line;
+            message += this.term.readline.line;
         }
 
         this.screen.render(message);

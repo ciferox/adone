@@ -1,6 +1,10 @@
 const {
-    terminal: { Terminal }
+    terminal
 } = adone;
+
+const {
+    styler
+} = terminal;
 
 /**
  * Constants
@@ -13,7 +17,7 @@ const BACK = "go back a directory";
  * @param  {Number} pointer Position of the pointer
  * @return {String}         Rendered content
  */
-const listRender = (terminal, choices, pointer) => {
+const listRender = (term, choices, pointer) => {
     let output = "";
     let separatorOffset = 0;
 
@@ -27,7 +31,7 @@ const listRender = (terminal, choices, pointer) => {
         const isSelected = (i - separatorOffset === pointer);
         let line = (isSelected ? `${adone.text.unicode.symbol.pointer} ` : "  ") + choice.name;
         if (isSelected) {
-            line = terminal.cyan(line);
+            line = styler.cyan(line);
         }
         output += `${line} \n`;
     });
@@ -55,7 +59,7 @@ const getDirectories = (basePath) => {
         .sort();
 };
 
-export default class Prompt extends Terminal.BasePrompt {
+export default class Prompt extends terminal.BasePrompt {
     constructor(question, answers) {
         super(question, answers);
 
@@ -67,7 +71,7 @@ export default class Prompt extends Terminal.BasePrompt {
         this.currentPath = adone.std.path.isAbsolute(this.opt.basePath)
             ? adone.std.path.resolve(this.opt.basePath)
             : adone.std.path.resolve(process.cwd(), this.opt.basePath);
-        this.opt.choices = new Terminal.Choices(this.terminal, this.createChoices(this.currentPath), this.answers);
+        this.opt.choices = new terminal.Choices(this.term, this.createChoices(this.currentPath), this.answers);
         this.selected = 0;
 
         this.firstRender = true;
@@ -77,7 +81,7 @@ export default class Prompt extends Terminal.BasePrompt {
 
         this.searchTerm = "";
 
-        this.paginator = new Terminal.Paginator(this.terminal);
+        this.paginator = new terminal.Paginator(this.term);
     }
 
     /**
@@ -119,7 +123,7 @@ export default class Prompt extends Terminal.BasePrompt {
         });
 
         // Init the prompt
-        this.terminal.hideCursor();
+        this.term.hideCursor();
         this.render();
 
         return this;
@@ -134,15 +138,15 @@ export default class Prompt extends Terminal.BasePrompt {
         let message = this.getQuestion();
 
         if (this.firstRender) {
-            message += this.terminal.dim("(Use arrow keys)");
+            message += styler.dim("(Use arrow keys)");
         }
 
         // Render choices or answer depending on the state
         if (this.status === "answered") {
-            message += this.terminal.cyan(adone.std.path.relative(this.opt.basePath, this.currentPath));
+            message += styler.cyan(adone.std.path.relative(this.opt.basePath, this.currentPath));
         } else {
-            message += `${this.terminal.bold("\n Current directory: ") + this.opt.basePath}/${this.terminal.cyan(adone.std.path.relative(this.opt.basePath, this.currentPath))}`;
-            const choicesStr = listRender(this.terminal, this.opt.choices, this.selected);
+            message += `${styler.bold("\n Current directory: ") + this.opt.basePath}/${styler.cyan(adone.std.path.relative(this.opt.basePath, this.currentPath))}`;
+            const choicesStr = listRender(this.term, this.opt.choices, this.selected);
             message += `\n${this.paginator.paginate(choicesStr, this.selected, this.opt.pageSize)}`;
             if (this.searchMode) {
                 message += (`\nSearch: ${this.searchTerm}`);
@@ -163,7 +167,7 @@ export default class Prompt extends Terminal.BasePrompt {
         const choice = this.opt.choices.getChoice(this.selected);
         this.depth++;
         this.currentPath = adone.std.path.join(this.currentPath, choice.value);
-        this.opt.choices = new Terminal.Choices(this.terminal, this.createChoices(this.currentPath), this.answers);
+        this.opt.choices = new terminal.Choices(this.term, this.createChoices(this.currentPath), this.answers);
         this.selected = 0;
         this.render();
     }
@@ -175,7 +179,7 @@ export default class Prompt extends Terminal.BasePrompt {
         if (this.depth > 0) {
             this.depth--;
             this.currentPath = adone.std.path.dirname(this.currentPath);
-            this.opt.choices = new Terminal.Choices(this.terminal, this.createChoices(this.currentPath), this.answers);
+            this.opt.choices = new terminal.Choices(this.term, this.createChoices(this.currentPath), this.answers);
             this.selected = 0;
             this.render();
         }
@@ -191,7 +195,7 @@ export default class Prompt extends Terminal.BasePrompt {
         this.render();
 
         this.screen.done();
-        this.terminal.showCursor();
+        this.term.showCursor();
         this.done(adone.std.path.relative(this.opt.basePath, this.currentPath));
     }
 
@@ -278,13 +282,13 @@ export default class Prompt extends Terminal.BasePrompt {
     createChoices(basePath) {
         const choices = getDirectories(basePath);
         if (choices.length > 0) {
-            choices.push(new Terminal.Separator(this.terminal));
+            choices.push(new terminal.Separator(this.term));
         }
         choices.push(CHOOSE);
         if (this.depth > 0) {
-            choices.push(new Terminal.Separator(this.terminal));
+            choices.push(new terminal.Separator(this.term));
             choices.push(BACK);
-            choices.push(new Terminal.Separator(this.terminal));
+            choices.push(new terminal.Separator(this.term));
         }
         return choices;
     }

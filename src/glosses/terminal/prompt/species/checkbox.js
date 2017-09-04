@@ -1,16 +1,20 @@
 const {
     is,
     vendor: { lodash: _ },
-    terminal: { Terminal }
+    terminal
 } = adone;
+
+const {
+    styler
+} = terminal;
 
 /**
  * Get the checkbox
  * @param  {Boolean} checked - add a X or not to the checkbox
  * @return {String} Composited checkbox string
  */
-const getCheckbox = (terminal, checked) => {
-    return checked ? terminal.green(adone.text.unicode.symbol.radioOn) : adone.text.unicode.symbol.radioOff;
+const getCheckbox = (term, checked) => {
+    return checked ? styler.green(adone.text.unicode.symbol.radioOn) : adone.text.unicode.symbol.radioOff;
 };
 
 /**
@@ -18,7 +22,7 @@ const getCheckbox = (terminal, checked) => {
  * @param  {Number} pointer Position of the pointer
  * @return {String}         Rendered content
  */
-const renderChoices = (terminal, choices, pointer) => {
+const renderChoices = (term, choices, pointer) => {
     let output = "";
     let separatorOffset = 0;
 
@@ -35,8 +39,8 @@ const renderChoices = (terminal, choices, pointer) => {
             output += ` (${is.string(choice.disabled) ? choice.disabled : "Disabled"})`;
         } else {
             const isSelected = (i - separatorOffset === pointer);
-            output += isSelected ? terminal.cyan(adone.text.unicode.symbol.pointer) : " ";
-            output += `${getCheckbox(terminal, choice.checked)} ${choice.name}`;
+            output += isSelected ? styler.cyan(adone.text.unicode.symbol.pointer) : " ";
+            output += `${getCheckbox(term, choice.checked)} ${choice.name}`;
         }
 
         output += "\n";
@@ -45,9 +49,9 @@ const renderChoices = (terminal, choices, pointer) => {
     return output.replace(/\n$/, "");
 };
 
-export default class CheckboxPrompt extends Terminal.BasePrompt {
-    constructor(terminal, question, answers) {
-        super(terminal, question, answers);
+export default class CheckboxPrompt extends terminal.BasePrompt {
+    constructor(term, question, answers) {
+        super(term, question, answers);
 
         if (!this.opt.choices) {
             this.throwParamError("choices");
@@ -67,7 +71,7 @@ export default class CheckboxPrompt extends Terminal.BasePrompt {
         // Make sure no default is set (so it won't be printed)
         this.opt.default = null;
 
-        this.paginator = new Terminal.Paginator(this.terminal);
+        this.paginator = new terminal.Paginator(this.term);
     }
 
     /**
@@ -103,7 +107,7 @@ export default class CheckboxPrompt extends Terminal.BasePrompt {
         });
 
         // Init the prompt
-        this.terminal.hideCursor();
+        this.term.hideCursor();
         this.render();
         this.firstRender = false;
 
@@ -120,20 +124,20 @@ export default class CheckboxPrompt extends Terminal.BasePrompt {
         let bottomContent = "";
 
         if (this.firstRender) {
-            message += `(Press ${this.terminal.cyan.bold("<space>")} to select, ${this.terminal.cyan.bold("<a>")} to toggle all, ${this.terminal.cyan.bold("<i>")} to inverse selection)`;
+            message += `(Press ${styler.cyan.bold("<space>")} to select, ${styler.cyan.bold("<a>")} to toggle all, ${styler.cyan.bold("<i>")} to inverse selection)`;
         }
 
         // Render choices or answer depending on the state
         if (this.status === "answered") {
-            message += this.terminal.cyan(this.selection.join(", "));
+            message += styler.cyan(this.selection.join(", "));
         } else {
-            const choicesStr = renderChoices(this.terminal, this.opt.choices, this.pointer);
+            const choicesStr = renderChoices(this.term, this.opt.choices, this.pointer);
             const indexPosition = this.opt.choices.indexOf(this.opt.choices.getChoice(this.pointer));
             message += `\n${this.paginator.paginate(choicesStr, indexPosition, this.opt.pageSize)}`;
         }
 
         if (error) {
-            bottomContent = this.terminal.red(">> ") + error;
+            bottomContent = styler.red(">> ") + error;
         }
 
         this.screen.render(message, bottomContent);
@@ -149,7 +153,7 @@ export default class CheckboxPrompt extends Terminal.BasePrompt {
         this.render();
 
         this.screen.done();
-        this.terminal.showCursor();
+        this.term.showCursor();
         this.done(state.value);
     }
 

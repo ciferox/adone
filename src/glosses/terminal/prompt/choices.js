@@ -1,4 +1,9 @@
-const { is, x, vendor: { lodash: _ }, Terminal } = adone;
+const {
+    is,
+    x,
+    vendor: { lodash: _ },
+    terminal
+} = adone;
 
 /**
  * Choice object
@@ -41,19 +46,19 @@ class Choice {
  * @param {Array} choices  All `choice` to keep in the collection
  */
 export default class Choices {
-    constructor(terminal, choices, answers) {
-        this.terminal = terminal;
+    constructor(term, choices, answers) {
+        this.term = term;
         this.choices = choices.map((val) => {
             if (val.type === "separator") {
-                if (!(val instanceof Terminal.Separator)) {
-                    val = new Terminal.Separator(this.terminal, val.line);
+                if (!(val instanceof terminal.Separator)) {
+                    val = new terminal.Separator(this.term, val.line);
                 }
                 return val;
             }
             return new Choice(val, answers);
         });
 
-        this.realChoices = this.choices.filter(Terminal.Separator.exclude).filter((item) => {
+        this.realChoices = this.choices.filter(terminal.Separator.exclude).filter((item) => {
             return !item.disabled;
         });
     }
@@ -135,7 +140,7 @@ export default class Choices {
 
     push(...args) {
         this.choices.push(...args.map((x) => new Choice(x)));
-        this.realChoices = this.choices.filter(Terminal.Separator.exclude);
+        this.realChoices = this.choices.filter(terminal.Separator.exclude);
         return this.choices;
     }
 }
