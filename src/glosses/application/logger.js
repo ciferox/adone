@@ -98,7 +98,8 @@ export default class Logger {
 
     toFile(options) {
         this._pipeTransform(Object.assign({
-            type: "file"
+            type: "file",
+            flags: "a"
         }, options));
         return this;
     }
@@ -136,8 +137,8 @@ export default class Logger {
         return Logger.defaultLogger;
     }
 
-    _pipeTransform({ type, filter, argsSchema, noFormatLogger, delimiter = " ", stream, filePath } = {}) {
-        class LogTransform extends adone.Transform { }
+    _pipeTransform({ type, filter, argsSchema, noFormatLogger, delimiter = " ", stream, filePath, flags } = {}) {
+        class LogTransform extends adone.stream.CoreStream.Transform { }
 
         LogTransform.prototype._format = format;
         LogTransform.prototype.LOG_NOFORMAT = LOG_NOFORMAT;
@@ -242,7 +243,7 @@ export default class Logger {
                 if (!is.string(filePath)) {
                     throw new adone.x.NotValid("For 'file' log channels you should specify 'filePath' option");
                 }
-                t.pipe(adone.std.fs.createWriteStream(filePath));
+                t.pipe(adone.std.fs.createWriteStream(filePath, { flags }));
                 break;
             }
             case "stream": {

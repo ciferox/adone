@@ -521,7 +521,7 @@ export const readdir = (root, {
 
     let resolvedRoot;
     let pending = 0;
-    const source = adone.core().through(async function ([path, depth]) {
+    const source = adone.stream.core().through(async function ([path, depth]) {
         --pending;
         const realPath = await adone.fs.realpath(path);
         const relativePath = std.path.relative(realPath, resolvedRoot);

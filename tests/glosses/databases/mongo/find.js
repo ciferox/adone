@@ -1,5 +1,5 @@
 describe("find", function () {
-    const { is, data: { bson }, util, promise, database: { mongo }, core } = adone;
+    const { is, data: { bson }, util, promise, database: { mongo }, stream: { core } } = adone;
     const { range, enumerate } = util;
 
     it("should correctly perform simple find", async () => {

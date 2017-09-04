@@ -34,7 +34,8 @@ const fs = adone.lazify({
         executableSync: ["./is_executable", (mod) => mod.isExecutableSync]
     }, null, require),
     which: ["./which", (mod) => mod.which],
-    whichSync: ["./which", (mod) => mod.whichSync]
+    whichSync: ["./which", (mod) => mod.whichSync],
+    TailWatcher: "./tail_watcher"
 }, adone.asNamespace(exports), require);
 
 const lazy = adone.lazify({
@@ -627,14 +628,17 @@ export const rename = (oldPath, newPath, { retries = 10, delay = 100 } = {}) => 
     });
 };
 
-export const tail = async (path, n = 10, { separator = is.windows ? "\r\n" : "\n", chunkLength = 4096 } = {}) => {
+export const tail = async (path, n = 10, { separator = is.windows ? "\r\n" : "\n", chunkLength = 4096, pos } = {}) => {
     const fd = await fs.fd.open(path, "r");
-    const stat = await fs.fd.stat(fd);
+    if (!pos) {
+        const stat = await fs.fd.stat(fd);
+        pos = stat.size;
+    }
     let buffer = Buffer.alloc(0);
-    if (stat.size === 0 || !n) {
+    if (pos === 0 || !n) {
         return [];
     }
-    let offset = Math.max(0, stat.size - chunkLength);
+    let offset = Math.max(0, pos - chunkLength);
     const lines = new adone.collection.LinkedList();
     separator = Buffer.from(separator);
     const chunk = Buffer.alloc(chunkLength);
@@ -764,3 +768,5 @@ export const chownr = async (path, uid, gid) => {
     }));
     await fs.chown(path, uid, gid);
 };
+
+export const watchTail = (filepath, options) => new fs.TailWatcher(filepath, options);

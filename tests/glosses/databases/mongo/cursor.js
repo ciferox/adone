@@ -1,5 +1,5 @@
 describe("cursor", function () {
-    const { is, util, core, promise, data: { bson: { Long } }, database: { mongo } } = adone;
+    const { is, util, stream: { core }, promise, data: { bson: { Long } }, database: { mongo } } = adone;
     const { range } = util;
 
     it("should be able to reset on to array running query again", async () => {

@@ -1,5 +1,5 @@
 describe("promote values", function () {
-    const { data: { bson }, database: { mongo }, util, core } = adone;
+    const { data: { bson }, database: { mongo }, util, stream: { core } } = adone;
     const { range } = util;
 
     it("should correctly honor promoteValues", async () => {

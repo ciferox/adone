@@ -33,13 +33,13 @@ export default class LinuxOS extends adone.metrics.OS {
         } catch (err) {
             this.buildNumber = "";
         }
-    
+
         try {
             this.pageSize = parseInt(adone.metrics.native.getPageSize());
         } catch (err) {
             this.pageSize = 4096; // default
         }
-        
+
         // static initializations of all subsystems
         LinuxProcess._initialize();
     }
@@ -59,6 +59,7 @@ export default class LinuxOS extends adone.metrics.OS {
         }
         return procs;
     }
+
     getProcess(pid) {
         try {
             if (!is.number(pid)) {
@@ -68,8 +69,24 @@ export default class LinuxOS extends adone.metrics.OS {
             if (is.null(parts) || parts.length < 24) {
                 return null;
             }
-            const path = adone.std.fs.readlinkSync(adone.sprintf("/proc/%d/exe", pid));
-            const io = this._readKeyValues(adone.sprintf("/proc/%d/io", pid), ":");
+            let path;
+            try {
+                path = adone.std.fs.readlinkSync(adone.sprintf("/proc/%d/exe", pid));
+            } catch (err) {
+                // failed to read, probably no access
+                path = null;
+            }
+            let readBytes;
+            let writeBytes;
+            try {
+                const io = this._readKeyValues(adone.sprintf("/proc/%d/io", pid), ":");
+                readBytes = io.get("read_bytes") || "0";
+                writeBytes = io.get("write_bytes") || "0";
+            } catch (err) {
+                // failed to read, probably no access
+                readBytes = null;
+                writeBytes = null;
+            }
 
             return new LinuxProcess(
                 parts[1].replace(/\(/, "").replace(")", ""), // name
@@ -84,8 +101,8 @@ export default class LinuxOS extends adone.metrics.OS {
                 Number.parseInt(parts[14]), // kernel time
                 Number.parseInt(parts[13]), // user time
                 Number.parseInt(parts[21]), // start time
-                Number.parseInt(io.get("read_bytes") || "0"), // bytes read
-                Number.parseInt(io.get("write_bytes") || "0"), // bytes written
+                readBytes,
+                writeBytes,
                 (new Date()).getTime()
             );
         } catch (err) {
@@ -125,7 +142,7 @@ export default class LinuxOS extends adone.metrics.OS {
                 }
             }
         }
-        return !is.null(this.family); 
+        return !is.null(this.family);
     }
 
     _readLsbRelease() {
@@ -162,13 +179,13 @@ export default class LinuxOS extends adone.metrics.OS {
                 this.codeName = parts[1].trim();
             }
         }
-        return family;   
+        return family;
     }
 
     _readKeyValues(filepath, separator) {
         const map = new Map();
         const lines = adone.fs.readLinesSync(filepath);
-        
+
         for (const line of lines) {
             const parts = line.split(separator);
             if (parts.length === 2) {

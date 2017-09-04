@@ -838,7 +838,7 @@ const isNegative = (pattern) => {
     return false;
 };
 
-class GlobCore extends adone.core.Core {
+class GlobCore extends adone.stream.CoreStream {
     constructor(patterns, options = {}) {
         super();
         if (!options) {

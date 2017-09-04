@@ -12,6 +12,16 @@ const getSystemUptimeFromProc = () => {
     }
 };
 
+const getSystemBootTimeFromProc = () => {
+    const lines = adone.fs.readLinesSync("/proc/stat");
+    for (const line of lines) {
+        // "btime unix_timestamp"
+        if (line.startsWith("btime")) {
+            return Number(line.slice(6));
+        }
+    }
+};
+
 export default class LinuxProcess extends Process {
     constructor(name, path, state, pid, parentPid, threadCount, priority, virtualSize, residentSetSize, kernelTime, userTime, startTime, bytesRead, bytesWritten, now) {
         super();
@@ -49,7 +59,7 @@ export default class LinuxProcess extends Process {
         for (const pid of pids) {
             const parts = adone.fs.readWordsSync(adone.sprintf("/proc/%s/stat", pid));
             if (is.nil(parts) || parts.length < 22) {
-                continue; 
+                continue;
             }
             const jiffies = Number.parseInt(parts[21]);
             if (jiffies > youngestJiffies) {
@@ -59,17 +69,17 @@ export default class LinuxProcess extends Process {
         }
 
         if (is.null(youngestPid)) {
-            return; 
+            return;
         }
 
         let startTimeSecsSinceBoot = getSystemUptimeFromProc();
-        bootTime = (new Date()).getTime() - ((1000 * startTimeSecsSinceBoot) >>> 0);
+        bootTime = getSystemBootTimeFromProc() * 1000; // reliable for calculating processes start time
         // Now execute `ps -p <pid> -o etimes=` to get the elapsed time of this
         // process in seconds.Timeline:
         // BOOT|<----jiffies---->|<----etime---->|NOW
         // BOOT|<------------uptime------------->|NOW
 
-        // // This takes advantage of the fact that ps does all the heavy lifting of sorting out HZ internally.
+        // This takes advantage of the fact that ps does all the heavy lifting of sorting out HZ internally.
         let etime = adone.std.child_process.execSync(adone.sprintf("ps -p %d -o etimes=", youngestPid));
         if (is.buffer(etime)) {
             etime = etime.toString();
@@ -79,7 +89,7 @@ export default class LinuxProcess extends Process {
         startTimeSecsSinceBoot -= Number.parseFloat(etime);
         // By subtracting etime (secs) from uptime (secs) we get uptime (in secs) when the process was started. This correlates with startTime in jiffies for this process
         if (startTimeSecsSinceBoot <= 0) {
-            return; 
+            return;
         }
 
         // divide jiffies (since boot) by seconds (since boot)

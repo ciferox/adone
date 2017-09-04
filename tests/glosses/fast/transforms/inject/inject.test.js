@@ -54,7 +54,7 @@ describe("fast", "transform", "inject", () => {
     };
 
     const src = (files, options = {}) => {
-        return adone.core(files.map((file) => {
+        return adone.stream.core(files.map((file) => {
             return fixture(file, options.read);
         }));
     };

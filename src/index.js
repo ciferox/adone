@@ -254,7 +254,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         assert: () => adone.assertion.loadAssertInterface().assert,
         expect: () => adone.assertion.loadExpectInterface().expect,
 
-        // Namespaces 
+        // Namespaces
 
         // NodeJS
         std: () => asNamespace(adone.lazify({
@@ -317,12 +317,9 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         URI: "./glosses/uri",
         semver: "./glosses/semver",
         sprintf: "./glosses/text/sprintf",
-        core: "./glosses/core",
-        Transform: "./glosses/core/transform",
         text: "./glosses/text",
         terminal: "./glosses/terminal",
         stream: "./glosses/streams",
-        transform: "./glosses/core/transforms",
         templating: "./glosses/templating",
         fast: "./glosses/fast",
         shani: "./glosses/shani",

@@ -1,4 +1,4 @@
-adone.lazify({
+const stream = adone.lazify({
     buffer: () => adone.lazify({
         DEFAULT_INITIAL_SIZE: ["./buffer_stream", (mod) => mod.DEFAULT_INITIAL_SIZE],
         DEFAULT_INCREMENT_AMOUNT: ["./buffer_stream", (mod) => mod.DEFAULT_INCREMENT_AMOUNT],
@@ -20,5 +20,15 @@ adone.lazify({
     eos: "./eos",
     shift: "./shift",
     through: "./through",
-    replace: "./replace"
+    replace: "./replace",
+    CoreStream: "./core"
 }, adone.asNamespace(exports), require);
+
+// must be a function, not an arrow function
+export const core = function (source, options) {
+    return new stream.CoreStream(source, options);
+};
+
+adone.lazify({
+    merge: () => stream.CoreStream.merge
+}, core);

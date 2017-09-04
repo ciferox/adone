@@ -1,4 +1,4 @@
-const { lazify, std, util, is, x, core: { Core } } = adone;
+const { lazify, std, util, is, x, stream: { core, CoreStream } } = adone;
 
 const fast = lazify({
     File: "./file"
@@ -30,7 +30,7 @@ export const transform = lazify({
     wiredep: "./transforms/wiredep"
 }, null, require);
 
-export class Fast extends Core {
+export class Fast extends CoreStream {
     transpile(options) {
         return this.pipe(transform.transpile(options));
     }
@@ -476,7 +476,7 @@ export const watchSource = (globs, {
         globsParents = globs.map((x) => adone.util.globParent(x));
     }
 
-    const stream = adone.core(null, {
+    const stream = core(null, {
         flush: () => {
             // eslint-disable-next-line no-use-before-define
             watcher.close();

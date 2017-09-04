@@ -849,7 +849,7 @@ class Command {
             throw new x.IllegalState(`${this.names[0]}: Cannot add the option ${newOption.names[0]} due to name collision`);
         }
         if (this.blindMode && (newOption.nargs === "?" || newOption.nargs === "*")) {
-            throw new x.IllegalState(`${this.names[0]}: Cannot user options with nargs = "*" | "+" | "?" it can lead to unexpected behaviour`);
+            throw new x.IllegalState(`${this.names[0]}: Cannot use options with nargs = "*" | "+" | "?" it can lead to unexpected behaviour`);
         }
         for (const group of this.optionsGroups) {
             if (group.name === newOption.group) {
@@ -1068,6 +1068,9 @@ class Command {
         for (const arg of this.arguments) {
             messages.push(arg.getUsageMessage());
         }
+        if (this.blindMode) {
+            messages.push(ellipsis);
+        }
         if (messages.length || !this.handler[INTERNAL]) {
             table.push([null, chain, argumentsWrap(messages, argumentsLength)]);
         }
@@ -1147,16 +1150,16 @@ class Command {
                         message: arg.getShortHelpMessage()
                     };
                 }), {
-                        model: [
-                            { id: "left-spacing", width: 4 },
-                            { id: "names", maxWidth: 40, wordwrap: true },
-                            { id: "between-cells", width: 2 },
-                            { id: "message", wordwrap: false }
-                        ],
-                        width: "100%",
-                        borderless: true,
-                        noHeader: true
-                    }));
+                    model: [
+                        { id: "left-spacing", width: 4 },
+                        { id: "names", maxWidth: 40, wordwrap: true },
+                        { id: "between-cells", width: 2 },
+                        { id: "message", wordwrap: false }
+                    ],
+                    width: "100%",
+                    borderless: true,
+                    noHeader: true
+                }));
             }
             if (options.length) {
                 if (this.arguments.length) {
@@ -1187,16 +1190,16 @@ class Command {
                             message: opt.getShortHelpMessage()
                         };
                     }), {
-                            model: [
-                                { id: "left-spacing", width: 4 },
-                                { id: "names", maxWidth: 40, wordwrap: true },
-                                { id: "between-cells", width: 2 },
-                                { id: "message", wordwrap: false }
-                            ],
-                            width: "100%",
-                            borderless: true,
-                            noHeader: true
-                        }));
+                        model: [
+                            { id: "left-spacing", width: 4 },
+                            { id: "names", maxWidth: 40, wordwrap: true },
+                            { id: "between-cells", width: 2 },
+                            { id: "message", wordwrap: false }
+                        ],
+                        width: "100%",
+                        borderless: true,
+                        noHeader: true
+                    }));
                 }
             }
             if (commands.length) {
@@ -1228,16 +1231,16 @@ class Command {
                             message: cmd.getShortHelpMessage()
                         };
                     }), {
-                            model: [
-                                { id: "left-spacing", width: 4 },
-                                { id: "names", maxWidth: 40, wordwrap: true },
-                                { id: "between-cells", width: 2 },
-                                { id: "message", wordwrap: true }
-                            ],
-                            width: "100%",
-                            borderless: true,
-                            noHeader: true
-                        }));
+                        model: [
+                            { id: "left-spacing", width: 4 },
+                            { id: "names", maxWidth: 40, wordwrap: true },
+                            { id: "between-cells", width: 2 },
+                            { id: "message", wordwrap: true }
+                        ],
+                        width: "100%",
+                        borderless: true,
+                        noHeader: true
+                    }));
                 }
             }
         }
@@ -1595,7 +1598,7 @@ export class Application extends Subsystem {
 
     /**
      * Returns subsystem instance by name
-     * 
+     *
      * @param {string} name Name of subsystem
      * @returns {adone.application.Subsystem}
      */
@@ -2097,6 +2100,7 @@ export class Application extends Subsystem {
                 part = argv[partIndex--];
             };
             nextPart();
+            let numberOfPositionalArgs = 0;
 
             const state = ["start command"];
 
@@ -2105,13 +2109,14 @@ export class Application extends Subsystem {
                 switch (state.shift()) {
                     case "start command": {
                         positional = command.arguments.slice();
+                        numberOfPositionalArgs = positional.length;
                         optional = command.options.slice();
                         commands = command.commands.slice();
                         state.push("next argument");
                         break;
                     }
                     case "next argument": {
-                        if (command.blindMode && positional.length === 0) {
+                        if (command.blindMode && numberOfPositionalArgs !== 0 && positional.length === 0) {
                             unshiftPart();
                             state.push("rest");
                             state.push("finish");

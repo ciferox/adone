@@ -1,5 +1,7 @@
 describe("core", () => {
-    const { Transform, x, core, is } = adone;
+    const { x, stream, is } = adone;
+    const { core, CoreStream } = stream;
+    const { Transform, Filter } = CoreStream;
 
     const transform = (options) => new Transform(options);
 
@@ -1602,8 +1604,6 @@ describe("core", () => {
         });
 
         describe("stash/unstash", () => {
-            const { Filter } = core;
-
             const write = (stream, iterable) => {
                 for (const i of iterable) {
                     stream.write(i);
@@ -1942,7 +1942,7 @@ describe("core", () => {
                 });
 
                 it("should correcly work using inheritance", async () => {
-                    class ExCore extends adone.core.Core {
+                    class ExCore extends adone.stream.CoreStream {
                         somethingUseful() {
                             return this.map((x) => x + 1);
                         }

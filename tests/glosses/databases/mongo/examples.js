@@ -1,5 +1,5 @@
 describe("examples", function () {
-    const { database: { mongo }, util, core } = adone;
+    const { database: { mongo }, util } = adone;
     const { range } = util;
 
     it("insert/count", async () => {

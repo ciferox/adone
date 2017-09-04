@@ -82,7 +82,7 @@ export default class ServiceManager extends application.Subsystem {
             this.meta = await this.servicesDb.get("$meta");
         }
 
-        // this.services = this.meta.sliceFor("service.");
+        this.services = vault.slice(this.meta, "service");
     }
 
     async uninitialize() {
@@ -118,26 +118,25 @@ export default class ServiceManager extends application.Subsystem {
             }
         }
 
-        const names = this.meta.keys(new RegExp(`^${SERVICE_NAME_PREFIX}(.+)`));
+        const names = this.services.keys();
 
         // Remove uninstalled services
         for (const name of names) {
             if (!actualNames.includes(name)) {
-                await this.meta.delete(`${SERVICE_NAME_PREFIX}${name}`); // eslint-disable-line
+                await this.services.delete(name); // eslint-disable-line
             }
         }
 
         for (const service of services) {
-            const internalName = `${SERVICE_NAME_PREFIX}${service.name}`;
             let runtimeData;
-            if (!this.meta.has(internalName)) {
+            if (!this.services.has(service.name)) {
                 runtimeData = {
                     status: DISABLED
                 };
                 // eslint-disable-next-line
-                await this.meta.set(internalName, runtimeData);
+                await this.services.set(service.name, runtimeData);
             } else {
-                runtimeData = await this.meta.get(internalName); // eslint-disable-line
+                runtimeData = await this.services.get(service.name); // eslint-disable-line
             }
             service.status = runtimeData.status;
             if (is.string(runtimeData.group)) {

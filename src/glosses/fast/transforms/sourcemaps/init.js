@@ -1,5 +1,5 @@
 export default function init(options = {}) {
-    const { x, Transform, is, util, fast: { transform: { sourcemaps: { __ } } }, sourcemap } = adone;
+    const { x, stream: { CoreStream: { Transform } }, is, util, fast: { transform: { sourcemaps: { __ } } }, sourcemap } = adone;
 
     return new Transform({
         transform(file) {
@@ -32,7 +32,7 @@ export default function init(options = {}) {
                 const generator = new sourcemap.Generator({ file: source });
 
                 if (fileType === ".js") {
-                    const tokens = adone.js.compiler.parse(fileContent).tokens;
+                    const { tokens } = adone.js.compiler.parse(fileContent, { tokens: true });
                     for (const token of tokens) {
                         if (token.type.label === "eof") {
                             break;

@@ -1,4 +1,6 @@
-const { is, Transform, x, collection } = adone;
+import Transform from "./transform";
+
+const { is, x, collection } = adone;
 
 class EndingTransform extends Transform {
     _end() {
@@ -9,60 +11,8 @@ class EndingTransform extends Transform {
 
 const sFilter = Symbol("filter");
 
-class Filter {
-    constructor() {
-        this.named = new Map();
-        this.unnamed = new collection.LinkedList();
-    }
 
-    stash(name, filter) {
-        if (is.function(name)) {
-            [name, filter] = [null, name];
-        }
-        const stashStream = new Transform();
-        if (name) {
-            this.named.set(name, stashStream);
-        } else {
-            this.unnamed.push(stashStream);
-        }
-        return new Transform({
-            async transform(x) {
-                const stash = await filter(x);
-                if (stash) {
-                    if (!stashStream.push(x)) {
-                        this.pause();
-                    }
-                } else {
-                    this.push(x);
-                }
-            }
-        });
-    }
-
-    clear() {
-        this.unnamed.clear(true);
-        this.named.clear();
-    }
-
-    unstash(name = null) {
-        if (is.null(name)) {
-            const streams = [...this.unnamed.toArray(), ...this.named.values()];
-            if (!streams.length) {
-                return null;
-            }
-            this.clear();
-            return core.merge(streams, { end: false });
-        }
-        if (!this.named.has(name)) {
-            return null;
-        }
-        const stream = this.named.get(name);
-        this.named.delete(name);
-        return stream;
-    }
-}
-
-class Core extends adone.event.EventEmitter {
+export default class CoreStream extends adone.event.EventEmitter {
     constructor(source, options) {
         super();
         this._lastStream = new Transform(options);
@@ -378,7 +328,7 @@ class Core extends adone.event.EventEmitter {
 
     stash(name, filter) {
         if (!this[sFilter]) {
-            this[sFilter] = new Filter();
+            this[sFilter] = new Filter(); // eslint-disable-line no-use-before-define
         }
         return this.pipe(this[sFilter].stash(name, filter));
     }
@@ -428,11 +378,61 @@ class Core extends adone.event.EventEmitter {
     }
 }
 
-export default function core(val, options) {
-    return new Core(val, options);
+
+class Filter {
+    constructor() {
+        this.named = new Map();
+        this.unnamed = new collection.LinkedList();
+    }
+
+    stash(name, filter) {
+        if (is.function(name)) {
+            [name, filter] = [null, name];
+        }
+        const stashStream = new Transform();
+        if (name) {
+            this.named.set(name, stashStream);
+        } else {
+            this.unnamed.push(stashStream);
+        }
+        return new Transform({
+            async transform(x) {
+                const stash = await filter(x);
+                if (stash) {
+                    if (!stashStream.push(x)) {
+                        this.pause();
+                    }
+                } else {
+                    this.push(x);
+                }
+            }
+        });
+    }
+
+    clear() {
+        this.unnamed.clear(true);
+        this.named.clear();
+    }
+
+    unstash(name = null) {
+        if (is.null(name)) {
+            const streams = [...this.unnamed.toArray(), ...this.named.values()];
+            if (!streams.length) {
+                return null;
+            }
+            this.clear();
+            return CoreStream.merge(streams, { end: false });
+        }
+        if (!this.named.has(name)) {
+            return null;
+        }
+        const stream = this.named.get(name);
+        this.named.delete(name);
+        return stream;
+    }
 }
 
-core.Core = Core;
-core.Filter = Filter;
-core.merge = Core.merge;
-adone.tag.set(Core, adone.tag.CORE_STREAM);
+CoreStream.Filter = Filter;
+CoreStream.Transform = Transform;
+
+adone.tag.set(CoreStream, adone.tag.CORE_STREAM);

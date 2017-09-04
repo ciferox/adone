@@ -2,7 +2,7 @@ import check from "../helpers/check_redis";
 import MockServer from "../helpers/mock_server";
 
 describe("database", "redis", "scanStream", { skip: check }, () => {
-    const { is, core, database: { redis: { Redis, Cluster } } } = adone;
+    const { is, stream: { core }, database: { redis: { Redis, Cluster } } } = adone;
     const { std: { stream: { Readable } } } = adone;
 
     afterEach(async () => {
