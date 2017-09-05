@@ -1,8 +1,10 @@
-# ADONE: the generalized core of 'cyber-fractal systems' infrastructure
+<div align="center">
+  <a href="https://adone.io/dist"><img src="https://adone.io/logo.svg" width="200px"></a>
+  <h1>ADONE</h1>
+  <p>the generalized core of 'cyber-fractal systems' infrastructure</p>
+</div>
 
 _Note: Project is in active development and not production ready yet._
-
-<p align="center"><a href="https://adone.io/dist"><img src="https://adone.io/logo.svg" width="150px" align="center"></a></p>
 
 **ADONE** (**AllDONE**) is a multpurpose Node.js-platform, consisting of:
 - **Glosses** - constantly developing library code, divided into namespaces.
