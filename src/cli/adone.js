@@ -39,7 +39,7 @@ class AdoneCLI extends application.Application {
                 {
                     name: "path",
                     default: "index.js",
-                    help: "Run [es6] script or adone compact application"
+                    help: "Run [es6] script or adone application"
                 }
             ],
             options: [
@@ -263,10 +263,11 @@ class AdoneCLI extends application.Application {
 
                                 term.print(styleLiteralArgs(type, key, result.args));
                             } catch (err) {
-                                if (!value.toString().includes("[native code]")) {
-                                    throw err;
+                                if (value.toString().includes("[native code]")) {
+                                    term.print(styleLiteralArgs("native function ", key, []));
+                                } else {
+                                    term.print(styleLiteralArgs("function ", key, []));
                                 }
-                                term.print(styleLiteralArgs("native function ", key, []));
                             }
                             break;
                         }

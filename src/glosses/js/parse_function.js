@@ -106,17 +106,6 @@ export default (code, options) => {
         result.value = `{ ${result.value} }`;
     }
 
-    let node;
-    if (is.function(options.parse)) {
-        result.value = `(${result.value})`;
-
-        const ast = options.parse(result.value, options);
-        const body = (ast.program && ast.program.body) || ast.body;
-
-        node = body[0].expression;
-    } else {
-        node = adone.js.compiler.parseExpression(result.value, options);
-    }
-
+    const node = adone.js.compiler.parseExpression(result.value, options);
     return plugins.reduce((res, fn) => fn(node, res) || res, result);
 };

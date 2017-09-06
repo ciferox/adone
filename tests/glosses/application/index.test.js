@@ -77,14 +77,6 @@ describe("application", "Application", () => {
     });
 
     describe("Subsystems", () => {
-        for (let i = 1; i <= 3; i++) {
-            it(`Improper subsystem addition ${i}`, async () => {
-                const err = await assert.throws(async () => exec("node", [fixture(`improper_subsystem_addition${i}.js`)]));
-                assert.equal(err.code, 1);
-                assert.match(err.stderr, /Subsystem can be added only during configuration of the application/);
-            });
-        }
-
         it("add subsystem by instance", async () => {
             const stdout = await execStdout("node", [fixture("add_subsystem_by_instance.js")]);
             assert.equal(stdout, "configure\ninitialize\nuninitialize");
