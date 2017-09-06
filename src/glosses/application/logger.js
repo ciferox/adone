@@ -1,9 +1,23 @@
 const {
     is,
-    std: { util: { format } }
+    std
 } = adone;
 
+const { util: { format } } = std;
+
 const LOG_NOFORMAT = 255;
+
+class BaseTransform extends std.stream.Transform {
+    constructor(transform) {
+        super({
+            writableObjectMode: true,
+            transform
+        });
+    }
+}
+
+BaseTransform.prototype._format = format;
+BaseTransform.prototype.LOG_NOFORMAT = LOG_NOFORMAT;
 
 export default class Logger {
     constructor(options = {}) {
@@ -138,10 +152,7 @@ export default class Logger {
     }
 
     _pipeTransform({ type, filter, argsSchema, noFormatLogger, delimiter = " ", stream, filePath, flags } = {}) {
-        class LogTransform extends adone.stream.CoreStream.Transform { }
-
-        LogTransform.prototype._format = format;
-        LogTransform.prototype.LOG_NOFORMAT = LOG_NOFORMAT;
+        class LogTransform extends BaseTransform { }
 
         let suffixStyle;
         let preprocessCode = "";
@@ -217,25 +228,23 @@ export default class Logger {
         let filterCode = "";
         if (is.function(filter)) {
             LogTransform.prototype._filter = filter;
-            filterCode = "if (!this._filter(x)) return;";
+            filterCode = "if (!this._filter(x)) return done();";
         }
 
         const bindingsCount = this.options.bindArgs.length;
         let fnCode = "";
         if (noFormatLogger === true) {
             fnCode += `if (x[${bindingsCount}] === this.LOG_NOFORMAT) {
-                    return this.push(\`\${this._format.apply(null, x.slice(1 + ${bindingsCount}))}\\n\`);
+                    return done(null, \`\${this._format.apply(null, x.slice(1 + ${bindingsCount}))}\\n\`);
                 }`;
         }
         fnCode += `
             ${filterCode}
             ${definitions}
             ${preprocessCode}
-            const msg = this._format.apply(null, [${formatString}].concat(args));
-            this.push(msg);
+            done(null, this._format.apply(null, [${formatString}].concat(args)));
         `;
-        LogTransform.prototype._transform = new Function("x", fnCode);
-        const t = new LogTransform();
+        const t = new LogTransform(new Function("x", "_", "done", fnCode));
         switch (type) {
             case "stdout": t.pipe(process.stdout); break;
             case "stderr": t.pipe(process.stderr); break;
@@ -268,10 +277,7 @@ export default class Logger {
 
         this._transforms.push(t);
         this._channels.push(type);
-        this._endPromisses.push(new Promise((resolve) => {
-            t.once("end", resolve);
-        }));
-        t.resume();
+        this._endPromisses.push(new Promise((resolve) => t.once("end", resolve)));
     }
 }
 Logger.LOG_FATAL = 0;

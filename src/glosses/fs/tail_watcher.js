@@ -11,7 +11,6 @@ export default class Tail extends EventEmitter {
         pos
     } = {}) {
         super();
-        this._readBlock = this.readBlock.bind(this);
         this.filename = filename;
         this.separator = separator;
         this.fsWatchOptions = fsWatchOptions;
@@ -25,12 +24,12 @@ export default class Tail extends EventEmitter {
         this.queue = new collection.LinkedList();
         this.isWatching = false;
 
-        this.internalDispatcher.on("next", () => this.readBlock());
+        this.internalDispatcher.on("next", () => this._readBlock());
 
-        this.watch(this.fromBeginning ? 0 : pos);
+        this._watch(this.fromBeginning ? 0 : pos);
     }
 
-    readBlock() {
+    _readBlock() {
         if (!this.queue.empty) {
             const block = this.queue.shift();
             if (block.end > block.start) {
@@ -55,7 +54,7 @@ export default class Tail extends EventEmitter {
         }
     }
 
-    watch(pos) {
+    _watch(pos) {
         if (this.isWatching) {
             return;
         }
@@ -67,13 +66,13 @@ export default class Tail extends EventEmitter {
         }
 
         if (!this.useWatchFile && std.fs.watch) {
-            return this.watcher = std.fs.watch(this.filename, this.fsWatchOptions, (e) => this.watchEvent(e));
+            return this.watcher = std.fs.watch(this.filename, this.fsWatchOptions, (e) => this._watchEvent(e));
         }
-        return std.fs.watchFile(this.filename, this.fsWatchOptions, (curr, prev) => this.watchFileEvent(curr, prev));
+        std.fs.watchFile(this.filename, this.fsWatchOptions, (curr, prev) => this._watchFileEvent(curr, prev));
 
     }
 
-    watchEvent(e) {
+    _watchEvent(e) {
         if (e === "change") {
             const stats = fs.statSync(this.filename);
             if (stats.size < this.pos) { // scenario where texts is not appended but it's actually a w+
@@ -89,18 +88,18 @@ export default class Tail extends EventEmitter {
         } else if (e === "rename") {
             this.unwatch();
             if (this.follow) {
-                return setTimeout((() => this.watch()), 1000);
+                return setTimeout((() => this._watch()), 1000);
             }
-            return this.emit("error", `'rename' event for ${this.filename}. File not available.`);
+            this.emit("error", `'rename' event for ${this.filename}. File not available.`);
         }
     }
 
 
-    watchFileEvent(curr, prev) {
+    _watchFileEvent(curr, prev) {
         if (curr.size > prev.size) {
             this.queue.push({ start: prev.size, end: curr.size });
             if (this.queue.length === 1) {
-                return this.internalDispatcher.emit("next");
+                this.internalDispatcher.emit("next");
             }
         }
     }
@@ -112,6 +111,6 @@ export default class Tail extends EventEmitter {
             fs.unwatchFile(this.filename);
         }
         this.isWatching = false;
-        return this.queue = new collection.LinkedList();
+        this.queue = new collection.LinkedList();
     }
 }
