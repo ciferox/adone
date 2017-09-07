@@ -1112,7 +1112,7 @@ class Command {
 
         const totalWidth = term.cols;
 
-        if (is.string(this.description)) {
+        if (is.string(this.description) && this.description) {
             helpMessage.push("", text.wordwrap(this.description, totalWidth));
         }
 
@@ -1164,10 +1164,8 @@ class Command {
                 if (this.arguments.length) {
                     helpMessage.push("");
                 }
-                for (const [idx, group] of adone.util.enumerate(this.optionsGroups)) {
-                    if (group.empty) {
-                        continue;
-                    }
+                const nonEmptyGroups = this.optionsGroups.filter((x) => !x.empty);
+                for (const [idx, group] of adone.util.enumerate(nonEmptyGroups)) {
                     if (idx > 0) {
                         helpMessage.push("");
                     }
@@ -1205,10 +1203,8 @@ class Command {
                 if (this.arguments.length || options.length) {
                     helpMessage.push("");
                 }
-                for (const [idx, group] of adone.util.enumerate(this.commandsGroups)) {
-                    if (group.empty) {
-                        continue;
-                    }
+                const nonEmptyGroups = this.commandsGroups.filter((x) => !x.empty);
+                for (const [idx, group] of adone.util.enumerate(nonEmptyGroups)) {
                     if (idx > 0) {
                         helpMessage.push("");
                     }
@@ -1390,7 +1386,7 @@ export default class Application extends adone.application.Subsystem {
         this[ERROR_SCOPE] = true;
 
         await super._configure();
-        
+
         this[ERROR_SCOPE] = false;
 
         let command = this[MAIN_COMMAND];
