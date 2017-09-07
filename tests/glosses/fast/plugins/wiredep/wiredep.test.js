@@ -35,7 +35,7 @@ describe("fast", "transform", "wiredep", () => {
         return filePaths;
     };
 
-    const plugin = fast.getPlugin("wiredep");
+    const plugin = fast.plugin.wiredep;
 
     const wiredep = plugin.wiredep;
     let prevWorkDir;

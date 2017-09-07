@@ -1,4 +1,8 @@
-const { is, sourcemap } = adone;
+const {
+    is,
+    sourcemap,
+    util
+} = adone;
 
 export const applySourceMap = (file, sourceMap) => {
     if (is.string(sourceMap)) {
@@ -153,4 +157,35 @@ export const updateMetadata = async (fd, file, { originMode, originTimes, origin
         file.stat.uid = ownerDiff.uid;
         file.stat.gid = ownerDiff.gid;
     }
+};
+
+
+export const resolveGlob = (glob, cwd) => {
+    if (glob[0] === "!") {
+        return `!${adone.std.path.resolve(cwd, glob.slice(1))}`;
+    }
+    return adone.std.path.resolve(cwd, glob);
+};
+
+export const globSource = (globs, { cwd = process.cwd(), base = null, dot = true, links = false } = {}) => {
+    let globsParents;
+    if (!base) {
+        globsParents = globs.map((x) => util.globParent(x));
+    }
+    return adone.fs.glob(globs, { dot, patternIndex: true })
+        .through(async function fileWrapper({ path, patternIndex }) {
+            const stat = await (links ? adone.fs.lstat : adone.fs.stat)(path);
+            if (stat.isDirectory()) {
+                return;
+            }
+            const _base = base || globsParents[patternIndex];
+            this.push(new adone.fast.File({
+                cwd,
+                base: _base,
+                path,
+                contents: null,
+                stat, // TODO, it should be handled by the glob
+                symlink: stat.isSymbolicLink() ? await adone.fs.readlink(path) : null
+            }));
+        });
 };

@@ -9,7 +9,7 @@ describe("fast", "transform", "revision hash replace", () => {
 
     const src = ({ cwd = process.cwd(), read = true, buffer = true, stream = false } = {}) => {
         // just an empty source
-        return new fast.FastFS(null, { read, buffer, stream, cwd });
+        return new fast.LocalStream(null, { read, buffer, stream, cwd });
     };
 
     it("should by default replace filenames in .css and .html files", async () => {

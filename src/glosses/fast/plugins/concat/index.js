@@ -1,5 +1,7 @@
 export default function plugin() {
-    const { is, std: { path }, x, fast: { __, File } } = adone;
+    const { is, std: { path }, x, fast: { File } } = adone;
+
+    const { Concat } = adone.private(adone.fast);
 
     return function concat(file, options = {}) {
 
@@ -47,7 +49,7 @@ export default function plugin() {
 
             // construct concat instance
             if (!data) {
-                data = new __.Concat(isUsingSourceMaps, fileName, options.newLine);
+                data = new Concat(isUsingSourceMaps, fileName, options.newLine);
             }
 
             // add file to concat instance

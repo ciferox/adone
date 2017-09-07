@@ -149,11 +149,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             NETRON_INTERFACE: Symbol(),
             NETRON_STUB: Symbol(),
             NETRON_REMOTESTUB: Symbol(),
-            NETRON_STREAM: Symbol(),
-
-            FAST_STREAM: Symbol(),
-            FAST_FS_STREAM: Symbol(),
-            FAST_FS_MAP_STREAM: Symbol()
+            NETRON_STREAM: Symbol()
         },
         bind: (libName) => require(adone.std.path.resolve(__dirname, "./native", libName)),
         getAssetAbsolutePath: (relPath) => adone.std.path.resolve(__dirname, "..", "etc", adone.std.path.normalize(relPath)),

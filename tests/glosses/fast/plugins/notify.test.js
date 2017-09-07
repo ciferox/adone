@@ -3,7 +3,7 @@ describe("fast", "transform", "notify", () => {
     const { Stream, File } = fast;
 
     const plugin = fast.plugin.notify;
-
+    
     const mockGenerator = (tester) => {
         tester = tester || function () { };
         return async (opts) => {

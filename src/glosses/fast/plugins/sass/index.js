@@ -1,7 +1,8 @@
 import SASS from "node-sass";
 
 export default function plugin() {
-    const { std: { path }, x, is, fast: { File, __: { helper: { applySourceMap } } } } = adone;
+    const { std: { path }, x, is, fast: { File } } = adone;
+    const { helper } = adone.private(adone.fast);
 
     return function sass(options = {}) {
         return this.throughAsync(async function (file) {
@@ -94,7 +95,7 @@ export default function plugin() {
                 t.extname = ".css";
                 sassMap.file = t.path;
                 // Apply the map
-                applySourceMap(file, sassMap);
+                helper.applySourceMap(file, sassMap);
             }
 
             file.contents = sassObj.css;

@@ -61,8 +61,8 @@ describe("fast", () => {
         expect(is.fastStream(fast.src())).to.be.true;
     });
 
-    it("should be a fast fs stream", () => {
-        expect(is.fastStream(fast.src())).to.be.true;
+    it("should be a fast local stream", () => {
+        expect(is.fastLocalStream(fast.src())).to.be.true;
     });
 
     describe("map", () => {
@@ -96,11 +96,11 @@ describe("fast", () => {
         });
 
         it("should be a fast fs stream", () => {
-            expect(is.fastStream(fast.map())).to.be.true;
+            expect(is.fastLocalStream(fast.map())).to.be.true;
         });
 
         it("should be a fast fs map stream", () => {
-            expect(is.fastFSMapStream(fast.map())).to.be.true;
+            expect(is.fastLocalMapStream(fast.map())).to.be.true;
         });
     });
 
@@ -406,8 +406,8 @@ describe("fast", () => {
             expect(is.fastStream(fast.watch())).to.be.true;
         });
 
-        it("should be a fast fs stream", () => {
-            expect(is.fastStream(fast.watch())).to.be.true;
+        it("should be a fast local stream", () => {
+            expect(is.fastLocalStream(fast.watch())).to.be.true;
         });
     });
 
@@ -463,7 +463,7 @@ describe("fast", () => {
         });
 
         it("should be a fast fs map stream", () => {
-            expect(is.fastFSMapStream(fast.watchMap())).to.be.true;
+            expect(is.fastLocalMapStream(fast.watchMap())).to.be.true;
         });
     });
 });
