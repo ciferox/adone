@@ -505,7 +505,7 @@ export class Cell {
         if (this[styleProperty] && this[styleProperty].length) {
             try {
                 // adone.log(styleProperty, this[styleProperty]);
-                let colors = adone.runtime.term;
+                let colors = adone.terminal.styler;
                 for (let i = this[styleProperty].length; --i >= 0; ) {
                     colors = colors[this[styleProperty][i]];
                 }
