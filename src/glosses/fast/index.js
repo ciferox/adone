@@ -1,4 +1,4 @@
-const { lazify, std, util, is, x, stream: { core, CoreStream } } = adone;
+const { lazify, std, util, is, x, stream: { CoreStream, core } } = adone;
 
 const fast = lazify({
     File: "./file"
@@ -9,107 +9,7 @@ fast.__ = lazify({
     helper: "./__/helpers"
 }, null, require);
 
-export const transform = lazify({
-    transpile: "./transforms/transpile",
-    deleteLines: "./transforms/delete_lines",
-    rename: "./transforms/rename",
-    concat: "./transforms/concat",
-    flatten: "./transforms/flatten",
-    sourcemaps: "./transforms/sourcemaps",
-    wrap: "./transforms/wrap",
-    replace: "./transforms/replace",
-    revisionHash: "./transforms/revision_hash",
-    revisionHashReplace: "./transforms/revision_hash_replace",
-    useref: "./transforms/useref",
-    sass: "./transforms/sass",
-    angularFilesort: "./transforms/angular/file_sort",
-    angularTemplateCache: "./transforms/angular/template_cache",
-    inject: "./transforms/inject",
-    chmod: "./transforms/chmod",
-    notify: "./transforms/notify",
-    wiredep: "./transforms/wiredep"
-}, null, require);
-
 export class Fast extends CoreStream {
-    transpile(options) {
-        return this.pipe(transform.transpile(options));
-    }
-
-    deleteLines(options) {
-        return this.pipe(transform.deleteLines(options));
-    }
-
-    rename(handler) {
-        return this.pipe(transform.rename(handler));
-    }
-
-    concat(file, options) {
-        return this.pipe(transform.concat(file, options));
-    }
-
-    flatten(file, options) {
-        return this.pipe(transform.flatten(file, options));
-    }
-
-    sourcemapsInit(options) {
-        return this.pipe(transform.sourcemaps.init(options));
-    }
-
-    sourcemapsWrite(destPath, options) {
-        return this.pipe(transform.sourcemaps.write(destPath, options));
-    }
-
-    revisionHash({ manifest } = {}) {
-        if (manifest) {
-            return this.pipe(transform.revisionHash.manifest(manifest));
-        }
-        return this.pipe(transform.revisionHash.rev());
-    }
-
-    revisionHashReplace(options) {
-        return this.pipe(transform.revisionHashReplace(options));
-    }
-
-    wrap(template, data, options) {
-        return this.pipe(transform.wrap(template, data, options));
-    }
-
-    replace(search, replacement) {
-        return this.pipe(transform.replace(search, replacement));
-    }
-
-    useref(options = {}) {
-        return this.pipe(transform.useref(options));
-    }
-
-    sass(options) {
-        return this.pipe(transform.sass(options));
-    }
-
-    angularFilesort() {
-        return this.pipe(transform.angularFilesort());
-    }
-
-    angularTemplateCache(filename, options) {
-        return this.pipe(transform.angularTemplateCache(filename, options));
-    }
-
-    inject(sources, options) {
-        return this.pipe(transform.inject(sources, options));
-    }
-
-    chmod(mode, dirMode) {
-        return this.pipe(transform.chmod(mode, dirMode));
-    }
-
-    notify(options) {
-        return this.pipe(transform.notify(options));
-    }
-
-    wiredep(options) {
-        return this.pipe(transform.wiredep.stream(options));
-    }
-
     decompress(compressorName, options = {}) {
         if (!(compressorName in adone.compressor)) {
             throw new x.InvalidArgument(`Unknown compressor: ${compressorName}`);
@@ -266,7 +166,54 @@ export class Fast extends CoreStream {
             await p;
         });
     }
+
+    static plugin(meta) {
+        const obj = {};
+        for (const [key, path] of util.entries(meta)) {
+            obj[key] = [path, (mod) => {
+                this._plugins[key] = mod;
+                return mod.default(key);
+            }];
+        }
+        adone.lazify(obj, this.prototype);
+        return this;
+    }
+
+    static getPlugin(key) {
+        if (!this._plugins[key]) {
+            this.prototype[key];
+        }
+        return this._plugins[key];
+    }
 }
+
+Fast._plugins = {};
+
+// core plugin
+Fast.plugin({
+    transpile: std.path.resolve(__dirname, "./plugins/transpile"),
+    deleteLines: std.path.resolve(__dirname, "./plugins/delete_lines"),
+    rename: std.path.resolve(__dirname, "./plugins/rename"),
+    concat: std.path.resolve(__dirname, "./plugins/concat"),
+    flatten: std.path.resolve(__dirname, "./plugins/flatten"),
+    sourcemapsInit: std.path.resolve(__dirname, "./plugins/sourcemaps"),
+    sourcemapsWrite: std.path.resolve(__dirname, "./plugins/sourcemaps"),
+    wrap: std.path.resolve(__dirname, "./plugins/wrap"),
+    replace: std.path.resolve(__dirname, "./plugins/replace"),
+    revisionHash: std.path.resolve(__dirname, "./plugins/revision_hash"),
+    revisionHashReplace: std.path.resolve(__dirname, "./plugins/revision_hash_replace"),
+    useref: std.path.resolve(__dirname, "./plugins/useref"),
+    sass: std.path.resolve(__dirname, "./plugins/sass"),
+    angularFilesort: std.path.resolve(__dirname, "./plugins/angular/file_sort"),
+    angularTemplateCache: std.path.resolve(__dirname, "./plugins/angular/template_cache"),
+    inject: std.path.resolve(__dirname, "./plugins/inject"),
+    chmod: std.path.resolve(__dirname, "./plugins/chmod"),
+    notify: std.path.resolve(__dirname, "./plugins/notify"),
+    notifyError: std.path.resolve(__dirname, "./plugins/notify"),
+    wiredep: std.path.resolve(__dirname, "./plugins/wiredep")
+});
+
+export const getPlugin = (x) => Fast.getPlugin(x);
 
 adone.tag.set(Fast, adone.tag.FAST_STREAM);
 

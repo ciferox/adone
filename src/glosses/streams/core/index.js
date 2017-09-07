@@ -1,97 +1,171 @@
-import Transform from "./transform";
+const { noop, is, x, event: { EventEmitter }, util, std, collection } = adone;
 
-const { is, x, collection } = adone;
+const __ = adone.lazify({
+    Transform: "./transform",
+    AsyncTransform: "./async_transform",
+    SyncTransform: "./sync_transform",
+    PassThrough: "./pass_through"
+}, null, require);
 
-class EndingTransform extends Transform {
-    _end() {
-        this.emit("ending");
-        return super._end();
+
+const wrapBefore = (cb, func) => {
+    switch (util.functionParams(func).length) {
+        case 0: {
+            return function () {
+                cb.call(this);
+                return func.call(this);
+            };
+        }
+        case 1: {
+            return function (a) {
+                cb.call(this);
+                return func.call(this, a);
+            };
+        }
+        case 2: {
+            return function (a, b) {
+                cb.call(this);
+                return func.call(this, a, b);
+            };
+        }
+        case 3: {
+            return function (a, b, c) {
+                cb.call(this);
+                return func.call(this, a, b, c);
+            };
+        }
+        default: {
+            return function (...args) {
+                cb.call(this);
+                return func.apply(this, args);
+            };
+        }
     }
-}
+};
 
-const sFilter = Symbol("filter");
+const _checkDestroyed = function () {
+    if (this._destroyed) {
+        throw new x.IllegalState("Stream was destroyed");
+    }
+};
 
+const checkDestroyed = (target, key, descriptor) => {
+    const { value } = descriptor;
+    descriptor.value = wrapBefore(_checkDestroyed, value);
+};
 
-export default class CoreStream extends adone.event.EventEmitter {
+const STASHES = Symbol("stashes");
+
+/**
+ * Represents a chain of transform streams
+ */
+class CoreStream extends EventEmitter {
     constructor(source, options) {
         super();
-        this._lastStream = new Transform(options);
-        this._chain = [this._lastStream];
+        this._chain = [this._createFirstStream(options)];
 
-        this._dataListener = (x) => this.emit("data", x);
-        this._endListener = () => this.emit("end");
+        this._emitError = (err) => this.emit("error", err);
+        this._emitEnd = () => this.emit("end");
+        this._emitData = (data) => this.emit("data", data);
+        this._first
+            .onError(this._emitError)
+            .onEnd(this._emitEnd)
+            .onNext(this._emitData);
+        this._pipable = true;
+        this._paused = true;
+        this._destroyed = false;
 
-        this._chain[0].on("drain", () => this.emit("drain"));
-        this._chain[0].on("error", (err) => this.emit("error", err, this._chain[0]));
-
-        this._lastStream.on("data", this._dataListener);
-        this._lastStream.once("end", this._endListener);
-
-        Object.defineProperties(this, {
-            _readableState: {
-                get: () => this._lastStream._readableState
-            },
-            _writableState: {
-                get: () => this._chain[0]._writableState
-            },
-            _transformState: {
-                get: () => this._chain[0]._transformState // correct?
-            }
-        });
-
-        this.source(source);
+        this.fromSource(source);
     }
 
-    source(source) {
+    _createFirstStream(options) {
+        if (!options || !is.object(options)) {
+            return new __.PassThrough();
+        }
+        if (!options.transform) {
+            return new __.PassThrough(options.flush);
+        }
+        if (options.sync === true || options.async === false) {
+            return new __.SyncTransform(options.transform, options.flush);
+        }
+        if (options.sync === false || options.async === true) {
+            return new __.AsyncTransform(options.transform, options.flush);
+        }
+        if (is.asyncFunction(options.transform)) {
+            return new __.AsyncTransform(options.transform, options.flush);
+        }
+        return new __.SyncTransform(options.transform, options.flush);
+    }
+
+    fromSource(source) {
         if (is.array(source)) {
-            for (let i = 0; i < source.length; ++i) {
-                this.write(source[i]);
+            for (const i of source) {
+                this.write(i);
             }
             this.end();
-        } else if (is.transformStream(source) || is.netronStream(source)) {
-            source.pipe(this, { spreadErrors: false }); // should not emit errors from "this" to source
-            source.on("error", (err) => this.emit("error", err, source));
-            if (source.paused) {
+        } else if (is.coreStream(source)) {
+            source.pipe(this);
+            source.on("error", () => this.emit("error"));
+            if (source.isPaused()) {
                 source.resume();
             }
+            // source.on("data", (x) => {
+            //     this.write(x);
+            // });
+            // source.once("end", () => {
+            //     this.end();
+            // });
+            // source.on("error", (err) => {
+            //     this.emit("error", err);
+            // });
+            // source.resume();
         }
     }
 
-    // stream api
-
-    push(chunk) {
-        return this._lastStream.push(chunk);
+    get _first() {
+        return this._chain[0];
     }
 
-    write(chunk) {
-        return this._chain[0].write(chunk);
+    get _last() {
+        return this._chain[this._chain.length - 1];
     }
 
-    pipe(dest, { spreadErrors = true, ...pipeOptions } = {}) {
-        if (is.function(dest)) {
-            return dest(this);
-        }
-        dest = this._lastStream.pipe(dest, { spreadErrors, ...pipeOptions });
-        if (dest !== this._lastStream) {
-            this._chain.push(dest);
-            const preLast = this._lastStream;
-            this._lastStream = dest;
-            preLast.removeListener("data", this._dataListener);
-            preLast.removeListener("end", this._endListener);
-            this._lastStream.on("data", this._dataListener);
-            this._lastStream.once("end", this._endListener);
-            if (spreadErrors) {
-                this._lastStream.on("error", (err) => this.emit("error", err, this._chain[0]));
-            }
-        }
+    @checkDestroyed
+    write(value) {
+        return this._first.write(value);
+    }
+
+    @checkDestroyed
+    push(value) {
+        return this._last.push(value);
+    }
+
+    end() {
+        this._first.end();
         return this;
     }
 
+    destroy() {
+        if (this._destroyed) {
+            return this;
+        }
+        this._destroyed = true;
+        for (const s of this._chain) {
+            s.destroy();
+        }
+        this.emit("destroy");
+        return this;
+    }
+
+    @checkDestroyed
     pause() {
-        this._lastStream.pause();
+        for (let i = this._chain.length - 1; i >= 0; --i) {
+            this._chain[i].pause();
+        }
         return this;
     }
 
+    @checkDestroyed
     resume() {
         for (let i = this._chain.length - 1; i >= 0; --i) {
             this._chain[i].resume();
@@ -99,249 +173,256 @@ export default class CoreStream extends adone.event.EventEmitter {
         return this;
     }
 
-    end({ force = false, clearReadable = false, clearWritable = false } = {}) {
-        if (!force) {
-            this._chain[0].end({ force: false, clearReadable, clearWritable });
-        } else {
-            for (let i = 0; i < this._chain.length; ++i) {
-                this._chain[i].end({ force: true, clearReadable, clearWritable });
-            }
-        }
-        return this;
+    isPaused() {
+        return this._last.isPaused();
     }
 
-    get paused() {
-        return this._lastStream.paused;
+    isEnded() {
+        return this._last.isEnded();
     }
 
-    get ended() {
-        return this._lastStream.ended;
-    }
-
-    // core api
-
-    each(callback) {
-        if (!is.function(callback)) {
-            throw new x.InvalidArgument("'callback' must be a function");
-        }
+    pipe(stream, { end = true } = {}) {
         this.on("data", (x) => {
-            callback(x);
+            stream.write(x);
         });
-        if (this.paused) {
-            process.nextTick(() => this.resume());
+        if (end) {
+            this.once("end", () => {
+                stream.end();
+            });
         }
+        if (stream.isPaused()) {
+            stream.resume();
+        }
+        return stream;
+    }
+
+    _throughTransform(stream) {
+        stream
+            .onNext(this._emitData)
+            .onError(this._emitError)
+            .onEnd(this._emitEnd);
+        this._last.pipe(stream);
+        this._chain.push(stream);
         return this;
     }
 
-    toArray(callback) {
-        if (!is.function(callback)) {
-            throw new x.InvalidArgument("'callback' must be a function");
-        }
-        if (this.ended) {
-            process.nextTick(() => callback([]));
-        } else {
-            const res = [];
-            this.each((x) => res.push(x));
-            this.once("end", () => callback(res));
-        }
-        return this;
+    @checkDestroyed
+    throughSync(transform, flush) {
+        const stream = new __.SyncTransform(transform, flush);
+        return this._throughTransform(stream);
     }
 
+    @checkDestroyed
+    throughAsync(transform, flush) {
+        const stream = new __.AsyncTransform(transform, flush);
+        return this._throughTransform(stream);
+    }
+
+    @checkDestroyed
     through(transform, flush) {
-        return this.pipe(new Transform({ transform, flush }));
+        if (is.asyncFunction(transform)) {
+            return this.throughAsync(transform, flush);
+        }
+        return this.throughSync(transform, flush);
     }
 
+    @checkDestroyed
     map(callback) {
         if (!is.function(callback)) {
             throw new x.InvalidArgument("'callback' must be a function");
         }
-        return this.through(function (x) {
-            const res = callback(x);
-            if (is.promise(res)) {
-                return res.then((y) => this.push(y));
-            }
-            this.push(res);
+        if (is.asyncFunction(callback)) {
+            return this.throughAsync(async function (value) {
+                this.push(await callback(value));
+            });
+        }
+        return this.throughSync(function (value) {
+            this.push(callback(value));
         });
     }
 
+    @checkDestroyed
     mapIf(condition, callback) {
+        if (!is.function(condition)) {
+            throw new x.InvalidArgument("'condition' must be a function");
+        }
+
         if (!is.function(callback)) {
             throw new x.InvalidArgument("'callback' must be a function");
         }
 
-        return this.through(function (x) {
-            let res;
-            if (condition(x)) {
-                res = callback(x);
-                if (is.promise(res)) {
-                    return res.then((y) => this.push(y));
+        if (is.asyncFunction(condition) || is.asyncFunction(callback)) {
+            return this.throughAsync(async function (x) {
+                if (await condition(x)) {
+                    this.push(await callback(x));
+                } else {
+                    this.push(x);
                 }
-            } else {
-                res = x;
-            }
-
-            this.push(res);
-        });
-    }
-
-    filter(callback) {
-        if (!is.function(callback)) {
-            throw new x.InvalidArgument("'callback' must be a function");
+            });
         }
-        return this.through(function (x) {
-            const res = callback(x);
-            if (is.promise(res)) {
-                return res.then((y) => y && this.push(x));
-            } else if (res) {
+        return this.throughSync(function (x) {
+            if (condition(x)) {
+                this.push(callback(x));
+            } else {
                 this.push(x);
             }
         });
     }
 
-    static merge(streams, { end = true, ...sourceOptions } = {}) {
-        const src = new this(null, sourceOptions);
-        const drainWaiters = new Set();
-        let m = 0;
-        let waitForDrain = false;
-        for (let i = 0; i < streams.length; ++i) {
-            if (is.function(streams[i])) {
-                streams[i] = streams[i]();
-            }
-            if (!streams[i] || streams[i].ended) {
-                streams.splice(i--, 1);
-            }
-        }
-        const onStreamEnd = () => {
-            if (!--m) {
-                src.end();
-            }
-        };
-        for (let i = 0; i < streams.length; ++i) {
-            const stream = streams[i];
-            if (end) {
-                stream.once("end", onStreamEnd);
-            }
-            // eslint-disable-next-line
-            stream.on("data", (x) => {
-                if (!src.write(x)) {
-                    stream.pause();
-                    drainWaiters.add(i);
-                    if (!waitForDrain) {
-                        waitForDrain = true;
-                        src.once("drain", () => {
-                            waitForDrain = false;
-                            const copy = [...drainWaiters];
-                            drainWaiters.clear();
-                            for (const j of copy) {
-                                if (!streams[j].ended) {
-                                    streams[j].resume();
-                                }
-                            }
-                        });
-                    }
-                }
-            });
-            stream.on("error", (err) => src.emit("error", err, stream));
-            ++m;
-        }
-        process.nextTick(() => {
-            for (let i = 0; i < streams.length; ++i) {
-                streams[i].resume();
-            }
-        });
-        return src;
-    }
-
-    done(callback, { current = false } = {}) {
+    @checkDestroyed
+    filter(callback) {
         if (!is.function(callback)) {
             throw new x.InvalidArgument("'callback' must be a function");
         }
-        if (current) {
-            this._lastStream.once("end", callback);
-        } else {
-            this.once("end", callback);
+        if (is.asyncFunction(callback)) {
+            return this.throughAsync(async function (value) {
+                if (await callback(value)) {
+                    this.push(value);
+                }
+            });
         }
-        return this;
+        return this.throughSync(function (value) {
+            if (callback(value)) {
+                this.push(value);
+            }
+        });
     }
 
+    @checkDestroyed
+    forEach(callback, { wait = true, passthrough = false } = {}) {
+        if (!is.function(callback)) {
+            throw new x.InvalidArgument("'callback' must be a function");
+        }
+        if (is.asyncFunction(callback)) {
+            if (wait) {
+                return this.throughAsync(async function (value) {
+                    await callback(value);
+                    if (passthrough) {
+                        this.push(value);
+                    }
+                }).resume();
+            }
+            return this.throughAsync(function (value) {
+                callback(value);
+                if (passthrough) {
+                    this.push(value);
+                }
+            }).resume();
+
+        }
+        return this.throughSync(function (value) {
+            callback(value);
+            if (passthrough) {
+                this.push(value);
+            }
+        }).resume();
+    }
+
+    @checkDestroyed
+    done(callback, { passthrough = false } = {}) {
+        if (!is.function(callback)) {
+            throw new x.InvalidArgument("'callback' must be a function");
+        }
+        if (passthrough) {
+            return this.throughSync(function (value) {
+                this.push(value);
+            }, () => {
+                callback();
+            }).resume();
+        }
+        return this.throughSync(noop, () => {
+            callback();
+        }).resume();
+    }
+
+    @checkDestroyed
+    toArray(callback, { passthrough = false } = {}) {
+        if (!is.function(callback)) {
+            throw new x.InvalidArgument("'callback' must be a function");
+        }
+        if (this._last.isEnded()) {
+            process.nextTick(callback, []);
+            return this;
+        }
+        const arr = [];
+        return this.throughSync(function (value) {
+            arr.push(value);
+            if (passthrough) {
+                this.push(value);
+            }
+        }, () => {
+            callback(arr);
+        }).resume();
+    }
+
+    @checkDestroyed
     unique(prop = null) {
         if (!is.null(prop) && !is.function(prop)) {
             throw new x.InvalidArgument("'prop' must be a function or null");
         }
         const cache = new Set();
-        return this.filter((x) => {
+        return this.throughSync(function (x) {
             const res = prop ? prop(x) : x;
             if (cache.has(res)) {
-                return false;
+                return;
             }
             cache.add(res);
-            return true;
-        }).done(() => cache.clear(), { current: true });
-    }
-
-    if(condition, trueStream = null, falseStream = null) {
-        if (!trueStream && !falseStream) {
-            throw new x.InvalidArgument("You must provide at least one stream");
-        }
-
-        let outputEnd = null;
-
-        const input = new EndingTransform({
-            transform: async (x) => {
-                const stream = await condition(x) ? trueStream : falseStream;
-                if (!stream) {
-                    input.push(x);
-                } else if (!stream.write(x)) {
-                    input.pause();
-                    stream.once("drain", () => input.resume());
-                }
-            },
-            flush: () => outputEnd
+            this.push(x);
+        }, () => {
+            cache.clear();
         });
-        input.once("ending", () => {
-            trueStream && trueStream.end();
-            falseStream && falseStream.end();
-        });
-
-        for (const stream of [trueStream, falseStream]) {
-            if (!stream) {
-                continue;
-            }
-            stream.on("data", (x) => {
-                if (!input.push(x)) {
-                    stream.pause();
-                    input.once("drain", () => stream.resume());
-                }
-            });
-            if (stream.paused) {
-                process.nextTick(() => stream.resume());
-            }
-        }
-
-        outputEnd = Promise.all([
-            trueStream && new Promise((resolve) => trueStream.once("end", resolve)),
-            falseStream && new Promise((resolve) => falseStream.once("end", resolve))
-        ]);
-
-        return this.pipe(input);
     }
 
     stash(name, filter) {
-        if (!this[sFilter]) {
-            this[sFilter] = new Filter(); // eslint-disable-line no-use-before-define
+        if (is.function(name)) {
+            [name, filter] = [undefined, name];
+        } else if (!is.function(filter)) {
+            throw new x.InvalidArgument("'filter' must be a function");
         }
-        return this.pipe(this[sFilter].stash(name, filter));
+
+        let stashes;
+        if (!this[STASHES]) {
+            stashes = this[STASHES] = {
+                named: new Map(),
+                unnamed: new collection.LinkedList()
+            };
+        } else {
+            stashes = this[STASHES];
+        }
+        const stashStream = new __.PassThrough();
+        if (name) {
+            stashes.named.set(name, stashStream);
+        } else {
+            stashes.unnamed.push(stashStream);
+        }
+        return this.throughSync(function (x) {
+            if (filter(x)) {
+                stashStream.push(x);
+            } else {
+                this.push(x);
+            }
+        });
     }
 
     unstash(name) {
-        if (!this[sFilter]) {
+        if (!this[STASHES]) {
             return this;
         }
-        const unstashed = this[sFilter].unstash(name);
-        if (is.null(unstashed)) {
-            return this;
+        const stashes = this[STASHES];
+        let stream;
+        if (!name) {
+            if (stashes.unnamed.empty) {
+                return this;
+            }
+            stream = stashes.unnamed.pop();
+        } else {
+            if (!stashes.named.has(name)) {
+                throw new x.Unknown(`unknown stash stream '${name}'`);
+            }
+            stream = stashes.named.get(name);
+            stashes.named.delete(name);
         }
-        return this.pipe(unstashed);
+        return this._throughTransform(stream);
     }
 
     flatten() {
@@ -354,7 +435,7 @@ export default class CoreStream extends adone.event.EventEmitter {
                 }
             }
         };
-        return this.through(function (data) {
+        return this.throughSync(function (data) {
             if (!is.array(data)) {
                 this.push(data);
                 return;
@@ -363,76 +444,103 @@ export default class CoreStream extends adone.event.EventEmitter {
         });
     }
 
-    // promise api
+    /**
+     * Creates a promise that will be fulfilled with an array of all the emitted values or the first occurred error.
+     *
+     */
     then(onResolve, onReject) {
         return new Promise((resolve, reject) => {
-            this.toArray(resolve).once("error", (err) => {
-                reject(err);
-                this.end({ force: true });
+            let err;
+            let arr;
+
+            this.once("end", () => {
+                err ? reject(err) : resolve(arr);
+            });
+
+            // we can have more than one error from streams (flushes, transforms)
+            this.on("error", (_err) => {
+                if (err) {
+                    // we have had an error, save the next one
+                    if (!err.consequent) {
+                        err.consequent = [_err];
+                    } else {
+                        err.consequent.push(_err);
+                    }
+                    return;
+                }
+                // the first error
+                err = _err;
+
+                // it does not matter whether we call it while transforming or flushing
+                this.destroy();
+            });
+
+            // gather all the emitted values
+            this.toArray((_arr) => {
+                arr = _arr;
             });
         }).then(onResolve, onReject);
     }
 
     catch(onReject) {
-        return this.then(null, onReject);
-    }
-}
-
-
-class Filter {
-    constructor() {
-        this.named = new Map();
-        this.unnamed = new collection.LinkedList();
+        return this.then(undefined, onReject);
     }
 
-    stash(name, filter) {
-        if (is.function(name)) {
-            [name, filter] = [null, name];
-        }
-        const stashStream = new Transform();
-        if (name) {
-            this.named.set(name, stashStream);
-        } else {
-            this.unnamed.push(stashStream);
-        }
-        return new Transform({
-            async transform(x) {
-                const stash = await filter(x);
-                if (stash) {
-                    if (!stashStream.push(x)) {
-                        this.pause();
-                    }
-                } else {
-                    this.push(x);
+    static merge(streams, { end = true, sourceOptions } = {}) {
+        const src = new this(null, sourceOptions);
+        streams = streams.filter((x) => {
+            return x && !x.isEnded();
+        });
+        let m = streams.length;
+        const onEnd = () => {
+            --m;
+            if (!end) {
+                return;
+            }
+            if (m === 0) {
+                if (end) {
+                    src.end();
+                }
+                src.removeListener("end", onSrcEnd); // eslint-disable-line no-use-before-define
+            }
+        };
+        const onData = (x) => {
+            src.write(x);
+        };
+        const onError = (err) => {
+            src.emit("error", err);
+        };
+        const onSrcEnd = () => {
+            if (m !== 0) {
+                for (const stream of streams) {
+                    stream.removeListener("data", onData);
+                    stream.removeListener("error", onError);
+                    stream.removeListener("end", onEnd);
                 }
             }
-        });
-    }
-
-    clear() {
-        this.unnamed.clear(true);
-        this.named.clear();
-    }
-
-    unstash(name = null) {
-        if (is.null(name)) {
-            const streams = [...this.unnamed.toArray(), ...this.named.values()];
-            if (!streams.length) {
-                return null;
-            }
-            this.clear();
-            return CoreStream.merge(streams, { end: false });
+        };
+        src.once("end", onSrcEnd);
+        for (const stream of streams) {
+            stream.once("end", onEnd);
+            stream.on("error", onError);
+            stream.on("data", onData);
+            stream.resume();
         }
-        if (!this.named.has(name)) {
-            return null;
-        }
-        const stream = this.named.get(name);
-        this.named.delete(name);
-        return stream;
+        return src;
     }
 }
 
-CoreStream.Filter = Filter;
-CoreStream.Transform = Transform;
-
 adone.tag.set(CoreStream, adone.tag.CORE_STREAM);
+
+/**
+ * Creates a CoreStream instance
+ */
+export default function core(source, options) {
+    return new CoreStream(source, options);
+}
+
+core.CoreStream = CoreStream;
+
+core.merge = CoreStream.merge;
+
+adone.definePrivate(__, core);

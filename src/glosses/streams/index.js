@@ -21,14 +21,6 @@ const stream = adone.lazify({
     shift: "./shift",
     through: "./through",
     replace: "./replace",
-    CoreStream: "./core"
+    core: "./core",
+    CoreStream: () => stream.core.CoreStream
 }, adone.asNamespace(exports), require);
-
-// must be a function, not an arrow function
-export const core = function (source, options) {
-    return new stream.CoreStream(source, options);
-};
-
-adone.lazify({
-    merge: () => stream.CoreStream.merge
-}, core);

@@ -1,253 +1,258 @@
-const {
-    is,
-    event: { EventEmitter },
-    x,
-    collection
-} = adone;
+const { collection, noop, x, is } = adone;
 
-export default class Transform extends EventEmitter {
-    constructor({ transform, flush, highWaterMark = 16 } = {}) {
-        super();
-        this._readableState = {
-            highWaterMark,
-            nullPushed: false,
-            flowing: false,
-            buffer: new collection.LinkedList()
-        };
+/**
+ * Represents an abstact transform stream
+ */
+export default class Transform {
+    /**
+     * @param {Function} transform function that's called for each next element
+     * @param {Function} flush function that's called when the stream ends, but before the onEnd handler
+     */
+    constructor(transform, flush) {
+        this._paused = true;
+        this._onNext = noop;
+        this._onEnd = noop;
+        this._onError = noop;
+        this._outgoingQueue = new collection.LinkedList();
+        this._processing = false;
+        this._transform = transform;
+        this._flush = flush;
 
-        this._writableState = {
-            highWaterMark,
-            needDrain: false,
-            buffer: new collection.LinkedList()
-        };
-
-        this._transformState = {
-            working: false
-        };
-
-        this.waitForDrain = false;
-        this.flushing = false;
-        this.flushed = false;
-        this.ending = false;
-        this.ended = false;
-        this.stopPushing = false;
-
-        if (transform) {
-            this._transform = transform;
-        }
-        if (flush) {
-            this._flush = flush;
-        }
+        this._ending = false;
+        this._flushing = false;
+        this._flushed = false;
+        this._ended = false;
+        this._resumeScheduled = false;
+        this._pausedAfterResume = false;
+        this._destroyed = false;
     }
 
-    _transform(chunk) {
-        this.push(chunk);
+    isPaused() {
+        return this._paused;
     }
 
-    _flush() {
-
+    isEnded() {
+        return this._ended;
     }
 
-    _afterTransform() {
-        if (
-            !this._writableState.buffer.empty &&
-            this._readableState.buffer.length < this._readableState.highWaterMark
-        ) {
-            this._process(this._writableState.buffer.shift());
-        } else {
-            this._transformState.working = false;
-            if (this.ending && this._readableState.buffer.empty) {
-                // if the readable buffer is empty then the writable buffer is empty too (the prev check)
-                this._end();
-            } else if (this._writableState.needDrain && this._writableState.buffer.empty) {
-                this._writableState.needDrain = false;
-                this.emit("drain");
-            }
-        }
-    }
-
-    _process(chunk) {
-        this._transformState.working = true;
-        try {
-            const ret = this._transform(chunk);
-            if (is.promise(ret)) {
-                ret
-                    .catch((err) => this.emit("error", err))
-                    .then(() => this._afterTransform());
-                return;
-            }
-        } catch (err) {
-            if (is.undefined(err._level)) {
-                err._level = 0;
-            } else {
-                ++err._level;
-                throw err;
-            }
-            this.emit("error", err);
-        }
-        this._afterTransform();
-    }
-
-    _end() {
-        if (!this.flushed) {
-            if (this.flushing) {
-                return;
-            }
-            this.flushing = true;
-            const ret = this._flush();
-            if (is.promise(ret)) {
-                ret.then(() => {
-                    this.flushed = true;
-                    if (this._readableState.buffer.empty) {
-                        this._end();
-                    }
-                });
-                return;
-            }
-            if (!this._readableState.buffer.empty) {
-                return;
-            }
-
-        }
-        this.ending = false;
-        this.ended = true;
-        this.emit("end");
-    }
-
-    write(chunk) {
-        if (this.ending || this.ended) {
-            throw new x.IllegalState("end() was called");
-        }
-        if (this._transformState.working || this._readableState.buffer.length >= this._readableState.highWaterMark) {
-            this._writableState.buffer.push(chunk);
-        } else {
-            this._process(chunk);
-        }
-        const t = this._writableState.buffer.length < this._writableState.highWaterMark;
-        if (!t) {
-            this._writableState.needDrain = true;
-        }
-        return t;
-    }
-
-    push(chunk) {
-        if (this._readableState.nullPushed || this.stopPushing) {
-            return false;
-        }
-        if (chunk === adone.null) {
-            this._readableState.nullPushed = true;
-            this.end();
-            return false;
-        }
-        if (this._readableState.flowing && this._readableState.buffer.empty) {
-            this.emit("data", chunk);
-        } else {
-            this._readableState.buffer.push(chunk);
-        }
-        return this._readableState.buffer.length < this._readableState.highWaterMark;
-    }
-
-    end({ force = false, clearReadable = false, clearWritable = false } = {}) {
-        if (clearReadable) {
-            this._readableState.buffer.clear();
-        }
-        if (clearWritable) {
-            this._writableState.buffer.clear();
-        }
-        if (this.ending) {
-            return this;
-        }
-        this.ending = true;
-        this.stopPushing = force;
-        if (!this._transformState.working && this._writableState.buffer.empty && this._readableState.buffer.empty) {
-            this._end();
-        }
+    /**
+     * Transform/flush functon pushes new elements, this handler is called on each of them
+     */
+    onNext(handler) {
+        this._onNext = handler;
         return this;
     }
 
-    pipe(dst, { end = true, resume = false } = {}) {
-        const src = this;
-
-        if (src.ended) {
-            if (end) {
-                process.nextTick(() => dst.end());
-            }
-            return dst;
-        }
-
-        let dstEnd = false;  // think it over
-        const onData = (x) => {
-            if (!dstEnd && !dst.write(x)) {
-                this.waitForDrain = true;
-                src.pause();
-            }
-        };
-
-        const onDrain = () => {
-            this.waitForDrain = false;
-            src.resume();
-        };
-
-        const onDstEnd = () => {
-            dstEnd = true;
-        };
-
-        src.on("data", onData);
-        dst.on("drain", onDrain);
-        if (dst === process.stdout || dst === process.stderr) {
-            end = false;
-        }
-        if (end) {
-            src.once("end", () => {
-                this.removeListener("data", onData);
-                dst.removeListener("drain", onDrain);
-                dst.removeListener("end", onDstEnd);
-                dst.end();
-            });
-        }
-        dst.once("end", onDstEnd);
-        if (resume && !src._readableState.flowing) {
-            process.nextTick(() => src.resume());
-        }
-        return dst;
+    /**
+     * When the stream has ended and flushed this handler is called
+     */
+    onEnd(handler) {
+        this._onEnd = handler;
+        return this;
     }
 
+    /**
+     * When error occures while flushing/transforming this handler is called
+     */
+    onError(handler) {
+        this._onError = handler;
+        return this;
+    }
+
+    /**
+     * Pauses the stream
+     */
     pause() {
-        this._readableState.flowing = false;
+        this._paused = true;
+        if (this._resumeScheduled) {
+            this._pausedAfterResume = true;
+        }
         return this;
     }
 
+    /**
+     * Resumes the stream and flushes the outgoing queue
+     */
     resume() {
-        if (this.ended || this._readableState.flowing || this.waitForDrain) {
+        if (!this.isPaused()) {
             return this;
         }
-        this._readableState.flowing = true;
-        while (this._readableState.flowing) {
-            if (this._readableState.buffer.empty) {
-                break;
+        if (this._resumeScheduled) {
+            if (this._pausedAfterResume) {
+                this._pausedAfterResume = false;
             }
-            this.emit("data", this._readableState.buffer.shift());
-            if (
-                !this._writableState.buffer.empty &&
-                !this._transformState.working &&
-                this._readableState.buffer.length < this._readableState.highWaterMark
-            ) {
-                this._process(this._writableState.buffer.shift());
+            return this;
+        }
+        this._resumeScheduled = true;
+        process.nextTick(() => {
+            this._resumeScheduled = false;
+            if (this._pausedAfterResume) {
+                this._pausedAfterResume = false;
+                return;
             }
+            while (!this._outgoingQueue.empty) {
+                this._onNext(this._outgoingQueue.shift());
+            }
+            this._paused = false;
+            this.maybeFlush();
+        });
+        return this;
+    }
+
+    /**
+     * Pushes a new element into stream.
+     * Pushed elements bypass the processing stage.
+     * Puts it into the outgoing queue if the stream is paused.
+     */
+    push(value) {
+        if (this._destroyed) { // destroyed streams do not emit elements
+            return true;
+        }
+        if (this.isPaused()) {
+            this._outgoingQueue.push(value);
+        } else {
+            this._onNext(value);
+        }
+    }
+
+    /**
+     * Writes a new value into the stream.
+     * Written elements immediately go to the processing stage.
+     */
+    write(value) {
+        if (this._ending) {
+            throw new x.IllegalState("Write after end");
+        }
+        if (this._destroyed) {
+            throw new x.IllegalState("destroyed");
+        }
+        this._process(value);
+        return true;
+    }
+
+    /**
+     * If end() was called, the processing is not active and there are no elements to emit(onNext)
+     * we can go to the final stage(end), call the flush function and finally end the stream.
+     * If the flushing fails, it emits onError and then onEnd.
+     * We must not stop ending, the completion of any further streams is a must
+     *
+     * Flushing always completes asynchronously, so flush will be called on the next tick
+     * and we will receive onEnd at least on the next tick
+     */
+    maybeFlush() {
+        if (!this._ending) {
+            return;
+        }
+        if (this._flushing) {
+            if (this._flushed) {
+                // flush pushed some elements, they have been emitted, end the stream
+                // it completes at least on the next tick
+                this._ended = true;
+                this._onEnd();
+            }
+            return;
         }
         if (
-            this.ending &&
-            !this._transformState.working &&
-            this._readableState.buffer.empty &&
-            this._writableState.buffer.empty
+            !this._processing
+            && this._outgoingQueue.empty
         ) {
-            this._end();
+            this._flushing = true;
+
+            const flush = () => {
+                if (!this._flush) {
+                    this._onEnd();
+                    this._ended = true;
+                    return;
+                }
+
+                if (is.asyncFunction(this._flush)) {
+                    this._flush().then(() => {
+                        this._flushed = true;
+                        if (this._outgoingQueue.empty) {
+                            this._ended = true;
+                            this._onEnd();
+                        }
+                        // flush pushed some elements and they have not been emitted,
+                        // the stream must be paused
+                    }, (err) => {
+                        this._flushed = true;
+                        err.flushing = true;
+                        this._onError(err);
+
+                        if (this._outgoingQueue.empty) {
+                            this._ended = true;
+                            this._onEnd();
+                        }
+                        // flush pushed some elements and they have not been emitted,
+                        // the stream must be paused
+                    });
+                } else {
+                    try {
+                        this._flush();
+                    } catch (err) {
+                        err.flushing = true;
+                        this._onError(err);
+                    }
+                    this._flushed = true;
+                    if (this._outgoingQueue.empty) {
+                        this._ended = true;
+                        this._onEnd();
+                    }
+                    // flush pushed some elements and they have not been emitted,
+                    // the stream must be paused
+                }
+            };
+
+            const _flush = () => {
+                if (this._resumeScheduled) {
+                    // schedule flush always after resume
+                    process.nextTick(_flush);
+                } else {
+                    flush();
+                }
+            };
+
+            process.nextTick(_flush);
+        }
+    }
+
+    /**
+     * Initiates the ending stage
+     */
+    end() {
+        if (!this._ending) {
+            this._ending = true;
+            this.maybeFlush();
         }
         return this;
     }
 
-    get paused() {
-        return this._readableState.flowing === false;
+    /**
+     * Destoyes the stream.
+     * Stream will not emit onNext event, will process no further elements.
+     * Initiates the ending stage. We must end all the streams, call all the flush functions,
+     * they can complete some cleaning actions, like closing descriptors etc.
+     */
+    destroy() {
+        if (this._destroyed) {
+            return this;
+        }
+        this._destroyed = true;
+        this.onNext(noop);
+        this._outgoingQueue.clear();
+        return this.end();
+    }
+
+    /**
+     * Pipes this transform stream to another transform stream
+     */
+    pipe(target) {
+        this.onNext((value) => {
+            target.write(value);
+        });
+        this.onEnd(() => {
+            target.end();
+        });
+        return target;
     }
 }
-adone.tag.set(Transform, adone.tag.TRANSFORM);

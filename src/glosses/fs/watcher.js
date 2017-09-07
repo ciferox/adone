@@ -1443,7 +1443,7 @@ export default class Watcher extends adone.event.EventEmitter {
                     directoryFilter: wh.filterDir,
                     depth: 0,
                     lstat: true
-                }).each((entry) => {
+                }).forEach((entry) => {
                     const item = entry.path;
                     let path = adone.std.path.join(directory, item);
                     current.push(item);
