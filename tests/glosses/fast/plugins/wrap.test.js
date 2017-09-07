@@ -1,14 +1,14 @@
 describe("fast", "transform", "wrap", () => {
     const { fast, stream } = adone;
-    const { File, Fast } = fast;
+    const { File, Stream } = fast;
 
     it("should pass an empty file as it is", async () => {
-        const [file] = await new Fast([new File({})]).wrap("");
+        const [file] = await new Stream([new File({})]).wrap("");
         expect(file.isNull()).to.be.true;
     });
 
     it("should produce expected file via buffer", async () => {
-        const [file] = await new Fast([new File({ contents: Buffer.from("foo") })]).wrap("<%= contents %>bar");
+        const [file] = await new Stream([new File({ contents: Buffer.from("foo") })]).wrap("<%= contents %>bar");
         expect(file.isBuffer()).to.be.true;
         expect(String(file.contents)).to.be.equal("foobar");
     });
@@ -16,7 +16,7 @@ describe("fast", "transform", "wrap", () => {
     it("should produce expected file via stream", async () => {
         const s = new adone.std.stream.PassThrough().pause();
         s.end(Buffer.from("b"));
-        const [file] = await new Fast([new File({ contents: s })]).wrap("a<%= contents %>c");
+        const [file] = await new Stream([new File({ contents: s })]).wrap("a<%= contents %>c");
         expect(file.isStream()).to.be.true;
         const data = await file.contents.pipe(stream.concat());
         expect(String(data)).to.be.equal("abc");
@@ -24,32 +24,32 @@ describe("fast", "transform", "wrap", () => {
 
     it("should error when no template is provided", () => {
         assert.throws(() => {
-            new Fast().wrap(null);
+            new Stream().wrap(null);
         });
     });
 
     it("should handle a template from a file", async () => {
         const file = await FS.createTempFile();
         await file.write("BEFORE <%= contents %> AFTER");
-        const [data] = await new Fast([new File({ contents: Buffer.from("Hello") })]).wrap({ src: file.path() });
+        const [data] = await new Stream([new File({ contents: Buffer.from("Hello") })]).wrap({ src: file.path() });
         expect(data.isBuffer()).to.be.true;
         expect(String(data.contents)).to.be.equal("BEFORE Hello AFTER");
     });
 
     it("should handle a template from a function", async () => {
-        const [file] = await new Fast([new File({ contents: Buffer.from("Hello") })]).wrap(() => "BEFORE <%= contents %> AFTER");
+        const [file] = await new Stream([new File({ contents: Buffer.from("Hello") })]).wrap(() => "BEFORE <%= contents %> AFTER");
         expect(file.isBuffer()).to.be.true;
         expect(String(file.contents)).to.be.equal("BEFORE Hello AFTER");
     });
 
     it("should fail when it cannot read the template file.", async () => {
         await assert.throws(async () => {
-            await new Fast([new File({ contents: Buffer.from("Hello") })]).wrap({ src: "something_that_doesnt_exist" });
+            await new Stream([new File({ contents: Buffer.from("Hello") })]).wrap({ src: "something_that_doesnt_exist" });
         });
     });
 
     it("should handle template data and options", async () => {
-        const [file] = await new Fast([new File({ contents: Buffer.from("Hello") })])
+        const [file] = await new Stream([new File({ contents: Buffer.from("Hello") })])
             .wrap(
                 "BEFORE <%= data.contents %> <%= data.someVar %> AFTER",
                 { someVar: "someVal" },
@@ -62,7 +62,7 @@ describe("fast", "transform", "wrap", () => {
     it("should allow for dynamic options", async () => {
         const srcFile = new File({ contents: Buffer.from("Hello") });
         srcFile.dataProp = "data";
-        const [file] = await new Fast([srcFile])
+        const [file] = await new Stream([srcFile])
             .wrap(
                 "BEFORE <%= data.contents %> <%= data.someVar %> AFTER",
                 { someVar: "someVal" },
@@ -77,7 +77,7 @@ describe("fast", "transform", "wrap", () => {
     it("should allow file props in the template data", async () => {
         const srcFile = new File({ contents: Buffer.from("Hello") });
         srcFile.someProp = "someValue";
-        const [file] = await new Fast([srcFile])
+        const [file] = await new Stream([srcFile])
             .wrap("Contents: [<%= contents %>] - File prop: [<%= file.someProp %>]");
         expect(file.isBuffer());
         expect(String(file.contents)).to.be.equal("Contents: [Hello] - File prop: [someValue]");
@@ -86,7 +86,7 @@ describe("fast", "transform", "wrap", () => {
     it("should make data props override file data", async () => {
         const srcFile = new File({ contents: Buffer.from("Hello") });
         srcFile.someProp = "bar";
-        const [file] = await new Fast([srcFile])
+        const [file] = await new Stream([srcFile])
             .wrap("<%= contents %> - <%= file.someProp %>", {
                 file: { someProp: "foo" }
             });
@@ -97,7 +97,7 @@ describe("fast", "transform", "wrap", () => {
     it("should allow for dynamic data", async () => {
         const srcFile = new File({ contents: Buffer.from("Hello") });
         srcFile.someProp = "bar";
-        const [file] = await new Fast([srcFile])
+        const [file] = await new Stream([srcFile])
             .wrap("<%= contents %> - <%= file.someProp %>", (file) => {
                 return {
                     file: { someProp: `foo-${file.someProp}` }
@@ -116,7 +116,7 @@ describe("fast", "transform", "wrap", () => {
 
         const expected = ["one  1", "two  2"];
 
-        const files = await new Fast([srcFile1, srcFile2])
+        const files = await new Stream([srcFile1, srcFile2])
             .wrap("<%= file.one %> <%= file.two %> <%= contents %>")
             .forEach((file) => {
                 expect(file.isBuffer()).to.be.ok;
@@ -128,7 +128,7 @@ describe("fast", "transform", "wrap", () => {
     it("should merge file.data property", async () => {
         const srcFile = new File({ contents: Buffer.from("Hello") });
         srcFile.data = { prop: "foo" };
-        const [file] = await new Fast([srcFile]).wrap("<%= contents %> <%= prop %>");
+        const [file] = await new Stream([srcFile]).wrap("<%= contents %> <%= prop %>");
         expect(file.isBuffer()).to.be.ok;
         expect(String(file.contents)).to.be.equal("Hello foo");
     });
@@ -138,7 +138,7 @@ describe("fast", "transform", "wrap", () => {
             path: "test/fixtures/hello.txt",
             contents: Buffer.from("Hello")
         });
-        const [file] = await new Fast([srcFile])
+        const [file] = await new Stream([srcFile])
             .wrap("<%= path.dirname(file.path) %>", {
                 file: { path: "a/b" }
             }, {
@@ -155,7 +155,7 @@ describe("fast", "transform", "wrap", () => {
             path: "data.json",
             contents: Buffer.from("{\"name\": \"foo\"}")
         });
-        const [file] = await new Fast([srcFile]).wrap("BEFORE <%= contents.name %> AFTER");
+        const [file] = await new Stream([srcFile]).wrap("BEFORE <%= contents.name %> AFTER");
         expect(file.isBuffer()).to.be.ok;
         expect(String(file.contents)).to.be.equal("BEFORE foo AFTER");
     });
@@ -165,7 +165,7 @@ describe("fast", "transform", "wrap", () => {
             path: "data.json5",
             contents: Buffer.from("{ name: Infinity }")
         });
-        const [file] = await new Fast([srcFile]).wrap("BEFORE <%= contents.name %> AFTER");
+        const [file] = await new Stream([srcFile]).wrap("BEFORE <%= contents.name %> AFTER");
         expect(file.isBuffer()).to.be.ok;
         expect(String(file.contents)).to.be.equal("BEFORE Infinity AFTER");
     });
@@ -175,14 +175,14 @@ describe("fast", "transform", "wrap", () => {
             path: "data.yml",
             contents: Buffer.from("name: foo")
         });
-        const [file] = await new Fast([srcFile]).wrap("<%= contents %>", null, { parse: false });
+        const [file] = await new Stream([srcFile]).wrap("<%= contents %>", null, { parse: false });
         expect(file.isBuffer()).to.be.ok;
         expect(String(file.contents)).to.be.equal("name: foo");
     });
 
     it("should throw exception object passed for template and no src property is set", () => {
         assert.throws(() => {
-            new Fast().wrap({});
+            new Stream().wrap({});
         }, "Expecting `src` option");
     });
 
@@ -192,7 +192,7 @@ describe("fast", "transform", "wrap", () => {
             contents: Buffer.from("This is an invalid JSON file.")
         });
         await assert.throws(async () => {
-            await new Fast([srcFile]).wrap("<%= contents %>");
+            await new Stream([srcFile]).wrap("<%= contents %>");
         }, "Error parsing: data.json");
     });
 
@@ -202,7 +202,7 @@ describe("fast", "transform", "wrap", () => {
             contents: Buffer.from("{\"name\": \"foo\"}")
         });
         await assert.throws(async () => {
-            await new Fast([srcFile]).wrap("<%= contents.does.not.exist %>");
+            await new Stream([srcFile]).wrap("<%= contents.does.not.exist %>");
         }, "Cannot read property 'not' of undefined");
     });
 

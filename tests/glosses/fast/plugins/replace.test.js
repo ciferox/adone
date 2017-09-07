@@ -1,6 +1,6 @@
 describe("fast", "transform", "replace", () => {
     const { fast } = adone;
-    const { File, Fast } = fast;
+    const { File, Stream } = fast;
 
     const fixture = "Hello old world!\nHello new world!\nHello kind world!\nHello cruel world!";
 
@@ -30,32 +30,32 @@ describe("fast", "transform", "replace", () => {
 
     describe("buffered input", () => {
         it("should replace string on a buffer", async () => {
-            const [newFile] = await new Fast([file]).replace("world", "person");
+            const [newFile] = await new Stream([file]).replace("world", "person");
             assert.equal(String(newFile.contents), expected.helloperson);
         });
 
         it("should replace regex on a buffer", async () => {
-            const [newFile] = await new Fast([file]).replace(/world/g, "person");
+            const [newFile] = await new Stream([file]).replace(/world/g, "person");
             assert.equal(String(newFile.contents), expected.helloperson);
         });
 
         it("should replace regex on a buffer with a function", async () => {
-            const [newFile] = await new Fast([file]).replace(/world/g, () => "person");
+            const [newFile] = await new Stream([file]).replace(/world/g, () => "person");
             assert.equal(String(newFile.contents), expected.helloperson);
         });
 
         it("should replace string on a buffer with a function", async () => {
-            const [newFile] = await new Fast([file]).replace("world", () => "person");
+            const [newFile] = await new Stream([file]).replace("world", () => "person");
             assert.equal(String(newFile.contents), expected.helloperson);
         });
 
         it("should call function once for each replacement when replacing a string on a buffer", async () => {
-            const [newFile] = await new Fast([file]).replace("world", () => replacements.shift());
+            const [newFile] = await new Stream([file]).replace("world", () => replacements.shift());
             assert.equal(String(newFile.contents), expected.hellofarm);
         });
 
         it("should call function once for each replacement when replacing a regex on a buffer", async () => {
-            const [newFile] = await new Fast([file]).replace(/world/g, () => replacements.shift());
+            const [newFile] = await new Stream([file]).replace(/world/g, () => replacements.shift());
             assert.equal(String(newFile.contents), expected.hellofarm);
         });
 
@@ -66,7 +66,7 @@ describe("fast", "transform", "replace", () => {
             const file2 = new File({
                 contents: Buffer.from("Hello, Yell!")
             });
-            const files = await new Fast([file1, file2]).replace({
+            const files = await new Stream([file1, file2]).replace({
                 World: "Person",
                 Yell: "Person"
             });
@@ -85,7 +85,7 @@ describe("fast", "transform", "replace", () => {
             });
 
             await assert.throws(async () => {
-                await new Fast([file]).replace("world", "person");
+                await new Stream([file]).replace("world", "person");
             });
         });
     });
@@ -93,23 +93,23 @@ describe("fast", "transform", "replace", () => {
     describe("multiple replacements", () => {
         it("should throw an error if first argument is array, but second aren't", () => {
             assert.throws(() => {
-                new Fast([file]).replacereplace(["world"], "person");
+                new Stream([file]).replacereplace(["world"], "person");
             });
         });
 
         it("should throw an error if lengths didn't match", () => {
             assert.throws(() => {
-                new Fast([file]).replace(["world"], ["person", "world"]);
+                new Stream([file]).replace(["world"], ["person", "world"]);
             });
         });
 
         it("should replace by arrays", async () => {
-            const [newFile] = await new Fast([file]).replace(["old", /world/g], ["dlo", () => replacements.shift()]);
+            const [newFile] = await new Stream([file]).replace(["old", /world/g], ["dlo", () => replacements.shift()]);
             assert.equal(String(newFile.contents), expected.multreplace);
         });
 
         it("should replace by objects", async () => {
-            const [newFile] = await new Fast([file]).replace({
+            const [newFile] = await new Stream([file]).replace({
                 old: "dlo",
                 world: "person"
             });
@@ -120,7 +120,7 @@ describe("fast", "transform", "replace", () => {
             const file = new File({
                 contents: Buffer.from("$$ $$a $$b")
             });
-            const [newFile] = await new Fast([file]).replace({
+            const [newFile] = await new Stream([file]).replace({
                 $$: "hello",
                 $$a: "world",
                 $$b: "!"
@@ -132,7 +132,7 @@ describe("fast", "transform", "replace", () => {
             const file = new File({
                 contents: Buffer.from("$$ a$$ b$$")
             });
-            const [newFile] = await new Fast([file]).replace({
+            const [newFile] = await new Stream([file]).replace({
                 $$: "hello",
                 a$$: "world",
                 b$$: "!"

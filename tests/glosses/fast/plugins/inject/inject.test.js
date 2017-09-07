@@ -1,6 +1,6 @@
 describe("fast", "transform", "inject", () => {
     const { fast, std: { fs, path } } = adone;
-    const { Fast, File } = fast;
+    const { Stream, File } = fast;
 
     const expectedFile = (file) => {
         const filepath = path.resolve(__dirname, "expected", file);
@@ -53,7 +53,7 @@ describe("fast", "transform", "inject", () => {
         });
     };
 
-    const src = (files, options = {}) => new Fast(files).map((file) => fixture(file, options.read));
+    const src = (files, options = {}) => new Stream(files).map((file) => fixture(file, options.read));
 
     it("should inject stylesheets, scripts, images, jsx and html components into desired file", (done) => {
         const target = src(["template.html"], { read: true });

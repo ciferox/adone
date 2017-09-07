@@ -159,7 +159,8 @@ class AdoneCLI extends application.Application {
 
             return 0;
         } catch (err) {
-            term.print(`{red-fg}${err.message}{/}`);
+            adone.log(err);
+            // term.print(`{red-fg}${err.message}{/}`);
             return 1;
         }
     }

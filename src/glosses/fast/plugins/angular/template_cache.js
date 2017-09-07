@@ -1,4 +1,4 @@
-const { fast: { Fast }, vendor, is, std: { path }, util } = adone;
+const { vendor, is, std: { path }, util } = adone;
 
 const TEMPLATE_HEADER = "angular.module('<%= module %>'<%= standalone %>).run(['$templateCache', function($templateCache) {";
 const TEMPLATE_BODY = "$templateCache.put('<%= url %>','<%= contents %>');";

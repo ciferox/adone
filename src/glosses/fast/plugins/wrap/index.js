@@ -81,5 +81,5 @@ export default function plugin() {
             }
             this.push(file);
         });
-    }
+    };
 }

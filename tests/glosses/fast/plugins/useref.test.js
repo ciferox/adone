@@ -1,6 +1,6 @@
 describe("fast", "transform", "useref", () => {
     const { fast, std: { path, fs } } = adone;
-    const { File, Fast } = fast;
+    const { File, Stream } = fast;
 
     const P = (p) => p.split("/").join(path.sep);
 
@@ -31,7 +31,7 @@ describe("fast", "transform", "useref", () => {
             contents: Buffer.from("wadup();")
         });
 
-        const files = await new Fast([fakeFile]).useref();
+        const files = await new Stream([fakeFile]).useref();
         expect(files).to.have.length(1);
         const [file] = files;
         expect(file.contents).to.be.ok;
@@ -46,7 +46,7 @@ describe("fast", "transform", "useref", () => {
             contents: fs.createReadStream(f.path())
         });
         await assert.throws(async () => {
-            await new Fast([file]).useref();
+            await new Stream([file]).useref();
         });
     });
 

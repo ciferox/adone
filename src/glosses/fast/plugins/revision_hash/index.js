@@ -1,4 +1,9 @@
-const { x, std: { crypto, path }, is, fast: { Fast, File } } = adone;
+const {
+    x,
+    std: { crypto, path },
+    is,
+    fast: { File }
+} = adone;
 
 const transformFilename = (file) => {
     file.revOrigPath = file.path;

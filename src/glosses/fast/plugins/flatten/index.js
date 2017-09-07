@@ -1,4 +1,4 @@
-const { is, std: { path }, fast: { Fast } } = adone;
+const { is, std: { path } } = adone;
 
 const includeParents = (dirs, options) => {
     let topLevels;

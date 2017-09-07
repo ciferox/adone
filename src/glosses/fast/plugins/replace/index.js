@@ -1,6 +1,6 @@
 export default function plugin() {
     return function replace(search, replacement) {
-        const { is, x, util, fast: { Fast } } = adone;
+        const { is, x, util } = adone;
 
         let replacePairs = [];
         if (is.array(search)) {

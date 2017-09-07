@@ -2,7 +2,7 @@ import generateFixtures from "./generate_fixtures";
 
 describe("fast", "transform", "sass", () => {
     const { std: { path, fs }, fast } = adone;
-    const { File, Fast } = fast;
+    const { File, Stream } = fast;
 
     let scssdir;
     let expectdir;
@@ -36,7 +36,7 @@ describe("fast", "transform", "sass", () => {
                 return true;
             }
         };
-        const [file] = await new Fast([emptyFile]).sass();
+        const [file] = await new Stream([emptyFile]).sass();
         expect(file).to.be.equal(emptyFile);
     });
 
@@ -50,13 +50,13 @@ describe("fast", "transform", "sass", () => {
             }
         };
         await assert.throws(async () => {
-            await new Fast([streamFile]).sass();
+            await new Stream([streamFile]).sass();
         });
     });
 
     it("should compile an empty sass file", async () => {
         const sassFile = createVinyl("empty.scss");
-        const [cssFile] = await new Fast([sassFile]).sass();
+        const [cssFile] = await new Stream([sassFile]).sass();
         expect(cssFile).to.be.ok;
         expect(cssFile.path).to.be.ok;
         expect(cssFile.relative).to.be.ok;
@@ -67,7 +67,7 @@ describe("fast", "transform", "sass", () => {
 
     it("should compile a single sass file", async () => {
         const sassFile = createVinyl("mixins.scss");
-        const [cssFile] = await new Fast([sassFile]).sass();
+        const [cssFile] = await new Stream([sassFile]).sass();
         expect(cssFile).to.be.ok;
         expect(cssFile.path).to.be.ok;
         expect(cssFile.relative).to.be.ok;
@@ -80,7 +80,7 @@ describe("fast", "transform", "sass", () => {
             createVinyl("mixins.scss"),
             createVinyl("variables.scss")
         ];
-        const cssFiles = await new Fast(files).sass();
+        const cssFiles = await new Stream(files).sass();
         expect(cssFiles).to.have.length(2);
 
         for (const cssFile of cssFiles) {
@@ -94,7 +94,7 @@ describe("fast", "transform", "sass", () => {
 
     it("should compile files with partials in another folder", async () => {
         const sassFile = createVinyl("inheritance.scss");
-        const [cssFile] = await new Fast([sassFile]).sass();
+        const [cssFile] = await new Stream([sassFile]).sass();
         expect(cssFile).to.be.ok;
         expect(cssFile.path).to.be.ok;
         expect(cssFile.relative).to.be.ok;
@@ -105,7 +105,7 @@ describe("fast", "transform", "sass", () => {
     it("should handle sass errors", async () => {
         const errorFile = createVinyl("error.scss");
         const err = await assert.throws(async () => {
-            await new Fast([errorFile]).sass();
+            await new Stream([errorFile]).sass();
         });
         // Error must include message body
         expect(err.message).to.match(/property \"font\" must be followed by a ':'/);
@@ -117,7 +117,7 @@ describe("fast", "transform", "sass", () => {
     it("should preserve the original sass error message", async () => {
         const errorFile = createVinyl("error.scss");
         const err = await assert.throws(async () => {
-            await new Fast([errorFile]).sass();
+            await new Stream([errorFile]).sass();
         });
         // Error must include original error message
         expect(err.message).to.match(/property \"font\" must be followed by a ':'/);
@@ -130,7 +130,7 @@ describe("fast", "transform", "sass", () => {
         // Transform file name
         sassFile.path = scssdir.getFile("mixin--changed.scss").path();
 
-        const [cssFile] = await new Fast([sassFile]).sass();
+        const [cssFile] = await new Stream([sassFile]).sass();
         expect(cssFile).to.be.ok;
         expect(cssFile.path).to.be.ok;
         expect(cssFile.path.split(path.sep).pop()).to.be.equal("mixin--changed.css");
@@ -145,7 +145,7 @@ describe("fast", "transform", "sass", () => {
         // Transform file name
         sassFile.contents = Buffer.from(`/* Added Dynamically */${sassFile.contents.toString()}`);
 
-        const [cssFile] = await new Fast([sassFile]).sass();
+        const [cssFile] = await new Stream([sassFile]).sass();
         expect(cssFile).to.be.ok;
         expect(cssFile.path).to.be.ok;
         expect(cssFile.relative).to.be.ok;
@@ -172,14 +172,14 @@ describe("fast", "transform", "sass", () => {
             "\"sourcesContent\": [ \"@import ../inheritance;\" ]" +
             "}";
 
-        const [cssFile] = await new Fast([sassFile]).sass();
+        const [cssFile] = await new Stream([sassFile]).sass();
         expect(cssFile.sourceMap).to.be.ok;
         expect(cssFile.sourceMap.sources).to.be.deep.equal(expectedSources);
     });
 
     it("should compile a single indented sass file", async () => {
         const sassFile = createVinyl("indent.sass");
-        const [cssFile] = await new Fast([sassFile]).sass();
+        const [cssFile] = await new Stream([sassFile]).sass();
         expect(cssFile).to.be.ok;
         expect(cssFile.path).to.be.ok;
         expect(cssFile.relative).to.be.ok;
@@ -193,7 +193,7 @@ describe("fast", "transform", "sass", () => {
             createVinyl("indent.sass")
         ];
 
-        const cssFiles = await new Fast(files).sass();
+        const cssFiles = await new Stream(files).sass();
         expect(cssFiles).to.have.length(2);
 
         for (const cssFile of cssFiles) {

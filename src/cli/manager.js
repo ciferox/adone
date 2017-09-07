@@ -73,6 +73,8 @@ export class InstallationManager {
             transpile: true
         });
 
+        adone.log(adoneConf);
+
         switch (adoneConf.project.type) {
             case "subsystem":
                 await this._installCliSubsystem(adoneConf, path, { symlink });

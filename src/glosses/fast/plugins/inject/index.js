@@ -7,7 +7,7 @@ const lazy = lazify({
     tags: "./tags"
 }, null, require);
 
-const { vendor, is, x, std: { path }, fast: { Fast }, text } = adone;
+const { vendor, is, x, std: { path }, text } = adone;
 
 
 const getLeadingWhitespace = (str) => str.match(/^\s*/)[0];

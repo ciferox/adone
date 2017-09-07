@@ -2,7 +2,7 @@ import generateFixtures from "./generate_fixtures";
 
 describe("fast", "transform", "angular", "fileSort", () => {
     const { std: { path, fs }, fast } = adone;
-    const { File, Fast } = fast;
+    const { File, Stream } = fast;
 
     let root;
 
@@ -37,7 +37,7 @@ describe("fast", "transform", "angular", "fileSort", () => {
             fixture("yet-another.js")
         ];
 
-        const resultFiles = await new Fast(files).angularFilesort().map((x) => x.relative);
+        const resultFiles = await new Stream(files).angularFilesort().map((x) => x.relative);
         expect(resultFiles.length).to.be.equal(7);
         expect(resultFiles.indexOf("module-controller.js")).to.be.above(resultFiles.indexOf("module.js"));
         expect(resultFiles.indexOf("yet-another.js")).to.be.above(resultFiles.indexOf("another.js"));
@@ -53,7 +53,7 @@ describe("fast", "transform", "angular", "fileSort", () => {
             fixture("circular2.js")
         ];
 
-        const resultFiles = await new Fast(files).angularFilesort().map((x) => x.relative);
+        const resultFiles = await new Stream(files).angularFilesort().map((x) => x.relative);
         expect(resultFiles.length).to.be.equal(5);
         expect(resultFiles.indexOf("module-controller.js")).to.be.above(resultFiles.indexOf("module.js"));
         expect(resultFiles.indexOf("module.js")).to.be.above(resultFiles.indexOf("circular.js"));
@@ -66,7 +66,7 @@ describe("fast", "transform", "angular", "fileSort", () => {
             fixture("circular.js")
         ];
 
-        const resultFiles = await new Fast(files).angularFilesort().map((x) => x.relative);
+        const resultFiles = await new Stream(files).angularFilesort().map((x) => x.relative);
         expect(resultFiles.length).to.be.equal(1);
         expect(resultFiles[0]).to.be.equal("circular.js");
     });
@@ -77,7 +77,7 @@ describe("fast", "transform", "angular", "fileSort", () => {
             fixture("circular3.js")
         ];
 
-        const resultFiles = await new Fast(files).angularFilesort().map((x) => x.relative);
+        const resultFiles = await new Stream(files).angularFilesort().map((x) => x.relative);
 
         expect(resultFiles.length).to.be.equal(2);
         expect(resultFiles).to.contain("circular2.js");
@@ -90,7 +90,7 @@ describe("fast", "transform", "angular", "fileSort", () => {
         ];
 
         await assert.throws(async () => {
-            await new Fast(files).angularFilesort();
+            await new Stream(files).angularFilesort();
         });
     });
 
@@ -99,7 +99,7 @@ describe("fast", "transform", "angular", "fileSort", () => {
             fixture("empty.js")
         ];
 
-        const resultFiles = await new Fast(files).angularFilesort().map((x) => x.relative);
+        const resultFiles = await new Stream(files).angularFilesort().map((x) => x.relative);
         expect(resultFiles).to.be.deep.equal(["empty.js"]);
     });
 

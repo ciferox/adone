@@ -2,7 +2,7 @@ import generateFixtures from "./generate_fixtures";
 
 describe("fast", "transform", "sourcemaps", "init", () => {
     const { std: { stream: { Readable } }, fast } = adone;
-    const { File, Fast } = fast;
+    const { File, Stream } = fast;
 
     let sourceContent;
     let sourceContentCSS;
@@ -62,13 +62,13 @@ describe("fast", "transform", "sourcemaps", "init", () => {
 
     it("should emit an error if file content is a stream", async () => {
         await assert.throws(async () => {
-            await new Fast([makeStreamFile()]).sourcemapsInit();
+            await new Stream([makeStreamFile()]).sourcemapsInit();
         });
     });
 
     it("should pass through when file is null", async () => {
         const file = new File();
-        const [data] = await new Fast([file]).sourcemapsInit();
+        const [data] = await new Stream([file]).sourcemapsInit();
         expect(data).to.be.ok;
         expect(data).to.be.instanceof(File);
         expect(data.sourceMap).not.to.be.ok;
@@ -76,7 +76,7 @@ describe("fast", "transform", "sourcemaps", "init", () => {
     });
 
     it("should add an empty source map", async () => {
-        const [data] = await new Fast([makeFile()]).sourcemapsInit();
+        const [data] = await new Stream([makeFile()]).sourcemapsInit();
         expect(data).to.be.ok;
         expect(data).to.be.ok;
         expect(data instanceof File).to.be.ok;
@@ -89,7 +89,7 @@ describe("fast", "transform", "sourcemaps", "init", () => {
     });
 
     it("should add a valid source map if wished", async () => {
-        const [data] = await new Fast([makeFile()]).sourcemapsInit({ identityMap: true });
+        const [data] = await new Stream([makeFile()]).sourcemapsInit({ identityMap: true });
         expect(data).to.be.ok;
         expect(data instanceof File).to.be.ok;
         expect(data.sourceMap).to.be.ok;
@@ -120,7 +120,7 @@ describe("fast", "transform", "sourcemaps", "init", () => {
     });
 
     it("should import an existing inline source map", async () => {
-        const [data] = await new Fast([makeFileWithInlineSourceMap()]).sourcemapsInit({ loadMaps: true });
+        const [data] = await new Stream([makeFileWithInlineSourceMap()]).sourcemapsInit({ loadMaps: true });
         expect(data).to.be.ok;
         expect(data instanceof File).to.be.ok;
         expect(data.sourceMap).to.be.ok;
@@ -138,7 +138,7 @@ describe("fast", "transform", "sourcemaps", "init", () => {
     it("should load external source map file referenced in comment with the //# syntax", async () => {
         const file = makeFile();
         file.contents = Buffer.from(`${sourceContent}\n//# ${"sourceMappingURL"}=helloworld2.js.map`);
-        const [data] = await new Fast([file]).sourcemapsInit({ loadMaps: true });
+        const [data] = await new Stream([file]).sourcemapsInit({ loadMaps: true });
         expect(data.sourceMap).to.be.ok;
         expect(String(data.sourceMap.version)).to.be.equal("3");
         expect(data.sourceMap.sources).to.be.deep.equal(["helloworld2.js"]);
@@ -150,7 +150,7 @@ describe("fast", "transform", "sourcemaps", "init", () => {
         const file = makeFile();
         file.contents = Buffer.from(`${sourceContent}\n//# ${"sourceMappingURL"}=helloworld2.js.map`);
 
-        const [data] = await new Fast([file]).sourcemapsInit({ loadMaps: true });
+        const [data] = await new Stream([file]).sourcemapsInit({ loadMaps: true });
         expect(/sourceMappingURL/.test(data.contents.toString())).to.be.false;
     });
 
@@ -158,7 +158,7 @@ describe("fast", "transform", "sourcemaps", "init", () => {
         const file = makeFile();
         file.contents = Buffer.from(`${sourceContent}\n/*# ${"sourceMappingURL"}=helloworld2.js.map */`);
 
-        const [data] = await new Fast([file]).sourcemapsInit({ loadMaps: true });
+        const [data] = await new Stream([file]).sourcemapsInit({ loadMaps: true });
         expect(data.sourceMap).to.be.ok;
         expect(String(data.sourceMap.version)).to.be.equal("3");
         expect(data.sourceMap.sources).to.be.deep.equal(["helloworld2.js"]);
@@ -170,7 +170,7 @@ describe("fast", "transform", "sourcemaps", "init", () => {
         const file = makeFile();
         file.contents = Buffer.from(`${sourceContent}\n/*# ${"sourceMappingURL"}=helloworld2.js.map */`);
 
-        const [data] = await new Fast([file]).sourcemapsInit({ loadMaps: true });
+        const [data] = await new Stream([file]).sourcemapsInit({ loadMaps: true });
         expect(/sourceMappingURL/.test(data.contents.toString())).to.be.false;
     });
 
@@ -178,7 +178,7 @@ describe("fast", "transform", "sourcemaps", "init", () => {
         const file = makeFile();
         file.path = file.path.replace("helloworld.js", "helloworld2.js");
 
-        const [data] = await new Fast([file]).sourcemapsInit({ loadMaps: true });
+        const [data] = await new Stream([file]).sourcemapsInit({ loadMaps: true });
         expect(data.sourceMap).to.be.ok;
         expect(String(data.sourceMap.version)).to.be.equal("3");
         expect(data.sourceMap.sources).to.be.deep.equal(["helloworld2.js"]);
@@ -190,7 +190,7 @@ describe("fast", "transform", "sourcemaps", "init", () => {
         const file = makeFile();
         file.contents = Buffer.from(`${sourceContent}\n//# ${"sourceMappingURL"}=helloworld3.js.map`);
 
-        const [data] = await new Fast([file]).sourcemapsInit({ loadMaps: true });
+        const [data] = await new Stream([file]).sourcemapsInit({ loadMaps: true });
         expect(data.sourceMap).to.be.ok;
         expect(String(data.sourceMap.version)).to.be.equal("3");
         expect(data.sourceMap.sources).to.be.deep.equal([
@@ -206,7 +206,7 @@ describe("fast", "transform", "sourcemaps", "init", () => {
         const file = makeFile();
         file.contents = Buffer.from(`${sourceContent}\n//# ${"sourceMappingURL"}=helloworld4.js.map`);
 
-        const [data] = await new Fast([file]).sourcemapsInit({ loadMaps: true });
+        const [data] = await new Stream([file]).sourcemapsInit({ loadMaps: true });
         expect(data.sourceMap).to.be.ok;
         expect(String(data.sourceMap.version)).to.be.equal("3");
         expect(data.sourceMap.sources).to.be.deep.equal([
@@ -223,7 +223,7 @@ describe("fast", "transform", "sourcemaps", "init", () => {
         const file = makeFile();
         file.base = file.cwd;
 
-        const [data] = await new Fast([file]).sourcemapsInit();
+        const [data] = await new Stream([file]).sourcemapsInit();
         expect(data.sourceMap.file).to.be.equal("from/helloworld.js");
         expect(data.sourceMap.sources).to.be.deep.equal(["from/helloworld.js"]);
     });
@@ -232,7 +232,7 @@ describe("fast", "transform", "sourcemaps", "init", () => {
         const file = makeFile();
         file.contents = Buffer.from(`${sourceContent}\n//# ${"sourceMappingURL"}=helloworld5.js.map`);
 
-        const [data] = await new Fast([file]).sourcemapsInit({ loadMaps: true });
+        const [data] = await new Stream([file]).sourcemapsInit({ loadMaps: true });
         expect(data.sourceMap).to.be.ok;
         expect(String(data.sourceMap.version)).to.be.equal("3");
         expect(data.sourceMap.sources).to.be.deep.equal([
@@ -249,7 +249,7 @@ describe("fast", "transform", "sourcemaps", "init", () => {
         const file = makeFile();
         file.contents = Buffer.from(`${sourceContent}\n//# ${"sourceMappingURL"}=helloworld6.js.map`);
 
-        const [data] = await new Fast([file]).sourcemapsInit({ loadMaps: true });
+        const [data] = await new Stream([file]).sourcemapsInit({ loadMaps: true });
         expect(data.sourceMap).to.be.ok;
         expect(String(data.sourceMap.version)).to.be.equal("3");
         expect(data.sourceMap.sources).to.be.deep.equal([
@@ -270,7 +270,7 @@ describe("fast", "transform", "sourcemaps", "init", () => {
 
         const file = makeFile();
         file.sourceMap = sourceMap;
-        const [data] = await new Fast([file]).sourcemapsInit({ loadMaps: true });
+        const [data] = await new Stream([file]).sourcemapsInit({ loadMaps: true });
         expect(data).to.be.ok;
         expect(data instanceof File).to.be.ok;
         expect(data.sourceMap).to.be.equal(sourceMap);
@@ -278,7 +278,7 @@ describe("fast", "transform", "sourcemaps", "init", () => {
     });
 
     it("handle null contents", async () => {
-        const [data] = await new Fast([makeNullFile()]).sourcemapsInit({ addComment: true });
+        const [data] = await new Stream([makeNullFile()]).sourcemapsInit({ addComment: true });
         expect(data).to.be.ok;
         expect(data instanceof File).to.be.ok;
         expect(data.sourceMap).to.be.ok;

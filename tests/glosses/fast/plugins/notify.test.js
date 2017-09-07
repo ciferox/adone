@@ -1,8 +1,8 @@
 describe("fast", "transform", "notify", () => {
     const { fast } = adone;
-    const { Fast, File } = fast;
+    const { Stream, File } = fast;
 
-    const plugin = fast.getPlugin("notify");
+    const plugin = fast.plugin.notify;
 
     const mockGenerator = (tester) => {
         tester = tester || function () { };
@@ -51,7 +51,7 @@ describe("fast", "transform", "notify", () => {
 
         const expectedFile = getFile("1.txt");
 
-        new Fast([expectedFile]).notify({
+        new Stream([expectedFile]).notify({
             message: testString,
             icon: expectedIcon,
             notifier: mockGenerator((opts) => {
@@ -112,7 +112,7 @@ describe("fast", "transform", "notify", () => {
         const testString = "some exception";
         const expectedFile = getFile("1.txt");
 
-        await new Fast([expectedFile]).notify({
+        await new Stream([expectedFile]).notify({
             message: testString,
             notifier() {
                 throw new Error(testString);
@@ -202,7 +202,7 @@ describe("fast", "transform", "notify", () => {
             expect(String(opts.message)).to.be.equal(testString);
         });
 
-        const [file] = await new Fast([expectedFile]).notify({
+        const [file] = await new Stream([expectedFile]).notify({
             message: testString,
             notifier: mockGenerator(onNotify)
         });
@@ -229,7 +229,7 @@ describe("fast", "transform", "notify", () => {
             expect(String(opts.title)).to.be.equal(expectedString);
         });
 
-        const [file] = await new Fast([expectedFile]).notify({
+        const [file] = await new Stream([expectedFile]).notify({
             message: testString,
             title: testString,
             notifier: mockGenerator(onNotify)

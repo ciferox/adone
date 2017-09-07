@@ -1,15 +1,13 @@
 describe("fast", "transform", "chmod", () => {
     const { fast } = adone;
-    const { File, Fast } = fast;
+    const { File, Stream } = fast;
 
     it("should throw if invalid argument type", () => {
-        expect(() => {
-            new Fast().chmod("bad argument");
-        }).to.throw(/Expected mode to be/);
+        expect(() => new Stream().chmod("bad argument")).to.throw(/Expected mode to be/);
     });
 
     it("should chmod files using a number", async () => {
-        const [file] = await new Fast([
+        const [file] = await new Stream([
             new File({
                 stat: {
                     mode: 0o100644
@@ -21,7 +19,7 @@ describe("fast", "transform", "chmod", () => {
     });
 
     it("should chmod files using an object", async () => {
-        const [file] = await new Fast([
+        const [file] = await new Stream([
             new File({
                 stat: {
                     mode: 0o100644
@@ -46,7 +44,7 @@ describe("fast", "transform", "chmod", () => {
     });
 
     it("should chmod files using a simple object", async () => {
-        const [file] = await new Fast([
+        const [file] = await new Stream([
             new File({
                 stat: {
                     mode: 0o100644
@@ -61,7 +59,7 @@ describe("fast", "transform", "chmod", () => {
     });
 
     it("should not change folder permissions without a dirMode value", async () => {
-        const [file] = await new Fast([
+        const [file] = await new Stream([
             new File({
                 stat: {
                     mode: 0o100644,
@@ -73,7 +71,7 @@ describe("fast", "transform", "chmod", () => {
     });
 
     it("should use mode for directories when dirMode set to true", async () => {
-        const [file] = await new Fast([
+        const [file] = await new Stream([
             new File({
                 stat: {
                     mode: 0o100644,
@@ -86,12 +84,12 @@ describe("fast", "transform", "chmod", () => {
 
     it("should throw if invalid argument type", () => {
         expect(() => {
-            new Fast().chmod(null, "bad argument");
+            new Stream().chmod(null, "bad argument");
         }).to.throw(/Expected dirMode to be/);
     });
 
     it("should chmod directories using a number", async () => {
-        const [file] = await new Fast([
+        const [file] = await new Stream([
             new File({
                 stat: {
                     mode: 0o100644,
@@ -104,7 +102,7 @@ describe("fast", "transform", "chmod", () => {
     });
 
     it("should chmod directories using an object", async () => {
-        const [file] = await new Fast([
+        const [file] = await new Stream([
             new File({
                 stat: {
                     mode: 0o100644,
@@ -129,7 +127,7 @@ describe("fast", "transform", "chmod", () => {
     });
 
     it("should handle no stat object", async () => {
-        const [file] = await new Fast([
+        const [file] = await new Stream([
             new File({
                 contents: adone.emptyBuffer
             })
@@ -139,7 +137,7 @@ describe("fast", "transform", "chmod", () => {
     });
 
     it("should use defaultMode if no mode on state object", async () => {
-        const [file] = await new Fast([
+        const [file] = await new Stream([
             new File({
                 stat: {},
                 contents: adone.emptyBuffer
@@ -151,7 +149,7 @@ describe("fast", "transform", "chmod", () => {
     it("should handle different values for mode and dirMode", async () => {
         let checkedDir = false;
         let checkedFile = false;
-        await new Fast([
+        await new Stream([
             new File({
                 contents: adone.emptyBuffer
             }),

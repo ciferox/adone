@@ -2,9 +2,9 @@ import generateFixtures from "./generate_fixtures";
 
 describe("fast", "transform", "sourcemaps", "write", () => {
     const { fast, std: { stream: { Readable } } } = adone;
-    const { File, Fast } = fast;
+    const { File, Stream } = fast;
 
-    const plugin = Fast.getPlugin("sourcemapsWrite");
+    const plugin = fast.plugin.sourcemapsWrite;
     const { __: { util } } = plugin;
 
     let sourceContent;
@@ -90,7 +90,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
 
     it("should pass through when file is null", async () => {
         const file = new File();
-        const [data] = await new Fast([file]).sourcemapsWrite();
+        const [data] = await new Stream([file]).sourcemapsWrite();
         expect(data).to.be.ok;
         expect(data instanceof File).to.be.ok;
         expect(data).to.be.deep.equal(file);
@@ -100,7 +100,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
     it("should pass through when file has no source map", async () => {
         const file = makeFile();
         delete file.sourceMap;
-        const [data] = await new Fast([file]).sourcemapsWrite();
+        const [data] = await new Stream([file]).sourcemapsWrite();
         expect(data).to.be.ok;
         expect(data instanceof File).to.be.ok;
         expect(data).to.be.deep.equal(file);
@@ -109,13 +109,13 @@ describe("fast", "transform", "sourcemaps", "write", () => {
 
     it("should emit an error if file content is a stream", async () => {
         await assert.throws(async () => {
-            await new Fast([makeStreamFile()]).sourcemapsWrite();
+            await new Stream([makeStreamFile()]).sourcemapsWrite();
         });
     });
 
     it("should write an inline source map", async () => {
         const file = makeFile();
-        const [data] = await new Fast([file]).sourcemapsWrite();
+        const [data] = await new Stream([file]).sourcemapsWrite();
         expect(data).to.be.ok;
         expect(data instanceof File).to.be.ok;
         expect(data).to.be.deep.equal(file);
@@ -145,7 +145,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
     it("hould detect whether a file uses \\n or \\r\\n and follow the existing style", async () => {
         const file = makeFile();
         file.contents = Buffer.from(file.contents.toString().replace(/\n/g, "\r\n"));
-        const [data] = await new Fast([file]).sourcemapsWrite();
+        const [data] = await new Stream([file]).sourcemapsWrite();
         expect(data).to.be.ok;
         expect(String(data.contents)).to.be.equal(`${sourceContent.replace(/\n/g, "\r\n")}\r\n//# ${"sourceMappingURL"}=${base64JSON(data.sourceMap)}\r\n`, "should add source map as comment");
     });
@@ -153,7 +153,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
     it("preExisting", async () => {
         const file = makeMappedFile();
         file.contents = Buffer.from(adone.sourcemap.convert.removeComments(file.contents.toString()).trim());
-        const [data] = await new Fast([file]).sourcemapsWrite({ preExisting: true });
+        const [data] = await new Stream([file]).sourcemapsWrite({ preExisting: true });
         expect(data).to.be.ok;
         expect(Boolean(data.sourceMap.preExisting)).to.be.ok;
         expect(String(data.contents)).to.be.equal(`${sourceContent}\n//# ${"sourceMappingURL"}=${base64JSON(data.sourceMap)}\n`);
@@ -161,7 +161,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
 
     it("should write external map files", async () => {
         const file = makeFile();
-        const outFiles = await new Fast([file]).sourcemapsWrite("../maps", { destPath: "dist" });
+        const outFiles = await new Stream([file]).sourcemapsWrite("../maps", { destPath: "dist" });
         let sourceMap;
         outFiles.reverse().map((data) => {
             if (data.path === fromdir.getFile("helloworld.js").path()) {
@@ -188,7 +188,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
 
     it("should keep original file history", async () => {
         const file = makeFile();
-        const outFiles = await new Fast([file]).sourcemapsWrite("../maps", { destPath: "dist" });
+        const outFiles = await new Stream([file]).sourcemapsWrite("../maps", { destPath: "dist" });
         expect(outFiles).to.have.length(2);
         outFiles.reverse().map((data) => {
             if (data.path === root.getFile("maps", "helloworld.js.map").path()) {
@@ -200,7 +200,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
 
     it("should allow to rename map file", async () => {
         const file = makeFile();
-        const outFiles = await new Fast([file]).sourcemapsWrite("../maps", {
+        const outFiles = await new Stream([file]).sourcemapsWrite("../maps", {
             mapFile: (mapFile) => mapFile.replace(".js.map", ".map"),
             destPath: "dist"
         });
@@ -224,7 +224,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
 
     it("should create shortest path to map in file comment", async () => {
         const file = makeNestedFile();
-        const outFiles = await new Fast([file]).sourcemapsWrite("dir1/maps");
+        const outFiles = await new Stream([file]).sourcemapsWrite("dir1/maps");
         expect(outFiles).to.have.length(2);
         outFiles.reverse().map((data) => {
             if (data.path === fromdir.getFile("dir1", "dir2", "helloworld.js").path()) {
@@ -236,20 +236,20 @@ describe("fast", "transform", "sourcemaps", "write", () => {
 
     it("should write no comment with option addComment=false", async () => {
         const file = makeFile();
-        const [data] = await new Fast([file]).sourcemapsWrite({ addComment: false });
+        const [data] = await new Stream([file]).sourcemapsWrite({ addComment: false });
         expect(String(data.contents)).to.be.equal(sourceContent);
     });
 
     it("should not include source content with option includeContent=false", async () => {
         const file = makeFile();
-        const [data] = await new Fast([file]).sourcemapsWrite({ includeContent: false });
+        const [data] = await new Stream([file]).sourcemapsWrite({ includeContent: false });
         expect(data.sourceMap.sourcesContent).to.be.equal(undefined);
     });
 
     it("should fetch missing sourceContent", async () => {
         const file = makeFile();
         delete file.sourceMap.sourcesContent;
-        const [data] = await new Fast([file]).sourcemapsWrite();
+        const [data] = await new Stream([file]).sourcemapsWrite();
         expect(data.sourceMap.sourcesContent).not.to.be.equal(undefined);
         expect(data.sourceMap.sourcesContent).to.be.deep.equal([sourceContent]);
     });
@@ -258,7 +258,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
         const file = makeFile();
         file.sourceMap.sources[0] += ".invalid";
         delete file.sourceMap.sourcesContent;
-        const [data] = await new Fast([file]).sourcemapsWrite();
+        const [data] = await new Stream([file]).sourcemapsWrite();
         expect(data.sourceMap.sourcesContent).not.to.be.equal(undefined);
         expect(data.sourceMap.sourcesContent).to.be.deep.equal([]);
     });
@@ -267,27 +267,27 @@ describe("fast", "transform", "sourcemaps", "write", () => {
         const file = makeFile();
         file.sourceMap.sources[0] += ".invalid";
         delete file.sourceMap.sourcesContent;
-        const [data] = await new Fast([file]).sourcemapsWrite();
+        const [data] = await new Stream([file]).sourcemapsWrite();
         expect(data.sourceMap.sourcesContent).not.to.be.undefined;
         expect(data.sourceMap.sourcesContent).to.be.empty;
     });
 
     it("should set the sourceRoot by option sourceRoot", async () => {
         const file = makeFile();
-        const [data] = await new Fast([file]).sourcemapsWrite({ sourceRoot: "/testSourceRoot" });
+        const [data] = await new Stream([file]).sourcemapsWrite({ sourceRoot: "/testSourceRoot" });
         expect(data.sourceMap.sourceRoot).to.be.equal("/testSourceRoot");
     });
 
     it("should set the mapSourcesAbsolute by option mapSourcesAbsolute", async () => {
         const file = makeFile();
-        const [data] = await new Fast([file]).sourcemapsWrite({ sourceRoot: "/testSourceRoot", mapSourcesAbsolute: true });
+        const [data] = await new Stream([file]).sourcemapsWrite({ sourceRoot: "/testSourceRoot", mapSourcesAbsolute: true });
         expect(data.sourceMap.sources).to.be.deep.equal(["/from/helloworld.js"]);
         expect(data.sourceMap.sourceRoot).to.be.equal("/testSourceRoot");
     });
 
     it("should set the sourceRoot by option sourceRoot, as a function", async () => {
         const file = makeFile();
-        const [data] = await new Fast([file]).sourcemapsWrite({
+        const [data] = await new Stream([file]).sourcemapsWrite({
             sourceRoot: () => "/testSourceRoot"
         });
         expect(data.sourceMap.sourceRoot).to.be.equal("/testSourceRoot");
@@ -295,7 +295,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
 
     it("should automatically determine sourceRoot if destPath is set", async () => {
         const file = makeNestedFile();
-        const outFiles = await new Fast([file]).sourcemapsWrite(".", {
+        const outFiles = await new Stream([file]).sourcemapsWrite(".", {
             destPath: "dist",
             includeContent: false
         });
@@ -313,7 +313,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
 
     it("should interpret relative path in sourceRoot as relative to destination", async () => {
         const file = makeNestedFile();
-        const outFiles = await new Fast([file]).sourcemapsWrite(".", { sourceRoot: "../src" });
+        const outFiles = await new Stream([file]).sourcemapsWrite(".", { sourceRoot: "../src" });
         expect(outFiles).to.have.length(2);
         outFiles.reverse().map((data) => {
             if (data.path === root.getFile("from", "dir1", "dir2", "helloworld.js").path()) {
@@ -328,7 +328,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
 
     it("should interpret relative path in sourceRoot as relative to destination (part 2)", async () => {
         const file = makeNestedFile();
-        const outFiles = await new Fast([file]).sourcemapsWrite(".", { sourceRoot: "" });
+        const outFiles = await new Stream([file]).sourcemapsWrite(".", { sourceRoot: "" });
         expect(outFiles).to.have.length(2);
         outFiles.reverse().map((data) => {
             if (data.path === root.getFile("from", "dir1", "dir2", "helloworld.js").path()) {
@@ -343,7 +343,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
 
     it("should interpret relative path in sourceRoot as relative to destination (part 3)", async () => {
         const file = makeNestedFile();
-        const outFiles = await new Fast([file]).sourcemapsWrite("maps", { sourceRoot: "../src" });
+        const outFiles = await new Stream([file]).sourcemapsWrite("maps", { sourceRoot: "../src" });
         expect(outFiles).to.have.length(2);
         outFiles.reverse().map((data) => {
             if (data.path === root.getFile("from", "dir1", "dir2", "helloworld.js").path()) {
@@ -358,7 +358,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
 
     it("should interpret relative path in sourceRoot as relative to destination (part 4)", async () => {
         const file = makeNestedFile();
-        const outFiles = await new Fast([file]).sourcemapsWrite("../maps", {
+        const outFiles = await new Stream([file]).sourcemapsWrite("../maps", {
             sourceRoot: "../src",
             destPath: "dist"
         });
@@ -376,7 +376,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
 
     it("should accept a sourceMappingURLPrefix", async () => {
         const file = makeFile();
-        const [data] = await new Fast([file])
+        const [data] = await new Stream([file])
             .sourcemapsWrite("../maps", { sourceMappingURLPrefix: "https://asset-host.example.com" })
             .filter((file) => /helloworld\.js$/.test(file.path));
         expect(String(data.contents).match(/sourceMappingURL.*\n$/)[0]).to.be.equal("sourceMappingURL=https://asset-host.example.com/maps/helloworld.js.map\n");
@@ -384,7 +384,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
 
     it("should accept a sourceMappingURLPrefix, as a function", async () => {
         const file = makeFile();
-        const [data] = await new Fast([file]).sourcemapsWrite("../maps", {
+        const [data] = await new Stream([file]).sourcemapsWrite("../maps", {
             sourceMappingURLPrefix: () => "https://asset-host.example.com"
         }).filter((data) => /helloworld\.js$/.test(data.path));
         expect(String(data.contents).match(/sourceMappingURL.*\n$/)[0]).to.be.equal("sourceMappingURL=https://asset-host.example.com/maps/helloworld.js.map\n");
@@ -392,7 +392,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
 
     it("should invoke sourceMappingURLPrefix every time", (done) => {
         let times = 0;
-        const pipeline = new Fast().sourcemapsWrite("../maps", {
+        const pipeline = new Stream().sourcemapsWrite("../maps", {
             sourceMappingURLPrefix() {
                 ++times;
                 return `https://asset-host.example.com/${times}`;
@@ -413,13 +413,13 @@ describe("fast", "transform", "sourcemaps", "write", () => {
 
     it("null as sourceRoot should not set the sourceRoot", async () => {
         const file = makeFile();
-        const [data] = await new Fast([file]).sourcemapsWrite({ sourceRoot: null });
+        const [data] = await new Stream([file]).sourcemapsWrite({ sourceRoot: null });
         expect(data.sourceMap.sourceRoot).to.be.equal(undefined);
     });
 
     it("function returning null as sourceRoot should not set the sourceRoot", async () => {
         const file = makeFile();
-        const [data] = await new Fast([file]).sourcemapsWrite({
+        const [data] = await new Stream([file]).sourcemapsWrite({
             sourceRoot: () => null
         });
         expect(data.sourceMap.sourceRoot).to.be.equal(undefined);
@@ -427,13 +427,13 @@ describe("fast", "transform", "sourcemaps", "write", () => {
 
     it("empty string as sourceRoot should be kept", async () => {
         const file = makeFile();
-        const [data] = await new Fast([file]).sourcemapsWrite({ sourceRoot: "" });
+        const [data] = await new Stream([file]).sourcemapsWrite({ sourceRoot: "" });
         expect(data.sourceMap.sourceRoot).to.be.equal("");
     });
 
     it("should be able to fully control sourceMappingURL by the option sourceMappingURL", async () => {
         const file = makeNestedFile();
-        const [data] = await new Fast([file]).sourcemapsWrite("../aaa/bbb/", {
+        const [data] = await new Stream([file]).sourcemapsWrite("../aaa/bbb/", {
             sourceMappingURL: (file) => `http://maps.example.com/${file.relative.replace(/\\/g, "/")}.map`
         }).filter((data) => /helloworld\.js$/.test(data.path));
         expect(String(data.contents)).to.be.equal(`${sourceContent}\n//# ${"sourceMappingURL"}=http://maps.example.com/dir1/dir2/helloworld.js.map\n`);
@@ -441,7 +441,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
 
     it("should allow to change sources", async () => {
         const file = makeFile();
-        const [data] = await new Fast([file]).sourcemapsWrite({
+        const [data] = await new Stream([file]).sourcemapsWrite({
             mapSources: (sourcePath) => `../src/${sourcePath}`
         });
         expect(data.sourceMap.sources).to.be.deep.equal(["../src/helloworld.js"]);

@@ -1,6 +1,6 @@
 describe("fast", "transform", "concat", () => {
     const { fast, std: { path }, x } = adone;
-    const { File, Fast } = fast;
+    const { File, Stream } = fast;
 
     let root;
     let fromdir;
@@ -36,7 +36,7 @@ describe("fast", "transform", "concat", () => {
     });
 
     it("should ignore null files", async () => {
-        const values = await new Fast([new File()]).concat("test");
+        const values = await new Stream([new File()]).concat("test");
         expect(values).to.be.empty;
     });
 
@@ -150,7 +150,7 @@ describe("fast", "transform", "concat", () => {
         it("should throw without path", () => {
             let err;
             try {
-                new Fast().concat({ path: undefined });
+                new Stream().concat({ path: undefined });
             } catch (_err) {
                 err = _err;
             }

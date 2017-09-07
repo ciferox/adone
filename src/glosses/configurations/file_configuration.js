@@ -108,6 +108,7 @@ export default class FileConfiguration extends adone.configuration.Configuration
                     key: correctName
                 }, options));
             } catch (err) {
+                adone.log(err);
                 if (err instanceof SyntaxError) {
                     throw new x.NotValid("Config is not valid");
                 }

@@ -1,41 +1,41 @@
-const { is, x, fs, util } = adone;
+export default function () {
+    const { is, x, fs, util } = adone;
 
-const defaultMode = 0o777 & (~process.umask());
+    const defaultMode = 0o777 & (~process.umask());
 
-const normalize = (mode) => {
-    if (is.nil(mode)) {
-        return mode;
-    }
-    let called = false;
-    const newMode = {
-        owner: {},
-        group: {},
-        others: {}
+    const normalize = (mode) => {
+        if (is.nil(mode)) {
+            return mode;
+        }
+        let called = false;
+        const newMode = {
+            owner: {},
+            group: {},
+            others: {}
+        };
+
+        for (const key of ["read", "write", "execute"]) {
+            if (is.boolean(mode[key])) {
+                newMode.owner[key] = mode[key];
+                newMode.group[key] = mode[key];
+                newMode.others[key] = mode[key];
+                called = true;
+            }
+        }
+
+        return called ? newMode : mode;
     };
 
-    for (const key of ["read", "write", "execute"]) {
-        if (is.boolean(mode[key])) {
-            newMode.owner[key] = mode[key];
-            newMode.group[key] = mode[key];
-            newMode.others[key] = mode[key];
-            called = true;
+    const assign = (a, b) => {
+        for (const key of util.keys(b)) {
+            if (is.object(b[key])) {
+                assign(a[key], b[key]);
+            } else if (key in a) {
+                a[key] = b[key];
+            }
         }
-    }
+    };
 
-    return called ? newMode : mode;
-};
-
-const assign = (a, b) => {
-    for (const key of util.keys(b)) {
-        if (is.object(b[key])) {
-            assign(a[key], b[key]);
-        } else if (key in a) {
-            a[key] = b[key];
-        }
-    }
-};
-
-export default function plugin() {
     return function chmod(mode, dirMode) {
         if (!is.nil(mode) && !is.number(mode) && !is.object(mode)) {
             throw new x.InvalidArgument("Expected mode to be null/undefined/number/Object");

@@ -1,4 +1,10 @@
-const { is, std: { path }, fast: { Fast, __ }, util } = adone;
+const {
+    is,
+    std: { path },
+    util
+} = adone;
+
+const { helper } = adone.private(adone.fast);
 
 const replacer = ({ file, base, map } = {}) => {
     return {
@@ -62,7 +68,7 @@ export default function transpilePlugin() {
                 }));
 
                 if (file.sourceMap && result.map) {
-                    __.helper.applySourceMap(file, result.map);
+                    helper.applySourceMap(file, result.map);
                 }
 
                 if (!result.ignored) {

@@ -37,7 +37,10 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         clearInterval: global.clearInterval,
         setImmediate: global.setImmediate,
         clearImmediate: global.clearImmediate,
-        lazify: (modules, _obj, _require = require, { configurable = false } = {}) => {
+        lazify: (modules, _obj, _require = require, {
+            configurable = false,
+            mapper = (key, mod) => ((typeof mod === "object" && mod.__esModule === true && "default" in mod) ? mod.default : mod)
+        } = {}) => {
             const obj = _obj || {};
             Object.keys(modules).forEach((key) => {
                 Object.defineProperty(obj, key, {
@@ -67,9 +70,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
                             throw new TypeError(`Invalid module type of ${key}`);
                         }
 
-                        if (typeof mod === "object" && mod.__esModule === true && "default" in mod) { // eslint-disable-line
-                            mod = mod.default;
-                        }
+                        mod = mapper(key, mod);
 
                         Object.defineProperty(obj, key, {
                             configurable,

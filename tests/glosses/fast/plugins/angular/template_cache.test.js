@@ -1,9 +1,9 @@
 describe("fast", "transform", "angular", "templateCache", () => {
     const { std: { path }, fast } = adone;
-    const { File, Fast } = fast;
+    const { File, Stream } = fast;
 
     it("should build valid $templateCache from multiple source-files", async () => {
-        const [file] = await new Fast([
+        const [file] = await new Stream([
             new File({
                 base: __dirname,
                 path: path.join(__dirname, "template-a.html"),
@@ -22,7 +22,7 @@ describe("fast", "transform", "angular", "templateCache", () => {
     });
 
     it("should allow options as first parameter if no filename is specified", async () => {
-        const [file] = await new Fast([
+        const [file] = await new Stream([
             new File({
                 base: __dirname,
                 path: `${__dirname}/template-a.html`,
@@ -40,7 +40,7 @@ describe("fast", "transform", "angular", "templateCache", () => {
 
     context("options.root", () => {
         it("should set root", async () => {
-            const [file] = await new Fast([
+            const [file] = await new Stream([
                 new File({
                     base: __dirname,
                     path: `${__dirname}/template-a.html`,
@@ -55,7 +55,7 @@ describe("fast", "transform", "angular", "templateCache", () => {
         });
 
         it("should preserve the \"./\" if there is one in front of the root", async () => {
-            const [file] = await new Fast([
+            const [file] = await new Stream([
                 new File({
                     base: __dirname,
                     path: `${__dirname}/template-a.html`,
@@ -71,7 +71,7 @@ describe("fast", "transform", "angular", "templateCache", () => {
         });
 
         it("should preserve the \".\" if there is one in front of the root", async () => {
-            const [file] = await new Fast([
+            const [file] = await new Stream([
                 new File({
                     base: __dirname,
                     path: `${__dirname}/template-a.html`,
@@ -86,7 +86,7 @@ describe("fast", "transform", "angular", "templateCache", () => {
         });
 
         it("should preserve the root as is, if the root folder name start with a \".\" character", async () => {
-            const [file] = await new Fast([
+            const [file] = await new Stream([
                 new File({
                     base: __dirname,
                     path: `${__dirname}/template-a.html`,
@@ -104,7 +104,7 @@ describe("fast", "transform", "angular", "templateCache", () => {
 
     context("options.transformUrl", () => {
         it("should change the URL to the output of the function", async () => {
-            const [file] = await new Fast([
+            const [file] = await new Stream([
                 new File({
                     base: __dirname,
                     path: `${__dirname}/template-a.html`,
@@ -122,7 +122,7 @@ describe("fast", "transform", "angular", "templateCache", () => {
         });
 
         it("should set the final url, after any root option has been applied", async () => {
-            const [file] = await new Fast([
+            const [file] = await new Stream([
                 new File({
                     base: __dirname,
                     path: `${__dirname}/template-a.html`,
@@ -143,7 +143,7 @@ describe("fast", "transform", "angular", "templateCache", () => {
 
     context("options.standalone", () => {
         it("should create standalone Angular module", async () => {
-            const [file] = await new Fast([
+            const [file] = await new Stream([
                 new File({
                     base: __dirname,
                     path: `${__dirname}/template-a.html`,
@@ -161,7 +161,7 @@ describe("fast", "transform", "angular", "templateCache", () => {
 
     context("options.filename", () => {
         it("should default to templates.js if not specified", async () => {
-            const [file] = await new Fast([
+            const [file] = await new Stream([
                 new File({
                     base: __dirname,
                     path: `${__dirname}/template-a.html`,
@@ -174,7 +174,7 @@ describe("fast", "transform", "angular", "templateCache", () => {
         });
 
         it("should set filename", async () => {
-            const [file] = await new Fast([
+            const [file] = await new Stream([
                 new File({
                     base: __dirname,
                     path: `${__dirname}/template-a.html`,
@@ -194,7 +194,7 @@ describe("fast", "transform", "angular", "templateCache", () => {
 
     context("options.base", () => {
         it("should set base url", async () => {
-            const [file] = await new Fast([
+            const [file] = await new Stream([
                 new File({
                     base: __dirname,
                     path: `${__dirname}/template-a.html`,
@@ -212,7 +212,7 @@ describe("fast", "transform", "angular", "templateCache", () => {
         });
 
         it("should allow functions", async () => {
-            const [file] = await new Fast([
+            const [file] = await new Stream([
                 new File({
                     base: __dirname,
                     path: `${__dirname}/template-a.html`,
@@ -234,7 +234,7 @@ describe("fast", "transform", "angular", "templateCache", () => {
 
     context("options.moduleSystem", () => {
         it("should support Browserify-style exports", async () => {
-            const [file] = await new Fast([
+            const [file] = await new Stream([
                 new File({
                     base: __dirname,
                     path: `${__dirname}/template-a.html`,
@@ -251,7 +251,7 @@ describe("fast", "transform", "angular", "templateCache", () => {
         });
 
         it("should support RequireJS-style exports", async () => {
-            const [file] = await new Fast([
+            const [file] = await new Stream([
                 new File({
                     base: __dirname,
                     path: `${__dirname}/template-a.html`,
@@ -267,7 +267,7 @@ describe("fast", "transform", "angular", "templateCache", () => {
         });
 
         it("should support ES6-style exports", async () => {
-            const [file] = await new Fast([
+            const [file] = await new Stream([
                 new File({
                     base: __dirname,
                     path: `${__dirname}/template-a.html`,
@@ -285,7 +285,7 @@ describe("fast", "transform", "angular", "templateCache", () => {
 
     context("options.templateHeader & options.templateFooter", () => {
         it("should override TEMPLATE_HEADER & TEMPLATE_FOOTER", async () => {
-            const [file] = await new Fast([
+            const [file] = await new Stream([
                 new File({
                     base: __dirname,
                     path: `${__dirname}/template-a.html`,
@@ -304,7 +304,7 @@ describe("fast", "transform", "angular", "templateCache", () => {
 
     context("options.templateBody", () => {
         it("should override TEMPLATE_BODY", async () => {
-            const [file] = await new Fast([
+            const [file] = await new Stream([
                 new File({
                     base: __dirname,
                     path: `${__dirname}/template-a.html`,
