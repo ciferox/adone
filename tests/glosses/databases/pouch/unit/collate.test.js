@@ -23,7 +23,14 @@ const stringLexCompare = (a, b) => {
     return 0;
 };
 
-const { collate: { collate, toIndexableString, parseIndexableString, normalizeKey } } = adone.database.pouch.__;
+const {
+    collate: {
+        collate,
+        toIndexableString,
+        parseIndexableString,
+        normalizeKey
+    }
+} = adone.private(adone.database.pouch);
 
 /*
  * returns the decimal form for the given integer, i.e. writes

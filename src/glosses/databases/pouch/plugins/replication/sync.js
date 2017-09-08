@@ -2,17 +2,18 @@ const {
     is,
     util,
     event: { EventEmitter },
-    database: {
-        pouch: {
-            __: {
-                util: {
-                    toPouch
-                }
-            },
-            plugin: { replication }
-        }
-    }
+    database: { pouch }
 } = adone;
+
+const {
+    plugin: { replication }
+} = pouch;
+
+const {
+    util: {
+        toPouch
+    }
+} = adone.private(pouch);
 
 class Sync extends EventEmitter {
     constructor(src, target, opts, callback) {

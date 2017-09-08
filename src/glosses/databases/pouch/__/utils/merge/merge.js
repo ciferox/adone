@@ -9,7 +9,13 @@
 // Path = {pos: position_from_root, ids: Tree}
 // Tree = [Key, Opts, [Tree, ...]], in particular single node: [Key, []]
 
-const { database: { pouch: { __: { util: { merge: _merge } } } } } = adone;
+const {
+    database: { pouch }
+} = adone;
+
+const {
+    util: { merge: _merge }
+} = adone.private(pouch);
 
 const sortByPos = (a, b) => {
     return a.pos - b.pos;

@@ -21,7 +21,10 @@
 
 server stores sha1(sha1(password)) ( hash_stag2)
 */
-const { is, std: { crypto } } = adone;
+const {
+    is,
+    std: { crypto }
+} = adone;
 
 const sha1 = (msg, msg1, msg2) => {
     const hash = crypto.createHash("sha1");

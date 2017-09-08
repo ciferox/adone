@@ -1,4 +1,11 @@
-const { is, database: { pouch: { __: { collate: { collate } } } } } = adone;
+const {
+    is,
+    database: { pouch }
+} = adone;
+
+const {
+    collate: { collate }
+} = adone.private(pouch);
 
 const CHECKPOINT_VERSION = 1;
 const REPLICATOR = "pouchdb";

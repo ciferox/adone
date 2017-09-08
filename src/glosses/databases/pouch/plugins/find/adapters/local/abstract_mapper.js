@@ -1,15 +1,16 @@
 const {
-    database: {
-        pouch: {
-            __: {
-                util: {
-                    selector: { parseField }
-                }
-            },
-            plugin: { mapreduce }
-        }
-    }
+    database: { pouch }
 } = adone;
+
+const {
+    plugin: { mapreduce }
+} = pouch;
+
+const {
+    util: {
+        selector: { parseField }
+    }
+} = adone.private(pouch);
 
 //
 // One thing about these mappers:
@@ -99,8 +100,6 @@ const createMapper = (fields, emit) => {
         return createDeepSingleMapper(fields[0], emit);
     } // multi
     return createDeepMultiMapper(fields, emit);
-
-
 };
 
 const mapper = (mapFunDef, emit) => {

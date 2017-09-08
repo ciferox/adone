@@ -1,5 +1,10 @@
 describe("database", "mysql", "unit", "packets", "datetime", () => {
-    const { database: { mysql: { __: { packet: { Packet } } } } } = adone;
+    const {
+        database: { mysql }
+    } = adone;
+    const {
+        packet: { Packet }
+    } = adone.private(mysql);
 
     it("should read a datetime", () => {
         const buf = Buffer.from("0a000004000007dd070116010203", "hex");

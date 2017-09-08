@@ -1,27 +1,26 @@
 const {
-    database: {
-        pouch: {
-            __: {
-                util: {
-                    adapter: {
-                        updateDoc
-                    },
-                    merge: {
-                        isDeleted,
-                        isLocalId,
-                        merge,
-                        winningRev: calculateWinningRev
-                    }
-                }
-            },
-            x: {
-                createError,
-                MISSING_DOC,
-                REV_CONFLICT
-            }
+    database: { pouch }
+} = adone;
+
+const {
+    x: {
+        createError,
+        MISSING_DOC,
+        REV_CONFLICT
+    }
+} = pouch;
+
+const {
+    util: {
+        adapter: { updateDoc },
+        merge: {
+            isDeleted,
+            isLocalId,
+            merge,
+            winningRev: calculateWinningRev
         }
     }
-} = adone;
+} = adone.private(pouch);
 
 const rootIsMissing = (docInfo) => {
     return docInfo.metadata.rev_tree[0].ids[1].status === "missing";

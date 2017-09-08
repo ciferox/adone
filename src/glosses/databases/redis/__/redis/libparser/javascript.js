@@ -1,4 +1,6 @@
-const { is } = adone;
+const {
+    is
+} = adone;
 
 export default class JavaScriptReplyParser {
     constructor(options) {

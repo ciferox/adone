@@ -1,13 +1,15 @@
 const { is, x, util: { uuid } } = adone;
 
+const { util } = adone.private(uuid);
+
 // Per 4.5, create and 48-bit node id, (47 random bits + multicast bit = 1)
 const nodeId = [
-    uuid.__.seedBytes[0] | 0x01,
-    uuid.__.seedBytes[1], uuid.__.seedBytes[2], uuid.__.seedBytes[3], uuid.__.seedBytes[4], uuid.__.seedBytes[5]
+    util.seedBytes[0] | 0x01,
+    util.seedBytes[1], util.seedBytes[2], util.seedBytes[3], util.seedBytes[4], util.seedBytes[5]
 ];
 
 // Per 4.2.2, randomize (14 bit) clockseq
-let _clockseq = (uuid.__.seedBytes[6] << 8 | uuid.__.seedBytes[7]) & 0x3fff;
+let _clockseq = (util.seedBytes[6] << 8 | util.seedBytes[7]) & 0x3fff;
 
 // Previous uuid creation time
 let _lastMSecs = 0;
@@ -85,7 +87,7 @@ const v1 = (options, buf, offset) => {
         b[i + n] = node[n];
     }
 
-    return buf ? buf : uuid.__.bytesToUuid(b);
+    return buf ? buf : util.bytesToUuid(b);
 };
 
 export default v1;

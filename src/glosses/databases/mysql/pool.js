@@ -6,6 +6,8 @@ const {
     collection
 } = adone;
 
+const __ = adone.private(mysql);
+
 const spliceConnection = (queue, connection) => {
     if (queue.empty) {
         return;
@@ -54,7 +56,7 @@ export default class Pool extends EventEmitter {
             this.config.connectionLimit === 0 ||
             this._allConnections.length < this.config.connectionLimit
         ) {
-            connection = new mysql.__.PoolConnection(this, { config: this.config.connectionConfig });
+            connection = new __.PoolConnection(this, { config: this.config.connectionConfig });
 
             this._allConnections.push(connection);
 
@@ -198,7 +200,7 @@ export default class Pool extends EventEmitter {
     }
 
     escape(value) {
-        return mysql.__.escape(
+        return __.escape(
             value,
             this.config.connectionConfig.stringifyObjects,
             this.config.connectionConfig.timezone
@@ -206,6 +208,6 @@ export default class Pool extends EventEmitter {
     }
 
     escapeId(value) {
-        return mysql.__.escapeId(value, false);
+        return __.escapeId(value, false);
     }
 }

@@ -1,4 +1,16 @@
-const { x, is, math: { Long }, database: { mysql: { c, __ } }, noop } = adone;
+const {
+    x,
+    is,
+    math: { Long },
+    database: { mysql },
+    noop
+} = adone;
+
+const {
+    c
+} = mysql;
+
+const __ = adone.private(mysql);
 
 const minus = "-".charCodeAt(0);
 const plus = "+".charCodeAt(0);

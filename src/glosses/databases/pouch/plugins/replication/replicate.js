@@ -1,20 +1,21 @@
 const {
     is,
     util,
-    database: {
-        pouch: {
-            x: { createError, BAD_REQUEST },
-            __: {
-                util: {
-                    toPouch,
-                    filterChange,
-                    uuid
-                }
-            },
-            plugin: { replication }
-        }
-    }
+    database: { pouch }
 } = adone;
+
+const {
+    x: { createError, BAD_REQUEST },
+    plugin: { replication }
+} = pouch;
+
+const {
+    util: {
+        toPouch,
+        filterChange,
+        uuid
+    }
+} = adone.private(pouch);
 
 const _replicate = (src, target, opts, returnValue, result) => {
     let batches = []; // list of batches to be processed

@@ -1,4 +1,7 @@
-const { is, util } = adone;
+const {
+    is,
+    util
+} = adone;
 
 export default function toPromise(func) {
     //create the function we will be returning

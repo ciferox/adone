@@ -1,7 +1,9 @@
 const {
     event: { EventEmitter },
-    database: { mysql: { __ } }
+    database: { mysql }
 } = adone;
+
+const __ = adone.private(mysql);
 
 const makeDoneCb = (resolve, reject) => (err, rows, columns) => {
     if (err) {

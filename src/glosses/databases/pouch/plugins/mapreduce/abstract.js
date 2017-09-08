@@ -1,4 +1,11 @@
-const { database: { pouch: { x, __ } } } = adone;
+const {
+    database: { pouch }
+} = adone;
+
+const {
+    x
+} = pouch;
+
 const {
     collate: {
         collate,
@@ -16,7 +23,7 @@ const {
         upsert,
         isRemote
     }
-} = __;
+} = adone.private(pouch);
 
 const stringify = (input) => {
     if (!input) {

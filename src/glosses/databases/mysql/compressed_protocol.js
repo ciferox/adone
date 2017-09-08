@@ -1,8 +1,13 @@
 // connection mixins
 // implementation of http://dev.mysql.com/doc/internals/en/compression.html
 
-const { util } = adone;
-const { database: { mysql: { __ } }, compressor: { deflate } } = adone;
+const {
+    util,
+    database: { mysql },
+    compressor: { deflate }
+} = adone;
+
+const __ = adone.private(mysql);
 
 const MAX_COMPRESSED_LENGTH = 16777210;
 

@@ -1,4 +1,10 @@
-const { std: { net, tls, url: urllib } } = adone;
+const {
+    std: {
+        net,
+        tls,
+        url: urllib
+    }
+} = adone;
 
 export const createSocket = (proxyUrl, destinationPort, destinationHost) => new Promise((resolve, reject) => {
     const proxy = urllib.parse(proxyUrl);
@@ -53,7 +59,7 @@ export const createSocket = (proxyUrl, destinationPort, destinationHost) => new 
             `CONNECT ${destinationHost}:${destinationPort} HTTP/1.1\r\n${
 
             // HTTP request headers
-            Object.keys(reqHeaders).map((key) => `${key}: ${reqHeaders[key]}`).join("\r\n")
+                Object.keys(reqHeaders).map((key) => `${key}: ${reqHeaders[key]}`).join("\r\n")
 
             // End request
             }\r\n\r\n`);

@@ -1,5 +1,20 @@
-const { is, database: { pouch: { __, plugin: { find: plugin } } }, promise: { callbackify } } = adone;
-const { util: { toPromise, isRemote } } = __;
+const {
+    is,
+    database: { pouch },
+    promise: { callbackify }
+} = adone;
+
+const {
+    plugin: { find: plugin }
+} = pouch;
+
+const {
+    util: {
+        toPromise,
+        isRemote
+    }
+} = adone.private(pouch);
+
 const { adapter } = plugin;
 
 export default {

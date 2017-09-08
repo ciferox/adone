@@ -1,5 +1,13 @@
-const { is, database: { mysql: { __ } } } = adone;
-const { packet } = __;
+const {
+    is,
+    database: { mysql }
+} = adone;
+
+const __ = adone.private(mysql);
+
+const {
+    packet
+} = __;
 
 const readPacketLength = (b, off) => {
     const b0 = b[off];
@@ -37,8 +45,9 @@ export default class PacketParser {
 
         this.onPacket = onPacket;
         this.execute = PacketParser.prototype.executeStart;
-        this._flushLargePacket = packetHeaderLength === 7 ? this._flushLargePacket7 :
-                                                            this._flushLargePacket4;
+        this._flushLargePacket = packetHeaderLength === 7
+            ? this._flushLargePacket7
+            : this._flushLargePacket4;
     }
 
     _flushLargePacket4() {

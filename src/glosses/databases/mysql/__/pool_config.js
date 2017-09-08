@@ -1,4 +1,9 @@
-const { is, database: { mysql: { __ } } } = adone;
+const {
+    is,
+    database: { mysql }
+} = adone;
+
+const __ = adone.private(mysql);
 
 export default class PoolConfig {
     constructor(options) {

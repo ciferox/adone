@@ -1,4 +1,6 @@
-const { is } = adone;
+const {
+    is
+} = adone;
 
 class PouchError extends adone.x.Exception {
     constructor(status, error, reason) {

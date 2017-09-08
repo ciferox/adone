@@ -1,5 +1,6 @@
 describe("database", "redis", "unit", "parsers", () => {
-    const { is, database: { redis: { __: { parser: { createParser } } } } } = adone;
+    const { is, database: { redis } } = adone;
+    const { parser: { createParser } } = adone.private(redis);
 
     const assert = adone.std.assert;
     const parsers = ["javascript", "hiredis"];

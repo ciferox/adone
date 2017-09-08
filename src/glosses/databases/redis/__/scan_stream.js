@@ -1,4 +1,9 @@
-const { std: { stream: { Readable } }, is } = adone;
+const {
+    std: {
+        stream: { Readable }
+    },
+    is
+} = adone;
 
 export default class ScanStream extends Readable {
     constructor(opt) {

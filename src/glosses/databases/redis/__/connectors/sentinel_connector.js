@@ -1,5 +1,13 @@
-const { database: { redis }, x, is, std, util, noop, promise } = adone;
-const { __ } = redis;
+const {
+    database: { redis },
+    x,
+    is,
+    std,
+    util,
+    noop,
+    promise
+} = adone;
+const __ = adone.private(redis);
 
 const isSentinelEql = (a, b) => ((a.host || "127.0.0.1") === (b.host || "127.0.0.1")) && ((a.port || 26379) === (b.port || 26379));
 

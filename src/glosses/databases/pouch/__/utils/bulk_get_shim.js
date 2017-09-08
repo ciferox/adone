@@ -1,4 +1,6 @@
-const { util } = adone;
+const {
+    util
+} = adone;
 
 // Most browsers throttle concurrent requests at 6, so it's silly
 // to shim _bulk_get by trying to launch potentially hundreds of requests

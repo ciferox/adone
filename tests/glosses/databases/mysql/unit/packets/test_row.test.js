@@ -1,5 +1,10 @@
 describe("database", "mysql", "unit", "packets", "text row", () => {
-    const { database: { mysql: { __: { packet: { TextRow } } } } } = adone;
+    const {
+        database: { mysql }
+    } = adone;
+    const {
+        packet: { TextRow }
+    } = adone.private(mysql);
 
     specify("simple", () => {
         const packet = TextRow.toPacket(["Hello", "World"], "cesu8");

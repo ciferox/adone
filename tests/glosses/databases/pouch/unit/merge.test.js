@@ -4,11 +4,13 @@
 
 describe("database", "pouch", "merge", () => {
     const {
-        merge: {
-            merge,
-            winningRev
+        util: {
+            merge: {
+                merge,
+                winningRev
+            }
         }
-    } = adone.database.pouch.__.util;
+    } = adone.private(adone.database.pouch);
     let simple;
     let two0;
     let two1;

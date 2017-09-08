@@ -1,4 +1,7 @@
-const { is, lazify } = adone;
+const {
+    is,
+    lazify
+} = adone;
 
 const packet = lazify({
     AuthSwitchRequestMoreData: "./auth_switch_request_more_data",

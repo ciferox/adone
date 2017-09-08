@@ -1,5 +1,10 @@
 describe("database", "mysql", "unit", "packets", "ok", () => {
-    const { database: { mysql: { __: { packet } } } } = adone;
+    const {
+        database: { mysql }
+    } = adone;
+    const {
+        packet
+    } = adone.private(mysql);
 
     it("should have correct length", () => {
         const p = packet.OK.toPacket({ affectedRows: 0, insertId: 1 });

@@ -11,15 +11,21 @@ const STATE_REQ_DSTADDR = 6;
 const STATE_REQ_DSTADDR_VARLEN = 7;
 const STATE_REQ_DSTPORT = 8;
 
-const BUF_AUTH_NO_ACCEPT = new Buffer([0x05, 0xFF]);
-const BUF_REP_INTR_SUCCESS = new Buffer([0x05,
+const BUF_AUTH_NO_ACCEPT = Buffer.from([0x05, 0xFF]);
+const BUF_REP_INTR_SUCCESS = Buffer.from([
+    0x05,
     REP.SUCCESS,
     0x00,
     0x01,
-    0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00]);
-const BUF_REP_DISALLOW = new Buffer([0x05, REP.DISALLOW]);
-const BUF_REP_CMDUNSUPP = new Buffer([0x05, REP.CMDUNSUPP]);
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00
+]);
+const BUF_REP_DISALLOW = Buffer.from([0x05, REP.DISALLOW]);
+const BUF_REP_CMDUNSUPP = Buffer.from([0x05, REP.CMDUNSUPP]);
 
 export class Parser extends adone.event.EventEmitter {
     constructor(stream) {
@@ -84,7 +90,7 @@ export class Parser extends adone.event.EventEmitter {
                     }
                     ++i;
                     ++state;
-                    this._methods = new Buffer(nmethods);
+                    this._methods = Buffer.allocUnsafe(nmethods);
                     this._methodsp = 0;
                     break;
                 }
@@ -159,9 +165,9 @@ export class Parser extends adone.event.EventEmitter {
                     const atyp = chunk[i];
                     state = STATE_REQ_DSTADDR;
                     if (atyp === ATYP.IPv4) {
-                        this._dstaddr = new Buffer(4);
+                        this._dstaddr = Buffer.allocUnsafe(4);
                     } else if (atyp === ATYP.IPv6) {
-                        this._dstaddr = new Buffer(16);
+                        this._dstaddr = Buffer.allocUnsafe(16);
                     } else if (atyp === ATYP.NAME) {
                         state = STATE_REQ_DSTADDR_VARLEN;
                     } else {
@@ -189,12 +195,12 @@ export class Parser extends adone.event.EventEmitter {
                     }
                     break;
                 case STATE_REQ_DSTADDR_VARLEN:
-                    this._dstaddr = new Buffer(chunk[i]);
+                    this._dstaddr = Buffer.allocUnsafe(chunk[i]);
                     state = STATE_REQ_DSTADDR;
                     ++i;
                     break;
                 case STATE_REQ_DSTPORT:
-                    if (this._dstport === undefined) {
+                    if (is.undefined(this._dstport)) {
                         this._dstport = chunk[i];
                     } else {
                         this._dstport <<= 8;
@@ -261,7 +267,7 @@ export class Parser extends adone.event.EventEmitter {
 
 const handleProxyError = (socket, err) => {
     if (socket.writable) {
-        const errbuf = new Buffer([0x05, REP.GENFAIL]);
+        const errbuf = Buffer.from([0x05, REP.GENFAIL]);
         if (err.code) {
             switch (err.code) {
                 case "ENOENT":
@@ -305,7 +311,7 @@ const proxySocket = (socket, req) => {
                 if (socket.writable) {
                     const localbytes = adone.net.proxy.socks.ipbytes(dstSock.localAddress || "127.0.0.1");
                     const len = localbytes.length;
-                    const bufrep = new Buffer(6 + len);
+                    const bufrep = Buffer.allocUnsafe(6 + len);
                     let p = 4;
                     bufrep[0] = 0x05;
                     bufrep[1] = REP.SUCCESS;
@@ -387,7 +393,7 @@ export default class Server extends adone.event.EventEmitter {
                                 socket.end();
                             }
                         });
-                        socket.write(new Buffer([0x05, auths[a].METHOD]));
+                        socket.write(Buffer.from([0x05, auths[a].METHOD]));
                         socket.resume();
                         return;
                     }

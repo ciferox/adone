@@ -1,4 +1,10 @@
-const { database: { pouch: { __: { util: { merge } } } } } = adone;
+const {
+    database: { pouch }
+} = adone;
+
+const {
+    util: { merge }
+} = adone.private(pouch);
 
 // compact a tree by marking its non-leafs as missing,
 // and return a list of revs to delete

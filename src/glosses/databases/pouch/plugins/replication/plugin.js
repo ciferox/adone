@@ -1,4 +1,10 @@
-const { database: { pouch: { plugin: { replication: plugin } } } } = adone;
+const {
+    database: {
+        pouch: {
+            plugin: { replication: plugin }
+        }
+    }
+} = adone;
 
 export default function replication(PouchDB) {
     PouchDB.replicate = plugin.replicate;

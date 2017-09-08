@@ -1,5 +1,6 @@
 describe("database", "redis", "unit", "Command", () => {
-    const { database: { redis: { __: { Command } } } } = adone;
+    const { database: { redis } } = adone;
+    const { Command } = adone.private(redis);
 
     describe("constructor()", () => {
         it("should flatten the args", () => {

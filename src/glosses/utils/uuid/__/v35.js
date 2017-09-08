@@ -1,34 +1,6 @@
-const { is, std: { crypto } } = adone;
+const { is, util: { uuid } } = adone;
 
-export const rnd16 = () => crypto.randomBytes(16);
-rnd16();
-
-export const seedBytes = rnd16();
-
-/**
- * Convert array of 16 byte values to UUID string format of the form:
- * XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
- */
-const byteToHex = [];
-for (let i = 0; i < 256; ++i) {
-    byteToHex[i] = (i + 0x100).toString(16).substr(1);
-}
-
-export const bytesToUuid = (buf, offset) => {
-    let i = offset || 0;
-    const bth = byteToHex;
-    return `${bth[buf[i++]] + bth[buf[i++]] + bth[buf[i++]] + bth[buf[i++]]}-${bth[buf[i++]]}${bth[buf[i++]]}-${bth[buf[i++]]}${bth[buf[i++]]}-${bth[buf[i++]]}${bth[buf[i++]]}-${bth[buf[i++]]}${bth[buf[i++]]}${bth[buf[i++]]}${bth[buf[i++]]}${bth[buf[i++]]}${bth[buf[i++]]}`;
-};
-
-export const sha1 = (bytes) => {
-    if (is.array(bytes)) {
-        bytes = Buffer.from(bytes);
-    } else if (is.string(bytes)) {
-        bytes = Buffer.from(bytes, "utf8");
-    }
-
-    return crypto.createHash("sha1").update(bytes).digest();
-};
+const { util } = adone.private(uuid);
 
 const uuidToBytes = (uuid) => {
     // Note: We assume we're being passed a valid uuid string
@@ -49,8 +21,7 @@ const stringToBytes = (str) => {
     return bytes;
 };
 
-
-export const v35 = (name, version, hashfunc) => {
+export default function v35(name, version, hashfunc) {
     const generateUUID = function (value, namespace, buf, offset) {
         const off = buf && offset || 0;
 
@@ -79,7 +50,7 @@ export const v35 = (name, version, hashfunc) => {
             }
         }
 
-        return buf || bytesToUuid(bytes);
+        return buf || util.bytesToUuid(bytes);
     };
     Object.defineProperty(generateUUID, "name", {
         value: name
@@ -89,14 +60,4 @@ export const v35 = (name, version, hashfunc) => {
     generateUUID.DNS = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
     generateUUID.URL = "6ba7b811-9dad-11d1-80b4-00c04fd430c8";
     return generateUUID;
-};
-
-export const md5 = (bytes) => {
-    if (is.array(bytes)) {
-        bytes = Buffer.from(bytes);
-    } else if (is.string(bytes)) {
-        bytes = Buffer.from(bytes, "utf8");
-    }
-
-    return crypto.createHash("md5").update(bytes).digest();
-};
+}

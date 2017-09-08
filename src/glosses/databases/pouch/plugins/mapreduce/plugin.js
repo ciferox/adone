@@ -1,4 +1,13 @@
-const { is, database: { pouch: { x, plugin: { mapreduce } } }, std: { vm } } = adone;
+const {
+    is,
+    database: { pouch },
+    std: { vm }
+} = adone;
+
+const {
+    x,
+    plugin: { mapreduce }
+} = pouch;
 
 const createBuiltInError = (name) => {
     const message = `builtin ${name} function requires map values to be numbers or number arrays`;

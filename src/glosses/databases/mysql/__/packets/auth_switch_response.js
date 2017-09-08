@@ -1,6 +1,12 @@
 // http://dev.mysql.com/doc/internals/en/connection-phase-packets.html#packet-Protocol::AuthSwitchRequest
-const { database: { mysql: { __ } }, is } = adone;
-const { packet } = __;
+const {
+    is,
+    database: { mysql }
+} = adone;
+
+const {
+    packet
+} = adone.private(mysql);
 
 export default class AuthSwitchResponse {
     constructor(data) {

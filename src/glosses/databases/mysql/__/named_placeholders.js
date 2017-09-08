@@ -1,4 +1,8 @@
-const { is, collection, x } = adone;
+const {
+    is,
+    collection,
+    x
+} = adone;
 
 const RE_PARAM = /(?:\?)|(?::(\d+|(?:[a-zA-Z][a-zA-Z0-9_]*)))/g;
 const DQUOTE = 34;

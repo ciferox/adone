@@ -1,10 +1,12 @@
 const {
-    database: { redis: { __ } },
+    database: { redis },
     util,
     promise,
     is,
     collection: { ByteArray }
 } = adone;
+
+const __ = adone.private(redis);
 
 export default class Pipeline extends __.Commander {
     constructor(redis) {

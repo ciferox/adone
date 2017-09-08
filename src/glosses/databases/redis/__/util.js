@@ -1,4 +1,8 @@
-const { is, x, util, std } = adone;
+const {
+    is,
+    x,
+    std
+} = adone;
 
 export const convertBufferToString = (value, encoding) => {
     if (is.buffer(value)) {

@@ -4,6 +4,8 @@ const {
     database: { mysql }
 } = adone;
 
+const __ = adone.private(mysql);
+
 // TODO: inherit Server from net.Server
 export default class Server extends EventEmitter {
     constructor() {
@@ -13,7 +15,7 @@ export default class Server extends EventEmitter {
     }
 
     _handleConnection(socket) {
-        const connectionConfig = new mysql.__.ConnectionConfig({ stream: socket, isServer: true });
+        const connectionConfig = new __.ConnectionConfig({ stream: socket, isServer: true });
         const connection = new mysql.Connection({ config: connectionConfig });
         this.emit("connection", connection);
     }

@@ -1,5 +1,6 @@
 describe("database", "redis", "unit", "Connector", () => {
-    const { std: { net, tls }, database: { redis: { __: { Connector } } } } = adone;
+    const { std: { net, tls }, database: { redis } } = adone;
+    const { Connector } = adone.private(redis);
 
     describe("connect()", () => {
         it("first tries path", async () => {

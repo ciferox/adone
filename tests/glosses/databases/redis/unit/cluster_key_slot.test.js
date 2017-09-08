@@ -1,5 +1,6 @@
 describe("database", "redis", "unit", "cluster key slot", () => {
-    const { database: { redis: { __: { calculateSlot } } } } = adone;
+    const { database: { redis } } = adone;
+    const { calculateSlot } = adone.private(redis);
     const { generateMulti } = calculateSlot;
 
     const tests = {

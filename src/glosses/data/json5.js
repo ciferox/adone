@@ -3,16 +3,16 @@
 
 const { is } = adone;
 
-let at;           // The index of the current character
-let lineNumber;   // The current line number
+let at; // The index of the current character
+let lineNumber; // The current line number
 let columnNumber; // The current column number
-let ch;           // The current character
+let ch; // The current character
 const escapee = {
     "'": "'",
     "\"": "\"",
     "\\": "\\",
     "/": "/",
-    "\n": "",       // Replace escaped newlines in strings w/ empty string
+    "\n": "", // Replace escaped newlines in strings w/ empty string
     b: "\b",
     f: "\f",
     n: "\n",
@@ -379,7 +379,7 @@ const decodeArray = () => {
         while (ch) {
             if (ch === "]") {
                 next("]");
-                return array;   // Potentially empty array
+                return array; // Potentially empty array
             }
             // ES5 allows omitting elements in arrays, e.g. [,] and
             // [,null]. We don't allow this in JSON5.
@@ -413,7 +413,7 @@ const decodeObject = () => {
         while (ch) {
             if (ch === "}") {
                 next("}");
-                return object;   // Potentially empty object
+                return object; // Potentially empty object
             }
 
             // Keys can be unquoted. If they are, they need to be
@@ -571,7 +571,7 @@ export const encode = (obj, replacer, space) => {
         escapable.lastIndex = 0;
         return escapable.test(string) ? `"${string.replace(escapable, (a) => {
             const c = meta[a];
-            return is.string(c) ? c : `\\u${("0000" + a.charCodeAt(0).toString(16)).slice(-4)}`;
+            return is.string(c) ? c : `\\u${(`0000${ a.charCodeAt(0).toString(16)}`).slice(-4)}`;
         })}"` : `"${string}"`;
     };
 
@@ -598,7 +598,7 @@ export const encode = (obj, replacer, space) => {
             case "string":
                 return escapeString(objPart.toString());
             case "object":
-                if (objPart === null) {
+                if (is.null(objPart)) {
                     return "null";
                 } else if (is.array(objPart)) {
                     checkForCircular(objPart);
@@ -608,7 +608,7 @@ export const encode = (obj, replacer, space) => {
                     for (let i = 0; i < objPart.length; i++) {
                         res = internalStringify(objPart, i, false);
                         buffer += makeIndent(indentStr, objStack.length);
-                        if (res === null || is.undefined(res)) {
+                        if (is.nil(res)) {
                             buffer += "null";
                         } else {
                             buffer += res;
@@ -633,11 +633,11 @@ export const encode = (obj, replacer, space) => {
                         if (objPart.hasOwnProperty(prop)) {
                             const value = internalStringify(objPart, prop, false);
                             isTopLevel = false;
-                            if (!is.undefined(value) && value !== null) {
+                            if (!is.nil(value)) {
                                 buffer += makeIndent(indentStr, objStack.length);
                                 nonEmpty = true;
                                 key = isWord(prop) ? prop : escapeString(prop);
-                                buffer += `${key}:${indentStr ? " " : ""}${value},`;
+                                buffer += `${key}:${indentStr ? " " : ""}${value}, `;
                             }
                         }
                     }

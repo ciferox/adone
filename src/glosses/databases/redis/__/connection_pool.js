@@ -6,7 +6,8 @@ const {
     is,
     x
 } = adone;
-const { __ } = redis;
+
+const __ = adone.private(redis);
 
 const setKey = (node = {}) => {
     node.port = node.port || 6379;

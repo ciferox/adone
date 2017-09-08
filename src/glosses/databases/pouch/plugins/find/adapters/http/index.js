@@ -1,4 +1,11 @@
-const { database: { pouch: { plugin: { find: plugin } } } } = adone;
+const {
+    database: { pouch }
+} = adone;
+
+const {
+    plugin: { find: plugin }
+} = pouch;
+
 const {
     massageCreateIndexRequest
 } = plugin;

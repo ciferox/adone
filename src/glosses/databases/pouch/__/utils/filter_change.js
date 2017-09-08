@@ -1,4 +1,14 @@
-const { is, database: { pouch: { x: { createError, BAD_REQUEST } } } } = adone;
+const {
+    is,
+    database: { pouch }
+} = adone;
+
+const {
+    x: {
+        createError,
+        BAD_REQUEST
+    }
+} = pouch;
 
 const tryFilter = (filter, doc, req) => {
     try {

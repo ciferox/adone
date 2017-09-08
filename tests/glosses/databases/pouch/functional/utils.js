@@ -72,17 +72,19 @@ export const putTree = async (db, tree) => {
     }
 };
 
-export const btoa = adone.database.pouch.__.util.binary.btoa;
+const __ = adone.private(adone.database.pouch);
 
-export const atob = adone.database.pouch.__.util.binary.atob;
+export const btoa = __.util.binary.btoa;
 
-export const binaryStringToBuffer = adone.database.pouch.__.util.binary.binaryStringToBuffer;
+export const atob = __.util.binary.atob;
+
+export const binaryStringToBuffer = __.util.binary.binaryStringToBuffer;
 
 export const x = adone.database.pouch.x;
 
-export const rev = adone.database.pouch.__.util.rev;
+export const rev = __.util.rev;
 
-export const uuid = adone.database.pouch.__.util.uuid;
+export const uuid = __.util.uuid;
 
 export const sortById = (a, b) => a._id < b._id ? -1 : 1;
 

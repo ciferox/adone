@@ -1,4 +1,7 @@
-const { is, util } = adone;
+const {
+    is,
+    util
+} = adone;
 
 // this would just be "return doc[field]", but fields
 // can be "deep" due to dot notation

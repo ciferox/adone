@@ -1,4 +1,10 @@
-const { database: { redis: { __ } }, is, promise } = adone;
+const {
+    database: { redis },
+    is,
+    promise
+} = adone;
+
+const __ = adone.private(redis);
 
 export const addTransactionSupport = (instance) => {
     instance.pipeline = function (commands) {

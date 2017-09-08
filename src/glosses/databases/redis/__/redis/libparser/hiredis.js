@@ -1,4 +1,8 @@
-const { is, lazify, bind } = adone;
+const {
+    is,
+    lazify,
+    bind
+} = adone;
 
 const lazy = lazify({
     hiredis: () => bind("hiredis.node")

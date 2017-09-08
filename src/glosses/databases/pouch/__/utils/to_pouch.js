@@ -1,4 +1,6 @@
-const { is } = adone;
+const {
+    is
+} = adone;
 
 export default function toPouch(db, opts) {
     const PouchConstructor = opts.PouchConstructor;

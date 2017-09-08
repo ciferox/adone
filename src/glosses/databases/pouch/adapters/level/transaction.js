@@ -3,7 +3,9 @@
 // things in-memory and then does a big batch() operation
 // when you're done
 
-const { is } = adone;
+const {
+    is
+} = adone;
 
 const getCacheFor = (transaction, store) => {
     const prefix = store.prefix()[0];

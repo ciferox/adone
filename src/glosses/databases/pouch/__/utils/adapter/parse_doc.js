@@ -1,13 +1,18 @@
 const {
-    database: {
-        pouch: {
-            x: { DOC_VALIDATION, INVALID_REV, createError },
-            __: {
-                util: { uuid, rev, invalidIdError }
-            }
-        }
-    }
+    database: { pouch }
 } = adone;
+
+const {
+    x: { DOC_VALIDATION, INVALID_REV, createError }
+} = pouch;
+
+const {
+    util: {
+        uuid,
+        rev,
+        invalidIdError
+    }
+} = adone.private(pouch);
 
 const toObject = (array) => {
     return array.reduce((obj, item) => {

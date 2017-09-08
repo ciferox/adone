@@ -1,11 +1,16 @@
-export default class Agent extends adone.event.EventEmitter {
+const {
+    is,
+    event: { EventEmitter }
+} = adone;
+
+export default class Agent extends EventEmitter {
     constructor(options, secure, rejectUnauthorized) {
         super();
         this.options = options;
         this.secure = secure || false;
         this.rejectUnauthorized = rejectUnauthorized;
 
-        if (this.rejectUnauthorized === undefined) {
+        if (is.undefined(this.rejectUnauthorized)) {
             this.rejectUnauthorized = true;
         }
     }
@@ -55,7 +60,7 @@ export default class Agent extends adone.event.EventEmitter {
 
     addRequest(req, host, port, localAddress) {
         let opts;
-        if (typeof host === "object") {
+        if (is.object(host)) {
             // >= v0.11.x API
             opts = host;
             if (opts.host && opts.path) {
@@ -67,7 +72,7 @@ export default class Agent extends adone.event.EventEmitter {
         } else {
             // <= v0.10.x API
             opts = { host, port };
-            if (localAddress !== null) {
+            if (!is.null(localAddress)) {
                 opts.localAddress = localAddress;
             }
         }
@@ -76,7 +81,7 @@ export default class Agent extends adone.event.EventEmitter {
 
         this.createConnection(req, opts, (err, socket) => {
             const emitErr = () => req.emit("error", err);
-            
+
             if (err) {
                 if (sync) {
                     // need to defer the "error" event, when sync, because by now the `req`

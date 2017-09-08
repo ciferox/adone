@@ -1,6 +1,11 @@
 // http://dev.mysql.com/doc/internals/en/connection-phase-packets.html#packet-Protocol::AuthSwitchRequest
-const { database: { mysql: { __ } } } = adone;
-const { packet } = __;
+const {
+    database: { mysql }
+} = adone;
+
+const {
+    packet
+} = adone.private(mysql);
 
 export default class AuthSwitchRequest {
     constructor(opts) {
@@ -22,7 +27,7 @@ export default class AuthSwitchRequest {
     }
 
     static fromPacket(packet) {
-        packet.readInt8();  // marker
+        packet.readInt8(); // marker
         // assert marker == 0xfe?
 
         // TODO: use server encoding

@@ -1,5 +1,5 @@
 const { database: { redis }, is, x, lazify } = adone;
-const { __ } = redis;
+const __ = adone.private(redis);
 
 const parser = lazify({
     createParser: "./libparser"

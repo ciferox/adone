@@ -1,5 +1,6 @@
 describe("database", "redis", "unit", "redis-commands", () => {
-    const { database: { redis: { __: { commands } } } } = adone;
+    const { database: { redis } } = adone;
+    const { commands } = adone.private(redis);
 
     describe(".list", () => {
         it("should be an array", () => {

@@ -1,4 +1,10 @@
-const { is, x, lazify, setTimeout, clearTimeout, hrtime, Date, util } = adone;
+const {
+    is,
+    x,
+    lazify,
+    hrtime,
+    util
+} = adone;
 
 const shani = lazify({
     util: "./util"

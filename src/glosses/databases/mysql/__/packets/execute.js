@@ -1,4 +1,15 @@
-const { is, database: { mysql: { c, __: { packet } } } } = adone;
+const {
+    is,
+    database: { mysql }
+} = adone;
+
+const {
+    c
+} = mysql;
+
+const {
+    packet
+} = adone.private(mysql);
 
 export default class Execute {
     constructor(id, parameters, charsetNumber) {
@@ -21,7 +32,7 @@ export default class Execute {
         if (this.parameters && this.parameters.length > 0) {
             length += Math.floor((this.parameters.length + 7) / 8);
             length += 1; // new-params-bound-flag
-            length += 2 * this.parameters.length;  // type byte for each parameter if new-params-bound-flag is set
+            length += 2 * this.parameters.length; // type byte for each parameter if new-params-bound-flag is set
             for (i = 0; i < this.parameters.length; i++) {
                 if (!is.null(this.parameters[i])) {
                     if (is.date(this.parameters[i])) {
@@ -49,7 +60,7 @@ export default class Execute {
         p.offset = 4;
         p.writeInt8(c.command.STMT_EXECUTE);
         p.writeInt32(this.id);
-        p.writeInt8(c.cursor.NO_CURSOR);  // flags
+        p.writeInt8(c.cursor.NO_CURSOR); // flags
         p.writeInt32(1); // iteration-count, always 1
         if (this.parameters && this.parameters.length > 0) {
 

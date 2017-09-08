@@ -1,7 +1,13 @@
-const uuid = adone.lazify({
-    __: "./__",
+adone.lazify({
     v1: "./v1",
-    v3: () => uuid.__.v35("v3", 0x30, uuid.__.md5),
+    v3: "./v3",
     v4: "./v4",
-    v5: () => uuid.__.v35("v5", 0x50, uuid.__.sha1)
+    v5: "./v5"
+}, exports, require);
+
+adone.lazifyPrivate({
+    util: "./__/util",
+    v35: "./__/v35",
+    md5: "./__/md5",
+    sha1: "./__/sha1"
 }, exports, require);

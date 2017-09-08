@@ -1,4 +1,6 @@
-const { std: { crypto } } = adone;
+const {
+    std: { crypto }
+} = adone;
 
 export const binary = (data, callback) => {
     const base64 = crypto.createHash("md5").update(data, "binary").digest("base64");

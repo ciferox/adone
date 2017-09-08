@@ -15,8 +15,8 @@ const {
     util,
     database: { pouch }
 } = adone;
+
 const {
-    __,
     x: {
         MISSING_DOC,
         REV_CONFLICT,
@@ -26,6 +26,7 @@ const {
         createError
     }
 } = pouch;
+
 const {
     util: {
         uuid,
@@ -49,11 +50,9 @@ const {
             atob,
             binaryStringToBuffer
         },
-        md5: {
-            binary: binaryMd5
-        }
+        md5: { binary: binaryMd5 }
     }
-} = __;
+} = adone.private(pouch);
 
 const createEmptyBluffer = (type) => {
     return typedBuffer("", "binary", type);

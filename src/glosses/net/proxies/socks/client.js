@@ -136,9 +136,9 @@ export class Parser extends adone.event.EventEmitter {
                     const atyp = chunk[i];
                     state = STATE_REP_BNDADDR;
                     if (atyp === ATYP.IPv4) {
-                        this._bndaddr = new Buffer(4);
+                        this._bndaddr = Buffer.allocUnsafe(4);
                     } else if (atyp === ATYP.IPv6) {
-                        this._bndaddr = new Buffer(16);
+                        this._bndaddr = Buffer.allocUnsafe(16);
                     } else if (atyp === ATYP.NAME) {
                         state = STATE_REP_BNDADDR_VARLEN;
                     } else {
@@ -166,12 +166,12 @@ export class Parser extends adone.event.EventEmitter {
                     }
                     break;
                 case STATE_REP_BNDADDR_VARLEN:
-                    this._bndaddr = new Buffer(chunk[i]);
+                    this._bndaddr = Buffer.allocUnsafe(chunk[i]);
                     state = STATE_REP_BNDADDR;
                     ++i;
                     break;
                 case STATE_REP_BNDPORT:
-                    if (this._bndport === undefined) {
+                    if (is.undefined(this._bndport)) {
                         this._bndport = chunk[i];
                     } else {
                         this._bndport <<= 8;
@@ -264,10 +264,10 @@ export default class Client extends adone.event.EventEmitter {
 
         this._dstaddr = undefined;
         this._dstport = undefined;
-        this._localDNS = (options && typeof options.localDNS === "boolean" ? options.localDNS : true);
-        this._strictLocalDNS = (options && typeof options.strictLocalDNS === "boolean" ? options.strictLocalDNS : true);
+        this._localDNS = (options && is.boolean(options.localDNS) ? options.localDNS : true);
+        this._strictLocalDNS = (options && is.boolean(options.strictLocalDNS) ? options.strictLocalDNS : true);
         this._auths = [];
-        if (options && Array.isArray(options.auths)) {
+        if (options && is.array(options.auths)) {
             for (let i = 0, len = options.auths.length; i < len; ++i) {
                 this.useAuth(options.auths[i]);
             }
@@ -279,7 +279,7 @@ export default class Client extends adone.event.EventEmitter {
         const socket = this._sock;
         const auths = this._auths;
         let alen = auths.length;
-        const authsbuf = new Buffer(2 + alen);
+        const authsbuf = Buffer.allocUnsafe(2 + alen);
         authsbuf[0] = 0x05;
         authsbuf[1] = alen;
         for (let a = 0, p = 2; a < alen; ++a, ++p) {
@@ -324,7 +324,7 @@ export default class Client extends adone.event.EventEmitter {
             if (socket.writable) {
                 socket.end();
             }
-        }).on("reply", (repInfo) => {
+        }).on("reply", () => {
             this._ready = true;
             this.emit("connect", this._sock);
             this._sock.resume();
@@ -335,7 +335,7 @@ export default class Client extends adone.event.EventEmitter {
         const iptype = adone.std.net.isIP(this._dstaddr);
 
         const addrlen = (iptype === 0 ? Buffer.byteLength(this._dstaddr) : (iptype === 4 ? 4 : 16));
-        const reqbuf = new Buffer(6 + (iptype === 0 ? 1 : 0) + addrlen);
+        const reqbuf = Buffer.allocUnsafe(6 + (iptype === 0 ? 1 : 0) + addrlen);
         let p;
         reqbuf[0] = 0x05;
         reqbuf[1] = CMD.CONNECT;
@@ -359,7 +359,7 @@ export default class Client extends adone.event.EventEmitter {
     }
 
     useAuth(auth) {
-        if (typeof auth !== "object" || typeof auth.client !== "function" || auth.client.length !== 2) {
+        if (!is.object(auth) || !is.function(auth.client) || auth.client.length !== 2) {
             throw new Error("Invalid authentication handler");
         } else if (this._auths.length >= 255) {
             throw new Error("Too many authentication handlers (limited to 255).");
@@ -377,23 +377,23 @@ export default class Client extends adone.event.EventEmitter {
 
         const [port, host] = adone.net.util.normalizeAddr(options.port, options.host);
 
-        if (typeof cb === "function") {
+        if (is.function(cb)) {
             this.once("connect", cb);
         }
 
         this._dstaddr = host;
         this._dstport = port;
 
-        if (typeof options.localDNS === "boolean") {
+        if (is.boolean(options.localDNS)) {
             this._localDNS = options.localDNS;
         }
-        if (typeof options.strictLocalDNS === "boolean") {
+        if (is.boolean(options.strictLocalDNS)) {
             this._strictLocalDNS = options.strictLocalDNS;
         }
-        if (typeof options.proxyHost === "string") {
+        if (is.string(options.proxyHost)) {
             this._proxyhost = options.proxyHost;
         }
-        if (typeof options.proxyPort === "string") {
+        if (is.string(options.proxyPort)) {
             this._proxyport = options.proxyPort;
         }
 

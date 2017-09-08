@@ -2,7 +2,9 @@ const MIN_MAGNITUDE = -324; // verified by -Number.MIN_VALUE
 const MAGNITUDE_DIGITS = 3; // ditto
 const SEP = ""; // set to '_' for easier debugging
 
-const { is } = adone;
+const {
+    is
+} = adone;
 
 // couch considers null/NaN/Infinity/-Infinity === undefined,
 // for the purposes of mapreduce indexes. also, dates get stringified.

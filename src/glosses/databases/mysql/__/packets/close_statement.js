@@ -1,4 +1,14 @@
-const { database: { mysql: { c, __: { packet } } } } = adone;
+const {
+    database: { mysql }
+} = adone;
+
+const {
+    c
+} = mysql;
+
+const {
+    packet
+} = adone.private(mysql);
 
 export default class CloseStatement {
     constructor(id) {

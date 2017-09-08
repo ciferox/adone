@@ -1,5 +1,16 @@
-const { x, database: { mysql: { c, __ } } } = adone;
-const { packet, command: { Command } } = __;
+const {
+    x,
+    database: { mysql }
+} = adone;
+
+const {
+    c
+} = mysql;
+
+const {
+    packet,
+    command: { Command }
+} = adone.private(mysql);
 
 export default class ServerHandshake extends Command {
     constructor(args) {

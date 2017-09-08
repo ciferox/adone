@@ -1,4 +1,7 @@
-const { is, database: { pouch: { __ } } } = adone;
+const {
+    is,
+    database: { pouch }
+} = adone;
 const {
     collate: { collate },
     util: {
@@ -12,7 +15,7 @@ const {
             getFieldFromDoc
         }
     }
-} = __;
+} = adone.private(pouch);
 
 // create a comparator based on the sort object
 const createFieldSorter = (sort) => {

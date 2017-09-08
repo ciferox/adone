@@ -1,4 +1,8 @@
-const { database: { mysql: { Connection } } } = adone;
+const {
+    database: {
+        mysql: { Connection }
+    }
+} = adone;
 
 export default class PoolConnection extends Connection {
     constructor(pool, options) {

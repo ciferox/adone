@@ -1,23 +1,34 @@
-const { x, database: { mysql: { c, __: { packet: { Packet } } } } } = adone;
+const {
+    x,
+    database: { mysql }
+} = adone;
+
+const {
+    c
+} = mysql;
+
+const {
+    packet: { Packet }
+} = adone.private(mysql);
 
 const binaryReader = new Array(256);
 
 // TODO: replace with constants.MYSQL_TYPE_*
 binaryReader[c.type.DECIMAL] = Packet.prototype.readLengthCodedString;
-binaryReader[1] = Packet.prototype.readInt8;   // tiny
-binaryReader[2] = Packet.prototype.readInt16;  // short
-binaryReader[3] = Packet.prototype.readInt32;  // long
-binaryReader[4] = Packet.prototype.readFloat;  // float
+binaryReader[1] = Packet.prototype.readInt8; // tiny
+binaryReader[2] = Packet.prototype.readInt16; // short
+binaryReader[3] = Packet.prototype.readInt32; // long
+binaryReader[4] = Packet.prototype.readFloat; // float
 binaryReader[5] = Packet.prototype.readDouble; // double
 binaryReader[6] = Packet.prototype.assertInvalid; // null, should be skipped vie null bitmap
 binaryReader[7] = Packet.prototype.readTimestamp; // timestamp, http://dev.mysql.com/doc/internals/en/prepared-statements.html#packet-ProtocolBinary::MYSQL_TYPE_TIMESTAMP
-binaryReader[8] = Packet.prototype.readInt64;  // long long
-binaryReader[9] = Packet.prototype.readInt32;  // int24
+binaryReader[8] = Packet.prototype.readInt64; // long long
+binaryReader[9] = Packet.prototype.readInt32; // int24
 binaryReader[10] = Packet.prototype.readTimestamp; // date
-binaryReader[11] = Packet.prototype.readTime;  // time, http://dev.mysql.com/doc/internals/en/prepared-statements.html#packet-ProtocolBinary::MYSQL_TYPE_TIME
-binaryReader[12] = Packet.prototype.readDateTime;  // datetime, http://dev.mysql.com/doc/internals/en/prepared-statements.html#packet-ProtocolBinary::MYSQL_TYPE_DATETIME
-binaryReader[13] = Packet.prototype.readInt16;  // year
-binaryReader[c.type.VAR_STRING] = Packet.prototype.readLengthCodedString;  // var string
+binaryReader[11] = Packet.prototype.readTime; // time, http://dev.mysql.com/doc/internals/en/prepared-statements.html#packet-ProtocolBinary::MYSQL_TYPE_TIME
+binaryReader[12] = Packet.prototype.readDateTime; // datetime, http://dev.mysql.com/doc/internals/en/prepared-statements.html#packet-ProtocolBinary::MYSQL_TYPE_DATETIME
+binaryReader[13] = Packet.prototype.readInt16; // year
+binaryReader[c.type.VAR_STRING] = Packet.prototype.readLengthCodedString; // var string
 // TODO: complete list of types...
 
 export default class BinaryRow {

@@ -1,4 +1,6 @@
-const { util: { iconv } } = adone;
+const {
+    util: { iconv }
+} = adone;
 
 export const decode = (buffer, encoding, options) => {
     if (Buffer.isEncoding(encoding)) {

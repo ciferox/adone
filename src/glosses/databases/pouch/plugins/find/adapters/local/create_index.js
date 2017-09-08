@@ -1,17 +1,19 @@
 const {
     util,
-    database: {
-        pouch: {
-            plugin: { find: plugin },
-            __: {
-                util: {
-                    md5: { string: stringMd5 },
-                    upsert
-                }
-            }
-        }
-    }
+    database: { pouch }
 } = adone;
+
+const {
+    plugin: { find: plugin },
+} = pouch;
+
+const {
+    util: {
+        md5: { string: stringMd5 },
+        upsert
+    }
+} = adone.private(pouch);
+
 const {
     adapter: {
         local: {

@@ -1,4 +1,12 @@
-const { database: { redis: { __ } }, x, is, promise, lazify } = adone;
+const {
+    database: { redis },
+    x,
+    is,
+    promise,
+    lazify
+} = adone;
+
+const __ = adone.private(redis);
 
 const lazy = lazify({
     commands: () => ["sentinel", ...__.commands.list.filter((x) => x !== "monitor")]

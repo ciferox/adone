@@ -1,4 +1,11 @@
-const { is, database: { pouch: { __: { util: { defaultBackOff } } } } } = adone;
+const {
+    is,
+    database: { pouch }
+} = adone;
+
+const {
+    util: { defaultBackOff }
+} = adone.private(pouch);
 
 const STARTING_BACK_OFF = 0;
 

@@ -1,4 +1,9 @@
-const { is, util, database: { pouch: { __ } } } = adone;
+const {
+    is,
+    util,
+    database: { pouch }
+} = adone;
+
 const {
     util: {
         selector: {
@@ -12,7 +17,7 @@ const {
     collate: {
         collate
     }
-} = __;
+} = adone.private(pouch);
 
 // normalize the "sort" value
 const massageSort = (sort) => {

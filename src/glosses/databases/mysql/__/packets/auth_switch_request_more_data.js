@@ -1,6 +1,11 @@
 // http://dev.mysql.com/doc/internals/en/connection-phase-packets.html#packet-Protocol::AuthSwitchRequest
-const { database: { mysql: { __ } } } = adone;
-const { packet } = __;
+const {
+    database: { mysql }
+} = adone;
+
+const {
+    packet
+} = adone.private(mysql);
 
 export default class AuthSwitchRequestMoreData {
     constructor(data) {
@@ -18,7 +23,7 @@ export default class AuthSwitchRequestMoreData {
     }
 
     static fromPacket(packet) {
-        packet.readInt8();  // marker
+        packet.readInt8(); // marker
         const data = packet.readBuffer();
         return new AuthSwitchRequestMoreData(data);
     }

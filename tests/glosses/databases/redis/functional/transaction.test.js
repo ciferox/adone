@@ -1,7 +1,9 @@
 import check from "../helpers/check_redis";
 
 describe("database", "redis", "transaction", { skip: check }, () => {
-    const { is, database: { redis: { Redis, __: { Command } } } } = adone;
+    const { is, database: { redis } } = adone;
+    const { Redis } = redis;
+    const { Command } = adone.private(redis);
 
     afterEach(async () => {
         const redis = new Redis();

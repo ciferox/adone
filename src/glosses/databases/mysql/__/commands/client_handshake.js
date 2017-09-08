@@ -1,6 +1,16 @@
-const { database: { mysql }, x } = adone;
-const { c, __ } = mysql;
-const { packet, command: { Command } } = __;
+const {
+    database: { mysql },
+    x
+} = adone;
+
+const {
+    c
+} = mysql;
+
+const {
+    packet,
+    command: { Command }
+} = adone.private(mysql);
 
 const flagNames = (flags) => {
     const res = [];

@@ -1,5 +1,4 @@
 const pouch = adone.lazify({
-    __: "./__",
     x: "./x",
     adapter: "./adapters",
     plugin: "./plugins",
@@ -26,4 +25,16 @@ const pouch = adone.lazify({
     MemoryDB: () => {
         return pouch.DB.defaults({ db: adone.database.level.backend.Memory });
     }
+}, exports, require);
+
+adone.lazifyPrivate({
+    util: "./__/utils",
+    DB: "./__/db",
+    Adapter: "./__/adapter",
+    Changes: "./__/changes",
+    TaskQueue: "./__/task_queue",
+    changesFilter: "./__/changes_filter",
+    selector: "./__/selector",
+    collate: "./__/collate",
+    plugin: "./__/plugins"
 }, exports, require);

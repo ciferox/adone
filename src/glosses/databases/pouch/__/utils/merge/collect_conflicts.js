@@ -1,4 +1,10 @@
-const { database: { pouch: { __: { util: { merge } } } } } = adone;
+const {
+    database: { pouch }
+} = adone;
+
+const {
+    util: { merge }
+} = adone.private(pouch);
 
 // returns revs of all conflicts that is leaves such that
 // 1. are not deleted and

@@ -1,4 +1,6 @@
-const { util } = adone;
+const {
+    util
+} = adone;
 // we restucture the supplied JSON considerably, because the official
 // Mango API is very particular about a lot of this stuff, but we like
 // to be liberal with what we accept in order to prevent mental

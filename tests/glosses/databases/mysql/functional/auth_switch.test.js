@@ -1,14 +1,12 @@
 describe("database", "mysql", "functional", "auth switch", () => {
     const { database: { mysql } } = adone;
     const {
-        __: {
-            command: { Command },
-            packet: {
-                Handshake, HandshakeResponse,
-                AuthSwitchRequest, AuthSwitchResponse, AuthSwitchRequestMoreData
-            }
+        command: { Command },
+        packet: {
+            Handshake, HandshakeResponse,
+            AuthSwitchRequest, AuthSwitchResponse, AuthSwitchRequestMoreData
         }
-    } = mysql;
+    } = adone.private(mysql);
 
     const connectAttributes = { foo: "bar", baz: "foo" };
     let count = 0;

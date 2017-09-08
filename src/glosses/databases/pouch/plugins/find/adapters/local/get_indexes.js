@@ -1,17 +1,23 @@
-const { is, util, database: { pouch: { __, plugin: { find: plugin } } } } = adone;
+const {
+    is,
+    util,
+    database: { pouch }
+} = adone;
+
+const {
+    plugin: { find: plugin }
+} = pouch;
+
 const {
     util: {
-        selector: {
-            compare
-        }
+        selector: { compare }
     }
-} = __;
+} = adone.private(pouch);
+
 const {
     adapter: {
         local: {
-            util: {
-                massageIndexDef
-            }
+            util: { massageIndexDef }
         }
     }
 } = plugin;

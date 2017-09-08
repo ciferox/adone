@@ -1,4 +1,11 @@
-const { util, database: { pouch: { __: { util: { isRemote } } } } } = adone;
+const {
+    util,
+    database: { pouch }
+} = adone;
+
+const {
+    util: { isRemote }
+} = adone.private(pouch);
 
 const isGenOne = (rev) => {
     return /^1-/.test(rev);

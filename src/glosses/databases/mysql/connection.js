@@ -3,10 +3,23 @@ const {
     is,
     x,
     util,
-    database: { mysql: { __, c } },
-    std: { net, tls, stream: { Readable } }
+    database: { mysql },
+    std: {
+        net,
+        tls,
+        stream: { Readable }
+    }
 } = adone;
-const { packet } = __;
+
+const {
+    c
+} = mysql;
+
+const __ = adone.private(mysql);
+
+const {
+    packet
+} = __;
 
 let _connectionId = 0;
 let convertNamedPlaceholders = null;

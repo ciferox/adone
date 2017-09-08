@@ -1,3 +1,5 @@
+const { is } = adone;
+
 const STATE_VERSION = 0;
 // server
 const STATE_ULEN = 1;
@@ -8,8 +10,8 @@ const STATE_PASSWD = 4;
 const STATE_STATUS = 5;
 
 // server
-const BUF_SUCCESS = new Buffer([0x01, 0x00]);
-const BUF_FAILURE = new Buffer([0x01, 0x01]);
+const BUF_SUCCESS = Buffer.from([0x01, 0x00]);
+const BUF_FAILURE = Buffer.from([0x01, 0x01]);
 
 adone.lazify({
     Agent: "./agent",
@@ -65,9 +67,9 @@ adone.lazify({
             let userlen;
             let passlen;
 
-            if (args.length === 1 && typeof args[0] === "function") {
+            if (args.length === 1 && is.function(args[0])) {
                 authcb = args[0];
-            } else if (args.length === 2 && typeof args[0] === "string" && typeof args[1] === "string") {
+            } else if (args.length === 2 && is.string(args[0]) && is.string(args[1])) {
                 user = args[0];
                 pass = args[1];
                 userlen = Buffer.byteLength(user);
@@ -122,7 +124,7 @@ adone.lazify({
                                     }
                                     ++i;
                                     ++state;
-                                    user = new Buffer(ulen);
+                                    user = Buffer.allocUnsafe(ulen);
                                     userp = 0;
                                     break;
                                 }
@@ -150,7 +152,7 @@ adone.lazify({
                                     }
                                     ++i;
                                     ++state;
-                                    pass = new Buffer(plen);
+                                    pass = Buffer.allocUnsafe(plen);
                                     passp = 0;
                                     break;
                                 }
@@ -230,7 +232,7 @@ adone.lazify({
                     };
                     stream.on("data", onData);
 
-                    const buf = new Buffer(3 + userlen + passlen);
+                    const buf = Buffer.allocUnsafe(3 + userlen + passlen);
                     buf[0] = 0x01;
                     buf[1] = userlen;
                     buf.write(user, 2, userlen);
@@ -252,7 +254,8 @@ adone.lazify({
             nums = str.split(".", 4);
             bytes = new Array(4);
             for (i = 0; i < 4; ++i) {
-                if (isNaN(bytes[i] = Number(nums[i]))) {
+                bytes[i] = Number(nums[i]);
+                if (isNaN(bytes[i])) {
                     throw new Error(`Error parsing IP: ${str}`);
                 }
             }

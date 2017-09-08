@@ -1,17 +1,23 @@
-const { is, util, database: { pouch: { __, plugin: { find: plugin } } } } = adone;
+const {
+    is,
+    util,
+    database: { pouch }
+} = adone;
+
+const {
+    plugin: { find: plugin }
+} = pouch
 
 const {
     collate: { collate },
-    selector: {
-        filterInMemoryFields
-    },
+    selector: { filterInMemoryFields },
     util: {
         selector: {
             massageSelector,
             getValue
         }
     }
-} = __;
+} = adone.private(pouch);
 
 const {
     adapter: {

@@ -1,4 +1,11 @@
-const { std: { crypto }, database: { mysql: { __: { packet } } } } = adone;
+const {
+    std: { crypto },
+    database: { mysql }
+} = adone;
+
+const {
+    packet
+} = adone.private(mysql);
 
 export default class Handshake {
     constructor(args) {

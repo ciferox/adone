@@ -1,6 +1,16 @@
-const { is, database: { mysql: { __ } } } = adone;
-const { packet, command } = __;
-const { Command } = command;
+const {
+    is,
+    database: { mysql }
+} = adone;
+
+const {
+    packet,
+    command
+} = adone.private(mysql);
+
+const {
+    Command
+} = command;
 
 class PreparedStatementInfo {
     constructor(query, id, columns, parameters, connection) {

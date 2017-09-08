@@ -1,6 +1,19 @@
-const { database: { mysql: { __ } }, noop, lazify } = adone;
-const { packet, command } = __;
-const { Command } = command;
+const {
+    database: { mysql },
+    noop,
+    lazify
+} = adone;
+
+const __ = adone.private(mysql);
+
+const {
+    packet,
+    command
+} = __;
+
+const {
+    Command
+} = command;
 
 export default class Execute extends Command {
     constructor(options, callback) {

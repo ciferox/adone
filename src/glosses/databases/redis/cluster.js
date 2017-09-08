@@ -8,7 +8,8 @@ const {
     util,
     event: { EventEmitter }
 } = adone;
-const { __ } = redis;
+
+const __ = adone.private(redis);
 
 const isRejectOverwritten = Symbol("is reject overwritten");
 
@@ -257,6 +258,7 @@ export default class Cluster extends __.Commander.mixin(EventEmitter) {
             let lastNodeError;
             for (const key of keys) {
                 try {
+                    // eslint-disable-next-line no-await-in-loop
                     await this.getInfoFromNode(this.connectionPool.nodes.all[key]);
                 } catch (err) {
                     if (this.status === "END") {

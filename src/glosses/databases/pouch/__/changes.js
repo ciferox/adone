@@ -2,7 +2,7 @@ const {
     is,
     event: { EventEmitter },
     util,
-    database: { pouch: { __ } }
+    database: { pouch }
 } = adone;
 const {
     util: {
@@ -12,7 +12,7 @@ const {
             collectConflicts
         }
     }
-} = __;
+} = adone.private(pouch);
 
 
 const tryCatchInChangeListener = (self, change) => {

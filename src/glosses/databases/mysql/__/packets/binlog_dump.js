@@ -3,7 +3,17 @@
 // 0x01 - BINLOG_DUMP_NON_BLOCK
 // send EOF instead of blocking
 
-const { database: { mysql: { c, __: { packet } } } } = adone;
+const {
+    database: { mysql }
+} = adone;
+
+const {
+    c
+} = mysql;
+
+const {
+    packet
+} = adone.private(mysql);
 
 export default class BinlogDump {
     constructor(opts) {

@@ -1,4 +1,7 @@
-const { collection, noop } = adone;
+const {
+    collection,
+    noop
+} = adone;
 
 export default class DelayQueue {
     constructor() {

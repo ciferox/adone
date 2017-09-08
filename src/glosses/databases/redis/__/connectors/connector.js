@@ -1,4 +1,6 @@
-const { std } = adone;
+const {
+    std
+} = adone;
 
 export default class Connector {
     constructor(options) {

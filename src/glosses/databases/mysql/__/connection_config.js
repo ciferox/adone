@@ -1,4 +1,14 @@
-const { is, x, util, std: { url: { parse: urlParse } }, database: { mysql: { c } } } = adone;
+const {
+    is,
+    x,
+    util,
+    std: {
+        url: { parse: urlParse }
+    },
+    database: {
+        mysql: { c }
+    }
+} = adone;
 
 export default class ConnectionConfig {
     constructor(options) {

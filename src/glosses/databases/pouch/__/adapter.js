@@ -1,9 +1,14 @@
 const {
     is,
     util,
-    database: { pouch: { __, x } },
+    database: { pouch },
     event: { EventEmitter }
 } = adone;
+
+const {
+    x
+} = pouch;
+
 const {
     Changes,
     util: {
@@ -22,7 +27,7 @@ const {
             isLocalId
         }
     }
-} = __;
+} = adone.private(pouch);
 
 /*
  * A generic pouch adapter

@@ -1,4 +1,13 @@
-const { is, std: { vm }, database: { pouch: { __, x } } } = adone;
+const {
+    is,
+    std: { vm },
+    database: { pouch }
+} = adone;
+
+const {
+    x
+} = pouch;
+
 const {
     util: {
         isRemote,
@@ -8,7 +17,7 @@ const {
     selector: {
         matchesSelector
     }
-} = __;
+} = adone.private(pouch);
 
 const evalFilter = (input) => {
     const code = `(function() {\n"use strict";\nreturn ${input}\n})()`;

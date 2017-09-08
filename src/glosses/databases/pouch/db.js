@@ -2,9 +2,14 @@ const {
     is,
     util,
     event: { EventEmitter },
-    database: { pouch: { __ } }
+    database: { pouch }
 } = adone;
-const { Adapter, TaskQueue, util: pouchUtil } = __;
+
+const {
+    Adapter,
+    TaskQueue,
+    util: pouchUtil
+} = adone.private(pouch);
 
 // OK, so here's the deal. Consider this code:
 //     var db1 = new PouchDB('foo');

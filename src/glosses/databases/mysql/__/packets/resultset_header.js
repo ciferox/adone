@@ -1,6 +1,17 @@
 // TODO: rename to OK packet
 // https://dev.mysql.com/doc/internals/en/packet-OK_Packet.html
-const { is, database: { mysql: { c, __: { packet } } } } = adone;
+const {
+    is,
+    database: { mysql }
+} = adone;
+
+const {
+    c
+} = mysql;
+
+const {
+    packet
+} = adone.private(mysql);
 
 export default class ResultSetHeader {
     constructor(packet, connection) {

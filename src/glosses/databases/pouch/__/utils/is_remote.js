@@ -8,7 +8,9 @@
 // Previously, this was handled via db.type() === 'http'
 // which is now deprecated.
 
-const { is } = adone;
+const {
+    is
+} = adone;
 
 export default function isRemote(db) {
     if (is.boolean(db._remote)) {

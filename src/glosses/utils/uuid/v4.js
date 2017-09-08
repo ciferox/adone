@@ -1,5 +1,7 @@
 const { is, util: { uuid } } = adone;
 
+const { util } = adone.private(uuid);
+
 const v4 = (options, buf, offset) => {
     const i = buf && offset || 0;
 
@@ -7,7 +9,7 @@ const v4 = (options, buf, offset) => {
         buf = options === "binary" ? Buffer.alloc(16) : null;
     }
 
-    const rnds = uuid.__.rnd16();
+    const rnds = util.rnd16();
 
     // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
     rnds[6] = (rnds[6] & 0x0f) | 0x40;
@@ -20,7 +22,7 @@ const v4 = (options, buf, offset) => {
         }
     }
 
-    return buf || uuid.__.bytesToUuid(rnds);
+    return buf || util.bytesToUuid(rnds);
 };
 
 export default v4;

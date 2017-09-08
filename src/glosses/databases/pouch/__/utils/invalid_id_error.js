@@ -1,4 +1,11 @@
-const { is, database: { pouch: { x } } } = adone;
+const {
+    is,
+    database: { pouch }
+} = adone;
+
+const {
+    x
+} = pouch;
 
 // Determine id an ID is valid
 //   - invalid IDs begin with an underescore that does not begin '_design' or

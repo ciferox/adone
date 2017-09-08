@@ -1,6 +1,20 @@
-const { database: { mysql: { c, __ } }, lazify } = adone;
-const { packet, command } = __;
-const { Command } = command;
+const {
+    database: { mysql },
+    lazify
+} = adone;
+
+const {
+    c
+} = mysql;
+
+const {
+    packet,
+    command
+} = adone.private(mysql);
+
+const {
+    Command
+} = command;
 
 export default class ChangeUser extends Command {
     constructor(options, callback) {

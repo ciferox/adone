@@ -1,4 +1,11 @@
-const { is, database: { mysql: { __: { packet } } } } = adone;
+const {
+    is,
+    database: { mysql }
+} = adone;
+
+const {
+    packet
+} = adone.private(mysql);
 
 export default class TextRow {
     constructor(columns) {

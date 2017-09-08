@@ -1,4 +1,6 @@
-const { database: { redis: { __ } }, x, is, noop } = adone;
+const { database: { redis }, x, is, noop } = adone;
+
+const __ = adone.private(redis);
 
 export const readyHandler = (self) => {
     return () => {

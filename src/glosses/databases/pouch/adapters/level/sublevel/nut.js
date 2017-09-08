@@ -1,4 +1,10 @@
-const { is, util: { ltgt, clone } } = adone;
+const {
+    is,
+    util: {
+        ltgt,
+        clone
+    }
+} = adone;
 
 const isFunction = (f) => {
     return is.function(f);

@@ -1,5 +1,5 @@
 const {
-    database: { redis: { __ } },
+    database: { redis },
     is,
     util,
     promise,
@@ -7,6 +7,8 @@ const {
     noop,
     collection: { ByteArray }
 } = adone;
+
+const __ = adone.private(redis);
 
 export default class Command {
     constructor(name, args, options, callback) {

@@ -1,0 +1,21 @@
+const { std: { crypto } } = adone;
+
+export const rnd16 = () => crypto.randomBytes(16);
+rnd16();
+
+export const seedBytes = rnd16();
+
+/**
+ * Convert array of 16 byte values to UUID string format of the form:
+ * XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+ */
+const byteToHex = [];
+for (let i = 0; i < 256; ++i) {
+    byteToHex[i] = (i + 0x100).toString(16).substr(1);
+}
+
+export const bytesToUuid = (buf, offset) => {
+    let i = offset || 0;
+    const bth = byteToHex;
+    return `${bth[buf[i++]] + bth[buf[i++]] + bth[buf[i++]] + bth[buf[i++]]}-${bth[buf[i++]]}${bth[buf[i++]]}-${bth[buf[i++]]}${bth[buf[i++]]}-${bth[buf[i++]]}${bth[buf[i++]]}-${bth[buf[i++]]}${bth[buf[i++]]}${bth[buf[i++]]}${bth[buf[i++]]}${bth[buf[i++]]}${bth[buf[i++]]}`;
+};

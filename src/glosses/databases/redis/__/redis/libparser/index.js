@@ -1,4 +1,8 @@
-const { is, x, lazify } = adone;
+const {
+    is,
+    x,
+    lazify
+} = adone;
 
 const parsers = lazify({
     JavaScript: "./javascript",
@@ -14,8 +18,8 @@ export default function createParser(options) {
 
     const innerOptions = {
         // The hiredis parser expects underscores
-        return_buffers: options.returnBuffers || false,  // eslint-disable-line camelcase
-        string_numbers: options.stringNumbers || false  // eslint-disable-line camelcase
+        return_buffers: options.returnBuffers || false, // eslint-disable-line camelcase
+        string_numbers: options.stringNumbers || false // eslint-disable-line camelcase
     };
     let parser;
     if (options.name === "javascript" || options.stringNumbers) {

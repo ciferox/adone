@@ -1,5 +1,6 @@
 describe("database", "redis", "unit", "util", () => {
-    const { x, database: { redis: { __: { util } } } } = adone;
+    const { x, database: { redis } } = adone;
+    const { util } = adone.private(redis);
 
     describe(".convertBufferToString", () => {
         it("should return correctly", () => {

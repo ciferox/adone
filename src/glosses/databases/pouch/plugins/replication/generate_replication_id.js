@@ -1,15 +1,13 @@
 const {
-    database: {
-        pouch: {
-            __: {
-                collate: { collate },
-                util: {
-                    md5: { binary: binaryMd5 }
-                }
-            }
-        }
-    }
+    database: { pouch }
 } = adone;
+
+const {
+    collate: { collate },
+    util: {
+        md5: { binary: binaryMd5 }
+    }
+} = adone.private(pouch);
 
 const sortObjectPropertiesByKey = (queryParams) => {
     return Object.keys(queryParams).sort(collate).reduce((result, key) => {

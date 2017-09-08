@@ -5,7 +5,13 @@
 
 // NOTE: we are fixed to readable-stream@1.0.x for now
 // for pure Streams2 across Node versions
-const { is, std: { stream: { Readable }, util: { inherits } } } = adone;
+const {
+    is,
+    std: {
+        stream: { Readable },
+        util: { inherits }
+    }
+} = adone;
 
 export default function ReadStream(options, makeData) {
     if (!(this instanceof ReadStream)) {

@@ -1,5 +1,13 @@
 describe("database", "mysql", "unit", "packet parser", () => {
-    const { database: { mysql: { __: { PacketParser, packet: { Packet } } } }, is } = adone;
+    const {
+        database: { mysql },
+        is
+    } = adone;
+
+    const {
+        PacketParser,
+        packet: { Packet }
+    } = adone.private(mysql);
 
     const splitUP = (arr) => {
         const cases = [[arr]];

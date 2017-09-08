@@ -1,7 +1,6 @@
 const { lazify } = adone;
 
 const mysql = lazify({
-    __: "./__",
     c: "./constants",
     auth: "./auth",
     Connection: "./connection",
@@ -13,9 +12,28 @@ const mysql = lazify({
     enableCompression: "./compressed_protocol"
 }, exports, require);
 
+adone.lazifyPrivate({
+    command: "./__/commands",
+    packet: "./__/packets",
+    ConnectionConfig: "./__/connection_config",
+    PacketParser: "./__/packet_parser",
+    auth: "./__/auth",
+    PoolConfig: "./__/pool_config",
+    PoolConnection: "./__/pool_connection",
+    PromisePool: "./__/promise_pool",
+    PromiseConnection: "./__/promise_connection",
+    compileBinaryParser: "./__/compile_binary_parser",
+    compileTextParser: "./__/compile_text_parser",
+    stringParser: "./__/string_parser",
+    helper: "./__/helpers",
+    namedPlaceholders: "./__/named_placeholders"
+}, exports, require);
+
+const __ = adone.private(mysql);
+
 export const createConnection = (config = {}) => {
     const connection = new mysql.Connection({
-        config: new mysql.__.ConnectionConfig(config)
+        config: new __.ConnectionConfig(config)
     });
     const { promise = true } = config;
     if (!promise) {
@@ -23,7 +41,7 @@ export const createConnection = (config = {}) => {
     }
     return new Promise((resolve, reject) => {
         connection.once("connect", (connectParams) => {
-            resolve(new mysql.__.PromiseConnection(connection, connectParams));
+            resolve(new __.PromiseConnection(connection, connectParams));
         });
         connection.once("error", reject);
     });
@@ -31,13 +49,13 @@ export const createConnection = (config = {}) => {
 
 export const createPool = (config) => {
     const pool = new mysql.Pool({
-        config: new mysql.__.PoolConfig(config)
+        config: new __.PoolConfig(config)
     });
     const { promise = true } = config;
     if (!promise) {
         return pool;
     }
-    return new mysql.__.PromisePool(pool);
+    return new __.PromisePool(pool);
 };
 
 export const createPoolCluster = (config) => {

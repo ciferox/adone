@@ -1,4 +1,11 @@
-const { std: { fs, path }, database: { pouch: { __ } } } = adone;
+const {
+    std: {
+        fs,
+        path
+    },
+    database: { pouch }
+} = adone;
+
 const {
     util: {
         merge: {
@@ -6,7 +13,7 @@ const {
             winningRev
         }
     }
-} = __;
+} = adone.private(pouch);
 
 const LevelWriteStream = (db) => (options) => {
     options = options || {};

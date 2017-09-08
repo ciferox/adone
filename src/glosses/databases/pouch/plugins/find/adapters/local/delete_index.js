@@ -1,23 +1,18 @@
 const {
-    database: {
-        pouch: {
-            plugin: {
-                find: plugin
-            },
-            __: {
-                util: {
-                    upsert
-                }
-            }
-        }
-    }
+    database: { pouch }
 } = adone;
 
 const {
+    plugin: { find: plugin },
+} = pouch;
+
+const {
+    util: { upsert }
+} = adone.private(pouch);
+
+const {
     adapter: {
-        local: {
-            abstractMapper
-        }
+        local: { abstractMapper }
     }
 } = plugin;
 

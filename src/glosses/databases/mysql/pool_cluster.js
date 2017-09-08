@@ -6,6 +6,8 @@ const {
     database: { mysql }
 } = adone;
 
+const __ = adone.private(mysql);
+
 const selector = {
     RR: () => {
         let index = 0;
@@ -106,7 +108,7 @@ export default class PoolCluster extends EventEmitter {
             this._nodes[id] = {
                 id,
                 errorCount: 0,
-                pool: new mysql.Pool({ config: new mysql.__.PoolConfig(config) })
+                pool: new mysql.Pool({ config: new __.PoolConfig(config) })
             };
 
             this._serviceableNodeIds.push(id);

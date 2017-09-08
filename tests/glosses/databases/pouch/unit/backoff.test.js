@@ -1,5 +1,5 @@
 describe("database", "pouch", "backoff", () => {
-    const { defaultBackOff } = adone.database.pouch.__.util;
+    const { util: { defaultBackOff } } = adone.private(adone.database.pouch);
 
     it("defaultBackoff should start off at most 2 seconds and never exceed 10 minutes", () => {
         assert.exists(defaultBackOff);

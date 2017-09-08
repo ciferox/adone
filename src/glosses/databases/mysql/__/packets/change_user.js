@@ -1,5 +1,16 @@
-const { is, x, database: { mysql } } = adone;
-const { c, __: { packet } } = mysql;
+const {
+    is,
+    x,
+    database: { mysql }
+} = adone;
+
+const {
+    c
+} = mysql;
+
+const {
+    packet
+} = adone.private(mysql);
 
 export default class ChangeUser {
     constructor(opts) {

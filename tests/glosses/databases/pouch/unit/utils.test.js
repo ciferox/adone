@@ -1,10 +1,18 @@
 describe("database", "pouch", "utils", () => {
     const {
-        x,
-        __: {
-            util: { normalizeDesignDocFunctionName, parseDesignDocFunctionName }
+        database: { pouch }
+    } = adone;
+    const {
+        x
+    } = pouch;
+
+    const {
+        util: {
+            normalizeDesignDocFunctionName,
+            parseDesignDocFunctionName
         }
-    } = adone.database.pouch;
+    } = adone.private(pouch);
+
     const { createError } = x;
 
     describe("the design doc function name normalizer", () => {

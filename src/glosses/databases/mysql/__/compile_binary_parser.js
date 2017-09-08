@@ -1,4 +1,15 @@
-const { is, database: { mysql: { c, __ } }, std: { vm } } = adone;
+const {
+    is,
+    database: { mysql },
+    std: { vm }
+} = adone;
+
+const {
+    c
+} = mysql;
+
+const __ = adone.private(mysql);
+
 const typeNames = [];
 for (const t in c.type) {
     typeNames[c.type[t]] = t;

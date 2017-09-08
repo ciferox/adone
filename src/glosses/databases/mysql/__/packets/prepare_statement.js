@@ -1,5 +1,16 @@
-const { database: { mysql: { c, __ } } } = adone;
-const { packet } = __;
+const {
+    database: { mysql }
+} = adone;
+
+const {
+    c
+} = mysql;
+
+const __ = adone.private(mysql);
+
+const {
+    packet
+} = __;
 
 export default class PrepareStatement {
     constructor(sql, charsetNumber) {

@@ -1,5 +1,15 @@
-const { database: { mysql: { c, __ } } } = adone;
-const { packet, command: { Command } } = __;
+const {
+    database: { mysql }
+} = adone;
+
+const {
+    c
+} = mysql;
+
+const {
+    packet,
+    command: { Command }
+} = adone.private(mysql);
 
 export default class Quit extends Command {
     constructor(callback) {

@@ -1,9 +1,24 @@
 const {
-    is, fs, noop, lazify,
-    std: { stream: { Readable } },
-    database: { mysql: { c, __ } },
+    is,
+    fs,
+    noop,
+    lazify,
+    std: {
+        stream: { Readable }
+    },
+    database: { mysql }
 } = adone;
-const { packet, command: { Command } } = __;
+
+const {
+    c
+} = mysql;
+
+const __ = adone.private(mysql);
+
+const {
+    packet,
+    command: { Command }
+} = __;
 
 const lazy = lazify({
     EmptyPacket: () => new packet.Packet(0, Buffer.allocUnsafe(4), 0, 4)
@@ -244,20 +259,20 @@ export default class Query extends Command {
             if (!stream.push(row)) {
                 this._connection.pause();
             }
-            stream.emit("result", row);  // replicate old emitter
+            stream.emit("result", row); // replicate old emitter
         });
 
         this.on("error", (err) => {
-            stream.emit("error", err);  // Pass on any errors
+            stream.emit("error", err); // Pass on any errors
         });
 
         this.on("end", () => {
-            stream.emit("close");  // notify readers that query has completed
-            stream.push(null);  // pushing null, indicating EOF
+            stream.emit("close"); // notify readers that query has completed
+            stream.push(null); // pushing null, indicating EOF
         });
 
         this.on("fields", (fields) => {
-            stream.emit("fields", fields);  // replicate old emitter
+            stream.emit("fields", fields); // replicate old emitter
         });
 
         return stream;

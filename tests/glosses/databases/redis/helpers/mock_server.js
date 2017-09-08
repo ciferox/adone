@@ -3,8 +3,10 @@ const {
     is,
     std: { net },
     event: { EventEmitter },
-    database: { redis: { __: { util, parser: { createParser } } } }
+    database: { redis }
 } = adone;
+
+const { util, parser: { createParser } } = adone.private(redis);
 
 export default class MockServer extends EventEmitter {
     constructor(port, handler) {

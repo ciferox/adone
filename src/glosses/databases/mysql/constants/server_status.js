@@ -8,8 +8,8 @@
   statement, when autocommit=off.
 */
 export const SERVER_STATUS_IN_TRANS = 1;
-export const SERVER_STATUS_AUTOCOMMIT = 2;  // Server in auto_commit mode
-export const SERVER_MORE_RESULTS_EXISTS = 8;  // Multi query - next query exists
+export const SERVER_STATUS_AUTOCOMMIT = 2; // Server in auto_commit mode
+export const SERVER_MORE_RESULTS_EXISTS = 8; // Multi query - next query exists
 export const SERVER_QUERY_NO_GOOD_INDEX_USED = 16;
 export const SERVER_QUERY_NO_INDEX_USED = 32;
 /**

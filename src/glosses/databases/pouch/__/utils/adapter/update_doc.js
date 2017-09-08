@@ -1,25 +1,25 @@
 const {
-    database: {
-        pouch: {
-            __: {
-                util: {
-                    merge: {
-                        isDeleted,
-                        merge,
-                        winningRev: calculateWinningRev,
-                        revExists
-                    },
-                    adapter: {
-                        parseDoc
-                    }
-                }
-            },
-            x: {
-                createError, REV_CONFLICT
-            }
-        }
-    }
+    database: { pouch }
 } = adone;
+
+const {
+    x: {
+        createError,
+        REV_CONFLICT
+    }
+} = pouch;
+
+const {
+    util: {
+        merge: {
+            isDeleted,
+            merge,
+            winningRev: calculateWinningRev,
+            revExists
+        },
+        adapter: { parseDoc }
+    }
+} = adone.private(pouch);
 
 export default function updateDoc(revLimit, prev, docInfo, results,
     i, cb, writeDoc, newEdits) {

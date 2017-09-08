@@ -4,6 +4,8 @@ describe("util", "uuid", () => {
     // Verify ordering of v1 ids created with explicit times
     const TIME = 1321644961388; // 2011-11-18 11:36:01.388-08:00
 
+    const __ = adone.private(uuid);
+
     const HASH_SAMPLES = [
         {
             input: "",
@@ -48,7 +50,14 @@ describe("util", "uuid", () => {
     it("sha1 node", () => {
         HASH_SAMPLES.forEach((sample) => {
             // Convert the sha1 Buffer to an Array here so we can call map() on it in hashToHex
-            assert.equal(hashToHex(Array.prototype.slice.apply(uuid.__.sha1(sample.input))), sample.sha1);
+            assert.equal(hashToHex(Array.prototype.slice.apply(__.sha1(sample.input))), sample.sha1);
+        });
+    });
+
+    it("md5 node", () => {
+        HASH_SAMPLES.forEach((sample) => {
+            // Convert the sha1 Buffer to an Array here so we can call map() on it in hashToHex
+            assert.equal(hashToHex(Array.prototype.slice.apply(__.md5(sample.input))), sample.md5);
         });
     });
 

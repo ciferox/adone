@@ -1,4 +1,11 @@
-const { database: { redis: { __ } }, is, std, promise } = adone;
+const {
+    database: { redis },
+    is,
+    std,
+    promise
+} = adone;
+
+const __ = adone.private(redis);
 
 export default class Script {
     constructor(lua, numberOfKeys, keyPrefix = "") {

@@ -1,4 +1,6 @@
-const { event: { EventEmitter } } = adone;
+const {
+    event: { EventEmitter }
+} = adone;
 
 export default class Command extends EventEmitter {
     constructor() {

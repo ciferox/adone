@@ -1,6 +1,12 @@
 describe("database", "mysql", "unit", "packets", () => {
     describe("column definition", () => {
-        const { database: { mysql: { __: { packet: { ColumnDefinition } } } } } = adone;
+        const {
+            database: { mysql }
+        } = adone;
+        const {
+            packet: { ColumnDefinition }
+        } = adone.private(mysql);
+
         const sequenceId = 5;
 
         specify("simple", () => {

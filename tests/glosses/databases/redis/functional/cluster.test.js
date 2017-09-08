@@ -2,7 +2,9 @@ import MockServer from "../helpers/mock_server";
 import check from "../helpers/check_redis";
 
 describe("database", "redis", "cluster", { skip: check }, () => {
-    const { is, database: { redis: { Redis, Cluster, __: { calculateSlot } } }, util, promise } = adone;
+    const { is, database: { redis }, util, promise } = adone;
+    const { Redis, Cluster } = redis;
+    const { calculateSlot } = adone.private(redis);
 
     const disconnect = async (clients, done) => {
         if (is.function(done)) {

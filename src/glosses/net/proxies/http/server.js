@@ -1,9 +1,20 @@
-const { is, x, net: { proxy: { http: { tunnel } }, http: { server: { helper } } } } = adone;
+const {
+    is,
+    x,
+    net: {
+        proxy: {
+            http: { tunnel }
+        },
+        http: {
+            server: { helper }
+        }
+    }
+} = adone;
 
 const hopByHopHeaders = new Set([
     "connection",
     "keep-alive",
-    "proxy-connection",  // hm
+    "proxy-connection", // hm
     "proxy-authenticate",
     "proxy-authorization",
     "te",
@@ -98,7 +109,7 @@ class LocalRequest {
         if (is.null(port)) {
             port = this.secure ? 443 : 80;
         } else {
-            port = Number(port);  // incorrect number?
+            port = Number(port); // incorrect number?
         }
         return port;
     }
@@ -570,7 +581,7 @@ class WSSessionContext {
 
         this._outgoingComposed = adone.net.http.server.helper.compose(this.outgoingTransforms);
         this._outgoing = (data, flags) => {
-            this._outgoingComposed({ data, flags }).catch(adone.noop);  // swallow all the errors
+            this._outgoingComposed({ data, flags }).catch(adone.noop); // swallow all the errors
         };
 
         this.localCloseCode = null;
@@ -599,7 +610,7 @@ class WSSessionContext {
         const a = this.incomingTransforms;
         a.push(callback);
         const l = a.length;
-        [a[l - 1], a[l - 2]] = [a[l - 2], a[l - 1]];  // keep the sending mw at the end
+        [a[l - 1], a[l - 2]] = [a[l - 2], a[l - 1]]; // keep the sending mw at the end
         return this;
     }
 
@@ -607,7 +618,7 @@ class WSSessionContext {
         const a = this.outgoingTransforms;
         a.push(callback);
         const l = a.length;
-        [a[l - 1], a[l - 2]] = [a[l - 2], a[l - 1]];  // keep the sending mw at the end
+        [a[l - 1], a[l - 2]] = [a[l - 2], a[l - 1]]; // keep the sending mw at the end
         return this;
     }
 
@@ -802,7 +813,7 @@ class HTTPUpgradeContext {
                             protocol: this.localRequest.protocol,
                             method: this.localRequest.method,
                             headers: this.localRequest.headers,
-                            rejectUnauthorized: false  // ?
+                            rejectUnauthorized: false // ?
                         };
                         options.agent = tunnel[this.localRequest.protocol][proxy.protocol](tunnelOptions);
                     }
@@ -869,7 +880,7 @@ class HTTPUpgradeContext {
                             .once("upgrade", (res, socket) => resolve([res, socket]))
                             .once("aborted", reject)
                             .once("error", reject)
-                            .end();  // this._head?
+                            .end(); // this._head?
                     });
                     this.remoteResponse = new RemoteResponse(this, res);
                     const { rawHeaders, statusCode, httpVersion } = res;
@@ -1048,7 +1059,7 @@ class HTTPConnectContext {
                 const context = new HTTPContext(request, response, this);
                 context.clientAddress = this.clientAddress;
                 context.clientPort = this.clientPort;
-                resolve();   // it calls multiple times, does it matter?
+                resolve(); // it calls multiple times, does it matter?
                 this.processContext(context);
             };
 
@@ -1060,7 +1071,7 @@ class HTTPConnectContext {
                     const context = new HTTPUpgradeContext(this, request, socket, head, this.processContext);
                     context.clientAddress = this.clientAddress;
                     context.clientPort = this.clientPort;
-                    resolve();  // it calls multiple times, does it matter?
+                    resolve(); // it calls multiple times, does it matter?
                     this.processContext(context);
                 });
             }
@@ -1133,7 +1144,7 @@ class HTTPConnectContext {
         if (this.handleUpgrade) {
             // read the first chunk to understand if it is an update request
             const chunk = await new Promise((resolve, reject) => {
-                this.sendEstablished();  // we will never receive the first chunk without this
+                this.sendEstablished(); // we will never receive the first chunk without this
                 this.localSocket.once("data", (chunk) => {
                     this.localSocket.pause();
                     this.localSocket.removeListener("error", reject);

@@ -1,27 +1,26 @@
 const {
-    database: {
-        pouch: {
-            __: {
-                util: {
-                    binary: {
-                        atob,
-                        btoa,
-                        binaryStringToBuffer,
-                        bufferToBinaryString,
-                        bufferToBase64
-                    },
-                    md5: {
-                        binary: binaryMd5
-                    }
-                }
-            },
-            x: {
-                createError,
-                BAD_ARG
-            }
-        }
-    }
+    database: { pouch }
 } = adone;
+
+const {
+    x: {
+        createError,
+        BAD_ARG
+    }
+} = pouch;
+
+const {
+    util: {
+        binary: {
+            atob,
+            btoa,
+            binaryStringToBuffer,
+            bufferToBinaryString,
+            bufferToBase64
+        },
+        md5: { binary: binaryMd5 }
+    }
+} = adone.private(pouch);
 
 const parseBase64 = (data) => {
     try {
