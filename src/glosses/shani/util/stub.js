@@ -52,6 +52,7 @@ const proto = {
         delete this.throwArgAt;
         delete this.fakeFn;
         this.returnThis = false;
+        this.resolveThis = false;
 
         fakes.forEach((fake) => {
             fake.resetBehavior();

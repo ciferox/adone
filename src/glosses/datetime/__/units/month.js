@@ -3,9 +3,10 @@ import { addFormatToken } from "../format";
 import { addUnitAlias } from "./aliases";
 import { addUnitPriority } from "./priorities";
 import { MONTH } from "./constants";
-import { toInt } from "../utils";
+import { toInt, mod } from "../utils";
 import { createUTC } from "../create/utc";
 import getParsingFlags from "../create/parsing-flags";
+import { isLeapYear } from "./year";
 const { is } = adone;
 
 import {
@@ -17,9 +18,14 @@ import {
     addParseToken
 } from "../parse";
 
-export function daysInMonth(year, month) {
-    return new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
-}
+export const daysInMonth = (year, month) => {
+    if (isNaN(year) || isNaN(month)) {
+        return NaN;
+    }
+    const modMonth = mod(month, 12);
+    year += (month - modMonth) / 12;
+    return modMonth === 1 ? (isLeapYear(year) ? 29 : 28) : (31 - modMonth % 7 % 2);
+};
 
 // FORMATTING
 
@@ -184,7 +190,7 @@ export function monthsShortRegex(isStrict) {
         this._monthsShortRegex = defaultMonthsShortRegex;
     }
     return this._monthsShortStrictRegex && isStrict ?
-            this._monthsShortStrictRegex : this._monthsShortRegex;
+        this._monthsShortStrictRegex : this._monthsShortRegex;
 
 }
 
@@ -204,7 +210,7 @@ export function monthsRegex(isStrict) {
         this._monthsRegex = defaultMonthsRegex;
     }
     return this._monthsStrictRegex && isStrict ?
-            this._monthsStrictRegex : this._monthsRegex;
+        this._monthsStrictRegex : this._monthsRegex;
 
 }
 

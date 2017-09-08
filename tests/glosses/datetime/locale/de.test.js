@@ -11,7 +11,7 @@ describe("datetime", "locale", "de", () => {
     });
 
     it("parse", () => {
-        const tests = "Januar Jan._Februar Febr._März Mrz._April Apr._Mai Mai_Juni Jun._Juli Jul._August Aug._September Sept._Oktober Okt._November Nov._Dezember Dez.".split("_");
+        const tests = "Januar Jan._Februar Feb._März März_April Apr._Mai Mai_Juni Juni_Juli Juli_August Aug._September Sep._Oktober Okt._November Nov._Dezember Dez.".split("_");
         let i;
 
         function equalTest(input, mmm, i) {
@@ -34,7 +34,7 @@ describe("datetime", "locale", "de", () => {
         const a = [
             ["dddd, Do MMMM YYYY, h:mm:ss a", "Sonntag, 14. Februar 2010, 3:25:50 pm"],
             ["ddd, hA", "So., 3PM"],
-            ["M Mo MM MMMM MMM", "2 2. 02 Februar Febr."],
+            ["M Mo MM MMMM MMM", "2 2. 02 Februar Feb."],
             ["YYYY YY", "2010 10"],
             ["D Do DD", "14 14. 14"],
             ["d do dddd ddd dd", "0 0. Sonntag So. So"],
@@ -52,9 +52,9 @@ describe("datetime", "locale", "de", () => {
             ["LLL", "14. Februar 2010 15:25"],
             ["LLLL", "Sonntag, 14. Februar 2010 15:25"],
             ["l", "14.2.2010"],
-            ["ll", "14. Febr. 2010"],
-            ["lll", "14. Febr. 2010 15:25"],
-            ["llll", "So., 14. Febr. 2010 15:25"]
+            ["ll", "14. Feb. 2010"],
+            ["lll", "14. Feb. 2010 15:25"],
+            ["llll", "So., 14. Feb. 2010 15:25"]
         ];
         const b = adone.datetime(new Date(2010, 1, 14, 15, 25, 50, 125));
         let i;
@@ -102,7 +102,7 @@ describe("datetime", "locale", "de", () => {
     });
 
     it("format month", () => {
-        const expected = "Januar Jan._Februar Febr._März Mrz._April Apr._Mai Mai_Juni Jun._Juli Jul._August Aug._September Sept._Oktober Okt._November Nov._Dezember Dez.".split("_");
+        const expected = "Januar Jan._Februar Feb._März März_April Apr._Mai Mai_Juni Juni_Juli Juli_August Aug._September Sep._Oktober Okt._November Nov._Dezember Dez.".split("_");
         let i;
 
         for (i = 0; i < expected.length; i++) {

@@ -232,9 +232,14 @@ describe("bulk", function () {
 
     it("should throw an error when no operations in ordered batch", async () => {
         const collection = this.db.collection("batch_write_ordered_ops_8");
-        expect(() => {
-            collection.initializeOrderedBulkOp().execute(() => { });
-        }).to.throw("Invalid Operation, No operations in bulk");
+        await assert.throws(async () => {
+            await collection.initializeOrderedBulkOp().execute();
+        }, "Invalid Operation, No operations in bulk");
+        const err = await new Promise((resolve) => {
+            collection.initializeOrderedBulkOp().execute(resolve);
+        });
+        expect(err).to.exist;
+        expect(err.message).to.be.equal("Invalid Operation, No operations in bulk");
     });
 
     it("should correctly execute ordered batch using w:0", async () => {
@@ -515,9 +520,14 @@ describe("bulk", function () {
 
         it("should throw an error when no operations in unordered batch", async () => {
             const collection = this.db.collection("batch_write_ordered_ops_8");
-            expect(() => {
-                collection.initializeUnorderedBulkOp().execute(() => { });
-            }).to.throw("Invalid Operation, No operations in bulk");
+            await assert.throws(async () => {
+                await collection.initializeUnorderedBulkOp().execute();
+            }, "Invalid Operation, No operations in bulk");
+            const err = await new Promise((resolve) => {
+                collection.initializeUnorderedBulkOp().execute(resolve);
+            });
+            expect(err).to.exist;
+            expect(err.message).to.be.equal("Invalid Operation, No operations in bulk");
         });
 
         it("should correctly execute unordered batch using w:0", async () => {
@@ -663,6 +673,20 @@ describe("bulk", function () {
 
             await collection.insertMany(docs, { ordered: false });
             expect(await collection.count()).to.be.equal(5);
+        });
+
+        it("should return an error instead of throwing when no operations are provided for ordered bulk operation execute", async () => {
+            const collection = this.db.collection("doesnt_matter");
+            await assert.throws(async () => {
+                await collection.insertMany([]);
+            }, "Invalid Operation, No operations in bulk");
+        });
+
+        it("should return an error instead of throwing when no operations are provided for unordered bulk operation execute", async () => {
+            const collection = this.db.collection("doesnt_matter");
+            await assert.throws(async () => {
+                await collection.insertMany([], { ordered: false });
+            }, "Invalid Operation, No operations in bulk");
         });
     }
 });

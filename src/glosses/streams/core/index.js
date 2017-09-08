@@ -7,7 +7,6 @@ const __ = adone.lazify({
     PassThrough: "./pass_through"
 }, null, require);
 
-
 const wrapBefore = (cb, func) => {
     switch (util.functionParams(func).length) {
         case 0: {
@@ -488,8 +487,17 @@ class CoreStream extends EventEmitter {
 
     static merge(streams, { end = true, sourceOptions } = {}) {
         const src = new this(null, sourceOptions);
-        streams = streams.filter((x) => {
-            return x && !x.isEnded();
+        streams = streams.filter((x, i) => {
+            if (!x) {
+                return false;
+            }
+            if (x instanceof CoreStream) {
+                return !x.isEnded();
+            }
+            if (x instanceof std.stream.Readable) {
+                return !x._readableState.ended;
+            }
+            throw new x.InvalidArgument(`Invalid stream at ${i}`);
         });
         let m = streams.length;
         const onEnd = () => {

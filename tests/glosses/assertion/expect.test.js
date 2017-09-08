@@ -408,31 +408,36 @@ describe("assertion", "expect", () => {
             expect(new Foo()).to.an.instanceof(undefined);
         }, "The instanceof assertion needs a constructor but undefined was given.");
 
-        if (!is.undefined(Symbol) && !is.undefined(Symbol.hasInstance)) {
-            err(() => {
-                expect(new Foo()).to.an.instanceof(Symbol());
-            }, "The instanceof assertion needs a constructor but symbol was given.");
+        err(() => {
+            function Thing() { }
+            const t = new Thing();
+            Thing.prototype = 1337;
+            expect(t).to.an.instanceof(Thing);
+        }, "The instanceof assertion needs a constructor but function was given.", true);
 
-            err(() => {
-                const FakeConstructor = {};
-                const fakeInstanceB = 4;
-                FakeConstructor[Symbol.hasInstance] = function (val) {
-                    return val === 3;
-                };
+        err(() => {
+            expect(new Foo()).to.an.instanceof(Symbol());
+        }, "The instanceof assertion needs a constructor but symbol was given.");
 
-                expect(fakeInstanceB).to.be.an.instanceof(FakeConstructor);
-            }, "expected 4 to be an instance of an unnamed constructor");
+        err(() => {
+            const FakeConstructor = {};
+            const fakeInstanceB = 4;
+            FakeConstructor[Symbol.hasInstance] = function (val) {
+                return val === 3;
+            };
 
-            err(() => {
-                const FakeConstructor = {};
-                const fakeInstanceB = 4;
-                FakeConstructor[Symbol.hasInstance] = function (val) {
-                    return val === 4;
-                };
+            expect(fakeInstanceB).to.be.an.instanceof(FakeConstructor);
+        }, "expected 4 to be an instance of an unnamed constructor");
 
-                expect(fakeInstanceB).to.not.be.an.instanceof(FakeConstructor);
-            }, "expected 4 to not be an instance of an unnamed constructor");
-        }
+        err(() => {
+            const FakeConstructor = {};
+            const fakeInstanceB = 4;
+            FakeConstructor[Symbol.hasInstance] = function (val) {
+                return val === 4;
+            };
+
+            expect(fakeInstanceB).to.not.be.an.instanceof(FakeConstructor);
+        }, "expected 4 to not be an instance of an unnamed constructor");
 
         err(() => {
             expect(3).to.an.instanceof(Foo, "blah");
@@ -1861,6 +1866,14 @@ describe("assertion", "expect", () => {
         expect([1, 2]).to.include(1);
         expect(["foo", "bar"]).to.not.include("baz");
         expect(["foo", "bar"]).to.not.include(1);
+
+        // .include should work with Error objects and objects with a custom
+        // `@@toStringTag`.
+        expect(new Error("foo")).to.include({ message: "foo" });
+        const customObj = { a: 1 };
+        customObj[Symbol.toStringTag] = "foo";
+
+        expect(customObj).to.include({ a: 1 });
 
         expect({ a: 1 }).to.include({ toString: Object.prototype.toString });
 

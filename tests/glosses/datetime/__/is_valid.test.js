@@ -15,6 +15,12 @@ describe("datetime", "is valid", () => {
         }
     });
 
+    it("Feb 29 0000 is valid", () => {
+        // https://github.com/moment/moment/issues/3358
+        assert.ok(adone.datetime({ year: 0, month: 1, date: 29 }).isValid(), "Feb 29 0000 must be valid");
+        assert.ok(adone.datetime({ year: 0, month: 1, date: 28 }).add(1, "d").isValid(), "Feb 28 0000 + 1 day must be valid");
+    });
+
     it("array bad date", () => {
         const tests = [
             adone.datetime([2010, 0, 0]),
@@ -83,7 +89,7 @@ describe("datetime", "is valid", () => {
             "2010-00-00",
             "2010-01-00",
             "2010-01-40",
-            "2010-01-01T24:01",  // 24:00:00 is actually valid
+            "2010-01-01T24:01", // 24:00:00 is actually valid
             "2010-01-01T23:60",
             "2010-01-01T23:59:60"
         ];

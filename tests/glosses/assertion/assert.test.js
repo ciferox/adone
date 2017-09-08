@@ -175,21 +175,26 @@ describe("assertion", "assert", () => {
             assert.instanceOf(new Foo(), undefined);
         }, "The instanceof assertion needs a constructor but undefined was given.");
 
-        if (!is.undefined(Symbol) && !is.undefined(Symbol.hasInstance)) {
-            err(() => {
-                assert.instanceOf(new Foo(), Symbol());
-            }, "The instanceof assertion needs a constructor but symbol was given.");
+        err(() => {
+            assert.instanceOf(new Foo(), Symbol());
+        }, "The instanceof assertion needs a constructor but symbol was given.");
 
-            err(() => {
-                const FakeConstructor = {};
-                const fakeInstanceB = 4;
-                FakeConstructor[Symbol.hasInstance] = function (val) {
-                    return val === 3;
-                };
+        err(() => {
+            function Thing() { }
+            const t = new Thing();
+            Thing.prototype = 1337;
+            assert.instanceOf(t, Thing);
+        }, "The instanceof assertion needs a constructor but function was given.", true);
 
-                assert.instanceOf(fakeInstanceB, FakeConstructor);
-            }, "expected 4 to be an instance of an unnamed constructor");
-        }
+        err(() => {
+            const FakeConstructor = {};
+            const fakeInstanceB = 4;
+            FakeConstructor[Symbol.hasInstance] = function (val) {
+                return val === 3;
+            };
+
+            assert.instanceOf(fakeInstanceB, FakeConstructor);
+        }, "expected 4 to be an instance of an unnamed constructor");
 
         err(() => {
             assert.instanceOf(5, Foo, "blah");
@@ -618,6 +623,14 @@ describe("assertion", "assert", () => {
         assert.include("foobar", "bar");
         assert.include("", "");
         assert.include([1, 2, 3], 3);
+
+        // .include should work with Error objects and objects with a custom
+        // `@@toStringTag`.
+        assert.include(new Error("foo"), { message: "foo" });
+        const customObj = { a: 1 };
+        customObj[Symbol.toStringTag] = "foo";
+
+        assert.include(customObj, { a: 1 });
 
         let obj1 = { a: 1 },
             obj2 = { b: 2 };

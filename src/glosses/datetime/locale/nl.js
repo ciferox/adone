@@ -33,7 +33,7 @@ export default ExDate.defineLocale("nl", {
 
     weekdays: "zondag_maandag_dinsdag_woensdag_donderdag_vrijdag_zaterdag".split("_"),
     weekdaysShort: "zo._ma._di._wo._do._vr._za.".split("_"),
-    weekdaysMin: "Zo_Ma_Di_Wo_Do_Vr_Za".split("_"),
+    weekdaysMin: "zo_ma_di_wo_do_vr_za".split("_"),
     weekdaysParseExact: true,
     longDateFormat: {
         LT: "HH:mm",
@@ -72,6 +72,6 @@ export default ExDate.defineLocale("nl", {
     },
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 4  // The week that contains Jan 4th is the first week of the year.
+        doy: 4 // The week that contains Jan 4th is the first week of the year.
     }
 });

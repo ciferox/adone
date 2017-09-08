@@ -13,17 +13,17 @@ export default ExDate.defineLocale("ca", {
     monthsParseExact: true,
     weekdays: "diumenge_dilluns_dimarts_dimecres_dijous_divendres_dissabte".split("_"),
     weekdaysShort: "dg._dl._dt._dc._dj._dv._ds.".split("_"),
-    weekdaysMin: "Dg_Dl_Dt_Dc_Dj_Dv_Ds".split("_"),
+    weekdaysMin: "dg_dl_dt_dc_dj_dv_ds".split("_"),
     weekdaysParseExact: true,
     longDateFormat: {
         LT: "H:mm",
         LTS: "H:mm:ss",
         L: "DD/MM/YYYY",
-        LL: "[el] D MMMM [de] YYYY",
+        LL: "D MMMM [de] YYYY",
         ll: "D MMM YYYY",
-        LLL: "[el] D MMMM [de] YYYY [a les] H:mm",
+        LLL: "D MMMM [de] YYYY [a les] H:mm",
         lll: "D MMM YYYY, H:mm",
-        LLLL: "[el] dddd D MMMM [de] YYYY [a les] H:mm",
+        LLLL: "dddd D MMMM [de] YYYY [a les] H:mm",
         llll: "ddd D MMM YYYY, H:mm"
     },
     calendar: {
@@ -63,8 +63,8 @@ export default ExDate.defineLocale("ca", {
     ordinal(number, period) {
         let output = (number === 1) ? "r" :
             (number === 2) ? "n" :
-            (number === 3) ? "r" :
-            (number === 4) ? "t" : "è";
+                (number === 3) ? "r" :
+                    (number === 4) ? "t" : "è";
         if (period === "w" || period === "W") {
             output = "a";
         }
@@ -72,7 +72,7 @@ export default ExDate.defineLocale("ca", {
     },
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 4  // The week that contains Jan 4th is the first week of the year.
+        doy: 4 // The week that contains Jan 4th is the first week of the year.
     }
 });
 

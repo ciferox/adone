@@ -103,68 +103,25 @@ export default function (lib, util) {
             flag(this, "message", message);
         }
 
-        util.expectTypes(this, ["array", "object", "string", "map", "set", "weakset"]);
-
-        const object = flag(this, "object");
-        const type = util.type(object).toLowerCase();
-
-        // This block is for asserting a subset of properties in an object.
-        if (type === "object") {
-            const props = adone.util.keys(value);
-            const negate = flag(this, "negate");
-            let firstErr = null;
-            let numErrs = 0;
-
-
-            for (const prop of props) {
-                const propAssertion = getAssertion(object);
-                util.transferFlags(this, propAssertion, true);
-                flag(propAssertion, "lockSsfi", true);
-
-                if (!negate || props.length === 1) {
-                    propAssertion.property(prop, value[prop]);
-                    continue;
-                }
-
-                try {
-                    propAssertion.property(prop, value[prop]);
-                } catch (err) {
-                    if (!util.checkError.compatibleConstructor(err, AssertionError)) {
-                        throw err;
-                    }
-                    if (is.null(firstErr)) {
-                        firstErr = err;
-                    }
-                    numErrs++;
-                }
-            }
-
-            // When validating .not.include with multiple properties, we only want
-            // to throw an assertion error if all of the properties are included,
-            // in which case we throw the first property assertion error that we
-            // encountered.
-            if (negate && props.length > 1 && numErrs === props.length) {
-                throw firstErr;
-            }
-
-            return;
-        }
-
+        const obj = flag(this, "object");
+        const objType = adone.util.typeOf(obj).toLowerCase();
+        let flagMsg = flag(this, "message");
+        const negate = flag(this, "negate");
+        const ssfi = flag(this, "ssfi");
         const isDeep = flag(this, "deep");
         const descriptor = isDeep ? "deep " : "";
+
+        flagMsg = flagMsg ? `${flagMsg}: ` : "";
+
         let included = false;
 
-        switch (type) {
+        switch (objType) {
             case "string": {
-                included = object.includes(value);
+                included = obj.includes(value);
                 break;
             }
             case "weakset": {
                 if (isDeep) {
-                    let flagMsg = flag(this, "message");
-                    const ssfi = flag(this, "ssfi");
-                    flagMsg = flagMsg ? `${flagMsg}: ` : "";
-
                     throw new AssertionError(
                         `${flagMsg}unable to use .deep.include with WeakSet`,
                         undefined,
@@ -172,35 +129,84 @@ export default function (lib, util) {
                     );
                 }
 
-                included = object.has(value);
+                included = obj.has(value);
                 break;
             }
             case "map": {
                 const isEql = isDeep ? is.deepEqual : sameValueZero;
-                object.forEach((item) => {
+                obj.forEach((item) => {
                     included = included || isEql(item, value);
                 });
                 break;
             }
             case "set": {
                 if (isDeep) {
-                    object.forEach((item) => {
+                    obj.forEach((item) => {
                         included = included || is.deepEqual(item, value);
                     });
                 } else {
-                    included = object.has(value);
+                    included = obj.has(value);
                 }
                 break;
             }
             case "array": {
                 if (isDeep) {
-                    included = object.some((item) => {
+                    included = obj.some((item) => {
                         return is.deepEqual(item, value);
                     });
                 } else {
-                    included = object.includes(value);
+                    included = obj.includes(value);
                 }
                 break;
+            }
+            default: {
+                // This block is for asserting a subset of properties in an object.
+                // `_.expectTypes` isn't used here because `.include` should work with
+                // objects with a custom `@@toStringTag`.
+                if (value !== Object(value)) {
+                    throw new AssertionError(
+                        `${flagMsg}object tested must be an array, a map, an object,`
+                      + ` a set, a string, or a weakset, but ${objType} given`,
+                        undefined,
+                        ssfi
+                    );
+                }
+
+                const props = Object.keys(value);
+                let firstErr = null;
+                let numErrs = 0;
+
+                props.forEach(function (prop) {
+                    const propAssertion = new Assertion(obj);
+                    util.transferFlags(this, propAssertion, true);
+                    flag(propAssertion, "lockSsfi", true);
+
+                    if (!negate || props.length === 1) {
+                        propAssertion.property(prop, value[prop]);
+                        return;
+                    }
+
+                    try {
+                        propAssertion.property(prop, value[prop]);
+                    } catch (err) {
+                        if (!util.checkError.compatibleConstructor(err, AssertionError)) {
+                            throw err;
+                        }
+                        if (is.null(firstErr)) {
+                            firstErr = err;
+                        }
+                        numErrs++;
+                    }
+                }, this);
+
+                // When validating .not.include with multiple properties, we only want
+                // to throw an assertion error if all of the properties are included,
+                // in which case we throw the first property assertion error that we
+                // encountered.
+                if (negate && props.length > 1 && numErrs === props.length) {
+                    throw firstErr;
+                }
+                return;
             }
         }
 
@@ -435,11 +441,11 @@ export default function (lib, util) {
         const objectType = adone.util.typeOf(object).toLowerCase();
         const nType = adone.util.typeOf(n).toLowerCase();
         let shouldThrow = true;
+        let errorMessage;
 
         if (doLength) {
             new Assertion(object, flagMsg, ssfi, true).to.have.property("length");
         }
-        let errorMessage;
         if (!doLength && (objectType === "date" && nType !== "date")) {
             errorMessage = `${msgPrefix}the argument to above must be a date`;
         } else if (nType !== "number" && (doLength || objectType === "number")) {
@@ -724,20 +730,20 @@ export default function (lib, util) {
         const target = flag(this, "object");
         const ssfi = flag(this, "ssfi");
         let flagMsg = flag(this, "message");
-        const validInstanceOfTarget =
-            constructor === Object(constructor) &&
-            (is.function(constructor) || Symbol.hasInstance in constructor);
-
-        if (!validInstanceOfTarget) {
-            flagMsg = flagMsg ? `${flagMsg}: ` : "";
-            const constructorType = is.null(constructor) ? "null" : typeof constructor;
-            throw new AssertionError(
-                `${flagMsg}The instanceof assertion needs a constructor but ${constructorType} was given.`,
-                undefined,
-                ssfi
-            );
+        let isInstanceOf;
+        try {
+            isInstanceOf = target instanceof constructor;
+        } catch (err) {
+            if (err instanceof TypeError) {
+                flagMsg = flagMsg ? `${flagMsg}: ` : "";
+                throw new AssertionError(
+                    `${flagMsg}The instanceof assertion needs a constructor but ${adone.util.typeOf(constructor).toLowerCase()} was given.`,
+                    undefined,
+                    ssfi
+                );
+            }
+            throw err;
         }
-        const isInstanceOf = target instanceof constructor;
 
         let name = util.getName(constructor);
         if (is.null(name)) {

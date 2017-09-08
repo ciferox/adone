@@ -9,7 +9,7 @@ const ordering = ["year", "quarter", "month", "week", "day", "hour", "minute", "
 
 const isDurationValid = (m) => {
     for (const key in m) {
-        if (!(ordering.indexOf(key) !== -1 && (m[key] == null || !isNaN(m[key])))) {
+        if (!(ordering.indexOf(key) !== -1 && (is.nil(m[key]) || !isNaN(m[key])))) {
             return false;
         }
     }
@@ -33,22 +33,22 @@ const { is } = adone;
 const mathAbs = Math.abs;
 
 // ASP.NET json date format regex
-const aspNetRegex = /^(\-)?(?:(\d*)[. ])?(\d+)\:(\d+)(?:\:(\d+)(\.\d*)?)?$/;
+const aspNetRegex = /^(\-|\+)?(?:(\d*)[. ])?(\d+)\:(\d+)(?:\:(\d+)(\.\d*)?)?$/;
 
 // from http://docs.closure-library.googlecode.com/git/closure_goog_date_date.js.source.html
 // somewhat more in line with 4.4.3.2 2004 spec, but allows decimal anywhere
 // and further modified to allow for strings containing both week and day
-const isoRegex = /^(-)?P(?:(-?[0-9,.]*)Y)?(?:(-?[0-9,.]*)M)?(?:(-?[0-9,.]*)W)?(?:(-?[0-9,.]*)D)?(?:T(?:(-?[0-9,.]*)H)?(?:(-?[0-9,.]*)M)?(?:(-?[0-9,.]*)S)?)?$/;
-//
+const isoRegex = /^(-|\+)?P(?:([-+]?[0-9,.]*)Y)?(?:([-+]?[0-9,.]*)M)?(?:([-+]?[0-9,.]*)W)?(?:([-+]?[0-9,.]*)D)?(?:T(?:([-+]?[0-9,.]*)H)?(?:([-+]?[0-9,.]*)M)?(?:([-+]?[0-9,.]*)S)?)?$/;
+
 
 let round = Math.round;
 const thresholds = {
-    ss: 44,         // a few seconds to seconds
-    s: 45,         // seconds to minute
-    m: 45,         // minutes to hour
-    h: 22,         // hours to day
-    d: 26,         // days to month
-    M: 11          // months to year
+    ss: 44, // a few seconds to seconds
+    s: 45, // seconds to minute
+    m: 45, // minutes to hour
+    h: 22, // hours to day
+    d: 26, // days to month
+    M: 11 // months to year
 };
 
 function parseIso(inp, sign) {
@@ -147,7 +147,7 @@ function relativeTime(posNegDuration, withoutSuffix, locale) {
 
 // This function allows you to set the rounding function for relative time strings
 export function getSetRelativeTimeRounding(roundingFunction) {
-    if (roundingFunction === undefined) {
+    if (is.undefined(roundingFunction)) {
         return round;
     }
     if (is.function(roundingFunction)) {
@@ -159,10 +159,10 @@ export function getSetRelativeTimeRounding(roundingFunction) {
 
 // This function allows you to set a threshold for relative time strings
 export function getSetRelativeTimeThreshold(threshold, limit) {
-    if (thresholds[threshold] === undefined) {
+    if (is.undefined(thresholds[threshold])) {
         return false;
     }
-    if (limit === undefined) {
+    if (is.undefined(limit)) {
         return thresholds[threshold];
     }
     thresholds[threshold] = limit;
@@ -204,7 +204,7 @@ export default class Duration {
                 ms: toInt(absRound(match[MILLISECOND] * 1000)) * sign // the millisecond decimal point is included in the match
             };
         } else if (match = isoRegex.exec(input)) { // eslint-disable-line no-cond-assign
-            sign = (match[1] === "-") ? -1 : 1;
+            sign = (match[1] === "-") ? -1 : (match[1] === "+") ? 1 : 1;
             duration = {
                 y: parseIso(match[2], sign),
                 M: parseIso(match[3], sign),
@@ -262,6 +262,10 @@ export default class Duration {
         if (isDuration(input) && is.propertyOwned(input, "_locale")) {
             this._locale = input._locale;
         }
+    }
+
+    clone() {
+        return new Duration(this);
     }
 
     abs() {
@@ -439,14 +443,14 @@ export default class Duration {
         }
 
         return `${total < 0 ? "-" : ""
-            }P${
+        }P${
             Y ? `${Y}Y` : ""
-            }${M ? `${M}M` : ""
-            }${D ? `${D}D` : ""
-            }${(h || m || s) ? "T" : ""
-            }${h ? `${h}H` : ""
-            }${m ? `${m}M` : ""
-            }${s ? `${s}S` : ""}`;
+        }${M ? `${M}M` : ""
+        }${D ? `${D}D` : ""
+        }${(h || m || s) ? "T" : ""
+        }${h ? `${h}H` : ""
+        }${m ? `${m}M` : ""
+        }${s ? `${s}S` : ""}`;
     }
 
     isValid() {

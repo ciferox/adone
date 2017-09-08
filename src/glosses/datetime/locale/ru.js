@@ -19,9 +19,9 @@ function relativeTimeWithPlural(number, withoutSuffix, key) {
     };
     if (key === "m") {
         return withoutSuffix ? "минута" : "минуту";
-    }    
+    }
     return `${number} ${plural(format[key], Number(number))}`;
-    
+
 }
 const monthsParse = [/^янв/i, /^фев/i, /^мар/i, /^апр/i, /^ма[йя]/i, /^июн/i, /^июл/i, /^авг/i, /^сен/i, /^окт/i, /^ноя/i, /^дек/i];
 
@@ -89,9 +89,9 @@ export default ExDate.defineLocale("ru", {
             } else {
                 if (this.day() === 2) {
                     return "[Во] dddd [в] LT";
-                } 
+                }
                 return "[В] dddd [в] LT";
-                
+
             }
         },
         lastWeek(now) {
@@ -111,9 +111,9 @@ export default ExDate.defineLocale("ru", {
             } else {
                 if (this.day() === 2) {
                     return "[Во] dddd [в] LT";
-                } 
+                }
                 return "[В] dddd [в] LT";
-                
+
             }
         },
         sameElse: "L"
@@ -145,9 +145,9 @@ export default ExDate.defineLocale("ru", {
             return "утра";
         } else if (hour < 17) {
             return "дня";
-        } 
+        }
         return "вечера";
-        
+
     },
     dayOfMonthOrdinalParse: /\d{1,2}-(й|го|я)/,
     ordinal(number, period) {
@@ -167,6 +167,6 @@ export default ExDate.defineLocale("ru", {
     },
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 7  // The week that contains Jan 1st is the first week of the year.
+        doy: 4 // The week that contains Jan 4th is the first week of the year.
     }
 });

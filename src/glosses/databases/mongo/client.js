@@ -36,7 +36,6 @@ const validOptionNames = [
     "serializeFunctions",
     "ignoreUndefined",
     "raw",
-    "promoteLongs",
     "bufferMaxEntries",
     "readPreference",
     "pkFactory",
@@ -50,7 +49,8 @@ const validOptionNames = [
     "keepAliveInitialDelay",
     "checkServerIdentity",
     "validateOptions",
-    "appname"
+    "appname",
+    "auth"
 ];
 
 const ignoreOptionNames = ["native_parser"];
@@ -332,6 +332,10 @@ export default class MongoClient extends EventEmitter {
         }
         if (is.nil(_finalOptions.connectTimeoutMS)) {
             _finalOptions.connectTimeoutMS = 30000;
+        }
+
+        if (_finalOptions.db_options && _finalOptions.db_options.auth) {
+            delete _finalOptions.db_options.auth;
         }
 
         // Failure modes

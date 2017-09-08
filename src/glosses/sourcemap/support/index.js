@@ -174,7 +174,7 @@ export default function createInstance(ErrorConstructor = Error) {
             fileName = this.getScriptNameOrSourceURL();
             if (!fileName && this.isEval()) {
                 fileLocation = this.getEvalOrigin();
-                fileLocation += ", ";  // Expecting source position to follow.
+                fileLocation += ", "; // Expecting source position to follow.
             }
 
             if (fileName) {
@@ -183,7 +183,7 @@ export default function createInstance(ErrorConstructor = Error) {
                 fileLocation += "<anonymous>";
             }
             const lineNumber = this.getLineNumber();
-            if (lineNumber !== null) {
+            if (!is.null(lineNumber)) {
                 fileLocation += `:${lineNumber}`;
                 const columnNumber = this.getColumnNumber();
                 if (columnNumber) {
@@ -248,8 +248,9 @@ export default function createInstance(ErrorConstructor = Error) {
             let column = frame.getColumnNumber() - 1;
             // Fix position in Node where some (internal) code is prepended.
             // See https://github.com/evanw/node-source-map-support/issues/36
-            if (line === 1 && !frame.isEval()) {
-                column -= 62;
+            const headerLength = 62;
+            if (line === 1 && column > headerLength && !frame.isEval()) {
+                column -= headerLength;
             }
             const position = object.mapSourcePosition({ source, line, column });  // eslint-disable-line
             frame = cloneCallSite(frame);

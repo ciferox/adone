@@ -231,4 +231,47 @@ describe("shani", "util", "issues", () => {
             assert.equal(this.stub.withArgs("arg").lastCall.returnValue, "return value");
         });
     });
+
+    describe("#1512 - sandbox.stub(obj,protoMethod)", () => {
+        let s;
+
+        beforeEach(() => {
+            s = sandbox.create();
+        });
+
+        afterEach(() => {
+            s.restore();
+        });
+
+        it("can stub methods on the prototype", () => {
+            const proto = { someFunction() {} };
+            const instance = Object.create(proto);
+
+            const stub = s.stub(instance, "someFunction");
+            instance.someFunction();
+            assert(stub.called);
+        });
+    });
+
+    describe("#1521 - stubbing Array.prototype.filter", () => {
+        let orgFilter;
+
+        before(() => {
+            orgFilter = Array.prototype.filter;
+        });
+
+        afterEach(() => {
+            /* eslint-disable no-extend-native */
+            Array.prototype.filter = orgFilter;
+        });
+
+        it("should be possible stub filter", () => {
+            const s = stub(Array.prototype, "filter");
+            [1, 2, 3].filter(() => {
+                return false;
+            });
+            assert(s.calledOnce);
+        });
+
+    });
 });

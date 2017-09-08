@@ -192,5 +192,21 @@ describe("connection", function () {
             expect(dbClose).to.be.equal(2);
             await db.close();
         });
+
+        it("should respect auth options", async () => {
+            const user = "testConnectGoodAuthAsOption";
+            const password = "password";
+            {
+                const db = await mongo.connect(this.url());
+                await db.addUser(user, password);
+                await db.close();
+            }
+            {
+                const opts = { auth: { user, password } };
+                const db = await mongo.connect(this.url({ username: "baduser", password: "badpassword" }), opts);
+                await connectionTester(db, "testConnectGoodAuthAsOption");
+                await db.close();
+            }
+        });
     }
 });

@@ -85,7 +85,7 @@ export default class ObjectId {
             time = ~~(Date.now() / 1000);
         }
 
-        const pid = process.pid % 0xFFFF;
+        const pid = (process.pid === 1 ? Math.floor(Math.random() * 100000) : process.pid) % 0xFFFF;
         const inc = this.getInc();
         const buffer = Buffer.alloc(12);
         // Encode time

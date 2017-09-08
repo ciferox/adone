@@ -414,8 +414,7 @@ describe("datetime", "create", () => {
         const momentA = adone.datetime([2011, 10, 10]);
         const momentB = adone.datetime(momentA);
         momentA.month(5);
-        assert.equal(momentB.month(), 10, "Calling adone.datetime() on a adone.datetime will create a clone");
-        assert.equal(momentA.month(), 5, "Calling adone.datetime() on a adone.datetime will create a clone");
+        assert.notEqual(momentA.month(), momentB.month(), "Calling moment() on a moment will create a clone");
     });
 
     it("explicit cloning", () => {
@@ -439,6 +438,58 @@ describe("datetime", "create", () => {
 
     it("parsing RFC 2822", () => {
         const testCases = {
+            "Tue, 01 Nov 2016 01:23:45 UT": [2016, 10, 1, 1, 23, 45, 0],
+            "Sun, 12 Apr 2015 05:06:07 GMT": [2015, 3, 12, 5, 6, 7, 0],
+            "Tue, 01 Nov 2016 01:23:45 +0000": [2016, 10, 1, 1, 23, 45, 0],
+            "Tue, 01 Nov 16 04:23:45 Z": [2016, 10, 1, 4, 23, 45, 0],
+            "01 Nov 2016 05:23:45 z": [2016, 10, 1, 5, 23, 45, 0],
+            "(Init Comment) Tue,\n 1 Nov              2016 (Split\n Comment)  07:23:45 +0000 (GMT)": [2016, 10, 1, 7, 23, 45, 0],
+            "Mon, 02 Jan 2017 06:00:00 -0800": [2017, 0, 2, 6, 0, 0, -8 * 60],
+            "Mon, 02 Jan 2017 06:00:00 +0800": [2017, 0, 2, 6, 0, 0, +8 * 60],
+            "Mon, 02 Jan 2017 06:00:00 +0330": [2017, 0, 2, 6, 0, 0, Number(3 * 60 + 30)],
+            "Mon, 02 Jan 2017 06:00:00 -0330": [2017, 0, 2, 6, 0, 0, -(3 * 60 + 30)],
+            "Mon, 02 Jan 2017 06:00:00 PST": [2017, 0, 2, 6, 0, 0, -8 * 60],
+            "Mon, 02 Jan 2017 06:00:00 PDT": [2017, 0, 2, 6, 0, 0, -7 * 60],
+            "Mon, 02 Jan 2017 06:00:00 MST": [2017, 0, 2, 6, 0, 0, -7 * 60],
+            "Mon, 02 Jan 2017 06:00:00 MDT": [2017, 0, 2, 6, 0, 0, -6 * 60],
+            "Mon, 02 Jan 2017 06:00:00 CST": [2017, 0, 2, 6, 0, 0, -6 * 60],
+            "Mon, 02 Jan 2017 06:00:00 CDT": [2017, 0, 2, 6, 0, 0, -5 * 60],
+            "Mon, 02 Jan 2017 06:00:00 EST": [2017, 0, 2, 6, 0, 0, -5 * 60],
+            "Mon, 02 Jan 2017 06:00:00 EDT": [2017, 0, 2, 6, 0, 0, -4 * 60]
+        };
+
+        let inp;
+        let tokens;
+        let parseResult;
+        let expResult;
+
+        for (inp in testCases) {
+            tokens = testCases[inp];
+            parseResult = adone.datetime(inp, adone.datetime.RFC_2822, true).parseZone();
+            expResult = adone.datetime.utc(tokens.slice(0, 6)).utcOffset(tokens[6], true);
+            assert.ok(parseResult.isValid(), inp);
+            assert.ok(parseResult.parsingFlags().rfc2822, `${inp} - rfc2822 parsingFlag`);
+            assert.equal(parseResult.utcOffset(), expResult.utcOffset(), `${inp} - zone`);
+            assert.equal(parseResult.valueOf(), expResult.valueOf(), `${inp} - correctness`);
+        }
+    });
+
+    it("non RFC 2822 strings", () => {
+        const testCases = {
+            "RFC2822 datetime with all options but invalid day delimiter": "Tue. 01 Nov 2016 01:23:45 GMT",
+            "RFC2822 datetime with mismatching Day (weekday v date)": "Mon, 01 Nov 2016 01:23:45 GMT"
+        };
+        let testCase;
+
+        for (testCase in testCases) {
+            const testResult = adone.datetime(testCases[testCase], adone.datetime.RFC_2822, true);
+            assert.ok(!testResult.isValid(), `${testCase}: ${testResult} - is invalid rfc2822`);
+            assert.ok(!testResult.parsingFlags().rfc2822, `${testCase}: ${testResult} - rfc2822 parsingFlag`);
+        }
+    });
+
+    it("parsing RFC 2822 in a different locale", () => {
+        const testCases = {
             "clean RFC2822 datetime with all options": "Tue, 01 Nov 2016 01:23:45 UT",
             "clean RFC2822 datetime without comma": "Tue 01 Nov 2016 02:23:45 GMT",
             "clean RFC2822 datetime without seconds": "Tue, 01 Nov 2016 03:23 +0000",
@@ -449,24 +500,34 @@ describe("datetime", "create", () => {
         };
         let testCase;
 
-        for (testCase in testCases) {
-            const testResult = adone.datetime(testCases[testCase], adone.datetime.RFC_2822, true);
-            assert.ok(testResult.isValid(), testResult);
-            assert.ok(testResult.parsingFlags().rfc2822, `${testResult} - rfc2822 parsingFlag`);
+        try {
+            adone.datetime.locale("ru");
+            for (testCase in testCases) {
+                const testResult = adone.datetime(testCases[testCase], adone.datetime.RFC_2822, true);
+                assert.ok(testResult.isValid(), testResult);
+                assert.ok(testResult.parsingFlags().rfc2822, `${testResult} - rfc2822 parsingFlag`);
+            }
+        } finally {
+            adone.datetime.locale("en");
         }
     });
 
-    it("non RFC 2822 strings", () => {
+    it("non RFC 2822 strings in a different locale", () => {
         const testCases = {
             "RFC2822 datetime with all options but invalid day delimiter": "Tue. 01 Nov 2016 01:23:45 GMT",
             "RFC2822 datetime with mismatching Day (week v date)": "Mon, 01 Nov 2016 01:23:45 GMT"
         };
         let testCase;
 
-        for (testCase in testCases) {
-            const testResult = adone.datetime(testCases[testCase], adone.datetime.RFC_2822, true);
-            assert.ok(!testResult.isValid(), testResult);
-            assert.ok(!testResult.parsingFlags().rfc2822, `${testResult} - rfc2822 parsingFlag`);
+        try {
+            adone.datetime.locale("ru");
+            for (testCase in testCases) {
+                const testResult = adone.datetime(testCases[testCase], adone.datetime.RFC_2822, true);
+                assert.ok(!testResult.isValid(), testResult);
+                assert.ok(!testResult.parsingFlags().rfc2822, `${testResult} - rfc2822 parsingFlag`);
+            }
+        } finally {
+            adone.datetime.locale("en");
         }
     });
 

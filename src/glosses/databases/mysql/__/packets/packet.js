@@ -250,7 +250,7 @@ export default class Packet {
             S = this.readInt8();
         }
         if (length > 10) {
-            ms = this.readInt32();
+            ms = this.readInt32() / 1000;
         }
         if (y + m + d + H + M + S + ms === 0) {
             return INVALID_DATE;
@@ -627,7 +627,7 @@ export default class Packet {
     }
 
     parseLengthCodedIntString() {
-        return this.readString(this.readLengthCodedNumber(), "binary");
+        return this.readLengthCodedString("binary");
     }
 
     parseLengthCodedFloat() {

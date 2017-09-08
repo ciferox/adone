@@ -75,6 +75,23 @@ describe("diff", "patch", "apply", () => {
             expect(applyPatch("line1\n" + "line2\n" + "line3\n" + "line5\n", "--- test\theader1\n" + "+++ test\theader2\n" + "@@ -1,3 +1,2 @@\n" + " line1\n" + "-line2\n" + " line3\n" + "@@ -3,2 +3,3 @@\n" + " line3\n" + "+line4\n" + " line5\n")).to.equal("line1\n" + "line3\n" + "line4\n" + "line5\n");
         });
 
+        it("should create a file", () => {
+            expect(applyPatch("",
+                "--- test\theader1\n"
+                + "+++ test\theader2\n"
+                + "@@ -0,0 +1,4 @@\n"
+                + "+line1\n"
+                + "+line2\n"
+                + "+line3\n"
+                + "+line4\n"))
+                .to.equal(
+                    "line1\n"
+                + "line2\n"
+                + "line3\n"
+                + "line4\n");
+        });
+
+
         it("should erase a file", () => {
             expect(applyPatch("line1\n" + "line2\n" + "line3\n" + "line4\n", "--- test\theader1\n" + "+++ test\theader2\n" + "@@ -1,4 +0,0 @@\n" + "-line1\n" + "-line2\n" + "-line3\n" + "-line4\n")).to.equal("");
         });

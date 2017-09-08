@@ -998,7 +998,7 @@ const readBlockMapping = (state, nodeIndent, flowIndent) => {
                 allowCompact = true;
 
             } else {
-                throwError(state, "incomplete explicit mapping pair; a key node is missed");
+                throwError(state, "incomplete explicit mapping pair; a key node is missed; or followed by a non-tabulated empty line");
             }
 
             state.position += 1;

@@ -6,6 +6,10 @@ describe("datetime", "locale", "gl", () => {
         adone.datetime.locale("gl");
     });
 
+    afterEach(() => {
+        adone.datetime.locale("en");
+    });
+
     it("parse", () => {
         const tests = "xaneiro xan._febreiro feb._marzo mar._abril abr._maio mai._xuño xuñ._xullo xul._agosto ago._setembro set._outubro out._novembro nov._decembro dec.".split("_");
         let i;

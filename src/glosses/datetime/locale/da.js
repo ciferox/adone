@@ -12,7 +12,7 @@ export default ExDate.defineLocale("da", {
     longDateFormat: {
         LT: "HH:mm",
         LTS: "HH:mm:ss",
-        L: "DD/MM/YYYY",
+        L: "DD.MM.YYYY",
         LL: "D. MMMM YYYY",
         LLL: "D. MMMM YYYY HH:mm",
         LLLL: "dddd [d.] D. MMMM YYYY [kl.] HH:mm"
@@ -44,7 +44,7 @@ export default ExDate.defineLocale("da", {
     ordinal: "%d.",
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 4  // The week that contains Jan 4th is the first week of the year.
+        doy: 4 // The week that contains Jan 4th is the first week of the year.
     }
 });
 

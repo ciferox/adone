@@ -1,7 +1,7 @@
-const { is, assertion: $assert } = adone;
+const { is, assertion: $assert, noop } = adone;
 const { __: { util } } = $assert;
 
-export default function addProperty(ctx, name, getter = new Function()) {
+export default function addProperty(ctx, name, getter = noop) {
     Object.defineProperty(ctx, name, {
         // eslint-disable-next-line func-name-matching
         get: function propertyGetter() {

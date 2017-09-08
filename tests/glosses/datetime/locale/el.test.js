@@ -352,4 +352,10 @@ describe("datetime", "locale", "el", () => {
         assert.equal(adone.datetime([2012, 0, 14]).format("w ww wo"), "2 02 2η", "Jan 14 2012 should be week 2");
         assert.equal(adone.datetime([2012, 0, 15]).format("w ww wo"), "2 02 2η", "Jan 15 2012 should be week 2");
     });
+
+    it("localeData months calls", () => {
+        const jan = adone.datetime("2012-01-01");
+        assert.equal(adone.datetime.localeData().months(jan), "Ιανουάριος", "should return the nominative month name");
+        assert.equal(adone.datetime.localeData().months(jan, "D MMMM"), "Ιανουαρίου", "should return the genitive month name");
+    });
 });

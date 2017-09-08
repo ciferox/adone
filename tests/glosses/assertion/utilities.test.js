@@ -774,8 +774,9 @@ describe("assertion", "utilities", () => {
                         _assertion.getAssertion(this._obj).to.be.deep.equal({ a: "x", __x: "X!" });
                     }
                     , function () {
-                        this._obj = this._obj || {};
-                        this._obj.__x = "X!";
+                        if (this._obj === Object(this._obj)) {
+                            this._obj.__x = "X!";
+                        }
                     }
                 );
 
@@ -884,8 +885,9 @@ describe("assertion", "utilities", () => {
                         assertion.getAssertion(this._obj).to.be.deep.equal({ a: "x", __x: "X!" });
                     }
                     , function () {
-                        this._obj = this._obj || {};
-                        this._obj.__x = "X!";
+                        if (this._obj === Object(this._obj)) {
+                            this._obj.__x = "X!";
+                        }
                     }
                 );
 

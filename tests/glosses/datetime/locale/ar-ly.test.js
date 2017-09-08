@@ -332,4 +332,11 @@ describe("datetime", "locale", "ar-ly", () => {
             }
         }
     });
+
+    it("ar-ly strict mode parsing works", () => {
+        const m = adone.datetime().locale("ar-ly");
+        const formattedDate = m.format("l");
+        assert.equal(adone.datetime.utc(formattedDate, "l", "ar-ly", false).isValid(), true, "Non-strict parsing works");
+        assert.equal(adone.datetime.utc(formattedDate, "l", "ar-ly", true).isValid(), true, "Strict parsing must work");
+    });
 });

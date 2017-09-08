@@ -27,6 +27,8 @@ describe("database", "redis", "unit", "util", () => {
             expect(t[1]).to.be.deep.equal([null, 2]);
             expect(t[2][0]).to.be.instanceof(Error);
             expect(t[2][0].message).to.be.equal("2");
+            const error = new Error("2");
+            expect(util.wrapMultiResult([1, 2, error])).to.eql([[null, 1], [null, 2], [error]]);
         });
     });
 
@@ -64,6 +66,9 @@ describe("database", "redis", "unit", "util", () => {
 
     describe(".convertObjectToArray", () => {
         it("should return correctly", () => {
+            const nullObject = Object.create(null);
+            nullObject.abc = "def";
+            expect(util.convertObjectToArray(nullObject)).to.eql(["abc", "def"]);
             expect(util.convertObjectToArray({ 1: 2 })).to.eql(["1", 2]);
             expect(util.convertObjectToArray({ 1: "2" })).to.eql(["1", "2"]);
             expect(util.convertObjectToArray({ 1: "2", abc: "def" })).to.eql(["1", "2", "abc", "def"]);

@@ -260,11 +260,11 @@ describe("datetime", "locale", "tr", () => {
             m = adone.datetime().add({
                 d: i
             });
-            assert.equal(m.calendar(), m.format("[haftaya] dddd [saat] LT"), `Today + ${i} days current time`);
+            assert.equal(m.calendar(), m.format("[gelecek] dddd [saat] LT"), `Today + ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("[haftaya] dddd [saat] LT"), `Today + ${i} days beginning of day`);
+            assert.equal(m.calendar(), m.format("[gelecek] dddd [saat] LT"), `Today + ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("[haftaya] dddd [saat] LT"), `Today + ${i} days end of day`);
+            assert.equal(m.calendar(), m.format("[gelecek] dddd [saat] LT"), `Today + ${i} days end of day`);
         }
     });
 
@@ -276,11 +276,11 @@ describe("datetime", "locale", "tr", () => {
             m = adone.datetime().subtract({
                 d: i
             });
-            assert.equal(m.calendar(), m.format("[geçen hafta] dddd [saat] LT"), `Today - ${i} days current time`);
+            assert.equal(m.calendar(), m.format("[geçen] dddd [saat] LT"), `Today - ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("[geçen hafta] dddd [saat] LT"), `Today - ${i} days beginning of day`);
+            assert.equal(m.calendar(), m.format("[geçen] dddd [saat] LT"), `Today - ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("[geçen hafta] dddd [saat] LT"), `Today - ${i} days end of day`);
+            assert.equal(m.calendar(), m.format("[geçen] dddd [saat] LT"), `Today - ${i} days end of day`);
         }
     });
 

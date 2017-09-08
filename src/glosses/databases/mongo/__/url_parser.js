@@ -137,6 +137,11 @@ export default function parseUrl(url, options) {
         object.auth = { user: auth[0], password: auth[1] };
     }
 
+    // if user provided auth options, use that
+    if (options && !is.nil(options.auth)) {
+        object.auth = options.auth;
+    }
+
     // Variables used for temporary storage
     let hostPart;
     let servers;

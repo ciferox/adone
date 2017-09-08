@@ -312,4 +312,9 @@ describe("datetime", "locale", "es", () => {
         assert.equal(adone.datetime([2012, 0, 9]).format("w ww wo"), "2 02 2º", "Jan  9 2012 should be week 2");
         assert.equal(adone.datetime([2012, 0, 15]).format("w ww wo"), "2 02 2º", "Jan 15 2012 should be week 2");
     });
+
+    it("test short months proper", () => {
+        const str = "02-ago-2016";
+        assert.equal(adone.datetime(str, "DD-MMM-YYYY").month(), "7", "02-ago-2016 month should be 7");
+    });
 });

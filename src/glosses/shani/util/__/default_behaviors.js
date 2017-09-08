@@ -4,13 +4,18 @@ const useLeftMostCallback = -1;
 const useRightMostCallback = -2;
 
 const throwsException = (fake, error, message) => {
-    if (is.string(error)) {
-        fake.exception = new x.Exception(message || "");
-        fake.exception.name = error;
+    if (is.function(error)) {
+        fake.exceptionCreator = error;
+    } else if (is.string(error)) {
+        fake.exceptionCreator = function () {
+            const newException = new Error(message || "");
+            newException.name = error;
+            return newException;
+        };
     } else if (!error) {
-        fake.exception = new x.Exception("Error");
-    } else if (is.function(error)) {
-        fake.exception = new error(message);
+        fake.exceptionCreator = function () {
+            return new Error("Error");
+        };
     } else {
         fake.exception = error;
     }
@@ -119,6 +124,7 @@ const behaviors = {
         fake.reject = false;
         fake.returnValueDefined = true;
         fake.exception = undefined;
+        fake.exceptionCreator = undefined;
         fake.fakeFn = undefined;
     },
     returnsArg(fake, pos) {
@@ -141,9 +147,11 @@ const behaviors = {
     resolves(fake, value) {
         fake.returnValue = value;
         fake.resolve = true;
+        fake.resolveThis = false;
         fake.reject = false;
         fake.returnValueDefined = true;
         fake.exception = undefined;
+        fake.exceptionCreator = undefined;
         fake.fakeFn = undefined;
     },
     rejects(fake, error, message) {
@@ -158,12 +166,24 @@ const behaviors = {
         }
         fake.returnValue = reason;
         fake.resolve = false;
+        fake.resolveThis = false;
         fake.reject = true;
         fake.returnValueDefined = true;
         fake.exception = undefined;
+        fake.exceptionCreator = undefined;
         fake.fakeFn = undefined;
 
         return fake;
+    },
+    resolvesThis(fake) {
+        fake.returnValue = undefined;
+        fake.resolve = false;
+        fake.resolveThis = true;
+        fake.reject = false;
+        fake.returnValueDefined = false;
+        fake.exception = undefined;
+        fake.exceptionCreator = undefined;
+        fake.fakeFn = undefined;
     },
     callThrough(fake) {
         fake.callsThrough = true;

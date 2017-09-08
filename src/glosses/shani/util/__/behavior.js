@@ -90,18 +90,24 @@ export const proto = {
         return behavior;
     },
     isPresent() {
-        return is.number(this.callArgAt) ||
-            this.exception ||
-            is.number(this.returnArgAt) ||
-            this.returnThis ||
-            is.number(this.throwArgAt) ||
-            this.fakeFn ||
-            this.returnValueDefined;
+        return is.number(this.callArgAt)
+            || this.exception
+            || this.exceptionCreator
+            || is.number(this.returnArgAt)
+            || this.returnThis
+            || this.resolveThis
+            || is.number(this.throwArgAt)
+            || this.fakeFn
+            || this.returnValueDefined;
     },
     invoke(context, args) {
         callCallback(this, args);
 
         if (this.exception) {
+            throw this.exception;
+        } else if (this.exceptionCreator) {
+            this.exception = this.exceptionCreator();
+            this.exceptionCreator = undefined;
             throw this.exception;
         } else if (is.number(this.returnArgAt)) {
             return args[this.returnArgAt];
@@ -114,6 +120,8 @@ export const proto = {
             throw args[this.throwArgAt];
         } else if (this.fakeFn) {
             return this.fakeFn.apply(context, args);
+        } else if (this.resolveThis) {
+            return (this.promiseLibrary || Promise).resolve(context);
         } else if (this.resolve) {
             return (this.promiseLibrary || Promise).resolve(this.returnValue);
         } else if (this.reject) {

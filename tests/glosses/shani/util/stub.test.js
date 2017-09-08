@@ -121,6 +121,19 @@ describe("shani", "util", "stub", () => {
                 stub();
             });
         });
+
+        it("throws only on the first call", () => {
+            const stub = createStub.create();
+            stub.returns("no exception");
+            stub.onFirstCall().throws();
+
+            assert.throws(() => {
+                stub();
+            });
+
+            // on the second call there is no exception
+            assert.equal(stub(), "no exception");
+        });
     });
 
     describe(".resolves", () => {
@@ -250,6 +263,68 @@ describe("shani", "util", "stub", () => {
             stub.rejects(2);
 
             assert.equal(rejectSpy.callCount, 0);
+        });
+    });
+
+    describe(".resolvesThis", () => {
+        afterEach(() => {
+            if (Promise.resolve.restore) {
+                Promise.resolve.restore();
+            }
+        });
+
+        it("returns a promise resolved with this", () => {
+            const instance = {};
+            instance.stub = createStub.create();
+            instance.stub.resolvesThis();
+
+            return instance.stub().then((actual) => {
+                assert.equal(actual, instance);
+            });
+        });
+
+        it("returns a promise resolved with the context bound with stub#call", () => {
+            const stub = createStub.create();
+            stub.resolvesThis();
+            const object = {};
+
+            return stub.call(object).then((actual) => {
+                assert.equal(actual, object);
+            });
+        });
+
+        it("returns a promise resolved with the context bound with stub#apply", () => {
+            const stub = createStub.create();
+            stub.resolvesThis();
+            const object = {};
+
+            return stub.apply(object).then((actual) => {
+                assert.equal(actual, object);
+            });
+        });
+
+        it("returns the stub itself, allowing to chain function calls", () => {
+            const stub = createStub.create();
+
+            assert.equal(stub.resolvesThis(), stub);
+        });
+
+        it("overrides throws behavior for error objects", () => {
+            const instance = {};
+            instance.stub = createStub.create().throws(new Error()).resolvesThis();
+
+            return instance.stub().then((actual) => {
+                assert.equal(actual, instance);
+            });
+        });
+
+        it("overrides throws behavior for dynamically created errors", () => {
+            const instance = {};
+            instance.stub = createStub.create().throws().resolvesThis();
+
+            return instance.stub().then((actual) => {
+                assert.equal(actual, instance);
+            });
         });
     });
 
@@ -491,6 +566,73 @@ describe("shani", "util", "stub", () => {
             assert.throws(stub);
 
             assert.isUndefined(stub.invoking);
+        });
+
+        it("throws an exception created using a function", () => {
+            const stub = createStub.create();
+
+            stub.throws(() => {
+                return new Error("not implemented");
+            });
+
+            assert.throws(stub, "not implemented");
+            assert.equal(stub.firstCall.exception.message, "not implemented");
+            assert.include(stub.firstCall.toString(), "not implemented");
+        });
+
+        describe("lazy instantiation of exceptions", () => {
+            let errorSpy;
+            beforeEach(function () {
+                this.originalError = global.Error;
+                errorSpy = createSpy(global, "Error");
+                // errorSpy starts with a call already made, not sure why
+                errorSpy.reset();
+            });
+
+            afterEach(function () {
+                errorSpy.restore();
+                global.Error = this.originalError;
+            });
+
+            it("uses a lazily created exception for the generic error", () => {
+                const stub = createStub.create();
+                stub.throws();
+
+                assert.isFalse(errorSpy.called);
+                assert.throws(stub, "Error");
+                assert.isTrue(errorSpy.called);
+            });
+
+            it("uses a lazily created exception for the named error", () => {
+                const stub = createStub.create();
+                stub.throws("TypeError", "typeerror message");
+
+                assert.isFalse(errorSpy.called);
+                assert.throws(stub, "typeerror message");
+                assert.isTrue(errorSpy.called);
+            });
+
+            it("uses a lazily created exception provided by a function", () => {
+                const stub = createStub.create();
+
+                stub.throws(() => {
+                    return new Error("not implemented");
+                });
+
+                assert.isFalse(errorSpy.called);
+                assert.throws(stub, "not implemented");
+                assert.isTrue(errorSpy.called);
+            });
+
+            it("does not use a lazily created exception if the error object is provided", () => {
+                const stub = createStub.create();
+                const exception = new Error();
+                stub.throws(exception);
+
+                assert.equal(errorSpy.callCount, 1);
+                assert.throws(stub, exception);
+                assert.equal(errorSpy.callCount, 1);
+            });
         });
     });
 
@@ -839,6 +981,17 @@ describe("shani", "util", "stub", () => {
         it("stub should affect spy", function () {
             const stub = createStub(this.object, "method");
             stub.throws("TypeError");
+
+            assert.throws(this.object.method);
+
+            assert(stub.threw("TypeError"));
+        });
+
+        it("handles threw properly for lazily instantiated Errors", function () {
+            const stub = createStub(this.object, "method");
+            stub.throws(() => {
+                return new TypeError();
+            });
 
             assert.throws(this.object.method);
 
@@ -2077,6 +2230,16 @@ describe("shani", "util", "stub", () => {
             instance.stub.resetBehavior();
 
             assert.isUndefined(instance.stub());
+        });
+
+        it("cleans 'resolvesThis' behavior, so the stub does not resolve nor returns anything", () => {
+            const instance = {};
+            instance.stub = createStub.create();
+            instance.stub.resolvesThis();
+
+            instance.stub.resetBehavior();
+
+            expect(instance.stub()).to.be.undefined;
         });
 
         describe("does not touch properties that are reset by 'reset'", () => {

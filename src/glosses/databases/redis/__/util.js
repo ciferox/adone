@@ -42,8 +42,10 @@ export const timeout = (callback, timeout) => {
 
 export const convertObjectToArray = (obj) => {
     const result = [];
-    for (const [key, value] of util.entries(obj)) {
-        result.push(key, value);
+    const keys = Object.keys(obj);
+
+    for (const key of keys) {
+        result.push(key, obj[key]);
     }
     return result;
 };

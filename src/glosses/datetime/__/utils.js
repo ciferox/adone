@@ -21,6 +21,10 @@ export function absCeil(number) {
 
 }
 
+export function mod(n, x) {
+    return ((n % x) + x) % x;
+}
+
 export function absFloor(number) {
     if (number < 0) {
         // -0 -> 0

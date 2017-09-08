@@ -12,6 +12,12 @@ const assertType = (value, type, name) => {
     }
 };
 
+const assertMethodExists = (value, method, name, methodPath) => {
+    if (is.nil(value[method])) {
+        throw new TypeError(`Expected ${name} to have method ${methodPath}`);
+    }
+};
+
 const every = (obj, fn) => {
     let pass = true;
 
@@ -55,7 +61,7 @@ const matchObject = (expectation, actual) => {
             if (!matchObject(exp, act)) {
                 return false;
             }
-        } else if (!lazy.deepEqual(exp, act)) {  // eslint-disable-line no-use-before-define
+        } else if (!lazy.deepEqual(exp, act)) { // eslint-disable-line no-use-before-define
             return false;
         }
 
@@ -106,7 +112,7 @@ const match = (expectation, message) => {
     if (type in TYPE_MAP) {
         TYPE_MAP[type](m, expectation, message);
     } else {
-        m.test = (actual) => lazy.deepEqual(expectation, actual);  // eslint-disable-line no-use-before-define
+        m.test = (actual) => lazy.deepEqual(expectation, actual); // eslint-disable-line no-use-before-define
     }
 
     if (!m.message) {
@@ -159,9 +165,11 @@ match.typeOf = (type) => {
     return match((actual) => __.util.typeOf(actual) === type, `typeOf("${type}")`);
 };
 
-match.instanceOf = (type) => {
-    assertType(type, "function", "type");
-    return match((actual) => actual instanceof type, `instanceOf(${adone.util.functionName(type)})`);
+match.instanceOf = function (type) {
+    assertMethodExists(type, Symbol.hasInstance, "type", "[Symbol.hasInstance]");
+    return match((actual) => {
+        return actual instanceof type;
+    }, `instanceOf(${adone.util.functionName(type) || Object.prototype.toString.call(type)})`);
 };
 
 const createPropertyMatcher = (propertyTest, messagePrefix) => {

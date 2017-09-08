@@ -242,34 +242,28 @@ describe("shani", "util", "match", () => {
     });
 
     it("returns true for Symbol match", () => {
-        if (typeof Symbol === "function") {
-            const symbol = Symbol();
+        const symbol = Symbol();
 
-            const m = match(symbol);
+        const m = match(symbol);
 
-            assert(m.test(symbol));
-        }
+        assert(m.test(symbol));
     });
 
     it("returns false for Symbol mismatch", () => {
-        if (typeof Symbol === "function") {
-            const m = match(Symbol());
+        const m = match(Symbol());
 
-            assert.isFalse(m.test());
-            assert.isFalse(m.test(Symbol(null)));
-            assert.isFalse(m.test(Symbol()));
-            assert.isFalse(m.test(Symbol({})));
-        }
+        assert.isFalse(m.test());
+        assert.isFalse(m.test(Symbol(null)));
+        assert.isFalse(m.test(Symbol()));
+        assert.isFalse(m.test(Symbol({})));
     });
 
     it("returns true for Symbol inside object", () => {
-        if (typeof Symbol === "function") {
-            const symbol = Symbol();
+        const symbol = Symbol();
 
-            const m = match({ prop: symbol });
+        const m = match({ prop: symbol });
 
-            assert(m.test({ prop: symbol }));
-        }
+        assert(m.test({ prop: symbol }));
     });
 
     it("returns true if test function in object returns true", () => {
@@ -420,12 +414,10 @@ describe("shani", "util", "match", () => {
         });
 
         it("returns true if test is called with same symbol", () => {
-            if (typeof Symbol === "function") {
-                const symbol = Symbol();
-                const same = match.same(symbol);
+            const symbol = Symbol();
+            const same = match.same(symbol);
 
-                assert(same.test(symbol));
-            }
+            assert(same.test(symbol));
         });
 
         it("returns false if test is not called with same argument", () => {
@@ -464,11 +456,9 @@ describe("shani", "util", "match", () => {
         });
 
         it("returns true if test is called with symbol", () => {
-            if (typeof Symbol === "function") {
-                const typeOf = match.typeOf("symbol");
+            const typeOf = match.typeOf("symbol");
 
-                assert(typeOf.test(Symbol()));
-            }
+            assert(typeOf.test(Symbol()));
         });
 
         it("returns true if test is called with regexp", () => {
@@ -511,6 +501,12 @@ describe("shani", "util", "match", () => {
 
             assert.isFalse(instanceOf.test({}));
         });
+
+        it("does not throw if given argument defines Symbol.hasInstance", () => {
+            const objectWithCustomTypeChecks = {};
+            objectWithCustomTypeChecks[Symbol.hasInstance] = function () { };
+            match.instanceOf(objectWithCustomTypeChecks);
+        });
     });
 
     describe(".has", propertyMatcherTests(match.has));
@@ -548,23 +544,19 @@ describe("shani", "util", "match", () => {
         });
 
         it("returns true if object has Symbol", () => {
-            if (typeof Symbol === "function") {
-                const symbol = Symbol();
+            const symbol = Symbol();
 
-                const has = match.has("prop", symbol);
+            const has = match.has("prop", symbol);
 
-                assert(has.test({ prop: symbol }));
-            }
+            assert(has.test({ prop: symbol }));
         });
 
         it("returns true if embedded object has Symbol", () => {
-            if (typeof Symbol === "function") {
-                const symbol = Symbol();
+            const symbol = Symbol();
 
-                const has = match.has("prop", match.has("embedded", symbol));
+            const has = match.has("prop", match.has("embedded", symbol));
 
-                assert(has.test({ prop: { embedded: symbol }, ignored: 42 }));
-            }
+            assert(has.test({ prop: { embedded: symbol }, ignored: 42 }));
         });
     });
 
@@ -737,131 +729,127 @@ describe("shani", "util", "match", () => {
         });
 
         describe("map.deepEquals", () => {
-            if (typeof Map === "function") {
-                it("has a .deepEquals matcher", () => {
-                    const mapOne = new Map();
-                    mapOne.set("one", 1);
-                    mapOne.set("two", 2);
-                    mapOne.set("three", 3);
+            it("has a .deepEquals matcher", () => {
+                const mapOne = new Map();
+                mapOne.set("one", 1);
+                mapOne.set("two", 2);
+                mapOne.set("three", 3);
 
-                    const deepEquals = match.map.deepEquals(mapOne);
-                    assert(match.isMatcher(deepEquals));
-                    assert.equal(deepEquals.toString(), "deepEquals(Map[['one',1],['two',2],['three',3]])");
-                });
+                const deepEquals = match.map.deepEquals(mapOne);
+                assert(match.isMatcher(deepEquals));
+                assert.equal(deepEquals.toString(), "deepEquals(Map[['one',1],['two',2],['three',3]])");
+            });
 
-                it("matches maps with the exact same elements", () => {
-                    const mapOne = new Map();
-                    mapOne.set("one", 1);
-                    mapOne.set("two", 2);
-                    mapOne.set("three", 3);
+            it("matches maps with the exact same elements", () => {
+                const mapOne = new Map();
+                mapOne.set("one", 1);
+                mapOne.set("two", 2);
+                mapOne.set("three", 3);
 
-                    const mapTwo = new Map();
-                    mapTwo.set("one", 1);
-                    mapTwo.set("two", 2);
-                    mapTwo.set("three", 3);
+                const mapTwo = new Map();
+                mapTwo.set("one", 1);
+                mapTwo.set("two", 2);
+                mapTwo.set("three", 3);
 
-                    const mapThree = new Map();
-                    mapThree.set("one", 1);
-                    mapThree.set("two", 2);
+                const mapThree = new Map();
+                mapThree.set("one", 1);
+                mapThree.set("two", 2);
 
-                    const deepEquals = match.map.deepEquals(mapOne);
-                    assert(deepEquals.test(mapTwo));
-                    assert.isFalse(deepEquals.test(mapThree));
-                    assert.isFalse(deepEquals.test(new Map()));
-                });
+                const deepEquals = match.map.deepEquals(mapOne);
+                assert(deepEquals.test(mapTwo));
+                assert.isFalse(deepEquals.test(mapThree));
+                assert.isFalse(deepEquals.test(new Map()));
+            });
 
-                it("fails when maps have the same keys but different values", () => {
-                    const mapOne = new Map();
-                    mapOne.set("one", 1);
-                    mapOne.set("two", 2);
-                    mapOne.set("three", 3);
+            it("fails when maps have the same keys but different values", () => {
+                const mapOne = new Map();
+                mapOne.set("one", 1);
+                mapOne.set("two", 2);
+                mapOne.set("three", 3);
 
-                    const mapTwo = new Map();
-                    mapTwo.set("one", 2);
-                    mapTwo.set("two", 4);
-                    mapTwo.set("three", 8);
+                const mapTwo = new Map();
+                mapTwo.set("one", 2);
+                mapTwo.set("two", 4);
+                mapTwo.set("three", 8);
 
-                    const mapThree = new Map();
-                    mapTwo.set("one", 1);
-                    mapTwo.set("two", 2);
-                    mapTwo.set("three", 4);
+                const mapThree = new Map();
+                mapTwo.set("one", 1);
+                mapTwo.set("two", 2);
+                mapTwo.set("three", 4);
 
-                    const deepEquals = match.map.deepEquals(mapOne);
-                    assert.isFalse(deepEquals.test(mapTwo));
-                    assert.isFalse(deepEquals.test(mapThree));
-                });
+                const deepEquals = match.map.deepEquals(mapOne);
+                assert.isFalse(deepEquals.test(mapTwo));
+                assert.isFalse(deepEquals.test(mapThree));
+            });
 
-                it("fails when passed a non-map object", () => {
-                    const deepEquals = match.array.deepEquals(new Map());
-                    assert.isFalse(deepEquals.test({}));
-                    assert.isFalse(deepEquals.test([]));
-                });
-            }
+            it("fails when passed a non-map object", () => {
+                const deepEquals = match.array.deepEquals(new Map());
+                assert.isFalse(deepEquals.test({}));
+                assert.isFalse(deepEquals.test([]));
+            });
         });
 
         describe("map.contains", () => {
-            if (typeof Map === "function") {
-                it("has a .contains matcher", () => {
-                    const mapOne = new Map();
-                    mapOne.set("one", 1);
-                    mapOne.set("two", 2);
-                    mapOne.set("three", 3);
+            it("has a .contains matcher", () => {
+                const mapOne = new Map();
+                mapOne.set("one", 1);
+                mapOne.set("two", 2);
+                mapOne.set("three", 3);
 
-                    const contains = match.map.contains(mapOne);
-                    assert(match.isMatcher(contains));
-                    assert.equal(contains.toString(), "contains(Map[['one',1],['two',2],['three',3]])");
-                });
+                const contains = match.map.contains(mapOne);
+                assert(match.isMatcher(contains));
+                assert.equal(contains.toString(), "contains(Map[['one',1],['two',2],['three',3]])");
+            });
 
-                it("matches maps containing the given elements", () => {
-                    const mapOne = new Map();
-                    mapOne.set("one", 1);
-                    mapOne.set("two", 2);
-                    mapOne.set("three", 3);
+            it("matches maps containing the given elements", () => {
+                const mapOne = new Map();
+                mapOne.set("one", 1);
+                mapOne.set("two", 2);
+                mapOne.set("three", 3);
 
-                    const mapTwo = new Map();
-                    mapTwo.set("one", 1);
-                    mapTwo.set("two", 2);
-                    mapTwo.set("three", 3);
+                const mapTwo = new Map();
+                mapTwo.set("one", 1);
+                mapTwo.set("two", 2);
+                mapTwo.set("three", 3);
 
-                    const mapThree = new Map();
-                    mapThree.set("one", 1);
-                    mapThree.set("two", 2);
+                const mapThree = new Map();
+                mapThree.set("one", 1);
+                mapThree.set("two", 2);
 
-                    const mapFour = new Map();
-                    mapFour.set("one", 1);
-                    mapFour.set("four", 4);
+                const mapFour = new Map();
+                mapFour.set("one", 1);
+                mapFour.set("four", 4);
 
-                    assert(match.map.contains(mapTwo).test(mapOne));
-                    assert(match.map.contains(mapThree).test(mapOne));
-                    assert.isFalse(match.map.contains(mapFour).test(mapOne));
-                });
+                assert(match.map.contains(mapTwo).test(mapOne));
+                assert(match.map.contains(mapThree).test(mapOne));
+                assert.isFalse(match.map.contains(mapFour).test(mapOne));
+            });
 
-                it("fails when maps contain the same keys but different values", () => {
-                    const mapOne = new Map();
-                    mapOne.set("one", 1);
-                    mapOne.set("two", 2);
-                    mapOne.set("three", 3);
+            it("fails when maps contain the same keys but different values", () => {
+                const mapOne = new Map();
+                mapOne.set("one", 1);
+                mapOne.set("two", 2);
+                mapOne.set("three", 3);
 
-                    const mapTwo = new Map();
-                    mapTwo.set("one", 2);
-                    mapTwo.set("two", 4);
-                    mapTwo.set("three", 8);
+                const mapTwo = new Map();
+                mapTwo.set("one", 2);
+                mapTwo.set("two", 4);
+                mapTwo.set("three", 8);
 
-                    const mapThree = new Map();
-                    mapThree.set("one", 1);
-                    mapThree.set("two", 2);
-                    mapThree.set("three", 4);
+                const mapThree = new Map();
+                mapThree.set("one", 1);
+                mapThree.set("two", 2);
+                mapThree.set("three", 4);
 
-                    assert.isFalse(match.map.contains(mapTwo).test(mapOne));
-                    assert.isFalse(match.map.contains(mapThree).test(mapOne));
-                });
+                assert.isFalse(match.map.contains(mapTwo).test(mapOne));
+                assert.isFalse(match.map.contains(mapThree).test(mapOne));
+            });
 
-                it("fails when passed a non-map object", () => {
-                    const contains = match.map.contains(new Map());
-                    assert.isFalse(contains.test({}));
-                    assert.isFalse(contains.test([]));
-                });
-            }
+            it("fails when passed a non-map object", () => {
+                const contains = match.map.contains(new Map());
+                assert.isFalse(contains.test({}));
+                assert.isFalse(contains.test([]));
+            });
         });
     });
 
@@ -874,90 +862,86 @@ describe("shani", "util", "match", () => {
         });
 
         describe("set.deepEquals", () => {
-            if (typeof Set === "function") {
-                it("has a .deepEquals matcher", () => {
-                    const setOne = new Set();
-                    setOne.add("one");
-                    setOne.add("two");
-                    setOne.add("three");
+            it("has a .deepEquals matcher", () => {
+                const setOne = new Set();
+                setOne.add("one");
+                setOne.add("two");
+                setOne.add("three");
 
-                    const deepEquals = match.set.deepEquals(setOne);
-                    assert(match.isMatcher(deepEquals));
-                    assert.equal(deepEquals.toString(), "deepEquals(Set['one','two','three'])");
-                });
+                const deepEquals = match.set.deepEquals(setOne);
+                assert(match.isMatcher(deepEquals));
+                assert.equal(deepEquals.toString(), "deepEquals(Set['one','two','three'])");
+            });
 
-                it("matches sets with the exact same elements", () => {
-                    const setOne = new Set();
-                    setOne.add("one");
-                    setOne.add("two");
-                    setOne.add("three");
+            it("matches sets with the exact same elements", () => {
+                const setOne = new Set();
+                setOne.add("one");
+                setOne.add("two");
+                setOne.add("three");
 
-                    const setTwo = new Set();
-                    setTwo.add("one");
-                    setTwo.add("two");
-                    setTwo.add("three");
+                const setTwo = new Set();
+                setTwo.add("one");
+                setTwo.add("two");
+                setTwo.add("three");
 
-                    const setThree = new Set();
-                    setThree.add("one");
-                    setThree.add("two");
+                const setThree = new Set();
+                setThree.add("one");
+                setThree.add("two");
 
-                    const deepEquals = match.set.deepEquals(setOne);
-                    assert(deepEquals.test(setTwo));
-                    assert.isFalse(deepEquals.test(setThree));
-                    assert.isFalse(deepEquals.test(new Set()));
-                });
+                const deepEquals = match.set.deepEquals(setOne);
+                assert(deepEquals.test(setTwo));
+                assert.isFalse(deepEquals.test(setThree));
+                assert.isFalse(deepEquals.test(new Set()));
+            });
 
-                it("fails when passed a non-set object", () => {
-                    const deepEquals = match.array.deepEquals(new Set());
-                    assert.isFalse(deepEquals.test({}));
-                    assert.isFalse(deepEquals.test([]));
-                });
-            }
+            it("fails when passed a non-set object", () => {
+                const deepEquals = match.array.deepEquals(new Set());
+                assert.isFalse(deepEquals.test({}));
+                assert.isFalse(deepEquals.test([]));
+            });
         });
 
         describe("set.contains", () => {
-            if (typeof Set === "function") {
-                it("has a .contains matcher", () => {
-                    const setOne = new Set();
-                    setOne.add("one");
-                    setOne.add("two");
-                    setOne.add("three");
+            it("has a .contains matcher", () => {
+                const setOne = new Set();
+                setOne.add("one");
+                setOne.add("two");
+                setOne.add("three");
 
-                    const contains = match.set.contains(setOne);
-                    assert(match.isMatcher(contains));
-                    assert.equal(contains.toString(), "contains(Set['one','two','three'])");
-                });
+                const contains = match.set.contains(setOne);
+                assert(match.isMatcher(contains));
+                assert.equal(contains.toString(), "contains(Set['one','two','three'])");
+            });
 
-                it("matches sets containing the given elements", () => {
-                    const setOne = new Set();
-                    setOne.add("one");
-                    setOne.add("two");
-                    setOne.add("three");
+            it("matches sets containing the given elements", () => {
+                const setOne = new Set();
+                setOne.add("one");
+                setOne.add("two");
+                setOne.add("three");
 
-                    const setTwo = new Set();
-                    setTwo.add("one");
-                    setTwo.add("two");
-                    setTwo.add("three");
+                const setTwo = new Set();
+                setTwo.add("one");
+                setTwo.add("two");
+                setTwo.add("three");
 
-                    const setThree = new Set();
-                    setThree.add("one");
-                    setThree.add("two");
+                const setThree = new Set();
+                setThree.add("one");
+                setThree.add("two");
 
-                    const setFour = new Set();
-                    setFour.add("one");
-                    setFour.add("four");
+                const setFour = new Set();
+                setFour.add("one");
+                setFour.add("four");
 
-                    assert(match.set.contains(setTwo).test(setOne));
-                    assert(match.set.contains(setThree).test(setOne));
-                    assert.isFalse(match.set.contains(setFour).test(setOne));
-                });
+                assert(match.set.contains(setTwo).test(setOne));
+                assert(match.set.contains(setThree).test(setOne));
+                assert.isFalse(match.set.contains(setFour).test(setOne));
+            });
 
-                it("fails when passed a non-set object", () => {
-                    const contains = match.set.contains(new Set());
-                    assert.isFalse(contains.test({}));
-                    assert.isFalse(contains.test([]));
-                });
-            }
+            it("fails when passed a non-set object", () => {
+                const contains = match.set.contains(new Set());
+                assert.isFalse(contains.test({}));
+                assert.isFalse(contains.test([]));
+            });
         });
     });
 

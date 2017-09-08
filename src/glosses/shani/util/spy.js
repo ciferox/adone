@@ -5,7 +5,7 @@ const lazy = lazify({
     deepEqual: () => __.util.deepEqual.use(util.match)
 }, null, require);
 
-// const deepEqual = sutil.__.util.deepEqual.use(match);
+const filter = Array.prototype.filter;
 
 let callId = 0;
 const ErrorConstructor = Error.prototype.constructor;
@@ -399,7 +399,7 @@ const proto = {
         return fake;
     },
     matchingFakes(args, strict) {
-        return (this.fakes || []).filter((fake) => fake.matches(args, strict));
+        return filter.call(this.fakes || [], (fake) => fake.matches(args, strict));
     },
     matches(args, strict) {
         const margs = this.matchingArguments;

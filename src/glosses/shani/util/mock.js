@@ -1,6 +1,8 @@
 const { is, x, shani: { util }, lazify } = adone;
 const { __ } = util;
-// const { __: { util: { wrapMethod }, SpyCall: { toString: SpyCallToString } }, expectation, match } = util;
+
+
+const filter = Array.prototype.filter;
 
 const lazy = lazify({
     deepEqual: () => __.util.deepEqual.use(util.match)
@@ -97,13 +99,13 @@ class Mock {
         const currentArgs = args || [];
         let available;
 
-        const expectationsWithMatchingArgs = expectations.filter((expectation) => {
+        const expectationsWithMatchingArgs = filter.call(expectations, (expectation) => {
             const expectedArgs = expectation.expectedArguments || [];
 
             return arrayEquals(expectedArgs, currentArgs, expectation.expectsExactArgCount);
         });
 
-        const expectationsToApply = expectationsWithMatchingArgs.filter((expectation) => {
+        const expectationsToApply = filter.call(expectationsWithMatchingArgs, (expectation) => {
             return !expectation.met() && expectation.allowsCall(thisValue, args);
         });
 

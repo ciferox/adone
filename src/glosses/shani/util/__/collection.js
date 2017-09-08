@@ -1,6 +1,9 @@
 const { is, shani: { util } } = adone;
 const { __ } = util;
 
+const push = Array.prototype.push;
+const filter = Array.prototype.filter;
+
 const getFakes = (fakeCollection) => {
     if (!fakeCollection.fakes) {
         fakeCollection.fakes = [];
@@ -12,7 +15,7 @@ const getFakes = (fakeCollection) => {
 export default class Collection {
     each(method) {
         const fakes = getFakes(this);
-        const matchingFakes = fakes.filter((fake) => is.function(fake[method]));
+        const matchingFakes = filter.call(fakes, (fake) => is.function(fake[method]));
 
         matchingFakes.forEach((fake) => fake[method]());
     }
@@ -61,7 +64,7 @@ export default class Collection {
     }
 
     add(fake) {
-        getFakes(this).push(fake);
+        push.call(getFakes(this), fake);
         return fake;
     }
 
@@ -75,7 +78,7 @@ export default class Collection {
     }
 
     stub(object, property, ...args) {
-        if (object && !is.undefined(property) && !is.propertyOwned(object, property)) {
+        if (object && !is.undefined(property) && !(property in object)) {
             throw new TypeError(`Cannot stub non-existent own property ${__.util.valueToString(property)}`);
         }
 

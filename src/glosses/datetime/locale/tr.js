@@ -42,9 +42,9 @@ export default ExDate.defineLocale("tr", {
     calendar: {
         sameDay: "[bugün saat] LT",
         nextDay: "[yarın saat] LT",
-        nextWeek: "[haftaya] dddd [saat] LT",
+        nextWeek: "[gelecek] dddd [saat] LT",
         lastDay: "[dün] LT",
-        lastWeek: "[geçen hafta] dddd [saat] LT",
+        lastWeek: "[geçen] dddd [saat] LT",
         sameElse: "L"
     },
     relativeTime: {
@@ -64,7 +64,7 @@ export default ExDate.defineLocale("tr", {
     },
     dayOfMonthOrdinalParse: /\d{1,2}'(inci|nci|üncü|ncı|uncu|ıncı)/,
     ordinal(number) {
-        if (number === 0) {  // special case for zero
+        if (number === 0) { // special case for zero
             return `${number}'ıncı`;
         }
         const a = number % 10;
@@ -74,6 +74,6 @@ export default ExDate.defineLocale("tr", {
     },
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 7  // The week that contains Jan 1st is the first week of the year.
+        doy: 7 // The week that contains Jan 1st is the first week of the year.
     }
 });

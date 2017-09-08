@@ -400,7 +400,11 @@ export default class UnorderedBulkOperation {
 
     execute(writeConcern, callback) {
         if (this.s.executed) {
-            throw toError("batch cannot be re-executed");
+            const error = toError("batch cannot be re-executed");
+            if (is.function(callback)) {
+                return callback(error);
+            }
+            return Promise.reject(error);
         }
         if (is.function(writeConcern)) {
             callback = writeConcern;
@@ -421,7 +425,11 @@ export default class UnorderedBulkOperation {
 
         // If we have no operations in the bulk raise an error
         if (this.s.batches.length === 0) {
-            throw toError("Invalid Operation, No operations in bulk");
+            const error = toError("Invalid Operation, No operations in bulk");
+            if (is.function(callback)) {
+                return callback(error);
+            }
+            return Promise.reject(error);
         }
 
         // Execute using callback

@@ -20,7 +20,7 @@ describe("database", "mysql", "unit", "packets", "datetime", () => {
         const s = packet.readLengthCodedString("cesu8");
         assert.equal(s, "foo1");
         const d = adone.datetime(packet.readDateTime());
-        const e = adone.datetime.utc(1455030494821);
+        const e = adone.datetime.utc(1455030069425);
         d.add(d.utcOffset(), "minutes");
         assert.equal(d.unix(), e.unix());
 

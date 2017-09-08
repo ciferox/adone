@@ -149,6 +149,13 @@ describe("datetime", "duration", () => {
         assert.deepEqual(adone.datetime.duration(modified), modified, "cloning modified duration works");
     });
 
+    it("explicit cloning", () => {
+        const durationA = adone.datetime.duration(5, "milliseconds");
+        const durationB = durationA.clone();
+        durationA.add(5, "milliseconds");
+        assert.notEqual(durationA.milliseconds(), durationB.milliseconds(), "Calling duration.clone() on a duration will create a clone");
+    });
+
     it("instantiation from 24-hour time zero", () => {
         assert.equal(adone.datetime.duration("00:00").years(), 0, "0 years");
         assert.equal(adone.datetime.duration("00:00").days(), 0, "0 days");
@@ -262,6 +269,9 @@ describe("datetime", "duration", () => {
 
         assert.equal(adone.datetime.duration("-00:00:15.7205000").seconds(), -15, "15 seconds");
         assert.equal(adone.datetime.duration("-00:00:15.7205000").milliseconds(), -721, "721 milliseconds");
+
+        assert.equal(adone.datetime.duration("+00:00:15.7205000").seconds(), 15, "15 seconds");
+        assert.equal(adone.datetime.duration("+00:00:15.7205000").milliseconds(), 721, "721 milliseconds");
     });
 
     it("instatiation from serialized C# TimeSpan maxValue", () => {
@@ -269,7 +279,7 @@ describe("datetime", "duration", () => {
 
         assert.equal(d.years(), 29227, "29227 years");
         assert.equal(d.months(), 8, "8 months");
-        assert.equal(d.days(), 12, "12 day");  // if you have to change this value -- just do it
+        assert.equal(d.days(), 12, "12 day"); // if you have to change this value -- just do it
 
         assert.equal(d.hours(), 2, "2 hours");
         assert.equal(d.minutes(), 48, "48 minutes");
@@ -282,12 +292,25 @@ describe("datetime", "duration", () => {
 
         assert.equal(d.years(), -29227, "29653 years");
         assert.equal(d.months(), -8, "8 day");
-        assert.equal(d.days(), -12, "12 day");  // if you have to change this value -- just do it
+        assert.equal(d.days(), -12, "12 day"); // if you have to change this value -- just do it
 
         assert.equal(d.hours(), -2, "2 hours");
         assert.equal(d.minutes(), -48, "48 minutes");
         assert.equal(d.seconds(), -5, "5 seconds");
         assert.equal(d.milliseconds(), -478, "478 milliseconds");
+    });
+
+    it("instatiation from serialized C# TimeSpan maxValue with + sign", () => {
+        const d = adone.datetime.duration("+10675199.02:48:05.4775808");
+
+        assert.equal(d.years(), 29227, "29653 years");
+        assert.equal(d.months(), 8, "8 day");
+        assert.equal(d.days(), 12, "12 day"); // if you have to change this value -- just do it
+
+        assert.equal(d.hours(), 2, "2 hours");
+        assert.equal(d.minutes(), 48, "48 minutes");
+        assert.equal(d.seconds(), 5, "5 seconds");
+        assert.equal(d.milliseconds(), 478, "478 milliseconds");
     });
 
     it("instantiation from ISO 8601 duration", () => {
@@ -297,6 +320,7 @@ describe("datetime", "duration", () => {
         assert.equal(adone.datetime.duration("PT1M").asSeconds(), adone.datetime.duration({ m: 1 }).asSeconds(), "single minute field");
         assert.equal(adone.datetime.duration("P1MT2H").asSeconds(), adone.datetime.duration({ M: 1, h: 2 }).asSeconds(), "random fields missing");
         assert.equal(adone.datetime.duration("-P60D").asSeconds(), adone.datetime.duration({ d: -60 }).asSeconds(), "negative days");
+        assert.equal(adone.datetime.duration("+P60D").asSeconds(), adone.datetime.duration({ d: 60 }).asSeconds(), "positive days");
         assert.equal(adone.datetime.duration("PT0.5S").asSeconds(), adone.datetime.duration({ s: 0.5 }).asSeconds(), "fractional seconds");
         assert.equal(adone.datetime.duration("PT0,5S").asSeconds(), adone.datetime.duration({ s: 0.5 }).asSeconds(), "fractional seconds (comma)");
     });
@@ -307,6 +331,10 @@ describe("datetime", "duration", () => {
         assert.equal(adone.datetime.duration({ m: -1 }).toISOString(), "-PT1M", "one minute ago");
         assert.equal(adone.datetime.duration({ s: -0.5 }).toISOString(), "-PT0.5S", "one half second ago");
         assert.equal(adone.datetime.duration({ y: -1, M: 1 }).toISOString(), "-P11M", "a month after a year ago");
+        assert.equal(adone.datetime.duration({ M: +1 }).toISOString(), "P1M", "one month ago");
+        assert.equal(adone.datetime.duration({ m: +1 }).toISOString(), "PT1M", "one minute ago");
+        assert.equal(adone.datetime.duration({ s: +0.5 }).toISOString(), "PT0.5S", "one half second ago");
+        assert.equal(adone.datetime.duration({ y: +1, M: 1 }).toISOString(), "P1Y1M", "a month after a year in future");
         assert.equal(adone.datetime.duration({}).toISOString(), "P0D", "zero duration");
         assert.equal(adone.datetime.duration({ M: 16, d: 40, s: 86465 }).toISOString(), "P1Y4M40DT24H1M5S", "all fields");
     });
@@ -317,6 +345,10 @@ describe("datetime", "duration", () => {
         assert.equal(adone.datetime.duration({ m: -1 }).toString(), "-PT1M", "one minute ago");
         assert.equal(adone.datetime.duration({ s: -0.5 }).toString(), "-PT0.5S", "one half second ago");
         assert.equal(adone.datetime.duration({ y: -1, M: 1 }).toString(), "-P11M", "a month after a year ago");
+        assert.equal(adone.datetime.duration({ M: +1 }).toString(), "P1M", "one month ago");
+        assert.equal(adone.datetime.duration({ m: +1 }).toString(), "PT1M", "one minute ago");
+        assert.equal(adone.datetime.duration({ s: +0.5 }).toString(), "PT0.5S", "one half second ago");
+        assert.equal(adone.datetime.duration({ y: +1, M: 1 }).toString(), "P1Y1M", "a month after a year in future");
         assert.equal(adone.datetime.duration({}).toString(), "P0D", "zero duration");
         assert.equal(adone.datetime.duration({ M: 16, d: 40, s: 86465 }).toString(), "P1Y4M40DT24H1M5S", "all fields");
     });
@@ -334,6 +366,8 @@ describe("datetime", "duration", () => {
         assert.equal(adone.datetime.duration("P1DT12H").asSeconds(), adone.datetime.duration({ d: 1, h: 12 }).asSeconds(), "python isodate 10");
         assert.equal(adone.datetime.duration("-P2W").asSeconds(), adone.datetime.duration({ w: -2 }).asSeconds(), "python isodate 11");
         assert.equal(adone.datetime.duration("-P2.2W").asSeconds(), adone.datetime.duration({ w: -2.2 }).asSeconds(), "python isodate 12");
+        assert.equal(adone.datetime.duration("+P2W").asSeconds(), adone.datetime.duration({ w: 2 }).asSeconds(), "python isodate 11");
+        assert.equal(adone.datetime.duration("+P2.2W").asSeconds(), adone.datetime.duration({ w: 2.2 }).asSeconds(), "python isodate 12");
         assert.equal(adone.datetime.duration("P1DT2H3M4S").asSeconds(), adone.datetime.duration({ d: 1, h: 2, m: 3, s: 4 }).asSeconds(), "python isodate 13");
         assert.equal(adone.datetime.duration("P1DT2H3M").asSeconds(), adone.datetime.duration({ d: 1, h: 2, m: 3 }).asSeconds(), "python isodate 14");
         assert.equal(adone.datetime.duration("P1DT2H").asSeconds(), adone.datetime.duration({ d: 1, h: 2 }).asSeconds(), "python isodate 15");
@@ -352,6 +386,18 @@ describe("datetime", "duration", () => {
         assert.equal(adone.datetime.duration("P-3Y-6M-4DT-12H-30M-5S").asSeconds(), adone.datetime.duration({ y: -3, M: -6, d: -4, h: -12, m: -30, s: -5 }).asSeconds(), "python isodate 28");
         assert.equal(adone.datetime.duration("-P-2W").asSeconds(), adone.datetime.duration({ w: 2 }).asSeconds(), "python isodate 29");
         assert.equal(adone.datetime.duration("P-2W").asSeconds(), adone.datetime.duration({ w: -2 }).asSeconds(), "python isodate 30");
+        assert.equal(adone.datetime.duration("+P2Y").asSeconds(), adone.datetime.duration({ y: 2 }).asSeconds(), "python isodate 31");
+        assert.equal(adone.datetime.duration("+P3Y6M4DT12H30M5S").asSeconds(), adone.datetime.duration({ y: 3, M: 6, d: 4, h: 12, m: 30, s: 5 }).asSeconds(), "python isodate 32");
+        assert.equal(adone.datetime.duration("+P1DT2H3M4S").asSeconds(), adone.datetime.duration({ d: 1, h: 2, m: 3, s: 4 }).asSeconds(), "python isodate 34");
+        assert.equal(adone.datetime.duration("PT+6H3M").asSeconds(), adone.datetime.duration({ h: 6, m: 3 }).asSeconds(), "python isodate 35");
+        assert.equal(adone.datetime.duration("+PT+6H3M").asSeconds(), adone.datetime.duration({ h: 6, m: 3 }).asSeconds(), "python isodate 36");
+        assert.equal(adone.datetime.duration("+PT-6H3M").asSeconds(), adone.datetime.duration({ h: -6, m: 3 }).asSeconds(), "python isodate 37");
+        assert.equal(adone.datetime.duration("+P+3Y+6M+4DT+12H+30M+5S").asSeconds(), adone.datetime.duration({ y: 3, M: 6, d: 4, h: 12, m: 30, s: 5 }).asSeconds(), "python isodate 38");
+        assert.equal(adone.datetime.duration("+P-3Y-6M-4DT-12H-30M-5S").asSeconds(), adone.datetime.duration({ y: -3, M: -6, d: -4, h: -12, m: -30, s: -5 }).asSeconds(), "python isodate 39");
+        assert.equal(adone.datetime.duration("P+3Y+6M+4DT+12H+30M+5S").asSeconds(), adone.datetime.duration({ y: 3, M: 6, d: 4, h: 12, m: 30, s: 5 }).asSeconds(), "python isodate 40");
+        assert.equal(adone.datetime.duration("+P+2W").asSeconds(), adone.datetime.duration({ w: 2 }).asSeconds(), "python isodate 41");
+        assert.equal(adone.datetime.duration("+P-2W").asSeconds(), adone.datetime.duration({ w: -2 }).asSeconds(), "python isodate 41");
+        assert.equal(adone.datetime.duration("P+2W").asSeconds(), adone.datetime.duration({ w: 2 }).asSeconds(), "python isodate 43");
     });
 
     it("ISO 8601 misuse cases", () => {
@@ -404,6 +450,7 @@ describe("datetime", "duration", () => {
         adone.datetime.locale("en");
         assert.equal(adone.datetime.duration({ seconds: 44 }).humanize(true), "in a few seconds", "44 seconds = a few seconds");
         assert.equal(adone.datetime.duration({ seconds: -44 }).humanize(true), "a few seconds ago", "44 seconds = a few seconds");
+        assert.equal(adone.datetime.duration({ seconds: +44 }).humanize(true), "in a few seconds", "44 seconds = a few seconds");
     });
 
     it("bubble value up", () => {
@@ -617,17 +664,33 @@ describe("datetime", "duration", () => {
         assert.equal(d.hours(), -23, "-1 day + 1 hour == -23 hour (component)");
         assert.equal(d.asHours(), -23, "-1 day + 1 hour == -23 hours");
 
+        d = adone.datetime.duration(+1, "day").add(1, "hour");
+        assert.equal(d.hours(), 1, "1 day + 1 hour == 1 hour (component)");
+        assert.equal(d.asHours(), 25, "1 day + 1 hour == 25 hour");
+
         d = adone.datetime.duration(-1, "year").add(1, "day");
         assert.equal(d.days(), -30, "- 1 year + 1 day == -30 days (component)");
         assert.equal(d.months(), -11, "- 1 year + 1 day == -11 months (component)");
         assert.equal(d.years(), 0, "- 1 year + 1 day == 0 years (component)");
         assert.equal(d.asDays(), -364, "- 1 year + 1 day == -364 days");
 
+        d = adone.datetime.duration(+1, "year").add(1, "day");
+        assert.equal(d.days(), 1, "+ 1 year + 1 day == 1 days (component)");
+        assert.equal(d.months(), 0, "+ 1 year + 1 day == 0 month (component)");
+        assert.equal(d.years(), 1, "+ 1 year + 1 day == 1 year (component)");
+        assert.equal(d.asDays(), 366, "+ 1 year + 1 day == +366 day");
+
         d = adone.datetime.duration(-1, "year").add(1, "hour");
         assert.equal(d.hours(), -23, "- 1 year + 1 hour == -23 hours (component)");
         assert.equal(d.days(), -30, "- 1 year + 1 hour == -30 days (component)");
         assert.equal(d.months(), -11, "- 1 year + 1 hour == -11 months (component)");
         assert.equal(d.years(), 0, "- 1 year + 1 hour == 0 years (component)");
+
+        d = adone.datetime.duration(+1, "year").add(1, "hour");
+        assert.equal(d.hours(), 1, "+ 1 year + 1 hour == 1 hour (component)");
+        assert.equal(d.days(), 0, "+ 1 year + 1 hour == 1 day (component)");
+        assert.equal(d.months(), 0, "+ 1 year + 1 hour == 1 month (component)");
+        assert.equal(d.years(), 1, "+ 1 year + 1 hour == 1 year (component)");
     });
 
     it("subtract and bubble", () => {

@@ -57,7 +57,24 @@ export default ExDate.defineLocale("pl", {
     calendar: {
         sameDay: "[Dziś o] LT",
         nextDay: "[Jutro o] LT",
-        nextWeek: "[W] dddd [o] LT",
+        nextWeek() {
+            switch (this.day()) {
+                case 0:
+                    return "[W niedzielę o] LT";
+
+                case 2:
+                    return "[We wtorek o] LT";
+
+                case 3:
+                    return "[W środę o] LT";
+
+                case 6:
+                    return "[W sobotę o] LT";
+
+                default:
+                    return "[W] dddd [o] LT";
+            }
+        },
         lastDay: "[Wczoraj o] LT",
         lastWeek() {
             switch (this.day()) {
@@ -92,6 +109,6 @@ export default ExDate.defineLocale("pl", {
     ordinal: "%d.",
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 4  // The week that contains Jan 4th is the first week of the year.
+        doy: 4 // The week that contains Jan 4th is the first week of the year.
     }
 });

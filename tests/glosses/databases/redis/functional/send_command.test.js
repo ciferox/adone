@@ -110,7 +110,7 @@ describe("database", "redis", "send command", { skip: check }, () => {
         redis.lpush("app2", "test2");
         redis.lpush("app3", "test3");
         expect(await redis.blpop("app1", "app2", "app3", 0)).to.be.deep.equal(["foo:app1", "test1"]);
-        expect(await redis.keys("*")).to.be.deep.equal(["foo:app2", "foo:app3"]);
+        expect(await redis.keys("*")).to.have.members(["foo:app2", "foo:app3"]);
         redis.disconnect();
     });
 

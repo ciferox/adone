@@ -79,7 +79,7 @@ describe("util", "fakeClock", () => {
         });
     });
 
-    describe("common cases", function () {
+    describe("common cases", () => {
         describe("setTimeout", () => {
             beforeEach(function () {
                 this.clock = fakeClock.createClock();
@@ -1067,7 +1067,7 @@ describe("util", "fakeClock", () => {
                 assert.isFalse(spies[1].called);
             });
 
-            it("new timers added with a call time ealier than the last existing timer are run", function () {
+            it("new timers added with a call time earlier than the last existing timer are run", function () {
                 this.clock = fakeClock.createClock();
                 const test = this;
                 const spies = [

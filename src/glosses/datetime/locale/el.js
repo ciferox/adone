@@ -3,13 +3,15 @@
 
 import ExDate from "..";
 
+const { is } = adone;
+
 export default ExDate.defineLocale("el", {
     monthsNominativeEl: "Ιανουάριος_Φεβρουάριος_Μάρτιος_Απρίλιος_Μάιος_Ιούνιος_Ιούλιος_Αύγουστος_Σεπτέμβριος_Οκτώβριος_Νοέμβριος_Δεκέμβριος".split("_"),
     monthsGenitiveEl: "Ιανουαρίου_Φεβρουαρίου_Μαρτίου_Απριλίου_Μαΐου_Ιουνίου_Ιουλίου_Αυγούστου_Σεπτεμβρίου_Οκτωβρίου_Νοεμβρίου_Δεκεμβρίου".split("_"),
     months(momentToFormat, format) {
         if (!momentToFormat) {
             return this._monthsNominativeEl;
-        } else if (/D/.test(format.substring(0, format.indexOf("MMMM")))) { // if there is a day number before 'MMMM'
+        } else if (is.string(format) && /D/.test(format.substring(0, format.indexOf("MMMM")))) { // if there is a day number before 'MMMM'
             return this._monthsGenitiveEl[momentToFormat.month()];
         }
         return this._monthsNominativeEl[momentToFormat.month()];
@@ -80,6 +82,6 @@ export default ExDate.defineLocale("el", {
     ordinal: "%dη",
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 4  // The week that contains Jan 4st is the first week of the year.
+        doy: 4 // The week that contains Jan 4st is the first week of the year.
     }
 });
