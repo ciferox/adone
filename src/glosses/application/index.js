@@ -63,6 +63,10 @@ export const run = async (App, ignoreArgs = false) => {
         }
     }
 
+    for (const s of Object.getOwnPropertySymbols(App.prototype)) {
+        XApplication.prototype[s] = App.prototype[s];
+    }
+
     const app = new XApplication();
     for (const name of props) {
         const descriptor = Object.getOwnPropertyDescriptor(_App, name);

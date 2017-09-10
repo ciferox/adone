@@ -64,7 +64,9 @@ const IS_MAIN = Symbol();
 const MAIN_COMMAND = Symbol.for("adone.application.Application#mainCommand");
 const VERSION = Symbol();
 const HANDLERS = Symbol();
-
+const STATIC_COMMANDS = Symbol.for("adone.application.Application#staticCommands");
+const STATIC_COMMAND_GROUPS = Symbol.for("adone.application.Application#staticCommandGroups");
+const STATIC_MAIN_COMMAND = Symbol.for("adone.application.Application#staticMainCommand");
 
 const escape = (x) => x.replace(/%/g, "%%");
 
@@ -1385,6 +1387,22 @@ export default class Application extends adone.application.Subsystem {
     async _configure(ignoreArgs) {
         this[ERROR_SCOPE] = true;
 
+        if (this[STATIC_MAIN_COMMAND]) {
+            this.defineMainCommand(this[STATIC_MAIN_COMMAND]);
+        }
+
+        if (this[STATIC_COMMAND_GROUPS]) {
+            for (const description of this[STATIC_COMMAND_GROUPS]) {
+                this.defineCommandsGroup(description);
+            }
+        }
+
+        if (this[STATIC_COMMANDS]) {
+            for (const description of this[STATIC_COMMANDS]) {
+                this.defineCommand(description);
+            }
+        }
+
         await super._configure();
 
         this[ERROR_SCOPE] = false;
@@ -2220,7 +2238,116 @@ export default class Application extends adone.application.Subsystem {
 Application.prototype.main[INTERNAL] = true;
 
 tag.set(Application, tag.APPLICATION);
-Application.Argument = Argument;
-Application.PositionalArgument = PositionalArgument;
-Application.OptionalArgument = OptionalArgument;
-Application.Command = Command;
+// Application.Argument = Argument;
+// Application.PositionalArgument = PositionalArgument;
+// Application.OptionalArgument = OptionalArgument;
+// Application.Command = Command;
+
+const DESCRIPTION = Symbol();
+
+const getCommandDescription = (descriptor) => {
+    let commandDescription = descriptor.value[DESCRIPTION];
+    if (!commandDescription) {
+        commandDescription = {};
+        descriptor.value[DESCRIPTION] = commandDescription;
+    }
+    return commandDescription;
+};
+
+const CommandDecorator = (description = {}) => (target, key, descriptor) => {
+    const commandDescription = getCommandDescription(descriptor);
+    description.handler = descriptor.value;
+    Object.assign(commandDescription, description);
+    if (!target[STATIC_COMMANDS]) {
+        target[STATIC_COMMANDS] = [];
+    }
+    if (!commandDescription.name) {
+        commandDescription.name = key;
+    }
+    target[STATIC_COMMANDS].push(commandDescription);
+};
+
+const MainCommandDecorator = (description = {}) => (target, key, descriptor) => {
+    const commandDescription = getCommandDescription(descriptor);
+    description.handler = descriptor.value;
+    Object.assign(commandDescription, description);
+    target[STATIC_MAIN_COMMAND] = commandDescription;
+};
+
+/**
+ * Everywhere we use "unshift" instead of "push" to keep the natural order.
+ * Decorators are applied in reverse order, i.e. the last decorator will be applied first.
+ * We want to define arguments/options from first to last, not from last to first.
+ */
+
+const CommandsGroupDecorator = (description) => (target) => {
+    if (!target.prototype[STATIC_COMMAND_GROUPS]) {
+        target.prototype[STATIC_COMMAND_GROUPS] = [];
+    }
+    target.prototype[STATIC_COMMAND_GROUPS].unshift(description);
+};
+
+const CommandsGroupsDecorator = (descriptions) => (target) => {
+    if (!target.prototype[STATIC_COMMAND_GROUPS]) {
+        target.prototype[STATIC_COMMAND_GROUPS] = [];
+    }
+    for (const descr of descriptions) {
+        target.prototype[STATIC_COMMAND_GROUPS].unshift(descr);
+    }
+};
+
+const ArgumentDecorator = (description) => (target, key, descriptor) => {
+    const commandDescription = getCommandDescription(descriptor);
+    if (!commandDescription.arguments) {
+        commandDescription.arguments = [];
+    }
+    commandDescription.arguments.unshift(description);
+};
+
+const ArgumentsDecorator = (args) => (target, key, descriptor) => {
+    const commandDescription = getCommandDescription(descriptor);
+    commandDescription.arguments = args;
+};
+
+const OptionDecorator = (description) => (target, key, descriptor) => {
+    const commandDescription = getCommandDescription(descriptor);
+    if (!commandDescription.options) {
+        commandDescription.options = [];
+    }
+    commandDescription.options.unshift(description);
+};
+
+const OptionsDecorator = (options) => (target, key, descriptor) => {
+    const commandDescription = getCommandDescription(descriptor);
+    commandDescription.options = options;
+};
+
+const OptionsGroupDecorator = (description) => (target, key, descriptor) => {
+    const commandDescription = getCommandDescription(descriptor);
+    if (!commandDescription.optionsGroups) {
+        commandDescription.optionsGroups = [];
+    }
+    commandDescription.optionsGroups.unshift(description);
+};
+
+const OptionsGroupsDecorator = (descriptions) => (target, key, descriptor) => {
+    const commandDescription = getCommandDescription(descriptor);
+    if (!commandDescription.optionsGroups) {
+        commandDescription.optionsGroups = [];
+    }
+    for (const descr of descriptions) {
+        commandDescription.optionsGroups.unshift(descr);
+    }
+};
+
+Application.Command = CommandDecorator;
+Application.CommandsGroup = CommandsGroupDecorator;
+Application.CommandsGroups = CommandsGroupsDecorator;
+Application.Argument = ArgumentDecorator;
+Application.Arguments = ArgumentsDecorator;
+Application.Option = OptionDecorator;
+Application.Options = OptionsDecorator;
+Application.OptionsGroup = OptionsGroupDecorator;
+Application.OptionsGroups = OptionsGroupsDecorator;
+Application.MainCommand = MainCommandDecorator;
+
