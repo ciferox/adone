@@ -603,7 +603,7 @@ export type ClassBase = HasDecorators & {
     typeParameters?: ?TypeParameterDeclaration,
     superTypeParameters?: ?TypeParameterInstantiation,
     implements?:
-    | ?$ReadOnlyArray<TsExpressionWithTypeArguments>
+    |?$ReadOnlyArray<TsExpressionWithTypeArguments>
     | $ReadOnlyArray<FlowClassImplements>,
 };
 
@@ -624,6 +624,7 @@ export type ClassMemberBase = NodeBase &
 
 export type ClassMember =
     | ClassMethod
+    | ClassPrivateMethod
     | ClassProperty
     | ClassPrivateProperty
     | TsIndexSignature;
@@ -632,6 +633,7 @@ export type MethodLike =
     | ObjectMethod
     | FunctionExpression
     | ClassMethod
+    | ClassPrivateMethod
     | TSDeclareMethod;
 
 export type MethodBase = FunctionBase & {
@@ -653,6 +655,12 @@ export type ClassMethod = MethodBase &
         variance?: ?FlowVariance, // TODO: Not in spec
     };
 
+export type ClassPrivateMethod = NodeBase &
+    ClassMethodOrDeclareMethodCommon & {
+        type: "ClassPrivateMethod",
+        key: PrivateName,
+    };
+
 export type ClassProperty = ClassMemberBase & {
     type: "ClassProperty",
     key: Expression,
@@ -667,7 +675,7 @@ export type ClassProperty = ClassMemberBase & {
 
 export type ClassPrivateProperty = NodeBase & {
     type: "ClassPrivateProperty",
-    key: Identifier,
+    key: PrivateName,
     value: ?Expression, // TODO: Not in spec that this is nullable.
     static: boolean,
 };

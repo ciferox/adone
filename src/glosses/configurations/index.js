@@ -107,7 +107,8 @@ export class Configuration {
 adone.tag.set(Configuration, adone.tag.CONFIGURATION);
 
 const lazy = adone.lazify({
-    FileConfiguration: "./file_configuration"
+    FileConfiguration: "./file_configuration",
+    AdoneConfiguration: "./adone_configuration"
 }, adone.asNamespace(exports), require);
 
 export const load = async (path, name, options) => {

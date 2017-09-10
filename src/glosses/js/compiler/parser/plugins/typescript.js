@@ -19,7 +19,7 @@ type TsModifier =
     | "private"
     | "protected";
 
-const nonNull = function <T> (x: ?T): T {
+const nonNull = function <T>(x: ?T): T {
     if (is.nil(x)) {
         // $FlowIgnore
         throw new Error(`Unexpected ${x} value.`);
@@ -116,7 +116,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             throw new Error("Unreachable");
         }
 
-        tsParseList < T: N.Node >(kind: ParsingContext, parseElement: () => T): T[] {
+        tsParseList<T: N.Node>(kind: ParsingContext, parseElement: () => T): T[] {
             const result: T[] = [];
             while (!this.tsIsListTerminator(kind)) {
                 // Skipping "parseListElement" from the TS source since that's just for error handling.
@@ -125,7 +125,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             return result;
         }
 
-        tsParseDelimitedList < T: N.Node >(
+        tsParseDelimitedList<T: N.Node>(
             kind: ParsingContext,
             parseElement: () => T,
         ): T[] {
@@ -138,9 +138,9 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             );
         }
 
-        tsTryParseDelimitedList < T: N.Node >(
+        tsTryParseDelimitedList<T: N.Node>(
             kind: ParsingContext,
-            parseElement: () => ?T,
+            parseElement: () =>?T,
         ): ?(T[]) {
             return this.tsParseDelimitedListWorker(
                 kind,
@@ -153,9 +153,9 @@ export default (superClass: Class<Parser>): Class<Parser> =>
 * If !expectSuccess, returns undefined instead of failing to parse.
 * If expectSuccess, parseElement should always return a defined value.
 */
-        tsParseDelimitedListWorker < T: N.Node >(
+        tsParseDelimitedListWorker<T: N.Node>(
             kind: ParsingContext,
-            parseElement: () => ?T,
+            parseElement: () =>?T,
             expectSuccess: boolean,
         ): ?(T[]) {
             const result = [];
@@ -190,7 +190,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             return result;
         }
 
-        tsParseBracketedList < T: N.Node >(
+        tsParseBracketedList<T: N.Node>(
             kind: ParsingContext,
             parseElement: () => T,
             bracket: boolean,
@@ -316,9 +316,9 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             }
         }
 
-        tsParseBindingListForSignature(): $ReadOnlyArray <
-    N.Identifier | N.RestElement,
-    > {
+        tsParseBindingListForSignature(): $ReadOnlyArray<
+            N.Identifier | N.RestElement,
+            > {
             return this.parseBindingList(tt.parenR).map((pattern) => {
                 if (pattern.type !== "Identifier" && pattern.type !== "RestElement") {
                     throw this.unexpected(
@@ -340,8 +340,8 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             kind: "TSCallSignatureDeclaration" | "TSConstructSignatureDeclaration",
         ): N.TsCallSignatureDeclaration | N.TsConstructSignatureDeclaration {
             const node:
-        | N.TsCallSignatureDeclaration
-        | N.TsConstructSignatureDeclaration = this.startNode();
+                | N.TsCallSignatureDeclaration
+                | N.TsConstructSignatureDeclaration = this.startNode();
             if (kind === "TSConstructSignatureDeclaration") {
                 this.expect(tt._new);
             }
@@ -359,7 +359,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             if (
                 !(
                     this.match(tt.bracketL) &&
-            this.tsLookAhead(this.tsIsUnambiguouslyIndexSignature.bind(this))
+                    this.tsLookAhead(this.tsIsUnambiguouslyIndexSignature.bind(this))
                 )
             ) {
                 return undefined;
@@ -386,7 +386,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         ): N.TsPropertySignature | N.TsMethodSignature {
             this.parsePropertyName(node);
             if (this.eat(tt.question)) {
-                node.optional = true; 
+                node.optional = true;
             }
             const nodeAny: any = node;
 
@@ -398,11 +398,11 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             }
             const property: N.TsPropertySignature = nodeAny;
             if (readonly) {
-                property.readonly = true; 
+                property.readonly = true;
             }
             const type = this.tsTryParseTypeAnnotation();
             if (type) {
-                property.typeAnnotation = type; 
+                property.typeAnnotation = type;
             }
             this.tsParseTypeMemberSemicolon();
             return this.finishNode(property, "TSPropertySignature");
@@ -415,7 +415,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             }
             if (
                 this.match(tt._new) &&
-        this.tsLookAhead(this.tsIsStartOfConstructSignature.bind(this))
+                this.tsLookAhead(this.tsIsStartOfConstructSignature.bind(this))
             ) {
                 return this.tsParseSignatureMember("TSConstructSignatureDeclaration");
             }
@@ -444,7 +444,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             return this.finishNode(node, "TSTypeLiteral");
         }
 
-        tsParseObjectTypeMembers(): $ReadOnlyArray < N.TsTypeElement > {
+        tsParseObjectTypeMembers(): $ReadOnlyArray<N.TsTypeElement> {
             this.expect(tt.braceL);
             const members = this.tsParseList(
                 "TypeMembers",
@@ -684,7 +684,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             }
             return (
                 this.match(tt.parenL) &&
-        this.tsLookAhead(this.tsIsUnambiguouslyStartOfFunctionType.bind(this))
+                this.tsLookAhead(this.tsIsUnambiguouslyStartOfFunctionType.bind(this))
             );
         }
 
@@ -706,9 +706,9 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             if (this.tsSkipParameterStart()) {
                 if (
                     this.match(tt.colon) ||
-            this.match(tt.comma) ||
-            this.match(tt.question) ||
-            this.match(tt.eq)
+                    this.match(tt.comma) ||
+                    this.match(tt.question) ||
+                    this.match(tt.eq)
                 ) {
                     // ( xxx :
                     // ( xxx ,
@@ -734,8 +734,8 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             this.expect(returnToken);
 
             const typePredicateVariable =
-        this.tsIsIdentifier() &&
-        this.tsTryParse(this.tsParseTypePredicatePrefix.bind(this));
+                this.tsIsIdentifier() &&
+                this.tsTryParse(this.tsParseTypePredicatePrefix.bind(this));
 
             if (!typePredicateVariable) {
                 return this.tsParseTypeAnnotation(/* eatColon */ false, t);
@@ -827,7 +827,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             });
         }
 
-        tsParseHeritageClause(): $ReadOnlyArray < N.TsExpressionWithTypeArguments > {
+        tsParseHeritageClause(): $ReadOnlyArray<N.TsExpressionWithTypeArguments> {
             return this.tsParseDelimitedList(
                 "HeritageClauseElement",
                 this.tsParseExpressionWithTypeArguments.bind(this),
@@ -950,7 +950,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
 
         tsParseImportEqualsDeclaration(
             node: N.TsImportEqualsDeclaration,
-            isExport ?: boolean,
+            isExport?: boolean,
         ): N.TsImportEqualsDeclaration {
             node.isExport = isExport || false;
             node.id = this.parseIdentifier();
@@ -1006,7 +1006,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             }
         }
 
-        tsTryParse<T>(f: () => ?T): ?T {
+        tsTryParse<T>(f: () =>?T): ?T {
             const state = this.state.clone();
             const result = f();
             if (!is.undefined(result) && result !== false) {
@@ -1017,7 +1017,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
 
         }
 
-        nodeWithSamePosition < T: N.Node >(original: N.Node, type: string): T {
+        nodeWithSamePosition<T: N.Node>(original: N.Node, type: string): T {
             const node = this.startNodeAtNode(original);
             node.type = type;
             node.end = original.end;
@@ -1054,7 +1054,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
                         this.expectContextual("enum");
                         return this.tsParseEnumDeclaration(nany, /* isConst */ true);
                     }
-                    // falls through
+                // falls through
                 case tt._var:
                 case tt._let:
                     return this.parseVarStatement(nany, this.state.type);
@@ -1228,9 +1228,9 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         isExportDefaultSpecifier(): boolean {
             if (
                 this.match(tt.name) &&
-        (this.state.value === "type" ||
-            this.state.value === "interface" ||
-            this.state.value === "enum")
+                (this.state.value === "type" ||
+                    this.state.value === "interface" ||
+                    this.state.value === "enum")
             ) {
                 return false;
             }
@@ -1258,10 +1258,10 @@ export default (superClass: Class<Parser>): Class<Parser> =>
                     pp.decorators = decorators;
                 }
                 if (accessibility) {
-                    pp.accessibility = accessibility; 
+                    pp.accessibility = accessibility;
                 }
                 if (readonly) {
-                    pp.readonly = readonly; 
+                    pp.readonly = readonly;
                 }
                 if (elt.type !== "Identifier" && elt.type !== "AssignmentPattern") {
                     throw this.raise(
@@ -1279,7 +1279,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
 
         }
 
-        parseFunctionBodyAndFinish(node: N.BodilessFunctionOrMethodBase, type: string, allowExpressionBody ?: boolean): void {
+        parseFunctionBodyAndFinish(node: N.BodilessFunctionOrMethodBase, type: string, allowExpressionBody?: boolean): void {
             // For arrow functions, `parseArrow` handles the return type itself.
             if (!allowExpressionBody && this.match(tt.colon)) {
                 node.returnType = this.tsParseTypeOrTypePredicateAnnotation(tt.colon);
@@ -1371,8 +1371,8 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         ) {
             if (
                 nonNull(tt._in.binop) > minPrec &&
-        !this.hasPrecedingLineBreak() &&
-        this.eatContextual("as")
+                !this.hasPrecedingLineBreak() &&
+                this.eatContextual("as")
             ) {
                 const node: N.TsAsExpression = this.startNodeAt(
                     leftStartPos,
@@ -1414,7 +1414,7 @@ export const x = 1;
 }
 2. We have a type checker to warn us about this sort of thing.
 */
-        checkDuplicateExports() {}
+        checkDuplicateExports() { }
 
         parseImport(
             node: N.Node,
@@ -1552,9 +1552,9 @@ export const x = 1;
             expr: N.Expression,
         ): N.Statement {
             const decl =
-        expr.type === "Identifier"
-            ? this.tsParseExpressionStatement(node, expr)
-            : undefined;
+                expr.type === "Identifier"
+                    ? this.tsParseExpressionStatement(node, expr)
+                    : undefined;
             return decl || super.parseExpressionStatement(node, expr);
         }
 
@@ -1582,7 +1582,7 @@ export const x = 1;
             noIn: ?boolean,
             startPos: number,
             startLoc: Position,
-            refNeedsArrowPos ?: ?Pos,
+            refNeedsArrowPos?: ?Pos,
         ): N.Expression {
             // only do the expensive clone if there is a question mark
             // and if we come from inside parens
@@ -1680,7 +1680,7 @@ export const x = 1;
             return super.parseClassProperty(node);
         }
 
-        parseClassMethod(
+        pushClassMethod(
             classBody: N.ClassBody,
             method: N.ClassMethod,
             isGenerator: boolean,
@@ -1691,13 +1691,26 @@ export const x = 1;
             if (typeParameters) {
                 method.typeParameters = typeParameters;
             }
-            super.parseClassMethod(
+            super.pushClassMethod(
                 classBody,
                 method,
                 isGenerator,
                 isAsync,
                 isConstructor,
             );
+        }
+
+        pushClassPrivateMethod(
+            classBody: N.ClassBody,
+            method: N.ClassPrivateMethod,
+            isGenerator: boolean,
+            isAsync: boolean,
+        ): void {
+            const typeParameters = this.tsTryParseTypeParameters();
+            if (typeParameters) {
+                method.typeParameters = typeParameters;
+            }
+            super.pushClassPrivateMethod(classBody, method, isGenerator, isAsync);
         }
 
         parseClassSuper(node: N.Class): void {
@@ -1827,7 +1840,7 @@ export const x = 1;
         }
 
         // Handle type assertions
-        parseMaybeUnary(refShorthandDefaultPos ?: ?Pos): N.Expression {
+        parseMaybeUnary(refShorthandDefaultPos?: ?Pos): N.Expression {
             if (!this.hasPlugin("jsx") && this.eatRelational("<")) {
                 return this.tsParseTypeAssertion();
             }
@@ -1924,7 +1937,7 @@ export const x = 1;
                     return;
                 default:
                     super.checkLVal(expr, isBinding, checkClashes, contextDescription);
-    
+
             }
         }
 
@@ -1956,13 +1969,13 @@ export const x = 1;
 
             if (
                 node.type === "AssignmentPattern" &&
-        node.typeAnnotation &&
-        node.right.start < node.typeAnnotation.start
+                node.typeAnnotation &&
+                node.right.start < node.typeAnnotation.start
             ) {
                 this.raise(
                     node.typeAnnotation.start,
                     "Type annotations must come before default assignments, " +
-            "e.g. instead of `age = 25: number` use `age: number = 25`",
+                    "e.g. instead of `age = 25: number` use `age: number = 25`",
                 );
             }
 
@@ -1973,16 +1986,16 @@ export const x = 1;
         readToken(code: number): void {
             if (this.state.inType && (code === 62 || code === 60)) {
                 return this.finishOp(tt.relational, 1);
-            } 
+            }
             return super.readToken(code);
-    
+
         }
 
         toAssignableList(
             exprList: N.Expression[],
             isBinding: ?boolean,
             contextDescription: string,
-        ): $ReadOnlyArray < N.Pattern > {
+        ): $ReadOnlyArray<N.Pattern> {
             for (let i = 0; i < exprList.length; i++) {
                 const expr = exprList[i];
                 if (expr && expr.type === "TypeCastExpression") {
@@ -2004,23 +2017,23 @@ export const x = 1;
         }
 
         toReferencedList(
-            exprList: $ReadOnlyArray <?N.Expression >,
-        ): $ReadOnlyArray <?N.Expression > {
-            for (let i = 0; i < exprList.length; i++) {
-                const expr = exprList[i];
-                if (expr && expr._exprListItem && expr.type === "TypeCastExpression") {
-                    this.raise(expr.start, "Did not expect a type annotation here.");
-                }
-            }
+            exprList: $ReadOnlyArray<?N.Expression >,
+        ): $ReadOnlyArray<?N.Expression > {
+            for(let i = 0; i < exprList.length; i++) {
+    const expr = exprList[i];
+    if (expr && expr._exprListItem && expr.type === "TypeCastExpression") {
+        this.raise(expr.start, "Did not expect a type annotation here.");
+    }
+}
 
-            return exprList;
+return exprList;
         }
 
-        shouldParseArrow() {
-            return this.match(tt.colon) || super.shouldParseArrow();
-        }
+shouldParseArrow() {
+    return this.match(tt.colon) || super.shouldParseArrow();
+}
 
-        shouldParseAsyncArrow(): boolean {
-            return this.match(tt.colon) || super.shouldParseAsyncArrow();
-        }
+shouldParseAsyncArrow(): boolean {
+    return this.match(tt.colon) || super.shouldParseAsyncArrow();
+}
     };

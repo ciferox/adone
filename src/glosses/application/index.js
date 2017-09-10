@@ -63,7 +63,7 @@ export const run = async (App, ignoreArgs = false) => {
         }
     }
 
-    for (const s of Object.getOwnPropertySymbols(App.prototype)) {
+    for (const s of Object.getOwnPropertySymbols(_App)) {
         XApplication.prototype[s] = App.prototype[s];
     }
 
