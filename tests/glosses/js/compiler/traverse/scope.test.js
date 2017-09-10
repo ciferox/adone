@@ -73,6 +73,20 @@ describe("js", "compiler", "traverse", "scope", () => {
             );
         });
 
+        it("variable constantness", () => {
+            assert.ok(getPath("var a = 1;").scope.getBinding("a").constant === true);
+            assert.ok(
+                getPath("var a = 1; a = 2;").scope.getBinding("a").constant === false,
+            );
+            assert.ok(
+                getPath("var a = 1, a = 2;").scope.getBinding("a").constant === false,
+            );
+            assert.ok(
+                getPath("var a = 1; var a = 2;").scope.getBinding("a").constant ===
+                false,
+            );
+        });
+
         it("purity", () => {
             assert.ok(
                 getPath("({ x: 1 })").get("body")[0].get("expression").isPure(),
@@ -147,11 +161,11 @@ describe("js", "compiler", "traverse", "scope", () => {
             assert.equal(referencePaths.length, 2);
             assert.deepEqual(referencePaths[0].node.loc.start, {
                 line: 1,
-                column: 28,
+                column: 28
             });
             assert.deepEqual(referencePaths[1].node.loc.start, {
                 line: 1,
-                column: 32,
+                column: 32
             });
         });
     });

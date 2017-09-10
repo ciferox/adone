@@ -412,734 +412,738 @@ export default class Scope {
      */
 
     maybeGenerateMemoised(node: Object, dontPush?: boolean): ?Object {
-        if(this.isStatic(node)) {
+        if (this.isStatic(node)) {
             return null;
-        } 
-        const id = this.generateUidIdentifierBasedOnNode(node);
-        if(!dontPush) { 
-    this.push({ id });
-}
-return id;
-    
-    }
-
-checkBlockScopedCollisions(local, kind: string, name: string, id: Object) {
-    // ignore parameters
-    if (kind === "param") {
-        return;
-    }
-
-    // Ignore existing binding if it's the name of the current function or
-    // class expression
-    if (local.kind === "local") {
-        return;
-    }
-
-    // ignore hoisted functions if there's also a local let
-    if (kind === "hoisted" && local.kind === "let") {
-        return;
-    }
-
-    const duplicate =
-        // don't allow duplicate bindings to exist alongside
-        kind === "let" ||
-        local.kind === "let" ||
-        local.kind === "const" ||
-        local.kind === "module" ||
-        // don't allow a local of param with a kind of let
-        (local.kind === "param" && (kind === "let" || kind === "const"));
-
-    if (duplicate) {
-        throw this.hub.file.buildCodeFrameError(
-            id,
-            messages.get("scopeDuplicateDeclaration", name),
-            TypeError,
-        );
-    }
-}
-
-rename(oldName: string, newName: string, block ?) {
-    const binding = this.getBinding(oldName);
-    if (binding) {
-        newName = newName || this.generateUidIdentifier(oldName).name;
-        return new Renamer(binding, oldName, newName).rename(block);
-    }
-}
-
-_renameFromMap(map, oldName, newName, value) {
-    if (map[oldName]) {
-        map[newName] = value;
-        map[oldName] = null;
-    }
-}
-
-dump() {
-    const sep = repeat("-", 60);
-    console.log(sep);
-    let scope = this;
-    do {
-        console.log("#", scope.block.type);
-        for (const name in scope.bindings) {
-            const binding = scope.bindings[name];
-            console.log(" -", name, {
-                constant: binding.constant,
-                references: binding.references,
-                violations: binding.constantViolations.length,
-                kind: binding.kind
-            });
         }
-    } while ((scope = scope.parent));
-    console.log(sep);
-}
+        const id = this.generateUidIdentifierBasedOnNode(node);
+        if (!dontPush) {
+            this.push({ id });
+        }
+        return id;
 
-toArray(node: Object, i ?: number) {
-    const file = this.hub.file;
+    }
 
-    if (t.isIdentifier(node)) {
-        const binding = this.getBinding(node.name);
-        if (binding && binding.constant && binding.path.isGenericType("Array")) {
+    checkBlockScopedCollisions(local, kind: string, name: string, id: Object) {
+        // ignore parameters
+        if (kind === "param") {
+            return;
+        }
+
+        // Ignore existing binding if it's the name of the current function or
+        // class expression
+        if (local.kind === "local") {
+            return;
+        }
+
+        // ignore hoisted functions if there's also a local let
+        if (kind === "hoisted" && local.kind === "let") {
+            return;
+        }
+
+        const duplicate =
+            // don't allow duplicate bindings to exist alongside
+            kind === "let" ||
+            local.kind === "let" ||
+            local.kind === "const" ||
+            local.kind === "module" ||
+            // don't allow a local of param with a kind of let
+            (local.kind === "param" && (kind === "let" || kind === "const"));
+
+        if (duplicate) {
+            throw this.hub.file.buildCodeFrameError(
+                id,
+                messages.get("scopeDuplicateDeclaration", name),
+                TypeError,
+            );
+        }
+    }
+
+    rename(oldName: string, newName: string, block?) {
+        const binding = this.getBinding(oldName);
+        if (binding) {
+            newName = newName || this.generateUidIdentifier(oldName).name;
+            return new Renamer(binding, oldName, newName).rename(block);
+        }
+    }
+
+    _renameFromMap(map, oldName, newName, value) {
+        if (map[oldName]) {
+            map[newName] = value;
+            map[oldName] = null;
+        }
+    }
+
+    dump() {
+        const sep = repeat("-", 60);
+        console.log(sep);
+        let scope = this;
+        do {
+            console.log("#", scope.block.type);
+            for (const name in scope.bindings) {
+                const binding = scope.bindings[name];
+                console.log(" -", name, {
+                    constant: binding.constant,
+                    references: binding.references,
+                    violations: binding.constantViolations.length,
+                    kind: binding.kind
+                });
+            }
+        } while ((scope = scope.parent));
+        console.log(sep);
+    }
+
+    toArray(node: Object, i?: number) {
+        const file = this.hub.file;
+
+        if (t.isIdentifier(node)) {
+            const binding = this.getBinding(node.name);
+            if (binding && binding.constant && binding.path.isGenericType("Array")) {
+                return node;
+            }
+        }
+
+        if (t.isArrayExpression(node)) {
             return node;
         }
-    }
 
-    if (t.isArrayExpression(node)) {
-        return node;
-    }
-
-    if (t.isIdentifier(node, { name: "arguments" })) {
-        return t.callExpression(
-            t.memberExpression(
+        if (t.isIdentifier(node, { name: "arguments" })) {
+            return t.callExpression(
                 t.memberExpression(
                     t.memberExpression(
-                        t.identifier("Array"),
-                        t.identifier("prototype"),
+                        t.memberExpression(
+                            t.identifier("Array"),
+                            t.identifier("prototype"),
+                        ),
+                        t.identifier("slice"),
                     ),
-                    t.identifier("slice"),
+                    t.identifier("call"),
                 ),
-                t.identifier("call"),
-            ),
-            [node],
-        );
-    }
-
-    let helperName = "toArray";
-    const args = [node];
-    if (i === true) {
-        helperName = "toConsumableArray";
-    } else if (i) {
-        args.push(t.numericLiteral(i));
-        helperName = "slicedToArray";
-        // TODO if (this.hub.file.isLoose("es6.forOf")) helperName += "-loose";
-    }
-    return t.callExpression(file.addHelper(helperName), args);
-}
-
-hasLabel(name: string) {
-    return Boolean(this.getLabel(name));
-}
-
-getLabel(name: string) {
-    return this.labels.get(name);
-}
-
-registerLabel(path: NodePath) {
-    this.labels.set(path.node.label.name, path);
-}
-
-registerDeclaration(path: NodePath) {
-    if (path.isLabeledStatement()) {
-        this.registerLabel(path);
-    } else if (path.isFunctionDeclaration()) {
-        this.registerBinding("hoisted", path.get("id"), path);
-    } else if (path.isVariableDeclaration()) {
-        const declarations = path.get("declarations");
-        for (const declar of (declarations: Array)) {
-            this.registerBinding(path.node.kind, declar);
+                [node],
+            );
         }
-    } else if (path.isClassDeclaration()) {
-        this.registerBinding("let", path);
-    } else if (path.isImportDeclaration()) {
-        const specifiers = path.get("specifiers");
-        for (const specifier of (specifiers: Array)) {
-            this.registerBinding("module", specifier);
+
+        let helperName = "toArray";
+        const args = [node];
+        if (i === true) {
+            helperName = "toConsumableArray";
+        } else if (i) {
+            args.push(t.numericLiteral(i));
+            helperName = "slicedToArray";
+            // TODO if (this.hub.file.isLoose("es6.forOf")) helperName += "-loose";
         }
-    } else if (path.isExportDeclaration()) {
-        const declar = path.get("declaration");
-        if (
-            declar.isClassDeclaration() ||
-            declar.isFunctionDeclaration() ||
-            declar.isVariableDeclaration()
-        ) {
-            this.registerDeclaration(declar);
-        }
-    } else {
-        this.registerBinding("unknown", path);
+        return t.callExpression(file.addHelper(helperName), args);
     }
-}
 
-buildUndefinedNode() {
-    if (this.hasBinding("undefined")) {
-        return t.unaryExpression("void", t.numericLiteral(0), true);
+    hasLabel(name: string) {
+        return Boolean(this.getLabel(name));
     }
-    return t.identifier("undefined");
 
-}
+    getLabel(name: string) {
+        return this.labels.get(name);
+    }
 
-registerConstantViolation(path: NodePath) {
-    const ids = path.getBindingIdentifiers();
-    for (const name in ids) {
-        const binding = this.getBinding(name);
-        if (binding) {
-            binding.reassign(path);
+    registerLabel(path: NodePath) {
+        this.labels.set(path.node.label.name, path);
+    }
+
+    registerDeclaration(path: NodePath) {
+        if (path.isLabeledStatement()) {
+            this.registerLabel(path);
+        } else if (path.isFunctionDeclaration()) {
+            this.registerBinding("hoisted", path.get("id"), path);
+        } else if (path.isVariableDeclaration()) {
+            const declarations = path.get("declarations");
+            for (const declar of (declarations: Array)) {
+                this.registerBinding(path.node.kind, declar);
+            }
+        } else if (path.isClassDeclaration()) {
+            this.registerBinding("let", path);
+        } else if (path.isImportDeclaration()) {
+            const specifiers = path.get("specifiers");
+            for (const specifier of (specifiers: Array)) {
+                this.registerBinding("module", specifier);
+            }
+        } else if (path.isExportDeclaration()) {
+            const declar = path.get("declaration");
+            if (
+                declar.isClassDeclaration() ||
+                declar.isFunctionDeclaration() ||
+                declar.isVariableDeclaration()
+            ) {
+                this.registerDeclaration(declar);
+            }
+        } else {
+            this.registerBinding("unknown", path);
         }
     }
-}
 
-registerBinding(kind: string, path: NodePath, bindingPath = path) {
-    if (!kind) {
-        throw new ReferenceError("no `kind`");
-    }
-
-    if (path.isVariableDeclaration()) {
-        const declarators: Array<NodePath> = path.get("declarations");
-        for (const declar of declarators) {
-            this.registerBinding(kind, declar);
+    buildUndefinedNode() {
+        if (this.hasBinding("undefined")) {
+            return t.unaryExpression("void", t.numericLiteral(0), true);
         }
-        return;
+        return t.identifier("undefined");
+
     }
 
-    const parent = this.getProgramParent();
-    const ids = path.getBindingIdentifiers(true);
+    registerConstantViolation(path: NodePath) {
+        const ids = path.getBindingIdentifiers();
+        for (const name in ids) {
+            const binding = this.getBinding(name);
+            if (binding) {
+                binding.reassign(path);
+            }
+        }
+    }
 
-    for (const name in ids) {
-        for (const id of (ids[name]: Array<Object>)) {
-            let local = this.getOwnBinding(name);
+    registerBinding(kind: string, path: NodePath, bindingPath = path) {
+        if (!kind) {
+            throw new ReferenceError("no `kind`");
+        }
 
-            if (local) {
-                // same identifier so continue safely as we're likely trying to register it
-                // multiple times
-                if (local.identifier === id) {
+        if (path.isVariableDeclaration()) {
+            const declarators: Array<NodePath> = path.get("declarations");
+            for (const declar of declarators) {
+                this.registerBinding(kind, declar);
+            }
+            return;
+        }
+
+        const parent = this.getProgramParent();
+        const ids = path.getBindingIdentifiers(true);
+
+        for (const name in ids) {
+            for (const id of (ids[name]: Array<Object>)) {
+                let local = this.getOwnBinding(name);
+
+                if (local) {
+                    // same identifier so continue safely as we're likely trying to register it
+                    // multiple times
+                    if (local.identifier === id) {
+                        continue;
+                    }
+
+                    this.checkBlockScopedCollisions(local, kind, name, id);
+                }
+
+                // It's erroneous that we currently consider flow a binding, however, we can't
+                // remove it because people might be depending on it. See warning section
+                // in `warnOnFlowBinding`.
+                if (local && local.path.isFlow()) {
+                    local = null;
+                }
+
+                parent.references[name] = true;
+
+                // A redeclaration of an existing variable is a modification
+                if (local) {
+                    this.registerConstantViolation(bindingPath);
+                } else {
+                    this.bindings[name] = new Binding({
+                        identifier: id,
+                        scope: this,
+                        path: bindingPath,
+                        kind
+                    });
+                }
+            }
+        }
+    }
+
+    addGlobal(node: Object) {
+        this.globals[node.name] = node;
+    }
+
+    hasUid(name): boolean {
+        let scope = this;
+
+        do {
+            if (scope.uids[name]) {
+                return true;
+            }
+        } while ((scope = scope.parent));
+
+        return false;
+    }
+
+    hasGlobal(name: string): boolean {
+        let scope = this;
+
+        do {
+            if (scope.globals[name]) {
+                return true;
+            }
+        } while ((scope = scope.parent));
+
+        return false;
+    }
+
+    hasReference(name: string): boolean {
+        let scope = this;
+
+        do {
+            if (scope.references[name]) {
+                return true;
+            }
+        } while ((scope = scope.parent));
+
+        return false;
+    }
+
+    isPure(node, constantsOnly?: boolean) {
+        if (t.isIdentifier(node)) {
+            const binding = this.getBinding(node.name);
+            if (!binding) {
+                return false;
+            }
+            if (constantsOnly) {
+                return binding.constant;
+            }
+            return true;
+        } else if (t.isClass(node)) {
+            if (node.superClass && !this.isPure(node.superClass, constantsOnly)) {
+                return false;
+            }
+            return this.isPure(node.body, constantsOnly);
+        } else if (t.isClassBody(node)) {
+            for (const method of node.body) {
+                if (!this.isPure(method, constantsOnly)) {
+                    return false;
+                }
+            }
+            return true;
+        } else if (t.isBinary(node)) {
+            return (
+                this.isPure(node.left, constantsOnly) &&
+                this.isPure(node.right, constantsOnly)
+            );
+        } else if (t.isArrayExpression(node)) {
+            for (const elem of (node.elements: Array<Object>)) {
+                if (!this.isPure(elem, constantsOnly)) {
+                    return false;
+                }
+            }
+            return true;
+        } else if (t.isObjectExpression(node)) {
+            for (const prop of (node.properties: Array<Object>)) {
+                if (!this.isPure(prop, constantsOnly)) {
+                    return false;
+                }
+            }
+            return true;
+        } else if (t.isClassMethod(node)) {
+            if (node.computed && !this.isPure(node.key, constantsOnly)) {
+                return false;
+            }
+            if (node.kind === "get" || node.kind === "set") {
+                return false;
+            }
+            return true;
+        } else if (t.isClassProperty(node) || t.isObjectProperty(node)) {
+            if (node.computed && !this.isPure(node.key, constantsOnly)) {
+                return false;
+            }
+            return this.isPure(node.value, constantsOnly);
+        } else if (t.isUnaryExpression(node)) {
+            return this.isPure(node.argument, constantsOnly);
+        } else if (t.isTaggedTemplateExpression(node)) {
+            return (
+                t.matchesPattern(node.tag, "String.raw") &&
+                !this.hasBinding("String", true) &&
+                this.isPure(node.quasi, constantsOnly)
+            );
+        } else if (t.isTemplateLiteral(node)) {
+            for (const expression of (node.expressions: Array<Object>)) {
+                if (!this.isPure(expression, constantsOnly)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return t.isPureish(node);
+
+    }
+
+    /**
+    * Set some arbitrary data on the current scope.
+    */
+
+    setData(key, val) {
+        return (this.data[key] = val);
+    }
+
+    /**
+    * Recursively walk up scope tree looking for the data `key`.
+    */
+
+    getData(key) {
+        let scope = this;
+        do {
+            const data = scope.data[key];
+            if (!is.nil(data)) {
+                return data;
+            }
+        } while ((scope = scope.parent));
+    }
+
+    /**
+    * Recursively walk up scope tree looking for the data `key` and if it exists,
+    * remove it.
+    */
+
+    removeData(key) {
+        let scope = this;
+        do {
+            const data = scope.data[key];
+            if (!is.nil(data)) {
+                scope.data[key] = null;
+            }
+        } while ((scope = scope.parent));
+    }
+
+    init() {
+        if (!this.references) {
+            this.crawl();
+        }
+    }
+
+    crawl() {
+        _crawlCallsCount++;
+        this._crawl();
+        _crawlCallsCount--;
+    }
+
+    _crawl() {
+        const path = this.path;
+
+        //
+
+        this.references = Object.create(null);
+        this.bindings = Object.create(null);
+        this.globals = Object.create(null);
+        this.uids = Object.create(null);
+        this.data = Object.create(null);
+
+        // ForStatement - left, init
+
+        if (path.isLoop()) {
+            for (const key of (t.FOR_INIT_KEYS: Array<string>)) {
+                const node = path.get(key);
+                if (node.isBlockScoped()) {
+                    this.registerBinding(node.node.kind, node);
+                }
+            }
+        }
+
+        // FunctionExpression - id
+
+        if (path.isFunctionExpression() && path.has("id")) {
+            if (!path.get("id").node[t.NOT_LOCAL_BINDING]) {
+                this.registerBinding("local", path.get("id"), path);
+            }
+        }
+
+        // Class
+
+        if (path.isClassExpression() && path.has("id")) {
+            if (!path.get("id").node[t.NOT_LOCAL_BINDING]) {
+                this.registerBinding("local", path);
+            }
+        }
+
+        // Function - params, rest
+
+        if (path.isFunction()) {
+            const params: Array<NodePath> = path.get("params");
+            for (const param of params) {
+                this.registerBinding("param", param);
+            }
+        }
+
+        // CatchClause - param
+
+        if (path.isCatchClause()) {
+            this.registerBinding("let", path);
+        }
+
+        // Program
+
+        const parent = this.getProgramParent();
+        if (parent.crawling) {
+            return;
+        }
+
+        const state = {
+            references: [],
+            constantViolations: [],
+            assignments: []
+        };
+
+        this.crawling = true;
+        path.traverse(collectorVisitor, state);
+        this.crawling = false;
+
+        // register assignments
+        for (const path of state.assignments) {
+            // register undeclared bindings as globals
+            const ids = path.getBindingIdentifiers();
+            let programParent;
+            for (const name in ids) {
+                if (path.scope.getBinding(name)) {
                     continue;
                 }
 
-                this.checkBlockScopedCollisions(local, kind, name, id);
+                programParent = programParent || path.scope.getProgramParent();
+                programParent.addGlobal(ids[name]);
             }
 
-            // It's erroneous that we currently consider flow a binding, however, we can't
-            // remove it because people might be depending on it. See warning section
-            // in `warnOnFlowBinding`.
-            if (local && local.path.isFlow()) {
-                local = null;
-            }
-
-            parent.references[name] = true;
-
-            this.bindings[name] = new Binding({
-                identifier: id,
-                existing: local,
-                scope: this,
-                path: bindingPath,
-                kind
-            });
+            // register as constant violation
+            path.scope.registerConstantViolation(path);
         }
-    }
-}
 
-addGlobal(node: Object) {
-    this.globals[node.name] = node;
-}
-
-hasUid(name): boolean {
-    let scope = this;
-
-    do {
-        if (scope.uids[name]) {
-            return true;
-        }
-    } while ((scope = scope.parent));
-
-    return false;
-}
-
-hasGlobal(name: string): boolean {
-    let scope = this;
-
-    do {
-        if (scope.globals[name]) {
-            return true;
-        }
-    } while ((scope = scope.parent));
-
-    return false;
-}
-
-hasReference(name: string): boolean {
-    let scope = this;
-
-    do {
-        if (scope.references[name]) {
-            return true;
-        }
-    } while ((scope = scope.parent));
-
-    return false;
-}
-
-isPure(node, constantsOnly ?: boolean) {
-    if (t.isIdentifier(node)) {
-        const binding = this.getBinding(node.name);
-        if (!binding) {
-            return false;
-        }
-        if (constantsOnly) {
-            return binding.constant;
-        }
-        return true;
-    } else if (t.isClass(node)) {
-        if (node.superClass && !this.isPure(node.superClass, constantsOnly)) {
-            return false;
-        }
-        return this.isPure(node.body, constantsOnly);
-    } else if (t.isClassBody(node)) {
-        for (const method of node.body) {
-            if (!this.isPure(method, constantsOnly)) {
-                return false;
+        // register references
+        for (const ref of state.references) {
+            const binding = ref.scope.getBinding(ref.node.name);
+            if (binding) {
+                binding.reference(ref);
+            } else {
+                ref.scope.getProgramParent().addGlobal(ref.node);
             }
         }
-        return true;
-    } else if (t.isBinary(node)) {
-        return (
-            this.isPure(node.left, constantsOnly) &&
-            this.isPure(node.right, constantsOnly)
-        );
-    } else if (t.isArrayExpression(node)) {
-        for (const elem of (node.elements: Array<Object>)) {
-            if (!this.isPure(elem, constantsOnly)) {
-                return false;
+
+        // register constant violations
+        for (const path of state.constantViolations) {
+            path.scope.registerConstantViolation(path);
+        }
+    }
+
+    push(opts: {
+        id: Object,
+        init: ?Object,
+        unique: ?boolean,
+        _blockHoist: ?number,
+        kind: "var" | "let",
+    }) {
+        let path = this.path;
+
+        if (!path.isBlockStatement() && !path.isProgram()) {
+            path = this.getBlockParent().path;
+        }
+
+        if (path.isSwitchStatement()) {
+            path = (this.getFunctionParent() || this.getProgramParent()).path;
+        }
+
+        if (path.isLoop() || path.isCatchClause() || path.isFunction()) {
+            t.ensureBlock(path.node);
+            path = path.get("body");
+        }
+
+        const unique = opts.unique;
+        const kind = opts.kind || "var";
+        const blockHoist = is.nil(opts._blockHoist) ? 2 : opts._blockHoist;
+
+        const dataKey = `declaration:${kind}:${blockHoist}`;
+        let declarPath = !unique && path.getData(dataKey);
+
+        if (!declarPath) {
+            const declar = t.variableDeclaration(kind, []);
+            declar._blockHoist = blockHoist;
+
+            [declarPath] = path.unshiftContainer("body", [declar]);
+            if (!unique) {
+                path.setData(dataKey, declarPath);
             }
         }
-        return true;
-    } else if (t.isObjectExpression(node)) {
-        for (const prop of (node.properties: Array<Object>)) {
-            if (!this.isPure(prop, constantsOnly)) {
-                return false;
-            }
-        }
-        return true;
-    } else if (t.isClassMethod(node)) {
-        if (node.computed && !this.isPure(node.key, constantsOnly)) {
-            return false;
-        }
-        if (node.kind === "get" || node.kind === "set") {
-            return false;
-        }
-        return true;
-    } else if (t.isClassProperty(node) || t.isObjectProperty(node)) {
-        if (node.computed && !this.isPure(node.key, constantsOnly)) {
-            return false;
-        }
-        return this.isPure(node.value, constantsOnly);
-    } else if (t.isUnaryExpression(node)) {
-        return this.isPure(node.argument, constantsOnly);
-    } else if (t.isTaggedTemplateExpression(node)) {
-        return (
-            t.matchesPattern(node.tag, "String.raw") &&
-            !this.hasBinding("String", true) &&
-            this.isPure(node.quasi, constantsOnly)
-        );
-    } else if (t.isTemplateLiteral(node)) {
-        for (const expression of (node.expressions: Array<Object>)) {
-            if (!this.isPure(expression, constantsOnly)) {
-                return false;
-            }
-        }
-        return true;
-    }
-    return t.isPureish(node);
 
-}
-
-/**
-* Set some arbitrary data on the current scope.
-*/
-
-setData(key, val) {
-    return (this.data[key] = val);
-}
-
-/**
-* Recursively walk up scope tree looking for the data `key`.
-*/
-
-getData(key) {
-    let scope = this;
-    do {
-        const data = scope.data[key];
-        if (!is.nil(data)) {
-            return data;
-        }
-    } while ((scope = scope.parent));
-}
-
-/**
-* Recursively walk up scope tree looking for the data `key` and if it exists,
-* remove it.
-*/
-
-removeData(key) {
-    let scope = this;
-    do {
-        const data = scope.data[key];
-        if (!is.nil(data)) {
-            scope.data[key] = null;
-        }
-    } while ((scope = scope.parent));
-}
-
-init() {
-    if (!this.references) {
-        this.crawl();
-    }
-}
-
-crawl() {
-    _crawlCallsCount++;
-    this._crawl();
-    _crawlCallsCount--;
-}
-
-_crawl() {
-    const path = this.path;
-
-    //
-
-    this.references = Object.create(null);
-    this.bindings = Object.create(null);
-    this.globals = Object.create(null);
-    this.uids = Object.create(null);
-    this.data = Object.create(null);
-
-    // ForStatement - left, init
-
-    if (path.isLoop()) {
-        for (const key of (t.FOR_INIT_KEYS: Array<string>)) {
-            const node = path.get(key);
-            if (node.isBlockScoped()) {
-                this.registerBinding(node.node.kind, node);
-            }
-        }
+        const declarator = t.variableDeclarator(opts.id, opts.init);
+        declarPath.node.declarations.push(declarator);
+        this.registerBinding(kind, declarPath.get("declarations").pop());
     }
 
-    // FunctionExpression - id
+    /**
+    * Walk up to the top of the scope tree and get the `Program`.
+    */
 
-    if (path.isFunctionExpression() && path.has("id")) {
-        if (!path.get("id").node[t.NOT_LOCAL_BINDING]) {
-            this.registerBinding("local", path.get("id"), path);
-        }
-    }
-
-    // Class
-
-    if (path.isClassExpression() && path.has("id")) {
-        if (!path.get("id").node[t.NOT_LOCAL_BINDING]) {
-            this.registerBinding("local", path);
-        }
-    }
-
-    // Function - params, rest
-
-    if (path.isFunction()) {
-        const params: Array<NodePath> = path.get("params");
-        for (const param of params) {
-            this.registerBinding("param", param);
-        }
-    }
-
-    // CatchClause - param
-
-    if (path.isCatchClause()) {
-        this.registerBinding("let", path);
-    }
-
-    // Program
-
-    const parent = this.getProgramParent();
-    if (parent.crawling) {
-        return;
-    }
-
-    const state = {
-        references: [],
-        constantViolations: [],
-        assignments: []
-    };
-
-    this.crawling = true;
-    path.traverse(collectorVisitor, state);
-    this.crawling = false;
-
-    // register assignments
-    for (const path of state.assignments) {
-        // register undeclared bindings as globals
-        const ids = path.getBindingIdentifiers();
-        let programParent;
-        for (const name in ids) {
-            if (path.scope.getBinding(name)) {
-                continue;
-            }
-
-            programParent = programParent || path.scope.getProgramParent();
-            programParent.addGlobal(ids[name]);
-        }
-
-        // register as constant violation
-        path.scope.registerConstantViolation(path);
-    }
-
-    // register references
-    for (const ref of state.references) {
-        const binding = ref.scope.getBinding(ref.node.name);
-        if (binding) {
-            binding.reference(ref);
-        } else {
-            ref.scope.getProgramParent().addGlobal(ref.node);
-        }
-    }
-
-    // register constant violations
-    for (const path of state.constantViolations) {
-        path.scope.registerConstantViolation(path);
-    }
-}
-
-push(opts: {
-    id: Object,
-    init: ?Object,
-    unique: ?boolean,
-    _blockHoist: ?number,
-    kind: "var" | "let",
-}) {
-    let path = this.path;
-
-    if (!path.isBlockStatement() && !path.isProgram()) {
-        path = this.getBlockParent().path;
-    }
-
-    if (path.isSwitchStatement()) {
-        path = (this.getFunctionParent() || this.getProgramParent()).path;
-    }
-
-    if (path.isLoop() || path.isCatchClause() || path.isFunction()) {
-        t.ensureBlock(path.node);
-        path = path.get("body");
-    }
-
-    const unique = opts.unique;
-    const kind = opts.kind || "var";
-    const blockHoist = is.nil(opts._blockHoist) ? 2 : opts._blockHoist;
-
-    const dataKey = `declaration:${kind}:${blockHoist}`;
-    let declarPath = !unique && path.getData(dataKey);
-
-    if (!declarPath) {
-        const declar = t.variableDeclaration(kind, []);
-        declar._blockHoist = blockHoist;
-
-        [declarPath] = path.unshiftContainer("body", [declar]);
-        if (!unique) {
-            path.setData(dataKey, declarPath);
-        }
-    }
-
-    const declarator = t.variableDeclarator(opts.id, opts.init);
-    declarPath.node.declarations.push(declarator);
-    this.registerBinding(kind, declarPath.get("declarations").pop());
-}
-
-/**
-* Walk up to the top of the scope tree and get the `Program`.
-*/
-
-getProgramParent() {
-    let scope = this;
-    do {
-        if (scope.path.isProgram()) {
-            return scope;
-        }
-    } while ((scope = scope.parent));
-    throw new Error("Couldn't find a Program");
-}
-
-/**
-* Walk up the scope tree until we hit either a Function or return null.
-*/
-
-getFunctionParent() {
-    let scope = this;
-    do {
-        if (scope.path.isFunctionParent()) {
-            return scope;
-        }
-    } while ((scope = scope.parent));
-    return null;
-}
-
-/**
-* Walk up the scope tree until we hit either a BlockStatement/Loop/Program/Function/Switch or reach the
-* very top and hit Program.
-*/
-
-getBlockParent() {
-    let scope = this;
-    do {
-        if (scope.path.isBlockParent()) {
-            return scope;
-        }
-    } while ((scope = scope.parent));
-    throw new Error(
-        "We couldn't find a BlockStatement, For, Switch, Function, Loop or Program...",
-    );
-}
-
-/**
-* Walks the scope tree and gathers **all** bindings.
-*/
-
-getAllBindings(): Object {
-    const ids = Object.create(null);
-
-    let scope = this;
-    do {
-        defaults(ids, scope.bindings);
-        scope = scope.parent;
-    } while (scope);
-
-    return ids;
-}
-
-/**
-* Walks the scope tree and gathers all declarations of `kind`.
-*/
-
-getAllBindingsOfKind(): Object {
-    const ids = Object.create(null);
-
-    for (const kind of (arguments: Array)) {
+    getProgramParent() {
         let scope = this;
         do {
-            for (const name in scope.bindings) {
-                const binding = scope.bindings[name];
-                if (binding.kind === kind) {
-                    ids[name] = binding;
-                }
+            if (scope.path.isProgram()) {
+                return scope;
             }
-            scope = scope.parent;
-        } while (scope);
+        } while ((scope = scope.parent));
+        throw new Error("Couldn't find a Program");
     }
 
-    return ids;
-}
+    /**
+    * Walk up the scope tree until we hit either a Function or return null.
+    */
 
-bindingIdentifierEquals(name: string, node: Object): boolean {
-    return this.getBindingIdentifier(name) === node;
-}
+    getFunctionParent() {
+        let scope = this;
+        do {
+            if (scope.path.isFunctionParent()) {
+                return scope;
+            }
+        } while ((scope = scope.parent));
+        return null;
+    }
 
-warnOnFlowBinding(binding) {
-    if (_crawlCallsCount === 0 && binding && binding.path.isFlow()) {
-        console.warn(`
+    /**
+    * Walk up the scope tree until we hit either a BlockStatement/Loop/Program/Function/Switch or reach the
+    * very top and hit Program.
+    */
+
+    getBlockParent() {
+        let scope = this;
+        do {
+            if (scope.path.isBlockParent()) {
+                return scope;
+            }
+        } while ((scope = scope.parent));
+        throw new Error(
+            "We couldn't find a BlockStatement, For, Switch, Function, Loop or Program...",
+        );
+    }
+
+    /**
+    * Walks the scope tree and gathers **all** bindings.
+    */
+
+    getAllBindings(): Object {
+        const ids = Object.create(null);
+
+        let scope = this;
+        do {
+            defaults(ids, scope.bindings);
+            scope = scope.parent;
+        } while (scope);
+
+        return ids;
+    }
+
+    /**
+    * Walks the scope tree and gathers all declarations of `kind`.
+    */
+
+    getAllBindingsOfKind(): Object {
+        const ids = Object.create(null);
+
+        for (const kind of (arguments: Array)) {
+            let scope = this;
+            do {
+                for (const name in scope.bindings) {
+                    const binding = scope.bindings[name];
+                    if (binding.kind === kind) {
+                        ids[name] = binding;
+                    }
+                }
+                scope = scope.parent;
+            } while (scope);
+        }
+
+        return ids;
+    }
+
+    bindingIdentifierEquals(name: string, node: Object): boolean {
+        return this.getBindingIdentifier(name) === node;
+    }
+
+    warnOnFlowBinding(binding) {
+        if (_crawlCallsCount === 0 && binding && binding.path.isFlow()) {
+            console.warn(`
         You or one of the Babel plugins you are using are using Flow declarations as bindings.
         Support for this will be removed in version 7. To find out the caller, grep for this
         message and change it to a \`console.trace()\`.
       `);
-    }
-    return binding;
-}
-
-getBinding(name: string) {
-    let scope = this;
-
-    do {
-        const binding = scope.getOwnBinding(name);
-        if (binding) {
-            return this.warnOnFlowBinding(binding);
         }
-    } while ((scope = scope.parent));
-}
+        return binding;
+    }
 
-getOwnBinding(name: string) {
-    return this.warnOnFlowBinding(this.bindings[name]);
-}
+    getBinding(name: string) {
+        let scope = this;
 
-getBindingIdentifier(name: string) {
-    const info = this.getBinding(name);
-    return info && info.identifier;
-}
+        do {
+            const binding = scope.getOwnBinding(name);
+            if (binding) {
+                return this.warnOnFlowBinding(binding);
+            }
+        } while ((scope = scope.parent));
+    }
 
-getOwnBindingIdentifier(name: string) {
-    const binding = this.bindings[name];
-    return binding && binding.identifier;
-}
+    getOwnBinding(name: string) {
+        return this.warnOnFlowBinding(this.bindings[name]);
+    }
 
-hasOwnBinding(name: string) {
-    return Boolean(this.getOwnBinding(name));
-}
+    getBindingIdentifier(name: string) {
+        const info = this.getBinding(name);
+        return info && info.identifier;
+    }
 
-hasBinding(name: string, noGlobals ?) {
-    if (!name) {
+    getOwnBindingIdentifier(name: string) {
+        const binding = this.bindings[name];
+        return binding && binding.identifier;
+    }
+
+    hasOwnBinding(name: string) {
+        return Boolean(this.getOwnBinding(name));
+    }
+
+    hasBinding(name: string, noGlobals?) {
+        if (!name) {
+            return false;
+        }
+        if (this.hasOwnBinding(name)) {
+            return true;
+        }
+        if (this.parentHasBinding(name, noGlobals)) {
+            return true;
+        }
+        if (this.hasUid(name)) {
+            return true;
+        }
+        if (!noGlobals && includes(Scope.globals, name)) {
+            return true;
+        }
+        if (!noGlobals && includes(Scope.contextVariables, name)) {
+            return true;
+        }
         return false;
     }
-    if (this.hasOwnBinding(name)) {
-        return true;
-    }
-    if (this.parentHasBinding(name, noGlobals)) {
-        return true;
-    }
-    if (this.hasUid(name)) {
-        return true;
-    }
-    if (!noGlobals && includes(Scope.globals, name)) {
-        return true;
-    }
-    if (!noGlobals && includes(Scope.contextVariables, name)) {
-        return true;
-    }
-    return false;
-}
 
-parentHasBinding(name: string, noGlobals ?) {
-    return this.parent && this.parent.hasBinding(name, noGlobals);
-}
-
-/**
-* Move a binding of `name` to another `scope`.
-*/
-
-moveBindingTo(name, scope) {
-    const info = this.getBinding(name);
-    if (info) {
-        info.scope.removeOwnBinding(name);
-        info.scope = scope;
-        scope.bindings[name] = info;
-    }
-}
-
-removeOwnBinding(name: string) {
-    delete this.bindings[name];
-}
-
-removeBinding(name: string) {
-    // clear literal binding
-    const info = this.getBinding(name);
-    if (info) {
-        info.scope.removeOwnBinding(name);
+    parentHasBinding(name: string, noGlobals?) {
+        return this.parent && this.parent.hasBinding(name, noGlobals);
     }
 
-    // clear uids with this name - https://github.com/babel/babel/issues/2101
-    let scope = this;
-    do {
-        if (scope.uids[name]) {
-            scope.uids[name] = false;
+    /**
+    * Move a binding of `name` to another `scope`.
+    */
+
+    moveBindingTo(name, scope) {
+        const info = this.getBinding(name);
+        if (info) {
+            info.scope.removeOwnBinding(name);
+            info.scope = scope;
+            scope.bindings[name] = info;
         }
-    } while ((scope = scope.parent));
-}
+    }
+
+    removeOwnBinding(name: string) {
+        delete this.bindings[name];
+    }
+
+    removeBinding(name: string) {
+        // clear literal binding
+        const info = this.getBinding(name);
+        if (info) {
+            info.scope.removeOwnBinding(name);
+        }
+
+        // clear uids with this name - https://github.com/babel/babel/issues/2101
+        let scope = this;
+        do {
+            if (scope.uids[name]) {
+                scope.uids[name] = false;
+            }
+        } while ((scope = scope.parent));
+    }
 }
