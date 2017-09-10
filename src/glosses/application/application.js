@@ -91,6 +91,7 @@ class Argument {
         this.appendChoicesHelpMessage = options.appendChoicesHelpMessage;
         this.colors = options.colors;
         this._frozenColors = options._frozenColors;
+        this._verify = options.verify;
     }
 
     setCommand(command) {
@@ -157,6 +158,24 @@ class Argument {
             return _coerce(this.type, this.value.length);
         }
         return _coerce(this.type);
+    }
+
+    hasVerifier() {
+        return !is.null(this._verify);
+    }
+
+    async verify(args, opts) { // rest ?
+        let res;
+        try {
+            res = await this._verify(args, opts);
+        } catch (err) {
+            throw new x.InvalidArgument(`verification of ${this.names[0]} failed due to "${err.message}"`);
+        }
+        // each non-true value is recognized as an error
+        if (res !== true) {
+            const message = is.string(res) ? res : `verification of ${this.names[0]} failed`;
+            throw new x.InvalidArgument(message);
+        }
     }
 
     hasValue() {
@@ -264,6 +283,15 @@ class Argument {
                 throw new x.IllegalState(`${name}: The number of types must be equal to the number of arguments`);
             }
         }
+
+        if (options.verify) {
+            if (!is.function(options.verify)) {
+                throw new x.InvalidArgument(`${name}: verify must be a function`);
+            }
+        } else {
+            options.verify = null;
+        }
+
 
         if (!options.required) {
             options.required = false;
@@ -2182,6 +2210,12 @@ export default class Application extends adone.application.Subsystem {
                                 }
                             } else if (arg.action === "append") {
                                 arg.value = arg._values;
+                            }
+                        }
+                        for (const arg of [...command.arguments, ...command.options]) {
+                            if (arg.present && arg.hasVerifier()) {
+                                // eslint-disable-next-line no-await-in-loop
+                                await arg.verify(command.getArgumentsMap(), command.getOptionsMap());
                             }
                         }
                         break;
