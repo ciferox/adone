@@ -311,11 +311,36 @@ class Argument {
             options.choices = [...options.choices];
         }
         if (options.holder) {
-            if (/\s/.test(options.holder)) {
-                throw new x.IllegalState(`${name}: holder cannot have space characters: ${options.holder}`);
+            const checkHolder = (holder, i) => {
+                const index = is.integer(i) ? `[${i}]` : "";
+                if (!is.string(holder)) {
+                    throw new x.IllegalState(`${name}${index}: holder must be a string`);
+                }
+                if (/\s/.test(holder)) {
+                    throw new x.IllegalState(`${name}${index}: holder cannot have space characters: ${options.holder}`);
+                }
+            };
+            if (!is.integer(options.nargs) || options.nargs === 1) {
+                checkHolder(options.holder);
+            } else {
+                if (!is.array(options.holder)) {
+                    throw new x.IllegalState(`${name}: you must specify a holder for each argument`);
+                }
+                for (let i = 0; i < options.nargs; ++i) {
+                    checkHolder(options.holder[i], i);
+                }
             }
+            options.holder = util.arrify(options.holder);
         } else {
             options.holder = null;
+        }
+
+        if (options.format) {
+            if (!is.function(options.format)) {
+                throw new x.InvalidArgument(`${name}: format must be a function`);
+            }
+        } else {
+            options.format = null;
         }
 
         if (!("appendDefaultHelpMessage" in options)) {
@@ -455,11 +480,11 @@ class PositionalArgument extends Argument {
         return false;
     }
 
-    get usageVariable() {
+    get usageVariables() {
         if (this.holder) {
             return this.holder;
         }
-        return this.names[0];
+        return [this.names[0]];
     }
 
     getUsageMessage() {
@@ -468,21 +493,21 @@ class PositionalArgument extends Argument {
         const openBracket = this.colors ? this.colors.squareBracket("[") : "[";
         const closeBracket = this.colors ? this.colors.squareBracket("]") : "]";
         const ellipsis = this.colors ? this.colors.ellipsis("...") : "...";
-        let usageVariable = this.usageVariable;
+        let usageVariables = this.usageVariables;
         if (this.colors) {
-            usageVariable = this.colors.argumentName(usageVariable);
+            usageVariables = usageVariables.map(this.colors.argumentName);
         }
-        const arg = `${uaOpenBracket}${usageVariable}${uaCloseBracket}`;
+        const formatVar = (v) => `${uaOpenBracket}${v}${uaCloseBracket}`;
         let msg = null;
         if (this.nargs === "+") {
-            msg = `${arg} ${openBracket}${arg} ${ellipsis}${closeBracket}`;
+            const t = formatVar(usageVariables[0]);
+            msg = `${t} ${openBracket}${t} ${ellipsis}${closeBracket}`;
         } else if (this.nargs === "*") {
-            msg = `${openBracket}${arg} ${ellipsis}${closeBracket}`;
+            msg = `${openBracket}${formatVar(usageVariables[0])} ${ellipsis}${closeBracket}`;
         } else if (this.nargs === "?") {
-            msg = `${openBracket}${arg}${closeBracket}`;
+            msg = `${openBracket}${formatVar(usageVariables[0])}${closeBracket}`;
         } else if (is.integer(this.nargs)) {
-            msg = `${arg} `.repeat(this.nargs - 1);
-            msg = `${msg}${arg}`;
+            msg = usageVariables.map(formatVar).join(" ");
         }
         return msg;
     }
@@ -493,7 +518,7 @@ class PositionalArgument extends Argument {
 
     getNamesMessage() {
         if (this.holder) {
-            return this.colors ? this.colors.argumentName(this.holder) : this.holder;
+            return (this.colors ? this.holder.map(this.colors.argumentName) : this.holder).join(", ");
         }
         return this.names.map((x) => {
             return this.colors ? this.colors.argumentName(x) : x;
@@ -553,7 +578,7 @@ class OptionalArgument extends Argument {
         return true;
     }
 
-    get usageVariable() {
+    get usageVariables() {
         if (this.holder) {
             return this.holder;
         }
@@ -563,7 +588,7 @@ class OptionalArgument extends Argument {
         while (s[i] === "-") {
             ++i;
         }
-        return s.slice(i);
+        return [s.slice(i)];
     }
 
     getUsageMessage({ required = true, allNames = false } = {}) {
@@ -575,21 +600,20 @@ class OptionalArgument extends Argument {
         const closeBrace = this.colors ? this.colors.squareBracket("]") : "]";
         const ellipsis = this.colors ? this.colors.ellipsis("...") : "...";
 
-        let usageVariable = this.usageVariable;
+        let usageVariables = this.usageVariables;
 
         if (this.colors) {
-            usageVariable = this.colors.optionVariable(usageVariable);
+            usageVariables = usageVariables.map(this.colors.optionVariable);
         }
 
         if (this.nargs === "+") {
-            msg = `${msg} ${usageVariable} ${openBrace}${usageVariable} ${ellipsis}${closeBrace}`;
+            msg = `${msg} ${usageVariables[0]} ${openBrace}${usageVariables[0]} ${ellipsis}${closeBrace}`;
         } else if (this.nargs === "*") {
-            msg = `${msg} ${openBrace}${usageVariable} ${ellipsis}${closeBrace}`;
+            msg = `${msg} ${openBrace}${usageVariables[0]} ${ellipsis}${closeBrace}`;
         } else if (this.nargs === "?") {
-            msg = `${msg} ${openBrace}${usageVariable}${closeBrace}`;
+            msg = `${msg} ${openBrace}${usageVariables[0]}${closeBrace}`;
         } else if (is.integer(this.nargs) && this.nargs) {
-            const t = `${usageVariable} `.repeat(this.nargs - 1);
-            msg = `${msg} ${t}${usageVariable}`;
+            msg = `${msg} ${usageVariables.join(" ")}`;
         }
         if (required && !this.required) {
             msg = `${openBrace}${msg}${closeBrace}`;
@@ -1221,7 +1245,7 @@ class Command {
                             { id: "left-spacing", width: 4 },
                             { id: "names", maxWidth: 40, wordwrap: true },
                             { id: "between-cells", width: 2 },
-                            { id: "message", wordwrap: false }
+                            { id: "message", wordwrap: true }
                         ],
                         width: "100%",
                         borderless: true,

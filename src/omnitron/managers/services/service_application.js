@@ -28,23 +28,23 @@ class ServiceApplication extends application.Application {
                 base: path,
                 transpile: true
             });
-    
+
             if (adoneConf.project.type !== "service") {
                 throw new x.NotValid("Not a service");
             }
-    
+
             const ServiceSubsystem = require(std.path.join(path, adoneConf.project.main)).default;
             if (!is.class(ServiceSubsystem)) {
                 throw new x.NotValid("Not valid service export");
             }
-    
+
             // eslint-disable-next-line
             await this.addSubsystem({
                 name: adoneConf.name,
                 description: adoneConf.description,
                 group: this.group,
                 subsystem: new ServiceSubsystem(),
-                configureArgs: [this.peer]                
+                configureArgs: [this.peer]
             });
         }
     }
@@ -54,7 +54,7 @@ class ServiceApplication extends application.Application {
     }
 
     main() {
-        
+
     }
 
     async uninitialize() {

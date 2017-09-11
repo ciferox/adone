@@ -20,19 +20,19 @@ export default class FileConfiguration extends adone.configuration.Configuration
                 decode: (buf, { path, key, transpile = false } = {}) => {
                     const content = buf.toString();
                     const transform = transpile ? js.Module.transforms.transpile(adone.require.options) : null;
-        
+
                     const m = new js.Module(path, {
                         transform
                     });
-        
+
                     m._compile(content, path);
                     let confObj = m.exports;
                     if (confObj.__esModule) {
                         confObj = confObj.default;
                     }
-        
+
                     let hasFunctions = false;
-        
+
                     const bindFunctions = (nestedConfig) => {
                         const keys = Object.getOwnPropertyNames(nestedConfig);
                         for (let i = 0; i < keys.length; i++) {
@@ -46,16 +46,16 @@ export default class FileConfiguration extends adone.configuration.Configuration
                             }
                         }
                     };
-        
+
                     bindFunctions(confObj);
-        
+
                     if (hasFunctions) {
                         if (is.undefined(this[PATHS])) {
                             this[PATHS] = {};
                         }
                         this[PATHS][confObj] = key;
                     }
-        
+
                     return confObj;
                 }
             }),
@@ -108,7 +108,7 @@ export default class FileConfiguration extends adone.configuration.Configuration
                     key: correctName
                 }, options));
             } catch (err) {
-                adone.log(err);
+                adone.error(err);
                 if (err instanceof SyntaxError) {
                     throw new x.NotValid("Config is not valid");
                 }
