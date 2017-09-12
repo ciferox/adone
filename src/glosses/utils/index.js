@@ -1027,5 +1027,6 @@ adone.lazify({
     throttle: "./throttle",
     fakeClock: "./fake_clock",
     ltgt: "./ltgt",
-    LogRotator: "./log_rotator"
+    LogRotator: "./log_rotator",
+    debounce: "./debounce"
 }, adone.asNamespace(exports), require);

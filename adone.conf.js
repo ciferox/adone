@@ -33,7 +33,12 @@ const notificatorFor = (title) => ({ watch }) => ({
     filter: (file) => file.extname !== ".map",
     message: watch ? (file) => path.relative(process.cwd(), file.path) : "done",
     onLast: !watch,
-    console: watch
+    console: watch,
+    debounce: watch ? { // future
+        timeout: 500,
+        leading: true,
+        trailing: true
+    } : undefined
 });
 
 const errorHandlerFor = (title) => fast.transform.notify.onError({

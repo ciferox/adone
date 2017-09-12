@@ -1,6 +1,6 @@
 import report from "./report";
 
-const { is } = adone;
+const { is, util } = adone;
 
 const notify = function (options = {}) {
     let reporter;
@@ -30,9 +30,25 @@ const notify = function (options = {}) {
     }
 
     if (!options.onLast) {
+        let _report = report;
+        if (options.debounce) {
+            _report = util.debounce(_report, options.debounce.timeout, options.debounce);
+        }
         return this.throughAsync(async function (file) {
             if (await filter(file)) {
-                await report(reporter, file, options, templateOptions).catch((err) => {
+                let _message = file;
+                let _options = options;
+                if (options.debounce && _report.ignored > 0) {
+                    const cnt = _report.ignored + 1; // ignored + current call
+                    _message = {
+                        message: `${cnt} files were changed`
+                    };
+                    _options = {
+                        ..._options,
+                        message: undefined // do not use custom formatter
+                    };
+                }
+                await _report(reporter, _message, _options, templateOptions).catch((err) => {
                     if (options.emitError) {
                         throw err;
                     }
