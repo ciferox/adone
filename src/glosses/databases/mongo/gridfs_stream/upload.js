@@ -1,9 +1,16 @@
-const { is, std: { crypto, stream: { Writable } } } = adone;
+const {
+    is,
+    std: {
+        crypto,
+        stream: { Writable }
+    },
+    data: { bson }
+} = adone;
 
 const ERROR_NAMESPACE_NOT_FOUND = 26;
 
 const createChunkDoc = (filesId, n, data) => ({
-    _id: new adone.data.bson.ObjectId(),
+    _id: new bson.ObjectId(),
     files_id: filesId,
     n,
     data

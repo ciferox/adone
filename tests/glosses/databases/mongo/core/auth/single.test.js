@@ -14,7 +14,8 @@ const promisify = adone.promise.promisify;
 describe("mongodb", function () {
     this.timeout(120000);
 
-    const { database: { mongo: { core: { Server, Connection } } } } = adone;
+    const { database: { mongo } } = adone;
+    const { core: { Server, Connection } } = adone.private(mongo);
 
     before(async function () {
         this.timeout(999999999); // long enough

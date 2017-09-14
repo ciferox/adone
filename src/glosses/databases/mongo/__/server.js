@@ -4,8 +4,18 @@ const {
     database: { mongo },
     std: { os }
 } = adone;
-const { __, MongoError, core } = mongo;
-const { utils: { MAX_JS_INT, translateOptions, filterOptions, mergeOptions, getReadPreference } } = __;
+const { MongoError } = mongo;
+const __ = adone.private(mongo);
+const {
+    core,
+    utils: {
+        MAX_JS_INT,
+        translateOptions,
+        filterOptions,
+        mergeOptions,
+        getReadPreference
+    }
+} = __;
 
 // Get package.json variable
 const driverVersion = "2.2.22 : adone";

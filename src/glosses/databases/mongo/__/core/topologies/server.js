@@ -1,9 +1,22 @@
 const {
-    database: { mongo: { core: { ReadPreference, Pool, Query, MongoError, wireProtocol, Cursor: BasicCursor, helper } } },
+    database: { mongo },
     event: { EventEmitter },
     data: { bson },
-    is, x, util
+    is,
+    x,
+    util
 } = adone;
+const {
+    core: {
+        ReadPreference,
+        Pool,
+        Query,
+        MongoError,
+        wireProtocol,
+        Cursor: BasicCursor,
+        helper
+    }
+} = adone.private(mongo);
 
 // Server instance id
 let id = 0;

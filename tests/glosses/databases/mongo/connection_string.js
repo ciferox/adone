@@ -4,6 +4,7 @@ describe("connection string", function () {
     }
 
     const { fs, database: { mongo } } = adone;
+    const __ = adone.private(mongo);
 
     const specs = new fs.Directory(__dirname, "connection_string_specs").filesSync();
 
@@ -14,7 +15,7 @@ describe("connection string", function () {
             for (const { auth, description, hosts, options, uri, valid, warning } of data.tests) {
                 let success = true;
                 try {
-                    mongo.__.parseUrl(uri);
+                    __.parseUrl(uri);
                     if (valid === false) {
                         success = false;
                     }

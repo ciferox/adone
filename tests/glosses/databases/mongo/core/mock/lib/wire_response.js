@@ -1,4 +1,4 @@
-const { data: { bson: { BSON } } } = adone;
+const { is, data: { bson: { BSON } } } = adone;
 
 // Response flags
 const CURSOR_NOT_FOUND = 0;
@@ -10,59 +10,59 @@ const Response = function (bson, data, opts) {
     opts = opts || { promoteLongs: true };
     this.parsed = false;
 
-  //
-  // Parse Header
-  //
+    //
+    // Parse Header
+    //
     this.index = 0;
     this.raw = data;
     this.data = data;
     this.bson = bson;
     this.opts = opts;
 
-  // Read the message length
+    // Read the message length
     this.length = data[this.index] | data[this.index + 1] << 8 | data[this.index + 2] << 16 | data[this.index + 3] << 24;
     this.index = this.index + 4;
 
-  // Fetch the request id for this reply
+    // Fetch the request id for this reply
     this.requestId = data[this.index] | data[this.index + 1] << 8 | data[this.index + 2] << 16 | data[this.index + 3] << 24;
     this.index = this.index + 4;
 
-  // Fetch the id of the request that triggered the response
+    // Fetch the id of the request that triggered the response
     this.responseTo = data[this.index] | data[this.index + 1] << 8 | data[this.index + 2] << 16 | data[this.index + 3] << 24;
     this.index = this.index + 4;
 
-  // Skip op-code field
+    // Skip op-code field
     this.index = this.index + 4;
 
-  // Unpack flags
+    // Unpack flags
     this.responseFlags = data[this.index] | data[this.index + 1] << 8 | data[this.index + 2] << 16 | data[this.index + 3] << 24;
     this.index = this.index + 4;
 
-  // Unpack the cursor
+    // Unpack the cursor
     const lowBits = data[this.index] | data[this.index + 1] << 8 | data[this.index + 2] << 16 | data[this.index + 3] << 24;
     this.index = this.index + 4;
     const highBits = data[this.index] | data[this.index + 1] << 8 | data[this.index + 2] << 16 | data[this.index + 3] << 24;
     this.index = this.index + 4;
-  // Create long object
+    // Create long object
     this.cursorId = new Long(lowBits, highBits);
 
-  // Unpack the starting from
+    // Unpack the starting from
     this.startingFrom = data[this.index] | data[this.index + 1] << 8 | data[this.index + 2] << 16 | data[this.index + 3] << 24;
     this.index = this.index + 4;
 
-  // Unpack the number of objects returned
+    // Unpack the number of objects returned
     this.numberReturned = data[this.index] | data[this.index + 1] << 8 | data[this.index + 2] << 16 | data[this.index + 3] << 24;
     this.index = this.index + 4;
 
-  // Preallocate document array
+    // Preallocate document array
     this.documents = new Array(this.numberReturned);
 
-  // Flag values
+    // Flag values
     this.cursorNotFound = (this.responseFlags & CURSOR_NOT_FOUND) != 0;
     this.queryFailure = (this.responseFlags & QUERY_FAILURE) != 0;
     this.shardConfigStale = (this.responseFlags & SHARD_CONFIG_STALE) != 0;
     this.awaitCapable = (this.responseFlags & AWAIT_CAPABLE) != 0;
-    this.promoteLongs = typeof opts.promoteLongs === "boolean" ? opts.promoteLongs : true;
+    this.promoteLongs = is.boolean(opts.promoteLongs) ? opts.promoteLongs : true;
 };
 
 Response.prototype.isParsed = function () {
@@ -80,69 +80,69 @@ const documentBuffers = {
 };
 
 Response.prototype.parse = function (options) {
-  // Don't parse again if not needed
+    // Don't parse again if not needed
     if (this.parsed) {
         return;
     }
     options = options || {};
 
-  // Allow the return of raw documents instead of parsing
+    // Allow the return of raw documents instead of parsing
     const raw = options.raw || false;
     const documentsReturnedIn = options.documentsReturnedIn || null;
 
-  //
-  // Single document and documentsReturnedIn set
-  //
-    if (this.numberReturned == 1 && documentsReturnedIn != null && raw) {
+    //
+    // Single document and documentsReturnedIn set
+    //
+    if (this.numberReturned == 1 && !is.nil(documentsReturnedIn) && raw) {
     // Calculate the bson size
         var bsonSize = this.data[this.index] | this.data[this.index + 1] << 8 | this.data[this.index + 2] << 16 | this.data[this.index + 3] << 24;
-    // Slice out the buffer containing the command result document
+        // Slice out the buffer containing the command result document
         const document = this.data.slice(this.index, this.index + bsonSize);
-    // Set up field we wish to keep as raw
+        // Set up field we wish to keep as raw
         const fieldsAsRaw = {};
         fieldsAsRaw[documentsReturnedIn] = true;
-    // Set up the options
+        // Set up the options
         var _options = { promoteLongs: this.opts.promoteLongs, fieldsAsRaw };
 
-    // Deserialize but keep the array of documents in non-parsed form
+        // Deserialize but keep the array of documents in non-parsed form
         const doc = this.bson.deserialize(document, _options);
 
-    // Get the documents
+        // Get the documents
         this.documents = doc.cursor[documentsReturnedIn];
         this.numberReturned = this.documents.length;
-    // Ensure we have a Long valie cursor id
-        this.cursorId = typeof doc.cursor.id === "number"
-      ? Long.fromNumber(doc.cursor.id)
-      : doc.cursor.id;
+        // Ensure we have a Long valie cursor id
+        this.cursorId = is.number(doc.cursor.id)
+            ? Long.fromNumber(doc.cursor.id)
+            : doc.cursor.id;
 
-    // Adjust the index
+        // Adjust the index
         this.index = this.index + bsonSize;
 
-    // Set as parsed
+        // Set as parsed
         this.parsed = true;
         return;
     }
 
-  //
-  // Parse Body
-  //
+    //
+    // Parse Body
+    //
     for (let i = 0; i < this.numberReturned; i++) {
         var bsonSize = this.data[this.index] | this.data[this.index + 1] << 8 | this.data[this.index + 2] << 16 | this.data[this.index + 3] << 24;
-    // Parse options
+        // Parse options
         var _options = { promoteLongs: this.opts.promoteLongs };
 
-    // If we have raw results specified slice the return document
+        // If we have raw results specified slice the return document
         if (raw) {
             this.documents[i] = this.data.slice(this.index, this.index + bsonSize);
         } else {
             this.documents[i] = this.bson.deserialize(this.data.slice(this.index, this.index + bsonSize), _options);
         }
 
-    // Adjust the index
+        // Adjust the index
         this.index = this.index + bsonSize;
     }
 
-  // Set parsed
+    // Set parsed
     this.parsed = true;
 };
 

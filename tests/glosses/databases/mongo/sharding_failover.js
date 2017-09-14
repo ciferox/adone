@@ -32,15 +32,16 @@ describe("sharding failover", function () {
     });
 
     it("should correctly connect to mongos sharded setup and kill the mongos proxy", async () => {
-        const mongos = new mongo.__.Mongos([
-            new mongo.__.Server(this.host, this.port, { autoReconnect: true }),
-            new mongo.__.Server(this.host, this.port + 1, { autoReconnect: true })
+        const __ = adone.private(mongo);
+        const mongos = new __.Mongos([
+            new __.Server(this.host, this.port, { autoReconnect: true }),
+            new __.Server(this.host, this.port + 1, { autoReconnect: true })
         ], { ha: true, haInterval: 500, poolSize: 1 });
         const left = spy();
         const joined = spy();
         mongos.on("left", left);
         mongos.on("joined", joined);
-        const db = new mongo.__.Db("integration_test_", mongos, { w: 0 });
+        const db = new __.Db("integration_test_", mongos, { w: 0 });
         await db.open();
         const collection = db.collection("shard_test2");
         await collection.insert({ test: 1 }, { w: 1 });

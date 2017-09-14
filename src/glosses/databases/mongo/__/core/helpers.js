@@ -1,4 +1,15 @@
-const { std: { os }, util, is, database: { mongo: { core: { ReadPreference, MongoError } } } } = adone;
+const {
+    std: { os },
+    util,
+    is,
+    database: { mongo }
+} = adone;
+const {
+    core: {
+        ReadPreference,
+        MongoError
+    }
+} = adone.private(mongo);
 
 export const emitSDAMEvent = (self, event, description) => {
     if (self.listeners(event).length > 0) {

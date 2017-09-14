@@ -1,6 +1,22 @@
-const { is, database: { mongo }, std: { stream: { Readable } } } = adone;
-const { __, MongoError, core, ReadPreference } = mongo;
-const { utils: { formattedOrderClause, handleCallback } } = __;
+const {
+    is,
+    database: { mongo },
+    std: {
+        stream: { Readable }
+    }
+} = adone;
+const {
+    MongoError,
+    ReadPreference
+} = mongo;
+const __ = adone.private(mongo);
+const {
+    core,
+    utils: {
+        formattedOrderClause,
+        handleCallback
+    }
+} = __;
 
 const flags = ["tailable", "oplogReplay", "noCursorTimeout", "awaitData", "exhaust", "partial"];
 const fields = ["numberOfRetries", "tailableRetryInterval"];

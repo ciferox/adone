@@ -1,4 +1,7 @@
-const { is, x } = adone;
+const {
+    is,
+    x
+} = adone;
 
 // Incrementing request id
 let _requestId = 0;
@@ -53,15 +56,25 @@ export class Query {
         this.requestId = Query.getRequestId();
 
         // Serialization option
-        this.serializeFunctions = is.boolean(options.serializeFunctions) ? options.serializeFunctions : false;
-        this.ignoreUndefined = is.boolean(options.ignoreUndefined) ? options.ignoreUndefined : false;
-        this.maxBsonSize = options.maxBsonSize || 1024 * 1024 * 16;
-        this.checkKeys = is.boolean(options.checkKeys) ? options.checkKeys : true;
+        this.serializeFunctions = is.boolean(options.serializeFunctions)
+            ? options.serializeFunctions
+            : false;
+        this.ignoreUndefined = is.boolean(options.ignoreUndefined)
+            ? options.ignoreUndefined
+            : false;
+        this.maxBsonSize = is.integer(options.maxBsonSize)
+            ? options.maxBsonSize
+            : 1024 * 1024 * 16;
+        this.checkKeys = is.boolean(options.checkKeys)
+            ? options.checkKeys
+            : true;
         this.batchSize = this.numberToReturn;
 
         // Flags
         this.tailable = false;
-        this.slaveOk = is.boolean(options.slaveOk) ? options.slaveOk : false;
+        this.slaveOk = is.boolean(options.slaveOk)
+            ? options.slaveOk
+            : false;
         this.oplogReplay = false;
         this.noCursorTimeout = false;
         this.awaitData = false;
@@ -392,62 +405,62 @@ export class Response {
         this.opts = opts;
 
         // Read the message length
-        this.length = data[this.index] |
-            data[this.index + 1] << 8 |
-            data[this.index + 2] << 16 |
-            data[this.index + 3] << 24;
+        this.length = data[this.index]
+            | data[this.index + 1] << 8
+            | data[this.index + 2] << 16
+            | data[this.index + 3] << 24;
         this.index = this.index + 4;
 
         // Fetch the request id for this reply
-        this.requestId = data[this.index] |
-            data[this.index + 1] << 8 |
-            data[this.index + 2] << 16 |
-            data[this.index + 3] << 24;
+        this.requestId = data[this.index]
+            | data[this.index + 1] << 8
+            | data[this.index + 2] << 16
+            | data[this.index + 3] << 24;
         this.index = this.index + 4;
 
         // Fetch the id of the request that triggered the response
-        this.responseTo = data[this.index] |
-            data[this.index + 1] << 8 |
-            data[this.index + 2] << 16 |
-            data[this.index + 3] << 24;
+        this.responseTo = data[this.index]
+            | data[this.index + 1] << 8
+            | data[this.index + 2] << 16
+            | data[this.index + 3] << 24;
         this.index = this.index + 4;
 
         // Skip op-code field
         this.index = this.index + 4;
 
         // Unpack flags
-        this.responseFlags = data[this.index] |
-            data[this.index + 1] << 8 |
-            data[this.index + 2] << 16 |
-            data[this.index + 3] << 24;
+        this.responseFlags = data[this.index]
+            | data[this.index + 1] << 8
+            | data[this.index + 2] << 16
+            | data[this.index + 3] << 24;
         this.index = this.index + 4;
 
         // Unpack the cursor
-        const lowBits = data[this.index] |
-            data[this.index + 1] << 8 |
-            data[this.index + 2] << 16 |
-            data[this.index + 3] << 24;
+        const lowBits = data[this.index]
+            | data[this.index + 1] << 8
+            | data[this.index + 2] << 16
+            | data[this.index + 3] << 24;
         this.index = this.index + 4;
-        const highBits = data[this.index] |
-            data[this.index + 1] << 8 |
-            data[this.index + 2] << 16 |
-            data[this.index + 3] << 24;
+        const highBits = data[this.index]
+            | data[this.index + 1] << 8
+            | data[this.index + 2] << 16
+            | data[this.index + 3] << 24;
         this.index = this.index + 4;
         // Create long object
         this.cursorId = new adone.data.bson.Long(lowBits, highBits);
 
         // Unpack the starting from
-        this.startingFrom = data[this.index] |
-            data[this.index + 1] << 8 |
-            data[this.index + 2] << 16 |
-            data[this.index + 3] << 24;
+        this.startingFrom = data[this.index]
+            | data[this.index + 1] << 8
+            | data[this.index + 2] << 16
+            | data[this.index + 3] << 24;
         this.index = this.index + 4;
 
         // Unpack the number of objects returned
-        this.numberReturned = data[this.index] |
-            data[this.index + 1] << 8 |
-            data[this.index + 2] << 16 |
-            data[this.index + 3] << 24;
+        this.numberReturned = data[this.index]
+            | data[this.index + 1] << 8
+            | data[this.index + 2] << 16
+            | data[this.index + 3] << 24;
         this.index = this.index + 4;
 
         // Preallocate document array
@@ -458,9 +471,15 @@ export class Response {
         this.queryFailure = (this.responseFlags & QUERY_FAILURE) !== 0;
         this.shardConfigStale = (this.responseFlags & SHARD_CONFIG_STALE) !== 0;
         this.awaitCapable = (this.responseFlags & AWAIT_CAPABLE) !== 0;
-        this.promoteLongs = is.boolean(opts.promoteLongs) ? opts.promoteLongs : true;
-        this.promoteValues = is.boolean(opts.promoteValues) ? opts.promoteValues : true;
-        this.promoteBuffers = is.boolean(opts.promoteBuffers) ? opts.promoteBuffers : false;
+        this.promoteLongs = is.boolean(opts.promoteLongs)
+            ? opts.promoteLongs
+            : true;
+        this.promoteValues = is.boolean(opts.promoteValues)
+            ? opts.promoteValues
+            : true;
+        this.promoteBuffers = is.boolean(opts.promoteBuffers)
+            ? opts.promoteBuffers
+            : false;
     }
 
     isParsed() {
@@ -496,10 +515,10 @@ export class Response {
         // Single document and documentsReturnedIn set
         if (this.numberReturned === 1 && !is.nil(documentsReturnedIn) && raw) {
             // Calculate the bson size
-            const bsonSize = this.data[this.index] |
-                this.data[this.index + 1] << 8 |
-                this.data[this.index + 2] << 16 |
-                this.data[this.index + 3] << 24;
+            const bsonSize = this.data[this.index]
+                | this.data[this.index + 1] << 8
+                | this.data[this.index + 2] << 16
+                | this.data[this.index + 3] << 24;
             // Slice out the buffer containing the command result document
             const document = this.data.slice(this.index, this.index + bsonSize);
             // Set up field we wish to keep as raw
@@ -528,10 +547,10 @@ export class Response {
 
         // Parse Body
         for (let i = 0; i < this.numberReturned; i++) {
-            const bsonSize = this.data[this.index] |
-                this.data[this.index + 1] << 8 |
-                this.data[this.index + 2] << 16 |
-                this.data[this.index + 3] << 24;
+            const bsonSize = this.data[this.index]
+                | this.data[this.index + 1] << 8
+                | this.data[this.index + 2] << 16
+                | this.data[this.index + 3] << 24;
 
             // If we have raw results specified slice the return document
             if (raw) {

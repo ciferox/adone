@@ -1,6 +1,18 @@
-const { is, data, database: { mongo } } = adone;
-const { __, ObjectId } = mongo;
-const { bulk, utils: { shallowClone, toError, handleCallback } } = __;
+const {
+    is,
+    data,
+    database: { mongo }
+} = adone;
+const { ObjectId } = mongo;
+const __ = adone.private(mongo);
+const {
+    bulk,
+    utils: {
+        shallowClone,
+        toError,
+        handleCallback
+    }
+} = __;
 
 const bson = new data.bson.BSON();
 

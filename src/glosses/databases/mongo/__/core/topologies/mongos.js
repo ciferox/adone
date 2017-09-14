@@ -1,8 +1,19 @@
 const {
-    database: { mongo: { core: { Cursor: BasicCursor, MongoError, Server, auth, helper } } },
+    database: { mongo },
     event: { EventEmitter },
-    is, util, lazify
+    is,
+    util,
+    lazify
 } = adone;
+const {
+    core: {
+        Cursor: BasicCursor,
+        MongoError,
+        Server,
+        auth,
+        helper
+    }
+} = adone.private(mongo);
 
 const DISCONNECTED = "disconnected";
 const CONNECTING = "connecting";

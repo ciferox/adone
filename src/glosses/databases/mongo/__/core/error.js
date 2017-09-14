@@ -1,4 +1,7 @@
-const { is, x } = adone;
+const {
+    is,
+    x
+} = adone;
 
 export default class MongoError extends x.Exception {
     static create(options) {

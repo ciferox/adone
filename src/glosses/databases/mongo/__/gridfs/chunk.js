@@ -1,4 +1,12 @@
-const { is, database: { mongo: { Binary, ObjectId } } } = adone;
+const {
+    is,
+    database: {
+        mongo: {
+            Binary,
+            ObjectId
+        }
+    }
+} = adone;
 
 export default class Chunk {
     constructor(file, mongoObject = {}, writeConcern = { w: 1 }) {

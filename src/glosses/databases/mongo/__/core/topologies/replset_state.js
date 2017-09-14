@@ -1,8 +1,15 @@
 const {
-    database: { mongo: { core: { MongoError, ReadPreference, helper } } },
+    database: { mongo },
     event: { EventEmitter },
     is, util
 } = adone;
+const {
+    core: {
+        MongoError,
+        ReadPreference,
+        helper
+    }
+} = adone.private(mongo);
 
 const TopologyType = {
     Single: "Single",

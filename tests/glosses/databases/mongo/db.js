@@ -1,6 +1,6 @@
 describe("db", function () {
     const { database: { mongo }, data: { bson } } = adone;
-    const { __: { Db } } = mongo;
+    const { Db } = adone.private(mongo);
 
     if (this.topology === "single") {
         it("should correctly handle illegal db names", async () => {

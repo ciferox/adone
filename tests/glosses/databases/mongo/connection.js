@@ -1,6 +1,6 @@
 describe("connection", function () {
     const { database: { mongo } } = adone;
-    const { __: { Db, Server } } = mongo;
+    const { Db, Server } = adone.private(mongo);
 
     if (this.topology === "single") {
         const openSocketDb = (opts = {}) => {

@@ -1,4 +1,9 @@
-const { is, std: { stream: { Readable } } } = adone;
+const {
+    is,
+    std: {
+        stream: { Readable }
+    }
+} = adone;
 
 export default class GridFSBucketReadStream extends Readable {
     constructor(chunks, files, readPreference, filter, options) {
@@ -166,8 +171,7 @@ export default class GridFSBucketReadStream extends Readable {
 
             const bytesRemaining = this.s.file.length - this.s.bytesRead;
             const expectedN = this.s.expected++;
-            const expectedLength = Math.min(this.s.file.chunkSize,
-                bytesRemaining);
+            const expectedLength = Math.min(this.s.file.chunkSize, bytesRemaining);
 
             let errmsg;
 
@@ -187,8 +191,7 @@ export default class GridFSBucketReadStream extends Readable {
                     return this._handleError(new Error(errmsg));
                 }
 
-                errmsg = `ChunkIsWrongSize: Got unexpected length: ${
-                    doc.data.length()}, expected: ${expectedLength}`;
+                errmsg = `ChunkIsWrongSize: Got unexpected length: ${doc.data.length()}, expected: ${expectedLength}`;
                 return this._handleError(new Error(errmsg));
             }
 

@@ -1,9 +1,15 @@
 const {
     is, x,
-    database: { mongo: { core: { Response, MongoError } } },
+    database: { mongo },
     std: { crypto, tls, net },
     event: { EventEmitter }
 } = adone;
+const {
+    core: {
+        Response,
+        MongoError
+    }
+} = adone.private(mongo);
 
 let _id = 0;
 let connectionAccounting = false;
@@ -52,9 +58,7 @@ const closeHandler = (self) => {
 
         // Emit close event
         if (!hadError) {
-            self.emit("close"
-                , MongoError.create(`connection ${self.id} to ${self.host}:${self.port} closed`)
-                , self);
+            self.emit("close", MongoError.create(`connection ${self.id} to ${self.host}:${self.port} closed`), self);
         }
     };
 };
@@ -142,7 +146,10 @@ const dataHandler = (self) => {
                         // If we have a negative sizeOfMessage emit error and return
                         if (sizeOfMessage < 0 || sizeOfMessage > self.maxBsonMessageSize) {
                             const errorObject = {
-                                err: "socketHandler", trace: "", bin: self.buffer, parseState: {
+                                err: "socketHandler",
+                                trace: "",
+                                bin: self.buffer,
+                                parseState: {
                                     sizeOfMessage,
                                     bytesRead: self.bytesRead,
                                     stubBuffer: self.stubBuffer

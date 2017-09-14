@@ -50,9 +50,10 @@ describe("sharding connection", function () {
     });
 
     it("should correctly emit open and fullsetup to all db instances", async () => {
-        const db1 = new mongo.__.Db("tests_1", new mongo.__.Mongos([
-            new mongo.__.Server(this.host, this.port),
-            new mongo.__.Server(this.host, this.port + 1)
+        const __ = adone.private(mongo);
+        const db1 = new __.Db("tests_1", new __.Mongos([
+            new __.Server(this.host, this.port),
+            new __.Server(this.host, this.port + 1)
         ]), { w: 1 });
         const db2 = db1.db("tests_2");
 

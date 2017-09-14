@@ -1,4 +1,8 @@
-const { is, x, database: { mongo } } = adone;
+const {
+    is,
+    x,
+    database: { mongo }
+} = adone;
 
 // Error codes
 export const UNKNOWN_ERROR = 8;

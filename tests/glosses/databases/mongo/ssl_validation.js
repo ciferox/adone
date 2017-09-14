@@ -6,7 +6,7 @@ describe("ssl validation", function () {
     }
 
     const { database: { mongo }, fs } = adone;
-    const { __: { ReplSet, Server, Db } } = mongo;
+    const { ReplSet, Server, Db } = adone.private(mongo);
 
     const replicaSet = "rs";
 

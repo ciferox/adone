@@ -4,7 +4,8 @@ import {
 } from "mongodb-topology-manager";
 import { Sharded as ShardingManager } from "./test_topologies";
 
-import mongo from "adone/glosses/databases/mongo/core";
+const { database: { mongo } } = adone;
+const { core } = adone.private(mongo);
 
 export default {
     skipStart: false,
@@ -27,7 +28,7 @@ export default {
         if (this.useReplicaSet) {
             this.port = 31000;
             this.topology = () => {
-                return new mongo.ReplSet([{
+                return new core.ReplSet([{
                     host: "localhost", port: 31000
                 }], { setName: "rs" });
             };
@@ -72,7 +73,7 @@ export default {
         } else if (this.useSharding) {
             this.port = 51000;
             this.topology = () => {
-                return new mongo.Mongos([{
+                return new core.Mongos([{
                     host: "localhost",
                     port: 51000
                 }]);
@@ -81,7 +82,7 @@ export default {
         } else {  // single
             this.port = 27017;
             this.topology = () => {
-                return new mongo.Server({ host: this.host, port: this.port });
+                return new core.Server({ host: this.host, port: this.port });
             };
             if (this.useAuth) {
                 const manager = this.manager = new ServerManager("mongod", {
@@ -169,7 +170,7 @@ export default {
             options = {};
         }
 
-        const server = this.topology(this, mongo);
+        const server = this.topology(this, core);
         // Set up connect
         server.once("connect", () => {
             callback(null, server);
@@ -180,7 +181,7 @@ export default {
     },
 
     // Additional parameters needed
-    require: mongo,
+    require: core,
     port: 27017,
     host: "localhost",
     setName: "rs",

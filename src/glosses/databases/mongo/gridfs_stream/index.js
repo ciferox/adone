@@ -1,9 +1,15 @@
 const {
     is,
     event: { EventEmitter },
-    database: { mongo }, lazify
+    database: { mongo },
+    lazify
 } = adone;
-const { __: { utils: { shallowClone, toError } } } = mongo;
+const {
+    utils: {
+        shallowClone,
+        toError
+    }
+} = adone.private(mongo);
 
 const lazy = lazify({
     GridFSBucketReadStream: "./download",

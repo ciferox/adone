@@ -1,4 +1,11 @@
-const { is, database: { mongo: { core: { MongoError } } } } = adone;
+const {
+    is,
+    database: { mongo }
+} = adone;
+const {
+    core: { MongoError }
+} = adone.private(mongo);
+
 // Wire command operation ids
 const OP_UPDATE = 2001;
 const OP_INSERT = 2002;

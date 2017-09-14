@@ -1,9 +1,21 @@
 const {
     is,
     std: { crypto },
-    data: { bson: { Binary } },
-    database: { mongo: { core: { Query, MongoError, auth: { Session, Schema } } } }
+    data: {
+        bson: { Binary }
+    },
+    database: { mongo }
 } = adone;
+const {
+    core: {
+        Query,
+        MongoError,
+        auth: {
+            Session,
+            Schema
+        }
+    }
+} = adone.private(mongo);
 
 const parsePayload = (payload) => {
     const dict = {};

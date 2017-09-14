@@ -2,6 +2,7 @@ import Dispatcher from "./dispatcher";
 
 describe("database", "mongo", function () {
     const { x, database: { mongo } } = adone;
+    const __ = adone.private(mongo);
 
     this.timeout(300000);
 
@@ -78,7 +79,7 @@ describe("database", "mongo", function () {
                     url: this.url
                 } = await this.dispatcher.getSingleServer());
 
-                this.DB = new mongo.__.Db(this.database, new mongo.__.Server("localhost", 27017, {
+                this.DB = new __.Db(this.database, new __.Server("localhost", 27017, {
                     poolSize: 1,
                     autoReconnect: false
                 }), {
@@ -99,8 +100,8 @@ describe("database", "mongo", function () {
                     url: this.url
                 } = await this.dispatcher.getShardedServer());
 
-                this.DB = new mongo.__.Db(this.database, new mongo.__.Mongos([
-                    new mongo.__.Server("localhost", 51000, {
+                this.DB = new __.Db(this.database, new __.Mongos([
+                    new __.Server("localhost", 51000, {
                         poolSize: 1,
                         autoReconnect: false
                     })
@@ -125,8 +126,8 @@ describe("database", "mongo", function () {
                     url: this.url
                 } = await this.dispatcher.getReplicasetServer());
 
-                this.DB = new mongo.__.Db(this.database, new mongo.__.ReplSet([
-                    new mongo.__.Server("localhost", 31000, {
+                this.DB = new __.Db(this.database, new __.ReplSet([
+                    new __.Server("localhost", 31000, {
                         poolSize: 1,
                         autoReconnect: false
                     })
@@ -152,7 +153,7 @@ describe("database", "mongo", function () {
                     url: this.url
                 } = await this.dispatcher.getAuthServer());
 
-                this.DB = new mongo.__.Db(this.database, new mongo.__.Server(this.host, this.port, {
+                this.DB = new __.Db(this.database, new __.Server(this.host, this.port, {
                     poolSize: 1,
                     autoReconnect: false
                 }), {

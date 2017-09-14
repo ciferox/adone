@@ -1,9 +1,16 @@
 const {
     is,
-    database: { mongo: { __, ReadPreference, MongoError } },
+    database: { mongo },
     event: { EventEmitter }
 } = adone;
-const { utils: { shallowClone } } = __;
+const {
+    ReadPreference,
+    MongoError
+} = mongo;
+const __ = adone.private(mongo);
+const {
+    utils: { shallowClone }
+} = __;
 
 const validOptionNames = [
     "poolSize",

@@ -1,10 +1,19 @@
 const {
     is,
-    data: { bson: { Binary } },
-    database: { mongo: { core: { Query, MongoError, auth: { Session, Schema } } } }
+    database: { mongo }
 } = adone;
+const {
+    core: {
+        Query,
+        MongoError,
+        auth: {
+            Session,
+            Schema
+        }
+    }
+} = adone.private(mongo);
 
-export default class Plain extends Schema {
+export default class X509 extends Schema {
     auth(server, connections, db, username, password, callback) {
         // Total connections
         let count = connections.length;
@@ -17,20 +26,21 @@ export default class Plain extends Schema {
         let errorObject = null;
 
         const execute = (connection) => {
-            // Create payload
-            const payload = new Binary(`\x00${username}\x00${password}`);
-
             // Let's start the sasl process
             const command = {
-                saslStart: 1,
-                mechanism: "PLAIN",
-                payload,
-                autoAuthorize: 1
+                authenticate: 1,
+                mechanism: "MONGODB-X509"
             };
+
+            // Add username if specified
+            if (username) {
+                command.user = username;
+            }
 
             // Let's start the process
             server(connection, new Query(this.bson, "$external.$cmd", command, {
-                numberToSkip: 0, numberToReturn: 1
+                numberToSkip: 0,
+                numberToReturn: 1
             }), (err, r) => {
                 // Adjust count
                 count = count - 1;
@@ -69,6 +79,7 @@ export default class Plain extends Schema {
 
         // For each connection we need to authenticate
         while (connections.length > 0) {
+            // Execute MongoCR
             _execute(connections.shift());
         }
     }

@@ -1,5 +1,11 @@
 const {
-    database: { mongo: { core: {
+    database: { mongo },
+    event: { EventEmitter },
+    data: { bson },
+    is, util, lazify
+} = adone;
+const {
+    core: {
         ReadPreference,
         Cursor: BasicCursor,
         MongoError,
@@ -7,11 +13,8 @@ const {
         ReplSetState,
         auth,
         helper
-    } } },
-    event: { EventEmitter },
-    data: { bson },
-    is, util, lazify
-} = adone;
+    }
+} = adone.private(mongo);
 
 // States
 const DISCONNECTED = "disconnected";

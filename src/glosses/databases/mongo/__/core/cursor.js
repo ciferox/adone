@@ -1,10 +1,13 @@
 const {
     is,
     x,
-    database: { mongo: { core: { MongoError } } },
+    database: { mongo },
     event: { EventEmitter },
     data
 } = adone;
+const {
+    core: { MongoError }
+} = adone.private(mongo);
 
 const handleCallback = (callback, err, result) => {
     try {
@@ -188,13 +191,14 @@ export default class Cursor extends EventEmitter {
 
             // Check if we have a command cursor
             if (
-                is.array(result.documents) && result.documents.length === 1 &&
-                (!this.cmd.find || (this.cmd.find && this.cmd.virtual === false)) &&
-                (
-                    !is.string(result.documents[0].cursor) ||
-                    result.documents[0].$err ||
-                    result.documents[0].errmsg ||
-                    is.array(result.documents[0].result)
+                is.array(result.documents)
+                && result.documents.length === 1
+                && (!this.cmd.find || (this.cmd.find && this.cmd.virtual === false))
+                && (
+                    !is.string(result.documents[0].cursor)
+                    || result.documents[0].$err
+                    || result.documents[0].errmsg
+                    || is.array(result.documents[0].result)
                 )
             ) {
 

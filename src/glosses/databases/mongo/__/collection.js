@@ -1,6 +1,18 @@
-const { is, database: { mongo }, util } = adone;
-const { __, ObjectId, Long, Code, MongoError, core, ReadPreference } = mongo;
 const {
+    is,
+    database: { mongo },
+    util
+} = adone;
+const {
+    ObjectId,
+    Long,
+    Code,
+    MongoError,
+    ReadPreference
+} = mongo;
+const __ = adone.private(mongo);
+const {
+    core,
     bulk,
     utils: {
         checkCollectionName,
@@ -126,7 +138,8 @@ const testForFields = {
     connection: 1,
     maxTimeMS: 1,
     transforms: 1,
-    collation: 1
+    collation: 1,
+    noCursorTimeout: 1
 };
 
 const decorateWithWriteConcern = (command, self, options) => {

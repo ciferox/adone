@@ -1,4 +1,10 @@
-const { is, database: { mongo: { ReadPreference } }, std: { url: parser } } = adone;
+const {
+    is,
+    database: {
+        mongo: { ReadPreference }
+    },
+    std: { url: parser }
+} = adone;
 
 export default function parseUrl(url, options) {
     let connectionPart = "";

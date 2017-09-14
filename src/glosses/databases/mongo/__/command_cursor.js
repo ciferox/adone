@@ -1,6 +1,15 @@
-const { is, database: { mongo } } = adone;
-const { __, MongoError, core, ReadPreference } = mongo;
-const { Cursor } = __;
+const {
+    is,
+    database: { mongo }
+} = adone;
+const {
+    MongoError,
+    ReadPreference
+} = mongo;
+const {
+    Cursor,
+    core
+} = adone.private(mongo);
 
 export default class CommandCursor extends Cursor {
     constructor(bson, ns, cmd, options, topology, topologyOptions) {

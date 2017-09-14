@@ -1,4 +1,9 @@
-const { is, database: { mongo: { MongoError } } } = adone;
+const {
+    is,
+    database: {
+        mongo: { MongoError }
+    }
+} = adone;
 
 const primaryOptions = ["primary", "primaryPreferred", "nearest", "secondaryPreferred"];
 const secondaryOptions = ["secondary", "secondaryPreferred"];

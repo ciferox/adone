@@ -1,4 +1,4 @@
-const { data: { bson: { BSON, Long } } } = adone;
+const { is, data: { bson: { BSON, Long } } } = adone;
 
 let net = require("net"),
     Request = require("./request"),
@@ -18,27 +18,27 @@ let net = require("net"),
 const Server = function (port, host, options) {
     EventEmitter.call(this);
 
-  // Special handlers
+    // Special handlers
     options = options || {};
 
-  // Do we have an onRead function
-    this.onRead = typeof options.onRead === "function"
-    ? options.onRead : null;
+    // Do we have an onRead function
+    this.onRead = is.function(options.onRead)
+        ? options.onRead : null;
 
-  // Create a bson instance
+    // Create a bson instance
     this.bson = new BSON();
-  // Save the settings
+    // Save the settings
     this.host = host;
     this.port = port;
-  // Create a server socket
+    // Create a server socket
     this.socket = net.createServer();
-  // Responses
+    // Responses
     this.messages = [];
-  // state
+    // state
     this.state = "stopped";
-  // Number of connections
+    // Number of connections
     this.connections = 0;
-  // sockets
+    // sockets
     this.sockets = [];
 };
 
@@ -56,7 +56,7 @@ Server.prototype.destroy = function () {
 Server.prototype.start = function () {
     const self = this;
 
-  // Return start promise
+    // Return start promise
     return new Promise((resolve, reject) => {
         self.socket.on("error", (err) => {
             console.log("!!!!!!!!!!!!!!!!!!!! error reject");
@@ -108,7 +108,7 @@ Server.prototype.receive = function () {
                 return reject(new Error("mock server is in destroyed state"));
             }
 
-      // If we have a message return it
+            // If we have a message return it
             if (self.messages.length > 0) {
                 const message = self.messages.shift();
                 return resolve(message);
@@ -123,16 +123,16 @@ Server.prototype.receive = function () {
 
 const protocol = function (self, message) {
     let index = 0;
-  // Get the opCode for the message
+    // Get the opCode for the message
     const size = message[index++] | message[index++] << 8 | message[index++] << 16 | message[index++] << 24;
     if (size != message.length) {
         throw new Error("corrupt wire protocol message");
     }
-  // Adjust to opcode
+    // Adjust to opcode
     index = 12;
-  // Get the opCode for the message
+    // Get the opCode for the message
     const type = message[index++] | message[index++] << 8 | message[index++] << 16 | message[index++] << 24;
-  // Switch on type
+    // Switch on type
     if (type == 2001) {
         return new Update(self.bson, message);
     }
@@ -158,66 +158,66 @@ var dataHandler = function (server, self, connection) {
     return function (data) {
     // Parse until we are done with the data
         while (data.length > 0) {
-      // Call the onRead function
-            if (typeof server.onRead === "function") {
-        // If onRead returns true, terminate the reading for this connection as
-        // it's dead
+            // Call the onRead function
+            if (is.function(server.onRead)) {
+                // If onRead returns true, terminate the reading for this connection as
+                // it's dead
                 if (server.onRead(server, connection, self.buffer, self.bytesRead)) {
                     break;
                 }
             }
-      // If we still have bytes to read on the current message
+            // If we still have bytes to read on the current message
             if (self.bytesRead > 0 && self.sizeOfMessage > 0) {
-        // Calculate the amount of remaining bytes
+                // Calculate the amount of remaining bytes
                 const remainingBytesToRead = self.sizeOfMessage - self.bytesRead;
-        // Check if the current chunk contains the rest of the message
+                // Check if the current chunk contains the rest of the message
                 if (remainingBytesToRead > data.length) {
-          // Copy the new data into the exiting buffer (should have been allocated when we know the message size)
+                    // Copy the new data into the exiting buffer (should have been allocated when we know the message size)
                     data.copy(self.buffer, self.bytesRead);
-          // Adjust the number of bytes read so it point to the correct index in the buffer
+                    // Adjust the number of bytes read so it point to the correct index in the buffer
                     self.bytesRead = self.bytesRead + data.length;
 
-          // Reset state of buffer
+                    // Reset state of buffer
                     data = new Buffer(0);
                 } else {
-          // Copy the missing part of the data into our current buffer
+                    // Copy the missing part of the data into our current buffer
                     data.copy(self.buffer, self.bytesRead, 0, remainingBytesToRead);
-          // Slice the overflow into a new buffer that we will then re-parse
+                    // Slice the overflow into a new buffer that we will then re-parse
                     data = data.slice(remainingBytesToRead);
 
-          // Emit current complete message
+                    // Emit current complete message
                     try {
                         var emitBuffer = self.buffer;
-            // Reset state of buffer
+                        // Reset state of buffer
                         self.buffer = null;
                         self.sizeOfMessage = 0;
                         self.bytesRead = 0;
                         self.stubBuffer = null;
-            // Emit the buffer
+                        // Emit the buffer
                         server.emit("message", protocol(server, emitBuffer), connection);
                     } catch (err) {
                         var errorObject = { err: "socketHandler", trace: err, bin: self.buffer, parseState: {
                             sizeOfMessage: self.sizeOfMessage,
                             bytesRead: self.bytesRead,
                             stubBuffer: self.stubBuffer } };
-            // We got a parse Error fire it off then keep going
+                        // We got a parse Error fire it off then keep going
                         server.emit("parseError", errorObject, self);
                     }
                 }
             } else {
-        // Stub buffer is kept in case we don't get enough bytes to determine the
-        // size of the message (< 4 bytes)
-                if (self.stubBuffer != null && self.stubBuffer.length > 0) {
-          // If we have enough bytes to determine the message size let's do it
+                // Stub buffer is kept in case we don't get enough bytes to determine the
+                // size of the message (< 4 bytes)
+                if (!is.nil(self.stubBuffer) && self.stubBuffer.length > 0) {
+                    // If we have enough bytes to determine the message size let's do it
                     if (self.stubBuffer.length + data.length > 4) {
-            // Prepad the data
+                        // Prepad the data
                         const newData = new Buffer(self.stubBuffer.length + data.length);
                         self.stubBuffer.copy(newData, 0);
                         data.copy(newData, self.stubBuffer.length);
-            // Reassign for parsing
+                        // Reassign for parsing
                         data = newData;
 
-            // Reset state of buffer
+                        // Reset state of buffer
                         self.buffer = null;
                         self.sizeOfMessage = 0;
                         self.bytesRead = 0;
@@ -225,61 +225,61 @@ var dataHandler = function (server, self, connection) {
 
                     } else {
 
-            // Add the the bytes to the stub buffer
+                        // Add the the bytes to the stub buffer
                         const newStubBuffer = new Buffer(self.stubBuffer.length + data.length);
-            // Copy existing stub buffer
+                        // Copy existing stub buffer
                         self.stubBuffer.copy(newStubBuffer, 0);
-            // Copy missing part of the data
+                        // Copy missing part of the data
                         data.copy(newStubBuffer, self.stubBuffer.length);
-            // Exit parsing loop
+                        // Exit parsing loop
                         data = new Buffer(0);
                     }
                 } else {
                     if (data.length > 4) {
-            // Retrieve the message size
+                        // Retrieve the message size
                         const sizeOfMessage = data[0] | data[1] << 8 | data[2] << 16 | data[3] << 24;
-            // If we have a negative sizeOfMessage emit error and return
+                        // If we have a negative sizeOfMessage emit error and return
                         if (sizeOfMessage < 0 || sizeOfMessage > self.maxBsonMessageSize) {
                             var errorObject = { err: "socketHandler", trace: "", bin: self.buffer, parseState: {
                                 sizeOfMessage,
                                 bytesRead: self.bytesRead,
                                 stubBuffer: self.stubBuffer } };
-              // We got a parse Error fire it off then keep going
+                            // We got a parse Error fire it off then keep going
                             server.emit("parseError", errorObject, self);
                             return;
                         }
-            // Ensure that the size of message is larger than 0 and less than the max allowed
+                        // Ensure that the size of message is larger than 0 and less than the max allowed
                         if (sizeOfMessage > 4 && sizeOfMessage < self.maxBsonMessageSize && sizeOfMessage > data.length) {
                             self.buffer = new Buffer(sizeOfMessage);
-              // Copy all the data into the buffer
+                            // Copy all the data into the buffer
                             data.copy(self.buffer, 0);
-              // Update bytes read
+                            // Update bytes read
                             self.bytesRead = data.length;
-              // Update sizeOfMessage
+                            // Update sizeOfMessage
                             self.sizeOfMessage = sizeOfMessage;
-              // Ensure stub buffer is null
+                            // Ensure stub buffer is null
                             self.stubBuffer = null;
-              // Exit parsing loop
+                            // Exit parsing loop
                             data = new Buffer(0);
 
                         } else if (sizeOfMessage > 4 && sizeOfMessage < self.maxBsonMessageSize && sizeOfMessage == data.length) {
                             try {
                                 var emitBuffer = data;
-                // Reset state of buffer
+                                // Reset state of buffer
                                 self.buffer = null;
                                 self.sizeOfMessage = 0;
                                 self.bytesRead = 0;
                                 self.stubBuffer = null;
-                // Exit parsing loop
+                                // Exit parsing loop
                                 data = new Buffer(0);
-                // Emit the message
+                                // Emit the message
                                 server.emit("message", protocol(server, emitBuffer), connection);
                             } catch (err) {
                                 var errorObject = { err: "socketHandler", trace: err, bin: self.buffer, parseState: {
                                     sizeOfMessage: self.sizeOfMessage,
                                     bytesRead: self.bytesRead,
                                     stubBuffer: self.stubBuffer } };
-                // We got a parse Error fire it off then keep going
+                                // We got a parse Error fire it off then keep going
                                 server.emit("parseError", errorObject, self);
                             }
                         } else if (sizeOfMessage <= 4 || sizeOfMessage > self.maxBsonMessageSize) {
@@ -288,34 +288,34 @@ var dataHandler = function (server, self, connection) {
                                 bytesRead: 0,
                                 buffer: null,
                                 stubBuffer: null } };
-              // We got a parse Error fire it off then keep going
+                            // We got a parse Error fire it off then keep going
                             server.emit("parseError", errorObject, self);
 
-              // Clear out the state of the parser
+                            // Clear out the state of the parser
                             self.buffer = null;
                             self.sizeOfMessage = 0;
                             self.bytesRead = 0;
                             self.stubBuffer = null;
-              // Exit parsing loop
+                            // Exit parsing loop
                             data = new Buffer(0);
                         } else {
                             var emitBuffer = data.slice(0, sizeOfMessage);
-              // Reset state of buffer
+                            // Reset state of buffer
                             self.buffer = null;
                             self.sizeOfMessage = 0;
                             self.bytesRead = 0;
                             self.stubBuffer = null;
-              // Copy rest of message
+                            // Copy rest of message
                             data = data.slice(sizeOfMessage);
-              // Emit the message
+                            // Emit the message
                             server.emit("message", protocol(server, emitBuffer), connection);
                         }
                     } else {
-            // Create a buffer that contains the space for the non-complete message
+                        // Create a buffer that contains the space for the non-complete message
                         self.stubBuffer = new Buffer(data.length);
-            // Copy the data to the stub buffer
+                        // Copy the data to the stub buffer
                         data.copy(self.stubBuffer, 0);
-            // Exit parsing loop
+                        // Exit parsing loop
                         data = new Buffer(0);
                     }
                 }

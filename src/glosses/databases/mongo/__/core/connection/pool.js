@@ -1,9 +1,19 @@
 const {
-    database: { mongo: { core: { auth, Connection, MongoError, Query, CommandResult } } },
+    database: { mongo },
     event: { EventEmitter },
-    is, x, lazify
+    is,
+    x,
+    lazify
 } = adone;
-
+const {
+    core: {
+        auth,
+        Connection,
+        MongoError,
+        Query,
+        CommandResult
+    }
+} = adone.private(mongo);
 
 const DISCONNECTED = "disconnected";
 const CONNECTING = "connecting";
@@ -421,12 +431,12 @@ const messageHandler = (self) => {
             // 1. we were in an authentication process when the operation was executed
             // 2. our current authentication timestamp is from the workItem one, meaning an auth has happened
             if (
-                connection.workItems.length === 1 &&
-                (
-                    connection.workItems[0].authenticating === true ||
-                    (
-                        is.number(connection.workItems[0].authenticatingTimestamp) &&
-                        connection.workItems[0].authenticatingTimestamp !== self.authenticatingTimestamp
+                connection.workItems.length === 1
+                && (
+                    connection.workItems[0].authenticating === true
+                    || (
+                        is.number(connection.workItems[0].authenticatingTimestamp)
+                        && connection.workItems[0].authenticatingTimestamp !== self.authenticatingTimestamp
                     )
                 )
             ) {
@@ -739,8 +749,13 @@ export default class Pool extends EventEmitter {
             keepAliveInitialDelay: 300000,
             noDelay: true,
             // SSL Settings
-            ssl: false, checkServerIdentity: true,
-            ca: null, crl: null, cert: null, key: null, passPhrase: null,
+            ssl: false,
+            checkServerIdentity: true,
+            ca: null,
+            crl: null,
+            cert: null,
+            key: null,
+            passPhrase: null,
             rejectUnauthorized: false,
             promoteLongs: true,
             promoteValues: true,
@@ -761,8 +776,11 @@ export default class Pool extends EventEmitter {
         this.reconnectId = null;
         // No bson parser passed in
         if (
-            !options.bson ||
-            (options.bson && (!is.function(options.bson.serialize) || !is.function(options.bson.deserialize)))
+            !options.bson
+            || (
+                options.bson
+                && (!is.function(options.bson.serialize) || !is.function(options.bson.deserialize))
+            )
         ) {
             throw new x.InvalidArgument("must pass in valid bson parser");
         }
@@ -788,7 +806,6 @@ export default class Pool extends EventEmitter {
 
         // Contains the reconnect connection
         this.reconnectConnection = null;
-
 
         // Are we currently authenticating
         this.authenticating = false;

@@ -22,14 +22,14 @@ export default class ReadPreference {
     }
 
     static isValid(_mode) {
-        return _mode === ReadPreference.PRIMARY ||
-            _mode === ReadPreference.PRIMARY_PREFERRED ||
-            _mode === ReadPreference.SECONDARY ||
-            _mode === ReadPreference.SECONDARY_PREFERRED ||
-            _mode === ReadPreference.NEAREST ||
-            _mode === true ||
-            _mode === false ||
-            is.nil(_mode);
+        return _mode === ReadPreference.PRIMARY
+            || _mode === ReadPreference.PRIMARY_PREFERRED
+            || _mode === ReadPreference.SECONDARY
+            || _mode === ReadPreference.SECONDARY_PREFERRED
+            || _mode === ReadPreference.NEAREST
+            || _mode === true
+            || _mode === false
+            || is.nil(_mode);
     }
 
     isValid(mode) {

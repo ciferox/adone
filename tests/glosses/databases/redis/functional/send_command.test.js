@@ -122,7 +122,7 @@ describe("database", "redis", "send command", { skip: check }, () => {
         redis.zadd("zset2", 2, "two");
         redis.zadd("zset2", 3, "three");
         expect(await redis.zunionstore("out", 2, "zset1", "zset2", "WEIGHTS", 2, 3)).to.be.equal(3);
-        expect(await redis.keys("*")).to.be.deep.equal(["foo:zset1", "foo:zset2", "foo:out"]);
+        expect(await redis.keys("*")).to.have.members(["foo:zset1", "foo:zset2", "foo:out"]);
         redis.disconnect();
     });
 

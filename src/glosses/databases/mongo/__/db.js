@@ -4,8 +4,15 @@ const {
     database: { mongo },
     std: { crypto }
 } = adone;
-const { __, MongoError, ObjectId, Code, core, ReadPreference } = mongo;
 const {
+    MongoError,
+    ObjectId,
+    Code,
+    ReadPreference
+} = mongo;
+const __ = adone.private(mongo);
+const {
+    core,
     utils: {
         getSingleProperty,
         shallowClone,

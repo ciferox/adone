@@ -1,4 +1,13 @@
-const { is, util, database: { mongo: { core, MongoError, ReadPreference } } } = adone;
+const {
+    is,
+    util,
+    database: { mongo }
+} = adone;
+const {
+    MongoError,
+    ReadPreference
+} = mongo;
+const { core } = adone.private(mongo);
 
 export const shallowClone = (obj) => {
     const copy = {};

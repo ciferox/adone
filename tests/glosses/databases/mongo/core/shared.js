@@ -7,7 +7,7 @@ export const executeCommand = (configuration, db, cmd, options) => {
     const port = options.port || configuration.port;
 
     return new Promise((resolve, reject) => {
-        const { Pool, Query } = adone.database.mongo.core;
+        const { Pool, Query } = adone.private(adone.database.mongo).core;
 
         // Attempt to connect
         const pool = new Pool({
@@ -39,7 +39,7 @@ export const executeCommand = (configuration, db, cmd, options) => {
 
 export const locateAuthMethod = (configuration) => {
     return new Promise((resolve, reject) => {
-        const { Pool, Query } = adone.database.mongo.core;
+        const { Pool, Query } = adone.private(adone.database.mongo).core;
 
         // Set up operations
         const db = "admin";

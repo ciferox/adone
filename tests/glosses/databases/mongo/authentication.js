@@ -1,6 +1,6 @@
 describe("authentication", function () {
     const { database: { mongo }, util, promise } = adone;
-    const { __: { Db, Mongos, Server, ReplSet } } = mongo;
+    const { Db, Mongos, Server, ReplSet } = adone.private(mongo);
     const { range } = util;
 
     it.skip("should fail due to illegal authentication mechanism", async () => {

@@ -1,15 +1,23 @@
 const {
-    database: { mongo: { core: {
-        wireProtocol: { Insert, Update, Remove },
+    database: { mongo },
+    is,
+    util
+} = adone;
+const {
+    core: {
+        wireProtocol: {
+            Insert,
+            Update,
+            Remove
+        },
         KillCursor,
         GetMore,
         Query,
         CommandResult,
         MongoError,
         helper
-    } } },
-    is, util
-} = adone;
+    }
+} = adone.private(mongo);
 
 const writeConcernFields = ["w", "wtimeout", "j", "fsync"];
 
@@ -202,11 +210,11 @@ const setupCommand = (bson, ns, cmd, cursorState, topology, options = {}) => {
 
 const hasWriteConcern = (writeConcern) => {
     if (
-        writeConcern.w ||
-        writeConcern.wtimeout ||
-        writeConcern.j === true ||
-        writeConcern.fsync === true ||
-        is.emptyObject(writeConcern)
+        writeConcern.w
+        || writeConcern.wtimeout
+        || writeConcern.j === true
+        || writeConcern.fsync === true
+        || is.emptyObject(writeConcern)
     ) {
         return true;
     }

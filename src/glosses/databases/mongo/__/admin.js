@@ -1,5 +1,14 @@
-const { is, database: { mongo: { __ } } } = adone;
-const { utils: { shallowClone, toError } } = __;
+const {
+    is,
+    database: { mongo }
+} = adone;
+const __ = adone.private(mongo);
+const {
+    utils: {
+        shallowClone,
+        toError
+    }
+} = __;
 
 // Get write concern
 const writeConcern = function (options, db) {

@@ -4,8 +4,21 @@ const {
     database: { mongo },
     std: { os }
 } = adone;
-const { __, MongoError, core, ReadPreference } = mongo;
-const { utils: { MAX_JS_INT, translateOptions, filterOptions, mergeOptions, getReadPreference } } = __;
+const {
+    MongoError,
+    ReadPreference
+} = mongo;
+const __ = adone.private(mongo);
+const {
+    core,
+    utils: {
+        MAX_JS_INT,
+        translateOptions,
+        filterOptions,
+        mergeOptions,
+        getReadPreference
+    }
+} = __;
 
 // Allowed parameters
 const legalOptionNames = [

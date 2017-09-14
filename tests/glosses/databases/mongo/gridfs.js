@@ -1,6 +1,7 @@
 describe("gridfs", function () {
     const { data: { bson }, database: { mongo }, fs, std: { crypto }, stream } = adone;
     const { GridStore } = mongo;
+    const __ = adone.private(mongo);
 
     it("should create new grid store object", async () => {
         const { db } = this;
@@ -818,7 +819,7 @@ describe("gridfs", function () {
         gridStore = new GridStore(db, "test_gs_cannot_change_chunk_size_on_read", "r");
         await gridStore.open();
         gridStore.chunkSize = 42;
-        expect(gridStore.chunkSize).to.be.equal(mongo.__.Chunk.DEFAULT_CHUNK_SIZE);
+        expect(gridStore.chunkSize).to.be.equal(__.Chunk.DEFAULT_CHUNK_SIZE);
         await gridStore.close();
     });
 
@@ -827,7 +828,7 @@ describe("gridfs", function () {
         const gridStore = new GridStore(db, "test_gs_cannot_change_chunk_size_after_data_written", "w");
         await gridStore.open();
         await gridStore.write("hello, world!");
-        expect(gridStore.chunkSize).to.be.equal(mongo.__.Chunk.DEFAULT_CHUNK_SIZE);
+        expect(gridStore.chunkSize).to.be.equal(__.Chunk.DEFAULT_CHUNK_SIZE);
         await gridStore.close();
     });
 

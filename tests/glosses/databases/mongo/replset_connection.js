@@ -6,7 +6,7 @@ describe("replset connection", function () {
     }
 
     const { database: { mongo }, promise, std } = adone;
-    const { __: { ReplSet, Server, Mongos, Db } } = mongo;
+    const { ReplSet, Server, Mongos, Db } = adone.private(mongo);
 
     const replicaSet = "rs";
 

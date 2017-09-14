@@ -1,5 +1,11 @@
-const { is, database: { mongo } } = adone;
-const { MongoError, __: { utils: { shallowClone } } } = mongo;
+const {
+    is,
+    database: { mongo }
+} = adone;
+const { MongoError } = mongo;
+const {
+    utils: { shallowClone }
+} = adone.private(mongo);
 
 export default async function authenticate(self, username, password, options = {}) {
     // Shallow copy the options

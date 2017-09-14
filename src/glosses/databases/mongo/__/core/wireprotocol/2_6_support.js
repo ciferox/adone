@@ -1,13 +1,17 @@
 const {
-    database: { mongo: { core: {
+    database: { mongo },
+    is,
+    util
+} = adone;
+const {
+    core: {
         KillCursor,
         GetMore,
         Query,
         MongoError,
         helper
-    } } },
-    is, util
-} = adone;
+    }
+} = adone.private(mongo);
 
 const executeWrite = (pool, bson, type, opsField, ns, ops, options, callback) => {
     if (ops.length === 0) {

@@ -1,10 +1,13 @@
-const { is, lazify } = adone;
+const {
+    is,
+    lazify,
+    lazifyPrivate
+} = adone;
 
 const mongo = lazify({
-    __: "./__",
     core: "./core",
     MongoClient: "./client",
-    MongoError: () => mongo.core.MongoError,
+    MongoError: () => __.core.MongoError, // eslint-disable-line no-use-before-define
     Binary: () => adone.data.bson.Binary,
     Code: () => adone.data.bson.Code,
     Map: () => adone.data.bson.Map,
@@ -24,11 +27,35 @@ const mongo = lazify({
     GridStore: "./grid_store"
 }, exports, require);
 
+lazifyPrivate({
+    Instrumentation: "./__/apm",
+    Admin: "./__/admin",
+    Db: "./__/db",
+    Collection: "./__/collection",
+    Server: "./__/server",
+    ReplSet: "./__/replset",
+    Mongos: "./__/mongos",
+    Cursor: "./__/cursor",
+    CommandCursor: "./__/command_cursor",
+    AggregationCursor: "./__/aggregation_cursor",
+    parseUrl: "./__/url_parser",
+    metadata: "./__/metadata",
+    utils: "./__/utils",
+    authenticate: "./__/authenticate",
+    bulk: "./__/bulk",
+    ServerCapabilities: ["./__/topology_base", (x) => x.ServerCapabilities],
+    Store: ["./__/topology_base", (x) => x.Store],
+    Chunk: "./__/gridfs/chunk",
+    core: "./__/core"
+}, exports, require);
+
+const __ = adone.private(mongo);
+
 export const instrument = (options, callback) => {
     if (is.function(options)) {
         [callback, options] = [options, {}];
     }
-    return new mongo.__.Instrumentation(mongo.core, options, callback);
+    return new __.Instrumentation(__.core, options, callback);
 };
 
 export const connect = (...args) => new mongo.MongoClient({ relayEvents: false }).connect(...args);

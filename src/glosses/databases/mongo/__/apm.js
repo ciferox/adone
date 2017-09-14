@@ -1,8 +1,10 @@
 const {
     is,
     event: { EventEmitter },
-    database: { mongo: { __, GridStore } }
+    database: { mongo }
 } = adone;
+const { GridStore } = mongo;
+const __ = adone.private(mongo);
 const { bulk } = __;
 
 const basicOperationIdGenerator = {

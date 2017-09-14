@@ -1,6 +1,20 @@
-const { is, database: { mongo }, fs, std: { stream: { Duplex } } } = adone;
-const { __, ObjectId, MongoError, ReadPreference } = mongo;
-const { utils: { shallowClone } } = __;
+const {
+    is,
+    database: { mongo },
+    fs,
+    std: {
+        stream: { Duplex }
+    }
+} = adone;
+const {
+    ObjectId,
+    MongoError,
+    ReadPreference
+} = mongo;
+const __ = adone.private(mongo);
+const {
+    utils: { shallowClone }
+} = __;
 
 const REFERENCE_BY_FILENAME = 0;
 const REFERENCE_BY_ID = 1;

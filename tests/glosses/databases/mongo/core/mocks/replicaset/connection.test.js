@@ -17,7 +17,8 @@ const waitFor = (emitter, event) => new Promise((resolve) => emitter.once(event,
 describe("database", "mongo", "core", function () {
     this.timeout(120000);
 
-    const { database: { mongo: { core: { ReplSet, Connection } } } } = adone;
+    const { database: { mongo } } = adone;
+    const { core: { ReplSet, Connection } } = adone.private(mongo);
 
     before(async function () {
         this.timeout(999999999); // long enough

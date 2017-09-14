@@ -1,8 +1,18 @@
 const {
     is,
     std: { crypto },
-    database: { mongo: { core: { Query, MongoError, auth: { Session, Schema } } } }
+    database: { mongo }
 } = adone;
+const {
+    core: {
+        Query,
+        MongoError,
+        auth: {
+            Session,
+            Schema
+        }
+    }
+} = adone.private(mongo);
 
 export default class MongoCR extends Schema {
     auth(server, connections, db, username, password, callback) {

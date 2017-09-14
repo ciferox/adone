@@ -1,6 +1,9 @@
-const { is, database: { mongo } } = adone;
-const { MongoError, __ } = mongo;
-const { Cursor } = __;
+const {
+    is,
+    database: { mongo }
+} = adone;
+const { MongoError } = mongo;
+const { Cursor } = adone.private(mongo);
 
 export default class AggregationCursor extends Cursor {
     constructor(bson, ns, cmd, options, topology, topologyOptions) {
