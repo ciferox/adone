@@ -1,4 +1,24 @@
-const { is, x, std, util } = adone;
+const {
+    is,
+    x,
+    std,
+    util
+} = adone;
+const {
+    path
+} = std;
+
+const removeTrailingSep = (str) => {
+    let i = str.length - 1;
+    if (i < 2) {
+        return str;
+    }
+    const sep = std.path.sep;
+    while (i > 0 && str[i] === sep) {
+        i--;
+    }
+    return str.substr(0, i + 1);
+};
 
 const cloneStat = (stat) => {
     const stub = new std.fs.Stats();
@@ -15,8 +35,8 @@ export default class File {
         contents = null,
         stat = null,
         path = null,
-        base = null,
         cwd = process.cwd(),
+        base = cwd,
         symlink = null,
         history = []
     } = {}) {
@@ -107,8 +127,7 @@ export default class File {
         if (!value || !is.string(value)) {
             throw new x.Exception("Invalid value");
         }
-        // todo filter
-        this._.set("cwd", value);
+        this._.set("cwd", removeTrailingSep(path.normalize(value)));
     }
 
     get base() {
@@ -116,14 +135,19 @@ export default class File {
     }
 
     set base(value) {
-        if (!is.null(value) && (!is.string(value) || !value)) {
-            throw new x.Exception("Invalid value");
-        }
         if (is.null(value)) {
             this._.delete("base");
             return;
         }
-        this._.set("base", std.path.normalize(value));
+        if (!is.string(value) || !value) {
+            throw new x.Exception("Invalid value");
+        }
+        const base = removeTrailingSep(path.normalize(value));
+        if (base !== this.cwd) {
+            this._.set("base", base);
+        } else {
+            this._.delete("base");
+        }
     }
 
     get path() {
@@ -131,9 +155,9 @@ export default class File {
     }
 
     set path(value) {
-        const path = std.path.normalize(value); // todo trailing sep
-        if (path && path !== this.path) {
-            this.history.push(path);
+        value = removeTrailingSep(path.normalize(value));
+        if (value && value !== this.path) {
+            this.history.push(value);
         }
     }
 
@@ -155,6 +179,10 @@ export default class File {
             throw new x.Exception("No path - no dirname");
         }
         return std.path.dirname(path);
+    }
+
+    set dirname(dirname) {
+        this.path = path.join(dirname, this.basename);
     }
 
     get basename() {

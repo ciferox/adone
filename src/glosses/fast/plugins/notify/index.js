@@ -32,7 +32,11 @@ const notify = function (options = {}) {
     if (!options.onLast) {
         let _report = report;
         if (options.debounce) {
-            _report = util.debounce(_report, options.debounce.timeout, options.debounce);
+            let opts = options.debounce;
+            if (is.number(opts)) {
+                opts = { timeout: opts };
+            }
+            _report = util.debounce(_report, opts.timeout, opts);
         }
         return this.throughAsync(async function (file) {
             if (await filter(file)) {

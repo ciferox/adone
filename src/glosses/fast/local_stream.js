@@ -81,14 +81,12 @@ export class FastLocalStream extends adone.fast.Stream {
 
             await adone.fs.mkdir(dirname);
 
-            const fd = await adone.fs.fd.open(destPath, "w");
+            const fd = await adone.fs.fd.open(destPath, flag, mode);
             try {
                 if (file.isStream()) {
                     await new Promise((resolve, reject) => {
-                        const writeStream = std.fs.createWriteStream(null, {
-                            fd, mode, flag
-                        }).on("error", reject);
-                        file.contents.on("error", reject).on("end", resolve);
+                        const writeStream = std.fs.createWriteStream(null, { fd }).once("error", reject);
+                        file.contents.once("error", reject).once("end", resolve);
                         file.contents.pipe(writeStream, { end: false });
                     });
                 } else {

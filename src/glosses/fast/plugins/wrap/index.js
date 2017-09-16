@@ -56,10 +56,14 @@ export default function plugin() {
                     try {
                         switch (file.extname) {
                             case ".json":
-                                contents = JSON.parse(contents);
+                                contents = adone.data.json.decode(contents);
                                 break;
                             case ".json5":
                                 contents = adone.data.json5.decode(contents);
+                                break;
+                            case ".yml":
+                            case ".yaml":
+                                contents = adone.data.yaml.decode(contents);
                                 break;
                         }
                     } catch (err) {
