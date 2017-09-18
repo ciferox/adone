@@ -92,7 +92,7 @@ export const parse = (str) => {
     let arrayElement;
     let objElement;
 
-    while (true) {
+    for (; ;) {
         collationIndex = str[i++];
         if (collationIndex === "}" || collationIndex === "]" || is.undefined(collationIndex)) {
             if (stack.length === 1) {
@@ -134,7 +134,7 @@ export const parse = (str) => {
             case "-":
                 parsedNum = "";
                 i--;
-                while (true) {
+                for ( ; ; ) {
                     numChar = str[i++];
                     if (/[\d\.\-e\+]/.test(numChar)) {
                         parsedNum += numChar;
@@ -149,7 +149,7 @@ export const parse = (str) => {
                 parsedString = "";
                 lastCh = void 0;
                 numConsecutiveSlashes = 0;
-                while (true) {
+                for ( ; ; ) {
                     ch = str[i++];
                     if (ch !== '"' || (lastCh === "\\" && numConsecutiveSlashes % 2 === 1)) {
                         parsedString += ch;

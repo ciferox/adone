@@ -85,7 +85,7 @@ export const packStream = (cwd = process.cwd(), opts = {}) => {
         if (err) {
             return pack.destroy(err);
         }
-        statNext(onstat);  // eslint-disable-line no-use-before-define
+        statNext(onstat); // eslint-disable-line no-use-before-define
     };
 
     const onsymlink = (filename, header) => {
@@ -199,7 +199,7 @@ export const extractStream = (cwd = process.cwd(), opts = {}) => {
         fmode |= 0o222;
     }
 
-    const utimesParent = (name, cb) => {  // we just set the mtime on the parent dir again everytime we write an entry
+    const utimesParent = (name, cb) => { // we just set the mtime on the parent dir again everytime we write an entry
         let top;
         while ((top = head(stack)) && name.slice(0, top[0].length) !== top[0]) {
             stack.pop();
@@ -219,7 +219,7 @@ export const extractStream = (cwd = process.cwd(), opts = {}) => {
             return fs.utimes(name, now, header.mtime, cb);
         }
         if (header.type === "symlink") {
-            return utimesParent(name, cb);  // TODO: how to set mtime on link?
+            return utimesParent(name, cb); // TODO: how to set mtime on link?
         }
 
         fs.utimes(name, now, header.mtime, (err) => {

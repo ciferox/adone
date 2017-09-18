@@ -21,7 +21,6 @@ export default class ObjectId {
             if (ObjectId.cacheHexString) {
                 this.__id = this.toString("hex");
             }
-            // Return the object
             return;
         }
 
@@ -31,14 +30,17 @@ export default class ObjectId {
         // Throw an error if it's not a valid setup
         if (!valid && !is.nil(id)) {
             throw new x.InvalidArgument("Argument passed in must be a single String of 12 bytes or a string of 24 hex characters");
-        } else if (valid && is.string(id) && id.length === 24) {
-            return new ObjectId(Buffer.from(id, "hex"));
+        }
+
+        if (!is.buffer(id) && (is.object(id) || id instanceof ObjectId)) {
+            id = id.id;
+        }
+
+        if (valid && is.string(id) && id.length === 24) {
+            this.id = Buffer.from(id, "hex");
         } else if (!is.nil(id) && id.length === 12) {
             // assume 12 byte string
-            this.id = id;
-        } else if (!is.nil(id) && id.toHexString) {
-            // Duck-typing to support ObjectId from different npm packages
-            return id;
+            this.id = !is.buffer(id) ? Buffer.from(id) : id;
         } else {
             throw new x.InvalidArgument("Argument passed in must be a single String of 12 bytes or a string of 24 hex characters");
         }

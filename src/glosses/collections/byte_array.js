@@ -477,7 +477,7 @@ export default class ByteArray {
         if (isString) {
             length = length || Buffer.byteLength(source);
         } else {
-            if (!is.exbuffer(source)) {
+            if (!is.byteArray(source)) {
                 source = ByteArray.wrap(source, encoding);
             }
             length = source.limit - source.offset;
@@ -1403,7 +1403,7 @@ export default class ByteArray {
         let relative;
         let targetRelative;
         if (!this.noAssert) {
-            if (!is.exbuffer(target)) {
+            if (!is.byteArray(target)) {
                 throw new x.InvalidArgument("Illegal target: Not a ByteArray");
             }
         }
@@ -1852,7 +1852,7 @@ export default class ByteArray {
         let i = 0;
         let length;
         for (; i < k; ++i) {
-            if (!is.exbuffer(buffers[i])) {
+            if (!is.byteArray(buffers[i])) {
                 buffers[i] = ByteArray.wrap(buffers[i], encoding);
             }
             length = buffers[i].limit - buffers[i].offset;
@@ -1907,7 +1907,7 @@ export default class ByteArray {
         }
 
         let bb;
-        if (is.exbuffer(buffer)) {
+        if (is.byteArray(buffer)) {
             bb = buffer.clone();
             bb.markedOffset = -1;
             return bb;
@@ -2203,7 +2203,7 @@ export default class ByteArray {
         return bb;
     }
 }
-adone.tag.set(ByteArray, adone.tag.EXBUFFER);
+adone.tag.set(ByteArray, adone.tag.BYTE_ARRAY);
 ByteArray.DEFAULT_CAPACITY = 64;
 ByteArray.DEFAULT_NOASSERT = false;
 ByteArray.MAX_VARINT32_BYTES = 5; // Maximum number of bytes required to store a 32bit base 128 variable-length integer

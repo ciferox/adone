@@ -461,15 +461,15 @@ decodeValue = () => {
     }
 };
 
-export const isWordChar = (c) => {
+const isWordChar = (c) => {
     return (c >= "a" && c <= "z") || (c >= "A" && c <= "Z") || (c >= "0" && c <= "9") || c === "_" || c === "$";
 };
 
-export const isWordStart = (c) => {
+const isWordStart = (c) => {
     return (c >= "a" && c <= "z") || (c >= "A" && c <= "Z") || c === "_" || c === "$";
 };
 
-export const isWord = (key) => {
+const isWord = (key) => {
     if (!is.string(key)) {
         return false;
     }
@@ -487,7 +487,7 @@ export const isWord = (key) => {
     return true;
 };
 
-export const encode = (obj, replacer, space) => {
+export const encode = (obj, { replacer, space } = {}) => {
     if (replacer && (!is.function(replacer) && !is.array(replacer))) {
         throw new Error("Replacer must be a function or an array");
     }
@@ -637,7 +637,7 @@ export const encode = (obj, replacer, space) => {
                                 buffer += makeIndent(indentStr, objStack.length);
                                 nonEmpty = true;
                                 key = isWord(prop) ? prop : escapeString(prop);
-                                buffer += `${key}:${indentStr ? " " : ""}${value}, `;
+                                buffer += `${key}:${indentStr ? " " : ""}${value},`; // eslint-disable-line
                             }
                         }
                     }
@@ -660,9 +660,17 @@ export const encode = (obj, replacer, space) => {
     // but when top-level, return undefined
     const topLevelHolder = { "": obj };
     if (is.undefined(obj)) {
-        return getReplacedValueOrUndefined(topLevelHolder, "", true);
+        const val = getReplacedValueOrUndefined(topLevelHolder, "", true);
+        if (!val) {
+            return val;
+        }
+        return Buffer.from(val);
     }
-    return internalStringify(topLevelHolder, "", true);
+    const val = internalStringify(topLevelHolder, "", true);
+    if (!val) {
+        return val;
+    }
+    return Buffer.from(val);
 };
 
 // Return the json_parse function. It will have access to all of the above functions and variables.
@@ -704,3 +712,9 @@ export const decode = (source, reviver) => {
 };
 
 export const any = false;
+
+adone.definePrivate({
+    isWordChar,
+    isWordStart,
+    isWord
+}, exports);

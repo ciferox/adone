@@ -134,7 +134,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             LOGGER: Symbol(),
             LONG: Symbol(),
             BIGNUMBER: Symbol(),
-            EXBUFFER: Symbol(),
+            BYTE_ARRAY: Symbol(),
             EXDATE: Symbol(),
             CONFIGURATION: Symbol(),
 

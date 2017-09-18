@@ -1,5 +1,7 @@
 const { is, data: { json5 } } = adone;
 
+const __ = adone.private(json5);
+
 const simpleCases = [
     null,
     9, -9, +9, +9.878,
@@ -13,7 +15,7 @@ const simpleCases = [
 const stringifyJSON5 = (obj, replacer, space) => {
     let res;
     try {
-        res = json5.encode(obj, replacer, space);
+        res = json5.encode(obj, { replacer, space });
     } catch (e) {
         res = e.message;
     }
@@ -40,7 +42,7 @@ const stringifyJSON = (obj, replacer, space) => {
                     return;
                 }
             }
-            if (json5.isWord(key) && !is.function(innerObj) && typeof innerObj !== "undefined") {
+            if (__.isWord(key) && !is.function(innerObj) && !is.undefined(innerObj)) {
                 keys.push(key);
             }
             if (typeof innerObj === "object") {
@@ -48,7 +50,7 @@ const stringifyJSON = (obj, replacer, space) => {
                     for (let i = 0; i < innerObj.length; i++) {
                         findKeys(i, innerObj[i]);
                     }
-                } else if (innerObj !== null) {
+                } else if (!is.null(innerObj)) {
                     for (const prop in innerObj) {
                         if (innerObj.hasOwnProperty(prop)) {
                             findKeys(prop, innerObj[prop]);
@@ -65,7 +67,7 @@ const stringifyJSON = (obj, replacer, space) => {
         for (let i = 0; i < keys.length; i++) {
             // not perfect since we can match on parts of the previous value that
             // matches the key, but we can design our test around that.
-            last = res.indexOf(`"${keys[i] }"`, last);
+            last = res.indexOf(`"${keys[i]}"`, last);
             if (last === -1) {
                 // problem with test framework
                 console.log(`Couldn't find: ${keys[i]}`);
@@ -117,7 +119,7 @@ const assertStringify = (obj, replacerTestConstructor, expectError) => {
         // no point in round tripping if there is an error
         const origStr = json5.encode(obj);
         let roundTripStr;
-        if (origStr !== "undefined" && typeof origStr !== "undefined") {
+        if (origStr !== "undefined" && !is.undefined(origStr)) {
             try {
                 roundTripStr = json5.encode(json5.decode(origStr));
             } catch (e) {
@@ -125,7 +127,7 @@ const assertStringify = (obj, replacerTestConstructor, expectError) => {
                 console.log(origStr);
                 throw e;
             }
-            assert.equal(origStr, roundTripStr);
+            assert.equal(origStr, roundTripStr.toString());
         }
     }
 };
@@ -222,7 +224,7 @@ describe("data", "json5", "encode", () => {
         const assertStringifyJSON5ThrowsExceptionForReplacer = (replacer) => {
             assert.throws(
                 () => {
-                    json5.encode(null, replacer);
+                    json5.encode(null, { replacer });
                 },
                 /Replacer must be a function or an array/
             );

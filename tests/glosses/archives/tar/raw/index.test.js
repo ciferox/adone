@@ -678,7 +678,7 @@ describe("archive", "tar", "raw", () => {
                 });
                 extract.on("finish", () => resolve(entries));
             });
-            extract.end(await fixtures.getFile("base-256-uid-gid.tar").contents("binary"));
+            extract.end(await fixtures.getFile("base-256-uid-gid.tar").contents("buffer"));
 
             entries = await entries;
 
@@ -709,7 +709,7 @@ describe("archive", "tar", "raw", () => {
                 });
                 extract.on("finish", resolve);
             });
-            extract.end(await fixtures.getFile("base-256-size.tar").contents("binary"));
+            extract.end(await fixtures.getFile("base-256-size.tar").contents("buffer"));
             await p;
         });
     });

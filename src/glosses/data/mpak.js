@@ -7,7 +7,7 @@ const {
 
 export class Encoder {
     constructor(encodingTypes) {
-        this.encodingTypes = encodingTypes;
+        this._encodingTypes = encodingTypes;
     }
 
     encode(x, buf) {
@@ -118,7 +118,7 @@ export class Encoder {
                         this._encode(x[key], buf);
                     }
                 } else { // try extensions
-                    const encTypes = this.encodingTypes;
+                    const encTypes = this._encodingTypes;
                     for (let i = 0; i < encTypes.length; ++i) {
                         if (encTypes[i].check(x)) {
                             const extType = encTypes[i];
@@ -221,8 +221,8 @@ export class Decoder {
         this._decodingTypes = decodingTypes;
     }
 
-    decode(buf) {
-        if (!is.exbuffer(buf)) {
+    decode(buf) { // needFlip option ?
+        if (!is.byteArray(buf)) {
             buf = ByteArray.wrap(buf, undefined, true);
         }
 

@@ -459,13 +459,13 @@ export class Entry {
 }
 
 export const validateFileName = (fileName) => {
-    if (fileName.indexOf("\\") !== -1) {
+    if (fileName.includes("\\")) {
         return `invalid characters in fileName: ${fileName}`;
     }
     if (/^[a-zA-Z]:/.test(fileName) || /^\//.test(fileName)) {
         return `absolute path: ${fileName}`;
     }
-    if (fileName.split("/").indexOf("..") !== -1) {
+    if (fileName.split("/").includes("..")) {
         return `invalid relative path: ${fileName}`;
     }
     // all good

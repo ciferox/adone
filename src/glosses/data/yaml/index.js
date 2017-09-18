@@ -13,6 +13,6 @@ const yaml = adone.lazify({
     Exception: "./exception"
 }, exports, require);
 
-export const encode = (object, options) => yaml.safeDump(object, options);
+export const encode = (object, options) => Buffer.from(yaml.safeDump(object, options));
 export const decode = (string, options) => yaml.safeLoad(string, options);
 export const any = false;
