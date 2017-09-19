@@ -1,4 +1,8 @@
-import { addFormatToken } from "../format";
+const __ = adone.private(adone.datetime);
+
+const {
+    format: { addFormatToken }
+} = __;
 
 // FORMATTING
 

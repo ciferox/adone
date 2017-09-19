@@ -1,18 +1,22 @@
-import { addFormatToken } from "../format";
-import { addUnitAlias } from "./aliases";
-import { addUnitPriority } from "./priorities";
-import { MILLISECOND } from "./constants";
-import { toInt } from "../utils";
+const __ = adone.private(adone.datetime);
 
-import {
-    addRegexToken,
-    match1,
-    match2,
-    match3,
-    match1to3,
-    matchUnsigned,
-    addParseToken
-} from "../parse";
+const {
+    format: { addFormatToken },
+    parse: {
+        addRegexToken,
+        match1,
+        match2,
+        match3,
+        match1to3,
+        matchUnsigned,
+        addParseToken
+    },
+    unit: {
+        alias: { addUnitAlias },
+        priority: { addUnitPriority },
+        c: { MILLISECOND }
+    }
+} = __;
 
 // FORMATTING
 
@@ -64,9 +68,7 @@ for (token = "SSSS"; token.length <= 9; token += "S") {
     addRegexToken(token, matchUnsigned);
 }
 
-function parseMs(input, array) {
-    array[MILLISECOND] = toInt((`0.${input}`) * 1000);
-}
+const parseMs = (input, array) => array[MILLISECOND] = __.util.toInt((`0.${input}`) * 1000);
 
 for (token = "S"; token.length <= 9; token += "S") {
     addParseToken(token, parseMs);

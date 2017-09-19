@@ -1,9 +1,18 @@
-import { addFormatToken } from "../format";
-import { addUnitAlias } from "./aliases";
-import { addUnitPriority } from "./priorities";
-import { addRegexToken, match1, addParseToken } from "../parse";
-import { MONTH } from "./constants";
-import { toInt } from "../utils";
+const __ = adone.private(adone.datetime);
+
+const {
+    format: { addFormatToken },
+    parse: {
+        addRegexToken,
+        addParseToken,
+        match1
+    },
+    unit: {
+        alias: { addUnitAlias },
+        priority: { addUnitPriority },
+        c: { MONTH }
+    }
+} = __;
 
 // FORMATTING
 
@@ -21,5 +30,5 @@ addUnitPriority("quarter", 7);
 
 addRegexToken("Q", match1);
 addParseToken("Q", (input, array) => {
-    array[MONTH] = (toInt(input) - 1) * 3;
+    array[MONTH] = (__.util.toInt(input) - 1) * 3;
 });

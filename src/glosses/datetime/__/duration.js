@@ -1,15 +1,11 @@
-import { createLocal } from "./create/local";
-import { getLocale } from "./locale";
-import { DATE, HOUR, MINUTE, SECOND, MILLISECOND } from "./units/constants";
-import { cloneWithOffset } from "./units/offset";
-import { normalizeUnits, normalizeObjectUnits } from "./units/aliases";
-import { toInt, absRound, absCeil, absFloor } from "./utils";
+const { is } = adone;
+const __ = adone.private(adone.datetime);
 
 const ordering = ["year", "quarter", "month", "week", "day", "hour", "minute", "second", "millisecond"];
 
 const isDurationValid = (m) => {
     for (const key in m) {
-        if (!(ordering.indexOf(key) !== -1 && (is.nil(m[key]) || !isNaN(m[key])))) {
+        if (!(ordering.includes(key) && (is.nil(m[key]) || !isNaN(m[key])))) {
             return false;
         }
     }
@@ -20,7 +16,7 @@ const isDurationValid = (m) => {
             if (unitHasDecimal) {
                 return false; // only allow non-integers for smallest unit
             }
-            if (parseFloat(m[ordering[i]]) !== toInt(m[ordering[i]])) {
+            if (parseFloat(m[ordering[i]]) !== __.util.toInt(m[ordering[i]])) {
                 unitHasDecimal = true;
             }
         }
@@ -29,7 +25,6 @@ const isDurationValid = (m) => {
     return true;
 };
 
-const { is } = adone;
 const mathAbs = Math.abs;
 
 // ASP.NET json date format regex
@@ -51,16 +46,16 @@ const thresholds = {
     M: 11 // months to year
 };
 
-function parseIso(inp, sign) {
+const parseIso = (inp, sign) => {
     // We'd normally use ~~inp for this, but unfortunately it also
     // converts floats to ints.
     // inp may be undefined, so careful calling replace on it.
     const res = inp && parseFloat(inp.replace(",", "."));
     // apply sign while we're at it
     return (isNaN(res) ? 0 : res) * sign;
-}
+};
 
-function positiveExDatesDifference(base, other) {
+const positiveExDatesDifference = (base, other) => {
     const res = { milliseconds: 0, months: 0 };
 
     res.months = other.month() - base.month() +
@@ -72,15 +67,15 @@ function positiveExDatesDifference(base, other) {
     res.milliseconds = Number(other) - Number(base.clone().add(res.months, "M"));
 
     return res;
-}
+};
 
-function exDatesDifference(base, other) {
+const exDatesDifference = (base, other) => {
     let res;
     if (!(base.isValid() && other.isValid())) {
         return { milliseconds: 0, months: 0 };
     }
 
-    other = cloneWithOffset(other, base);
+    other = __.unit.offset.cloneWithOffset(other, base);
     if (base.isBefore(other)) {
         res = positiveExDatesDifference(base, other);
     } else {
@@ -90,9 +85,9 @@ function exDatesDifference(base, other) {
     }
 
     return res;
-}
+};
 
-function addSubtract(duration, input, value, direction) {
+const addSubtract = (duration, input, value, direction) => {
     const other = new Duration(input, value);
 
     duration._milliseconds += direction * other._milliseconds;
@@ -100,25 +95,25 @@ function addSubtract(duration, input, value, direction) {
     duration._months += direction * other._months;
 
     return duration._bubble();
-}
+};
 
-function daysToMonths(days) {
+const daysToMonths = (days) => {
     // 400 years have 146097 days (taking into account leap year rules)
     // 400 years have 12 months === 4800
     return days * 4800 / 146097;
-}
+};
 
-function monthsToDays(months) {
+const monthsToDays = (months) => {
     // the reverse of daysToMonths
     return months * 146097 / 4800;
-}
+};
 
-// helper function for exdate.fn.from, exdate.fn.fromNow, and exdate.duration.fn.humanize
-function substituteTimeAgo(string, number, withoutSuffix, isFuture, locale) {
+// helper function for datetime.fn.from, datetime.fn.fromNow, and datetime.duration.fn.humanize
+const substituteTimeAgo = (string, number, withoutSuffix, isFuture, locale) => {
     return locale.relativeTime(number || 1, Boolean(withoutSuffix), string, isFuture);
-}
+};
 
-function relativeTime(posNegDuration, withoutSuffix, locale) {
+const relativeTime = (posNegDuration, withoutSuffix, locale) => {
     const duration = new Duration(posNegDuration).abs();
     const seconds = round(duration.as("s"));
     const minutes = round(duration.as("m"));
@@ -127,26 +122,26 @@ function relativeTime(posNegDuration, withoutSuffix, locale) {
     const months = round(duration.as("M"));
     const years = round(duration.as("y"));
 
-    const a = seconds <= thresholds.ss && ["s", seconds] ||
-            seconds < thresholds.s && ["ss", seconds] ||
-            minutes <= 1 && ["m"] ||
-            minutes < thresholds.m && ["mm", minutes] ||
-            hours <= 1 && ["h"] ||
-            hours < thresholds.h && ["hh", hours] ||
-            days <= 1 && ["d"] ||
-            days < thresholds.d && ["dd", days] ||
-            months <= 1 && ["M"] ||
-            months < thresholds.M && ["MM", months] ||
-            years <= 1 && ["y"] || ["yy", years];
+    const a = seconds <= thresholds.ss && ["s", seconds]
+        || seconds < thresholds.s && ["ss", seconds]
+        || minutes <= 1 && ["m"]
+        || minutes < thresholds.m && ["mm", minutes]
+        || hours <= 1 && ["h"]
+        || hours < thresholds.h && ["hh", hours]
+        || days <= 1 && ["d"]
+        || days < thresholds.d && ["dd", days]
+        || months <= 1 && ["M"]
+        || months < thresholds.M && ["MM", months]
+        || years <= 1 && ["y"] || ["yy", years];
 
     a[2] = withoutSuffix;
     a[3] = Number(posNegDuration) > 0;
     a[4] = locale;
     return substituteTimeAgo.apply(null, a);
-}
+};
 
 // This function allows you to set the rounding function for relative time strings
-export function getSetRelativeTimeRounding(roundingFunction) {
+export const getSetRelativeTimeRounding = (roundingFunction) => {
     if (is.undefined(roundingFunction)) {
         return round;
     }
@@ -155,10 +150,10 @@ export function getSetRelativeTimeRounding(roundingFunction) {
         return true;
     }
     return false;
-}
+};
 
 // This function allows you to set a threshold for relative time strings
-export function getSetRelativeTimeThreshold(threshold, limit) {
+export const getSetRelativeTimeThreshold = (threshold, limit) => {
     if (is.undefined(thresholds[threshold])) {
         return false;
     }
@@ -170,9 +165,11 @@ export function getSetRelativeTimeThreshold(threshold, limit) {
         thresholds.ss = limit - 1;
     }
     return true;
-}
+};
 
-export default class Duration {
+export const isDuration = (obj) => obj instanceof Duration; // eslint-disable-line no-use-before-define
+
+export class Duration {
     constructor(input, key) {
         let duration = input;
         // matching against regexp is expensive, do it on demand
@@ -194,6 +191,14 @@ export default class Duration {
                 duration.milliseconds = input;
             }
         } else if (match = aspNetRegex.exec(input)) { // eslint-disable-line no-cond-assign
+            const {
+                DATE,
+                HOUR,
+                MINUTE,
+                SECOND,
+                MILLISECOND
+            } = __.unit.c;
+            const { toInt, absRound } = __.util;
             sign = (match[1] === "-") ? -1 : 1;
             duration = {
                 y: 0,
@@ -216,7 +221,8 @@ export default class Duration {
             };
         } else if (is.nil(duration)) {
             duration = {};
-        } else if (typeof duration === "object" && ("from" in duration || "to" in duration)) {
+        } else if (is.object(duration) && ("from" in duration || "to" in duration)) {
+            const { createLocal } = __.create;
             diffRes = exDatesDifference(createLocal(duration.from), createLocal(duration.to));
 
             duration = {};
@@ -224,7 +230,7 @@ export default class Duration {
             duration.M = diffRes.months;
         }
 
-        const normalizedInput = normalizeObjectUnits(duration);
+        const normalizedInput = __.unit.alias.normalizeObjectUnits(duration);
         const years = normalizedInput.year || 0;
         const quarters = normalizedInput.quarter || 0;
         const months = normalizedInput.month || 0;
@@ -255,7 +261,7 @@ export default class Duration {
 
         this._data = {};
 
-        this._locale = getLocale();
+        this._locale = __.locale.getLocale();
 
         this._bubble();
 
@@ -301,7 +307,7 @@ export default class Duration {
         let months;
         const milliseconds = this._milliseconds;
 
-        units = normalizeUnits(units);
+        units = __.unit.alias.normalizeUnits(units);
 
         if (units === "month" || units === "year") {
             days = this._days + milliseconds / 864e5;
@@ -331,7 +337,7 @@ export default class Duration {
             this._milliseconds +
             this._days * 864e5 +
             (this._months % 12) * 2592e6 +
-            toInt(this._months / 12) * 31536e6
+            __.util.toInt(this._months / 12) * 31536e6
         );
     }
 
@@ -340,6 +346,8 @@ export default class Duration {
         let days = this._days;
         let months = this._months;
         const data = this._data;
+
+        const { absCeil, absFloor } = __.util;
 
         // if we have a mix of positive and negative values, bubble down first
         if (!((milliseconds >= 0 && days >= 0 && months >= 0) ||
@@ -381,12 +389,12 @@ export default class Duration {
     }
 
     get(units) {
-        units = normalizeUnits(units);
+        units = __.unit.alias.normalizeUnits(units);
         return this.isValid() ? this[`${units}s`]() : NaN;
     }
 
     weeks() {
-        return absFloor(this.days() / 7);
+        return __.util.absFloor(this.days() / 7);
     }
 
     humanize(withSuffix) {
@@ -418,6 +426,8 @@ export default class Duration {
         const days = mathAbs(this._days);
         let months = mathAbs(this._months);
 
+        const { absFloor } = __.util;
+
         // 3600 seconds -> 60 minutes -> 1 hour
         let minutes = absFloor(seconds / 60);
         const hours = absFloor(minutes / 60);
@@ -442,15 +452,17 @@ export default class Duration {
             return "P0D";
         }
 
-        return `${total < 0 ? "-" : ""
-        }P${
-            Y ? `${Y}Y` : ""
-        }${M ? `${M}M` : ""
-        }${D ? `${D}D` : ""
-        }${(h || m || s) ? "T" : ""
-        }${h ? `${h}H` : ""
-        }${m ? `${m}M` : ""
-        }${s ? `${s}S` : ""}`;
+        return [
+            total < 0 ? "-" : "",
+            "P",
+            Y ? `${Y}Y` : "",
+            M ? `${M}M` : "",
+            D ? `${D}D` : "",
+            (h || m || s) ? "T" : "",
+            h ? `${h}H` : "",
+            m ? `${m}M` : "",
+            s ? `${s}S` : ""
+        ].join("");
     }
 
     isValid() {
@@ -458,12 +470,10 @@ export default class Duration {
     }
 
     locale(key) {
-        let newLocaleData;
-
         if (is.undefined(key)) {
             return this._locale._abbr;
         }
-        newLocaleData = getLocale(key);
+        const newLocaleData = __.locale.getLocale(key);
         if (is.exist(newLocaleData)) {
             this._locale = newLocaleData;
         }
@@ -480,11 +490,9 @@ export default class Duration {
     }
 }
 
-function makeAs(alias) {
-    return function () {
-        return this.as(alias);
-    };
-}
+const makeAs = (alias) => function () {
+    return this.as(alias);
+};
 
 Duration.prototype.asMilliseconds = makeAs("ms");
 Duration.prototype.asSeconds = makeAs("s");
@@ -495,11 +503,9 @@ Duration.prototype.asWeeks = makeAs("w");
 Duration.prototype.asMonths = makeAs("M");
 Duration.prototype.asYears = makeAs("y");
 
-function makeGetter(name) {
-    return function () {
-        return this.isValid() ? this._data[name] : NaN;
-    };
-}
+const makeGetter = (name) => function () {
+    return this.isValid() ? this._data[name] : NaN;
+};
 
 Duration.prototype.milliseconds = makeGetter("milliseconds");
 Duration.prototype.seconds = makeGetter("seconds");
@@ -511,7 +517,3 @@ Duration.prototype.years = makeGetter("years");
 
 Duration.prototype.toString = Duration.prototype.toISOString;
 Duration.prototype.toJSON = Duration.prototype.toISOString;
-
-export function isDuration(obj) {
-    return obj instanceof Duration;
-}

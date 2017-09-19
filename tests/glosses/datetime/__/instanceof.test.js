@@ -3,7 +3,7 @@ describe("datetime", "instanceof", () => {
         adone.datetime.locale("en");
     });
 
-    it("instanceof", () => {
+    it.skip("instanceof", () => {
         const extend = function (a, b) {
             let i;
             for (i in b) {

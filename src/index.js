@@ -39,6 +39,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         clearImmediate: global.clearImmediate,
         lazify: (modules, _obj, _require = require, {
             configurable = false,
+            writable = false,
             mapper = (key, mod) => ((typeof mod === "object" && mod.__esModule === true && "default" in mod) ? mod.default : mod)
         } = {}) => {
             const obj = _obj || {};
@@ -75,6 +76,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
                         Object.defineProperty(obj, key, {
                             configurable,
                             enumerable: true,
+                            writable,
                             value: mod
                         });
 
@@ -135,7 +137,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             LONG: Symbol(),
             BIGNUMBER: Symbol(),
             BYTE_ARRAY: Symbol(),
-            EXDATE: Symbol(),
+            DATETIME: Symbol(),
             CONFIGURATION: Symbol(),
 
             GENESIS_NETRON: Symbol(),

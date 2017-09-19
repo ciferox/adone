@@ -1,4 +1,4 @@
-export function createDate(y, m, d, h, M, s, ms) {
+export const createDate = (y, m, d, h, M, s, ms) => {
     //can't just apply() to create a date:
     //http://stackoverflow.com/questions/181348/instantiating-a-javascript-object-by-calling-prototype-constructor-apply
     const date = new Date(y, m, d, h, M, s, ms);
@@ -8,14 +8,14 @@ export function createDate(y, m, d, h, M, s, ms) {
         date.setFullYear(y);
     }
     return date;
-}
+};
 
-export function createUTCDate(y) {
-    const date = new Date(Date.UTC.apply(null, arguments));
-
+export const createUTCDate = (...args) => {
+    const [y] = args;
+    const date = new Date(Date.UTC(...args));
     //the Date.UTC function remaps years 0-99 to 1900-1999
     if (y < 100 && y >= 0 && isFinite(date.getUTCFullYear())) {
         date.setUTCFullYear(y);
     }
     return date;
-}
+};

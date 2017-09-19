@@ -1,20 +1,28 @@
-import { addFormatToken } from "../format";
-import { addUnitAlias } from "./aliases";
-import { addUnitPriority } from "./priorities";
-import { YEAR } from "./constants";
-import { toInt, hooks } from "../utils";
+const __ = adone.private(adone.datetime);
 
-import {
-    addRegexToken,
-    match1to2,
-    match1to4,
-    match1to6,
-    match2,
-    match4,
-    match6,
-    matchSigned,
-    addParseToken
-} from "../parse";
+const {
+    format: { addFormatToken },
+    parse: {
+        addRegexToken,
+        match1to2,
+        match1to4,
+        match1to6,
+        match2,
+        match4,
+        match6,
+        matchSigned,
+        addParseToken
+    },
+    unit: {
+        alias: { addUnitAlias },
+        priority: { addUnitPriority },
+        c: { YEAR }
+    },
+    util: {
+        hooks,
+        toInt
+    }
+} = __;
 
 // FORMATTING
 
@@ -60,16 +68,10 @@ addParseToken("Y", (input, array) => {
 
 // HELPERS
 
-export function daysInYear(year) {
-    return isLeapYear(year) ? 366 : 365;
-}
+export const isLeapYear = (year) => (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 
-export function isLeapYear(year) {
-    return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-}
+export const daysInYear = (year) => isLeapYear(year) ? 366 : 365;
 
 // HOOKS
 
-hooks.parseTwoDigitYear = function (input) {
-    return toInt(input) + (toInt(input) > 68 ? 1900 : 2000);
-};
+hooks.parseTwoDigitYear = (input) => toInt(input) + (toInt(input) > 68 ? 1900 : 2000);

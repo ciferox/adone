@@ -1,7 +1,6 @@
-// Side effect imports
-import "./day-of-month";
-import "./day-of-week";
-import "./day-of-year";
+import "./day_of_month";
+import "./day_of_week";
+import "./day_of_year";
 import "./hour";
 import "./millisecond";
 import "./minute";
@@ -11,10 +10,6 @@ import "./quarter";
 import "./second";
 import "./timestamp";
 import "./timezone";
-import "./week-year";
+import "./week_year";
 import "./week";
 import "./year";
-
-import { normalizeUnits } from "./aliases";
-
-export { normalizeUnits };

@@ -1,12 +1,5 @@
-import { configFromStringAndFormat } from "./from-string-and-format";
-import { createUTCDate } from "./date-from-array";
-import { configFromArray } from "./from-array";
-import { hooks } from "../utils";
-import getParsingFlags from "./parsing-flags";
-import { defaultLocaleMonthsShort } from "../units/month";
-import { defaultLocaleWeekdaysShort } from "../units/day-of-week";
-
 const { is } = adone;
+const __ = adone.private(adone.datetime);
 
 // iso 8601 regex
 // 0000-00-00 0000-W00 or 0000-W00-0 + T + 00 or 00:00 or 00:00:00 or 00:00:00.000 + +00:00 or +0000 or +00)
@@ -54,7 +47,7 @@ export const configFromISO = function (config) {
     let tzFormat;
 
     if (match) {
-        getParsingFlags(config).iso = true;
+        __.create.getParsingFlags(config).iso = true;
 
         let allowTime;
         for (let i = 0, l = isoDates.length; i < l; i++) {
@@ -94,7 +87,7 @@ export const configFromISO = function (config) {
             }
         }
         config._f = dateFormat + (timeFormat || "") + (tzFormat || "");
-        configFromStringAndFormat(config);
+        __.create.configFromStringAndFormat(config);
     } else {
         config._isValid = false;
     }
@@ -116,7 +109,7 @@ const untruncateYear = (yearStr) => {
 const extractFromRFC2822Strings = (yearStr, monthStr, dayStr, hourStr, minuteStr, secondStr) => {
     const result = [
         untruncateYear(yearStr),
-        defaultLocaleMonthsShort.indexOf(monthStr),
+        __.unit.month.defaultLocaleMonthsShort.indexOf(monthStr),
         parseInt(dayStr, 10),
         parseInt(hourStr, 10),
         parseInt(minuteStr, 10)
@@ -137,10 +130,10 @@ const preprocessRFC2822 = (s) => {
 const checkWeekday = (weekdayStr, parsedInput, config) => {
     if (weekdayStr) {
         // TODO: Replace the vanilla JS Date object with an indepentent day-of-week check.
-        const weekdayProvided = defaultLocaleWeekdaysShort.indexOf(weekdayStr);
+        const weekdayProvided = __.unit.dayOfWeek.defaultLocaleWeekdaysShort.indexOf(weekdayStr);
         const weekdayActual = new Date(parsedInput[0], parsedInput[1], parsedInput[2]).getDay();
         if (weekdayProvided !== weekdayActual) {
-            getParsingFlags(config).weekdayMismatch = true;
+            __.create.getParsingFlags(config).weekdayMismatch = true;
             config._isValid = false;
             return false;
         }
@@ -187,17 +180,17 @@ export const configFromRFC2822 = (config) => {
         config._a = parsedArray;
         config._tzm = calculateOffset(match[8], match[9], match[10]);
 
-        config._d = createUTCDate.apply(null, config._a);
+        config._d = __.create.createUTCDate.apply(null, config._a);
         config._d.setUTCMinutes(config._d.getUTCMinutes() - config._tzm);
 
-        getParsingFlags(config).rfc2822 = true;
+        __.create.getParsingFlags(config).rfc2822 = true;
     } else {
         config._isValid = false;
     }
 };
 
 // date from iso format or fallback
-export function configFromString(config) {
+export const configFromString = (config) => {
     const matched = aspNetJsonRegex.exec(config._i);
 
     if (!is.null(matched)) {
@@ -213,12 +206,4 @@ export function configFromString(config) {
     }
 
     configFromRFC2822(config);
-    if (config._isValid === false) {
-        delete config._isValid;
-    } else {
-        return;
-    }
-
-    // Final attempt, use Input Fallback
-    hooks.createFromInputFallback(config);
-}
+};

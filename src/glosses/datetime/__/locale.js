@@ -1,36 +1,14 @@
-
-import { createUTC } from "./create/utc";
-import { compareArrays, toInt } from "./utils";
 const { is } = adone;
-const { extend } = adone.vendor.lodash;
+const __ = adone.private(adone.datetime);
 
-// months
-import {
-    defaultLocaleMonths,
-    defaultLocaleMonthsShort
-} from "./units/month";
-
-// week
-import { defaultLocaleWeek } from "./units/week";
-
-// weekdays
-import {
-    defaultLocaleWeekdays,
-    defaultLocaleWeekdaysMin,
-    defaultLocaleWeekdaysShort
-} from "./units/day-of-week";
-
-// meridiem
-import { defaultLocaleMeridiemParse } from "./units/hour";
-
-function mergeConfigs(parentConfig, childConfig) {
-    const res = extend({}, parentConfig);
+const mergeConfigs = (parentConfig, childConfig) => {
+    const res = { ...parentConfig };
     for (const prop in childConfig) {
         if (is.propertyOwned(childConfig, prop)) {
             if (is.plainObject(parentConfig[prop]) && is.plainObject(childConfig[prop])) {
                 res[prop] = {};
-                extend(res[prop], parentConfig[prop]);
-                extend(res[prop], childConfig[prop]);
+                Object.assign(res[prop], parentConfig[prop]);
+                Object.assign(res[prop], childConfig[prop]);
             } else if (is.exist(childConfig[prop])) {
                 res[prop] = childConfig[prop];
             } else {
@@ -39,89 +17,24 @@ function mergeConfigs(parentConfig, childConfig) {
         }
     }
     for (const prop in parentConfig) {
-        if (is.propertyOwned(parentConfig, prop) &&
-            !is.propertyOwned(childConfig, prop) &&
-            is.plainObject(parentConfig[prop])) {
+        if (
+            is.propertyOwned(parentConfig, prop)
+            && !is.propertyOwned(childConfig, prop)
+            && is.plainObject(parentConfig[prop])
+        ) {
             // make sure changes to properties don't modify parent config
-            res[prop] = extend({}, res[prop]);
+            res[prop] = { ...res[prop] };
         }
     }
     return res;
-}
+};
 
 // internal storage for locale config files
 const locales = {};
 const localeFamilies = {};
 let globalLocale;
 
-function normalizeLocale(key) {
-    return key ? key.toLowerCase().replace("_", "-") : key;
-}
-
-// pick the locale from the array
-// try ['en-au', 'en-gb'] as 'en-au', 'en-gb', 'en', as in move through the list trying each
-// substring from most specific to least, but move to the next array item if it's a more specific variant than the current root
-function chooseLocale(names) {
-    let i = 0;
-    while (i < names.length) {
-        const split = normalizeLocale(names[i]).split("-");
-        let j = split.length;
-        let next = normalizeLocale(names[i + 1]);
-        next = next ? next.split("-") : null;
-        while (j > 0) {
-            const locale = loadLocale(split.slice(0, j).join("-"));
-            if (locale) {
-                return locale;
-            }
-            if (next && next.length >= j && compareArrays(split, next, true) >= j - 1) {
-                //the next array item is better than a shallower substring of this one
-                break;
-            }
-            j--;
-        }
-        i++;
-    }
-    return null;
-}
-
-function loadLocale(name) {
-    let oldLocale = null;
-    // TODO: Find a better way to register and load all the locales in Node
-    if (!locales[name] && (!is.undefined(module)) &&
-        module && module.exports) {
-        try {
-            oldLocale = globalLocale._abbr;
-            require(`../locale/${name}`);
-            // because defineLocale currently also sets the global locale, we
-            // want to undo that for lazy loaded locales
-            getSetGlobalLocale(oldLocale);
-        } catch (e) {
-            // swallow errors
-        }
-    }
-    return locales[name];
-}
-
-// This function will load locale and then set the global locale.  If
-// no arguments are passed in, it will simply return the current global
-// locale key.
-export function getSetGlobalLocale(key, values) {
-    let data;
-    if (key) {
-        if (is.undefined(values)) {
-            data = getLocale(key);
-        } else {
-            data = defineLocale(key, values);
-        }
-
-        if (data) {
-            // exdate.duration._locale = exdate._locale = data;
-            globalLocale = data;
-        }
-    }
-
-    return globalLocale._abbr;
-}
+const normalizeLocale = (key) => key ? key.toLowerCase().replace("_", "-") : key;
 
 const defaultCalendar = {
     sameDay: "[Today at] LT",
@@ -162,28 +75,125 @@ const defaultRelativeTime = {
     yy: "%d years"
 };
 
-const baseConfig = {
-    calendar: defaultCalendar,
-    longDateFormat: defaultLongDateFormat,
-    invalidDate: defaultInvalidDate,
-    ordinal: defaultOrdinal,
-    dayOfMonthOrdinalParse: defaultDayOfMonthOrdinalParse,
-    relativeTime: defaultRelativeTime,
+const baseConfig = adone.lazify({
+    calendar: () => defaultCalendar,
+    longDateFormat: () => defaultLongDateFormat,
+    invalidDate: () => defaultInvalidDate,
+    ordinal: () => defaultOrdinal,
+    dayOfMonthOrdinalParse: () => defaultDayOfMonthOrdinalParse,
+    relativeTime: () => defaultRelativeTime,
 
-    months: defaultLocaleMonths,
-    monthsShort: defaultLocaleMonthsShort,
+    months: () => __.unit.month.defaultLocaleMonths,
+    monthsShort: () => __.unit.month.defaultLocaleMonthsShort,
 
-    week: defaultLocaleWeek,
+    week: () => __.unit.week.defaultLocaleWeek,
 
-    weekdays: defaultLocaleWeekdays,
-    weekdaysMin: defaultLocaleWeekdaysMin,
-    weekdaysShort: defaultLocaleWeekdaysShort,
+    weekdays: () => __.unit.dayOfWeek.defaultLocaleWeekdays,
+    weekdaysMin: () => __.unit.dayOfWeek.defaultLocaleWeekdaysMin,
+    weekdaysShort: () => __.unit.dayOfWeek.defaultLocaleWeekdaysShort,
 
-    meridiemParse: defaultLocaleMeridiemParse
+    meridiemParse: () => __.unit.hour.defaultLocaleMeridiemParse
+});
+
+export class Locale {
+    constructor(config) {
+        if (is.exist(config)) {
+            this.set(config);
+        }
+    }
+
+    calendar(key, mom, now) {
+        const output = this._calendar[key] || this._calendar.sameElse;
+        return is.function(output) ? output.call(mom, now) : output;
+    }
+
+    longDateFormat(key) {
+        const format = this._longDateFormat[key];
+        const formatUpper = this._longDateFormat[key.toUpperCase()];
+
+        if (format || !formatUpper) {
+            return format;
+        }
+
+        this._longDateFormat[key] = formatUpper.replace(/MMMM|MM|DD|dddd/g, (val) => {
+            return val.slice(1);
+        });
+
+        return this._longDateFormat[key];
+    }
+
+    invalidDate() {
+        return this._invalidDate;
+    }
+
+    ordinal(number) {
+        return this._ordinal.replace("%d", number);
+    }
+
+    preparse(string) {
+        return string;
+    }
+
+    relativeTime(number, withoutSuffix, string, isFuture) {
+        const output = this._relativeTime[string];
+        return is.function(output)
+            ? output(number, withoutSuffix, string, isFuture)
+            : output.replace(/%d/i, number);
+    }
+
+    pastFuture(diff, output) {
+        const format = this._relativeTime[diff > 0 ? "future" : "past"];
+        return is.function(format)
+            ? format(output)
+            : format.replace(/%s/i, output);
+    }
+
+    set(config) {
+        for (const i in config) {
+            const prop = config[i];
+            if (is.function(prop)) {
+                this[i] = prop;
+            } else {
+                this[`_${i}`] = prop;
+            }
+        }
+        this._config = config;
+        // Lenient ordinal parsing accepts just a number in addition to
+        // number + (possibly) stuff coming from _dayOfMonthOrdinalParse.
+        // TODO: Remove "ordinalParse" fallback in next major release.
+        this._dayOfMonthOrdinalParseLenient = new RegExp(
+            `${this._dayOfMonthOrdinalParse.source || this._ordinalParse.source}|${(/\d{1,2}/).source}`
+        );
+    }
+}
+
+Locale.prototype.postformat = Locale.prototype.preparse;
+
+// This function will load locale and then set the global locale.  If
+// no arguments are passed in, it will simply return the current global
+// locale key.
+export const getSetGlobalLocale = (key, values) => {
+    let data;
+    if (key) {
+        if (is.undefined(values)) {
+            // eslint-disable-next-line no-use-before-define
+            data = getLocale(key);
+        } else {
+            // eslint-disable-next-line no-use-before-define
+            data = defineLocale(key, values);
+        }
+
+        if (data) {
+            // datetime.duration._locale = datetime._locale = data;
+            globalLocale = data;
+        }
+    }
+
+    return globalLocale._abbr;
 };
 
-export function defineLocale(name, config) {
-    if (config !== null) {
+export const defineLocale = (name, config) => {
+    if (!is.null(config)) {
         let parentConfig = baseConfig;
         config.abbr = name;
         if (is.exist(config.parentLocale)) {
@@ -219,10 +229,77 @@ export function defineLocale(name, config) {
     // useful for testing
     delete locales[name];
     return null;
+};
 
-}
+const loadLocale = (name) => {
+    let oldLocale = null;
+    // TODO: Find a better way to register and load all the locales in Node
+    if (!locales[name]) {
+        try {
+            oldLocale = globalLocale._abbr;
+            require(`../locale/${name}`);
+            // because defineLocale currently also sets the global locale, we
+            // want to undo that for lazy loaded locales
+            getSetGlobalLocale(oldLocale);
+        } catch (e) {
+            // swallow errors
+        }
+    }
+    return locales[name];
+};
 
-export function updateLocale(name, config) {
+// pick the locale from the array
+// try ['en-au', 'en-gb'] as 'en-au', 'en-gb', 'en', as in move through the list trying each
+// substring from most specific to least, but move to the next array item if it's a more specific variant than the current root
+const chooseLocale = (names) => {
+    let i = 0;
+    while (i < names.length) {
+        const split = normalizeLocale(names[i]).split("-");
+        let j = split.length;
+        let next = normalizeLocale(names[i + 1]);
+        next = next ? next.split("-") : null;
+        while (j > 0) {
+            const locale = loadLocale(split.slice(0, j).join("-"));
+            if (locale) {
+                return locale;
+            }
+            if (next && next.length >= j && __.util.compareArrays(split, next, true) >= j - 1) {
+                //the next array item is better than a shallower substring of this one
+                break;
+            }
+            j--;
+        }
+        i++;
+    }
+    return null;
+};
+
+// returns locale data
+export const getLocale = (key) => {
+    let locale;
+
+    if (key && key._locale && key._locale._abbr) {
+        key = key._locale._abbr;
+    }
+
+    if (!key) {
+        return globalLocale;
+    }
+
+    if (!is.array(key)) {
+        //short-circuit everything else
+        locale = loadLocale(key);
+        if (locale) {
+            return locale;
+        }
+        key = [key];
+    }
+
+    return chooseLocale(key);
+};
+
+
+export const updateLocale = (name, config) => {
     if (is.exist(config)) {
         let parentConfig = baseConfig;
         // MERGE
@@ -247,44 +324,18 @@ export function updateLocale(name, config) {
         }
     }
     return locales[name];
-}
+};
 
-// returns locale data
-export function getLocale(key) {
-    let locale;
+export const listLocales = () => adone.util.keys(locales);
 
-    if (key && key._locale && key._locale._abbr) {
-        key = key._locale._abbr;
-    }
-
-    if (!key) {
-        return globalLocale;
-    }
-
-    if (!is.array(key)) {
-        //short-circuit everything else
-        locale = loadLocale(key);
-        if (locale) {
-            return locale;
-        }
-        key = [key];
-    }
-
-    return chooseLocale(key);
-}
-
-export function listLocales() {
-    return adone.util.keys(locales);
-}
-
-function get(format, index, field, setter) {
+const get = (format, index, field, setter) => {
     const locale = getLocale();
-    const utc = createUTC().set(setter, index);
+    const utc = __.create.createUTC().set(setter, index);
     return locale[field](utc, format);
-}
+};
 
-function listMonthsImpl(format, index, field) {
-    if (adone.is.number(format)) {
+const listMonthsImpl = (format, index, field) => {
+    if (is.number(format)) {
         index = format;
         format = undefined;
     }
@@ -301,7 +352,7 @@ function listMonthsImpl(format, index, field) {
         out[i] = get(format, i, field, "month");
     }
     return out;
-}
+};
 
 // ()
 // (5)
@@ -311,24 +362,21 @@ function listMonthsImpl(format, index, field) {
 // (true, 5)
 // (true, fmt, 5)
 // (true, fmt)
-function listWeekdaysImpl(localeSorted, format, index, field) {
+const listWeekdaysImpl = (localeSorted, format, index, field) => {
     if (is.boolean(localeSorted)) {
-        if (adone.is.number(format)) {
+        if (is.number(format)) {
             index = format;
             format = undefined;
         }
-
         format = format || "";
     } else {
         format = localeSorted;
         index = format;
         localeSorted = false;
-
-        if (adone.is.number(format)) {
+        if (is.number(format)) {
             index = format;
             format = undefined;
         }
-
         format = format || "";
     }
 
@@ -345,158 +393,55 @@ function listWeekdaysImpl(localeSorted, format, index, field) {
         out[i] = get(format, (i + shift) % 7, field, "day");
     }
     return out;
-}
+};
 
-export function listMonths(format, index) {
-    return listMonthsImpl(format, index, "months");
-}
+export const listMonths = (format, index) => listMonthsImpl(format, index, "months");
 
-export function listMonthsShort(format, index) {
-    return listMonthsImpl(format, index, "monthsShort");
-}
+export const listMonthsShort = (format, index) => listMonthsImpl(format, index, "monthsShort");
 
-export function listWeekdays(localeSorted, format, index) {
-    return listWeekdaysImpl(localeSorted, format, index, "weekdays");
-}
+export const listWeekdays = (localeSorted, format, index) => listWeekdaysImpl(localeSorted, format, index, "weekdays");
 
-export function listWeekdaysShort(localeSorted, format, index) {
-    return listWeekdaysImpl(localeSorted, format, index, "weekdaysShort");
-}
+export const listWeekdaysShort = (localeSorted, format, index) => listWeekdaysImpl(localeSorted, format, index, "weekdaysShort");
 
-export function listWeekdaysMin(localeSorted, format, index) {
-    return listWeekdaysImpl(localeSorted, format, index, "weekdaysMin");
-}
+export const listWeekdaysMin = (localeSorted, format, index) => listWeekdaysImpl(localeSorted, format, index, "weekdaysMin");
 
+adone.lazify({
+    months: () => __.unit.month.localeMonths,
+    monthsShort: () => __.unit.month.localeMonthsShort,
+    monthsParse: () => __.unit.month.localeMonthsParse,
+    monthsRegex: () => __.unit.month.monthsRegex,
+    monthsShortRegex: () => __.unit.month.monthsShortRegex,
 
-class Locale {
-    constructor(config) {
-        if (adone.is.exist(config)) {
-            this.set(config);
-        }
-    }
+    week: () => __.unit.week.localeWeek,
+    firstDayOfYear: () => __.unit.week.localeFirstDayOfYear,
+    firstDayOfWeek: () => __.unit.week.localeFirstDayOfWeek,
 
-    calendar(key, mom, now) {
-        const output = this._calendar[key] || this._calendar.sameElse;
-        return adone.is.function(output) ? output.call(mom, now) : output;
-    }
+    weekdays: () => __.unit.dayOfWeek.localeWeekdays,
+    weekdaysMin: () => __.unit.dayOfWeek.localeWeekdaysMin,
+    weekdaysShort: () => __.unit.dayOfWeek.localeWeekdaysShort,
+    weekdaysParse: () => __.unit.dayOfWeek.localeWeekdaysParse,
+    weekdaysRegex: () => __.unit.dayOfWeek.weekdaysRegex,
+    weekdaysShortRegex: () => __.unit.dayOfWeek.weekdaysShortRegex,
+    weekdaysMinRegex: () => __.unit.dayOfWeek.weekdaysMinRegex,
 
-    longDateFormat(key) {
-        const format = this._longDateFormat[key];
-        const formatUpper = this._longDateFormat[key.toUpperCase()];
-
-        if (format || !formatUpper) {
-            return format;
-        }
-
-        this._longDateFormat[key] = formatUpper.replace(/MMMM|MM|DD|dddd/g, (val) => {
-            return val.slice(1);
-        });
-
-        return this._longDateFormat[key];
-    }
-
-    invalidDate() {
-        return this._invalidDate;
-    }
-
-    ordinal(number) {
-        return this._ordinal.replace("%d", number);
-    }
-
-    preparse(string) {
-        return string;
-    }
-
-    relativeTime(number, withoutSuffix, string, isFuture) {
-        const output = this._relativeTime[string];
-        return (adone.is.function(output)) ?
-            output(number, withoutSuffix, string, isFuture) :
-            output.replace(/%d/i, number);
-    }
-
-    pastFuture(diff, output) {
-        const format = this._relativeTime[diff > 0 ? "future" : "past"];
-        return adone.is.function(format) ? format(output) : format.replace(/%s/i, output);
-    }
-
-    set(config) {
-        for (const i in config) {
-            const prop = config[i];
-            if (is.function(prop)) {
-                this[i] = prop;
-            } else {
-                this[`_${i}`] = prop;
-            }
-        }
-        this._config = config;
-        // Lenient ordinal parsing accepts just a number in addition to
-        // number + (possibly) stuff coming from _dayOfMonthOrdinalParse.
-        // TODO: Remove "ordinalParse" fallback in next major release.
-        this._dayOfMonthOrdinalParseLenient = new RegExp(`${this._dayOfMonthOrdinalParse.source || this._ordinalParse.source}|${(/\d{1,2}/).source}`);
-    }
-}
-
-Locale.prototype.postformat = Locale.prototype.preparse;
-
-// Month
-import {
-    localeMonthsParse,
-    localeMonths,
-    localeMonthsShort,
-    monthsRegex,
-    monthsShortRegex
-} from "./units/month";
-
-Locale.prototype.months = localeMonths;
-Locale.prototype.monthsShort = localeMonthsShort;
-Locale.prototype.monthsParse = localeMonthsParse;
-Locale.prototype.monthsRegex = monthsRegex;
-Locale.prototype.monthsShortRegex = monthsShortRegex;
-
-// Week
-import { localeWeek, localeFirstDayOfYear, localeFirstDayOfWeek } from "./units/week";
-Locale.prototype.week = localeWeek;
-Locale.prototype.firstDayOfYear = localeFirstDayOfYear;
-Locale.prototype.firstDayOfWeek = localeFirstDayOfWeek;
-
-// Day of Week
-import {
-    localeWeekdaysParse,
-    localeWeekdays,
-    localeWeekdaysMin,
-    localeWeekdaysShort,
-
-    weekdaysRegex,
-    weekdaysShortRegex,
-    weekdaysMinRegex
-} from "./units/day-of-week";
-
-Locale.prototype.weekdays = localeWeekdays;
-Locale.prototype.weekdaysMin = localeWeekdaysMin;
-Locale.prototype.weekdaysShort = localeWeekdaysShort;
-Locale.prototype.weekdaysParse = localeWeekdaysParse;
-
-Locale.prototype.weekdaysRegex = weekdaysRegex;
-Locale.prototype.weekdaysShortRegex = weekdaysShortRegex;
-Locale.prototype.weekdaysMinRegex = weekdaysMinRegex;
-
-// Hours
-import { localeIsPM, localeMeridiem } from "./units/hour";
-
-Locale.prototype.isPM = localeIsPM;
-Locale.prototype.meridiem = localeMeridiem;
-
-export default Locale;
-
+    isPM: () => __.unit.hour.localeIsPM,
+    meridiem: () => __.unit.hour.localeMeridiem
+}, Locale.prototype, undefined, { configurable: true, writable: true });
 
 getSetGlobalLocale("en", {
     dayOfMonthOrdinalParse: /\d{1,2}(th|st|nd|rd)/,
     ordinal(number) {
-        const b = number % 10;
-        const output = (toInt(number % 100 / 10) === 1) ? "th" :
-            (b === 1) ? "st" :
-                (b === 2) ? "nd" :
-                    (b === 3) ? "rd" : "th";
+        let output = "th";
+        if (__.util.toInt(number % 100 / 10) !== 1) {
+            const b = number % 10;
+            if (b === 1) {
+                output = "st";
+            } else if (b === 2) {
+                output = "nd";
+            } else if (b === 3) {
+                output = "rd";
+            }
+        }
         return number + output;
     }
 });

@@ -1,9 +1,19 @@
-import { addFormatToken } from "../format";
-import { addUnitAlias } from "./aliases";
-import { addUnitPriority } from "./priorities";
-import { addRegexToken, match1to2, match2, addWeekParseToken } from "../parse";
-import { toInt } from "../utils";
-import { weekOfYear } from "./week-calendar-utils";
+const __ = adone.private(adone.datetime);
+
+const {
+    format: { addFormatToken },
+    parse: {
+        addRegexToken,
+        match1to2,
+        match2,
+        addWeekParseToken
+    },
+    unit: {
+        alias: { addUnitAlias },
+        priority: { addUnitPriority },
+    }
+} = __;
+
 
 // FORMATTING
 
@@ -28,24 +38,24 @@ addRegexToken("W", match1to2);
 addRegexToken("WW", match1to2, match2);
 
 addWeekParseToken(["w", "ww", "W", "WW"], (input, week, config, token) => {
-    week[token.substr(0, 1)] = toInt(input);
+    week[token.substr(0, 1)] = __.util.toInt(input);
 });
 
 // LOCALES
 
-export function localeWeek(mom) {
-    return weekOfYear(mom, this._week.dow, this._week.doy).week;
-}
+export const localeWeek = function (mom) {
+    return __.unit.weekCalendar.weekOfYear(mom, this._week.dow, this._week.doy).week;
+};
 
 export const defaultLocaleWeek = {
     dow: 0, // Sunday is the first day of the week.
-    doy: 6  // The week that contains Jan 1st is the first week of the year.
+    doy: 6 // The week that contains Jan 1st is the first week of the year.
 };
 
-export function localeFirstDayOfWeek() {
+export const localeFirstDayOfWeek = function () {
     return this._week.dow;
-}
+};
 
-export function localeFirstDayOfYear() {
+export const localeFirstDayOfYear = function () {
     return this._week.doy;
-}
+};

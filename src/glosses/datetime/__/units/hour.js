@@ -1,51 +1,61 @@
+const __ = adone.private(adone.datetime);
 
-import { addFormatToken } from "../format";
-import { addUnitAlias } from "./aliases";
-import { addUnitPriority } from "./priorities";
-import { addRegexToken, match1to2, match2, match3to4, match5to6, addParseToken } from "../parse";
-import { HOUR, MINUTE, SECOND } from "./constants";
-import { toInt } from "../utils";
-import getParsingFlags from "../create/parsing-flags";
-
-const { padStart } = adone.vendor.lodash;
+const {
+    format: { addFormatToken },
+    parse: {
+        addRegexToken,
+        match1to2,
+        match2,
+        match3to4,
+        match5to6,
+        addParseToken
+    },
+    unit: {
+        alias: { addUnitAlias },
+        priority: { addUnitPriority },
+        c: {
+            HOUR,
+            MINUTE,
+            SECOND
+        }
+    }
+} = __;
 
 // FORMATTING
 
-function hFormat() {
+const hFormat = function () {
     return this.hours() % 12 || 12;
-}
+};
 
-function kFormat() {
+const kFormat = function () {
     return this.hours() || 24;
-}
+};
 
 addFormatToken("H", ["HH", 2], 0, "hour");
 addFormatToken("h", ["hh", 2], 0, hFormat);
 addFormatToken("k", ["kk", 2], 0, kFormat);
 
 addFormatToken("hmm", 0, 0, function () {
-    return String(hFormat.apply(this)) + padStart(this.minutes(), 2, "0");
+    return String(hFormat.apply(this)) + String(this.minutes()).padStart(2, "0");
 });
 
 addFormatToken("hmmss", 0, 0, function () {
-    return String(hFormat.apply(this)) + padStart(this.minutes(), 2, "0") +
-        padStart(this.seconds(), 2, "0");
+    return String(hFormat.apply(this)) + String(this.minutes()).padStart(2, "0") + String(this.seconds()).padStart(2, "0");
 });
 
 addFormatToken("Hmm", 0, 0, function () {
-    return String(this.hours()) + padStart(this.minutes(), 2, "0");
+    return String(this.hours()) + String(this.minutes()).padStart(2, "0");
 });
 
 addFormatToken("Hmmss", 0, 0, function () {
-    return String(this.hours()) + padStart(this.minutes(), 2, "0") +
-        padStart(this.seconds(), 2, "0");
+    return String(this.hours()) + String(this.minutes()).padStart(2, "0") + String(this.seconds()).padStart(2, "0");
 });
 
-function meridiem(token, lowercase) {
+const meridiem = (token, lowercase) => {
     addFormatToken(token, 0, 0, function () {
         return this.localeData().meridiem(this.hours(), this.minutes(), lowercase);
     });
-}
+};
 
 meridiem("a", true);
 meridiem("A", false);
@@ -59,9 +69,7 @@ addUnitPriority("hour", 13);
 
 // PARSING
 
-function matchMeridiem(isStrict, locale) {
-    return locale._meridiemParse;
-}
+const matchMeridiem = (isStrict, locale) => locale._meridiemParse;
 
 addRegexToken("a", matchMeridiem);
 addRegexToken("A", matchMeridiem);
@@ -79,7 +87,7 @@ addRegexToken("Hmmss", match5to6);
 
 addParseToken(["H", "HH"], HOUR);
 addParseToken(["k", "kk"], (input, array) => {
-    const kInput = toInt(input);
+    const kInput = __.util.toInt(input);
     array[HOUR] = kInput === 24 ? 0 : kInput;
 });
 addParseToken(["a", "A"], (input, array, config) => {
@@ -87,49 +95,49 @@ addParseToken(["a", "A"], (input, array, config) => {
     config._meridiem = input;
 });
 addParseToken(["h", "hh"], (input, array, config) => {
-    array[HOUR] = toInt(input);
-    getParsingFlags(config).bigHour = true;
+    array[HOUR] = __.util.toInt(input);
+    __.create.getParsingFlags(config).bigHour = true;
 });
 addParseToken("hmm", (input, array, config) => {
     const pos = input.length - 2;
-    array[HOUR] = toInt(input.substr(0, pos));
-    array[MINUTE] = toInt(input.substr(pos));
-    getParsingFlags(config).bigHour = true;
+    array[HOUR] = __.util.toInt(input.substr(0, pos));
+    array[MINUTE] = __.util.toInt(input.substr(pos));
+    __.create.getParsingFlags(config).bigHour = true;
 });
 addParseToken("hmmss", (input, array, config) => {
     const pos1 = input.length - 4;
     const pos2 = input.length - 2;
-    array[HOUR] = toInt(input.substr(0, pos1));
-    array[MINUTE] = toInt(input.substr(pos1, 2));
-    array[SECOND] = toInt(input.substr(pos2));
-    getParsingFlags(config).bigHour = true;
+    array[HOUR] = __.util.toInt(input.substr(0, pos1));
+    array[MINUTE] = __.util.toInt(input.substr(pos1, 2));
+    array[SECOND] = __.util.toInt(input.substr(pos2));
+    __.create.getParsingFlags(config).bigHour = true;
 });
 addParseToken("Hmm", (input, array) => {
     const pos = input.length - 2;
-    array[HOUR] = toInt(input.substr(0, pos));
-    array[MINUTE] = toInt(input.substr(pos));
+    array[HOUR] = __.util.toInt(input.substr(0, pos));
+    array[MINUTE] = __.util.toInt(input.substr(pos));
 });
 addParseToken("Hmmss", (input, array) => {
     const pos1 = input.length - 4;
     const pos2 = input.length - 2;
-    array[HOUR] = toInt(input.substr(0, pos1));
-    array[MINUTE] = toInt(input.substr(pos1, 2));
-    array[SECOND] = toInt(input.substr(pos2));
+    array[HOUR] = __.util.toInt(input.substr(0, pos1));
+    array[MINUTE] = __.util.toInt(input.substr(pos1, 2));
+    array[SECOND] = __.util.toInt(input.substr(pos2));
 });
 
 // LOCALES
 
-export function localeIsPM(input) {
+export const localeIsPM = (input) => {
     // IE8 Quirks Mode & IE7 Standards Mode do not allow accessing strings like arrays
     // Using charAt should be more compatible.
     return ((`${input}`).toLowerCase().charAt(0) === "p");
-}
+};
 
 export const defaultLocaleMeridiemParse = /[ap]\.?m?\.?/i;
-export function localeMeridiem(hours, minutes, isLower) {
+export const localeMeridiem = (hours, minutes, isLower) => {
     if (hours > 11) {
         return isLower ? "pm" : "PM";
     }
     return isLower ? "am" : "AM";
 
-}
+};

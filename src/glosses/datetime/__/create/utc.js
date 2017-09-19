@@ -1,5 +1,5 @@
-import { createLocalOrUTC } from "./from-anything";
+const __ = adone.private(adone.datetime);
 
-export function createUTC(input, format, locale, strict) {
-    return createLocalOrUTC(input, format, locale, strict, true).utc();
+export default function createUTC(input, format, locale, strict) {
+    return __.create.createLocalOrUTC(input, format, locale, strict, true).utc();
 }

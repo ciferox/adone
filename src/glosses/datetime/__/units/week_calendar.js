@@ -1,24 +1,25 @@
-import { daysInYear } from "./year";
-import { createUTCDate } from "../create/date-from-array";
+const __ = adone.private(adone.datetime);
 
 // start-of-first-week - start-of-year
-function firstWeekOffset(year, dow, doy) {
+const firstWeekOffset = (year, dow, doy) => {
     // first-week day -- which january is always in the first week (4 for iso, 1 for other)
     const fwd = 7 + dow - doy;
     // first-week day local weekday -- which local weekday is fwd
-    const fwdlw = (7 + createUTCDate(year, 0, fwd).getUTCDay() - dow) % 7;
+    const fwdlw = (7 + __.create.createUTCDate(year, 0, fwd).getUTCDay() - dow) % 7;
 
     return -fwdlw + fwd - 1;
-}
+};
 
 //http://en.wikipedia.org/wiki/ISO_week_date#Calculating_a_date_given_the_year.2C_week_number_and_weekday
-export function dayOfYearFromWeeks(year, week, weekday, dow, doy) {
+export const dayOfYearFromWeeks = (year, week, weekday, dow, doy) => {
     const localWeekday = (7 + weekday - dow) % 7;
     const weekOffset = firstWeekOffset(year, dow, doy);
     const dayOfYear = 1 + 7 * (week - 1) + localWeekday + weekOffset;
 
     let resYear;
     let resDayOfYear;
+
+    const { daysInYear } = __.unit.year;
 
     if (dayOfYear <= 0) {
         resYear = year - 1;
@@ -35,9 +36,15 @@ export function dayOfYearFromWeeks(year, week, weekday, dow, doy) {
         year: resYear,
         dayOfYear: resDayOfYear
     };
-}
+};
 
-export function weekOfYear(mom, dow, doy) {
+export const weeksInYear = (year, dow, doy) => {
+    const weekOffset = firstWeekOffset(year, dow, doy);
+    const weekOffsetNext = firstWeekOffset(year + 1, dow, doy);
+    return (__.unit.year.daysInYear(year) - weekOffset + weekOffsetNext) / 7;
+};
+
+export const weekOfYear = (mom, dow, doy) => {
     const weekOffset = firstWeekOffset(mom.year(), dow, doy);
     const week = Math.floor((mom.dayOfYear() - weekOffset - 1) / 7) + 1;
 
@@ -59,10 +66,5 @@ export function weekOfYear(mom, dow, doy) {
         week: resWeek,
         year: resYear
     };
-}
+};
 
-export function weeksInYear(year, dow, doy) {
-    const weekOffset = firstWeekOffset(year, dow, doy);
-    const weekOffsetNext = firstWeekOffset(year + 1, dow, doy);
-    return (daysInYear(year) - weekOffset + weekOffsetNext) / 7;
-}

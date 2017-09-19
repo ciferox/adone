@@ -1,69 +1,67 @@
-import { hooks as exdate, setHookCallback } from "./__/utils";
+import { hooks as datetime, setHookCallback } from "./__/utils";
 
-import ExDate, {
-    min,
-    max,
-    now,
-    getCalendarFormat
-} from "./__/exdate";
+adone.lazifyPrivate({
+    create: "./__/create",
+    unit: "./__/units",
+    datetime: "./__/datetime",
+    duration: "./__/duration",
+    format: "./__/format",
+    locale: "./__/locale",
+    parse: "./__/parse",
+    util: "./__/utils"
+}, datetime, require);
 
-import { createLocal } from "./__/create/local";
-import { createUTC } from "./__/create/utc";
-import { createInvalid } from "./__/create/valid";
+const __ = adone.private(datetime);
 
-const createUnix = (input) => createLocal(input * 1000);
-const createInZone = (...args) => createLocal(...args).parseZone();
+const createUnix = (input) => __.create.createLocal(input * 1000);
+const createInZone = (...args) => __.create.createLocal(...args).parseZone();
+const createDuraton = (...args) => new __.duration.Duration(...args);
+const createInvalidDuration = () => __.duration.Duration.invalid();
 
-import {
-    defineLocale,
-    updateLocale,
-    getSetGlobalLocale as locale,
-    getLocale as localeData,
-    listLocales as locales,
-    listMonths as months,
-    listMonthsShort as monthsShort,
-    listWeekdays as weekdays,
-    listWeekdaysMin as weekdaysMin,
-    listWeekdaysShort as weekdaysShort
-} from "./__/locale";
+adone.lazify({
+    min: () => __.datetime.min,
+    max: () => __.datetime.max,
+    now: () => __.datetime.now,
+    calendarFormat: () => __.datetime.getCalendarFormat,
 
-import Duration, {
-    isDuration,
-    getSetRelativeTimeRounding as relativeTimeRounding,
-    getSetRelativeTimeThreshold as relativeTimeThreshold
-} from "./__/duration";
+    local: () => __.create.createLocal,
+    utc: () => __.create.createUTC,
+    invalid: () => __.create.createInvalid,
 
-import { normalizeUnits } from "./__/units/units";
+    locale: () => __.locale.getSetGlobalLocale,
+    defineLocale: () => __.locale.defineLocale,
+    updateLocale: () => __.locale.updateLocale,
+    locales: () => __.locale.listLocales,
+    localeData: () => __.locale.getLocale,
+    months: () => __.locale.listMonths,
+    monthsShort: () => __.locale.listMonthsShort,
+    weekdays: () => __.locale.listWeekdays,
+    weekdaysMin: () => __.locale.listWeekdaysMin,
+    weekdaysShort: () => __.locale.listWeekdaysShort,
 
-setHookCallback(createLocal);
+    normalizeUnits: () => __.unit.alias.normalizeUnits,
 
-exdate.fn = ExDate.prototype;
-exdate.min = min;
-exdate.max = max;
-exdate.now = now;
-exdate.utc = createUTC;
-exdate.unix = createUnix;
-exdate.local = createLocal;
-exdate.months = months;
-exdate.locale = locale;
-exdate.invalid = createInvalid;
-exdate.duration = (...args) => new Duration(...args);
-exdate.duration.invalid = () => Duration.invalid();
-exdate.Duration = Duration;
-exdate.weekdays = weekdays;
-exdate.parseZone = createInZone;
-exdate.localeData = localeData;
-exdate.isDuration = isDuration;
-exdate.monthsShort = monthsShort;
-exdate.weekdaysMin = weekdaysMin;
-exdate.defineLocale = defineLocale;
-exdate.updateLocale = updateLocale;
-exdate.locales = locales;
-exdate.weekdaysShort = weekdaysShort;
-exdate.normalizeUnits = normalizeUnits;
-exdate.relativeTimeRounding = relativeTimeRounding;
-exdate.relativeTimeThreshold = relativeTimeThreshold;
-exdate.calendarFormat = getCalendarFormat;
-exdate.prototype = ExDate.prototype;
+    Duration: () => __.duration.Duration,
+    isDuration: () => __.duration.isDuration,
+    relativeTimeRounding: () => __.duration.getSetRelativeTimeRounding,
+    relativeTimeThreshold: () => __.duration.getSetRelativeTimeThreshold
+}, datetime, undefined, { configurable: true, writable: true });
 
-export default adone.asNamespace(exdate);
+
+// datetime.fn = Datetime.prototype;
+datetime.unix = createUnix;
+datetime.duration = createDuraton;
+datetime.duration.invalid = createInvalidDuration;
+datetime.parseZone = createInZone;
+
+adone.asNamespace(datetime);
+
+// ??? imitate default export
+exports.__esModule = true;
+adone.lazify({
+    default: () => {
+        setHookCallback(__.create.createLocal);
+        require("./__/units/load_units");
+        return datetime;
+    }
+}, exports);

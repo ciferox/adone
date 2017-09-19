@@ -37,7 +37,7 @@ export const c = {
     JS_INT_MIN: -0x20000000000000
 };
 
-export const encode = (obj) => bson.serializer.serialize(obj);
+export const encode = (obj, opts) => bson.serializer.serialize(obj, opts);
 
 export const decode = (buf, opts) => bson.serializer.deserialize(buf, Object.assign({
     promoteBuffers: true,

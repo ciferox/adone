@@ -1,15 +1,22 @@
-
-import { addFormatToken } from "../format";
-import { addRegexToken, matchShortOffset, addParseToken } from "../parse";
-import { createLocal } from "../create/local";
-import { toInt, hooks } from "../utils";
-
 const { is } = adone;
-const { padStart } = adone.vendor.lodash;
+const __ = adone.private(adone.datetime);
+
+const {
+    format: { addFormatToken },
+    parse: {
+        addRegexToken,
+        addParseToken,
+        matchShortOffset
+    },
+    util: {
+        hooks,
+        toInt
+    }
+} = __;
 
 // FORMATTING
 
-function offset(token, separator) {
+const offset = (token, separator) => {
     addFormatToken(token, 0, 0, function () {
         let offset = this.utcOffset();
         let sign = "+";
@@ -17,33 +24,22 @@ function offset(token, separator) {
             offset = -offset;
             sign = "-";
         }
-        return sign + padStart(~~(offset / 60), 2, "0") + separator + padStart(~~(offset) % 60, 2, "0");
+        return sign + String(~~(offset / 60)).padStart(2, "0") + separator + String(~~(offset) % 60).padStart(2, "0");
     });
-}
+};
 
 offset("Z", ":");
 offset("ZZ", "");
-
-// PARSING
-
-addRegexToken("Z", matchShortOffset);
-addRegexToken("ZZ", matchShortOffset);
-addParseToken(["Z", "ZZ"], (input, array, config) => {
-    config._useUTC = true;
-    config._tzm = offsetFromString(matchShortOffset, input);
-});
-
-// HELPERS
 
 // timezone chunker
 // '+10:00' > ['10',  '00']
 // '-1530'  > ['-15', '30']
 const chunkOffset = /([\+\-]|\d\d)/gi;
 
-export function offsetFromString(matcher, string) {
+export const offsetFromString = (matcher, string) => {
     const matches = (string || "").match(matcher);
 
-    if (matches === null) {
+    if (is.null(matches)) {
         return null;
     }
 
@@ -52,25 +48,32 @@ export function offsetFromString(matcher, string) {
     const minutes = Number(parts[1] * 60) + toInt(parts[2]);
 
     return minutes === 0 ?
-      0 :
-      parts[0] === "+" ? minutes : -minutes;
-}
+        0 :
+        parts[0] === "+" ? minutes : -minutes;
+};
+
+addRegexToken("Z", matchShortOffset);
+addRegexToken("ZZ", matchShortOffset);
+addParseToken(["Z", "ZZ"], (input, array, config) => {
+    config._useUTC = true;
+    config._tzm = offsetFromString(matchShortOffset, input);
+});
 
 // Return an ExDate from input, that is local/utc/zone equivalent to model.
-export function cloneWithOffset(input, model) {
+export const cloneWithOffset = (input, model) => {
     let res;
     let diff;
     if (model._isUTC) {
         res = model.clone();
-        diff = (is.exdate(input) || is.date(input) ? input.valueOf() : createLocal(input).valueOf()) - res.valueOf();
+        diff = (is.datetime(input) || is.date(input) ? input.valueOf() : __.create.createLocal(input).valueOf()) - res.valueOf();
         // Use low-level api, because this fn is low-level api.
         res._d.setTime(res._d.valueOf() + diff);
         hooks.updateOffset(res, false);
         return res;
     }
-    return createLocal(input).local();
+    return __.create.createLocal(input).local();
 
-}
+};
 
 // HOOKS
 

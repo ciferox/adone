@@ -1,8 +1,19 @@
-import { addFormatToken } from "../format";
-import { addUnitAlias } from "./aliases";
-import { addUnitPriority } from "./priorities";
-import { addRegexToken, match1to2, match2, addParseToken } from "../parse";
-import { SECOND } from "./constants";
+const __ = adone.private(adone.datetime);
+
+const {
+    format: { addFormatToken },
+    parse: {
+        addRegexToken,
+        addParseToken,
+        match1to2,
+        match2
+    },
+    unit: {
+        alias: { addUnitAlias },
+        priority: { addUnitPriority },
+        c: { SECOND }
+    }
+} = __;
 
 // FORMATTING
 

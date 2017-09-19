@@ -58,7 +58,7 @@ export default ExDate.defineLocale("el", {
     calendar(key, mom) {
         const hours = mom && mom.hours();
         let output = this._calendarEl[key];
-        if (adone.is.function(output)) {
+        if (is.function(output)) {
             output = output.apply(mom);
         }
         return output.replace("{}", (hours % 12 === 1 ? "στη" : "στις"));

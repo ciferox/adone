@@ -1,6 +1,14 @@
-import { addFormatToken } from "../format";
-import { addRegexToken, matchTimestamp, matchSigned, addParseToken } from "../parse";
-import { toInt } from "../utils";
+const __ = adone.private(adone.datetime);
+
+const {
+    format: { addFormatToken },
+    parse: {
+        addRegexToken,
+        addParseToken,
+        matchSigned,
+        matchTimestamp
+    }
+} = __;
 
 // FORMATTING
 
@@ -15,5 +23,5 @@ addParseToken("X", (input, array, config) => {
     config._d = new Date(parseFloat(input, 10) * 1000);
 });
 addParseToken("x", (input, array, config) => {
-    config._d = new Date(toInt(input));
+    config._d = new Date(__.util.toInt(input));
 });

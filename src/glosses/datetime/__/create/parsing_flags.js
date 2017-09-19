@@ -1,6 +1,6 @@
 const { is } = adone;
 
-function defaultParsingFlags() {
+const defaultParsingFlags = () => {
     // We need to deep clone this object.
     return {
         empty: false,
@@ -18,7 +18,7 @@ function defaultParsingFlags() {
         rfc2822: false,
         weekdayMismatch: false
     };
-}
+};
 
 export default function getParsingFlags(m) {
     if (is.nil(m._pf)) {

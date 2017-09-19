@@ -1,25 +1,26 @@
+const { is } = adone;
+
 const aliases = {};
 
-export function addUnitAlias(unit, shorthand) {
+export const addUnitAlias = (unit, shorthand) => {
     const lowerCase = unit.toLowerCase();
     aliases[lowerCase] = aliases[`${lowerCase}s`] = aliases[shorthand] = unit;
-}
+};
 
-export function normalizeUnits(units) {
-    return adone.is.string(units) ? aliases[units] || aliases[units.toLowerCase()] : undefined;
-}
+export const normalizeUnits = (units) => {
+    return is.string(units) ? aliases[units] || aliases[units.toLowerCase()] : undefined;
+};
 
-export function normalizeObjectUnits(inputObject) {
+export const normalizeObjectUnits = (inputObject) => {
     const normalizedInput = {};
 
     for (const prop in inputObject) {
-        if (adone.is.propertyOwned(inputObject, prop)) {
+        if (is.propertyOwned(inputObject, prop)) {
             const normalizedProp = normalizeUnits(prop);
             if (normalizedProp) {
                 normalizedInput[normalizedProp] = inputObject[prop];
             }
         }
     }
-
     return normalizedInput;
-}
+};
