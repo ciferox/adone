@@ -152,7 +152,10 @@ export class Locale {
         for (const i in config) {
             const prop = config[i];
             if (is.function(prop)) {
-                this[i] = prop;
+                Object.defineProperty(this, i, {
+                    value: prop,
+                    configurable: true
+                });
             } else {
                 this[`_${i}`] = prop;
             }

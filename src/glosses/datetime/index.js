@@ -54,6 +54,9 @@ datetime.duration = createDuraton;
 datetime.duration.invalid = createInvalidDuration;
 datetime.parseZone = createInZone;
 
+datetime.defaultFormat = "YYYY-MM-DDTHH:mm:ssZ";
+datetime.defaultFormatUtc = "YYYY-MM-DDTHH:mm:ss[Z]";
+
 adone.asNamespace(datetime);
 
 // ??? imitate default export

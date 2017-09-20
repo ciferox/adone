@@ -3,16 +3,11 @@ const __ = adone.private(datetime);
 
 const { hooks, absRound, absFloor, toInt, compareArrays } = __.util;
 
-hooks.defaultFormat = "YYYY-MM-DDTHH:mm:ssZ";
-hooks.defaultFormatUtc = "YYYY-MM-DDTHH:mm:ss[Z]";
-
-
 const get = (mom, unit) => {
     return mom.isValid()
         ? mom._d[`get${mom._isUTC ? "UTC" : ""}${unit}`]()
         : NaN;
 };
-
 
 const set = (mom, unit, value) => {
     if (mom.isValid() && !isNaN(value)) {
