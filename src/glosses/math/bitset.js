@@ -175,7 +175,9 @@ export default class BitSet {
     // Run a custom function on every set bit. Faster than iterating over the entire bitset with a `get()`
     forEach(func) {
         for (let i = this.ffs(); i !== -1; i = this.nextSetBit(i + 1)) {
-            func(i);
+            if (func(i) === false) {
+                break;
+            }
         }
     }
 

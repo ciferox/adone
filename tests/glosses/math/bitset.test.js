@@ -274,4 +274,36 @@ describe("math", "BitSet", () => {
             expect(evenBitset.circularShift(-301).isEqual(oddBitset)).to.be.true;
         }
     });
+
+    it("should iterate over set bits", () => {
+        const a = new BitSet(15);
+        a.set(1);
+        a.set(2);
+        a.set(3);
+        a.set(5);
+        a.set(8);
+        a.set(13);
+        const vals = [];
+        a.forEach((x) => vals.push(x));
+        expect(vals).to.be.deep.equal([1, 2, 3, 5, 8, 13]);
+    });
+
+    it("should stop iterating if the callback returns false", () => {
+        const a = new BitSet(15);
+
+        a.set(1);
+        a.set(2);
+        a.set(3);
+        a.set(5);
+        a.set(8);
+        a.set(13);
+        const vals = [];
+        a.forEach((x) => {
+            vals.push(x);
+            if (x >= 5) {
+                return false;
+            }
+        });
+        expect(vals).to.be.deep.equal([1, 2, 3, 5]);
+    });
 });
