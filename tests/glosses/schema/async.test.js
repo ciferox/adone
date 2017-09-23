@@ -258,7 +258,7 @@ describe("schema", "compileAsync method", () => {
     });
 
     describe("should return error via callback", () => {
-        it.only("if passed schema is invalid", (done) => {
+        it("if passed schema is invalid", (done) => {
             const invalidSchema = {
                 id: "http://example.com/int2plus.json",
                 type: "integer",

@@ -4,6 +4,10 @@ const noValue = Symbol("noValue");
 const noGetter = () => noValue;
 const getter = (obj) => (key) => key in obj ? obj[key] : noValue;
 
+/**
+ * Represents a Map that has a default values factory object or function.
+ * Each get of non-existent key goes through the factory
+ */
 export default class DefaultMap extends Map {
     constructor(factory, ...args) {
         super(...args);

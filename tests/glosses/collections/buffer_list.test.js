@@ -1,5 +1,5 @@
 describe("collection", "BufferList", () => {
-    const { is, std: { crypto }, collection: { BufferList } } = adone;
+    const { is, std: { crypto }, collection: { BufferList }, fs } = adone;
     const encodings = "hex utf8 utf-8 ascii binary base64 ucs2 ucs-2 utf16le utf-16le".split(" ");
 
     it("single bytes from single buffer", () => {
@@ -354,31 +354,32 @@ describe("collection", "BufferList", () => {
 
     });
 
-    // !process.browser && tape("test stream", function (done) {
-    //     const random = crypto.randomBytes(65534);
-    //     const rndhash =  crypto.createHash("md5").update() hash(random, "md5");
-    //     const md5sum = crypto.createHash("md5");
-    //     const bl     = new BufferList(function (err, buf) {
-    //         assert(Buffer.isBuffer(buf));
-    //         assert(err === null);
-    //         assert.equal(rndhash, hash(bl.slice(), "md5"));
-    //         assert.equal(rndhash, hash(buf, "md5"));
+    it("test stream", (done) => {
+        const random = crypto.randomBytes(65534);
+        const md5 = (x) => crypto.createHash("md5").update(x).digest();
+        const rndhash = md5(random);
+        const md5sum = crypto.createHash("md5");
+        const bl = new BufferList(((err, buf) => {
+            assert(is.buffer(buf));
+            assert.isNull(err);
+            assert.deepEqual(rndhash, md5(bl.slice()));
+            assert.deepEqual(rndhash, md5(buf));
 
-    //         bl.pipe(fs.createWriteStream("/tmp/bl_test_rnd_out.dat"))
-    //           .on("close", function () {
-    //               const s = fs.createReadStream("/tmp/bl_test_rnd_out.dat");
-    //               s.on("data", md5sum.update.bind(md5sum));
-    //               s.on("end", function() {
-    //                   assert.equal(rndhash, md5sum.digest("hex"), "woohoo! correct hash!");
-    //                   done();
-    //               });
-    //           });
+            bl.pipe(fs.createWriteStream("/tmp/bl_test_rnd_out.dat"))
+                .on("close", () => {
+                    const s = fs.createReadStream("/tmp/bl_test_rnd_out.dat");
+                    s.on("data", md5sum.update.bind(md5sum));
+                    s.on("end", () => {
+                        assert.equal(rndhash.toString("hex"), md5sum.digest("hex"), "woohoo! correct hash!");
+                        done();
+                    });
+                });
 
-    //     });
+        }));
 
-    //     fs.writeFileSync("/tmp/bl_test_rnd.dat", random);
-    //     fs.createReadStream("/tmp/bl_test_rnd.dat").pipe(bl);
-    // });
+        fs.writeFileSync("/tmp/bl_test_rnd.dat", random);
+        fs.createReadStream("/tmp/bl_test_rnd.dat").pipe(bl);
+    });
 
     it("instantiation with Buffer", () => {
         const buf = crypto.randomBytes(1024);
@@ -578,86 +579,91 @@ describe("collection", "BufferList", () => {
         assert.equal(bl.length, 0);
     });
 
-    // !process.browser && it("destroy with pipe before read end", () => {
+    it("destroy with pipe before read end", () => {
+        const bl = new BufferList();
+        fs.createReadStream(__filename)
+            .pipe(bl);
 
+        bl.destroy();
 
-    //     const bl = new BufferList();
-    //     fs.createReadStream(__dirname + "/test.js")
-    //         .pipe(bl);
+        assert.equal(bl._bufs.length, 0);
+        assert.equal(bl.length, 0);
+    });
 
-    //     bl.destroy();
+    it("destroy with pipe before read end with race", (done) => {
+        const bl = new BufferList();
+        fs.createReadStream(__filename)
+            .pipe(bl);
 
-    //     assert.equal(bl._bufs.length, 0);
-    //     assert.equal(bl.length, 0);
+        setTimeout(() => {
+            bl.destroy();
+            setTimeout(() => {
+                assert.equal(bl._bufs.length, 0);
+                assert.equal(bl.length, 0);
+                done();
+            }, 500);
+        }, 500);
+    });
 
-    // });
+    it("destroy with pipe after read end", (done) => {
+        const bl = new BufferList();
+        const onEnd = () => {
+            bl.destroy();
 
-    // !process.browser && it("destroy with pipe before read end with race", () => {
+            assert.equal(bl._bufs.length, 0);
+            assert.equal(bl.length, 0);
+            done();
+        };
+        fs.createReadStream(__filename)
+            .on("end", onEnd)
+            .pipe(bl);
+    });
 
+    it("destroy with pipe while writing to a destination", (done) => {
+        const bl = new BufferList();
+        const ds = new BufferList();
 
-    //     const bl = new BufferList();
-    //     fs.createReadStream(__dirname + "/test.js")
-    //         .pipe(bl);
+        const onEnd = () => {
+            bl.pipe(ds);
 
-    //     setTimeout(function () {
-    //         bl.destroy();
-    //         setTimeout(function () {
-    //             assert.equal(bl._bufs.length, 0);
-    //             assert.equal(bl.length, 0);
-    //         }, 500);
-    //     }, 500);
-    // });
+            setTimeout(() => {
+                bl.destroy();
 
-    // !process.browser && it("destroy with pipe after read end", () => {
+                assert.equal(bl._bufs.length, 0);
+                assert.equal(bl.length, 0);
 
+                ds.destroy();
 
-    //     const bl = new BufferList();
-    //     fs.createReadStream(__dirname + "/test.js")
-    //         .on("end", onEnd)
-    //         .pipe(bl);
+                assert.equal(bl._bufs.length, 0);
+                assert.equal(bl.length, 0);
+                done();
+            }, 100);
+        };
 
-    //     function onEnd() {
-    //         bl.destroy();
+        fs.createReadStream(__filename)
+            .on("end", onEnd)
+            .pipe(bl);
+    });
 
-    //         assert.equal(bl._bufs.length, 0);
-    //         assert.equal(bl.length, 0);
-    //     }
-    // });
+    it("handles error", (done) => {
+        fs.createReadStream("/does/not/exist").pipe(new BufferList((err, data) => {
+            assert(err instanceof Error, "has error");
+            assert.notExists(data);
+            done();
+        }));
+    });
 
-    // !process.browser && it("destroy with pipe while writing to a destination", () => {
-    //
+    describe("promise api", () => {
+        it("should support then", async () => {
+            const data = await fs.createReadStream(__filename).pipe(new BufferList());
+            expect(data).to.exist;
+            expect(data.toString()).to.be.equal(await fs.readFile(__filename, "utf8"));
+        });
 
-    //     let bl = new BufferList()
-    //         , ds = new BufferList();
-
-    //     fs.createReadStream(__dirname + "/test.js")
-    //         .on("end", onEnd)
-    //         .pipe(bl);
-
-    //     function onEnd() {
-    //         bl.pipe(ds);
-
-    //         setTimeout(function () {
-    //             bl.destroy();
-
-    //             assert.equal(bl._bufs.length, 0);
-    //             assert.equal(bl.length, 0);
-
-    //             ds.destroy();
-
-    //             assert.equal(bl._bufs.length, 0);
-    //             assert.equal(bl.length, 0);
-
-    //         }, 100);
-    //     }
-    // });
-
-    // !process.browser && it("handle error", () => {
-    //
-    //     fs.createReadStream("/does/not/exist").pipe(BufferList(function (err, data) {
-    //         assert(err instanceof Error, "has error");
-    //         t.notOk(data, "no data");
-    //     }));
-    // });
-
+        it("should support reject", async () => {
+            await assert.throws(async () => {
+                await fs.createReadStream("/does/not/exist").pipe(new BufferList());
+            });
+        });
+    });
 });

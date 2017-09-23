@@ -1362,7 +1362,7 @@ describe("data", "mpak", "Serializer", () => {
         });
     });
 
-    describe.only("some std and adone types encode/decode", () => {
+    describe("some std and adone types encode/decode", () => {
         it("encode/decode Long mirror test", () => {
             let orig = Long.fromString("1152921504606912512", true); // 2**60 + 2**16
             let encoded = serializer.encode(orig);

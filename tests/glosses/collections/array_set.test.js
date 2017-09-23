@@ -31,7 +31,7 @@ describe("collection", "ArraySet", () => {
     });
 
     it("test creating from an array", () => {
-        const set = ArraySet.fromArray(["foo", "bar", "baz", "quux", "hasOwnProperty"]);
+        const set = ArraySet.from(["foo", "bar", "baz", "quux", "hasOwnProperty"]);
 
         assert.ok(set.has("foo"));
         assert.ok(set.has("bar"));
@@ -58,14 +58,14 @@ describe("collection", "ArraySet", () => {
         assert.strictEqual(set.indexOf("__proto__"), 0);
     });
 
-    it("test .fromArray() with duplicates", () => {
-        let set = ArraySet.fromArray(["foo", "foo"]);
+    it("test .from() with duplicates", () => {
+        let set = ArraySet.from(["foo", "foo"]);
         assert.ok(set.has("foo"));
         assert.strictEqual(set.at(0), "foo");
         assert.strictEqual(set.indexOf("foo"), 0);
         assert.strictEqual(set.toArray().length, 1);
 
-        set = ArraySet.fromArray(["foo", "foo"], true);
+        set = ArraySet.from(["foo", "foo"], true);
         assert.ok(set.has("foo"));
         assert.strictEqual(set.at(0), "foo");
         assert.strictEqual(set.at(1), "foo");
@@ -91,15 +91,15 @@ describe("collection", "ArraySet", () => {
         assert.strictEqual(set.toArray().length, 2);
     });
 
-    it("test .size()", () => {
+    it("test .length", () => {
         const set = new ArraySet();
         set.add("foo");
         set.add("bar");
         set.add("baz");
-        assert.strictEqual(set.size(), 3);
+        assert.strictEqual(set.length, 3);
     });
 
-    it("test .size() with disallowed duplicates", () => {
+    it("test .length with disallowed duplicates", () => {
         const set = new ArraySet();
 
         set.add("foo");
@@ -111,10 +111,10 @@ describe("collection", "ArraySet", () => {
         set.add("baz");
         set.add("baz");
 
-        assert.strictEqual(set.size(), 3);
+        assert.strictEqual(set.length, 3);
     });
 
-    it("test .size() with allowed duplicates", () => {
+    it("test .length with allowed duplicates", () => {
         const set = new ArraySet();
 
         set.add("foo");
@@ -126,6 +126,18 @@ describe("collection", "ArraySet", () => {
         set.add("baz");
         set.add("baz", true);
 
-        assert.strictEqual(set.size(), 3);
+        assert.strictEqual(set.length, 3);
+    });
+
+    describe("indexOf", () => {
+        it("should return an index of an element", () => {
+            const set = ArraySet.from([1, 2, 3, 4, 5]);
+            expect(set.indexOf(3)).to.be.equal(2);
+        });
+
+        it("should return -1 if an element is not present", () => {
+            const set = ArraySet.from([1, 2, 3, 4, 5]);
+            expect(set.indexOf({})).to.be.equal(-1);
+        });
     });
 });

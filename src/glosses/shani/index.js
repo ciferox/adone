@@ -559,7 +559,7 @@ export class Engine {
         const root = new Block(null);
         root.level(-1); // take care of the nested blocks
         root.timeout(this.defaultTimeout);
-        const stack = new adone.collection.Stack([root]);
+        const stack = adone.collection.Stack.from([root]);
 
         const runtimeContext = {};
 

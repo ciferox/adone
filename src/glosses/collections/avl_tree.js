@@ -8,7 +8,7 @@ class _AVLTree extends collection.BinarySearchTree {
     }
 
     checkHeightCorrect() {
-        if (!this.hasOwnProperty("key")) {  // Empty tree
+        if (!this.hasOwnProperty("key")) { // Empty tree
             return;
         }
 
@@ -59,7 +59,7 @@ class _AVLTree extends collection.BinarySearchTree {
         const p = this.left;
         if (!p) {
             return this;
-        }   // No change
+        } // No change
 
         const b = p.right;
         const q = this;
@@ -96,7 +96,7 @@ class _AVLTree extends collection.BinarySearchTree {
         const q = this.right;
         if (!q) {
             return this;
-        }   // No change
+        } // No change
 
         const b = q.left;
         const p = this;
@@ -131,7 +131,7 @@ class _AVLTree extends collection.BinarySearchTree {
     rightTooSmall() {
         if (this.balanceFactor() <= 1) {
             return this;
-        }   // Right is not too small, don't change
+        } // Right is not too small, don't change
 
         if (this.left.balanceFactor() < 0) {
             this.left.leftRotation();
@@ -143,7 +143,7 @@ class _AVLTree extends collection.BinarySearchTree {
     leftTooSmall() {
         if (this.balanceFactor() >= -1) {
             return this;
-        }   // Left is not too small, don't change
+        } // Left is not too small, don't change
 
         if (this.right.balanceFactor() > 0) {
             this.right.rightRotation();
@@ -156,7 +156,7 @@ class _AVLTree extends collection.BinarySearchTree {
         if (!this.hasOwnProperty("key")) {
             delete this.height;
             return this;
-        }   // Empty tree
+        } // Empty tree
 
         let newRoot = this;
         let rotated;
@@ -199,8 +199,8 @@ class _AVLTree extends collection.BinarySearchTree {
         // Insert new leaf at the right place
         for ( ; ; ) {
             // Same key: no change in the tree structure
-            if (currentNode.compareKeys(currentNode.key, key) === 0) {
-                if (currentNode.unique) {
+            if (currentNode._compareKeys(currentNode.key, key) === 0) {
+                if (currentNode._unique) {
                     const err = new x.IllegalState(`Can't insert key ${key}, it violates the unique constraint`);
                     err.key = key;
                     err.errorType = "uniqueViolated";
@@ -213,16 +213,16 @@ class _AVLTree extends collection.BinarySearchTree {
 
             insertPath.push(currentNode);
 
-            if (currentNode.compareKeys(key, currentNode.key) < 0) {
+            if (currentNode._compareKeys(key, currentNode.key) < 0) {
                 if (!currentNode.left) {
-                    insertPath.push(currentNode.createLeftChild({ key, value }));
+                    insertPath.push(currentNode._createLeftChild({ key, value }));
                     break;
                 } else {
                     currentNode = currentNode.left;
                 }
             } else {
                 if (!currentNode.right) {
-                    insertPath.push(currentNode.createRightChild({ key, value }));
+                    insertPath.push(currentNode._createRightChild({ key, value }));
                     break;
                 } else {
                     currentNode = currentNode.right;
@@ -236,31 +236,31 @@ class _AVLTree extends collection.BinarySearchTree {
     delete(key, value) {
         if (!this.hasOwnProperty("key")) {
             return this;
-        }   // Empty tree
+        } // Empty tree
 
         const deletePath = [];
         let currentNode = this;
         // Either no match is found and the function will return from within the loop
         // Or a match is found and deletePath will contain the path from the root to the node to delete after the loop
         for ( ; ; ) {
-            if (currentNode.compareKeys(key, currentNode.key) === 0) {
+            if (currentNode._compareKeys(key, currentNode.key) === 0) {
                 break;
             }
 
             deletePath.push(currentNode);
 
-            if (currentNode.compareKeys(key, currentNode.key) < 0) {
+            if (currentNode._compareKeys(key, currentNode.key) < 0) {
                 if (currentNode.left) {
                     currentNode = currentNode.left;
                 } else {
-                    return this;   // Key not found, no modification
+                    return this; // Key not found, no modification
                 }
             } else {
-                // currentNode.compareKeys(key, currentNode.key) is > 0
+                // currentNode._compareKeys(key, currentNode.key) is > 0
                 if (currentNode.right) {
                     currentNode = currentNode.right;
                 } else {
-                    return this;   // Key not found, no modification
+                    return this; // Key not found, no modification
                 }
             }
         }
@@ -268,7 +268,7 @@ class _AVLTree extends collection.BinarySearchTree {
         // Delete only a value (no tree modification)
         if (currentNode.data.length > 1 && !is.undefined(value)) {
             currentNode.data.forEach((d) => {
-                if (!currentNode.checkValueEquality(d, value)) {
+                if (!currentNode._checkValueEquality(d, value)) {
                     newData.push(d);
                 }
             });
@@ -280,7 +280,7 @@ class _AVLTree extends collection.BinarySearchTree {
 
         // Leaf
         if (!currentNode.left && !currentNode.right) {
-            if (currentNode === this) {   // This leaf is also the root
+            if (currentNode === this) { // This leaf is also the root
                 delete currentNode.key;
                 currentNode.data = [];
                 delete currentNode.height;
@@ -300,9 +300,9 @@ class _AVLTree extends collection.BinarySearchTree {
         if (!currentNode.left || !currentNode.right) {
             replaceWith = currentNode.left ? currentNode.left : currentNode.right;
 
-            if (currentNode === this) {   // This node is also the root
+            if (currentNode === this) { // This node is also the root
                 replaceWith.parent = null;
-                return replaceWith;   // height of replaceWith is necessarily 1 because the tree was balanced before deletion
+                return replaceWith; // height of replaceWith is necessarily 1 because the tree was balanced before deletion
             }
             if (currentNode.parent.left === currentNode) {
                 currentNode.parent.left = replaceWith;
@@ -355,15 +355,28 @@ class _AVLTree extends collection.BinarySearchTree {
     }
 }
 
+/**
+ * Represents an AVL tree, a self-balancing binary search tree
+ */
 export default class AVLTree {
     constructor(options) {
         this.tree = new _AVLTree(options);
     }
 
+    /**
+     * Checks whether the tree is an avl tree
+     *
+     * @returns {void}
+     */
     checkIsAVLT() {
         this.tree.checkIsAVLT();
     }
 
+    /**
+     * Inserts a new key/value
+     *
+     * @returns {void}
+     */
     insert(key, value) {
         const newTree = this.tree.insert(key, value);
 
@@ -373,6 +386,11 @@ export default class AVLTree {
         }
     }
 
+    /**
+     * Deletes the given key/value from the tree
+     *
+     * @returns {void}
+     */
     delete(key, value) {
         const newTree = this.tree.delete(key, value);
 

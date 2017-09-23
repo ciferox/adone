@@ -77,7 +77,7 @@ const get = (self, key, doUse) => {
         }
         if (hit) {
             hit = hit.value
-                ;
+            ;
         }
     }
     return hit;
@@ -108,16 +108,46 @@ class Entry {
     }
 }
 
+/**
+ * @typedef {(value, key) => number} LengthCalculator
+ */
 
-// lruList is a yallist where the head is the youngest
-// item, and the tail is the oldest.  the list contains the Hit
-// objects as the entries.
-// Each Hit object has a reference to its Yallist.Node.  This
-// never changes.
-//
-// cache is a Map (or PseudoMap) that matches the keys to
-// the Yallist.Node object.
+/**
+ * @typedef ConstructorOptions
+ *
+ * @property {number} [max] The maximum size of the cache
+ * @property {number} [maxAge]  Maximum age in ms
+ * @property {LengthCalculator} [length] Function that is used to calculate the length of stored items
+ * @property {(key, value) => void} [dispose] Function that is called on items when they are dropped from the cache
+ * @property {boolean} stale Whether to return the stale value before deleting it
+ * @property {boolean} noDisposeOnSet Dispose will only be called when a key falls out of the cache, not when it is overwritten
+ */
+
+/**
+ * @typedef SerializedEntry
+ * @property {any} key
+ * @property {any} value
+ * @property {number} e
+ */
+
+/**
+ * @typedef Entry
+ * @property {any} key
+ * @property {any} value
+ * @property {number} length
+ * @property {number} now
+ * @property {number} maxAge
+ */
+
+/**
+ * Represents an LRU cache
+ */
 export default class LRU {
+    /**
+     * Creates an LRU cache with the given options
+     *
+     * @param {number | ConstructorOptions} options number is treated as max
+     */
     constructor(options) {
         if (is.number(options)) {
             options = { max: options };
@@ -145,7 +175,11 @@ export default class LRU {
         this.reset();
     }
 
-    // resize the cache when the max changes.
+    /**
+     * max option setter
+     *
+     * @param {number} mL
+     */
     set max(mL) {
         if (!mL || !(is.number(mL)) || mL <= 0) {
             mL = Infinity;
@@ -154,18 +188,38 @@ export default class LRU {
         trim(this);
     }
 
+    /**
+     * max option getter
+     *
+     * @returns {number}
+     */
     get max() {
         return priv(this, "max");
     }
 
+    /**
+     * slate options setter
+     *
+     * @param {boolean} allowStale
+     */
     set allowStale(allowStale) {
         priv(this, "allowStale", Boolean(allowStale));
     }
 
+    /**
+     * stale option getter
+     *
+     * @returns {boolean}
+     */
     get allowStale() {
         return priv(this, "allowStale");
     }
 
+    /**
+     * maxAge option setter
+     *
+     * @param {number} mA
+     */
     set maxAge(mA) {
         if (!mA || !(is.number(mA)) || mA < 0) {
             mA = 0;
@@ -174,11 +228,20 @@ export default class LRU {
         trim(this);
     }
 
+    /**
+     * maxAge option getter
+     *
+     * @returns {number}
+     */
     get maxAge() {
         return priv(this, "maxAge");
     }
 
-    // resize the cache when the lengthCalculator changes.
+    /**
+     * length options setter
+     *
+     * @param {LengthCalculator} lC
+     */
     set lengthCalculator(lC) {
         if (!is.function(lC)) {
             lC = naiveLength;
@@ -194,18 +257,42 @@ export default class LRU {
         trim(this);
     }
 
+    /**
+     * length options getter
+     *
+     * @returns {LengthCalculator}
+     */
     get lengthCalculator() {
         return priv(this, "lengthCalculator");
     }
 
+    /**
+     * Total length of objects in cache taking into account length options function
+     *
+     * @returns {number}
+     */
     get length() {
         return priv(this, "length");
     }
 
+    /**
+     * Total quantity of objects currently in cache.
+     * Note, that stale items are returned as part of this item count.
+     *
+     * @returns {number}
+     */
     get itemCount() {
         return priv(this, "lruList").length;
     }
 
+    /**
+     * Iterates over all the keys in the cache, in reverse recent-ness order.
+     * (ie, less recently used items are iterated over first.)
+     *
+     * @param {(value, key, cache: LRU) => void} fn
+     * @param {any} thisp
+     * @returns {void}
+     */
     rforEach(fn, thisp) {
         thisp = thisp || this;
         const length = priv(this, "lruList").length;
@@ -217,6 +304,13 @@ export default class LRU {
         }
     }
 
+    /**
+     * Iterates over all the keys in the cache, in order of recent-ness
+     *
+     * @param {(value, key, cache: LRU) => void} fn
+     * @param {any} thisp
+     * @returns {void}
+     */
     forEach(fn, thisp) {
         thisp = thisp || this;
         const length = priv(this, "lruList").length;
@@ -228,18 +322,31 @@ export default class LRU {
         }
     }
 
+    /**
+     * Returns an array of the keys in the cache
+     * @returns {any[]}
+     */
     keys() {
         return priv(this, "lruList").toArray().map((k) => {
             return k.key;
         }, this);
     }
 
+    /**
+     * Returns an array of the values in the cache
+     * @returns {any[]}
+     */
     values() {
         return priv(this, "lruList").toArray().map((k) => {
             return k.value;
         }, this);
     }
 
+    /**
+     * Clears the cache entirely, throwing away all values
+     *
+     * @returns {void}
+     */
     reset() {
         if (priv(this, "dispose") && priv(this, "lruList") && priv(this, "lruList").length) {
             for (const hit of priv(this, "lruList")) {
@@ -252,6 +359,11 @@ export default class LRU {
         priv(this, "length", 0); // length of items in the list
     }
 
+    /**
+     * Return an array of the cache entries ready for serialization and usage with 'destinationCache.load(arr)`
+     *
+     * @returns {SerializedEntry[]}
+     */
     dump() {
         return priv(this, "lruList").map((hit) => {
             if (!isStale(this, hit)) {
@@ -265,11 +377,19 @@ export default class LRU {
         }).toArray().filter((h) => h);
     }
 
+    /**
+     * Returns an internal lru list of entries
+     *
+     * @returns {Entry[]}
+     */
     dumpLru() {
         return priv(this, "lruList");
     }
 
-    inspect(n, opts) {
+    /**
+     * @param opts std.util.inspect options
+     */
+    inspect(opts) {
         let str = "LRUCache {";
         let extras = false;
 
@@ -341,6 +461,13 @@ export default class LRU {
         return str;
     }
 
+    /**
+     * Sets a new value for the given key. Updates the "recently used"-ness of the key
+     *
+     * @param maxAge maxAge option specific for this key
+     *
+     * @returns {boolean} Whether the key was set
+     */
     set(key, value, maxAge) {
         maxAge = maxAge || priv(this, "maxAge");
 
@@ -388,10 +515,14 @@ export default class LRU {
         return true;
     }
 
+    /**
+     * Check if a key is in the cache, without updating the recent-ness or deleting it for being stale
+     *
+     * @returns {boolean}
+     */
     has(key) {
         if (!priv(this, "cache").has(key)) {
-            return false
-                ;
+            return false;
         }
         const hit = priv(this, "cache").get(key).value;
         if (isStale(this, hit)) {
@@ -400,14 +531,29 @@ export default class LRU {
         return true;
     }
 
+    /**
+     * Gets the value of the given key. Updates the "recently used"-ness of the key
+     *
+     * @returns {any} value
+     */
     get(key) {
         return get(this, key, true);
     }
 
+    /**
+     * Returns the key value without updating the "recently used"-ness of the key
+     *
+     * @returns {any} value
+     */
     peek(key) {
         return get(this, key, false);
     }
 
+    /**
+     * Deletes the less recently used element
+     *
+     * @returns {any} poped value
+     */
     pop() {
         if (priv(this, "lruList").empty) {
             return null;
@@ -418,10 +564,21 @@ export default class LRU {
         return value;
     }
 
+    /**
+     * Deletes a key out of the cache
+     *
+     * @returns {void}
+     */
     del(key) {
         del(this, priv(this, "cache").get(key));
     }
 
+    /**
+     * Loads another cache entries array, obtained with sourceCache.dump(), into the cache.
+     * The destination cache is reset before loading new entries
+     *
+     * @returns {void}
+     */
     load(arr) {
         // reset the cache
         this.reset();
@@ -444,10 +601,14 @@ export default class LRU {
         }
     }
 
+    /**
+     * Manually iterates over the entire cache proactively pruning old entries
+     *
+     * @returns {void}
+     */
     prune() {
-        const self = this;
         priv(this, "cache").forEach((value, key) => {
-            get(self, key, false);
+            get(this, key, false);
         });
     }
 }

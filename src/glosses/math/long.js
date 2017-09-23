@@ -6,17 +6,45 @@ const TWO_PWR_32_DBL = TWO_PWR_16_DBL * TWO_PWR_16_DBL;
 const TWO_PWR_64_DBL = TWO_PWR_32_DBL * TWO_PWR_32_DBL;
 const TWO_PWR_63_DBL = TWO_PWR_64_DBL / 2;
 
+/**
+ * @typedef {object} LowHighBits
+ * @property {number} low The low (signed) 32 bits of the long
+ * @property {number} high The high (signed) 32 bits of the long
+ */
+
+/**
+ * @typedef {Long | number | string | LowHighBits} Longable
+ */
+
+/**
+ * Represents a 64 bit two's-complement integer
+ */
 export default class Long {
+    /**
+     * @param {number} [low = 0] The low (signed) 32 bits of the long
+     * @param {number} [high = 0] The high (signed) 32 bits of the long
+     * @param {boolean} [unsigned = false] Whether unsigned or not, defaults to false for signed
+     */
     constructor(low = 0, high = 0, unsigned = false) {
         this.low = low | 0;
         this.high = high | 0;
         this.unsigned = Boolean(unsigned);
     }
 
+    /**
+     * Converts the Long to a 32 bit integer, assuming it is a 32 bit integer
+     *
+     * @returns {number}
+     */
     toInt() {
         return this.unsigned ? this.low >>> 0 : this.low;
     }
 
+    /**
+     * Converts the Long to a the nearest floating-point representation of this value (double, 53 bit mantissa)
+     *
+     * @returns {number}
+     */
     toNumber() {
         if (this.unsigned) {
             return ((this.high >>> 0) * TWO_PWR_32_DBL) + (this.low >>> 0);
@@ -24,6 +52,11 @@ export default class Long {
         return this.high * TWO_PWR_32_DBL + (this.low >>> 0);
     }
 
+    /**
+     * Converts the Long to a string written in the specified radix
+     *
+     * @param {string} radix Radix (2-36), 10 by default
+     */
     toString(radix = 10) {
         if (radix < 2 || radix > 36) {
             throw new x.InvalidArgument("radix is invalid");
@@ -63,22 +96,47 @@ export default class Long {
         }
     }
 
+    /**
+     * Gets the high 32 bits as a signed integer
+     *
+     * @returns {number}
+     */
     getHighBits() {
         return this.high;
     }
 
+    /**
+     * Gets the high 32 bits as an unsigned integer
+     *
+     * @returns {number}
+     */
     getHighBitsUnsigned() {
         return this.high >>> 0;
     }
 
+    /**
+     * Gets the low 32 bits as a signed integer
+     *
+     * @returns {number}
+     */
     getLowBits() {
         return this.low;
     }
 
+    /**
+     * Gets the low 32 bits as an unsigned integer
+     *
+     * @returns {number}
+     */
     getLowBitsUnsigned() {
         return this.low >>> 0;
     }
 
+    /**
+     * Gets the number of bits needed to represent the absolute value of this Long
+     *
+     * @returns {number}
+     */
     getNumBitsAbs() {
         if (this.isNegative()) {
             return this.equals(this.constructor.MIN_VALUE) ? 64 : this.negate().getNumBitsAbs();
@@ -93,31 +151,57 @@ export default class Long {
         return this.high !== 0 ? bit + 33 : bit + 1;
     }
 
+    /**
+     * Tests if this Long's value equals zero
+     *
+     * @returns {boolean}
+     */
     isZero() {
         return this.high === 0 && this.low === 0;
     }
 
-    // Tests if this Long's value is negative.
+    /**
+     * Tests if this Long's value is negative
+     *
+     * @returns {boolean}
+     */
     isNegative() {
         return !this.unsigned && this.high < 0;
     }
 
-    // Tests if this Long's value is positive.
+    /**
+     * Tests if this Long's value is positive
+     *
+     * @returns {boolean}
+     */
     isPositive() {
         return this.unsigned || this.high >= 0;
     }
 
-    // Tests if this Long's value is odd.
+    /**
+     * Tests if this Long's value is odd
+     *
+     * @returns {boolean}
+     */
     isOdd() {
         return (this.low & 1) === 1;
     }
 
-    // Tests if this Long's value is even.
+    /**
+     * Tests if this Long's value is even
+     *
+     * @returns {boolean}
+     */
     isEven() {
         return (this.low & 1) === 0;
     }
 
-    // Tests if this Long's value equals the specified's.
+    /**
+     * Tests if this Long's value equals the specified's
+     *
+     * @param {Longable} other
+     * @returns {boolean}
+     */
     equals(other) {
         if (!is.long(other)) {
             other = this.constructor.fromValue(other);
@@ -132,22 +216,51 @@ export default class Long {
         return this.high === other.high && this.low === other.low;
     }
 
+    /**
+     * Tests if this Long's value is less than the specified's
+     *
+     * @param {Longable} other
+     * @returns {boolean}
+     */
     lessThan(other) {
         return this.compare(other) < 0;
     }
 
+    /**
+     * Tests if this Long's value is less than or equal the specified's
+     *
+     * @param {Longable} other
+     * @returns {boolean}
+     */
     lessThanOrEqual(other) {
         return this.compare(other) <= 0;
     }
 
+    /**
+     * Tests if this Long's value is greater than the specified's
+     *
+     * @param {Longable} other
+     * @returns {boolean}
+     */
     greaterThan(other) {
         return this.compare(other) > 0;
     }
 
+    /**
+     * Tests if this Long's value is greater than or equal the specified's
+     *
+     * @param {Longable} other
+     * @returns {boolean}
+     */
     greaterThanOrEqual(other) {
         return this.compare(other) >= 0;
     }
 
+    /**
+     * Compares this Long's value with the specified's.
+     * @returns {number} 0 if they are the same, 1 if the this is greater and -1 if the given one is greater
+     * @returns {boolean}
+     */
     compare(other) {
         if (!is.long(other)) {
             other = this.constructor.fromValue(other);
@@ -174,6 +287,11 @@ export default class Long {
             : 1;
     }
 
+    /**
+     * Negates this Long's value
+     *
+     * @returns {Long}
+     */
     negate() {
         if (!this.unsigned && this.equals(this.constructor.MIN_VALUE)) {
             return this.constructor.MIN_VALUE;
@@ -181,6 +299,12 @@ export default class Long {
         return this.not().add(this.constructor.ONE);
     }
 
+    /**
+     * Returns the sum of this and the specified Long
+     *
+     * @param {Longable} addend
+     * @returns {Long}
+     */
     add(addend) {
         if (!is.long(addend)) {
             addend = this.constructor.fromValue(addend);
@@ -215,6 +339,12 @@ export default class Long {
         return this.constructor.fromBits((c16 << 16) | c00, (c48 << 16) | c32, this.unsigned);
     }
 
+    /**
+     * Returns the difference of this and the specified Long
+     *
+     * @param {Longable} subtrahend
+     * @returns {Long}
+     */
     sub(subtrahend) {
         if (!is.long(subtrahend)) {
             subtrahend = this.constructor.fromValue(subtrahend);
@@ -222,6 +352,12 @@ export default class Long {
         return this.add(subtrahend.negate());
     }
 
+    /**
+     * Returns the product of this and the specified Long
+     *
+     * @param {Longable} multiplier
+     * @returns {Long}
+     */
     mul(multiplier) {
         if (this.isZero()) {
             return this.constructor.ZERO;
@@ -295,6 +431,12 @@ export default class Long {
         return this.constructor.fromBits((c16 << 16) | c00, (c48 << 16) | c32, this.unsigned);
     }
 
+    /**
+     * Returns this Long divided by the specified
+     *
+     * @param {Longable} divisor
+     * @returns {Long}
+     */
     div(divisor) {
         if (!is.long(divisor)) {
             divisor = this.constructor.fromValue(divisor);
@@ -395,6 +537,12 @@ export default class Long {
         return res;
     }
 
+    /**
+     * Returns this Long modulo the specified
+     *
+     * @param {Longable} divisor
+     * @returns {Long}
+     */
     mod(divisor) {
         if (!is.long(divisor)) {
             divisor = this.constructor.fromValue(divisor);
@@ -402,10 +550,21 @@ export default class Long {
         return this.sub(this.div(divisor).mul(divisor));
     }
 
+    /**
+     * Returns the bitwise NOT of this Long
+     *
+     * @returns {Long}
+     */
     not() {
         return this.constructor.fromBits(~this.low, ~this.high, this.unsigned);
     }
 
+    /**
+     * Returns the bitwise AND of this Long and the specified
+     *
+     * @param {Longable} other
+     * @returns {Long}
+     */
     and(other) {
         if (!is.long(other)) {
             other = this.constructor.fromValue(other);
@@ -413,6 +572,12 @@ export default class Long {
         return this.constructor.fromBits(this.low & other.low, this.high & other.high, this.unsigned);
     }
 
+    /**
+     * Returns the bitwise OR of this Long and the specifieds
+     *
+     * @param {Longable} other
+     * @returns {Long}
+     */
     or(other) {
         if (!is.long(other)) {
             other = this.constructor.fromValue(other);
@@ -420,6 +585,12 @@ export default class Long {
         return this.constructor.fromBits(this.low | other.low, this.high | other.high, this.unsigned);
     }
 
+    /**
+     * Returns the bitwise XOR of this Long and the given one
+     *
+     * @param {Longable} other
+     * @returns {Long}
+     */
     xor(other) {
         if (!is.long(other)) {
             other = this.constructor.fromValue(other);
@@ -427,6 +598,12 @@ export default class Long {
         return this.constructor.fromBits(this.low ^ other.low, this.high ^ other.high, this.unsigned);
     }
 
+    /**
+     * Returns this Long with bits shifted to the left by the given amount
+     *
+     * @param {number | Long} numBits
+     * @returns {Long}
+     */
     shl(numBits) {
         if (is.long(numBits)) {
             numBits = numBits.toInt();
@@ -444,6 +621,11 @@ export default class Long {
         return this.constructor.fromBits(0, this.low << (numBits - 32), this.unsigned);
     }
 
+    /**
+     * Returns this Long with bits arithmetically shifted to the right by the given amount
+     *
+     * @param {number | Long} numBits
+     */
     shr(numBits) {
         if (is.long(numBits)) {
             numBits = numBits.toInt();
@@ -465,6 +647,12 @@ export default class Long {
         );
     }
 
+    /**
+     * Returns this Long with bits logically shifted to the right by the given amount
+     *
+     * @param {number | Long} numBits
+     * @returns {Long}
+     */
     shru(numBits) {
         if (is.long(numBits)) {
             numBits = numBits.toInt();
@@ -488,6 +676,11 @@ export default class Long {
         return this.constructor.fromBits(high >>> (numBits - 32), 0, this.unsigned);
     }
 
+    /**
+     * Converts this Long to signed
+     *
+     * @returns {Long}
+     */
     toSigned() {
         if (!this.unsigned) {
             return this;
@@ -495,6 +688,11 @@ export default class Long {
         return this.constructor.fromBits(this.low, this.high, false);
     }
 
+    /**
+     * Converts this Long to unsigned
+     *
+     * @returns {Long}
+     */
     toUnsigned() {
         if (this.unsigned) {
             return this;
@@ -502,10 +700,21 @@ export default class Long {
         return this.constructor.fromBits(this.low, this.high, true);
     }
 
+    /**
+     * Converts this Long to an array of bytes, big-endian by default
+     *
+     * @param {boolean} [le] Whether to return an array in little-endian format
+     * @returns {number[]}
+     */
     toBytes(le) {
         return le ? this.toBytesLE() : this.toBytesBE();
     }
 
+    /**
+     * Converts this Long to an array of bytes in little-endian format
+     *
+     * @returns {number[]}
+     */
     toBytesLE() {
         const hi = this.high;
         const lo = this.low;
@@ -521,6 +730,11 @@ export default class Long {
         ];
     }
 
+    /**
+     * Converts this Long to an array of bytes in big-endian format
+     *
+     * @returns {number[]}
+     */
     toBytesBE() {
         const hi = this.high;
         const lo = this.low;
@@ -536,6 +750,13 @@ export default class Long {
         ];
     }
 
+    /**
+     * Returns a Long representing the given 32 bit integer value
+     *
+     * @param {number} value
+     * @param {boolean} [unsigned]
+     * @returns {Long}
+     */
     static fromInt(value, unsigned) {
         if (unsigned) {
             value >>>= 0;
@@ -547,6 +768,13 @@ export default class Long {
         return obj;
     }
 
+    /**
+     * Returns a Long representing the given value, provided that it is a finite number. Otherwise, zero is returned
+     *
+     * @param {number} value
+     * @param {boolean} [unsigned]
+     * @returns {Long}
+     */
     static fromNumber(value, unsigned) {
         if (isNaN(value)) {
             return unsigned ? this.UZERO : this.ZERO;
@@ -571,10 +799,26 @@ export default class Long {
         return this.fromBits((value % TWO_PWR_32_DBL) | 0, (value / TWO_PWR_32_DBL) | 0, unsigned);
     }
 
+    /**
+     * Returns a Long representing the 64 bit integer that comes by concatenating the given low and high bits.
+     * Each is assumed to use 32 bits.
+     *
+     * @param {number} lowBits
+     * @param {number} highBits
+     * @param {boolean} [unsigned]
+     * @returns {Long}
+     */
     static fromBits(lowBits, highBits, unsigned) {
         return new this(lowBits, highBits, unsigned);
     }
 
+    /**
+     * Returns a Long representation of the given string, written using the specified radix
+     *
+     * @param {string} str
+     * @param {boolean} unsigned
+     * @param {number} [radix = 10]
+     */
     static fromString(str, unsigned, radix = 10) {
         if (str.length === 0) {
             throw new x.InvalidArgument("empty string");
@@ -621,6 +865,11 @@ export default class Long {
         return result;
     }
 
+    /**
+     * Converts the specified value to a Long
+     *
+     * @param {Longable} val
+     */
     static fromValue(val) {
         if (is.long(val)) {
             return val;

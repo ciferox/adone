@@ -758,7 +758,7 @@ describe("database", "mongo", "core", function () {
                     }
                 });
 
-                specify.only("Successfully add a new secondary server to the set and ensure ha Monitoring happens", async () => {
+                specify("Successfully add a new secondary server to the set and ensure ha Monitoring happens", async () => {
                     // Contain mock server
                     let running = true;
                     let currentIsMasterIndex = 0;

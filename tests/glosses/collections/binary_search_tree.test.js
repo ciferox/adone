@@ -115,77 +115,77 @@ describe("collection", "BinarySearchTree", () => {
             l.left = ll; l.right = lr;
             r.left = rl; r.right = rr;
 
-            t.checkNodeOrdering();
+            t._checkNodeOrdering();
 
             // Let's be paranoid and check all cases...
             l.key = 12;
             expect(() => {
-                t.checkNodeOrdering();
+                t._checkNodeOrdering();
             }).to.throw();
 
             l.key = 5;
 
             r.key = 9;
             expect(() => {
-                t.checkNodeOrdering();
+                t._checkNodeOrdering();
             }).to.throw();
 
             r.key = 15;
 
             ll.key = 6;
             expect(() => {
-                t.checkNodeOrdering();
+                t._checkNodeOrdering();
             }).to.throw();
 
             ll.key = 11;
             expect(() => {
-                t.checkNodeOrdering();
+                t._checkNodeOrdering();
             }).to.throw();
 
             ll.key = 3;
 
             lr.key = 4;
             expect(() => {
-                t.checkNodeOrdering();
+                t._checkNodeOrdering();
             }).to.throw();
 
             lr.key = 11;
             expect(() => {
-                t.checkNodeOrdering();
+                t._checkNodeOrdering();
             }).to.throw();
 
             lr.key = 8;
 
             rl.key = 16;
             expect(() => {
-                t.checkNodeOrdering();
+                t._checkNodeOrdering();
             }).to.throw();
 
             rl.key = 9;
             expect(() => {
-                t.checkNodeOrdering();
+                t._checkNodeOrdering();
             }).to.throw();
 
             rl.key = 11;
 
             rr.key = 12;
             expect(() => {
-                t.checkNodeOrdering();
+                t._checkNodeOrdering();
             }).to.throw();
 
             rr.key = 7;
             expect(() => {
-                t.checkNodeOrdering();
+                t._checkNodeOrdering();
             }).to.throw();
 
             rr.key = 10.5;
             expect(() => {
-                t.checkNodeOrdering();
+                t._checkNodeOrdering();
             }).to.throw();
 
             rr.key = 42;
 
-            t.checkNodeOrdering();
+            t._checkNodeOrdering();
         });
 
         it("Checking if a tree's internal pointers (i.e. parents) are correct", () => {
@@ -202,37 +202,37 @@ describe("collection", "BinarySearchTree", () => {
             r.left = rl; r.right = rr;
 
             expect(() => {
-                t.checkInternalPointers();
+                t._checkInternalPointers();
             }).to.throw();
 
             l.parent = t;
             expect(() => {
-                t.checkInternalPointers();
+                t._checkInternalPointers();
             }).to.throw();
 
             r.parent = t;
             expect(() => {
-                t.checkInternalPointers();
+                t._checkInternalPointers();
             }).to.throw();
 
             ll.parent = l;
             expect(() => {
-                t.checkInternalPointers();
+                t._checkInternalPointers();
             }).to.throw();
 
             lr.parent = l;
             expect(() => {
-                t.checkInternalPointers();
+                t._checkInternalPointers();
             }).to.throw();
 
             rl.parent = r;
             expect(() => {
-                t.checkInternalPointers();
+                t._checkInternalPointers();
             }).to.throw();
 
             rr.parent = r;
 
-            t.checkInternalPointers();
+            t._checkInternalPointers();
         });
 
         it("Can get the number of inserted keys", () => {

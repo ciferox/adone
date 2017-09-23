@@ -1,16 +1,33 @@
 const { is } = adone;
 
+/**
+ * Represents a Map that keeps keys only for a specified interval of time
+ */
 export default class TimedoutMap extends Map {
+    /**
+     * @param {number} [timeout = number] maximum age of the keys, 1000 by default
+     * @param {Function} [callback] callback that is called with each key when the timeout is passed
+     */
     constructor(timeout = 1000, callback = null) {
         super();
         this._timeout = timeout;
         this._callback = callback || ((key) => super.delete(key));
     }
 
+    /**
+     * Gets the timeout
+     *
+     * @returns {number}
+     */
     getTimeout() {
         return this._timeout;
     }
 
+    /**
+     * Sets the timeout
+     *
+     * @param {number} timeout
+     */
     setTimeout(timeout) {
         this._timeout = timeout;
     }
@@ -23,6 +40,7 @@ export default class TimedoutMap extends Map {
         const newObj = { value };
         super.set(key, newObj);
         newObj.timer = adone.setTimeout(this._callback, this._timeout, key);
+        return this;
     }
 
     get(key) {
@@ -37,6 +55,7 @@ export default class TimedoutMap extends Map {
         super.forEach((obj, key) => {
             callback.call(thisArg, obj.value, key, this);
         });
+        return this;
     }
 
     *entries() {

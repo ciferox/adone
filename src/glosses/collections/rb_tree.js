@@ -291,12 +291,16 @@ class RedBlackTreeIterator {
         this._stack = stack;
     }
 
-    // Test if iterator is valid
+    /**
+     * Checks if the iterator is valid
+     */
     get valid() {
         return this._stack.length > 0;
     }
 
-    // Node of the iterator
+    /**
+     * The value of the node at the iterator's current position
+     */
     get node() {
         if (this._stack.length > 0) {
             return this._stack[this._stack.length - 1];
@@ -304,23 +308,29 @@ class RedBlackTreeIterator {
         return null;
     }
 
-    // Returns key
+    /**
+     * The key of the item referenced by the iterator
+     */
     get key() {
         if (this._stack.length > 0) {
             return this._stack[this._stack.length - 1].key;
         }
-
     }
 
-    // Returns value
+    /**
+     * The value of the item referenced by the iterator
+     */
     get value() {
         if (this._stack.length > 0) {
             return this._stack[this._stack.length - 1].value;
         }
-
     }
 
-    // Returns the position of this iterator in the sorted list
+    /**
+     * Returns the position of this iterator in the sequence
+     *
+     * @returns {number}
+     */
     get index() {
         let idx = 0;
         const stack = this._stack;
@@ -344,7 +354,9 @@ class RedBlackTreeIterator {
         return idx;
     }
 
-    // Checks if iterator is at end of tree
+    /**
+     * If true, then the iterator is not at the end of the sequence
+     */
     get hasNext() {
         const stack = this._stack;
         if (stack.length === 0) {
@@ -361,7 +373,9 @@ class RedBlackTreeIterator {
         return false;
     }
 
-    // Checks if iterator is at start of tree
+    /**
+     * If true, then the iterator is not at the beginning of the sequence
+     */
     get hasPrev() {
         const stack = this._stack;
         if (stack.length === 0) {
@@ -378,12 +392,18 @@ class RedBlackTreeIterator {
         return false;
     }
 
-    // Makes a copy of an iterator
+    /**
+     * Makes a copy of the iterator
+     */
     clone() {
         return new RedBlackTreeIterator(this.tree, this._stack.slice());
     }
 
-    // Removes item at iterator from tree
+    /**
+     * Removes the item at the position of the iterator
+     *
+     * @returns {RedBlackTree} A new binary search tree with iter's item removed
+     */
     remove() {
         const stack = this._stack;
         if (stack.length === 0) {
@@ -486,7 +506,9 @@ class RedBlackTreeIterator {
         return new RedBlackTreeRef(this.tree._compare, cstack[0]);
     }
 
-    // Advances iterator to next element in list
+    /**
+     * Advances the iterator to the next position
+     */
     next() {
         const stack = this._stack;
         if (stack.length === 0) {
@@ -508,7 +530,11 @@ class RedBlackTreeIterator {
         }
     }
 
-    // Update value
+    /**
+     * Updates the value of the node in the tree at this iterator
+     *
+     * @returns {RedBlackTree} A new binary search tree with the corresponding node updated
+     */
     update(value) {
         const stack = this._stack;
         if (stack.length === 0) {
@@ -528,7 +554,9 @@ class RedBlackTreeIterator {
         return new RedBlackTreeRef(this.tree._compare, cstack[0]);
     }
 
-    // Moves iterator backward one element
+    /**
+     * Moves the iterator backward one element
+     */
     prev() {
         const stack = this._stack;
         if (stack.length === 0) {
@@ -557,6 +585,11 @@ export default class RedBlackTree {
         this.root = root;
     }
 
+    /**
+     * A sorted array of all the keys in the tree
+     *
+     * @returns {any[]}
+     */
     get keys() {
         const result = [];
         this.forEach((k) => {
@@ -565,6 +598,11 @@ export default class RedBlackTree {
         return result;
     }
 
+    /**
+     * An array of all the values in the tree
+     *
+     * @returns {any[]}
+     */
     get values() {
         const result = [];
         this.forEach((k, v) => {
@@ -573,7 +611,11 @@ export default class RedBlackTree {
         return result;
     }
 
-    // Returns the number of nodes in the tree
+    /**
+     * The number of items in the tree
+     *
+     * @returns {number}
+     */
     get length() {
         if (this.root) {
             return this.root._count;
@@ -581,7 +623,11 @@ export default class RedBlackTree {
         return 0;
     }
 
-    // First item in list
+    /**
+     * An iterator pointing to the first element in the tree
+     *
+     * @returns {RedBlackTreeIterator}
+     */
     get begin() {
         const stack = [];
         let n = this.root;
@@ -592,7 +638,11 @@ export default class RedBlackTree {
         return new RedBlackTreeIterator(this, stack);
     }
 
-    // Last item in list
+    /**
+     * An iterator pointing to the last element in the tree
+     *
+     * @returns {RedBlackTreeIterator}
+     */
     get end() {
         const stack = [];
         let n = this.root;
@@ -603,7 +653,11 @@ export default class RedBlackTree {
         return new RedBlackTreeIterator(this, stack);
     }
 
-    // Insert a new item into the tree
+    /**
+     * Creates a new tree with the new pair inserted
+     *
+     * @returns {RedBlackTree} A new tree with key and value inserted
+     */
     insert(key, value) {
         const cmp = this._compare;
         //Find point to insert new node at
@@ -768,6 +822,15 @@ export default class RedBlackTree {
         return new RedBlackTree(cmp, nStack[0]);
     }
 
+    /**
+     * Walks a visitor function over the nodes of the tree in order
+     *
+     * @param {(key: any, value: any) => any} visit A callback that gets executed on each node.
+     *                                              If a truthy value is returned from the visitor, then iteration is stopped.
+     * @param {any} [lo] An optional start of the range to visit (inclusive)
+     * @param {any} [hi] An optional end of the range to visit (non-inclusive)
+     * @returns The last value returned by the callback
+     */
     forEach(visit, lo, hi) {
         if (!this.root) {
             return;
@@ -785,7 +848,11 @@ export default class RedBlackTree {
         }
     }
 
-    // Find the ith item in the tree
+    /**
+     * Finds an iterator starting at the given element
+     *
+     * @returns {RedBlackTreeIterator} An iterator starting at position
+     */
     at(idx) {
         if (idx < 0) {
             return new RedBlackTreeIterator(this, []);
@@ -817,6 +884,11 @@ export default class RedBlackTree {
         return new RedBlackTreeIterator(this, []);
     }
 
+    /**
+     * Finds the first item in the tree whose key is >= key
+     *
+     * @returns {RedBlackTreeIterator} An iterator at the given element.
+     */
     ge(key) {
         const cmp = this._compare;
         let n = this.root;
@@ -838,6 +910,11 @@ export default class RedBlackTree {
         return new RedBlackTreeIterator(this, stack);
     }
 
+    /**
+     * Finds the first item in the tree whose key is > key
+     *
+     * @returns {RedBlackTreeIterator} An iterator at the given element.
+     */
     gt(key) {
         const cmp = this._compare;
         let n = this.root;
@@ -859,6 +936,11 @@ export default class RedBlackTree {
         return new RedBlackTreeIterator(this, stack);
     }
 
+    /**
+     * Finds the first item in the tree whose key is < key
+     *
+     * @returns {RedBlackTreeIterator} An iterator at the given element.
+     */
     lt(key) {
         const cmp = this._compare;
         let n = this.root;
@@ -880,6 +962,11 @@ export default class RedBlackTree {
         return new RedBlackTreeIterator(this, stack);
     }
 
+    /**
+     * Finds the first item in the tree whose key is <= key
+     *
+     * @returns {RedBlackTreeIterator} An iterator at the given element.
+     */
     le(key) {
         const cmp = this._compare;
         let n = this.root;
@@ -901,7 +988,11 @@ export default class RedBlackTree {
         return new RedBlackTreeIterator(this, stack);
     }
 
-    // Finds the item with key if it exists
+    /**
+     * Returns an iterator pointing to the first item in the tree with key, otherwise null.
+     *
+     * @returns {RedBlackTreeIterator}
+     */
     find(key) {
         const cmp = this._compare;
         let n = this.root;
@@ -921,7 +1012,11 @@ export default class RedBlackTree {
         return new RedBlackTreeIterator(this, []);
     }
 
-    // Removes item with key from tree
+    /**
+     * Removes the first item with key in the tree
+     *
+     * @returns {RedBlackTree}
+     */
     remove(key) {
         const iter = this.find(key);
         if (iter) {
@@ -930,7 +1025,9 @@ export default class RedBlackTree {
         return this;
     }
 
-    // Returns the item at `key`
+    /**
+     * Retrieves the value associated to the given key
+     */
     get(key) {
         const cmp = this._compare;
         let n = this.root;

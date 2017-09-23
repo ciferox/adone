@@ -1,23 +1,34 @@
+/**
+ * Represents the node of a stack
+ */
+class Node {
+    constructor(data, next) {
+        this.data = data;
+        this.next = next;
+    }
+}
+
+/**
+ * Represents a stack
+ */
 export default class Stack {
-    constructor(iterable) {
+    constructor() {
         this.head = null;
         this.length = 0;
-
-        if (iterable) {
-            this.extend(iterable);
-        }
     }
 
-    extend(iterable) {
-        for (const v of iterable) {
-            this.push(v);
-        }
-    }
-
+    /**
+     * Whether the stack is empty
+     *
+     * @returns {boolean}
+     */
     get empty() {
         return this.length === 0;
     }
 
+    /**
+     * The top element of the stack
+     */
     get top() {
         if (!this.head) {
             return;
@@ -25,11 +36,22 @@ export default class Stack {
         return this.head.data;
     }
 
+    /**
+     * Inserts a new element
+     *
+     * @returns {this}
+     */
     push(v) {
-        this.head = { next: this.head, data: v };
-        return ++this.length;
+        this.head = new Node(v, this.head);
+        ++this.length;
+        return this;
     }
 
+    /**
+     * Removes the top element
+     *
+     * @returns {any} top element value
+     */
     pop() {
         if (!this.head) {
             return;
@@ -40,11 +62,27 @@ export default class Stack {
         return value;
     }
 
+    /**
+     * Returns an iterator over the values
+     */
     *[Symbol.iterator]() {
         let t = this.head;
         while (t) {
             yield t.data;
             t = t.next;
         }
+    }
+
+    /**
+     * Creates a stack and pushed all the values from the given iterable object
+     *
+     * @returns {Stack}
+     */
+    static from(iterable) {
+        const s = new Stack();
+        for (const v of iterable) {
+            s.push(v);
+        }
+        return s;
     }
 }

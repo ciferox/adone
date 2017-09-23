@@ -1,31 +1,48 @@
-const { is, std: { stream: { Duplex: DuplexStream } } } = adone;
+const { is, std: { stream: { Duplex: DuplexStream } }, promise } = adone;
 
+/**
+ * Represents a Node.js Buffer list collector, reader and streamer with callback/promise interface support
+ */
 export default class BufferList extends DuplexStream {
-    constructor(callback) {
+    /**
+     * @param {Buffer | Function} initial if a buffer given then it is appended to the list, if a callback given then
+     * it will be called with all the collected data when the stream end or with an error if will occur
+     *
+     */
+    constructor(initial) {
         super();
 
         this._bufs = [];
+
+        /**
+         * The length of the list in bytes.
+         * This is the sum of the lengths of all of the buffers contained in the list,
+         * minus any initial offset for a semi-consumed buffer at the beginning.
+         * Should accurately represent the total number of bytes that can be read from the list
+         */
         this.length = 0;
 
-        if (is.function(callback)) {
-            this._callback = callback;
+        this._deferred = promise.defer();
 
-            const piper = (err) => {
-                if (this._callback) {
-                    this._callback(err);
-                    this._callback = null;
-                }
-            };
+        this.then = this._deferred.promise.then.bind(this._deferred.promise);
+        this.reject = this._deferred.promise.catch.bind(this._deferred.promise);
 
-            this.on("pipe", function onPipe(src) {
-                src.on("error", piper);
-            });
-            this.on("unpipe", function onUnpipe(src) {
-                src.removeListener("error", piper);
-            });
+        if (is.function(initial)) {
+            promise.nodeify(this._deferred.promise, initial);
         } else {
-            this.append(callback);
+            this.append(initial);
         }
+
+        const piper = (err) => {
+            this._deferred.reject(err);
+        };
+
+        this.on("pipe", function onPipe(src) {
+            src.on("error", piper);
+        });
+        this.on("unpipe", function onUnpipe(src) {
+            src.removeListener("error", piper);
+        });
     }
 
     _offset(offset) {
@@ -44,6 +61,11 @@ export default class BufferList extends DuplexStream {
         }
     }
 
+    /**
+     * Adds an additional buffer or BufferList to the internal list
+     *
+     * @returns {this}
+     */
     append(buf) {
         let i = 0;
 
@@ -94,19 +116,29 @@ export default class BufferList extends DuplexStream {
         this.consume(size);
     }
 
+    /**
+     * Ends the stream
+     */
     end(chunk) {
         super.end(chunk);
-
-        if (this._callback) {
-            this._callback(null, this.slice());
-            this._callback = null;
-        }
+        this._deferred.resolve(this.slice());
     }
 
+    /**
+     * Returns the byte at the specified index
+     *
+     * @return {number}
+     */
     get(index) {
         return this.slice(index, index + 1)[0];
     }
 
+    /**
+     * Returns a new Buffer object containing the bytes within the range specified.
+     *
+     * @param {number} [start] slice from
+     * @param {number} [end] slice to
+     */
     slice(start, end) {
         if (is.number(start) && start < 0) {
             start += this.length;
@@ -117,6 +149,16 @@ export default class BufferList extends DuplexStream {
         return this.copy(null, 0, start, end);
     }
 
+    /**
+     * Copies the content of the list in the dest buffer
+     * starting from destStart and containing the bytes within the range specified with srcStart to srcEnd
+     *
+     * @param {Buffer} dst
+     * @param {number} [dstStart] writes from this position
+     * @param {number} [srcStart] reads bytes from this position
+     * @param {number} [srcEnd]  read bytes to this position
+     * @returns {Buffer}
+     */
     copy(dst, dstStart, srcStart, srcEnd) {
         if (!is.number(srcStart) || srcStart < 0) {
             srcStart = 0;
@@ -189,6 +231,14 @@ export default class BufferList extends DuplexStream {
         return dst;
     }
 
+    /**
+     * Returns a new BufferList object containing the bytes within the range specified.
+     * No copies will be performed. All buffers in the result share memory with the original list.
+     *
+     * @param {number} start slice from
+     * @param {number} end slice to
+     * @returns {BufferList}
+     */
     shallowSlice(start, end) {
         start = start || 0;
         end = end || this.length;
@@ -218,10 +268,20 @@ export default class BufferList extends DuplexStream {
         return new BufferList(buffers);
     }
 
+    /**
+     * Return a string representation of the buffer
+     *
+     * @param {string} encoding
+     * @param {number} start
+     * @param {number} end
+     */
     toString(encoding, start, end) {
         return this.slice(start, end).toString(encoding);
     }
 
+    /**
+     * Shifts bytes off the start of the list
+     */
     consume(bytes) {
         while (this._bufs.length) {
             if (bytes >= this._bufs[0].length) {
@@ -237,6 +297,9 @@ export default class BufferList extends DuplexStream {
         return this;
     }
 
+    /**
+     * Performs a shallow-copy of the list
+     */
     duplicate() {
         let i = 0;
         const copy = new BufferList();
@@ -248,6 +311,9 @@ export default class BufferList extends DuplexStream {
         return copy;
     }
 
+    /**
+     * Destroys the stream
+     */
     destroy() {
         this._bufs.length = 0;
         this.length = 0;
@@ -255,8 +321,10 @@ export default class BufferList extends DuplexStream {
     }
 }
 
-
-
+/**
+ * All of the standard byte-reading methods of the Buffer interface are implemented
+ * and will operate across internal Buffer boundaries transparently
+ */
 const methods = {
     readDoubleBE: 8,
     readDoubleLE: 8,

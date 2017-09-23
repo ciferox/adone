@@ -5,12 +5,12 @@ export default class Executor {
         this.buffer = new collection.LinkedList();
         this.ready = false;
 
-        this.queue = new collection.BQueue();
+        this.queue = new collection.AsyncQueue();
 
         (async () => {
             for (;;) {
                 // eslint-disable-next-line no-await-in-loop
-                const data = await this.queue.shift();
+                const data = await this.queue.pop();
                 try {
                     const res = data.task();
                     if (is.promise(res)) {

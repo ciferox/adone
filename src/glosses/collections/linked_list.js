@@ -2,6 +2,9 @@ const { is, x } = adone;
 
 const empty = Symbol.for("linkedlist:empty");
 
+/**
+ * Represents the node of a linked list
+ */
 class Node {
     constructor(prev = null, next = null, value = empty) {
         this.next = next;
@@ -10,6 +13,9 @@ class Node {
     }
 }
 
+/**
+ * Represents a linked list
+ */
 export default class LinkedList {
     constructor(maxLength) {
         if (!maxLength || !is.finite(maxLength)) {
@@ -43,14 +49,29 @@ export default class LinkedList {
         }
     }
 
+    /**
+     * Whether the list is full
+     *
+     * @returns {boolean}
+     */
     get full() {
         return this.length === this.maxLength;
     }
 
+    /**
+     * Whether the list is empty
+     *
+     * @returns {boolean}
+     */
     get empty() {
         return this.length === 0;
     }
 
+    /**
+     * Resizes the list
+     *
+     * @param {number} newLength
+     */
     resize(newLength) {
         if (newLength === this.maxLength) {
             return this;
@@ -88,6 +109,11 @@ export default class LinkedList {
         return this;
     }
 
+    /**
+     * Adds a new node to the end
+     *
+     * @returns {Node} Added node
+     */
     push(value) {
         if (this.full) {
             if (this.autoresize) {
@@ -103,6 +129,11 @@ export default class LinkedList {
         return this.tail;
     }
 
+    /**
+     * Removes the last node
+     *
+     * @returns {any} the last node's value
+     */
     pop() {
         if (this.empty) {
             return;
@@ -115,6 +146,11 @@ export default class LinkedList {
         return value;
     }
 
+    /**
+     * Removes the first node
+     *
+     * @returns {any} the first node's value
+     */
     shift() {
         if (this.empty) {
             return;
@@ -127,6 +163,11 @@ export default class LinkedList {
         return value;
     }
 
+    /**
+     * Inserts a new node at the beginning of the list
+     *
+     * @returns {Node} Added node
+     */
     unshift(value) {
         if (this.full) {
             if (this.autoresize) {
@@ -141,6 +182,11 @@ export default class LinkedList {
         return this.head;
     }
 
+    /**
+     * Moves the given node to the end of the list
+     *
+     * @returns {void}
+     */
     pushNode(node) {
         if (node === this.tail) {
             return;
@@ -158,6 +204,11 @@ export default class LinkedList {
         this.tail.next = node;
     }
 
+    /**
+     * Moved the given node to the beginning of the list
+     *
+     * @returns {void}
+     */
     unshiftNode(node) {
         if (node === this.head) {
             return;
@@ -177,6 +228,11 @@ export default class LinkedList {
         this.head = node;
     }
 
+    /**
+     * Removes the given node from the list
+     *
+     * @returns {void}
+     */
     removeNode(node) {
         if (node === this.tail) {
             this.tail.value = empty;
@@ -190,6 +246,12 @@ export default class LinkedList {
         --this.length;
     }
 
+    /**
+     * Clears the list
+     *
+     * @param {boolean} [strong = false] Whether to reset all the node's values
+     * @returns {void}
+     */
     clear(strong = false) {
         if (strong) {
             for (let i = 0, n = this.length, cursor = this.head; i < n; ++i, cursor = cursor.next) {
@@ -203,6 +265,11 @@ export default class LinkedList {
         }
     }
 
+    /**
+     * Convers the list to an array
+     *
+     * @returns {any[]} all the elements of the list
+     */
     toArray() {
         const f = [];
         for (let i = 0, cursor = this.head, n = this.length; i < n; ++i, cursor = cursor.next) {
@@ -211,6 +278,11 @@ export default class LinkedList {
         return f;
     }
 
+    /**
+     * The first element of the list
+     *
+     * @returns {any} the first node's value
+     */
     get front() {
         if (this.length === 0) {
             throw new x.IllegalState("Empty");
@@ -218,6 +290,11 @@ export default class LinkedList {
         return this.head.value;
     }
 
+    /**
+     * The last element of the list
+     *
+     * @returns {any} the last node's value
+     */
     get back() {
         if (this.length === 0) {
             throw new x.IllegalState("Empty");
@@ -225,6 +302,9 @@ export default class LinkedList {
         return this.tail.value;
     }
 
+    /**
+     * Returns an iterator over the list elements
+     */
     [Symbol.iterator]() {
         let cursor = this.head;
         let i = 0;
@@ -240,6 +320,12 @@ export default class LinkedList {
         };
     }
 
+    /**
+     * Returns the next node for the given node
+     *
+     * @param {Node} node
+     * @returns {Node} the next node
+     */
     nextNode(node) {
         if (!node) {
             return this.empty ? null : this.head;
@@ -250,6 +336,13 @@ export default class LinkedList {
         return null;
     }
 
+    /**
+     * Invokes the given callback for each value from the beginning to the end (much faster than for-of).
+     * If the given function returns false it stops iterating.
+     *
+     * @param {(value: any, idx: number) => void} callback
+     * @returns {void}
+     */
     forEach(callback) {
         let cursor = this.head;
         for (let i = 0; i < this.length; ++i) {
@@ -261,6 +354,12 @@ export default class LinkedList {
         }
     }
 
+    /**
+     * Maps this linked list to a new one using the given function
+     *
+     * @param {(value: any, idx: number) => any} fn
+     * @returns {LinkedList}
+     */
     map(fn) {
         const res = new LinkedList();
         this.forEach((value, idx) => {
@@ -270,4 +369,7 @@ export default class LinkedList {
     }
 }
 
+/**
+ * Default length of a new created linked list
+ */
 LinkedList.DEFAULT_LENGTH = 16;

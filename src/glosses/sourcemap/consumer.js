@@ -169,8 +169,8 @@ export class BasicSourceMapConsumer extends SourceMapConsumer {
                 return source;
             });
 
-        this._names = collection.ArraySet.fromArray(names.map(String), true);
-        this._sources = collection.ArraySet.fromArray(sources, true);
+        this._names = collection.ArraySet.from(names.map(String), true);
+        this._sources = collection.ArraySet.from(sources, true);
         this.sourceRoot = sourceRoot;
         this.sourcesContent = sourcesContent;
         this._mappings = mappings;
@@ -179,11 +179,11 @@ export class BasicSourceMapConsumer extends SourceMapConsumer {
 
     static fromSourceMap(sourceMap) {
         const smc = Object.create(BasicSourceMapConsumer.prototype);
-        const names = smc._names = collection.ArraySet.fromArray(
+        const names = smc._names = collection.ArraySet.from(
             sourceMap._names.toArray(),
             true
         );
-        const sources = smc._sources = collection.ArraySet.fromArray(
+        const sources = smc._sources = collection.ArraySet.from(
             sourceMap._sources.toArray(),
             true
         );
@@ -414,7 +414,7 @@ export class BasicSourceMapConsumer extends SourceMapConsumer {
         if (!this.sourcesContent) {
             return false;
         }
-        if (this.sourcesContent.length < this._sources.size()) {
+        if (this.sourcesContent.length < this._sources.length) {
             return false;
         }
         return !this.sourcesContent.some(is.nil);

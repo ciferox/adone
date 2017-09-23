@@ -193,7 +193,17 @@ const utfx = {
     }
 };
 
+/**
+ * @typedef {string | ByteArray | Buffer | Uint8Array | ArrayBuffer} Wrappable
+ */
+
 export default class ByteArray {
+    /**
+     * Constructs a new ByteArray
+     *
+     * @param {number} capacity Initial capacity. Defaults to ByteBuffer.DEFAULT_CAPACITY(64)
+     * @param {boolean} noAssert Whether to skip assertions of offsets and values. Defaults to ByteBuffer.DEFAULT_NOASSERT(false)
+     */
     constructor(capacity = ByteArray.DEFAULT_CAPACITY, noAssert = ByteArray.DEFAULT_NOASSERT) {
         if (!noAssert) {
             capacity = capacity | 0;
@@ -210,6 +220,9 @@ export default class ByteArray {
         this.noAssert = noAssert;
     }
 
+    /**
+     *
+     */
     readBitSet(offset) {
         const relative = is.undefined(offset);
         if (relative) {
@@ -253,10 +266,10 @@ export default class ByteArray {
 
     /**
      * Reads the specified number of bytes.
+     *
      * @param {number} length Number of bytes to read
      * @param {number=} offset Offset to read from. Will use and increase {@link ByteArray#offset} by `length` if omitted.
-     * @returns {!ByteArray}
-     * @expose
+     * @returns {ByteArray}
      */
     read(length, offset) {
         const relative = is.undefined(offset);
@@ -279,6 +292,12 @@ export default class ByteArray {
         return slice;
     }
 
+    /**
+     * Reads an 8bit signed integer
+     *
+     * @param {number} [offset] Offset to read from
+     * @returns {number}
+     */
     readInt8(offset) {
         offset = this._checkRead(offset, 1);
         let value = this.buffer[offset];
@@ -288,11 +307,23 @@ export default class ByteArray {
         return value;
     }
 
+    /**
+     * Reads an 8bit unsigned integer
+     *
+     * @param {number} [offset] Offset to read from
+     * @returns {number}
+     */
     readUInt8(offset) {
         offset = this._checkRead(offset, 1);
         return this.buffer[offset];
     }
 
+    /**
+     * Reads a 16bit signed le integer
+     *
+     * @param {number} [offset] Offset to read from
+     * @returns {number}
+     */
     readInt16LE(offset) {
         offset = this._checkRead(offset, 2);
         let value = 0;
@@ -304,6 +335,12 @@ export default class ByteArray {
         return value;
     }
 
+    /**
+     * Reads a 16bit signed be integer
+     *
+     * @param {number} [offset] Offset to read from
+     * @returns {number}
+     */
     readInt16BE(offset) {
         offset = this._checkRead(offset, 2);
         let value = 0;
@@ -315,6 +352,12 @@ export default class ByteArray {
         return value;
     }
 
+    /**
+     * Reads a 16bit unsigned le integer
+     *
+     * @param {number} [offset] Offset to read from
+     * @returns {number}
+     */
     readUInt16LE(offset) {
         offset = this._checkRead(offset, 2);
         let value = 0;
@@ -323,6 +366,12 @@ export default class ByteArray {
         return value;
     }
 
+    /**
+     * Reads a 16bit unsigned be integer
+     *
+     * @param {number} [offset] Offset to read from
+     * @returns {number}
+     */
     readUInt16BE(offset) {
         offset = this._checkRead(offset, 2);
         let value = 0;
@@ -331,6 +380,12 @@ export default class ByteArray {
         return value;
     }
 
+    /**
+     * Reads a 32bit signed le integer
+     *
+     * @param {number} [offset] Offset to read from
+     * @returns {number}
+     */
     readInt32LE(offset) {
         offset = this._checkRead(offset, 4);
         let value = 0;
@@ -342,6 +397,12 @@ export default class ByteArray {
         return value;
     }
 
+    /**
+     * Reads a 32bit signed be integer
+     *
+     * @param {number} [offset] Offset to read from
+     * @returns {number}
+     */
     readInt32BE(offset) {
         offset = this._checkRead(offset, 4);
         let value = 0;
@@ -353,6 +414,12 @@ export default class ByteArray {
         return value;
     }
 
+    /**
+     * Reads a 32bit unsigned le integer
+     *
+     * @param {number} [offset] Offset to read from
+     * @returns {number}
+     */
     readUInt32LE(offset) {
         offset = this._checkRead(offset, 4);
         let value = 0;
@@ -363,6 +430,12 @@ export default class ByteArray {
         return value;
     }
 
+    /**
+     * Reads a 32bit unsigned be integer
+     *
+     * @param {number} [offset] Offset to read from
+     * @returns {number}
+     */
     readUInt32BE(offset) {
         offset = this._checkRead(offset, 4);
         let value = 0;
@@ -373,6 +446,12 @@ export default class ByteArray {
         return value;
     }
 
+    /**
+     * Reads a 64bit signed le integer as math.Long
+     *
+     * @param {number} [offset] Offset to read from
+     * @returns {adone.math.Long}
+     */
     readInt64LE(offset) {
         offset = this._checkRead(offset, 8);
         let lo = 0;
@@ -389,6 +468,12 @@ export default class ByteArray {
         return new Long(lo, hi, false);
     }
 
+    /**
+     * Reads a 64bit signed be integer as math.Long
+     *
+     * @param {number} [offset] Offset to read from
+     * @returns {adone.math.Long}
+     */
     readInt64BE(offset) {
         offset = this._checkRead(offset, 8);
         let lo = 0;
@@ -405,6 +490,12 @@ export default class ByteArray {
         return new Long(lo, hi, false);
     }
 
+    /**
+     * Reads a 64bit unsigned le integer as math.Long
+     *
+     * @param {number} [offset] Offset to read from
+     * @returns {adone.math.Long}
+     */
     readUInt64LE(offset) {
         offset = this._checkRead(offset, 8);
         let lo = 0;
@@ -421,6 +512,12 @@ export default class ByteArray {
         return new Long(lo, hi, true);
     }
 
+    /**
+     * Reads a 64bit unsigned be integer as math.Long
+     *
+     * @param {number} [offset] Offset to read from
+     * @returns {adone.math.Long}
+     */
     readUInt64BE(offset) {
         offset = this._checkRead(offset, 8);
         let lo = 0;
@@ -437,27 +534,60 @@ export default class ByteArray {
         return new Long(lo, hi, true);
     }
 
+    /**
+     * Reads an le float
+     *
+     * @param {number} [offset] Offset to read from
+     * @returns {number}
+     */
     readFloatLE(offset) {
         offset = this._checkRead(offset, 4);
         return this.buffer.readFloatLE(offset, true);
     }
 
+    /**
+     * Reads a be float
+     *
+     * @param {number} [offset] Offset to read from
+     * @returns {number}
+     */
     readFloatBE(offset) {
         offset = this._checkRead(offset, 4);
         return this.buffer.readFloatBE(offset, true);
     }
 
+    /**
+     * Reads a signed le double
+     *
+     * @param {number} [offset] Offset to read from
+     * @returns {number}
+     */
     readDoubleLE(offset) {
         offset = this._checkRead(offset, 8);
         return this.buffer.readDoubleLE(offset, true);
     }
 
+    /**
+     * Reads a signed be double
+     *
+     * @param {number} [offset] Offset to read from
+     * @returns {number}
+     */
     readDoubleBE(offset) {
         offset = this._checkRead(offset, 8);
         return this.buffer.readDoubleBE(offset, true);
     }
 
-    // Appends some data to this ByteArray. This will overwrite any contents behind the specified offset up to the appended data's length.
+    /**
+     * Appends some data to this ByteArray.
+     * This will overwrite any contents behind the specified offset up to the appended data's length.
+     *
+     * @param {Wrappable} source The source write from
+     * @param {number} offset Offset to write to
+     * @param {number} length length to read from the source
+     * @param {string} encoding encoding to use for wrapping the source in bytearray
+     *
+     */
     write(source, offset, length, encoding) {
         const relative = is.undefined(offset);
         if (relative) {
