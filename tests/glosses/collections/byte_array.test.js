@@ -791,7 +791,7 @@ describe("ByteArray", () => {
             assert.equal(bb.toString("base64"), "YWI=");
             assert.equal(bb.toString("utf8"), "ab");
             assert.equal(bb.toString("debug").substr(0, 7), "<61 62>");
-            assert.equal(bb.toString(), `${type === ArrayBuffer ? (accessor === DataView ? "ByteBufferAB_DataView" : "ByteBufferAB") : "ByteBufferNB"}(offset=0,markedOffset=-1,limit=2,capacity=3)`);
+            assert.equal(bb.toString(), `${type === ArrayBuffer ? "ByteArrayAB" : "ByteArrayNB"}(offset=0,markedOffset=-1,limit=2,capacity=3)`);
             assert.strictEqual(bb.offset, 0);
         });
 

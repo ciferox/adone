@@ -77,7 +77,7 @@ export default class PriorityQueue {
     /**
      * Deletes the given element from the queue
      *
-     * @returns {any} removed value
+     * @returns {this}
      */
     delete(item) {
         // ...

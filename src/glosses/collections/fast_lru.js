@@ -102,6 +102,13 @@ export default class FastLRU {
     }
 
     /**
+     * Returns the entries iterator
+     */
+    entries() {
+        return this.cache.entries();
+    }
+
+    /**
      * Clears the cache
      */
     clear() {

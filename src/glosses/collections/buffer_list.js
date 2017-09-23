@@ -1,11 +1,15 @@
 const { is, std: { stream: { Duplex: DuplexStream } }, promise } = adone;
 
 /**
+ * @typedef {Buffer | BufferList | string | number | Array<Buffer | BufferList | string | number>} Appendable
+ */
+
+/**
  * Represents a Node.js Buffer list collector, reader and streamer with callback/promise interface support
  */
 export default class BufferList extends DuplexStream {
     /**
-     * @param {Buffer | Function} initial if a buffer given then it is appended to the list, if a callback given then
+     * @param {Appendable | Function} initial if a value given then it is appended to the list, if a callback given then
      * it will be called with all the collected data when the stream end or with an error if will occur
      *
      */
@@ -64,6 +68,7 @@ export default class BufferList extends DuplexStream {
     /**
      * Adds an additional buffer or BufferList to the internal list
      *
+     * @param {Appendable} buf
      * @returns {this}
      */
     append(buf) {

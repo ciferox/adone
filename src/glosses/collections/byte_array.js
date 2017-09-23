@@ -197,12 +197,16 @@ const utfx = {
  * @typedef {string | ByteArray | Buffer | Uint8Array | ArrayBuffer} Wrappable
  */
 
+/**
+ * @typedef {"c" | "b"} Metrics
+ */
+
 export default class ByteArray {
     /**
      * Constructs a new ByteArray
      *
-     * @param {number} capacity Initial capacity. Defaults to ByteBuffer.DEFAULT_CAPACITY(64)
-     * @param {boolean} noAssert Whether to skip assertions of offsets and values. Defaults to ByteBuffer.DEFAULT_NOASSERT(false)
+     * @param {number} [capacity] Initial capacity. Defaults to ByteArray.DEFAULT_CAPACITY(64)
+     * @param {boolean} [noAssert] Whether to skip assertions of offsets and values. Defaults to ByteArray.DEFAULT_NOASSERT(false)
      */
     constructor(capacity = ByteArray.DEFAULT_CAPACITY, noAssert = ByteArray.DEFAULT_NOASSERT) {
         if (!noAssert) {
@@ -221,7 +225,10 @@ export default class ByteArray {
     }
 
     /**
+     * Reads a BitSet as an array of booleans.
      *
+     * @param {number} [offset] Offset to read from. Will use and increase offset by length if omitted.
+     * @returns {boolean[]}
      */
     readBitSet(offset) {
         const relative = is.undefined(offset);
@@ -268,7 +275,7 @@ export default class ByteArray {
      * Reads the specified number of bytes.
      *
      * @param {number} length Number of bytes to read
-     * @param {number=} offset Offset to read from. Will use and increase {@link ByteArray#offset} by `length` if omitted.
+     * @param {number} [offset] Offset to read from. Will use and increase offset by length if omitted.
      * @returns {ByteArray}
      */
     read(length, offset) {
@@ -535,7 +542,7 @@ export default class ByteArray {
     }
 
     /**
-     * Reads an le float
+     * Reads a 32bit le float
      *
      * @param {number} [offset] Offset to read from
      * @returns {number}
@@ -546,7 +553,7 @@ export default class ByteArray {
     }
 
     /**
-     * Reads a be float
+     * Reads a 32bit be float
      *
      * @param {number} [offset] Offset to read from
      * @returns {number}
@@ -557,7 +564,7 @@ export default class ByteArray {
     }
 
     /**
-     * Reads a signed le double
+     * Reads a 64bit le float
      *
      * @param {number} [offset] Offset to read from
      * @returns {number}
@@ -568,7 +575,7 @@ export default class ByteArray {
     }
 
     /**
-     * Reads a signed be double
+     * Reads a 64bit be float
      *
      * @param {number} [offset] Offset to read from
      * @returns {number}
@@ -583,10 +590,9 @@ export default class ByteArray {
      * This will overwrite any contents behind the specified offset up to the appended data's length.
      *
      * @param {Wrappable} source The source write from
-     * @param {number} offset Offset to write to
-     * @param {number} length length to read from the source
-     * @param {string} encoding encoding to use for wrapping the source in bytearray
-     *
+     * @param {number} [offset] Offset to write to
+     * @param {number} [length] length to read from the source
+     * @param {string} [encoding] encoding to use for wrapping the source in bytearray
      */
     write(source, offset, length, encoding) {
         const relative = is.undefined(offset);
@@ -633,7 +639,12 @@ export default class ByteArray {
         return this;
     }
 
-    // Writes the array as a bitset.
+    /**
+     * Writes the array as a bitset.
+     * @param {boolean[]} value Array of booleans to write
+     * @param {number} [offset] Offset to write to
+     * @returns {ByteArray}
+     */
     writeBitSet(value, offset) {
         const relative = is.undefined(offset);
         if (relative) {
@@ -687,6 +698,13 @@ export default class ByteArray {
         return offset - start;
     }
 
+    /**
+     * Writes an 8bit signed integer
+     *
+     * @param {number} value
+     * @param {number} [offset] Offset to write to
+     * @returns {this}
+     */
     writeInt8(value, offset) {
         value |= 0;
         offset = this._checkWrite(value, offset, 1);
@@ -694,6 +712,13 @@ export default class ByteArray {
         return this;
     }
 
+    /**
+     * Writes an 8bit unsigned integer
+     *
+     * @param {number} value
+     * @param {number} [offset] Offset to write to
+     * @returns {this}
+     */
     writeUInt8(value, offset) {
         value >>>= 0;
         offset = this._checkWrite(value, offset, 1);
@@ -701,6 +726,13 @@ export default class ByteArray {
         return this;
     }
 
+    /**
+     * Writes a 16bit signed le integer
+     *
+     * @param {number} value
+     * @param {number} [offset] Offset to write to
+     * @returns {this}
+     */
     writeInt16LE(value, offset) {
         value |= 0;
         offset = this._checkWrite(value, offset, 2);
@@ -709,6 +741,13 @@ export default class ByteArray {
         return this;
     }
 
+    /**
+     * Writes a 16bit signed be integer
+     *
+     * @param {number} value
+     * @param {number} [offset] Offset to write to
+     * @returns {this}
+     */
     writeInt16BE(value, offset) {
         value |= 0;
         offset = this._checkWrite(value, offset, 2);
@@ -717,6 +756,13 @@ export default class ByteArray {
         return this;
     }
 
+    /**
+     * Writes a 16bit unsigned le integer
+     *
+     * @param {number} value
+     * @param {number} [offset] Offset to write to
+     * @returns {this}
+     */
     writeUInt16LE(value, offset) {
         value >>>= 0;
         offset = this._checkWrite(value, offset, 2);
@@ -725,6 +771,13 @@ export default class ByteArray {
         return this;
     }
 
+    /**
+     * Writes a 16bit unsigned be integer
+     *
+     * @param {number} value
+     * @param {number} [offset] Offset to write to
+     * @returns {this}
+     */
     writeUInt16BE(value, offset) {
         value >>>= 0;
         offset = this._checkWrite(value, offset, 2);
@@ -734,6 +787,13 @@ export default class ByteArray {
         return this;
     }
 
+    /**
+     * Writes a 32bit signed le integer
+     *
+     * @param {number} value
+     * @param {number} [offset] Offset to write to
+     * @returns {this}
+     */
     writeInt32LE(value, offset) {
         value |= 0;
         offset = this._checkWrite(value, offset, 4);
@@ -744,6 +804,13 @@ export default class ByteArray {
         return this;
     }
 
+    /**
+     * Writes a 32bit signed be integer
+     *
+     * @param {number} value
+     * @param {number} [offset] Offset to write to
+     * @returns {this}
+     */
     writeInt32BE(value, offset) {
         value |= 0;
         offset = this._checkWrite(value, offset, 4);
@@ -754,6 +821,13 @@ export default class ByteArray {
         return this;
     }
 
+    /**
+     * Writes a 32bit unsigned le integer
+     *
+     * @param {number} value
+     * @param {number} [offset] Offset to write to
+     * @returns {this}
+     */
     writeUInt32LE(value, offset) {
         value >>>= 0;
         offset = this._checkWrite(value, offset, 4);
@@ -764,6 +838,13 @@ export default class ByteArray {
         return this;
     }
 
+    /**
+     * Writes a 32bit unsigned be integer
+     *
+     * @param {number} value
+     * @param {number} [offset] Offset to write to
+     * @returns {this}
+     */
     writeUInt32BE(value, offset) {
         value >>>= 0;
         offset = this._checkWrite(value, offset, 4);
@@ -774,6 +855,13 @@ export default class ByteArray {
         return this;
     }
 
+    /**
+     * Writes a 64bit signed le long integer
+     *
+     * @param {adone.math.Long | string | number} value
+     * @param {number} [offset] Offset to write to
+     * @returns {this}
+     */
     writeInt64LE(value, offset) {
         [value, offset] = this._checkWriteLong(value, offset);
         const lo = value.low;
@@ -790,6 +878,13 @@ export default class ByteArray {
         return this;
     }
 
+    /**
+     * Writes a 64bit signed be long integer
+     *
+     * @param {adone.math.Long | string | number} value
+     * @param {number} [offset] Offset to write to
+     * @returns {this}
+     */
     writeInt64BE(value, offset) {
         [value, offset] = this._checkWriteLong(value, offset);
         const lo = value.low;
@@ -806,6 +901,13 @@ export default class ByteArray {
         return this;
     }
 
+    /**
+     * Writes a 64bit unsigned le long integer
+     *
+     * @param {adone.math.Long | string | number} value
+     * @param {number} [offset] Offset to write to
+     * @returns {this}
+     */
     writeUInt64LE(value, offset) {
         [value, offset] = this._checkWriteLong(value, offset);
         const lo = value.low;
@@ -822,6 +924,13 @@ export default class ByteArray {
         return this;
     }
 
+    /**
+     * Writes a 64bit unsigned be long integer
+     *
+     * @param {adone.math.Long | string | number} value
+     * @param {number} [offset] Offset to write to
+     * @returns {this}
+     */
     writeUInt64BE(value, offset) {
         [value, offset] = this._checkWriteLong(value, offset);
         const lo = value.low;
@@ -838,24 +947,52 @@ export default class ByteArray {
         return this;
     }
 
+    /**
+     * Writes a 32bit le float
+     *
+     * @param {number} value
+     * @param {number} [offset] Offset to write to
+     * @returns {this}
+     */
     writeFloatLE(value, offset) {
         offset = this._checkWrite(value, offset, 4, true);
         this.buffer.writeFloatLE(value, offset, true);
         return this;
     }
 
+    /**
+     * Writes a 32bit be float
+     *
+     * @param {number} value
+     * @param {number} [offset] Offset to write to
+     * @returns {this}
+     */
     writeFloatBE(value, offset) {
         offset = this._checkWrite(value, offset, 4, true);
         this.buffer.writeFloatBE(value, offset, true);
         return this;
     }
 
+    /**
+     * Writes a 64bit le float
+     *
+     * @param {number} value
+     * @param {number} [offset] Offset to write to
+     * @returns {this}
+     */
     writeDoubleLE(value, offset) {
         offset = this._checkWrite(value, offset, 8, true);
         this.buffer.writeDoubleLE(value, offset, true);
         return this;
     }
 
+    /**
+     * Writes a 64bit be float
+     *
+     * @param {number} value
+     * @param {number} [offset] Offset to write to
+     * @returns {this}
+     */
     writeDoubleBE(value, offset) {
         offset = this._checkWrite(value, offset, 8, true);
         this.buffer.writeDoubleBE(value, offset, true);
@@ -941,6 +1078,13 @@ export default class ByteArray {
         return [value, result];
     }
 
+    /**
+     * Writes a 32bit base 128 variable-length integer
+     *
+     * @param {number} value
+     * @param {number} [offset] Offset to write to
+     * @returns {this | number} this if offset is omitted, else the actual number of bytes written
+     */
     writeVarint32(value, offset) {
         const relative = is.undefined(offset);
         if (relative) {
@@ -981,10 +1125,24 @@ export default class ByteArray {
         return size;
     }
 
+    /**
+     * Writes a zig-zag encoded 32bit base 128 variable-length integer
+     *
+     * @param {number} value
+     * @param {number} [offset] Offset to write to
+     * @returns {this | number} this if offset is omitted, else the actual number of bytes written
+     */
     writeVarint32ZigZag(value, offset) {
         return this.writeVarint32(ByteArray.zigZagEncode32(value), offset);
     }
 
+    /**
+     * Reads a 32bit base 128 variable-length integer
+     *
+     * @param {number} [offset] Offset to read from
+     * @returns {number | { value: number, length: number}} The value read if offset is omitted,
+     *      else the value read and the actual number of bytes read
+     */
     readVarint32(offset) {
         const relative = is.undefined(offset);
         if (relative) {
@@ -1022,6 +1180,13 @@ export default class ByteArray {
         return { value, length: c };
     }
 
+    /**
+     * Reads a zig-zag encoded 32bit base 128 variable-length integer
+     *
+     * @param {number} [offset] Offset to read from
+     * @returns {number | { value: number, length: number}} The value read if offset is omitted,
+     *      else the value read and the actual number of bytes read
+     */
     readVarint32ZigZag(offset) {
         let val = this.readVarint32(offset);
         if (is.object(val)) {
@@ -1032,6 +1197,13 @@ export default class ByteArray {
         return val;
     }
 
+    /**
+     * Writes a 64bit base 128 variable-length integer
+     *
+     * @param {adone.math.Long | string | number} value
+     * @param {number} [offset] Offset to write to
+     * @returns {this | number} this if offset is omitted, else the actual number of bytes written
+     */
     writeVarint64(value, offset) {
         const relative = is.undefined(offset);
         if (relative) {
@@ -1109,10 +1281,24 @@ export default class ByteArray {
 
     }
 
+    /**
+     * Writes a zig-zag encoded 64bit base 128 variable-length integer
+     *
+     * @param {adone.math.I.Longable} value
+     * @param {number} [offset] Offset to write to
+     * @returns {this | number} this if offset is omitted, else the actual number of bytes written
+     */
     writeVarint64ZigZag(value, offset) {
         return this.writeVarint64(ByteArray.zigZagEncode64(value), offset);
     }
 
+    /**
+     * Reads a 64bit base 128 variable-length integer
+     *
+     * @param {number} [offset] Offset to read from
+     * @returns {number | { value: adone.math.Long, c: number }} The value read if offset is omitted,
+     *      else the value read and the actual number of bytes read
+     */
     readVarint64(offset) {
         const relative = is.undefined(offset);
         if (relative) {
@@ -1182,6 +1368,13 @@ export default class ByteArray {
         return { value, length: offset - start };
     }
 
+    /**
+     * Reads a zig-zag encoded 64bit base 128 variable-length integer
+     *
+     * @param {number} [offset] Offset to read from
+     * @returns {number | { value: adone.math.Long, c: number }} The value read if offset is omitted,
+     *      else the value read and the actual number of bytes read
+     */
     readVarint64ZigZag(offset) {
         let val = this.readVarint64(offset);
         if (val && val.value instanceof Long) {
@@ -1192,6 +1385,14 @@ export default class ByteArray {
         return val;
     }
 
+    /**
+     * Writes a NULL-terminated UTF8 encoded string.
+     * For this to work the specified string must not contain any NULL characters itself
+     *
+     * @param {string} str
+     * @param {number} [offset] Offset to write to
+     * @returns {this | number} this if offset is omitted, else the actual number of bytes written
+     */
     writeCString(str, offset) {
         const relative = is.undefined(offset);
         if (relative) {
@@ -1233,6 +1434,14 @@ export default class ByteArray {
         return k;
     }
 
+    /**
+     * Reads a NULL-terminated UTF8 encoded string.
+     * For this to work the string read must not contain any NULL characters itself
+     *
+     * @param {number} [offset] Offset to read from
+     * @returns {string | { string: string, length: number }} The string read if offset is omitted,
+     *      else the string read and the actual number of bytes read
+     */
     readCString(offset) {
         const relative = is.undefined(offset);
         if (relative) {
@@ -1264,7 +1473,13 @@ export default class ByteArray {
         return { string: str, length: offset - start };
     }
 
-    // Writes an UTF8 encoded string.
+    /**
+     * Writes an UTF8 encoded string
+     *
+     * @param {string} str
+     * @param {offset} offset Offset to write to
+     * @returns {this | number} this if offset is omitted, else the actual number of bytes written
+     */
     writeString(str, offset) {
         const relative = is.undefined(offset);
         if (relative) {
@@ -1295,6 +1510,15 @@ export default class ByteArray {
         return k;
     }
 
+    /**
+     * Reads an UTF8 encoded string
+     *
+     * @param {number} length Number of characters or bytes to read
+     * @param {Metrics} [metrics] Metrics specifying what n is meant to count. Defaults to ByteArray.METRICS_CHARS("c")
+     * @param {number} [offset] Offset to read from
+     * @returns {string | { string: string, length: number}} The string read if offset is omitted,
+     *      else the string read and the actual number of bytes read
+     */
     readString(length, metrics, offset) {
         if (is.number(metrics)) {
             offset = metrics;
@@ -1363,6 +1587,13 @@ export default class ByteArray {
 
     }
 
+    /**
+     * Writes a length as varint32 prefixed UTF8 encoded string
+     *
+     * @param {string} str
+     * @param {number} [offset] Offset to read from
+     * @returns {this | number} this if offset is omitted, else the actual number of bytes written
+     */
     writeVString(str, offset) {
         const relative = is.undefined(offset);
         if (relative) {
@@ -1398,6 +1629,13 @@ export default class ByteArray {
         return offset - start;
     }
 
+    /**
+     * Reads a length as varint32 prefixed UTF8 encoded string
+     *
+     * @param {number} [offset] Offset to read from
+     * @returns {string | { string: string, length: number }} The string read if offset is omitted,
+     *      else the string read and the actual number of bytes read
+     */
     readVString(offset) {
         const relative = is.undefined(offset);
         if (relative) {
@@ -1423,20 +1661,44 @@ export default class ByteArray {
         return { string: str.string, length: offset - start };
     }
 
+    /**
+     * Appends this ByteArray's contents to another ByteArray.
+     * This will overwrite any contents behind the specified offset up to the length of this ByteArray's data
+     *
+     * @param {ByteArray} target
+     * @param {number} [offset] Offset to append to
+     * @returns {this}
+     */
     appendTo(target, offset) {
         target.write(this, offset);
         return this;
     }
 
+    /**
+     * Enables or disables assertions of argument types and offsets.
+     * Assertions are enabled by default but you can opt to disable them if your code already makes sure that everything is valid
+     *
+     * @param {boolean} assert
+     */
     assert(assert) {
         this.noAssert = !assert;
         return this;
     }
 
+    /**
+     * Gets the capacity of this ByteArray's backing buffer
+     *
+     * @returns {number}
+     */
     capacity() {
         return this.buffer.length;
     }
 
+    /**
+     * Clears this ByteArray's offsets by setting offset to 0 and limit to the backing buffer's capacity
+     *
+     * @returns {this}
+     */
     clear() {
         this.offset = 0;
         this.limit = this.buffer.length;
@@ -1444,6 +1706,13 @@ export default class ByteArray {
         return this;
     }
 
+    /**
+     * Creates a cloned instance of this ByteArray,
+     * preset with this ByteArray's values for offset, markedOffset and limit
+     *
+     * @param {boolean} copy Whether to copy the backing buffer or to return another view on the same, false by default
+     * @param {ByteArray}
+     */
     clone(copy) {
         const bb = new ByteArray(0, this.noAssert);
         if (copy) {
@@ -1459,6 +1728,14 @@ export default class ByteArray {
         return bb;
     }
 
+    /**
+     * Compacts this ByteArray to be backed by a buffer of its contents' length.
+     * Will set offset = 0 and limit = capacity and adapt markedOffset to the same relative position if set
+     *
+     * @param {number} begin Offset to start at, buffer offset by default
+     * @param {number} end Offset to end at, buffer limit by default
+     * @returns {this}
+     */
     compact(begin, end) {
         begin = is.undefined(begin) ? this.offset : begin;
         end = is.undefined(end) ? this.limit : end;
@@ -1499,6 +1776,13 @@ export default class ByteArray {
         return this;
     }
 
+    /**
+     * Creates a copy of this ByteArray's contents.
+     *
+     * @param {number} begin Begin offset, buffer offset by default
+     * @param {number} end End offset, buffer limit by default
+     * @returns {ByteArray}
+     */
     copy(begin, end) {
         begin = is.undefined(begin) ? this.offset : begin;
         end = is.undefined(end) ? this.limit : end;
@@ -1529,6 +1813,15 @@ export default class ByteArray {
         return bb;
     }
 
+    /**
+     * Copies this ByteArray's contents to another ByteArray.
+     *
+     * @param {ByteArray} target
+     * @param {number} [targetOffset] Offset to copy to. Will use and increase the target's offset by the number of bytes copied if omitted
+     * @param {number} [sourceOffset] Offset to start copying from. Will use and increase offset by the number of bytes copied if omitted
+     * @param {number} [sourceLimit] Offset to end copying from, defaults to the buffer limit
+     * @returns {this}
+     */
     copyTo(target, targetOffset, sourceOffset, sourceLimit) {
         let relative;
         let targetRelative;
@@ -1567,6 +1860,14 @@ export default class ByteArray {
         return this;
     }
 
+    /**
+     * Makes sure that this ByteArray is backed by a ByteArray#buffer of at least the specified capacity.
+     * If the current capacity is exceeded, it will be doubled.
+     * If double the current capacity is less than the required capacity, the required capacity will be used instead
+     *
+     * @param {number} capacity
+     * @returns {this}
+     */
     ensureCapacity(capacity) {
         let current = this.buffer.length;
         if (current < capacity) {
@@ -1575,6 +1876,14 @@ export default class ByteArray {
         return this;
     }
 
+    /**
+     * Overwrites this ByteArray's contents with the specified value.
+     *
+     * @param {number | string} value Byte value to fill with. If given as a string, the first character is used
+     * @param {number} [begin] Begin offset. Will use and increase offset by the number of bytes written if omitted. defaults to offset
+     * @param {number} [end] End offset, defaults to limit.
+     * @returns {this}
+     */
     fill(value, begin, end) {
         const relative = is.undefined(begin);
         if (relative) {
@@ -1617,15 +1926,25 @@ export default class ByteArray {
         return this;
     }
 
-    // Makes this ByteArray ready for a new sequence of write or relative read operations. Sets `limit = offset` and `offset = 0`.
-    // Make sure always to flip a ByteArray when all relative read or write operations are complete.
+    /**
+     * Makes this ByteArray ready for a new sequence of write or relative read operations.
+     * Sets limit = offset and offset = 0.
+     * Make sure always to flip a ByteArray when all relative read or write operations are complete
+     *
+     * @returns {this}
+     */
     flip() {
         this.limit = this.offset;
         this.offset = 0;
         return this;
     }
 
-    // Marks an offset on this ByteArray to be used later.
+    /**
+     * Marks an offset on this ByteArray to be used later
+     *
+     * @param {number} [offset] Offset to mark. Defaults to offset.
+     * @returns {this}
+     */
     mark(offset) {
         offset = is.undefined(offset) ? this.offset : offset;
         if (!this.noAssert) {
@@ -1641,6 +1960,17 @@ export default class ByteArray {
         return this;
     }
 
+    /**
+     * Prepends some data to this ByteArray.
+     * This will overwrite any contents before the specified offset up to the prepended data's length.
+     * If there is not enough space available before the specified offset,
+     * the backing buffer will be resized and its contents moved accordingly
+     *
+     * @param {Wrappable} source Data to prepend
+     * @param {string} [encoding] Encoding if data is a string
+     * @param {number} [offset] Offset to prepend at. Will use and decrease offset by the number of bytes prepended if omitted.
+     * @returns {this}
+     */
     prepend(source, encoding, offset) {
         if (is.number(encoding) || !is.string(encoding)) {
             offset = encoding;
@@ -1687,15 +2017,36 @@ export default class ByteArray {
         return this;
     }
 
+    /**
+     * Prepends this ByteArray to another ByteArray.
+     * This will overwrite any contents before the specified offset up to the prepended data's length.
+     * If there is not enough space available before the specified offset,
+     * the backing buffer will be resized and its contents moved accordingly
+     *
+     * @param {Wrappable} target
+     * @param {number} offset Offset to prepend at
+     */
     prependTo(target, offset) {
         target.prepend(this, offset);
         return this;
     }
 
+    /**
+     * Gets the number of remaining readable bytes
+     *
+     * @returns {number}
+     */
     remaining() {
         return this.limit - this.offset;
     }
 
+    /**
+     * Resets this ByteArray's offset.
+     * If an offset has been marked through mark before, offset will be set to markedOffset, which will then be discarded.
+     * If no offset has been marked, sets offset = 0
+     *
+     * @returns {this}
+     */
     reset() {
         if (this.markedOffset >= 0) {
             this.offset = this.markedOffset;
@@ -1706,6 +2057,13 @@ export default class ByteArray {
         return this;
     }
 
+    /**
+     * Resizes this ByteArray to be backed by a buffer of at least the given capacity.
+     * Will do nothing if already that large or larger.
+     *
+     * @param {number} capacity	Capacity required
+     * @returns {this}
+     */
     resize(capacity) {
         if (!this.noAssert) {
             if (!is.number(capacity) || capacity % 1 !== 0) {
@@ -1724,6 +2082,13 @@ export default class ByteArray {
         return this;
     }
 
+    /**
+     * Reverses this ByteArray's contents.
+     *
+     * @param {number} [begin] Offset to start at, defaults to offset
+     * @param {number} [end] Offset to end at, defaults to limit
+     * @returns {this}
+     */
     reverse(begin, end) {
         begin = is.undefined(begin) ? this.offset : begin;
         end = is.undefined(end) ? this.limit : end;
@@ -1747,6 +2112,12 @@ export default class ByteArray {
         return this;
     }
 
+    /**
+     * Skips the next length bytes. This will just advance
+     *
+     * @param {number} length
+     * @returns {this}
+     */
     skip(length) {
         if (!this.noAssert) {
             if (!is.number(length) || length % 1 !== 0) {
@@ -1764,6 +2135,13 @@ export default class ByteArray {
         return this;
     }
 
+    /**
+     * Slices this ByteArray by creating a cloned instance with offset = begin and limit = end
+     *
+     * @param {number} [begin] Begin offset, defaults to offset
+     * @param {number} [end] End offset, defaults to limit
+     * @returns {ByteArray}
+     */
     slice(begin, end) {
         begin = is.undefined(begin) ? this.offset : begin;
         end = is.undefined(end) ? this.limit : end;
@@ -1785,7 +2163,15 @@ export default class ByteArray {
         return bb;
     }
 
-    // Returns a copy of the backing buffer that contains this ByteArray's contents.
+    /**
+     * Returns a copy of the backing buffer that contains this ByteArray's contents.
+     *
+     * @param {boolean} [forceCopy] If true returns a copy, otherwise returns a view referencing the same memory if possible,
+     *      false by default
+     * @param {number} [begin] Begin offset, offset by default
+     * @param {number} [end] End offset, limit by default
+     * @returns {Buffer}
+     */
     toBuffer(forceCopy, begin, end) {
         begin = is.undefined(begin) ? this.offset : begin;
         end = is.undefined(end) ? this.limit : end;
@@ -1811,9 +2197,13 @@ export default class ByteArray {
             return this.buffer;
         }
         return this.buffer.slice(begin, end);
-
     }
 
+    /**
+     * Returns a raw buffer compacted to contain this ByteArray's contents
+     *
+     * @returns {ArrayBuffer}
+     */
     toArrayBuffer() {
         let offset = this.offset;
         let limit = this.limit;
@@ -1835,9 +2225,17 @@ export default class ByteArray {
         return ab;
     }
 
+    /**
+     * Converts the ByteArray's contents to a string
+     *
+     * @param {string} encoding Output encoding
+     * @param {number} [begin] Begin offset, offset by default
+     * @param {number} [end] End offset, limit by default
+     * @returns {string}
+     */
     toString(encoding, begin, end) {
         if (is.undefined(encoding)) {
-            return `ByteBufferNB(offset=${this.offset},markedOffset=${this.markedOffset},limit=${this.limit},capacity=${this.capacity()})`;
+            return `ByteArrayNB(offset=${this.offset},markedOffset=${this.markedOffset},limit=${this.limit},capacity=${this.capacity()})`;
         }
 
         switch (encoding) {
@@ -1858,6 +2256,13 @@ export default class ByteArray {
         }
     }
 
+    /**
+     * Encodes this ByteArray's contents to a base64 encoded string
+     *
+     * @param {number} [begin] Begin offset, offset by default
+     * @param {number} [end] End offset, limit by default
+     * @returns {string}
+     */
     toBase64(begin, end) {
         begin = is.undefined(begin) ? this.offset : begin;
         end = is.undefined(end) ? this.limit : end;
@@ -1868,6 +2273,13 @@ export default class ByteArray {
         return this.buffer.toString("base64", begin, end);
     }
 
+    /**
+     * Encodes this ByteArray to a binary encoded string, that is using only characters 0x00-0xFF as bytes
+     *
+     * @param {number} [begin] Begin offset, offset by default
+     * @param {number} [end] End offset, limit by default
+     * @returns {string}
+     */
     toBinary(begin, end) {
         begin = is.undefined(begin) ? this.offset : begin;
         end = is.undefined(end) ? this.limit : end;
@@ -1878,6 +2290,12 @@ export default class ByteArray {
         return this.buffer.toString("binary", begin, end);
     }
 
+    /**
+     * Encodes this ByteArray to a hex encoded string with marked offsets
+     *
+     * @param {boolean} [columns] If true returns two columns hex + ascii, defaults to false
+     * @returns {string}
+     */
     toDebug(columns) {
         let i = -1;
         const k = this.buffer.length;
@@ -1926,6 +2344,13 @@ export default class ByteArray {
         return columns ? out : hex;
     }
 
+    /**
+     * Encodes this ByteArray's contents to a hex encoded string
+     *
+     * @param {number} [begin] Begin offset, offset by default
+     * @param {number} [end] End offset, limit by default
+     * @returns {string}
+     */
     toHex(begin, end) {
         begin = is.undefined(begin) ? this.offset : begin;
         end = is.undefined(end) ? this.limit : end;
@@ -1945,6 +2370,13 @@ export default class ByteArray {
         return this.buffer.toString("hex", begin, end);
     }
 
+    /**
+     * Encodes this ByteArray's contents to an UTF8 encoded string
+     *
+     * @param {number} [begin] Begin offset, offset by default
+     * @param {number} [end] End offset, limit by default
+     * @returns {string}
+     */
     toUTF8(begin, end) {
         begin = is.undefined(begin) ? this.offset : begin;
         end = is.undefined(end) ? this.limit : end;
@@ -1968,10 +2400,23 @@ export default class ByteArray {
         return Buffer;
     }
 
+    /**
+     * Allocates a new ByteArray backed by a buffer of the specified capacity.
+     *
+     * @param {number} [capacity] Initial capacity. Defaults to ByteArray.DEFAULT_CAPACITY(64)
+     * @param {boolean} [noAssert] Whether to skip assertions of offsets and values. Defaults to ByteArray.DEFAULT_NOASSERT(false)
+     */
     static allocate(capacity, noAssert) {
         return new ByteArray(capacity, noAssert);
     }
 
+    /**
+     * Concatenates multiple ByteArrays into one
+     *
+     * @param {Wrappable[]} buffers
+     * @param {string} encoding Encoding for strings
+     * @param {boolean} noAssert Whether to skip assertions of offsets and values. Defaults to ByteArray.DEFAULT_NOASSERT(false)
+     */
     static concat(buffers, encoding, noAssert) {
         if (is.boolean(encoding) || !is.string(encoding)) {
             noAssert = encoding;
@@ -2015,6 +2460,14 @@ export default class ByteArray {
         return Buffer;
     }
 
+    /**
+     * Wraps a buffer or a string.
+     * Sets the allocated ByteArray's offset to 0 and its limit to the length of the wrapped data
+     *
+     * @param {Wrappable} buffer
+     * @param {string} encoding Encoding for strings
+     * @param {boolean} noAssert Whether to skip assertions of offsets and values. Defaults to ByteArray.DEFAULT_NOASSERT(false)
+     */
     static wrap(buffer, encoding, noAssert) {
         if (is.string(buffer)) {
             if (is.undefined(encoding)) {
@@ -2067,6 +2520,12 @@ export default class ByteArray {
         return bb;
     }
 
+    /**
+     * Calculates the actual number of bytes required to store a 32bit base 128 variable-length integer
+     *
+     * @param {number} value
+     * @returns {number}
+     */
     static calculateVarint32(value) {
         value = value >>> 0;
         if (value < 1 << 7) {
@@ -2081,17 +2540,32 @@ export default class ByteArray {
         return 5;
     }
 
-    // Zigzag encodes a signed 32bit integer so that it can be effectively used with varint encoding.
+    /**
+     * Zigzag encodes a signed 32bit integer so that it can be effectively used with varint encoding
+     *
+     * @param {number} n
+     * @returns {number}
+     */
     static zigZagEncode32(n) {
         return (((n |= 0) << 1) ^ (n >> 31)) >>> 0; // ref: src/google/protobuf/wire_format_lite.h
     }
 
-    // Decodes a zigzag encoded signed 32bit integer.
+    /**
+     * Decodes a zigzag encoded signed 32bit integer
+     *
+     * @param {number}
+     * @returns {number}
+     */
     static zigZagDecode32(n) {
         return ((n >>> 1) ^ -(n & 1)) | 0; // // ref: src/google/protobuf/wire_format_lite.h
     }
 
-    // Calculates the actual number of bytes required to store a 64bit base 128 variable-length integer.
+    /**
+     * Calculates the actual number of bytes required to store a 64bit base 128 variable-length integer
+     *
+     * @param {adone.math.Long | number | string} value
+     * @returns {number}
+     */
     static calculateVarint64(value) {
         if (is.number(value)) {
             value = Long.fromNumber(value);
@@ -2119,7 +2593,12 @@ export default class ByteArray {
 
     }
 
-    // Zigzag encodes a signed 64bit integer so that it can be effectively used with varint encoding.
+    /**
+     * Zigzag encodes a signed 64bit integer so that it can be effectively used with varint encoding
+     *
+     * @param {adone.math.Long | number | string} value
+     * @returns {adone.math.Long}
+     */
     static zigZagEncode64(value) {
         if (is.number(value)) {
             value = Long.fromNumber(value, false);
@@ -2132,7 +2611,12 @@ export default class ByteArray {
         return value.shl(1).xor(value.shr(63)).toUnsigned();
     }
 
-    // Decodes a zigzag encoded signed 64bit integer.
+    /**
+     * Decodes a zigzag encoded signed 64bit integer.
+     *
+     * @param {adone.math.Long | number | string} value
+     * @returns {adone.math.Long}
+     */
     static zigZagDecode64(value) {
         if (is.number(value)) {
             value = Long.fromNumber(value, false);
@@ -2145,12 +2629,24 @@ export default class ByteArray {
         return value.shru(1).xor(value.and(Long.ONE).toSigned().negate()).toSigned();
     }
 
-    // Calculates the number of UTF8 characters of a string. JavaScript itself uses UTF-16, so that a string's `length` property does not reflect its actual UTF8 size if it contains code points larger than 0xFFFF.
+    /**
+     * Calculates the number of UTF8 characters of a string.
+     * JavaScript itself uses UTF-16, so that a string's length property does not reflect its actual UTF8 size
+     * if it contains code points larger than 0xFFFF
+     *
+     * @param {string} str
+     * @returns {number}
+     */
     static calculateUTF8Chars(str) {
         return utfx.calculateUTF16asUTF8(stringSource(str))[0];
     }
 
-    // Calculates the number of UTF8 bytes of a string.
+    /**
+     *  Calculates the number of UTF8 bytes of a string.
+     *
+     * @param {string} str
+     * @returns {number}
+     */
     static calculateString(str) {
         if (!is.string(str)) {
             throw new x.InvalidArgument(`Illegal argument: ${typeof str}`);
@@ -2158,27 +2654,53 @@ export default class ByteArray {
         return Buffer.byteLength(str, "utf8");
     }
 
-    // Decodes a base64 encoded string to a ByteArray.
+    /**
+     * Decodes a base64 encoded string to a ByteArray
+     *
+     * @param {string} str
+     * @returns {ByteArray}
+     */
     static fromBase64(str) {
         return ByteArray.wrap(Buffer.from(str, "base64"));
     }
 
-    // Encodes a binary string to base64 like `window.btoa` does.
+    /**
+     * Encodes a binary string to base64 like window.btoa does
+     *
+     * @param {string} str
+     * @returns {ByteArray}
+     */
     static btoa(str) {
         return ByteArray.fromBinary(str).toBase64();
     }
 
-    // Decodes a base64 encoded string to binary like `window.atob` does.
+    /**
+     * Decodes a base64 encoded string to binary like window.atob does
+     *
+     * @param {string} b64
+     * @returns {ByteArray}
+     */
     static atob(b64) {
         return ByteArray.fromBase64(b64).toBinary();
     }
 
-    // Decodes a binary encoded string, that is using only characters 0x00-0xFF as bytes, to a ByteArray.
+    /**
+     * Decodes a binary encoded string, that is using only characters 0x00-0xFF as bytes, to a ByteArray
+     *
+     * @param {string} str
+     * @returns {ByteArray}
+     */
     static fromBinary(str) {
         return ByteArray.wrap(Buffer.from(str, "binary"));
     }
 
-    // Decodes a hex encoded string with marked offsets to a ByteArray.
+    /**
+     * Decodes a hex encoded string with marked offsets to a ByteArray
+     *
+     * @param {string} str
+     * @param {boolean} [noAssert]
+     * @returns {ByteArray}
+     */
     static fromDebug(str, noAssert) {
         const k = str.length;
         const bb = new ByteArray(((k + 1) / 3) | 0, noAssert);
@@ -2304,7 +2826,12 @@ export default class ByteArray {
         return bb;
     }
 
-    // Decodes a hex encoded string to a ByteArray.
+    /**
+     * Decodes a hex encoded string to a ByteArray
+     *
+     * @param {string} str
+     * @param {boolean} [noAssert]
+     */
     static fromHex(str, noAssert) {
         if (!noAssert) {
             if (!is.string(str)) {
@@ -2320,7 +2847,13 @@ export default class ByteArray {
         return bb;
     }
 
-    // Decodes an UTF8 encoded string to a ByteArray.
+    /**
+     * Decodes an UTF8 encoded string to a ByteArray
+     *
+     * @param {string} str
+     * @param {boolean} [noAssert]
+     * @returns {ByteArray}
+     */
     static fromUTF8(str, noAssert) {
         if (!noAssert) {
             if (!is.string(str)) {
@@ -2334,9 +2867,33 @@ export default class ByteArray {
     }
 }
 adone.tag.set(ByteArray, adone.tag.BYTE_ARRAY);
+
+/**
+ * Default initial capacity
+ */
 ByteArray.DEFAULT_CAPACITY = 64;
+
+/**
+ * Default no assertions flag
+ */
 ByteArray.DEFAULT_NOASSERT = false;
-ByteArray.MAX_VARINT32_BYTES = 5; // Maximum number of bytes required to store a 32bit base 128 variable-length integer
-ByteArray.MAX_VARINT64_BYTES = 10; // Maximum number of bytes required to store a 64bit base 128 variable-length integer
-ByteArray.METRICS_CHARS = "c"; // Metrics representing number of UTF8 characters. Evaluates to `c`.
-ByteArray.METRICS_BYTES = "b"; // Metrics representing number of bytes. Evaluates to `b`.
+
+/**
+ * Maximum number of bytes required to store a 32bit base 128 variable-length integer
+ */
+ByteArray.MAX_VARINT32_BYTES = 5;
+
+/**
+ * Maximum number of bytes required to store a 64bit base 128 variable-length integer
+ */
+ByteArray.MAX_VARINT64_BYTES = 10;
+
+/**
+ * Metrics representing number of UTF8 characters. Evaluates to `c`.
+ */
+ByteArray.METRICS_CHARS = "c";
+
+/**
+ * Metrics representing number of bytes. Evaluates to `b`.
+ */
+ByteArray.METRICS_BYTES = "b";
