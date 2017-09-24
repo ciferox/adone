@@ -1,4 +1,4 @@
-const { std: { fs, path }, compressor: { brotli } } = adone;
+const { is, std: { fs, path }, compressor: { brotli } } = adone;
 
 const testBufferAsync = (method, bufferFile, resultFile, done, params) => {
     params = params || {};
@@ -44,6 +44,11 @@ describe("compressor", "brotli", "async", () => {
 
             this.timeout(30000);
             testBufferAsync(brotli.compress, "large.txt", "large.txt.compressed", done);
+        });
+
+        it("should compress a string", async () => {
+            const a = await brotli.compress("hello");
+            expect(is.buffer(a)).to.be.true;
         });
     });
 

@@ -38,7 +38,7 @@ export const isValidCompressed = (input) => {
 export const isValidCompressedSync = native.isValidCompressedSync;
 
 export const decompress = (compressed, { asBuffer = true } = {}) => {
-    if (!Buffer.isBuffer(compressed)) {
+    if (!is.buffer(compressed)) {
         throw new Error("Input must be a Buffer");
     }
 
@@ -53,7 +53,7 @@ export const decompress = (compressed, { asBuffer = true } = {}) => {
 };
 
 export const decompressSync = (compressed, { asBuffer = true } = {}) => {
-    if (!Buffer.isBuffer(compressed)) {
+    if (!is.buffer(compressed)) {
         throw new Error("Input must be a Buffer");
     }
 

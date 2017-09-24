@@ -110,7 +110,9 @@ class TransformStreamDecode extends Transform {
 }
 
 export const compress = (buf, options = {}) => new Promise((resolve, reject) => {
-    if (!is.buffer(buf)) {
+    if (is.string(buf)) {
+        buf = Buffer.from(buf);
+    } else if (!is.buffer(buf)) {
         reject(new Error("Brotli input is not a buffer."));
         return;
     }
@@ -127,7 +129,9 @@ export const compress = (buf, options = {}) => new Promise((resolve, reject) => 
 });
 
 export const compressSync = (buf, options = {}) => {
-    if (!is.buffer(buf)) {
+    if (is.string(buf)) {
+        buf = Buffer.from(buf);
+    } else if (!is.buffer(buf)) {
         throw new Error("Brotli input is not a buffer.");
     }
     options.size_hint = buf.length;

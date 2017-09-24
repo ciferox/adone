@@ -1,4 +1,4 @@
-const { std: { fs, path }, compressor: { brotli } } = adone;
+const { is, std: { fs, path }, compressor: { brotli } } = adone;
 
 const testBufferSync = (method, bufferFile, resultFile, params) => {
     params = params || {};
@@ -41,6 +41,11 @@ describe("compressor", "brotli", "sync", () => {
 
             this.timeout(30000);
             testBufferSync(brotli.compressSync, "large.txt", "large.txt.compressed");
+        });
+
+        it("should compress a string", () => {
+            const a = brotli.compressSync("hello");
+            expect(is.buffer(a)).to.be.true;
         });
     });
 
