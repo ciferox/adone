@@ -173,12 +173,12 @@ const mkdirfix = async (name, opts) => {
     }
 };
 
-export const extractStream = (cwd = process.cwd(), opts = {}) => {
+export const unpackStream = (cwd = process.cwd(), opts = {}) => {
     const ignore = opts.ignore || adone.noop;
     let map = opts.map || adone.noop;
     const mapStream = opts.mapStream || adone.identity;
     const own = opts.chown !== false && !adone.is.windows && processGetuid() === 0;
-    const extract = opts.extract || new adone.archive.tar.RawExtractStream();
+    const unpack = opts.unpack || new adone.archive.tar.RawUnpackStream();
     const stack = [];
     const now = new Date();
     const umask = is.number(opts.umask) ? ~opts.umask : ~processUmask();
@@ -254,7 +254,7 @@ export const extractStream = (cwd = process.cwd(), opts = {}) => {
         });
     };
 
-    extract.on("entry", (header, stream, next) => {
+    unpack.on("entry", (header, stream, next) => {
         header = map(header) || header;
         header.name = normalize(header.name);
         const name = path.join(cwd, path.join("/", header.name));
@@ -345,5 +345,5 @@ export const extractStream = (cwd = process.cwd(), opts = {}) => {
         });
     });
 
-    return extract;
+    return unpack;
 };

@@ -25,6 +25,14 @@ describe("datetime", "create", () => {
         assert.deepEqual(importantArray, [2009, 11], "initializer should not mutate the original array");
     });
 
+    it("from ms-dos", () => {
+        const d = adone.datetime.dos({
+            date: 19256,
+            time: 40970
+        });
+        expect(d.format("DD.MM.YYYY HH:mm:ss")).to.be.equal("24.09.2017 20:00:20");
+    });
+
     it("object", () => {
         const fmt = "YYYY-MM-DD HH:mm:ss.SSS";
         const tests = [

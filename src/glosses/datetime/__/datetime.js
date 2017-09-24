@@ -563,6 +563,20 @@ export class Datetime {
         return new Date(this.valueOf());
     }
 
+    toDOS() {
+        let date = 0;
+        date |= this.date() & 0x1f; // 1-31
+        date |= ((this.month() + 1) & 0xf) << 5; // 0-11, 1-12
+        date |= ((this.year() - 1980) & 0x7f) << 9; // 0-128, 1980-2108
+
+        let time = 0;
+        time |= Math.floor(this.seconds() / 2); // 0-59, 0-29 (lose odd numbers)
+        time |= (this.minutes() & 0x3f) << 5; // 0-59
+        time |= (this.hours() & 0x1f) << 11; // 0-23
+
+        return { date, time };
+    }
+
     toArray() {
         const m = this;
         return [m.year(), m.month(), m.date(), m.hour(), m.minute(), m.second(), m.millisecond()];

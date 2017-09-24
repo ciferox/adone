@@ -16,7 +16,7 @@ describe("archive", "tar", () => {
         const b = fixtures.getDirectory("copy", "a");
 
         await new Promise((resolve) => {
-            tar.packStream(a.path()).pipe(tar.extractStream(b.path())).on("finish", resolve);
+            tar.packStream(a.path()).pipe(tar.unpackStream(b.path())).on("finish", resolve);
         });
 
         const files = await b.files();
@@ -39,7 +39,7 @@ describe("archive", "tar", () => {
         const b = fixtures.getDirectory("copy", "b");
 
         await new Promise((resolve) => {
-            tar.packStream(a.path()).pipe(tar.extractStream(b.path())).on("finish", resolve);
+            tar.packStream(a.path()).pipe(tar.unpackStream(b.path())).on("finish", resolve);
         });
 
         const files = await b.files();
@@ -82,7 +82,7 @@ describe("archive", "tar", () => {
         await hello.symbolicLink(link);
 
         await new Promise((resolve) => {
-            tar.packStream(a.path()).pipe(tar.extractStream(b.path())).on("finish", resolve);
+            tar.packStream(a.path()).pipe(tar.unpackStream(b.path())).on("finish", resolve);
         });
 
         const files = (await b.files()).map((x) => x.filename()).sort();
@@ -115,7 +115,7 @@ describe("archive", "tar", () => {
         await hello.symbolicLink(link);
 
         await new Promise((resolve) => {
-            tar.packStream(a.path(), { dereference: true }).pipe(tar.extractStream(b.path())).on("finish", resolve);
+            tar.packStream(a.path(), { dereference: true }).pipe(tar.unpackStream(b.path())).on("finish", resolve);
         });
 
         const files = (await b.files()).map((x) => x.filename()).sort();
@@ -138,7 +138,7 @@ describe("archive", "tar", () => {
         const b = fixtures.getDirectory("copy", "b-strip");
 
         await new Promise((resolve) => {
-            tar.packStream(a.path()).pipe(tar.extractStream(b.path(), { strip: 1 })).on("finish", resolve);
+            tar.packStream(a.path()).pipe(tar.unpackStream(b.path(), { strip: 1 })).on("finish", resolve);
         });
 
         const files = await b.files();
@@ -157,7 +157,7 @@ describe("archive", "tar", () => {
         };
 
         await new Promise((resolve) => {
-            tar.packStream(a.path()).pipe(tar.extractStream(b.path(), { map: uppercase, strip: 1 })).on("finish", resolve);
+            tar.packStream(a.path()).pipe(tar.unpackStream(b.path(), { map: uppercase, strip: 1 })).on("finish", resolve);
         });
 
         const files = await b.files();
@@ -178,7 +178,7 @@ describe("archive", "tar", () => {
         };
 
         await new Promise((resolve) => {
-            tar.packStream(a.path()).pipe(tar.extractStream(b.path(), { map: aWithMode })).on("finish", resolve);
+            tar.packStream(a.path()).pipe(tar.unpackStream(b.path(), { map: aWithMode })).on("finish", resolve);
         });
 
         const files = await b.files();
@@ -197,7 +197,7 @@ describe("archive", "tar", () => {
         const entries = ["file1", "sub-files/file3", "sub-dir"];
 
         await new Promise((resolve) => {
-            tar.packStream(a.path(), { entries }).pipe(tar.extractStream(b.path())).on("finish", resolve);
+            tar.packStream(a.path(), { entries }).pipe(tar.unpackStream(b.path())).on("finish", resolve);
         });
 
         const files = await b.files();

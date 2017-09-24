@@ -53,6 +53,18 @@ datetime.unix = createUnix;
 datetime.duration = createDuraton;
 datetime.duration.invalid = createInvalidDuration;
 datetime.parseZone = createInZone;
+datetime.dos = ({ date, time }) => {
+    const day = date & 0x1f; // 1-31
+    const month = (date >> 5 & 0xf) - 1; // 1-12, 0-11
+    const year = (date >> 9 & 0x7f) + 1980; // 0-128, 1980-2108
+
+    const millisecond = 0;
+    const second = (time & 0x1f) * 2; // 0-29, 0-58 (even numbers)
+    const minute = time >> 5 & 0x3f; // 0-59
+    const hour = time >> 11 & 0x1f; // 0-23
+
+    return datetime([year, month, day, hour, minute, second, millisecond]);
+};
 
 datetime.defaultFormat = "YYYY-MM-DDTHH:mm:ssZ";
 datetime.defaultFormatUtc = "YYYY-MM-DDTHH:mm:ss[Z]";

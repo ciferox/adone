@@ -1,12 +1,12 @@
 describe("archive", "zip", "unpack", () => {
-    const { archive: { zip }, std: { stream: { Readable, Writable } } } = adone;
+    const { archive: { zip }, std: { stream: { Readable, Writable } }, fs } = adone;
 
     const earliestTimestamp = new Date(2014, 7, 18, 0, 0, 0, 0);
 
     const thisDir = new adone.fs.Directory(__dirname);
 
     const openWithRandomAccess = async (zipfilePath, options, implementRead) => {
-        class InefficientRandomAccessReader extends zip.unpack.RandomAccessReader {
+        class InefficientRandomAccessReader extends fs.AbstractRandomAccessReader {
             _readStreamForRange(start, end) {
                 return adone.std.fs.createReadStream(zipfilePath, { start, end: end - 1 });
             }
@@ -258,7 +258,7 @@ describe("archive", "zip", "unpack", () => {
 
     describe("fromRandomAccessReader", () => {
         specify("errors", async () => {
-            class TestRandomAccessReader extends zip.unpack.RandomAccessReader {
+            class TestRandomAccessReader extends fs.AbstractRandomAccessReader {
                 _readStreamForRange(start, end) {
                     const brokenator = new Readable();
                     brokenator._read = function (size) {
@@ -332,8 +332,8 @@ describe("archive", "zip", "unpack", () => {
             let prev0 = -1;
             let prev1 = 1;
             let byteCount = 0;
-            readStream._read = function (size) {
-                while (true) {
+            readStream._read = () => {
+                for ( ; ; ) {
                     if (byteCount >= largeBinLength) {
                         readStream.push(null);
                         return;
@@ -372,7 +372,7 @@ describe("archive", "zip", "unpack", () => {
             const pretendSize = backendContents.length + largeBinLength - 4;
 
 
-            class InflatingRandomAccessReader extends zip.unpack.RandomAccessReader {
+            class InflatingRandomAccessReader extends fs.AbstractRandomAccessReader {
                 _readStreamForRange(start, end) {
                     const thisIsTheFirstRead = firstRead;
                     firstRead = false;
@@ -480,7 +480,7 @@ describe("archive", "zip", "unpack", () => {
             Buffer.from("7c4d3ea0d9754b470d3eb32ada5741bfc848f419", "hex")
         ];
 
-        class StingyRandomAccessReader extends zip.unpack.RandomAccessReader {
+        class StingyRandomAccessReader extends fs.AbstractRandomAccessReader {
             constructor(buffer) {
                 super();
                 this.buffer = buffer;

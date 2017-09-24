@@ -1,8 +1,10 @@
 const {
-    is, x, fs,
+    is,
+    x,
+    fs,
     compressor: { deflate },
-    std: { stream: { Transform, PassThrough, Writable } },
-    event: { EventEmitter }
+    event: { EventEmitter },
+    stream
 } = adone;
 
 const cp437 = '\u0000☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼ !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■ ';
@@ -29,175 +31,6 @@ const readUInt64LE = (buffer, offset) => {
     // as long as we're bounds checking the result of this function against the total file size,
     // we'll catch any overflow errors, because we already made sure the total file size was within reason.
 };
-
-class AssertByteCountStream extends Transform {
-    constructor(byteCount) {
-        super();
-        this.actualByteCount = 0;
-        this.expectedByteCount = byteCount;
-    }
-
-    _transform(chunk, encoding, cb) {
-        this.actualByteCount += chunk.length;
-        if (this.actualByteCount > this.expectedByteCount) {
-            const msg = `too many bytes in the stream. expected ${this.expectedByteCount}. got at least ${this.actualByteCount}`;
-            return cb(new x.IllegalState(msg));
-        }
-        cb(null, chunk);
-    }
-
-    _flush(cb) {
-        if (this.actualByteCount < this.expectedByteCount) {
-            const msg = `not enough bytes in the stream. expected ${this.expectedByteCount}. got only ${this.actualByteCount}`;
-            return cb(new x.IllegalState(msg));
-        }
-        cb();
-    }
-}
-
-class RefUnrefFilter extends PassThrough {
-    constructor(context) {
-        super();
-        this.context = context;
-        this.context.ref();
-        this.unreffedYet = false;
-    }
-
-    _flush(cb) {
-        this.unref();
-        cb();
-    }
-
-    unref() {
-        if (this.unreffedYet) {
-            return;
-        }
-        this.unreffedYet = true;
-        this.context.unref();
-    }
-}
-
-export class RandomAccessReader extends EventEmitter {
-    constructor() {
-        super();
-        this.refCount = 0;
-    }
-
-    ref() {
-        this.refCount += 1;
-    }
-
-    unref() {
-        this.refCount -= 1;
-
-        if (this.refCount > 0) {
-            return;
-        }
-        if (this.refCount < 0) {
-            throw new x.IllegalState("invalid unref");
-        }
-
-        this.close().then(() => {
-            this.emit("close");
-        }).catch((err) => {
-            this.emit("error", err);
-        });
-
-    }
-
-    createReadStream(options) {
-        const start = options.start;
-        const end = options.end;
-        if (start === end) {
-            const emptyStream = new PassThrough();
-            setImmediate(() => {
-                emptyStream.end();
-            });
-            return emptyStream;
-        }
-        const stream = this._readStreamForRange(start, end);
-
-        let destroyed = false;
-        const refUnrefFilter = new RefUnrefFilter(this);
-        stream.on("error", (err) => {
-            setImmediate(() => {
-                if (!destroyed) {
-                    refUnrefFilter.emit("error", err);
-                }
-            });
-        });
-        refUnrefFilter.destroy = function () {
-            stream.unpipe(refUnrefFilter);
-            refUnrefFilter.unref();
-            stream.destroy();
-        };
-
-        const byteCounter = new AssertByteCountStream(end - start);
-        refUnrefFilter.on("error", (err) => {
-            setImmediate(() => {
-                if (!destroyed) {
-                    byteCounter.emit("error", err);
-                }
-            });
-        });
-        byteCounter.destroy = function () {
-            destroyed = true;
-            refUnrefFilter.unpipe(byteCounter);
-            refUnrefFilter.destroy();
-        };
-
-        return stream.pipe(refUnrefFilter).pipe(byteCounter);
-    }
-
-    _readStreamForRange(/* start, end */) {
-        throw new x.NotImplemented();
-    }
-
-    async read(buffer, offset, length, position) {
-        const readStream = this.createReadStream({ start: position, end: position + length });
-        const writeStream = new Writable();
-        let written = 0;
-        writeStream._write = function (chunk, encoding, cb) {
-            chunk.copy(buffer, offset + written, 0, chunk.length);
-            written += chunk.length;
-            cb();
-        };
-        await new Promise((resolve, reject) => {
-            writeStream.once("finish", resolve);
-            readStream.once("error", reject);
-            readStream.pipe(writeStream);
-        });
-    }
-
-    async close() {
-    }
-}
-
-class RandomAccessFdReader extends RandomAccessReader {
-    constructor(fd) {
-        super();
-        this.fd = fd;
-    }
-
-    _readStreamForRange(start, end) {
-        --end;
-        return fs.createReadStream(null, { fd: this.fd, start, end, autoClose: false });
-    }
-}
-
-class RandomAccessBufferReader extends RandomAccessReader {
-    constructor(buffer) {
-        super();
-        this.buffer = buffer;
-    }
-
-    _readStreamForRange(start, end) {
-        const length = end - start;
-        const buffer = Buffer.alloc(length);
-        adone.util.memcpy.utou(buffer, 0, this.buffer, start, end);
-        return new adone.collection.BufferList(buffer);
-    }
-}
 
 const readAndAssertNoEof = async (reader, buffer, offset, length, position) => {
     if (length === 0) {
@@ -369,7 +202,7 @@ export const fromFd = async (fd, options) => {
         options.validateEntrySizes = true;
     }
     const stats = await fs.fd.stat(fd);
-    const reader = new RandomAccessFdReader(fd);
+    const reader = new fs.RandomAccessFdReader(fd);
     return fromRandomAccessReader(reader, stats.size, options);
 };
 
@@ -412,7 +245,7 @@ export const fromBuffer = async (buffer, options) => {
     if (is.nil(options.validateEntrySizes)) {
         options.validateEntrySizes = true;
     }
-    const reader = new RandomAccessBufferReader(buffer);
+    const reader = new fs.RandomAccessBufferReader(buffer);
     return fromRandomAccessReader(reader, buffer.length, options);
 };
 
@@ -431,22 +264,9 @@ const emitErrorAndAutoClose = (self, err) => {
     emitError(self, err);
 };
 
-export const dosDateTimeToDate = (date, time) => {
-    const day = date & 0x1f; // 1-31
-    const month = (date >> 5 & 0xf) - 1; // 1-12, 0-11
-    const year = (date >> 9 & 0x7f) + 1980; // 0-128, 1980-2108
-
-    const millisecond = 0;
-    const second = (time & 0x1f) * 2; // 0-29, 0-58 (even numbers)
-    const minute = time >> 5 & 0x3f; // 0-59
-    const hour = time >> 11 & 0x1f; // 0-23
-
-    return new Date(year, month, day, hour, minute, second, millisecond);
-};
-
-export class Entry {
+class Entry {
     getLastModDate() {
-        return dosDateTimeToDate(this.lastModFileDate, this.lastModFileTime);
+        return adone.datetime.dos({ date: this.lastModFileDate, time: this.lastModFileTime });
     }
 
     isEncrypted() {
@@ -472,7 +292,7 @@ export const validateFileName = (fileName) => {
     return null;
 };
 
-export class ZipFile extends EventEmitter {
+class ZipFile extends EventEmitter {
     constructor(
         reader,
         centralDirectoryOffset,
@@ -868,7 +688,7 @@ export class ZipFile extends EventEmitter {
                 readStream.pipe(inflateFilter);
 
                 if (this.validateEntrySizes) {
-                    endpointStream = new AssertByteCountStream(entry.uncompressedSize);
+                    endpointStream = new stream.AssertByteCountStream(entry.uncompressedSize);
                     inflateFilter.on("error", (err) => {
                         // forward zlib errors to the client-visible stream
                         setImmediate(() => {

@@ -166,6 +166,7 @@ export default class RawPackStream extends Readable {
                 self.destroy();
                 callback(err);
             });
+            return linkSink;
         }
 
         this._encode(header);

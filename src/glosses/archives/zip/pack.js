@@ -61,20 +61,6 @@ const writeUInt64LE = (buffer, n, offset) => {
     buffer.writeUInt32LE(high, offset + 4);
 };
 
-const dateToDosDateTime = (jsDate) => {
-    let date = 0;
-    date |= jsDate.getDate() & 0x1f; // 1-31
-    date |= ((jsDate.getMonth() + 1) & 0xf) << 5; // 0-11, 1-12
-    date |= ((jsDate.getFullYear() - 1980) & 0x7f) << 9; // 0-128, 1980-2108
-
-    let time = 0;
-    time |= Math.floor(jsDate.getSeconds() / 2); // 0-59, 0-29 (lose odd numbers)
-    time |= (jsDate.getMinutes() & 0x3f) << 5; // 0-59
-    time |= (jsDate.getHours() & 0x1f) << 11; // 0-23
-
-    return { date, time };
-};
-
 const getEndOfCentralDirectoryRecord = (self, actuallyJustTellMeHowLongItWouldBe) => {
     let needZip64Format = false;
     let normalEntriesLength = self.entries.length;
@@ -215,7 +201,7 @@ class Entry {
     }
 
     setLastModDate(date) {
-        const dosDateTime = dateToDosDateTime(date);
+        const dosDateTime = adone.datetime(date).toDOS();
         this.lastModFileTime = dosDateTime.time;
         this.lastModFileDate = dosDateTime.date;
     }
@@ -612,6 +598,8 @@ export class ZipFile extends EventEmitter {
         }, (err) => {
             this.emit("error", err);
         });
+
+        return this;
     }
 
     addReadStream(readStream, metadataPath, options = {}) {
@@ -623,6 +611,7 @@ export class ZipFile extends EventEmitter {
             pumpFileDataReadStream(this, entry, readStream);
         });
         pumpEntries(this);
+        return this;
     }
 
     addBuffer(buffer, metadataPath, options = {}) {
@@ -662,6 +651,7 @@ export class ZipFile extends EventEmitter {
                 this.emit("error", err);
             });
         }
+        return this;
     }
 
     addEmptyDirectory(metadataPath, options = {}) {
@@ -680,6 +670,7 @@ export class ZipFile extends EventEmitter {
             pumpEntries(this);
         });
         pumpEntries(this);
+        return this;
     }
 
     async end(options) {

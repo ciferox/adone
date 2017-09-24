@@ -17,7 +17,7 @@ export default function plugin() {
                 return;
             }
             const isBuffer = file.isBuffer();
-            const stream = new archive.RawExtractStream(extractorOptions);
+            const stream = new archive.RawUnpackStream(extractorOptions);
             const p = new Promise((resolve, reject) => {
                 stream.on("entry", (header, stream, next) => {
                     if (header.type !== "file") {

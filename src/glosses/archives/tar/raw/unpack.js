@@ -36,7 +36,7 @@ const emptyStream = (self, offset) => {
     return s;
 };
 
-export default class RawExtractStream extends Writable {
+export default class RawUnpackStream extends Writable {
     constructor(opts) {
         super(opts);
 

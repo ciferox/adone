@@ -16,6 +16,15 @@ describe("datetime", "to type", () => {
         assert.deepEqual(adone.datetime(expected).toObject(), expected, "toObject invalid");
     });
 
+    it("toDOS", () => {
+        const expected = {
+            date: 19256,
+            time: 40970
+        };
+        const d = adone.datetime("24.09.2017 20:00:20", "DD.MM.YYYY HH:mm:ss");
+        expect(d.toDOS()).to.be.deep.equal(expected);
+    });
+
     it("toArray", () => {
         const expected = [2014, 11, 26, 11, 46, 58, 17];
         assert.deepEqual(adone.datetime(expected).toArray(), expected, "toArray invalid");

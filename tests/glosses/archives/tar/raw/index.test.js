@@ -196,7 +196,7 @@ describe("archive", "tar", "raw", () => {
         };
 
         specify("one file", async () => {
-            const extract = new tar.RawExtractStream();
+            const extract = new tar.RawUnpackStream();
 
             let entries = new Promise((resolve) => {
                 const entries = [];
@@ -232,7 +232,7 @@ describe("archive", "tar", "raw", () => {
         });
 
         specify("chunked one file", async () => {
-            const extract = new tar.RawExtractStream();
+            const extract = new tar.RawUnpackStream();
 
             let entries = new Promise((resolve) => {
                 const entries = [];
@@ -273,7 +273,7 @@ describe("archive", "tar", "raw", () => {
         });
 
         specify("multi file", async () => {
-            const extract = new tar.RawExtractStream();
+            const extract = new tar.RawUnpackStream();
 
             let entries = new Promise((resolve) => {
                 const entries = [];
@@ -326,7 +326,7 @@ describe("archive", "tar", "raw", () => {
         });
 
         specify("chunked multi file", async () => {
-            const extract = new tar.RawExtractStream();
+            const extract = new tar.RawUnpackStream();
 
             let entries = new Promise((resolve) => {
                 const entries = [];
@@ -383,7 +383,7 @@ describe("archive", "tar", "raw", () => {
         });
 
         specify("pax", async () => {
-            const extract = new tar.RawExtractStream();
+            const extract = new tar.RawUnpackStream();
 
             let entries = new Promise((resolve) => {
                 const entries = [];
@@ -421,7 +421,7 @@ describe("archive", "tar", "raw", () => {
         });
 
         specify("types", async () => {
-            const extract = new tar.RawExtractStream();
+            const extract = new tar.RawUnpackStream();
 
             let entries = new Promise((resolve) => {
                 const entries = [];
@@ -474,7 +474,7 @@ describe("archive", "tar", "raw", () => {
         });
 
         specify("long name", async () => {
-            const extract = new tar.RawExtractStream();
+            const extract = new tar.RawUnpackStream();
 
             let entries = new Promise((resolve) => {
                 const entries = [];
@@ -511,7 +511,7 @@ describe("archive", "tar", "raw", () => {
         });
 
         specify("unicode bsd", async () => {  // can unpack a bsdtar unicoded tarball
-            const extract = new tar.RawExtractStream();
+            const extract = new tar.RawUnpackStream();
 
             let entries = new Promise((resolve) => {
                 const entries = [];
@@ -549,7 +549,7 @@ describe("archive", "tar", "raw", () => {
         });
 
         specify("unicode", async () => {
-            const extract = new tar.RawExtractStream();
+            const extract = new tar.RawUnpackStream();
 
             let entries = new Promise((resolve) => {
                 const entries = [];
@@ -587,7 +587,7 @@ describe("archive", "tar", "raw", () => {
         });
 
         specify("name is 100", async () => {
-            const extract = new tar.RawExtractStream();
+            const extract = new tar.RawUnpackStream();
 
             let entries = new Promise((resolve) => {
                 const entries = [];
@@ -610,7 +610,7 @@ describe("archive", "tar", "raw", () => {
         });
 
         specify("invalid file", (done) => {
-            const extract = new tar.RawExtractStream();
+            const extract = new tar.RawUnpackStream();
 
             extract.on("error", (err) => {
                 assert(Boolean(err));
@@ -623,7 +623,7 @@ describe("archive", "tar", "raw", () => {
         });
 
         specify("space prefixed", async () => {
-            const extract = new tar.RawExtractStream();
+            const extract = new tar.RawUnpackStream();
 
             let entries = new Promise((resolve) => {
                 const entries = [];
@@ -644,7 +644,7 @@ describe("archive", "tar", "raw", () => {
         });
 
         specify("gnu long path", async () => {
-            const extract = new tar.RawExtractStream();
+            const extract = new tar.RawUnpackStream();
 
             let entries = new Promise((resolve) => {
                 const entries = [];
@@ -666,7 +666,7 @@ describe("archive", "tar", "raw", () => {
         });
 
         specify("base 256 uid and gid", async () => {
-            const extract = new tar.RawExtractStream();
+            const extract = new tar.RawUnpackStream();
 
             let entries = new Promise((resolve) => {
                 const entries = [];
@@ -688,7 +688,7 @@ describe("archive", "tar", "raw", () => {
         });
 
         specify("base 256 size", async () => {
-            const extract = new tar.RawExtractStream();
+            const extract = new tar.RawUnpackStream();
             const p = new Promise((resolve) => {
                 extract.on("entry", (header, stream, callback) => {
                     expect(header).to.be.deep.equal({
