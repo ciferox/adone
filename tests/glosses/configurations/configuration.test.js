@@ -98,17 +98,6 @@ describe("configuration", "Configuration", () => {
         assert.isUndefined(conf.get("a.b.a.other"));
     });
 
-    it("shouldn't get access to value reserved property '_' and nested properties", () => {
-        assert.throws(() => (conf.has("_")), TypeError);
-        assert.throws(() => (conf.has("_.size")), TypeError);
-        assert.throws(() => (conf.get("_")), TypeError);
-        assert.throws(() => (conf.get("_.size")), TypeError);
-        assert.throws(() => (conf.set("_", 10)), TypeError);
-        assert.throws(() => (conf.set("_.size")), TypeError);
-        assert.throws(() => (conf.delete("_", 10)), TypeError);
-        assert.throws(() => (conf.delete("_.size")), TypeError);
-    });
-
     it("should delete keys", () => {
         conf.set("a.b.c", 10);
         conf.delete("a.b.c");

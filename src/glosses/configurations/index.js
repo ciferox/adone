@@ -98,9 +98,6 @@ export class Configuration {
         if (is.nil(parts) || parts.length === 0 || !parts[0]) {
             throw new adone.x.InvalidArgument("Invalid type of key");
         }
-        if (parts[0] === "_") {
-            throw new TypeError("Cannot access to value of reserved key");
-        }
         return parts;
     }
 }

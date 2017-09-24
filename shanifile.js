@@ -22,7 +22,7 @@ export default {
         plugins: [
             "transform.flowStripTypes",
             "transform.decorators",
-            "transform.classProperties",
+            ["transform.classProperties", { loose: true }],
             "transform.es2015ModulesCommonjs",
             "transform.functionBind",
             "transform.objectRestSpread",

@@ -121,16 +121,17 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
                 return false;
             },
             define(tag, predicate) {
-                adone.tag[tag] = Symbol();
+                const t = adone.tag[tag] = Symbol();
                 if (typeof (predicate) === "string") { // eslint-disable-line
                     Object.defineProperty(adone.is, predicate, {
                         enumerable: true,
-                        value: (obj) => adone.tag.has(obj, adone.tag[tag])
+                        value: (obj) => adone.tag.has(obj, t)
                     });
                 }
             },
             SUBSYSTEM: Symbol(),
             APPLICATION: Symbol(),
+            CONFIGURATION: Symbol(),
             TRANSFORM: Symbol(),
             CORE_STREAM: Symbol(),
             LOGGER: Symbol(),
@@ -138,7 +139,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             BIGNUMBER: Symbol(),
             BYTE_ARRAY: Symbol(),
             DATETIME: Symbol(),
-            CONFIGURATION: Symbol(),
+            EXDATE: Symbol(),
 
             GENESIS_NETRON: Symbol(),
             GENESIS_PEER: Symbol(),
@@ -192,7 +193,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             const plugins = [
                 "transform.flowStripTypes",
                 "transform.decorators",
-                "transform.classProperties",
+                ["transform.classProperties", { loose: true }],
                 "transform.es2015ModulesCommonjs",
                 "transform.functionBind",
                 "transform.objectRestSpread"
@@ -239,7 +240,8 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
 
             adone.lazify({
                 term: () => new adone.terminal.Terminal(),
-                logger: () => adone.application.Logger.default()
+                logger: () => adone.application.Logger.default(),
+                netron: () => new adone.netron.Netron()
             }, runtime);
 
             return runtime;
@@ -339,6 +341,8 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         notifier: "./glosses/notifier",
         vcs: "./glosses/vcs",
         regex: "./glosses/regex",
+        task: "./glosses/tasks",
+        project: "./glosses/project",
 
         // Omnitron
         omnitron: "./omnitron",

@@ -33,10 +33,6 @@ const paths = {
         from: ["src/cli/adone.js"],
         to: "bin"
     },
-    subsystems: {
-        from: ["src/subsystems/**/*"],
-        to: "lib/subsystems"
-    },
     omnitron: {
         from: ["src/omnitron/**/*"],
         to: "lib/omnitron"
@@ -82,7 +78,7 @@ const transform = () => babel({
         "transform-flow-strip-types",
         "transform-decorators-legacy",
         "transform-class-properties",
-        "transform.ESModules",
+        "transform-es2015-modules-commonjs",
         "transform-function-bind",
         "transform-object-rest-spread",
         [importReplace, {
@@ -124,18 +120,6 @@ const buildBin = () => gulp.src(paths.bin.from)
     }))
     .pipe(notify({ message: "Done: bin", onLast: true }))
     .pipe(gulp.dest(paths.bin.to));
-
-const buildSubsystems = () => gulp.src(paths.subsystems.from)
-    .pipe(errorHandler())
-    .pipe(cache("subsystems"))
-    .pipe(sourcemaps.init())
-    .pipe(transform())
-    .pipe(sourcemaps.mapSources((sourcePath, file) => {
-        return path.relative(path.dirname(path.resolve(paths.subsystems.to, file.relative)), file.path);
-    }))
-    .pipe(sourcemaps.write("."))
-    .pipe(notify({ message: "Done: subsystems", onLast: true }))
-    .pipe(gulp.dest(paths.subsystems.to));
 
 const buildOmnitron = () => gulp.src(paths.omnitron.from)
     .pipe(errorHandler())
@@ -266,9 +250,6 @@ const copyVendor = () => gulp.src(paths.vendor.from)
 gulp.task("clean-bin", () => del(paths.bin.to));
 gulp.task("build-bin", ["clean-bin"], buildBin);
 
-gulp.task("clean-subsystems", () => del(paths.subsystems.to));
-gulp.task("build-subsystems", ["clean-subsystems"], buildSubsystems);
-
 gulp.task("clean-glosses", () => del(paths.glosses.to));
 gulp.task("build-glosses", ["clean-glosses"], buildGlosses);
 
@@ -289,12 +270,11 @@ gulp.task("build-vendor", ["clean-glosses"], copyVendor);
 gulp.task("clean-schema-templates", () => del(paths.schemaTemplates.to));
 gulp.task("build-schema-templates", ["clean-schema-templates"], buildSchemaTemplates);
 
-gulp.task("clean", ["clean-examples", "clean-tests", "clean-glosses", "clean-bin", "clean-subsystems", "clean-omnitron", "clean-index", "clean-schema-templates"]);
-gulp.task("build", ["build-examples", "build-tests", "build-glosses", "build-bin", "build-subsystems", "build-omnitron", "build-index", "build-vendor", "build-schema-templates"]);
+gulp.task("clean", ["clean-examples", "clean-tests", "clean-glosses", "clean-bin", "clean-omnitron", "clean-index", "clean-schema-templates"]);
+gulp.task("build", ["build-examples", "build-tests", "build-glosses", "build-bin", "build-omnitron", "build-index", "build-vendor", "build-schema-templates"]);
 
 gulp.task("watch", ["build"], () => {
     gulp.watch(paths.bin.from, buildBin);
-    gulp.watch(paths.subsystems.from, buildSubsystems);
     gulp.watch(paths.tests.from, buildTests);
     gulp.watch(paths.examples.from, buildExamples);
     gulp.watch(paths.glosses.from, buildGlosses);

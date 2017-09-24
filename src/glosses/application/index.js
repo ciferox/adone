@@ -75,3 +75,26 @@ export const run = async (App, ignoreArgs = false) => {
 
     return app.run({ ignoreArgs });
 };
+
+export const restAsOptions = (args) => {
+    const map = {};
+    let lastArg = null;
+    for (let arg of args) {
+        if (arg.match(/^--[\w-]+=.+$/)) {
+            const i = arg.indexOf("=");
+            map[adone.text.toCamelCase(arg.slice(2, i))] = arg.slice(i + 1);
+            continue;
+        }
+        if (arg.startsWith("-")) {
+            arg = arg.slice(arg[1] === "-" ? 2 : 1);
+            if (lastArg) {
+                map[lastArg] = true;
+            }
+            lastArg = adone.text.toCamelCase(arg);
+        } else {
+            map[lastArg] = arg;
+            lastArg = null;
+        }
+    }
+    return map;
+};

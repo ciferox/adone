@@ -15,7 +15,7 @@ adone.lazify({
     nsNames: () => adone.meta.namespaces.map((ns) => ns.name).sort((a, b) => a.localeCompare(b))
 }, adone.asNamespace(exports), require);
 
-const metaNamespace = require("../../../.meta/adone.json");
+const metaNamespace = require("../../../.adone/meta.json");
 
 export const namespaces = [];
 export const namespaceMap = metaNamespace.namespace;

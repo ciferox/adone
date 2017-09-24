@@ -7,7 +7,7 @@ const objectCtorString = funcToString.call(Object);
 
 const getTag = (value) => {
     const rawTag = toString.call(value);
-    if (value === null) {
+    if (value === null) { // eslint-disable-line
         return "null";
     }
     return rawTag.substring(8, rawTag.length - 1).toLowerCase();
@@ -15,8 +15,8 @@ const getTag = (value) => {
 
 
 const baseGetTag = (value) => {
-    if (value == null) {
-        return value === undefined ? "[object Undefined]" : "[object Null]";
+    if (value == null) { // eslint-disable-line
+        return value === undefined ? "[object Undefined]" : "[object Null]"; // eslint-disable-line
     }
     if (!(symToStringTag && symToStringTag in Object(value))) {
         return toString.call(value);
@@ -141,15 +141,15 @@ const platform = process.platform;
 const is = {
     _getTag: getTag,
     // Checks whether given value is `null`.
-    null: (value) => value === null,
+    null: (value) => value === null, // eslint-disable-line
     // Checks whether given value is `undefined`.
     undefined: (value) => value === void 0,
     // Checks whether given value exists, i.e, not `null` nor `undefined`
-    exist: (value) => value != null,  // eslint-disable-line
+    exist: (value) => value != null, // eslint-disable-line
     // Checks whether given value is either `null` or `undefined`
-    nil: (value) => value == null,  // eslint-disable-line
+    nil: (value) => value == null, // eslint-disable-line
     // Checks whether given value is a number.
-    number: (value) => typeof value === "number",
+    number: (value) => typeof value === "number", // eslint-disable-line
     numeral: (value) => {
         // Checks whether given value is a numeral, i.e:
         //
@@ -182,7 +182,7 @@ const is = {
     float: (number) => is.number(number) && number !== Math.floor(number),
     negativeZero: (number) => (number === 0) && (Number.NEGATIVE_INFINITY === 1 / number),
     // Checks whether given value is a string.
-    string: (value) => (typeof value === "string"),
+    string: (value) => (typeof value === "string"), // eslint-disable-line
     // Checks whether given value is an empty string, i.e, a string with whitespace characters only.
     emptyString: (string) => (is.string(string) && /^\s*$/.test(string)),
     substring: (substring, string, offset) => {

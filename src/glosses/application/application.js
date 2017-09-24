@@ -2408,4 +2408,3 @@ Application.Options = OptionsDecorator;
 Application.OptionsGroup = OptionsGroupDecorator;
 Application.OptionsGroups = OptionsGroupsDecorator;
 Application.MainCommand = MainCommandDecorator;
-

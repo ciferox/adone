@@ -25,6 +25,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
 
         this[STAGE_SYMBOL] = STAGE_NEW;
         this[SUBSYSTEMS_SYMBOL] = [];
+        this.parent = null;
         this.app = this;
         this._ = this.data = {};
     }
@@ -128,8 +129,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
                 break;
             }
         }
-    }
-    
+    }    
 
     defineCommand(...args) {
         return this.app.defineCommand(this, ...args);
@@ -168,6 +168,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
             name = instance.constructor.name;
         }
 
+        instance.parent = this;
         instance.app = this;
 
         const sysInfo = {
@@ -240,6 +241,10 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         }
 
         throw new x.Unknown(`Unknown subsystem: ${name}`);
+    }
+
+    netron() {
+
     }
 
     async _configureSubsystem(sysInfo) {

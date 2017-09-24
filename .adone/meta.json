@@ -321,6 +321,18 @@
                     "index": "omnitron/index",
                     "src": "omnitron/**/*"
                 },
+                "project": {
+                    "description": "Adone project management stuff",
+                    "index": "glosses/project/index",
+                    "src": "glosses/project/**/*",
+                    "namespace": {
+                        "task": {
+                            "description": "Project tasks",
+                            "index": "glosses/project/tasks/index",
+                            "src": "glosses/project/tasks/**/*"
+                        }
+                    }
+                },
                 "promise": {
                     "description": "Promise utilites",
                     "index": "glosses/promise/index",
@@ -365,6 +377,11 @@
                     "description": "System utilites",
                     "index": "glosses/system/index",
                     "src": "glosses/system/**/*"
+                },
+                "tasks": {
+                    "description": "Tasks management",
+                    "index": "glosses/tasks/index",
+                    "src": "glosses/tasks/**/*"
                 },
                 "templating": {
                     "description": "Template engines",
