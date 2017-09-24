@@ -1,7 +1,6 @@
 // @flow
 
 import { getEnv } from "./helpers/environment";
-import micromatch from "micromatch";
 
 import { findConfigs, loadConfig } from "./loading/files";
 
@@ -125,10 +124,17 @@ class ConfigChainBuilder {
                 return (negate ? "!" : "") + path.resolve(dirname, pattern);
             });
 
-            if (
-                micromatch(possibleDirs, absolutePatterns, { nocase: true }).length > 0
-            ) {
-                return true;
+            // if (
+            //     micromatch(possibleDirs, absolutePatterns, { nocase: true }).length > 0
+            // ) {
+            //     return true;
+            // }
+            const matcher = adone.util.match(absolutePatterns);
+
+            for (const dir of possibleDirs) {
+                if (matcher(dir)) {
+                    return true;
+                }
             }
         }
 

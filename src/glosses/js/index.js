@@ -3,5 +3,6 @@ adone.lazify({
     coverage: "./coverage",
     Module: "./module",
     adone: "./adone",
-    parseFunction: "./parse_function"
+    parseFunction: "./parse_function",
+    tokens: "./tokens"
 }, adone.asNamespace(exports), require);

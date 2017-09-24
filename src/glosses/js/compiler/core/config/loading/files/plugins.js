@@ -4,8 +4,6 @@
  * This file handles all logic for converting string-based configuration references into loaded objects.
  */
 
-import resolve from "resolve";
-
 const {
     is,
     std: { path }
@@ -134,7 +132,7 @@ export const loadPlugin = (name: string): { value: mixed } => {
 // };
 
 export const loadParser = (name: string, dirname: string): { filepath: string, value: Function } => {
-    const filepath = resolve.sync(name, { basedir: dirname });
+    const filepath = adone.js.Module.resolve(name, { basedir: dirname });
 
     const mod = requireModule("parser", filepath);
 
@@ -157,7 +155,7 @@ export const loadParser = (name: string, dirname: string): { filepath: string, v
 };
 
 export const loadGenerator = (name: string, dirname: string): { filepath: string, value: Function } => {
-    const filepath = resolve.sync(name, { basedir: dirname });
+    const filepath = adone.js.Module.resolve(name, { basedir: dirname });
 
     const mod = requireModule("generator", filepath);
 

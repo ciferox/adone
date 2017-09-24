@@ -108,7 +108,5 @@
   "bin": {
     "adone": "./bin/adone.js"
   },
-  "dependencies": {
-    "micromatch": "^3.1.0"
-  }
+  "dependencies": {}
 }

@@ -1,7 +1,5 @@
 // @flow
 
-import json5 from "json5";
-import resolve from "resolve";
 import { getEnv } from "../../helpers/environment";
 import { makeStrongCache } from "../../caching";
 
@@ -106,7 +104,7 @@ const readConfigFile = makeStaticFileCache((filepath, content) => {
         }
     } else {
         try {
-            options = json5.parse(content);
+            options = adone.data.json5.decode(content);
         } catch (err) {
             err.message = `${filepath}: Error while parsing config - ${err.message}`;
             throw err;
@@ -153,7 +151,7 @@ const readConfig = (filepath) => {
 };
 
 export const loadConfig = (name: string, dirname: string): ConfigFile => {
-    const filepath = resolve.sync(name, { basedir: dirname });
+    const filepath = adone.js.Module.resolve(name, { basedir: dirname });
 
     const conf = readConfig(filepath);
     if (!conf) {

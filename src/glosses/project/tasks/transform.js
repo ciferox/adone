@@ -9,12 +9,6 @@ export default class TransformTask extends adone.project.task.Base {
         this.stream = null;
     }
 
-    /**
-     * This method should always return
-     * @param {null|Object} params
-     * @returns {null|Object} The method should always return an object, null or undefined. If an object is returned, it must contain at least the
-     *                        'stream' property.
-     */
     initialize(params) {
         if (is.null(this.stream)) {
             this.stream = fast.src(params.$src, {

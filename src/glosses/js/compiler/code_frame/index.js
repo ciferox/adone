@@ -1,9 +1,7 @@
-import jsTokens, { matchToToken } from "js-tokens";
-import esutils from "esutils";
-import Chalk from "chalk";
-
 const {
-    is
+    is,
+    js: { tokens, compiler: { esutils } },
+    terminal: { styler }
 } = adone;
 
 let deprecationWarningShown = false;
@@ -22,20 +20,20 @@ type NodeLocation = {
  * Chalk styles for token types.
  */
 
-const getDefs = (chalk) => {
+const getDefs = () => {
     return {
-        keyword: chalk.cyan,
-        capitalized: chalk.yellow,
-        jsx_tag: chalk.yellow,
-        punctuator: chalk.yellow,
+        keyword: styler.cyan,
+        capitalized: styler.yellow,
+        jsx_tag: styler.yellow,
+        punctuator: styler.yellow,
         // bracket:  intentionally omitted.
-        number: chalk.magenta,
-        string: chalk.green,
-        regex: chalk.magenta,
-        comment: chalk.grey,
-        invalid: chalk.white.bgRed.bold,
-        gutter: chalk.grey,
-        marker: chalk.red.bold
+        number: styler.magenta,
+        string: styler.green,
+        regex: styler.magenta,
+        comment: styler.grey,
+        invalid: styler.white.bgRed.bold,
+        gutter: styler.grey,
+        marker: styler.red.bold
     };
 };
 
@@ -63,7 +61,7 @@ const BRACKET = /^[()\[\]{}]$/;
 
 const getTokenType = (match) => {
     const [offset, text] = match.slice(-2);
-    const token = matchToToken(match);
+    const token = tokens.matchToToken(match);
 
     if (token.type === "name") {
         if (esutils.keyword.isReservedWordES6(token.value)) {
@@ -94,7 +92,7 @@ const getTokenType = (match) => {
  */
 
 const highlight = (defs: Object, text: string) => {
-    return text.replace(jsTokens, (...args) => {
+    return text.replace(tokens.regex, (...args) => {
         const type = getTokenType(args);
         const colorize = defs[type];
         if (colorize) {
@@ -172,16 +170,11 @@ const getMarkerLines = (loc: NodeLocation, source: Array<string>, opts: Object):
 };
 
 export const codeFrameColumns = (rawLines: string, loc: NodeLocation, opts: Object = {}): string => {
-    const highlighted =
-        (opts.highlightCode && Chalk.supportsColor) || opts.forceColor;
-    let chalk = Chalk;
-    if (opts.forceColor) {
-        chalk = new Chalk.constructor({ enabled: true });
-    }
+    const highlighted = opts.highlightCode || opts.forceColor;
     const maybeHighlight = (chalkFn, string) => {
         return highlighted ? chalkFn(string) : string;
     };
-    const defs = getDefs(chalk);
+    const defs = getDefs();
     if (highlighted) {
         rawLines = highlight(defs, rawLines);
     }
@@ -226,7 +219,7 @@ export const codeFrameColumns = (rawLines: string, loc: NodeLocation, opts: Obje
         .join("\n");
 
     if (highlighted) {
-        return chalk.reset(frame);
+        return styler.reset(frame);
     }
     return frame;
 };

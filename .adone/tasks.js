@@ -18,7 +18,7 @@ class AdoneTranspileTask extends project.task.Transpile {
     plugins(params) {
         const plugins = super.plugins(params);
         return plugins.concat([
-            importAdoneReplacer(({ filename }) => std.path.relative(std.path.dirname(filename), "lib"))
+            importAdoneReplacer(({ filename }) => std.path.relative(std.path.dirname(filename), std.path.join(__dirname, "..", "lib")))
         ]);
     }
 }
@@ -27,7 +27,7 @@ class AdoneTranspileExeTask extends project.task.TranspileExe {
     plugins(params) {
         const plugins = super.plugins(params);
         return plugins.concat([
-            importAdoneReplacer(({ filenameRelative }) => std.path.relative(std.path.join("bin", std.path.dirname(filenameRelative)), "lib"))
+            importAdoneReplacer(({ filename }) => std.path.relative(std.path.join(__dirname, "..", "bin"), std.path.join(__dirname, "..", "lib")))
         ]);
     }
 }

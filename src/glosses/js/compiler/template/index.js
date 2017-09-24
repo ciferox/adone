@@ -1,9 +1,7 @@
-import cloneDeep from "lodash/cloneDeep";
-import has from "lodash/has";
-
 const {
     is,
-    js: { compiler: { parse, traverse } }
+    js: { compiler: { parse, traverse } },
+    vendor: { lodash: { cloneDeep, has } }
 } = adone;
 
 const FROM_TEMPLATE = new Set();

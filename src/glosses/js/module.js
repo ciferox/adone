@@ -1,6 +1,14 @@
-
-
 const NodeModule = adone.std.module;
+
+const caller = () => {
+    const origPrepareStackTrace = Error.prepareStackTrace;
+    Error.prepareStackTrace = function (_, stack) {
+        return stack;
+    };
+    const stack = (new Error()).stack;
+    Error.prepareStackTrace = origPrepareStackTrace;
+    return stack[2].getFileName();
+};
 
 export default class Module extends NodeModule {
     constructor(id, { transform = null, parent = null, loaders = {} } = {}) {
@@ -49,6 +57,12 @@ export default class Module extends NodeModule {
             throw new adone.x.InvalidArgument("`path` should be a string");
         }
         return this.constructor._load(path, this, cache);
+    }
+
+
+    static resolve(request, { basedir = caller() } = {}) {
+        const m = new this(adone.std.path.join(basedir, "index.js"));
+        return NodeModule._resolveFilename(request, m, false);
     }
 
     static _createNewModule(filename, parent) {
