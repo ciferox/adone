@@ -1,6 +1,6 @@
 const {
     is,
-    runtime: { term }
+    terminal: { styler }
 } = adone;
 
 /**
@@ -39,7 +39,7 @@ const isSerializable = function (input, onlyPrimitives, options) {
     ) {
         return true;
     }
-    if (is.string(input) && input.indexOf("\n") === -1) {
+    if (is.string(input) && !input.includes("\n")) {
         return true;
     }
 
@@ -59,22 +59,22 @@ const addColorToData = function (input, options) {
 
     if (is.string(input)) {
         // Print strings in regular term color
-        return options.stringColor ? term[options.stringColor](input) : input;
+        return options.stringColor ? styler[options.stringColor](input) : input;
     }
 
     const sInput = String(input);
 
     if (input === true) {
-        return term.green(sInput);
+        return styler.green(sInput);
     }
     if (input === false) {
-        return term.red(sInput);
+        return styler.red(sInput);
     }
     if (is.null(input)) {
-        return term.grey(sInput);
+        return styler.grey(sInput);
     }
     if (is.number(input)) {
-        return term[options.numberColor](sInput);
+        return styler[options.numberColor](sInput);
     }
     if (is.function(input)) {
         return "function() {}";
@@ -122,7 +122,7 @@ const renderToArray = function (data, options, indentation) {
             // Prepend the dash at the begining of each array's element line
             let line = "- ";
             if (!options.noColor) {
-                line = term[options.dashColor](line);
+                line = styler[options.dashColor](line);
             }
             line = indent(indentation) + line;
 
@@ -168,7 +168,7 @@ const renderToArray = function (data, options, indentation) {
         // Prepend the index at the beginning of the line
         key = (`${i}: `);
         if (!options.noColor) {
-            key = term[options.keysColor](key);
+            key = styler[options.keysColor](key);
         }
         key = indent(indentation) + key;
 

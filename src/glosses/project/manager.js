@@ -51,7 +51,9 @@ export default class Manager extends task.Manager {
         super();
         this.name = null;
         this.path = path;
-        this.config = new project.Configuration();
+        this.config = new project.Configuration({
+            cwd: this.path
+        });
         this._loaded = false;
     }
 
@@ -59,7 +61,7 @@ export default class Manager extends task.Manager {
         return this.config.version;
     }
 
-    incVersion({ part = "minor", preid = undefined, loose = false } = {}) {
+    async incVersion({ part = "minor", preid = undefined, loose = false } = {}) {
         this._checkLoaded();
         if (!VERSION_PARTS.includes(part)) {
             throw new adone.x.NotValid(`Not valid version part: ${part}`);
@@ -71,6 +73,25 @@ export default class Manager extends task.Manager {
         }
 
         this.config.version = adone.semver.inc(adone.semver.clean(version, loose), part, loose, preid);
+        
+        await this.config.save("adone.conf.json", null, {
+            space: "    "
+        });
+
+        const updateConfig = async (name) => {
+            if (await fs.exists(std.path.join(this.path, name))) {
+                const cfg = await adone.configuration.load(name, null, {
+                    cwd: this.path
+                });
+                cfg.version = this.config.version;
+                await cfg.save(name, null, {
+                    space: "  "
+                });
+            }
+        };
+
+        await updateConfig("package.json");
+        await updateConfig("package-lock.json");
     }
 
     async load() {
@@ -99,12 +120,33 @@ export default class Manager extends task.Manager {
         this._loaded = true;
     }
 
+    getProjectEntries(path) {
+        const units = {};
+
+        this._parseProjectStructure("", this.config.project.structure, units);
+
+        // Convert object to array
+        const keys = Object.keys(units);
+        const entries = [];
+
+        for (const key of keys) {
+            entries.push(Object.assign({
+                $id: key
+            }, units[key]));
+        }
+
+        if (is.string(path)) {
+            return entries.filter((entry) => entry.$id.startsWith(path));
+        }
+        return entries;
+    }
+
     async clean(path) {
         this._checkLoaded();
-        const units = this._getProjectUnits(path);
+        const entries = this.getProjectEntries(path);
 
         const results = [];
-        for (const unit of units) {
+        for (const unit of entries) {
             const observer = await this.run("delete", unit); // eslint-disable-line
             results.push(observer.result);
         }
@@ -114,7 +156,7 @@ export default class Manager extends task.Manager {
 
     async build(path) {
         this._checkLoaded();
-        const units = this._getProjectUnits(path);
+        const units = this.getProjectEntries(path);
 
         const promises = [];
         for (const unit of units) {
@@ -136,7 +178,7 @@ export default class Manager extends task.Manager {
 
     async watch(path) {
         this._checkLoaded();
-        const units = this._getProjectUnits(path);
+        const units = this.getProjectEntries(path);
 
         const promises = [];
         for (const unit of units) {
@@ -192,32 +234,7 @@ export default class Manager extends task.Manager {
     //     await adoneConfig.save();
     // }
 
-    _getProjectUnits(path) {
-        const units = {};
-
-        let schema;
-        if (is.string(path)) {
-            schema = lodash.get(this.config.project.structure, path);
-        } else {
-            schema = this.config.project.structure;
-        }
-
-        this._processStructSchema("", schema, units);
-
-        // Convert object to array
-        const keys = Object.keys(units);
-        const result = [];
-
-        for (const key of keys) {
-            result.push(Object.assign({
-                $id: key
-            }, units[key]));
-        }
-
-        return result;
-    }
-
-    _processStructSchema(prefix, schema, units) {
+    _parseProjectStructure(prefix, schema, units) {
         for (const [key, val] of Object.entries(schema)) {
             if (key.startsWith("$")) {
                 if (!is.propertyOwned(units, prefix)) {
@@ -225,7 +242,7 @@ export default class Manager extends task.Manager {
                 }
                 units[prefix][key] = val;
             } else if (is.plainObject(val)) {
-                this._processStructSchema((prefix.length > 0 ? `${prefix}.${key}` : key), val, units);
+                this._parseProjectStructure((prefix.length > 0 ? `${prefix}.${key}` : key), val, units);
             }
         }
     }

@@ -10,7 +10,7 @@ describe("configuration", "FileConfiguration", () => {
     let conf;
 
     const options = {
-        base: fixture()
+        cwd: fixture()
     };
 
     beforeEach(() => {
@@ -143,7 +143,7 @@ describe("configuration", "FileConfiguration", () => {
             const savedConf = new configuration.FileConfiguration(options);
             await savedConf.load(filename);
             assert.deepEqual(savedConf, conf);
-            await adone.fs.unlink(adone.std.path.resolve(options.base, filename));
+            await adone.fs.unlink(adone.std.path.resolve(options.cwd, filename));
         });
     }
 
@@ -164,7 +164,7 @@ describe("configuration", "FileConfiguration", () => {
         await conf.save("nested.json", "b.nested");
         const savedConf = new configuration.FileConfiguration(options);
         await savedConf.load("nested.json");
-        await adone.fs.unlink(adone.std.path.resolve(options.base, "nested.json"));
+        await adone.fs.unlink(adone.std.path.resolve(options.cwd, "nested.json"));
         assert.equal(savedConf.str2, "val2");
         assert.equal(savedConf.num2, 8);
     });
@@ -175,7 +175,7 @@ describe("configuration", "FileConfiguration", () => {
         await conf.save("nested.json", ["b", "nested"]);
         const savedConf = new configuration.FileConfiguration(options);
         await savedConf.load("nested.json");
-        await adone.fs.unlink(adone.std.path.resolve(options.base, "nested.json"));
+        await adone.fs.unlink(adone.std.path.resolve(options.cwd, "nested.json"));
         assert.equal(savedConf.str2, "val2");
         assert.equal(savedConf.num2, 8);
     });
@@ -193,7 +193,7 @@ describe("configuration", "FileConfiguration", () => {
     it("should create destination directory while save", async () => {
         const conf = new configuration.FileConfiguration(options);
         await conf.load("a.json", true);
-        await conf.save(std.path.join(options.base, "1", "2", "3", "a.json"), true);
-        await adone.fs.rm(adone.std.path.join(options.base, "1"));
+        await conf.save(std.path.join(options.cwd, "1", "2", "3", "a.json"), true);
+        await adone.fs.rm(adone.std.path.join(options.cwd, "1"));
     });
 });

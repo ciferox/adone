@@ -10,7 +10,7 @@ const {
 export default class Configuration extends configuration.FileConfiguration {
     constructor({ inMemory = false } = {}) {
         super({
-            base: adone.config.configsPath
+            cwd: adone.config.configsPath
         });
         this.inMemory = inMemory;
 

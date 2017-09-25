@@ -6,14 +6,14 @@ const {
     js
 } = adone;
 
-const BASE_PATH = Symbol();
+const CWD_PATH = Symbol();
 const SERIALIZER = Symbol();
 const PATHS = Symbol();
 
 export default class FileConfiguration extends adone.configuration.Configuration {
-    constructor({ base = process.cwd() } = {}) {
+    constructor({ cwd = process.cwd() } = {}) {
         super();
-        this[BASE_PATH] = base;
+        this[CWD_PATH] = cwd;
         this[SERIALIZER] = adone.lazify({
             ".js": () => ({
                 encode: null,
@@ -93,9 +93,7 @@ export default class FileConfiguration extends adone.configuration.Configuration
         const conf = await this._checkPath(confPath, true);
         if (conf.st.isDirectory()) {
             conf.path = adone.util.globize(conf.path, { exts: `{${Object.keys(this[SERIALIZER]).join(",")}}` });
-            await fs.glob(conf.path).map((p) => {
-                return this.load(p, name, options);
-            });
+            await fs.glob(conf.path).map((p) => this.load(p, name, options));
         } else if (conf.st.isFile()) {
             let confObj = {};
 
@@ -145,16 +143,17 @@ export default class FileConfiguration extends adone.configuration.Configuration
 
     async _checkPath(confPath, checkExists) {
         let path;
-        if (!std.path.isAbsolute(confPath)) {
-            path = std.path.resolve(this[BASE_PATH], confPath);
-        } else {
+        if (std.path.isAbsolute(confPath)) {
             path = confPath;
+        } else {
+            path = std.path.resolve(this[CWD_PATH], confPath);
         }
 
         let ext = null;
         let serializer = null;
         ext = std.path.extname(path);
-        if (ext !== "") {
+
+        if (ext.length > 0) {
             if (!is.propertyOwned(this[SERIALIZER], ext)) {
                 throw new x.NotSupported(`Unsupported format: ${ext}`);
             }
@@ -165,16 +164,22 @@ export default class FileConfiguration extends adone.configuration.Configuration
         }
 
         if (checkExists) {
-            let st;
             try {
-                st = await fs.stat(path);
+                return {
+                    path,
+                    ext,
+                    serializer,
+                    st: await fs.stat(path)
+                };
             } catch (err) {
                 throw new x.NotExists(`${path} not exists`);
             }
-
-            return { path, ext, serializer, st };
         }
 
-        return { path, ext, serializer };
+        return {
+            path,
+            ext,
+            serializer
+        };
     }
 }
