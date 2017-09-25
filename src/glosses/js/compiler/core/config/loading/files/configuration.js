@@ -99,8 +99,8 @@ const readConfigFile = makeStaticFileCache((filepath, content) => {
             err.message = `${filepath}: Error while parsing JSON - ${err.message}`;
             throw err;
         }
-        if (!options) { 
-            return null; 
+        if (!options) {
+            return null;
         }
     } else {
         try {
@@ -206,12 +206,12 @@ export const findConfigs = (dirname: string): Array<ConfigFile> => {
             }
         }
 
-        if (foundIgnore && foundConfig) { 
+        if (foundIgnore && foundConfig) {
             break;
         }
 
-        if (loc === path.dirname(loc)) { 
-            break; 
+        if (loc === path.dirname(loc)) {
+            break;
         }
 
         loc = path.dirname(loc);

@@ -93,7 +93,7 @@ export default class FileConfiguration extends adone.configuration.Configuration
         const conf = await this._checkPath(confPath, true);
         if (conf.st.isDirectory()) {
             conf.path = adone.util.globize(conf.path, { exts: `{${Object.keys(this[SERIALIZER]).join(",")}}` });
-            await fs.glob(conf.path).map((p) => this.load(p, name, options));
+            await fs.glob(conf.path).map(async (p) => this.load(p, name, options));
         } else if (conf.st.isFile()) {
             let confObj = {};
 

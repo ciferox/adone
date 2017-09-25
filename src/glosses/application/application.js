@@ -804,10 +804,21 @@ class ArgumentsMap {
 
     has(key) {
         if (!this.args.has(key)) {
-            throw new x.Unknown(`No such argument: ${key}`);
+            return false;
         }
         const arg = this.args.get(key);
-        return arg.present;
+        if (arg.optional) {
+            return arg.present;
+        }
+        if (arg.present) {
+            return true;
+        }
+        // positional, not present
+        if (!arg.required || (arg.nargs === "*" || arg.nargs === "?")) {
+            return arg.hasDefaultValue();
+        }
+        // impossible case? parser must throw if a required arg is not present
+        return true;
     }
 }
 

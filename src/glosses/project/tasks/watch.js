@@ -5,16 +5,20 @@ const {
 } = adone;
 
 export default class WatchTask extends adone.project.task.Transform {
-    initialize(params) {
-        this.targetTask = this.manager.getTaskInstance(params.$task);
-        this.stream = fast.watch(params.$src, {
-            cwd: this.manager.path,
+    streamOptions() {
+        return {
+            ...super.streamOptions(),
             awaitWriteFinish: {
                 stabilityThreshold: 500,
                 pollInterval: 100
             }
-        });
-        
+        };
+    }
+
+    initialize(params) {
+        this.targetTask = this.manager.getTaskInstance(params.$task);
+        this.stream = fast.watch(params.$src, this.streamOptions());
+
         return super.initialize(params);
     }
 
@@ -34,7 +38,12 @@ export default class WatchTask extends adone.project.task.Transform {
                 onLast: false,
                 title: params.$dst,
                 filter: (file) => file.extname !== ".map",
-                message: (file) => std.path.relative(process.cwd(), file.path)
+                message: (file) => std.path.relative(process.cwd(), file.path),
+                debounce: {
+                    timeout: 500,
+                    leading: true,
+                    trailing: true
+                }
             });
         }
     }

@@ -9,11 +9,18 @@ export default class TransformTask extends adone.project.task.Base {
         this.stream = null;
     }
 
+    /**
+     * This method in which you can define the options that will be used in the fast stream
+     */
+    streamOptions() {
+        return {
+            cwd: this.manager.path
+        };
+    }
+
     initialize(params) {
         if (is.null(this.stream)) {
-            this.stream = fast.src(params.$src, {
-                cwd: this.manager.path
-            });
+            this.stream = fast.src(params.$src, this.streamOptions());
         }
 
         this.stream = this.transform(this.stream, params);

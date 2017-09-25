@@ -445,7 +445,6 @@ class CoreStream extends EventEmitter {
 
     /**
      * Creates a promise that will be fulfilled with an array of all the emitted values or the first occurred error.
-     *
      */
     then(onResolve, onReject) {
         return new Promise((resolve, reject) => {

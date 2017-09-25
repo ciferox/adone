@@ -22,7 +22,7 @@ export default class BaseTask extends task.Task {
     }
 
     /**
-     * The method in which you can implement the initializing logic and is called before the main() method. 
+     * The method in which you can implement the initializing logic and is called before the main() method.
      */
     initialize() {
     }
@@ -42,8 +42,8 @@ export default class BaseTask extends task.Task {
 
     /**
      * Calls in case of error.
-     * 
-     * @param {Error} err 
+     *
+     * @param {Error} err
      */
     exception(err) {
         adone.error(err);
