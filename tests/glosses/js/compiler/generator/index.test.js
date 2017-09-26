@@ -1,4 +1,4 @@
-import helperFixture from "../helper_fixture";
+import getFixture from "../helper_fixtures";
 
 const {
     std: { fs, path },
@@ -340,7 +340,7 @@ describe("js", "compiler", "generator", () => {
         });
     });
 
-    const suites = helperFixture(`${__dirname}/fixtures`);
+    const suites = getFixture(`${__dirname}/fixtures`);
 
     suites.forEach((testSuite) => {
         describe(`***generation/${testSuite.title}`, () => {

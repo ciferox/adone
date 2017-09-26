@@ -223,7 +223,6 @@
                             }
                           },
                           "method": false,
-                          "computed": false,
                           "key": {
                             "type": "Identifier",
                             "start": 31,
@@ -241,6 +240,7 @@
                             },
                             "name": "a"
                           },
+                          "computed": false,
                           "shorthand": false,
                           "value": {
                             "type": "NumericLiteral",

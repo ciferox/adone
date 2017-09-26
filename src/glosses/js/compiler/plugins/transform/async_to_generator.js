@@ -8,13 +8,6 @@ export default function () {
                     return;
                 }
 
-                // Ensure any Promise bindings at the Program level are renamed
-                // so the asyncToGenerator helper only sees the native Promise
-                const programScope = path.scope.getProgramParent();
-                if (programScope.hasBinding("Promise", true)) {
-                    programScope.rename("Promise");
-                }
-
                 adone.js.compiler.helper.remapAsyncToGenerator(path, state.file, {
                     wrapAsync: state.addHelper("asyncToGenerator"),
                 });

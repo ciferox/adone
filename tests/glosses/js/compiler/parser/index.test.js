@@ -1,4 +1,4 @@
-import { multiple as getFixtures } from "../helper_fixture";
+import { multiple as getFixtures } from "../helper_fixtures";
 
 const {
     is,

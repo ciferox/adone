@@ -286,16 +286,7 @@ describe("js", "compiler", "core", () => {
 
             assert.equal(aliasBaseType, "NumberTypeAnnotation");
 
-            assert.deepEqual(
-                [
-                    '"use strict";',
-                    "",
-                    "var x = function x(y) {",
-                    "  return y;",
-                    "};"
-                ].join("\n"),
-                result.code,
-            );
+            assert.deepEqual(result.code, "var x = function x(y) {\n  return y;\n};");
 
             // 2. passPerPreset: false
 
@@ -305,16 +296,7 @@ describe("js", "compiler", "core", () => {
 
             assert.equal(aliasBaseType, null);
 
-            assert.deepEqual(
-                [
-                    '"use strict";',
-                    "",
-                    "var x = function x(y) {",
-                    "  return y;",
-                    "};"
-                ].join("\n"),
-                result.code,
-            );
+            assert.deepEqual(result.code, "var x = function x(y) {\n  return y;\n};");
         });
 
         it.skip("complex plugin and preset ordering", () => {
@@ -817,6 +799,24 @@ describe("js", "compiler", "core", () => {
         });
 
         describe("buildExternalHelpers", () => {
+            describe("smoke tests", () => {
+                it("builds external helpers in global output type", () => {
+                    buildExternalHelpers(null, "global");
+                });
+
+                it("builds external helpers in module output type", () => {
+                    buildExternalHelpers(null, "module");
+                });
+
+                it("builds external helpers in umd output type", () => {
+                    buildExternalHelpers(null, "umd");
+                });
+
+                it("builds external helpers in var output type", () => {
+                    buildExternalHelpers(null, "var");
+                });
+            });
+
             it("all", () => {
                 const script = buildExternalHelpers();
                 assert.ok(script.indexOf("classCallCheck") >= -1);

@@ -104,7 +104,6 @@
                   }
                 },
                 "method": false,
-                "computed": false,
                 "key": {
                   "type": "StringLiteral",
                   "start": 10,
@@ -125,6 +124,7 @@
                   },
                   "value": "undef"
                 },
+                "computed": false,
                 "kind": "get",
                 "id": null,
                 "generator": false,

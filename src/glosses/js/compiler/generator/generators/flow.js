@@ -141,9 +141,7 @@ function FlowExportDeclaration(node: Object) {
     if (node.declaration) {
         const declar = node.declaration;
         this.print(declar, node);
-        if (!t.isStatement(declar)) {
-            this.semicolon();
-        }
+        if (!t.isStatement(declar)) this.semicolon();
     } else {
         this.token("{");
         if (node.specifiers.length) {
@@ -201,9 +199,7 @@ export function FunctionTypeAnnotation(node: Object, parent: Object) {
 
 export function FunctionTypeParam(node: Object) {
     this.print(node.name, node);
-    if (node.optional) {
-        this.token("?");
-    }
+    if (node.optional) this.token("?");
     this.token(":");
     this.space();
     this.print(node.typeAnnotation, node);
@@ -216,7 +212,7 @@ export function InterfaceExtends(node: Object) {
 
 export {
     InterfaceExtends as ClassImplements,
-    InterfaceExtends as GenericTypeAnnotation
+    InterfaceExtends as GenericTypeAnnotation,
 };
 
 export function _interfaceish(node: Object) {
@@ -279,7 +275,7 @@ export function NullableTypeAnnotation(node: Object) {
 
 export {
     NumericLiteral as NumberLiteralTypeAnnotation,
-    StringLiteral as StringLiteralTypeAnnotation
+    StringLiteral as StringLiteralTypeAnnotation,
 } from "./types";
 
 export function NumberTypeAnnotation() {
@@ -316,6 +312,38 @@ export function TypeAlias(node: Object) {
     this.space();
     this.print(node.right, node);
     this.semicolon();
+}
+
+export function TypeAnnotation(node) {
+    this.token(":");
+    this.space();
+    if (node.optional) this.token("?");
+    this.print(node.typeAnnotation, node);
+}
+
+export function TypeParameterInstantiation(node): void {
+    this.token("<");
+    this.printList(node.params, node, {});
+    this.token(">");
+}
+
+export { TypeParameterInstantiation as TypeParameterDeclaration };
+
+export function TypeParameter(node) {
+    this._variance(node);
+
+    this.word(node.name);
+
+    if (node.bound) {
+        this.print(node.bound, node);
+    }
+
+    if (node.default) {
+        this.space();
+        this.token("=");
+        this.space();
+        this.print(node.default, node);
+    }
 }
 
 export function OpaqueType(node: Object) {
@@ -357,9 +385,7 @@ export function ObjectTypeAnnotation(node: Object) {
 
         this.printJoin(props, node, {
             addNewlines(leading) {
-                if (leading && !props[0]) {
-                    return 1;
-                }
+                if (leading && !props[0]) return 1;
             },
             indent: true,
             statement: true,
@@ -368,7 +394,7 @@ export function ObjectTypeAnnotation(node: Object) {
                     this.token(",");
                     this.space();
                 }
-            }
+            },
         });
 
         this.space();
@@ -413,9 +439,7 @@ export function ObjectTypeProperty(node: Object) {
     }
     this._variance(node);
     this.print(node.key, node);
-    if (node.optional) {
-        this.token("?");
-    }
+    if (node.optional) this.token("?");
     this.token(":");
     this.space();
     this.print(node.value, node);

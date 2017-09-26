@@ -93,7 +93,6 @@
                   }
                 },
                 "method": false,
-                "computed": false,
                 "key": {
                   "type": "Identifier",
                   "start": 15,
@@ -111,6 +110,7 @@
                   },
                   "name": "await"
                 },
+                "computed": false,
                 "shorthand": true,
                 "value": {
                   "type": "Identifier",

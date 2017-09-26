@@ -129,7 +129,7 @@ export const isCompletionRecord = function (allowInsideFunction?) {
 
         // check to see if we're the last item in the container and if we are
         // we're a completion record!
-        if (is.array(container) && path.key !== container.length - 1) {
+        if (adone.is.array(container) && path.key !== container.length - 1) {
             return false;
         }
     } while ((path = path.parentPath) && !path.isProgram());

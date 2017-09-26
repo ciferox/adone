@@ -87,20 +87,20 @@ describe("js", "compiler", "traverse", "traverse", () => {
     });
 
     it("hasType", () => {
-        assert.ok(traverse.hasType(ast, null, "ThisExpression"));
+        assert.ok(traverse.hasType(ast, "ThisExpression"));
         assert.ok(
-            !traverse.hasType(ast, null, "ThisExpression", ["AssignmentExpression"]),
+            !traverse.hasType(ast, "ThisExpression", ["AssignmentExpression"]),
         );
 
-        assert.ok(traverse.hasType(ast, null, "ThisExpression"));
-        assert.ok(traverse.hasType(ast, null, "Program"));
+        assert.ok(traverse.hasType(ast, "ThisExpression"));
+        assert.ok(traverse.hasType(ast, "Program"));
 
         assert.ok(
-            !traverse.hasType(ast, null, "ThisExpression", ["MemberExpression"]),
+            !traverse.hasType(ast, "ThisExpression", ["MemberExpression"]),
         );
-        assert.ok(!traverse.hasType(ast, null, "ThisExpression", ["Program"]));
+        assert.ok(!traverse.hasType(ast, "ThisExpression", ["Program"]));
 
-        assert.ok(!traverse.hasType(ast, null, "ArrowFunctionExpression"));
+        assert.ok(!traverse.hasType(ast, "ArrowFunctionExpression"));
     });
 
     it("clearCache", () => {

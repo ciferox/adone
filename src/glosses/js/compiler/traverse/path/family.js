@@ -86,8 +86,11 @@ export const getAllPrevSiblings = function (): Array<NodePath> {
     return siblings;
 };
 
-export const get = function (key: string, context?: boolean | TraversalContext): NodePath {
-    if (context === true) { 
+export const get = function (
+    key: string,
+    context?: boolean | TraversalContext,
+): NodePath {
+    if (context === true) {
         context = this.context;
     }
     const parts = key.split(".");
@@ -97,7 +100,6 @@ export const get = function (key: string, context?: boolean | TraversalContext):
     }
     // "foo.bar"
     return this._getPattern(parts, context);
-
 };
 
 export const _getKey = function (key, context?) {
@@ -151,7 +153,10 @@ export const getOuterBindingIdentifiers = function (duplicates?): Object {
 // original source - https://github.com/babel/babel/blob/master/packages/babel-types/src/retrievers.js
 // path.getBindingIdentifiers returns nodes where the following re-implementation
 // returns paths
-export const getBindingIdentifierPaths = function (duplicates = false, outerOnly = false) {
+export const getBindingIdentifierPaths = function (
+    duplicates = false,
+    outerOnly = false,
+) {
     const path = this;
     let search = [].concat(path);
     const ids = Object.create(null);

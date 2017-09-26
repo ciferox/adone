@@ -93,7 +93,6 @@
                   }
                 },
                 "method": false,
-                "computed": false,
                 "key": {
                   "type": "Identifier",
                   "start": 13,
@@ -111,6 +110,7 @@
                   },
                   "name": "a"
                 },
+                "computed": false,
                 "shorthand": false,
                 "value": {
                   "type": "ObjectPattern",
@@ -142,7 +142,6 @@
                         }
                       },
                       "method": false,
-                      "computed": false,
                       "key": {
                         "type": "Identifier",
                         "start": 18,
@@ -160,6 +159,7 @@
                         },
                         "name": "w"
                       },
+                      "computed": false,
                       "shorthand": true,
                       "value": {
                         "type": "Identifier",
@@ -197,7 +197,6 @@
                         }
                       },
                       "method": false,
-                      "computed": false,
                       "key": {
                         "type": "Identifier",
                         "start": 21,
@@ -215,6 +214,7 @@
                         },
                         "name": "x"
                       },
+                      "computed": false,
                       "shorthand": true,
                       "value": {
                         "type": "Identifier",
@@ -255,7 +255,6 @@
                   }
                 },
                 "method": false,
-                "computed": false,
                 "key": {
                   "type": "Identifier",
                   "start": 26,
@@ -273,6 +272,7 @@
                   },
                   "name": "b"
                 },
+                "computed": false,
                 "shorthand": false,
                 "value": {
                   "type": "ArrayPattern",

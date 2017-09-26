@@ -40,7 +40,7 @@ class Generator extends Printer {
  * - If `opts.compact = "auto"` and the code is over 500KB, `compact` will be set to `true`.
  */
 
-const normalizeOptions = function (code, opts): Format {
+function normalizeOptions(code, opts): Format {
     const format = {
         auxiliaryCommentBefore: opts.auxiliaryCommentBefore,
         auxiliaryCommentAfter: opts.auxiliaryCommentAfter,
@@ -74,7 +74,7 @@ const normalizeOptions = function (code, opts): Format {
     }
 
     if (format.compact === "auto") {
-        format.compact = code.length > 500000; // 500KB
+        format.compact = code.length > 500000;//500_000; // 500KB
 
         if (format.compact) {
             console.error(
@@ -88,7 +88,7 @@ const normalizeOptions = function (code, opts): Format {
     }
 
     return format;
-};
+}
 
 /**
  * We originally exported the Generator class above, but to make it extra clear that it is a private API,

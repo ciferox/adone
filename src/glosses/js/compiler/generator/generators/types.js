@@ -1,6 +1,6 @@
 const {
-    is,
-    js: { compiler: { types: t } }
+    js: { compiler: { types: t } },
+    util: { jsesc }
 } = adone;
 
 export function Identifier(node: Object) {
@@ -84,13 +84,9 @@ export function ArrayExpression(node: Object) {
     for (let i = 0; i < elems.length; i++) {
         const elem = elems[i];
         if (elem) {
-            if (i > 0) { 
-                this.space();
-            }
+            if (i > 0) this.space();
             this.print(elem, node);
-            if (i < len - 1) { 
-                this.token(","); 
-            }
+            if (i < len - 1) this.token(",");
         } else {
             // If the array expression ends with a hole, that hole
             // will be ignored by the interpreter, but if it ends with
@@ -120,8 +116,8 @@ export function NullLiteral() {
 
 export function NumericLiteral(node: Object) {
     const raw = this.getPossibleRaw(node);
-    const value = `${node.value}`;
-    if (is.nil(raw)) {
+    const value = node.value + "";
+    if (raw == null) {
         this.number(value); // normalize
     } else if (this.format.minified) {
         this.number(raw.length < value.length ? raw : value);
@@ -132,7 +128,7 @@ export function NumericLiteral(node: Object) {
 
 export function StringLiteral(node: Object, parent: Object) {
     const raw = this.getPossibleRaw(node);
-    if (!this.format.minified && !is.nil(raw)) {
+    if (!this.format.minified && raw != null) {
         this.token(raw);
         return;
     }
@@ -140,12 +136,12 @@ export function StringLiteral(node: Object, parent: Object) {
     // ensure the output is ASCII-safe
     const opts = {
         quotes: t.isJSX(parent) ? "double" : this.format.quotes,
-        wrap: true
+        wrap: true,
     };
     if (this.format.jsonCompatibleStrings) {
         opts.json = true;
     }
-    const val = adone.util.jsesc(node.value, opts);
+    const val = jsesc(node.value, opts);
 
     return this.token(val);
 }

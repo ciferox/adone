@@ -1,7 +1,7 @@
 const {
     is,
     js: { compiler: { types: t } },
-    vendor: { lodash }
+    vendor: { lodash: { map } }
 } = adone;
 
 type WhitespaceObject = {
@@ -20,8 +20,8 @@ type WhitespaceObject = {
 function crawl(node, state = {}) {
     if (t.isMemberExpression(node)) {
         crawl(node.object, state);
-        if (node.computed) {
-            crawl(node.property, state);
+        if (node.computed) { 
+            crawl(node.property, state); 
         }
     } else if (t.isBinary(node) || t.isAssignmentExpression(node)) {
         crawl(node.left, state);
@@ -53,9 +53,9 @@ function isHelper(node) {
         return (
             (t.isIdentifier(node.left) && isHelper(node.left)) || isHelper(node.right)
         );
-    }
+    } 
     return false;
-
+    
 }
 
 function isType(node) {
@@ -79,7 +79,7 @@ export const nodes = {
 
     AssignmentExpression(node: Object): ?WhitespaceObject {
         const state = crawl(node.right);
-        if((state.hasCall && state.hasHelper) || state.hasFunction) {
+        if ((state.hasCall && state.hasHelper) || state.hasFunction) {
             return {
                 before: state.hasFunction,
                 after: true
@@ -87,91 +87,91 @@ export const nodes = {
         }
     },
 
-/**
-* Test if SwitchCase needs whitespace.
-*/
+    /**
+     * Test if SwitchCase needs whitespace.
+     */
 
-SwitchCase(node: Object, parent: Object): WhitespaceObject {
-    return {
-        before: node.consequent.length || parent.cases[0] === node,
-        after:
-        !node.consequent.length &&
-        parent.cases[parent.cases.length - 1] === node
-    };
-},
-
-/**
-* Test if LogicalExpression needs whitespace.
-*/
-
-LogicalExpression(node: Object): ?WhitespaceObject {
-    if (t.isFunction(node.left) || t.isFunction(node.right)) {
+    SwitchCase(node: Object, parent: Object): WhitespaceObject {
         return {
-            after: true
+            before: node.consequent.length || parent.cases[0] === node,
+            after:
+            !node.consequent.length &&
+            parent.cases[parent.cases.length - 1] === node
         };
-    }
-},
+    },
 
-/**
-* Test if Literal needs whitespace.
-*/
+    /**
+     * Test if LogicalExpression needs whitespace.
+     */
 
-Literal(node: Object): ?WhitespaceObject {
-    if (node.value === "use strict") {
-        return {
-            after: true
-        };
-    }
-},
-
-/**
-* Test if CallExpression needs whitespace.
-*/
-
-CallExpression(node: Object): ?WhitespaceObject {
-    if (t.isFunction(node.callee) || isHelper(node)) {
-        return {
-            before: true,
-            after: true
-        };
-    }
-},
-
-/**
-* Test if VariableDeclaration needs whitespace.
-*/
-
-VariableDeclaration(node: Object): ?WhitespaceObject {
-    for (let i = 0; i < node.declarations.length; i++) {
-        const declar = node.declarations[i];
-
-        let enabled = isHelper(declar.id) && !isType(declar.init);
-        if (!enabled) {
-            const state = crawl(declar.init);
-            enabled = (isHelper(declar.init) && state.hasCall) || state.hasFunction;
+    LogicalExpression(node: Object): ?WhitespaceObject {
+        if (t.isFunction(node.left) || t.isFunction(node.right)) {
+            return {
+                after: true
+            };
         }
+    },
 
-        if (enabled) {
+    /**
+     * Test if Literal needs whitespace.
+     */
+
+    Literal(node: Object): ?WhitespaceObject {
+        if (node.value === "use strict") {
+            return {
+                after: true
+            };
+        }
+    },
+
+    /**
+     * Test if CallExpression needs whitespace.
+     */
+
+    CallExpression(node: Object): ?WhitespaceObject {
+        if (t.isFunction(node.callee) || isHelper(node)) {
+            return {
+                before: true,
+                after: true
+            };
+        }
+    },
+
+    /**
+     * Test if VariableDeclaration needs whitespace.
+     */
+
+    VariableDeclaration(node: Object): ?WhitespaceObject {
+        for (let i = 0; i < node.declarations.length; i++) {
+            const declar = node.declarations[i];
+
+            let enabled = isHelper(declar.id) && !isType(declar.init);
+            if (!enabled) {
+                const state = crawl(declar.init);
+                enabled = (isHelper(declar.init) && state.hasCall) || state.hasFunction;
+            }
+
+            if (enabled) {
+                return {
+                    before: true,
+                    after: true
+                };
+            }
+        }
+    },
+
+    /**
+     * Test if IfStatement needs whitespace.
+     */
+
+    IfStatement(node: Object): ?WhitespaceObject {
+        if (t.isBlockStatement(node.consequent)) {
             return {
                 before: true,
                 after: true
             };
         }
     }
-},
-
-/**
-* Test if IfStatement needs whitespace.
-*/
-
-IfStatement(node: Object): ?WhitespaceObject {
-    if (t.isBlockStatement(node.consequent)) {
-        return {
-            before: true,
-            after: true
-        };
-    }
-}
 };
 
 /**
@@ -182,32 +182,32 @@ nodes.ObjectProperty = nodes.ObjectTypeProperty = nodes.ObjectMethod = function 
     node: Object,
     parent,
 ): ?WhitespaceObject {
-        if(parent.properties[0] === node) {
-            return {
-                before: true
-            };
-        }
-    };
+    if (parent.properties[0] === node) {
+        return {
+            before: true
+        };
+    }
+};
 
 nodes.ObjectTypeCallProperty = function (
     node: Object,
     parent,
 ): ?WhitespaceObject {
-        if(
-            parent.callProperties[0] === node &&
-                (!parent.properties || !parent.properties.length)
-        ) {
-            return {
-                before: true
-            };
-        }
-    };
+    if (
+        parent.callProperties[0] === node &&
+        (!parent.properties || !parent.properties.length)
+    ) {
+        return {
+            before: true
+        };
+    }
+};
 
 nodes.ObjectTypeIndexer = function (node: Object, parent): ?WhitespaceObject {
-    if(
+    if (
         parent.indexers[0] === node &&
-            (!parent.properties || !parent.properties.length) &&
-            (!parent.callProperties || !parent.callProperties.length)
+        (!parent.properties || !parent.properties.length) &&
+        (!parent.callProperties || !parent.callProperties.length)
     ) {
         return {
             before: true
@@ -225,7 +225,7 @@ export const list = {
      */
 
     VariableDeclaration(node: Object): Array<Object> {
-        return lodash.map(node.declarations, "init");
+        return map(node.declarations, "init");
     },
 
     /**

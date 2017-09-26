@@ -45,6 +45,17 @@ describe("js", "compiler", "core", "option-manager", () => {
         });
     });
 
+    describe("source type", () => {
+        it("should set module for .mjs extension", () => {
+            const config = manageOptions({
+                sourceType: "program",
+                filename: "foo.mjs"
+            });
+
+            assert.equal(config.options.sourceType, "module");
+        });
+    });
+
     describe.skip("presets", () => {
         function presetTest(name) {
             it(name, () => {

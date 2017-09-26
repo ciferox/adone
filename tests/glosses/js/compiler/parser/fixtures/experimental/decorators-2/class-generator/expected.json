@@ -125,7 +125,6 @@
               ],
               "static": false,
               "kind": "method",
-              "computed": false,
               "key": {
                 "type": "Identifier",
                 "start": 18,
@@ -143,6 +142,7 @@
                 },
                 "name": "m"
               },
+              "computed": false,
               "id": null,
               "generator": true,
               "expression": false,

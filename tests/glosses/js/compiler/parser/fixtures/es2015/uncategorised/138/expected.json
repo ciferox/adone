@@ -90,7 +90,6 @@
                 }
               },
               "static": false,
-              "computed": false,
               "key": {
                 "type": "Identifier",
                 "start": 14,
@@ -108,6 +107,7 @@
                 },
                 "name": "foo"
               },
+              "computed": false,
               "kind": "set",
               "id": null,
               "generator": false,
@@ -165,7 +165,6 @@
                 }
               },
               "static": false,
-              "computed": false,
               "key": {
                 "type": "Identifier",
                 "start": 28,
@@ -183,6 +182,7 @@
                 },
                 "name": "foo"
               },
+              "computed": false,
               "kind": "get",
               "id": null,
               "generator": false,

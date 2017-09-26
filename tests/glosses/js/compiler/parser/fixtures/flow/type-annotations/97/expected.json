@@ -72,7 +72,6 @@
                 }
               },
               "method": false,
-              "computed": false,
               "key": {
                 "type": "Identifier",
                 "start": 2,
@@ -90,6 +89,7 @@
                 },
                 "name": "f"
               },
+              "computed": false,
               "shorthand": false,
               "value": {
                 "type": "FunctionExpression",

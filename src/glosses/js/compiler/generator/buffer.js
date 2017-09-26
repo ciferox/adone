@@ -1,4 +1,5 @@
 import type SourceMap from "./source_map";
+import trimRight from "trim-right";
 
 const SPACES_RE = /^[ \t]+$/;
 
@@ -21,13 +22,13 @@ export default class Buffer {
 
     _position: Object = {
         line: 1,
-        column: 0
+        column: 0,
     };
     _sourcePosition: Object = {
         identifierName: null,
         line: null,
         column: null,
-        filename: null
+        filename: null,
     };
 
     /**
@@ -41,9 +42,9 @@ export default class Buffer {
         const result = {
             // Whatever trim is used here should not execute a regex against the
             // source string since it may be arbitrarily large after all transformations
-            code: this._buf.join("").trimRight(),
+            code: trimRight(this._buf.join("")),
             map: null,
-            rawMappings: map && map.getRawMappings()
+            rawMappings: map && map.getRawMappings(),
         };
 
         if (map) {
@@ -57,7 +58,7 @@ export default class Buffer {
                 },
                 set(value) {
                     Object.defineProperty(this, "map", { value, writable: true });
-                }
+                },
             });
         }
 
@@ -92,9 +93,7 @@ export default class Buffer {
 
     _flush(): void {
         let item;
-        while ((item = this._queue.pop())) { 
-            this._append(...item);
-        }
+        while ((item = this._queue.pop())) this._append(...item);
     }
 
     _append(
@@ -167,7 +166,7 @@ export default class Buffer {
     }
 
     hasContent(): boolean {
-        return this._queue.length > 0 || Boolean(this._last);
+        return this._queue.length > 0 || !!this._last;
     }
 
     /**
@@ -176,9 +175,7 @@ export default class Buffer {
      */
 
     source(prop: string, loc: Location): void {
-        if (prop && !loc) { 
-            return; 
-        }
+        if (prop && !loc) return;
 
         const pos = loc ? loc[prop] : null;
 
@@ -193,9 +190,7 @@ export default class Buffer {
      */
 
     withSource(prop: string, loc: Location, cb: () => void): void {
-        if (!this._map) {
-            return cb();
-        }
+        if (!this._map) return cb();
 
         // Use the call stack to manage a stack of "source location" data.
         const originalLine = this._sourcePosition.line;
@@ -227,9 +222,7 @@ export default class Buffer {
 
         let count = 0;
         for (let i = 0; i < extra.length; i++) {
-            if (extra[i] === "\n") { 
-                count++; 
-            }
+            if (extra[i] === "\n") count++;
         }
 
         return this._position.line + count;

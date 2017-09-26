@@ -157,7 +157,6 @@
                 }
               ],
               "static": false,
-              "computed": false,
               "key": {
                 "type": "Identifier",
                 "start": 27,
@@ -175,6 +174,7 @@
                 },
                 "name": "abc"
               },
+              "computed": false,
               "kind": "method",
               "id": null,
               "generator": false,

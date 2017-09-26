@@ -15,7 +15,7 @@ const hoistVariablesVisitor = {
 
     VariableDeclaration(path) {
         if (path.node.kind !== "var") {
-            return;
+            return; 
         }
 
         const bindings = path.getBindingIdentifiers();
@@ -54,13 +54,14 @@ export const replaceWithMultiple = function (nodes: Array<Object>) {
     t.inheritLeadingComments(nodes[0], this.node);
     t.inheritTrailingComments(nodes[nodes.length - 1], this.node);
     this.node = this.container[this.key] = null;
-    this.insertAfter(nodes);
+    const paths = this.insertAfter(nodes);
 
     if (this.node) {
         this.requeue();
     } else {
         this.remove();
     }
+    return paths;
 };
 
 /**
@@ -119,7 +120,7 @@ export const replaceWith = function (replacement) {
     }
 
     if (this.node === replacement) {
-        return;
+        return [this];
     }
 
     if (this.isProgram() && !t.isProgram(replacement)) {
@@ -140,6 +141,8 @@ export const replaceWith = function (replacement) {
         );
     }
 
+    let nodePath = "";
+
     if (this.isNodeType("Statement") && t.isExpression(replacement)) {
         if (
             !this.canHaveVariableDeclarationOrExpression() &&
@@ -148,6 +151,7 @@ export const replaceWith = function (replacement) {
         ) {
             // replacing a statement with an expression so wrap it in an expression statement
             replacement = t.expressionStatement(replacement);
+            nodePath = "expression";
         }
     }
 
@@ -176,6 +180,8 @@ export const replaceWith = function (replacement) {
 
     // requeue for visiting
     this.requeue();
+
+    return [nodePath ? this.get(nodePath) : this];
 };
 
 /**
@@ -208,47 +214,47 @@ export const replaceExpressionWithStatements = function (nodes: Array<Object>) {
     const toSequenceExpression = t.toSequenceExpression(nodes, this.scope);
 
     if (toSequenceExpression) {
-        this.replaceWith(toSequenceExpression);
-    } else {
-        const container = t.arrowFunctionExpression([], t.blockStatement(nodes));
+        return this.replaceWith(toSequenceExpression)[0].get("expressions");
+    }
+    const container = t.arrowFunctionExpression([], t.blockStatement(nodes));
 
-        this.replaceWith(t.callExpression(container, []));
-        this.traverse(hoistVariablesVisitor);
+    this.replaceWith(t.callExpression(container, []));
+    this.traverse(hoistVariablesVisitor);
 
-        // add implicit returns to all ending expression statements
-        const completionRecords: Array<NodePath> = this.get(
-            "callee",
-        ).getCompletionRecords();
-        for (const path of completionRecords) {
-            if (!path.isExpressionStatement()) {
-                continue;
-            }
-
-            const loop = path.findParent((path) => path.isLoop());
-            if (loop) {
-                let uid = loop.getData("expressionReplacementReturnUid");
-
-                if (!uid) {
-                    const callee = this.get("callee");
-                    uid = callee.scope.generateDeclaredUidIdentifier("ret");
-                    callee.get("body").pushContainer("body", t.returnStatement(uid));
-                    loop.setData("expressionReplacementReturnUid", uid);
-                } else {
-                    uid = t.identifier(uid.name);
-                }
-
-                path
-                    .get("expression")
-                    .replaceWith(t.assignmentExpression("=", uid, path.node.expression));
-            } else {
-                path.replaceWith(t.returnStatement(path.node.expression));
-            }
+    // add implicit returns to all ending expression statements
+    const completionRecords: Array<NodePath> = this.get(
+        "callee",
+    ).getCompletionRecords();
+    for (const path of completionRecords) {
+        if (!path.isExpressionStatement()) { 
+            continue; 
         }
 
-        this.get("callee").arrowFunctionToExpression();
+        const loop = path.findParent((path) => path.isLoop());
+        if (loop) {
+            let uid = loop.getData("expressionReplacementReturnUid");
 
-        return this.node;
+            if (!uid) {
+                const callee = this.get("callee");
+                uid = callee.scope.generateDeclaredUidIdentifier("ret");
+                callee.get("body").pushContainer("body", t.returnStatement(uid));
+                loop.setData("expressionReplacementReturnUid", uid);
+            } else {
+                uid = t.identifier(uid.name);
+            }
+
+            path
+                .get("expression")
+                .replaceWith(t.assignmentExpression("=", uid, path.node.expression));
+        } else {
+            path.replaceWith(t.returnStatement(path.node.expression));
+        }
     }
+
+    const callee = this.get("callee");
+    callee.arrowFunctionToExpression();
+
+    return callee.get("body.body");
 };
 
 export const replaceInline = function (nodes: Object | Array<Object>) {
@@ -257,12 +263,12 @@ export const replaceInline = function (nodes: Object | Array<Object>) {
     if (is.array(nodes)) {
         if (is.array(this.container)) {
             nodes = this._verifyNodeList(nodes);
-            this._containerInsertAfter(nodes);
-            return this.remove();
-        }
+            const paths = this._containerInsertAfter(nodes);
+            this.remove();
+            return paths;
+        } 
         return this.replaceWithMultiple(nodes);
-
-    }
-    return this.replaceWith(nodes);
-
+        
+    } 
+    return this.replaceWith(nodes);  
 };

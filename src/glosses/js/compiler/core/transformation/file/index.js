@@ -142,7 +142,7 @@ export default class File extends Store {
         }
 
         if (!is.nil(opts.sourceRoot)) {
-        // remove sourceRoot from filename
+            // remove sourceRoot from filename
             const sourceRootRegEx = new RegExp(`^${opts.sourceRoot}/?`);
             filenameRelative = filenameRelative.replace(sourceRootRegEx, "");
         }
@@ -156,7 +156,7 @@ export default class File extends Store {
         moduleName = moduleName.replace(/\\/g, "/");
 
         if (opts.getModuleId) {
-        // If return is falsy, assume they want us to use our generated default name
+            // If return is falsy, assume they want us to use our generated default name
             return opts.getModuleId(moduleName) || moduleName;
         }
         return moduleName;
@@ -173,8 +173,8 @@ export default class File extends Store {
 
     addImport(
         source: string,
-        imported ?: string = "",
-        name ?: string = imported,
+        imported?: string = "",
+        name?: string = imported,
     ): Object | null {
         const prependDeclaration = (
             specifiers: Array<BabelNodeImportSpecifier>,
@@ -213,7 +213,7 @@ export default class File extends Store {
             prependDeclaration(specifiers);
         }
 
-        return id;
+        return t.identifier(id.name);
     }
 
     addHelper(name: string): Object {
@@ -238,35 +238,35 @@ export default class File extends Store {
             return t.memberExpression(runtime, t.identifier(name));
         }
 
-        const ref = helper.get(name);
+        const ownBindingNames = Object.keys(this.scope.getAllBindings());
         const uid = (this.declarations[name] = this.scope.generateUidIdentifier(
             name,
         ));
 
-        if (t.isFunctionExpression(ref) && !ref.id) {
-            ref.body._compact = true;
-            ref.id = uid;
-            ref.type = "FunctionDeclaration";
-            this.path.unshiftContainer("body", ref);
-        } else {
-            ref._compact = true;
-            this.scope.push({
-                id: uid,
-                init: ref,
-                unique: true
-            });
-        }
+        const { nodes, globals } = helper.get(name, uid, ownBindingNames);
+
+        globals.forEach((name) => {
+            if (this.path.scope.hasBinding(name, true /* noGlobals */)) {
+                this.path.scope.rename(name);
+            }
+        });
+
+        nodes.forEach((node) => {
+            node._compact = true;
+        });
+
+        this.path.unshiftContainer("body", nodes);
 
         return uid;
     }
 
     addTemplateObject(
         helperName: string,
-        strings: Array < Object >,
+        strings: Array<Object>,
         raw: Object,
     ): Object {
-    // Generate a unique name based on the string literals so we dedupe
-    // identical strings used in the program.
+        // Generate a unique name based on the string literals so we dedupe
+        // identical strings used in the program.
         const stringIds = raw.elements.map((string) => {
             return string.value;
         });
@@ -307,7 +307,7 @@ export default class File extends Store {
             traverse(node, errorVisitor, this.scope, err);
 
             err.message +=
-            " (This is an error on an internal node. Probably an internal error";
+                " (This is an error on an internal node. Probably an internal error";
 
             if (err.loc) {
                 err.message += ". Location has been estimated.";
@@ -346,12 +346,12 @@ export default class File extends Store {
                         source: mapping.source,
 
                         original:
-                    is.nil(mapping.source)
-                        ? null
-                        : {
-                            line: mapping.originalLine,
-                            column: mapping.originalColumn
-                        },
+                        is.nil(mapping.source)
+                            ? null
+                            : {
+                                line: mapping.originalLine,
+                                column: mapping.originalColumn
+                            },
 
                         generated: generatedPosition
                     });
@@ -472,8 +472,8 @@ export default class File extends Store {
             }
 
             if (process.browser) {
-            // chrome has it's own pretty stringifier which doesn't use the stack property
-            // https://github.com/babel/babel/issues/2175
+                // chrome has it's own pretty stringifier which doesn't use the stack property
+                // https://github.com/babel/babel/issues/2175
                 err.message = message;
             }
 
@@ -568,7 +568,7 @@ export default class File extends Store {
         result.map = _result.map;
 
         if (this.shebang) {
-        // add back shebang
+            // add back shebang
             result.code = `${this.shebang}\n${result.code}`;
         }
 

@@ -1,7 +1,6 @@
 {
   "plugins": [
     "transform.es2015ArrowFunctions",
-    "syntax.asyncFunctions",
     "transform.asyncToGenerator",
     "externalHelpers"
   ]

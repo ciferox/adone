@@ -193,14 +193,14 @@ export function ConditionalExpression(node: Object, parent: Object): boolean {
     return UnaryLike(node, parent);
 }
 
-export const AssignmentExpression = function (node: Object): boolean {
+export function AssignmentExpression(node: Object): boolean {
     if (t.isObjectPattern(node.left)) {
         return true;
-    }
+    } 
     return ConditionalExpression(...arguments);
-};
+}
 
-// Walk up the print stack to deterimine if our node can come first
+// Walk up the print stack to determine if our node can come first
 // in statement.
 function isFirstInStatement(
     printStack: Array<Object>,

@@ -104,7 +104,6 @@
                   }
                 },
                 "method": true,
-                "computed": false,
                 "key": {
                   "type": "StringLiteral",
                   "start": 6,
@@ -125,6 +124,7 @@
                   },
                   "value": "method"
                 },
+                "computed": false,
                 "kind": "method",
                 "id": null,
                 "generator": false,

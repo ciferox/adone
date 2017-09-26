@@ -148,12 +148,12 @@ export function isType(nodeType: string, targetType: string): boolean {
 
     const aliases: ?Array<string> = t.FLIPPED_ALIAS_KEYS[targetType];
     if (aliases) {
-        if (aliases[0] === nodeType) { 
+        if (aliases[0] === nodeType) {
             return true;
         }
 
         for (const alias of aliases) {
-            if (nodeType === alias) { 
+            if (nodeType === alias) {
                 return true;
             }
         }
@@ -230,12 +230,12 @@ export function validate(node?: Object, key: string, val: any) {
     }
 
     const fields = t.NODE_FIELDS[node.type];
-    if (!fields) { 
+    if (!fields) {
         return;
     }
 
     const field = fields[key];
-    if (!field || !field.validate) { 
+    if (!field || !field.validate) {
         return;
     }
     if (field.optional && adone.is.nil(val)) {
@@ -335,13 +335,13 @@ export function cloneWithoutLoc(node: Object): Object {
  */
 
 export function cloneDeep(node: Object): Object {
-    if (!node) { 
+    if (!node) {
         return node;
     }
     const newNode = {};
 
     for (const key in node) {
-        if (key[0] === "_") { 
+        if (key[0] === "_") {
             continue;
         }
 
@@ -375,7 +375,7 @@ export function matchesPattern(
     allowPartial?: boolean,
 ): boolean {
     // not a member expression
-    if (!t.isMemberExpression(member)) { 
+    if (!t.isMemberExpression(member)) {
         return false;
     }
 
@@ -388,10 +388,10 @@ export function matchesPattern(
     }
     nodes.push(node);
 
-    if (nodes.length < parts.length) { 
+    if (nodes.length < parts.length) {
         return false;
     }
-    if (!allowPartial && nodes.length > parts.length) { 
+    if (!allowPartial && nodes.length > parts.length) {
         return false;
     }
 
@@ -406,7 +406,7 @@ export function matchesPattern(
             return false;
         }
 
-        if (parts[i] !== value) { 
+        if (parts[i] !== value) {
             return false;
         }
     }
@@ -430,6 +430,51 @@ export function buildMatchMemberExpression(
     return function (member) {
         return matchesPattern(member, parts, allowPartial);
     };
+}
+
+/**
+ * Add comment of certain type to a node.
+ */
+
+export function addComment(
+    node: Object,
+    type: string,
+    content: string,
+    line?: boolean,
+): Object {
+    addComments(node, type, [
+        {
+            type: line ? "CommentLine" : "CommentBlock",
+            value: content
+        }
+    ]);
+}
+
+/**
+ * Add comments of certain type to a node.
+ */
+
+export function addComments(
+    node: Object,
+    type: string,
+    comments: Array,
+): Object {
+    if (!comments || !node) { 
+        return; 
+    }
+
+    const key = `${type}Comments`;
+
+    if (node[key]) {
+        if (type === "leading") {
+            node[key] = comments.concat(node[key]);
+        } else {
+            node[key] = node[key].concat(comments);
+        }
+    } else {
+        node[key] = comments;
+    }
+    return node;
 }
 
 /**
@@ -491,7 +536,7 @@ export function inherits(child: Object, parent: Object): Object {
     // force inherit "private" properties
     for (const key in parent) {
         if (key[0] === "_" && key !== "__clone") {
-            child[key] = parent[key]; 
+            child[key] = parent[key];
         }
     }
 
@@ -511,7 +556,7 @@ export function inherits(child: Object, parent: Object): Object {
 
 export function assertNode(node?) {
     if (!isNode(node)) {
-    // $FlowFixMe
+        // $FlowFixMe
         throw new TypeError(`Not a valid node ${node && node.type}`);
     }
 }
@@ -537,7 +582,7 @@ export function traverseFast(
     enter: (node: Node) => void,
     opts?: Object,
 ) {
-    if (!node) { 
+    if (!node) {
         return;
     }
 
@@ -578,13 +623,13 @@ export function removeProperties(node: Node, opts?: Object): void {
     const map = opts.preserveComments ? CLEAR_KEYS : CLEAR_KEYS_PLUS_COMMENTS;
     for (const key of map) {
         if (!adone.is.nil(node[key])) {
-            node[key] = undefined; 
+            node[key] = undefined;
         }
     }
 
     for (const key in node) {
         if (key[0] === "_" && !adone.is.nil(node[key])) {
-            node[key] = undefined; 
+            node[key] = undefined;
         }
     }
 

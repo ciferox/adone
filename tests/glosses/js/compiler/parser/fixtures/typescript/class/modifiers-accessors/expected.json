@@ -92,7 +92,6 @@
               },
               "abstract": true,
               "static": false,
-              "computed": false,
               "key": {
                 "type": "Identifier",
                 "start": 76,
@@ -110,6 +109,7 @@
                 },
                 "name": "a"
               },
+              "computed": false,
               "kind": "get",
               "id": null,
               "generator": false,
@@ -132,7 +132,6 @@
                 }
               },
               "static": true,
-              "computed": false,
               "key": {
                 "type": "Identifier",
                 "start": 96,
@@ -150,6 +149,7 @@
                 },
                 "name": "s"
               },
+              "computed": false,
               "kind": "get",
               "id": null,
               "generator": false,
@@ -227,7 +227,6 @@
               "accessibility": "public",
               "abstract": true,
               "static": false,
-              "computed": false,
               "key": {
                 "type": "Identifier",
                 "start": 138,
@@ -245,6 +244,7 @@
                 },
                 "name": "pua"
               },
+              "computed": false,
               "kind": "get",
               "id": null,
               "generator": false,
@@ -268,7 +268,6 @@
               },
               "accessibility": "public",
               "static": true,
-              "computed": false,
               "key": {
                 "type": "Identifier",
                 "start": 167,
@@ -286,6 +285,7 @@
                 },
                 "name": "pus"
               },
+              "computed": false,
               "kind": "get",
               "id": null,
               "generator": false,
@@ -362,7 +362,6 @@
               },
               "accessibility": "public",
               "static": false,
-              "computed": false,
               "key": {
                 "type": "Identifier",
                 "start": 203,
@@ -380,6 +379,7 @@
                 },
                 "name": "pu"
               },
+              "computed": false,
               "kind": "get",
               "id": null,
               "generator": false,
@@ -456,7 +456,6 @@
               },
               "accessibility": "protected",
               "static": false,
-              "computed": false,
               "key": {
                 "type": "Identifier",
                 "start": 240,
@@ -474,6 +473,7 @@
                 },
                 "name": "po"
               },
+              "computed": false,
               "kind": "get",
               "id": null,
               "generator": false,
@@ -550,7 +550,6 @@
               },
               "accessibility": "private",
               "static": false,
-              "computed": false,
               "key": {
                 "type": "Identifier",
                 "start": 275,
@@ -568,6 +567,7 @@
                 },
                 "name": "pi"
               },
+              "computed": false,
               "kind": "get",
               "id": null,
               "generator": false,

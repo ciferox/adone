@@ -35,13 +35,7 @@ export default function ({ types: t }) {
                 );
             }
 
-            this.setDynamic("regeneratorIdentifier", () => {
-                return file.addImport(
-                    `${moduleName}/regenerator`,
-                    "default",
-                    "regeneratorRuntime",
-                );
-            });
+            this.moduleName = moduleName;
         },
 
         visitor: {
@@ -52,21 +46,27 @@ export default function ({ types: t }) {
                     node.name === "regeneratorRuntime" &&
                     state.opts.regenerator !== false
                 ) {
-                    path.replaceWith(state.get("regeneratorIdentifier"));
+                    path.replaceWith(
+                        this.file.addImport(
+                            `${this.moduleName}/regenerator`,
+                            "default",
+                            "regeneratorRuntime",
+                        ),
+                    );
                     return;
                 }
 
-                if (state.opts.polyfill === false || state.opts.useBuiltIns) { 
-                    return; 
+                if (state.opts.polyfill === false || state.opts.useBuiltIns) {
+                    return;
                 }
 
                 if (t.isMemberExpression(parent)) {
-                    return; 
-                }
-                if (!has(definitions.builtins, node.name)) { 
                     return;
                 }
-                if (scope.getBindingIdentifier(node.name)) { 
+                if (!has(definitions.builtins, node.name)) {
+                    return;
+                }
+                if (scope.getBindingIdentifier(node.name)) {
                     return;
                 }
 
@@ -83,21 +83,21 @@ export default function ({ types: t }) {
 
             // arr[Symbol.iterator]() -> _core.$for.getIterator(arr)
             CallExpression(path, state) {
-                if (state.opts.polyfill === false || state.opts.useBuiltIns) { 
-                    return; 
+                if (state.opts.polyfill === false || state.opts.useBuiltIns) {
+                    return;
                 }
 
                 // we can't compile this
-                if (path.node.arguments.length) { 
+                if (path.node.arguments.length) {
                     return;
                 }
 
                 const callee = path.node.callee;
                 if (!t.isMemberExpression(callee)) {
-                    return; 
+                    return;
                 }
-                if (!callee.computed) { 
-                    return; 
+                if (!callee.computed) {
+                    return;
                 }
                 if (!path.get("callee.property").matchesPattern("Symbol.iterator")) {
                     return;
@@ -118,14 +118,14 @@ export default function ({ types: t }) {
 
             // Symbol.iterator in arr -> core.$for.isIterable(arr)
             BinaryExpression(path, state) {
-                if (state.opts.polyfill === false || state.opts.useBuiltIns) { 
+                if (state.opts.polyfill === false || state.opts.useBuiltIns) {
                     return;
                 }
 
                 if (path.node.operator !== "in") {
-                    return; 
+                    return;
                 }
-                if (!path.get("left").matchesPattern("Symbol.iterator")) { 
+                if (!path.get("left").matchesPattern("Symbol.iterator")) {
                     return;
                 }
 
@@ -145,7 +145,7 @@ export default function ({ types: t }) {
             // Array.from -> _core.Array.from
             MemberExpression: {
                 enter(path, state) {
-                    if (state.opts.polyfill === false || state.opts.useBuiltIns) { 
+                    if (state.opts.polyfill === false || state.opts.useBuiltIns) {
                         return;
                     }
                     if (!path.isReferenced()) {
@@ -156,24 +156,24 @@ export default function ({ types: t }) {
                     const obj = node.object;
                     const prop = node.property;
 
-                    if (!t.isReferenced(obj, node)) { 
-                        return; 
+                    if (!t.isReferenced(obj, node)) {
+                        return;
                     }
                     if (node.computed) {
-                        return; 
+                        return;
                     }
-                    if (!has(definitions.methods, obj.name)) { 
-                        return; 
+                    if (!has(definitions.methods, obj.name)) {
+                        return;
                     }
 
                     const methods = definitions.methods[obj.name];
-                    if (!has(methods, prop.name)) { 
-                        return; 
+                    if (!has(methods, prop.name)) {
+                        return;
                     }
 
                     // doesn't reference the global
                     if (path.scope.getBindingIdentifier(obj.name)) {
-                        return; 
+                        return;
                     }
 
                     // special case Object.defineProperty to not use core-js when using string keys
@@ -199,21 +199,21 @@ export default function ({ types: t }) {
                 },
 
                 exit(path, state) {
-                    if (state.opts.polyfill === false || state.opts.useBuiltIns) { 
+                    if (state.opts.polyfill === false || state.opts.useBuiltIns) {
                         return;
                     }
-                    if (!path.isReferenced()) { 
-                        return; 
+                    if (!path.isReferenced()) {
+                        return;
                     }
 
                     const { node } = path;
                     const obj = node.object;
 
-                    if (!has(definitions.builtins, obj.name)) { 
-                        return; 
+                    if (!has(definitions.builtins, obj.name)) {
+                        return;
                     }
-                    if (path.scope.getBindingIdentifier(obj.name)) { 
-                        return; 
+                    if (path.scope.getBindingIdentifier(obj.name)) {
+                        return;
                     }
 
                     const moduleName = getRuntimeModuleName(state.opts);

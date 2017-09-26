@@ -28,24 +28,26 @@ export const insertBefore = function (nodes) {
         (this.parentPath.isForStatement() && this.key === "init")
     ) {
         if (this.node) {
-            nodes.push(this.node);
+            nodes.push(this.node); 
         }
-        this.replaceExpressionWithStatements(nodes);
+        return this.replaceExpressionWithStatements(nodes);
     } else if (is.array(this.container)) {
         return this._containerInsertBefore(nodes);
     } else if (this.isStatementOrBlock()) {
-        if (this.node) {
-            nodes.push(this.node);
-        }
-        this._replaceWith(t.blockStatement(nodes));
-    } else {
-        throw new Error(
-            "We don't know what to do with this node type. " +
-            "We were previously a Statement but we can't fit in here?",
-        );
-    }
+        const shouldInsertCurrentNode =
+            this.node &&
+            (!this.isExpressionStatement() || !is.nil(this.node.expression));
 
-    return [this];
+        this.replaceWith(
+            t.blockStatement(shouldInsertCurrentNode ? [this.node] : []),
+        );
+        return this.unshiftContainer("body", nodes);
+    } 
+    throw new Error(
+        "We don't know what to do with this node type. " +
+            "We were previously a Statement but we can't fit in here?",
+    );
+    
 };
 
 export const _containerInsert = function (from, nodes) {
@@ -53,36 +55,14 @@ export const _containerInsert = function (from, nodes) {
 
     const paths = [];
 
+    this.container.splice(from, 0, ...nodes);
     for (let i = 0; i < nodes.length; i++) {
         const to = from + i;
-        const node = nodes[i];
-        this.container.splice(to, 0, node);
+        const path = this.getSibling(`${to}`);
+        paths.push(path);
 
-        if (this.context) {
-            const path = this.context.create(
-                this.parent,
-                this.container,
-                to,
-                this.listKey,
-            );
-
-            // While this path may have a context, there is currently no guarantee that the context
-            // will be the active context, because `popContext` may leave a final context in place.
-            // We should remove this `if` and always push once #4145 has been resolved.
-            if (this.context.queue) {
-                path.pushContext(this.context);
-            }
-            paths.push(path);
-        } else {
-            paths.push(
-                NodePath.get({
-                    parentPath: this.parentPath,
-                    parent: this.parent,
-                    container: this.container,
-                    listKey: this.listKey,
-                    key: to
-                }),
-            );
+        if (this.context && this.context.queue) {
+            path.pushContext(this.context);
         }
     }
 
@@ -113,10 +93,6 @@ export const _containerInsertAfter = function (nodes) {
  */
 
 export const insertAfter = function (nodes) {
-    this._insertAfter(nodes);
-};
-
-export const _insertAfter = function (nodes, shouldRequeue = false) {
     this._assertUnremoved();
 
     nodes = this._verifyNodeList(nodes);
@@ -125,10 +101,7 @@ export const _insertAfter = function (nodes, shouldRequeue = false) {
         this.parentPath.isExpressionStatement() ||
         this.parentPath.isLabeledStatement()
     ) {
-        // `replaceWithMultiple` requeues if there's a replacement for this.node,
-        // but not for an ancestor's. Set `shouldRequeue` to true so that any replacement
-        // for an ancestor node can be enqueued. Fix #5628 and #5023.
-        return this.parentPath._insertAfter(nodes, true);
+        return this.parentPath.insertAfter(nodes);
     } else if (
         this.isNodeType("Expression") ||
         (this.parentPath.isForStatement() && this.key === "init")
@@ -140,29 +113,23 @@ export const _insertAfter = function (nodes, shouldRequeue = false) {
             );
             nodes.push(t.expressionStatement(temp));
         }
-        this.replaceExpressionWithStatements(nodes);
+        return this.replaceExpressionWithStatements(nodes);
     } else if (is.array(this.container)) {
         return this._containerInsertAfter(nodes);
     } else if (this.isStatementOrBlock()) {
-        // Unshift current node if it's not an empty expression
-        if (
+        const shouldInsertCurrentNode =
             this.node &&
-            (!this.isExpressionStatement() || !is.nil(this.node.expression))
-        ) {
-            nodes.unshift(this.node);
-        }
-        this._replaceWith(t.blockStatement(nodes));
-        if (shouldRequeue) {
-            this.requeue();
-        }
-    } else {
-        throw new Error(
-            "We don't know what to do with this node type. " +
-            "We were previously a Statement but we can't fit in here?",
-        );
-    }
+            (!this.isExpressionStatement() || !is.nil(this.node.expression));
 
-    return [this];
+        this.replaceWith(
+            t.blockStatement(shouldInsertCurrentNode ? [this.node] : []),
+        );
+        return this.pushContainer("body", nodes);
+    } 
+    throw new Error(
+        "We don't know what to do with this node type. " +
+            "We were previously a Statement but we can't fit in here?",
+    );    
 };
 
 /**

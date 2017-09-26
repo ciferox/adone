@@ -104,7 +104,6 @@
                   }
                 },
                 "static": false,
-                "computed": false,
                 "key": {
                   "type": "Identifier",
                   "start": 24,
@@ -122,6 +121,7 @@
                   },
                   "name": "constructor"
                 },
+                "computed": false,
                 "kind": "constructor",
                 "id": null,
                 "generator": false,

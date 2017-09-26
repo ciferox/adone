@@ -1,6 +1,10 @@
 import LooseTransformer from "./loose";
 import VanillaTransformer from "./vanilla";
 
+const {
+    js: { compiler: { helper: { annotateAsPure, functionName } } }
+} = adone;
+
 export default function ({ types: t }) {
     // todo: investigate traversal requeueing
     const VISITED = Symbol();
@@ -44,9 +48,10 @@ export default function ({ types: t }) {
                     return;
                 }
 
-                const inferred = adone.js.compiler.helper.functionName(path);
+                const inferred = functionName(path);
                 if (inferred && inferred !== node) {
-                    return path.replaceWith(inferred);
+                    path.replaceWith(inferred);
+                    return;
                 }
 
                 node[VISITED] = true;
@@ -58,11 +63,11 @@ export default function ({ types: t }) {
 
                 path.replaceWith(new Constructor(path, state.file).run());
 
-                if (
-                    path.isCallExpression() &&
-                    path.get("callee").isArrowFunctionExpression()
-                ) {
-                    path.get("callee").arrowFunctionToExpression();
+                if (path.isCallExpression()) {
+                    annotateAsPure(path);
+                    if (path.get("callee").isArrowFunctionExpression()) {
+                        path.get("callee").arrowFunctionToExpression();
+                    }
                 }
             }
         }

@@ -1,5 +1,9 @@
 // This file contains methods responsible for dealing with comments.
 
+const {
+    js: { compiler: { types: t } }
+} = adone;
+
 /**
  * Share comments amongst siblings.
  */
@@ -33,13 +37,8 @@ export const shareCommentsWithSiblings = function () {
     }
 };
 
-export const addComment = function (type, content, line?) {
-    this.addComments(type, [
-        {
-            type: line ? "CommentLine" : "CommentBlock",
-            value: content
-        }
-    ]);
+export const addComment = function (type: string, content: string, line?: boolean) {
+    t.addComment(this.node, type, content, line);
 };
 
 /**
@@ -47,24 +46,5 @@ export const addComment = function (type, content, line?) {
  */
 
 export const addComments = function (type: string, comments: Array) {
-    if (!comments) {
-        return;
-    }
-
-    const node = this.node;
-    if (!node) {
-        return;
-    }
-
-    const key = `${type}Comments`;
-
-    if (node[key]) {
-        if (type === "leading") {
-            node[key] = comments.concat(node[key]);
-        } else {
-            node[key] = node[key].concat(comments);
-        }
-    } else {
-        node[key] = comments;
-    }
+    t.addComments(this.node, type, comments);
 };

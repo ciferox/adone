@@ -2,6 +2,8 @@ const {
     js: { compiler: { helper, messages, generate, template, types: t } }
 } = adone;
 
+const keywordHelpers = ["typeof", "extends", "instanceof"];
+
 const buildUmdWrapper = template(`
   (function (root, factory) {
     if (typeof define === "function" && define.amd) {
@@ -16,7 +18,7 @@ const buildUmdWrapper = template(`
   });
 `);
 
-const buildGlobal = (namespace, builder) => {
+const buildGlobal = function (namespace, builder) {
     const body = [];
     const container = t.functionExpression(
         null,
@@ -25,7 +27,18 @@ const buildGlobal = (namespace, builder) => {
     );
     const tree = t.program([
         t.expressionStatement(
-            t.callExpression(container, [helper.get("selfGlobal")]),
+            t.callExpression(container, [
+                // typeof global === "undefined" ? self : global
+                t.conditionalExpression(
+                    t.binaryExpression(
+                        "===",
+                        t.unaryExpression("typeof", t.identifier("global")),
+                        t.stringLiteral("undefined"),
+                    ),
+                    t.identifier("self"),
+                    t.identifier("global"),
+                )
+            ]),
         )
     ]);
 
@@ -47,7 +60,50 @@ const buildGlobal = (namespace, builder) => {
     return tree;
 };
 
-const buildUmd = (namespace, builder) => {
+const buildModule = function (namespace, builder) {
+    const body = [];
+    builder(body);
+
+    const module = body.map((helperNode) => {
+        const possibleAssignment = t.isExpressionStatement(helperNode)
+            ? helperNode.expression
+            : helperNode;
+
+        const isExportedHelper =
+            t.isAssignmentExpression(possibleAssignment) &&
+            t.isMemberExpression(possibleAssignment.left) &&
+            possibleAssignment.left.object.name === namespace.name;
+
+        if (!isExportedHelper) {
+            return helperNode;
+        }
+
+        const exportedHelper = possibleAssignment;
+
+        const identifier = exportedHelper.left.property.name;
+        const isKeywordHelper = keywordHelpers.indexOf(identifier) !== -1;
+
+        if (isKeywordHelper) {
+            return t.exportNamedDeclaration(null, [
+                t.exportSpecifier(
+                    t.identifier(`_${identifier}`),
+                    t.identifier(identifier),
+                )
+            ]);
+        }
+
+        return t.exportNamedDeclaration(
+            t.variableDeclaration("var", [
+                t.variableDeclarator(t.identifier(identifier), exportedHelper.right)
+            ]),
+            [],
+        );
+    });
+
+    return t.program(module);
+};
+
+const buildUmd = function (namespace, builder) {
     const body = [];
     body.push(
         t.variableDeclaration("var", [
@@ -73,40 +129,37 @@ const buildUmd = (namespace, builder) => {
     ]);
 };
 
-const buildVar = (namespace, builder) => {
+const buildVar = function (namespace, builder) {
     const body = [];
     body.push(
         t.variableDeclaration("var", [
             t.variableDeclarator(namespace, t.objectExpression([]))
         ]),
     );
+    const tree = t.program(body);
     builder(body);
     body.push(t.expressionStatement(namespace));
-    return t.program(body);
+    return tree;
 };
 
-const buildHelpers = (body, namespace, whitelist) => {
+const buildHelpers = function (body, namespace, whitelist) {
     helper.list.forEach((name) => {
         if (whitelist && whitelist.indexOf(name) < 0) {
             return;
         }
 
-        const key = t.identifier(name);
-        body.push(
-            t.expressionStatement(
-                t.assignmentExpression(
-                    "=",
-                    t.memberExpression(namespace, key),
-                    helper.get(name),
-                ),
-            ),
+        const { nodes } = helper.get(
+            name,
+            t.memberExpression(namespace, t.identifier(name)),
         );
+
+        body.push(...nodes);
     });
 };
 
 export default function (
     whitelist?: Array<string>,
-    outputType: "global" | "umd" | "var" = "global",
+    outputType: "global" | "module" | "umd" | "var" = "global",
 ) {
     const namespace = t.identifier("babelHelpers");
 
@@ -118,6 +171,7 @@ export default function (
 
     const build = {
         global: buildGlobal,
+        module: buildModule,
         umd: buildUmd,
         var: buildVar
     }[outputType];

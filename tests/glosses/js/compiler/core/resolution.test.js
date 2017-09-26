@@ -3,7 +3,7 @@ const {
     std: { path }
 } = adone;
 
-describe.skip("addon resolution", () => {
+describe.skip("js", "compiler", "core", "addon resolution", () => {
     const base = path.join(__dirname, "fixtures", "resolution");
 
     beforeEach(function () {

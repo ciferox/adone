@@ -107,7 +107,6 @@
                     }
                   },
                   "method": false,
-                  "computed": false,
                   "key": {
                     "type": "Identifier",
                     "start": 36,
@@ -125,6 +124,7 @@
                     },
                     "name": "a"
                   },
+                  "computed": false,
                   "shorthand": false,
                   "value": {
                     "type": "ObjectPattern",
@@ -156,7 +156,6 @@
                           }
                         },
                         "method": false,
-                        "computed": false,
                         "key": {
                           "type": "Identifier",
                           "start": 40,
@@ -174,6 +173,7 @@
                           },
                           "name": "p"
                         },
+                        "computed": false,
                         "shorthand": false,
                         "value": {
                           "type": "Identifier",
@@ -211,7 +211,6 @@
                     }
                   },
                   "method": false,
-                  "computed": false,
                   "key": {
                     "type": "Identifier",
                     "start": 47,
@@ -229,6 +228,7 @@
                     },
                     "name": "b"
                   },
+                  "computed": false,
                   "shorthand": false,
                   "value": {
                     "type": "ObjectPattern",
@@ -260,7 +260,6 @@
                           }
                         },
                         "method": false,
-                        "computed": false,
                         "key": {
                           "type": "Identifier",
                           "start": 51,
@@ -278,6 +277,7 @@
                           },
                           "name": "r"
                         },
+                        "computed": false,
                         "shorthand": true,
                         "value": {
                           "type": "Identifier",
@@ -318,7 +318,6 @@
                     }
                   },
                   "method": false,
-                  "computed": false,
                   "key": {
                     "type": "Identifier",
                     "start": 55,
@@ -336,6 +335,7 @@
                     },
                     "name": "c"
                   },
+                  "computed": false,
                   "shorthand": false,
                   "value": {
                     "type": "ObjectPattern",
@@ -367,7 +367,6 @@
                           }
                         },
                         "method": false,
-                        "computed": false,
                         "key": {
                           "type": "Identifier",
                           "start": 59,
@@ -385,6 +384,7 @@
                           },
                           "name": "s"
                         },
+                        "computed": false,
                         "shorthand": true,
                         "value": {
                           "type": "AssignmentPattern",

@@ -16,8 +16,8 @@ export default class SourceMap {
     }
 
     /**
-     * Get the sourcemap.
-     */
+   * Get the sourcemap.
+   */
 
     get() {
         if (!this._cachedMap) {
@@ -46,9 +46,9 @@ export default class SourceMap {
     }
 
     /**
-     * Mark the current generated position with a source position. May also be passed null line/column
-     * values to insert a mapping to nothing.
-     */
+   * Mark the current generated position with a source position. May also be passed null line/column
+   * values to insert a mapping to nothing.
+   */
 
     mark(
         generatedLine: number,
@@ -58,17 +58,15 @@ export default class SourceMap {
         identifierName: ?string,
         filename: ?string,
     ) {
-        // Adding an empty mapping at the start of a generated line just clutters the map.
-        if (this._lastGenLine !== generatedLine && is.null(line)) { 
-            return; 
-        }
+    // Adding an empty mapping at the start of a generated line just clutters the map.
+        if (this._lastGenLine !== generatedLine && is.null(line)) {return;}
 
         // If this mapping points to the same source location as the last one, we can ignore it since
         // the previous one covers it.
         if (
             this._lastGenLine === generatedLine &&
-            this._lastSourceLine === line &&
-            this._lastSourceColumn === column
+      this._lastSourceLine === line &&
+      this._lastSourceColumn === column
         ) {
             return;
         }
@@ -89,12 +87,12 @@ export default class SourceMap {
             },
             source: is.nil(line) ? undefined : filename || this._opts.sourceFileName,
             original:
-            is.nil(line)
-                ? undefined
-                : {
-                    line,
-                    column
-                }
+        is.nil(line)
+            ? undefined
+            : {
+                line,
+                column
+            }
         });
     }
 }

@@ -54,7 +54,7 @@ export default function () {
                 );
                 const replace = blockScoping.run();
                 if (replace) {
-                    path.replaceWith(replace);
+                    path.replaceWith(replace); 
                 }
             },
 
@@ -95,16 +95,28 @@ const buildRetCheck = template(`
 `);
 
 function isBlockScoped(node) {
-    if (!t.isVariableDeclaration(node)) {
+    if (!t.isVariableDeclaration(node)) { 
         return false;
     }
-    if (node[t.BLOCK_SCOPED_SYMBOL]) {
-        return true;
+    if (node[t.BLOCK_SCOPED_SYMBOL]) { 
+        return true; 
     }
-    if (node.kind !== "let" && node.kind !== "const") {
+    if (node.kind !== "let" && node.kind !== "const") { 
         return false;
     }
     return true;
+}
+
+/**
+ * If there is a loop ancestor closer than the closest function, we
+ * consider ourselves to be in a loop.
+ */
+function isInLoop(path) {
+    const loopOrFunctionParent = path.find(
+        (path) => path.isLoop() || path.isFunction(),
+    );
+
+    return loopOrFunctionParent && loopOrFunctionParent.isLoop();
 }
 
 function convertBlockScopedToVar(
@@ -117,8 +129,9 @@ function convertBlockScopedToVar(
     if (!node) {
         node = path.node;
     }
+
     // https://github.com/babel/babel/issues/255
-    if (!t.isFor(parent)) {
+    if (isInLoop(path) && !t.isFor(parent)) {
         for (let i = 0; i < node.declarations.length; i++) {
             const declar = node.declarations[i];
             declar.init = declar.init || scope.buildUndefinedNode();
@@ -134,7 +147,7 @@ function convertBlockScopedToVar(
         const ids = path.getBindingIdentifiers();
         for (const name in ids) {
             const binding = scope.getOwnBinding(name);
-            if (binding) {
+            if (binding) { 
                 binding.kind = "var";
             }
             scope.moveBindingTo(name, parentScope);
@@ -176,7 +189,7 @@ const letReferenceFunctionVisitor = traverse.visitors.merge([
 
             // not a part of our scope
             if (!ref) {
-                return;
+                return; 
             }
 
             // this scope has a variable with the same name so it couldn't belong
@@ -274,8 +287,8 @@ const loopVisitor = {
 
     "BreakStatement|ContinueStatement|ReturnStatement"(path, state) {
         const { node, parent, scope } = path;
-        if (node[this.LOOP_IGNORE]) {
-            return;
+        if (node[this.LOOP_IGNORE]) { 
+            return; 
         }
 
         let replace;
@@ -292,8 +305,8 @@ const loopVisitor = {
             } else {
                 // we shouldn't be transforming these statements because
                 // they don't refer to the actual loop we're scopifying
-                if (state.ignoreLabeless) {
-                    return;
+                if (state.ignoreLabeless) { 
+                    return; 
                 }
 
                 // break statements mean something different in this context
@@ -362,7 +375,7 @@ class BlockScoping {
     run() {
         const block = this.block;
         if (DONE.has(block)) {
-            return;
+            return; 
         }
         DONE.add(block);
 
@@ -375,7 +388,7 @@ class BlockScoping {
         }
 
         // we can skip everything
-        if (!this.hasLetReferences) {
+        if (!this.hasLetReferences) { 
             return;
         }
 
@@ -401,7 +414,7 @@ class BlockScoping {
             const ref = letRefs[key];
             const binding = scope.getBinding(ref.name);
             if (!binding) {
-                continue;
+                continue; 
             }
             if (binding.kind === "let" || binding.kind === "const") {
                 binding.kind = "var";
@@ -505,7 +518,6 @@ class BlockScoping {
         // handle generators
         const hasYield = traverse.hasType(
             fn.body,
-            this.scope,
             "YieldExpression",
             t.FUNCTION_TYPES,
         );
@@ -518,7 +530,6 @@ class BlockScoping {
         // handlers async functions
         const hasAsync = traverse.hasType(
             fn.body,
-            this.scope,
             "AwaitExpression",
             t.FUNCTION_TYPES,
         );
@@ -597,7 +608,7 @@ class BlockScoping {
         for (let i = 0; i < fn.params.length; i++) {
             const param = fn.params[i];
             if (!state.reassignments[param.name]) {
-                continue;
+                continue; 
             }
 
             const newParam = this.scope.generateUidIdentifier(param.name);
@@ -686,12 +697,7 @@ class BlockScoping {
             loopDepth: 0
         };
 
-        const loopOrFunctionParent = this.blockPath.find(
-            (path) => path.isLoop() || path.isFunction(),
-        );
-        if (loopOrFunctionParent && loopOrFunctionParent.isLoop()) {
-            // There is a loop ancestor closer than the closest function, so we
-            // consider ourselves to be in a loop.
+        if (isInLoop(this.blockPath)) {
             state.loopDepth++;
         }
 
@@ -755,7 +761,7 @@ class BlockScoping {
         for (let i = 0; i < node.declarations.length; i++) {
             const declar = node.declarations[i];
             if (!declar.init) {
-                continue;
+                continue; 
             }
 
             const expr = t.assignmentExpression("=", declar.id, declar.init);

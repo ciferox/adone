@@ -197,6 +197,10 @@ class OptionManager {
 
         const basenameRelative = path.basename(opts.filenameRelative);
 
+        if (path.extname(opts.filenameRelative) === ".mjs") {
+            opts.sourceType = "module";
+        }
+
         defaults(opts, {
             sourceFileName: basenameRelative,
             sourceMapTarget: basenameRelative
@@ -212,9 +216,9 @@ class OptionManager {
 type BasicDescriptor = {
     value: {} | Function,
     options: ?{},
-dirname: string,
+    dirname: string,
     alias: string,
-        loc: string,
+    loc: string,
 };
 
 /**

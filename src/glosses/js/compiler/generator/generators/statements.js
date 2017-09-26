@@ -36,9 +36,7 @@ export function IfStatement(node: Object) {
     }
 
     if (node.alternate) {
-        if (this.endsWith("}")) {
-            this.space();
-        }
+        if (this.endsWith("}")) this.space();
         this.word("else");
         this.space();
         this.printAndIndentOnComments(node.alternate, node);
@@ -47,9 +45,7 @@ export function IfStatement(node: Object) {
 
 // Recursively get the last statement.
 function getLastStatement(statement) {
-    if (!t.isStatement(statement.body)) {
-        return statement;
-    }
+    if (!t.isStatement(statement.body)) return statement;
     return getLastStatement(statement.body);
 }
 
@@ -198,10 +194,8 @@ export function SwitchStatement(node: Object) {
     this.printSequence(node.cases, node, {
         indent: true,
         addNewlines(leading, cas) {
-            if (!leading && node.cases[node.cases.length - 1] === cas) {
-                return -1;
-            }
-        }
+            if (!leading && node.cases[node.cases.length - 1] === cas) return -1;
+        },
     });
 
     this.token("}");
@@ -233,22 +227,14 @@ function variableDeclarationIndent() {
     // "let " or "var " indentation.
     this.token(",");
     this.newline();
-    if (this.endsWith("\n")) {
-        for (let i = 0; i < 4; i++) {
-            this.space(true);
-        }
-    }
+    if (this.endsWith("\n")) for (let i = 0; i < 4; i++) this.space(true);
 }
 
 function constDeclarationIndent() {
     // "const " indentation.
     this.token(",");
     this.newline();
-    if (this.endsWith("\n")) {
-        for (let i = 0; i < 6; i++) {
-            this.space(true);
-        }
-    }
+    if (this.endsWith("\n")) for (let i = 0; i < 6; i++) this.space(true);
 }
 
 export function VariableDeclaration(node: Object, parent: Object) {
@@ -298,9 +284,7 @@ export function VariableDeclaration(node: Object, parent: Object) {
 
     if (t.isFor(parent)) {
         // don't give semicolons to these nodes since they'll be inserted in the parent generator
-        if (parent.left === node || parent.init === node) {
-            return;
-        }
+        if (parent.left === node || parent.init === node) return;
     }
 
     this.semicolon();

@@ -137,7 +137,6 @@
                         }
                       },
                       "method": false,
-                      "computed": false,
                       "key": {
                         "type": "Identifier",
                         "start": 14,
@@ -155,6 +154,7 @@
                         },
                         "name": "x"
                       },
+                      "computed": false,
                       "shorthand": true,
                       "value": {
                         "type": "Identifier",
@@ -209,7 +209,6 @@
                         }
                       },
                       "method": false,
-                      "computed": false,
                       "key": {
                         "type": "Identifier",
                         "start": 20,
@@ -227,6 +226,7 @@
                         },
                         "name": "x"
                       },
+                      "computed": false,
                       "shorthand": false,
                       "value": {
                         "type": "NumericLiteral",

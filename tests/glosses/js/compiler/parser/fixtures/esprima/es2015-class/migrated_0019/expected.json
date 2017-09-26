@@ -90,7 +90,6 @@
                 }
               },
               "static": false,
-              "computed": false,
               "key": {
                 "type": "StringLiteral",
                 "start": 9,
@@ -111,6 +110,7 @@
                 },
                 "value": "constructor"
               },
+              "computed": false,
               "kind": "constructor",
               "id": null,
               "generator": false,

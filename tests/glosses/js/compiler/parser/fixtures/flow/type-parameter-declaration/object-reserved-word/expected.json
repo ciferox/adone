@@ -104,7 +104,6 @@
                     }
                   },
                   "method": true,
-                  "computed": false,
                   "key": {
                     "type": "Identifier",
                     "start": 14,
@@ -122,6 +121,7 @@
                     },
                     "name": "foobar"
                   },
+                  "computed": false,
                   "kind": "method",
                   "id": null,
                   "generator": false,
@@ -195,7 +195,6 @@
                     }
                   },
                   "method": true,
-                  "computed": false,
                   "key": {
                     "type": "Identifier",
                     "start": 32,
@@ -213,6 +212,7 @@
                     },
                     "name": "delete"
                   },
+                  "computed": false,
                   "kind": "method",
                   "id": null,
                   "generator": false,
@@ -286,7 +286,6 @@
                     }
                   },
                   "method": true,
-                  "computed": false,
                   "key": {
                     "type": "Identifier",
                     "start": 50,
@@ -304,6 +303,7 @@
                     },
                     "name": "yield"
                   },
+                  "computed": false,
                   "kind": "method",
                   "id": null,
                   "generator": false,
@@ -377,7 +377,6 @@
                     }
                   },
                   "method": true,
-                  "computed": false,
                   "key": {
                     "type": "Identifier",
                     "start": 67,
@@ -395,6 +394,7 @@
                     },
                     "name": "do"
                   },
+                  "computed": false,
                   "kind": "method",
                   "id": null,
                   "generator": false,

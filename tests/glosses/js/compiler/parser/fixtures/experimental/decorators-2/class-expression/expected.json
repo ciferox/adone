@@ -204,7 +204,6 @@
                       }
                     ],
                     "static": false,
-                    "computed": false,
                     "key": {
                       "type": "Identifier",
                       "start": 36,
@@ -222,6 +221,7 @@
                       },
                       "name": "bam"
                     },
+                    "computed": false,
                     "kind": "method",
                     "id": null,
                     "generator": false,

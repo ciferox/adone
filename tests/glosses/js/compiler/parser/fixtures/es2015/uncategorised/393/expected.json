@@ -91,7 +91,6 @@
                     }
                   },
                   "method": false,
-                  "computed": false,
                   "key": {
                     "type": "Identifier",
                     "start": 2,
@@ -109,6 +108,7 @@
                     },
                     "name": "set"
                   },
+                  "computed": false,
                   "shorthand": true,
                   "value": {
                     "type": "AssignmentPattern",

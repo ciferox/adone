@@ -122,7 +122,6 @@
                         }
                       },
                       "method": false,
-                      "computed": false,
                       "key": {
                         "type": "Identifier",
                         "start": 38,
@@ -140,6 +139,7 @@
                         },
                         "name": "p"
                       },
+                      "computed": false,
                       "shorthand": false,
                       "value": {
                         "type": "Identifier",

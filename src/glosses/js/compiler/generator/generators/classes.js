@@ -64,9 +64,7 @@ export function ClassBody(node: Object) {
         this.printSequence(node.body, node);
         this.dedent();
 
-        if (!this.endsWith("\n")) { 
-            this.newline(); 
-        }
+        if (!this.endsWith("\n")) this.newline();
 
         this.rightBrace();
     }

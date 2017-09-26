@@ -104,7 +104,6 @@
                     }
                   },
                   "method": true,
-                  "computed": false,
                   "key": {
                     "type": "Identifier",
                     "start": 14,
@@ -122,6 +121,7 @@
                     },
                     "name": "method"
                   },
+                  "computed": false,
                   "kind": "method",
                   "id": null,
                   "generator": false,
@@ -288,7 +288,6 @@
                                       }
                                     },
                                     "method": false,
-                                    "computed": false,
                                     "key": {
                                       "type": "Identifier",
                                       "start": 38,
@@ -306,6 +305,7 @@
                                       },
                                       "name": "a"
                                     },
+                                    "computed": false,
                                     "shorthand": false,
                                     "value": {
                                       "type": "NumericLiteral",

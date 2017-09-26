@@ -1,7 +1,7 @@
 import * as n from "../node";
 
 const {
-    js: { compiler: { types: t } }
+  js: { compiler: { types: t } }
 } = adone;
 
 export function UnaryExpression(node: Object) {
@@ -36,7 +36,9 @@ export function UpdateExpression(node: Object) {
         this.token(node.operator);
         this.print(node.argument, node);
     } else {
+        this.startTerminatorless(true);
         this.print(node.argument, node);
+        this.endTerminatorless();
         this.token(node.operator);
     }
 }

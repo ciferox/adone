@@ -8,7 +8,7 @@ import buildConfigChain from "./config/build_config_chain";
 import manageOptions from "./config/option_manager";
 
 const {
-    js: { compiler: { types, messages } }
+    js: { compiler: { types, messages, template } }
 } = adone;
 
 export {
@@ -18,6 +18,7 @@ export {
     getEnv,
     types,
     messages,
+    template,
     makeStrongCache,
     makeWeakCache,
     buildConfigChain,
