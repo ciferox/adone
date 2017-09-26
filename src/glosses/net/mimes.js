@@ -19,20 +19,20 @@ export const types = new Map();
         }
         extensions.set(type, exts);
         // extension -> mime
-        for (const extension of exts) {
-            if (types.has(extension)) {
-                const from = preference.indexOf(db.get(types.get(extension)).source);
+        for (const ext of exts) {
+            if (types.has(ext)) {
+                const from = preference.indexOf(db.get(types.get(ext)).source);
                 const to = preference.indexOf(mime.source);
 
-                if (types.get(extension) !== "application/octet-stream" &&
-                    (from > to || (from === to && types.get(extension).startsWith("application/")))) {
+                if (types.get(ext) !== "application/octet-stream" &&
+                    (from > to || (from === to && types.get(ext).startsWith("application/")))) {
                     // skip the remapping
                     continue;
                 }
             }
 
             // set the extension -> mime
-            types.set(extension, type);
+            types.set(ext, type);
         }
     }
 }

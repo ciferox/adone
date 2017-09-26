@@ -1,5 +1,4 @@
 import type SourceMap from "./source_map";
-import trimRight from "trim-right";
 
 const SPACES_RE = /^[ \t]+$/;
 
@@ -42,9 +41,9 @@ export default class Buffer {
         const result = {
             // Whatever trim is used here should not execute a regex against the
             // source string since it may be arbitrarily large after all transformations
-            code: trimRight(this._buf.join("")),
+            code: adone.vendor.lodash.trimEnd(this._buf.join("")),
             map: null,
-            rawMappings: map && map.getRawMappings(),
+            rawMappings: map && map.getRawMappings()
         };
 
         if (map) {
