@@ -23,23 +23,23 @@ const INVALID_METHODS = ["random"];
  *
  */
 
-export const evaluateTruthy = function (): boolean {
+export function evaluateTruthy(): boolean {
     const res = this.evaluate();
     if (res.confident) { 
-        return Boolean(res.value); 
+        return Boolean(res.value);
     }
-};
+}
 
 /**
  * Deopts the evaluation
  */
-const deopt = function (path, state) {
-    if (!state.confident) { 
-        return;
+function deopt(path, state) {
+    if (!state.confident) {
+        return; 
     }
     state.deoptPath = path;
     state.confident = false;
-};
+}
 
 /**
  * We wrap the _evaluate method so we can track `seen` nodes, we push an item
@@ -49,7 +49,7 @@ const deopt = function (path, state) {
  *   var g = a ? 1 : 2,
  *       a = g * this.foo
  */
-const evaluateCached = function (path, state) {
+function evaluateCached(path, state) {
     const { node } = path;
     const { seen } = state;
 
@@ -59,23 +59,23 @@ const evaluateCached = function (path, state) {
             return existing.value;
         } 
         deopt(path, state);
-            
-        
-    } else {
-        const item = { resolved: false };
-        seen.set(node, item);
+        return;
+    
+    } 
+    const item = { resolved: false };
+    seen.set(node, item);
 
-        const val = _evaluate(path, state);
-        if (state.confident) {
-            item.resolved = true;
-            item.value = val;
-        }
-        return val;
+    const val = _evaluate(path, state);
+    if (state.confident) {
+        item.resolved = true;
+        item.value = val;
     }
-};
+    return val;
+  
+}
 
-const _evaluate = function (path, state) {
-    if (!state.confident) {
+function _evaluate(path, state) {
+    if (!state.confident) { 
         return;
     }
 
@@ -88,8 +88,8 @@ const _evaluate = function (path, state) {
 
     if (
         path.isStringLiteral() ||
-        path.isNumericLiteral() ||
-        path.isBooleanLiteral()
+    path.isNumericLiteral() ||
+    path.isBooleanLiteral()
     ) {
         return node.value;
     }
@@ -104,7 +104,7 @@ const _evaluate = function (path, state) {
 
     if (
         path.isTaggedTemplateExpression() &&
-        path.get("tag").isMemberExpression()
+    path.get("tag").isMemberExpression()
     ) {
         const object = path.get("tag.object");
         const { node: { name } } = object;
@@ -112,10 +112,10 @@ const _evaluate = function (path, state) {
 
         if (
             object.isIdentifier() &&
-            name === "String" &&
-            !path.scope.getBinding(name, true) &&
-            property.isIdentifier &&
-            property.node.name === "raw"
+      name === "String" &&
+      !path.scope.getBinding(name, true) &&
+      property.isIdentifier &&
+      property.node.name === "raw"
         ) {
             return evaluateQuasis(path, node.quasi.quasis, state, true);
         }
@@ -124,24 +124,24 @@ const _evaluate = function (path, state) {
     if (path.isConditionalExpression()) {
         const testResult = evaluateCached(path.get("test"), state);
         if (!state.confident) {
-            return;
+            return; 
         }
         if (testResult) {
             return evaluateCached(path.get("consequent"), state);
         } 
         return evaluateCached(path.get("alternate"), state);
-        
+    
     }
 
     if (path.isExpressionWrapper()) {
-        // TypeCastExpression, ExpressionStatement etc
+    // TypeCastExpression, ExpressionStatement etc
         return evaluateCached(path.get("expression"), state);
     }
 
     // "foo".length
     if (
         path.isMemberExpression() &&
-        !path.parentPath.isCallExpression({ callee: node })
+    !path.parentPath.isCallExpression({ callee: node })
     ) {
         const property = path.get("property");
         const object = path.get("object");
@@ -182,8 +182,8 @@ const _evaluate = function (path, state) {
             return deopt(path, state);
         } 
         return evaluateCached(resolved, state);
-            
-        
+      
+    
     }
 
     if (path.isUnaryExpression({ prefix: true })) {
@@ -195,14 +195,14 @@ const _evaluate = function (path, state) {
         const argument = path.get("argument");
         if (
             node.operator === "typeof" &&
-            (argument.isFunction() || argument.isClass())
+      (argument.isFunction() || argument.isClass())
         ) {
             return "function";
         }
 
         const arg = evaluateCached(argument, state);
         if (!state.confident) {
-            return;
+            return; 
         }
         switch (node.operator) {
             case "!":
@@ -265,8 +265,8 @@ const _evaluate = function (path, state) {
     }
 
     if (path.isLogicalExpression()) {
-        // If we are confident that one side of an && is false, or the left
-        // side of an || is true, we can be confident about the entire expression
+    // If we are confident that one side of an && is false, or the left
+    // side of an || is true, we can be confident about the entire expression
         const wasConfident = state.confident;
         const left = evaluateCached(path.get("left"), state);
         const leftConfident = state.confident;
@@ -309,7 +309,7 @@ const _evaluate = function (path, state) {
         }
         const right = evaluateCached(path.get("right"), state);
         if (!state.confident) { 
-            return;
+            return; 
         }
 
         switch (node.operator) {
@@ -364,8 +364,8 @@ const _evaluate = function (path, state) {
         // Number(1);
         if (
             callee.isIdentifier() &&
-            !path.scope.getBinding(callee.node.name, true) &&
-            VALID_CALLEES.indexOf(callee.node.name) >= 0
+      !path.scope.getBinding(callee.node.name, true) &&
+      VALID_CALLEES.indexOf(callee.node.name) >= 0
         ) {
             func = global[node.callee.name];
         }
@@ -377,9 +377,9 @@ const _evaluate = function (path, state) {
             // Math.min(1, 2)
             if (
                 object.isIdentifier() &&
-                property.isIdentifier() &&
-                VALID_CALLEES.indexOf(object.node.name) >= 0 &&
-                INVALID_METHODS.indexOf(property.node.name) < 0
+        property.isIdentifier() &&
+        VALID_CALLEES.indexOf(object.node.name) >= 0 &&
+        INVALID_METHODS.indexOf(property.node.name) < 0
             ) {
                 context = global[object.node.name];
                 func = context[property.node.name];
@@ -406,17 +406,17 @@ const _evaluate = function (path, state) {
     }
 
     deopt(path, state);
-};
+}
 
-const evaluateQuasis = function (path, quasis: Array<Object>, state, raw = false) {
+function evaluateQuasis(path, quasis: Array<Object>, state, raw = false) {
     let str = "";
 
     let i = 0;
     const exprs = path.get("expressions");
 
     for (const elem of quasis) {
-        // not confident, evaluated an expression we don't like
-        if (!state.confident) { 
+    // not confident, evaluated an expression we don't like
+        if (!state.confident) {
             break; 
         }
 
@@ -430,11 +430,11 @@ const evaluateQuasis = function (path, quasis: Array<Object>, state, raw = false
         }
     }
 
-    if (!state.confident) {
+    if (!state.confident) { 
         return; 
     }
     return str;
-};
+}
 
 /**
  * Walk the input `node` and statically evaluate it.
@@ -451,14 +451,14 @@ const evaluateQuasis = function (path, quasis: Array<Object>, state, raw = false
  *
  */
 
-export const evaluate = function (): { confident: boolean, value: any } {
+export function evaluate(): { confident: boolean, value: any } {
     const state = {
         confident: true,
         deoptPath: null,
         seen: new Map()
     };
     let value = evaluateCached(this, state);
-    if (!state.confident) { 
+    if (!state.confident) {
         value = undefined; 
     }
 
@@ -467,4 +467,4 @@ export const evaluate = function (): { confident: boolean, value: any } {
         deopt: state.deoptPath,
         value
     };
-};
+}

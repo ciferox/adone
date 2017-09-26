@@ -40,124 +40,124 @@ export default class Renamer {
         this.binding = binding;
     }
 
-    oldName: string;
-    newName: string;
-    binding: Binding;
+  oldName: string;
+  newName: string;
+  binding: Binding;
 
-    maybeConvertFromExportDeclaration(parentDeclar) {
-        const exportDeclar =
-            parentDeclar.parentPath.isExportDeclaration() && parentDeclar.parentPath;
-        if (!exportDeclar) { 
-            return;
-        }
+  maybeConvertFromExportDeclaration(parentDeclar) {
+      const exportDeclar =
+      parentDeclar.parentPath.isExportDeclaration() && parentDeclar.parentPath;
+      if (!exportDeclar) { 
+          return;
+      }
 
-        // build specifiers that point back to this export declaration
-        const isDefault = exportDeclar.isExportDefaultDeclaration();
+      // build specifiers that point back to this export declaration
+      const isDefault = exportDeclar.isExportDefaultDeclaration();
 
-        if (
-            isDefault &&
-            (parentDeclar.isFunctionDeclaration() ||
-                parentDeclar.isClassDeclaration()) &&
-            !parentDeclar.node.id
-        ) {
-            // Ensure that default class and function exports have a name so they have a identifier to
-            // reference from the export specifier list.
-            parentDeclar.node.id = parentDeclar.scope.generateUidIdentifier(
-                "default",
-            );
-        }
+      if (
+          isDefault &&
+      (parentDeclar.isFunctionDeclaration() ||
+        parentDeclar.isClassDeclaration()) &&
+      !parentDeclar.node.id
+      ) {
+      // Ensure that default class and function exports have a name so they have a identifier to
+      // reference from the export specifier list.
+          parentDeclar.node.id = parentDeclar.scope.generateUidIdentifier(
+              "default",
+          );
+      }
 
-        const bindingIdentifiers = parentDeclar.getOuterBindingIdentifiers();
-        const specifiers = [];
+      const bindingIdentifiers = parentDeclar.getOuterBindingIdentifiers();
+      const specifiers = [];
 
-        for (const name in bindingIdentifiers) {
-            const localName = name === this.oldName ? this.newName : name;
-            const exportedName = isDefault ? "default" : name;
-            specifiers.push(
-                t.exportSpecifier(t.identifier(localName), t.identifier(exportedName)),
-            );
-        }
+      for (const name in bindingIdentifiers) {
+          const localName = name === this.oldName ? this.newName : name;
+          const exportedName = isDefault ? "default" : name;
+          specifiers.push(
+              t.exportSpecifier(t.identifier(localName), t.identifier(exportedName)),
+          );
+      }
 
-        if (specifiers.length) {
-            const aliasDeclar = t.exportNamedDeclaration(null, specifiers);
+      if (specifiers.length) {
+          const aliasDeclar = t.exportNamedDeclaration(null, specifiers);
 
-            // hoist to the top if it's a function
-            if (parentDeclar.isFunctionDeclaration()) {
-                aliasDeclar._blockHoist = 3;
-            }
+          // hoist to the top if it's a function
+          if (parentDeclar.isFunctionDeclaration()) {
+              aliasDeclar._blockHoist = 3;
+          }
 
-            exportDeclar.insertAfter(aliasDeclar);
-            exportDeclar.replaceWith(parentDeclar.node);
-        }
-    }
+          exportDeclar.insertAfter(aliasDeclar);
+          exportDeclar.replaceWith(parentDeclar.node);
+      }
+  }
 
-    maybeConvertFromClassFunctionDeclaration(path) {
-        return; // TODO
+  maybeConvertFromClassFunctionDeclaration(path) {
+      return; // TODO
 
-        // retain the `name` of a class/function declaration
+      // retain the `name` of a class/function declaration
 
-        if (!path.isFunctionDeclaration() && !path.isClassDeclaration()) {}
-        if (this.binding.kind !== "hoisted") {}
+      if (!path.isFunctionDeclaration() && !path.isClassDeclaration()) {}
+      if (this.binding.kind !== "hoisted") {}
 
-        path.node.id = t.identifier(this.oldName);
-        path.node._blockHoist = 3;
+      path.node.id = t.identifier(this.oldName);
+      path.node._blockHoist = 3;
 
-        path.replaceWith(
-            t.variableDeclaration("let", [
-                t.variableDeclarator(
-                    t.identifier(this.newName),
-                    t.toExpression(path.node),
-                )
-            ]),
-        );
-    }
+      path.replaceWith(
+          t.variableDeclaration("let", [
+              t.variableDeclarator(
+                  t.identifier(this.newName),
+                  t.toExpression(path.node),
+              )
+          ]),
+      );
+  }
 
-    maybeConvertFromClassFunctionExpression(path) {
-        return; // TODO
+  maybeConvertFromClassFunctionExpression(path) {
+      return; // TODO
 
-        // retain the `name` of a class/function expression
+      // retain the `name` of a class/function expression
 
-        if (!path.isFunctionExpression() && !path.isClassExpression()) {}
-        if (this.binding.kind !== "local") {}
+      if (!path.isFunctionExpression() && !path.isClassExpression()) {}
+      if (this.binding.kind !== "local") {}
 
-        path.node.id = t.identifier(this.oldName);
+      path.node.id = t.identifier(this.oldName);
 
-        this.binding.scope.parent.push({
-            id: t.identifier(this.newName)
-        });
+      this.binding.scope.parent.push({
+          id: t.identifier(this.newName)
+      });
 
-        path.replaceWith(
-            t.assignmentExpression("=", t.identifier(this.newName), path.node),
-        );
-    }
+      path.replaceWith(
+          t.assignmentExpression("=", t.identifier(this.newName), path.node),
+      );
+  }
 
-    rename(block?) {
-        const { binding, oldName, newName } = this;
-        const { scope, path } = binding;
+  rename(block?) {
+      const { binding, oldName, newName } = this;
+      const { scope, path } = binding;
 
-        const parentDeclar = path.find(
-            (path) => path.isDeclaration() || path.isFunctionExpression(),
-        );
-        if (parentDeclar) {
-            this.maybeConvertFromExportDeclaration(parentDeclar);
-        }
+      const parentDeclar = path.find(
+          (path) => path.isDeclaration() || path.isFunctionExpression(),
+      );
+      if (parentDeclar) {
+          this.maybeConvertFromExportDeclaration(parentDeclar);
+      }
 
-        scope.traverse(block || scope.block, renameVisitor, this);
+      scope.traverse(block || scope.block, renameVisitor, this);
 
-        if (!block) {
-            scope.removeOwnBinding(oldName);
-            scope.bindings[newName] = binding;
-            this.binding.identifier.name = newName;
-        }
+      if (!block) {
+          scope.removeOwnBinding(oldName);
+          scope.bindings[newName] = binding;
+          this.binding.identifier.name = newName;
+      }
 
-        if (binding.type === "hoisted") {
-            // https://github.com/babel/babel/issues/2435
-            // todo: hoist and convert function to a let
-        }
+      if (binding.type === "hoisted") {
+      // https://github.com/babel/babel/issues/2435
+      // todo: hoist and convert function to a let
+      }
 
-        if (parentDeclar) {
-            this.maybeConvertFromClassFunctionDeclaration(parentDeclar);
-            this.maybeConvertFromClassFunctionExpression(parentDeclar);
-        }
-    }
+      if (parentDeclar) {
+          this.maybeConvertFromClassFunctionDeclaration(parentDeclar);
+          this.maybeConvertFromClassFunctionExpression(parentDeclar);
+      }
+  }
 }

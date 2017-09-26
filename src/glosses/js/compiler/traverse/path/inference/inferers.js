@@ -1,4 +1,5 @@
 const {
+    is,
     js: { compiler: { types: t } }
 } = adone;
 
@@ -8,18 +9,18 @@ export function VariableDeclarator() {
     const id = this.get("id");
 
     if (!id.isIdentifier()) {
-        return;
+        return; 
     }
     const init = this.get("init");
 
     let type = init.getTypeAnnotation();
 
     if (type && type.type === "AnyTypeAnnotation") {
-        // Detect "var foo = Array()" calls so we can optimize for arrays vs iterables.
+    // Detect "var foo = Array()" calls so we can optimize for arrays vs iterables.
         if (
             init.isCallExpression() &&
-            init.get("callee").isIdentifier({ name: "Array" }) &&
-            !init.scope.hasBinding("Array", true /* noGlobals */)
+      init.get("callee").isIdentifier({ name: "Array" }) &&
+      !init.scope.hasBinding("Array", true /* noGlobals */)
         ) {
             type = ArrayExpression();
         }
@@ -36,7 +37,7 @@ TypeCastExpression.validParent = true;
 
 export function NewExpression(node) {
     if (this.get("callee").isIdentifier()) {
-        // only resolve identifier callee
+    // only resolve identifier callee
         return t.genericTypeAnnotation(node.callee);
     }
 }
@@ -101,7 +102,9 @@ export function ConditionalExpression() {
 }
 
 export function SequenceExpression() {
-    return this.get("expressions").pop().getTypeAnnotation();
+    return this.get("expressions")
+        .pop()
+        .getTypeAnnotation();
 }
 
 export function AssignmentExpression() {
@@ -185,21 +188,21 @@ export function TaggedTemplateExpression() {
 }
 
 function resolveCall(callee) {
-    callee = callee.resolve();
+  callee = callee.resolve();
 
-    if (callee.isFunction()) {
-        if (callee.is("async")) {
-            if (callee.is("generator")) {
-                return t.genericTypeAnnotation(t.identifier("AsyncIterator"));
-            }
-            return t.genericTypeAnnotation(t.identifier("Promise"));
-
-        }
-        if (callee.node.returnType) {
-            return callee.node.returnType;
-        }
+  if (callee.isFunction()) {
+    if (callee.is("async")) {
+      if (callee.is("generator")) {
+        return t.genericTypeAnnotation(t.identifier("AsyncIterator"));
+      } 
+        return t.genericTypeAnnotation(t.identifier("Promise"));
+      
+    } 
+      if (callee.node.returnType) {
+        return callee.node.returnType;
+      } 
         // todo: get union type of all return arguments
-
-
-    }
+      
+    
+  }
 }

@@ -7,7 +7,7 @@ const {
 
 export default function (node: Object) {
     if (!this.isReferenced()) {
-        return;
+        return; 
     }
 
     // check if a binding exists of this value and if so then return a union type of all
@@ -16,13 +16,13 @@ export default function (node: Object) {
     if (binding) {
         if (binding.identifier.typeAnnotation) {
             return binding.identifier.typeAnnotation;
-        }
+        } 
         return getTypeAnnotationBindingConstantViolations(
             binding,
             this,
             node.name,
         );
-
+    
     }
 
     // built-in values
@@ -31,11 +31,11 @@ export default function (node: Object) {
     } else if (node.name === "NaN" || node.name === "Infinity") {
         return t.numberTypeAnnotation();
     } else if (node.name === "arguments") {
-        // todo
+    // todo
     }
 }
 
-const getTypeAnnotationBindingConstantViolations = function (binding, path, name) {
+function getTypeAnnotationBindingConstantViolations(binding, path, name) {
     const types = [];
 
     const functionConstantViolations = [];
@@ -62,33 +62,33 @@ const getTypeAnnotationBindingConstantViolations = function (binding, path, name
     }
 
     if (constantViolations.length) {
-        // pick one constant from each scope which will represent the last possible
-        // control flow path that it could've taken/been
-        /* This code is broken for the following problems:
-         * It thinks that assignments can only happen in scopes.
-         * What about conditionals, if statements without block,
-         * or guarded assignments.
-         * It also checks to see if one of the assignments is in the
-         * same scope and uses that as the only "violation". However,
-         * the binding is returned by `getConstantViolationsBefore` so we for
-         * sure always going to return that as the only "violation".
-        let rawConstantViolations = constantViolations.reverse();
-        let visitedScopes = [];
-        constantViolations = [];
-        for (let violation of (rawConstantViolations: Array<NodePath>)) {
-          let violationScope = violation.scope;
-          if (visitedScopes.indexOf(violationScope) >= 0) continue;
-    
-          visitedScopes.push(violationScope);
-          constantViolations.push(violation);
-    
-          if (violationScope === path.scope) {
-            constantViolations = [violation];
-            break;
-          }
-        }*/
+    // pick one constant from each scope which will represent the last possible
+    // control flow path that it could've taken/been
+    /* This code is broken for the following problems:
+     * It thinks that assignments can only happen in scopes.
+     * What about conditionals, if statements without block,
+     * or guarded assignments.
+     * It also checks to see if one of the assignments is in the
+     * same scope and uses that as the only "violation". However,
+     * the binding is returned by `getConstantViolationsBefore` so we for
+     * sure always going to return that as the only "violation".
+    let rawConstantViolations = constantViolations.reverse();
+    let visitedScopes = [];
+    constantViolations = [];
+    for (let violation of (rawConstantViolations: Array<NodePath>)) {
+      let violationScope = violation.scope;
+      if (visitedScopes.indexOf(violationScope) >= 0) continue;
 
-        // add back on function constant violations since we can't track calls
+      visitedScopes.push(violationScope);
+      constantViolations.push(violation);
+
+      if (violationScope === path.scope) {
+        constantViolations = [violation];
+        break;
+      }
+    }*/
+
+    // add back on function constant violations since we can't track calls
         constantViolations = constantViolations.concat(functionConstantViolations);
 
         // push on inferred types of violated paths
@@ -100,22 +100,22 @@ const getTypeAnnotationBindingConstantViolations = function (binding, path, name
     if (types.length) {
         return t.createUnionTypeAnnotation(types);
     }
-};
+}
 
-const getConstantViolationsBefore = function (binding, path, functions) {
+function getConstantViolationsBefore(binding, path, functions) {
     const violations = binding.constantViolations.slice();
     violations.unshift(binding.path);
     return violations.filter((violation) => {
         violation = violation.resolve();
         const status = violation._guessExecutionStatusRelativeTo(path);
-        if (functions && status === "function") {
-            functions.push(violation);
+        if (functions && status === "function") { 
+            functions.push(violation); 
         }
         return status === "before";
     });
-};
+}
 
-const inferAnnotationFromBinaryExpression = function (name, path) {
+function inferAnnotationFromBinaryExpression(name, path) {
     const operator = path.node.operator;
 
     const right = path.get("right").resolve();
@@ -139,8 +139,8 @@ const inferAnnotationFromBinaryExpression = function (name, path) {
         return;
     }
 
-    if (operator !== "===" && operator !== "==") {
-        return;
+    if (operator !== "===" && operator !== "==") { 
+        return; 
     }
 
     //
@@ -154,12 +154,12 @@ const inferAnnotationFromBinaryExpression = function (name, path) {
         typePath = left;
     }
 
-    if (!typeofPath) {
+    if (!typeofPath) { 
         return;
     }
     // and that the argument of the typeof path references us!
     if (!typeofPath.get("argument").isIdentifier({ name })) {
-        return;
+        return; 
     }
 
     // ensure that the type path is a Literal
@@ -170,15 +170,15 @@ const inferAnnotationFromBinaryExpression = function (name, path) {
 
     // and that it's a string so we can infer it
     const typeValue = typePath.node.value;
-    if (!is.string(typeValue)) {
-        return;
+    if (!is.string(typeValue)) { 
+        return; 
     }
 
     // turn type value into a type annotation
     return t.createTypeAnnotationBasedOnTypeof(typeValue);
-};
+}
 
-const getParentConditionalPath = function (binding, path, name) {
+function getParentConditionalPath(binding, path, name) {
     let parentPath;
     while ((parentPath = path.parentPath)) {
         if (parentPath.isIfStatement() || parentPath.isConditionalExpression()) {
@@ -189,19 +189,19 @@ const getParentConditionalPath = function (binding, path, name) {
             return parentPath;
         }
         if (parentPath.isFunction()) {
-            if (parentPath.parentPath.scope.getBinding(name) !== binding) {
+            if (parentPath.parentPath.scope.getBinding(name) !== binding) { 
                 return;
             }
         }
 
         path = parentPath;
     }
-};
+}
 
-const getConditionalAnnotation = function (binding, path, name) {
+function getConditionalAnnotation(binding, path, name) {
     const ifStatement = getParentConditionalPath(binding, path, name);
-    if (!ifStatement) {
-        return;
+    if (!ifStatement) { 
+        return; 
     }
 
     const test = ifStatement.get("test");
@@ -219,7 +219,7 @@ const getConditionalAnnotation = function (binding, path, name) {
         } else if (path.isBinaryExpression()) {
             const type = inferAnnotationFromBinaryExpression(name, path);
             if (type) {
-                types.push(type);
+                types.push(type); 
             }
         }
     }
@@ -232,4 +232,4 @@ const getConditionalAnnotation = function (binding, path, name) {
     }
 
     return getConditionalAnnotation(ifStatement, name);
-};
+}

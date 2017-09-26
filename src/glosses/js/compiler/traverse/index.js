@@ -3,7 +3,7 @@ import * as visitors from "./visitors";
 import * as cache from "./cache";
 
 const {
-    js: { compiler: { messages, types: t } },
+    js: { compiler: { types: t, messages } },
     vendor: { lodash: { includes } }
 } = adone;
 
@@ -14,11 +14,11 @@ export default function traverse(
     state: Object,
     parentPath: Object,
 ) {
-    if (!parent) {
-        return;
+    if (!parent) { 
+        return; 
     }
-    if (!opts) {
-        opts = {};
+    if (!opts) { 
+        opts = {}; 
     }
 
     if (!opts.noScope && !scope) {
@@ -58,17 +58,17 @@ traverse.node = function (
     skipKeys?,
 ) {
     const keys: Array = t.VISITOR_KEYS[node.type];
-    if (!keys) {
-        return;
+    if (!keys) { 
+        return; 
     }
 
     const context = new TraversalContext(scope, opts, state, parentPath);
     for (const key of keys) {
-        if (skipKeys && skipKeys[key]) {
-            continue;
+        if (skipKeys && skipKeys[key]) { 
+            continue; 
         }
-        if (context.visit(node, key)) {
-            return;
+        if (context.visit(node, key)) { 
+            return; 
         }
     }
 };
@@ -84,12 +84,12 @@ traverse.removeProperties = function (tree, opts) {
     return tree;
 };
 
-const hasBlacklistedType = (path, state) => {
+function hasBlacklistedType(path, state) {
     if (path.node.type === state.type) {
         state.has = true;
         path.stop();
     }
-};
+}
 
 traverse.hasType = function (
     tree: Object,
@@ -97,13 +97,13 @@ traverse.hasType = function (
     blacklistTypes: Array<string>,
 ): boolean {
     // the node we're searching in is blacklisted
-    if (includes(blacklistTypes, tree.type)) {
-        return false;
+    if (includes(blacklistTypes, tree.type)) { 
+        return false; 
     }
 
     // the type we're looking for is the same as the passed node
-    if (tree.type === type) {
-        return true;
+    if (tree.type === type) { 
+        return true; 
     }
 
     const state = {

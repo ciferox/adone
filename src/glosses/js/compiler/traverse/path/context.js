@@ -6,11 +6,11 @@ const {
     is
 } = adone;
 
-export const call = function (key): boolean {
+export function call(key): boolean {
     const opts = this.opts;
 
     if (this.node) {
-        if (this._call(opts[key])) {
+        if (this._call(opts[key])) { 
             return true;
         }
     }
@@ -20,21 +20,21 @@ export const call = function (key): boolean {
     }
 
     return false;
-};
+}
 
-export const _call = function (fns?: Array<Function>): boolean {
+export function _call(fns?: Array<Function>): boolean {
     if (!fns) {
         return false;
     }
 
     for (const fn of fns) {
-        if (!fn) {
-            continue;
+        if (!fn) { 
+            continue; 
         }
 
         const node = this.node;
-        if (!node) {
-            return true;
+        if (!node) { 
+            return true; 
         }
 
         const ret = fn.call(this.state, this, this.state);
@@ -47,20 +47,20 @@ export const _call = function (fns?: Array<Function>): boolean {
             return true;
         }
 
-        if (this.shouldStop || this.shouldSkip || this.removed) {
+        if (this.shouldStop || this.shouldSkip || this.removed) { 
             return true;
         }
     }
 
     return false;
-};
+}
 
-export const isBlacklisted = function (): boolean {
+export function isBlacklisted(): boolean {
     const blacklist = this.opts.blacklist;
     return blacklist && blacklist.indexOf(this.node.type) > -1;
-};
+}
 
-export const visit = function (): boolean {
+export function visit(): boolean {
     if (!this.node) {
         return false;
     }
@@ -89,24 +89,24 @@ export const visit = function (): boolean {
     this.call("exit");
 
     return this.shouldStop;
-};
+}
 
-export const skip = function () {
+export function skip() {
     this.shouldSkip = true;
-};
+}
 
-export const skipKey = function (key) {
+export function skipKey(key) {
     this.skipKeys[key] = true;
-};
+}
 
-export const stop = function () {
+export function stop() {
     this.shouldStop = true;
     this.shouldSkip = true;
-};
+}
 
-export const setScope = function () {
-    if (this.opts && this.opts.noScope) {
-        return;
+export function setScope() {
+    if (this.opts && this.opts.noScope) { 
+        return; 
     }
 
     let target = this.context && this.context.scope;
@@ -114,8 +114,8 @@ export const setScope = function () {
     if (!target) {
         let path = this.parentPath;
         while (path && !target) {
-            if (path.opts && path.opts.noScope) {
-                return;
+            if (path.opts && path.opts.noScope) { 
+                return; 
             }
 
             target = path.scope;
@@ -124,12 +124,12 @@ export const setScope = function () {
     }
 
     this.scope = this.getScope(target);
-    if (this.scope) {
-        this.scope.init();
+    if (this.scope) { 
+        this.scope.init(); 
     }
-};
+}
 
-export const setContext = function (context) {
+export function setContext(context) {
     this.shouldSkip = false;
     this.shouldStop = false;
     this.removed = false;
@@ -144,7 +144,7 @@ export const setContext = function (context) {
     this.setScope();
 
     return this;
-};
+}
 
 /**
  * Here we resync the node paths `key` and `container`. If they've changed according
@@ -152,8 +152,8 @@ export const setContext = function (context) {
  * for the new values.
  */
 
-export const resync = function () {
-    if (this.removed) {
+export function resync() {
+    if (this.removed) { 
         return;
     }
 
@@ -161,21 +161,21 @@ export const resync = function () {
     this._resyncList();
     this._resyncKey();
     //this._resyncRemoved();
-};
+}
 
-export const _resyncParent = function () {
+export function _resyncParent() {
     if (this.parentPath) {
         this.parent = this.parentPath.node;
     }
-};
+}
 
-export const _resyncKey = function () {
-    if (!this.container) {
-        return;
+export function _resyncKey() {
+    if (!this.container) { 
+        return; 
     }
 
-    if (this.node === this.container[this.key]) {
-        return;
+    if (this.node === this.container[this.key]) { 
+        return; 
     }
 
     // grrr, path key is out of sync. this is likely due to a modification to the AST
@@ -197,43 +197,43 @@ export const _resyncKey = function () {
 
     // ¯\_(ツ)_/¯ who knows where it's gone lol
     this.key = null;
-};
+}
 
-export const _resyncList = function () {
-    if (!this.parent || !this.inList) {
-        return;
+export function _resyncList() {
+    if (!this.parent || !this.inList) { 
+        return; 
     }
 
     const newContainer = this.parent[this.listKey];
-    if (this.container === newContainer) {
-        return;
+    if (this.container === newContainer) { 
+        return; 
     }
 
     // container is out of sync. this is likely the result of it being reassigned
     this.container = newContainer || null;
-};
+}
 
-export const _resyncRemoved = function () {
+export function _resyncRemoved() {
     if (
         is.nil(this.key) ||
-        !this.container ||
-        this.container[this.key] !== this.node
+    !this.container ||
+    this.container[this.key] !== this.node
     ) {
         this._markRemoved();
     }
-};
+}
 
-export const popContext = function () {
+export function popContext() {
     this.contexts.pop();
     this.setContext(this.contexts[this.contexts.length - 1]);
-};
+}
 
-export const pushContext = function (context) {
+export function pushContext(context) {
     this.contexts.push(context);
     this.setContext(context);
-};
+}
 
-export const setup = function (parentPath, container, listKey, key) {
+export function setup(parentPath, container, listKey, key) {
     this.inList = Boolean(listKey);
     this.listKey = listKey;
     this.parentKey = listKey || key;
@@ -241,17 +241,17 @@ export const setup = function (parentPath, container, listKey, key) {
 
     this.parentPath = parentPath || this.parentPath;
     this.setKey(key);
-};
+}
 
-export const setKey = function (key) {
+export function setKey(key) {
     this.key = key;
     this.node = this.container[this.key];
     this.type = this.node && this.node.type;
-};
+}
 
-export const requeue = function (pathToQueue = this) {
-    if (pathToQueue.removed) {
-        return;
+export function requeue(pathToQueue = this) {
+    if (pathToQueue.removed) { 
+        return; 
     }
 
     // TODO(loganfsmyth): This should be switched back to queue in parent contexts
@@ -262,17 +262,17 @@ export const requeue = function (pathToQueue = this) {
     for (const context of contexts) {
         context.maybeQueue(pathToQueue);
     }
-};
+}
 
-export const _getQueueContexts = function () {
+export function _getQueueContexts() {
     let path = this;
     let contexts = this.contexts;
     while (!contexts.length) {
         path = path.parentPath;
-        if (!path) {
-            break;
+        if (!path) { 
+            break; 
         }
         contexts = path.contexts;
     }
     return contexts;
-};
+}

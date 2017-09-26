@@ -28,67 +28,67 @@ export default class Binding {
         this.clearValue();
     }
 
-    constantViolations: Array<NodePath>;
-    constant: boolean;
+  constantViolations: Array<NodePath>;
+  constant: boolean;
 
-    referencePaths: Array<NodePath>;
-    referenced: boolean;
-    references: number;
+  referencePaths: Array<NodePath>;
+  referenced: boolean;
+  references: number;
 
-    hasDeoptedValue: boolean;
-    hasValue: boolean;
-    value: any;
+  hasDeoptedValue: boolean;
+  hasValue: boolean;
+  value: any;
 
-    deoptValue() {
-        this.clearValue();
-        this.hasDeoptedValue = true;
-    }
+  deoptValue() {
+      this.clearValue();
+      this.hasDeoptedValue = true;
+  }
 
-    setValue(value: any) {
-        if (this.hasDeoptedValue) { 
-            return; 
-        }
-        this.hasValue = true;
-        this.value = value;
-    }
+  setValue(value: any) {
+      if (this.hasDeoptedValue) { 
+          return; 
+      }
+      this.hasValue = true;
+      this.value = value;
+  }
 
-    clearValue() {
-        this.hasDeoptedValue = false;
-        this.hasValue = false;
-        this.value = null;
-    }
+  clearValue() {
+      this.hasDeoptedValue = false;
+      this.hasValue = false;
+      this.value = null;
+  }
 
-    /**
-     * Register a constant violation with the provided `path`.
-     */
+  /**
+   * Register a constant violation with the provided `path`.
+   */
 
-    reassign(path: Object) {
-        this.constant = false;
-        if (this.constantViolations.indexOf(path) !== -1) {
-            return;
-        }
-        this.constantViolations.push(path);
-    }
+  reassign(path: Object) {
+      this.constant = false;
+      if (this.constantViolations.indexOf(path) !== -1) {
+          return;
+      }
+      this.constantViolations.push(path);
+  }
 
-    /**
-     * Increment the amount of references to this binding.
-     */
+  /**
+   * Increment the amount of references to this binding.
+   */
 
-    reference(path: NodePath) {
-        if (this.referencePaths.indexOf(path) !== -1) {
-            return;
-        }
-        this.referenced = true;
-        this.references++;
-        this.referencePaths.push(path);
-    }
+  reference(path: NodePath) {
+      if (this.referencePaths.indexOf(path) !== -1) {
+          return;
+      }
+      this.referenced = true;
+      this.references++;
+      this.referencePaths.push(path);
+  }
 
-    /**
-     * Decrement the amount of references to this binding.
-     */
+  /**
+   * Decrement the amount of references to this binding.
+   */
 
-    dereference() {
-        this.references--;
-        this.referenced = Boolean(this.references);
-    }
+  dereference() {
+      this.references--;
+      this.referenced = Boolean(this.references);
+  }
 }

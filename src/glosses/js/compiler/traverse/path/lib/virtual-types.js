@@ -1,10 +1,12 @@
 import type NodePath from "../index";
 
 const {
+    is,
     js: { compiler: { types: t } }
 } = adone;
 
 const { react } = t;
+
 
 export const ReferencedIdentifier = {
     types: ["Identifier", "JSXIdentifier"],
@@ -48,14 +50,14 @@ export const Statement = {
                     return false; 
                 }
                 if (t.isForStatement(parent, { init: node })) { 
-                    return false;
+                    return false; 
                 }
             }
 
             return true;
         } 
         return false;
-        
+    
     }
 };
 
@@ -66,7 +68,7 @@ export const Expression = {
             return path.isReferencedIdentifier();
         } 
         return t.isExpression(path.node);
-        
+    
     }
 };
 
@@ -127,7 +129,7 @@ export const Flow = {
             return node.importKind === "type" || node.importKind === "typeof";
         } 
         return false;
-        
+    
     }
 };
 

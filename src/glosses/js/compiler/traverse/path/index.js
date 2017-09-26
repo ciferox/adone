@@ -5,6 +5,10 @@ import traverse from "../index";
 import Scope from "../scope";
 import { path as pathCache } from "../cache";
 
+const {
+    js: { compiler: { types: t } }
+} = adone;
+
 // NodePath is split across many files.
 import * as NodePath_ancestry from "./ancestry";
 import * as NodePath_inference from "./inference";
@@ -17,10 +21,6 @@ import * as NodePath_removal from "./removal";
 import * as NodePath_modification from "./modification";
 import * as NodePath_family from "./family";
 import * as NodePath_comments from "./comments";
-
-const {
-    js: { compiler: { types: t } }
-} = adone;
 
 export default class NodePath {
     constructor(hub: Hub, parent: Object) {
@@ -47,120 +47,113 @@ export default class NodePath {
         this.typeAnnotation = null;
     }
 
-    parent: Object;
-    hub: Hub;
-    contexts: Array<TraversalContext>;
-    data: Object;
-    shouldSkip: boolean;
-    shouldStop: boolean;
-    removed: boolean;
-    state: any;
-    opts: ?Object;
-    skipKeys: ?Object;
-    parentPath: ?NodePath;
-    context: TraversalContext;
-    container: ?Object | Array<Object>;
-    listKey: ?string;
-    inList: boolean;
-    parentKey: ?string;
-    key: ?string;
-    node: ?Object;
-    scope: Scope;
-    type: ?string;
-    typeAnnotation: ?Object;
+  parent: Object;
+  hub: Hub;
+  contexts: Array<TraversalContext>;
+  data: Object;
+  shouldSkip: boolean;
+  shouldStop: boolean;
+  removed: boolean;
+  state: any;
+  opts: ?Object;
+  skipKeys: ?Object;
+  parentPath: ?NodePath;
+  context: TraversalContext;
+  container: ?Object | Array<Object>;
+  listKey: ?string;
+  inList: boolean;
+  parentKey: ?string;
+  key: ?string;
+  node: ?Object;
+  scope: Scope;
+  type: ?string;
+  typeAnnotation: ?Object;
 
-    static get({ hub, parentPath, parent, container, listKey, key }): NodePath {
-        if (!hub && parentPath) {
-            hub = parentPath.hub;
-        }
+  static get({ hub, parentPath, parent, container, listKey, key }): NodePath {
+      if (!hub && parentPath) {
+          hub = parentPath.hub;
+      }
 
-        if (!parent) {
-            throw new adone.x.Exception("To get a node path the parent needs to exist");
-        }
+      if (!parent) {
+          throw new adone.x.Exception("To get a node path the parent needs to exist");
+      }
 
-        const targetNode = container[key];
+      const targetNode = container[key];
 
-        const paths = pathCache.get(parent) || [];
-        if (!pathCache.has(parent)) {
-            pathCache.set(parent, paths);
-        }
+      const paths = pathCache.get(parent) || [];
+      if (!pathCache.has(parent)) {
+          pathCache.set(parent, paths);
+      }
 
-        let path;
+      let path;
 
-        for (let i = 0; i < paths.length; i++) {
-            const pathCheck = paths[i];
-            if (pathCheck.node === targetNode) {
-                path = pathCheck;
-                break;
-            }
-        }
+      for (let i = 0; i < paths.length; i++) {
+          const pathCheck = paths[i];
+          if (pathCheck.node === targetNode) {
+              path = pathCheck;
+              break;
+          }
+      }
 
-        if (!path) {
-            path = new NodePath(hub, parent);
-            paths.push(path);
-        }
+      if (!path) {
+          path = new NodePath(hub, parent);
+          paths.push(path);
+      }
 
-        path.setup(parentPath, container, listKey, key);
+      path.setup(parentPath, container, listKey, key);
 
-        return path;
-    }
+      return path;
+  }
 
-    getScope(scope: Scope) {
-        let ourScope = scope;
+  getScope(scope: Scope) {
+      return this.isScope() ? new Scope(this) : scope;
+  }
 
-        // we're entering a new scope so let's construct it!
-        if (this.isScope()) {
-            ourScope = new Scope(this, scope);
-        }
+  setData(key: string, val: any): any {
+      return (this.data[key] = val);
+  }
 
-        return ourScope;
-    }
+  getData(key: string, def?: any): any {
+      let val = this.data[key];
+      if (!val && def) { 
+          val = this.data[key] = def; 
+      }
+      return val;
+  }
 
-    setData(key: string, val: any): any {
-        return (this.data[key] = val);
-    }
+  buildCodeFrameError(msg: string, Error: typeof Error = SyntaxError): Error {
+      return this.hub.file.buildCodeFrameError(this.node, msg, Error);
+  }
 
-    getData(key: string, def?: any): any {
-        let val = this.data[key];
-        if (!val && def) {
-            val = this.data[key] = def;
-        }
-        return val;
-    }
+  traverse(visitor: Object, state?: any) {
+      traverse(this.node, visitor, this.scope, state, this);
+  }
 
-    buildCodeFrameError(msg: string, Error: typeof Error = SyntaxError): Error {
-        return this.hub.file.buildCodeFrameError(this.node, msg, Error);
-    }
+  mark(type: string, message: string) {
+      this.hub.file.metadata.marked.push({
+          type,
+          message,
+          loc: this.node.loc
+      });
+  }
 
-    traverse(visitor: Object, state?: any) {
-        traverse(this.node, visitor, this.scope, state, this);
-    }
+  set(key: string, node: Object) {
+      t.validate(this.node, key, node);
+      this.node[key] = node;
+  }
 
-    mark(type: string, message: string) {
-        this.hub.file.metadata.marked.push({
-            type,
-            message,
-            loc: this.node.loc
-        });
-    }
-
-    set(key: string, node: Object) {
-        t.validate(this.node, key, node);
-        this.node[key] = node;
-    }
-
-    getPathLocation(): string {
-        const parts = [];
-        let path = this;
-        do {
-            let key = path.key;
-            if (path.inList) {
-                key = `${path.listKey}[${key}]`;
-            }
-            parts.unshift(key);
-        } while ((path = path.parentPath));
-        return parts.join(".");
-    }
+  getPathLocation(): string {
+      const parts = [];
+      let path = this;
+      do {
+          let key = path.key;
+          if (path.inList) { 
+              key = `${path.listKey}[${key}]`;
+          }
+          parts.unshift(key);
+      } while ((path = path.parentPath));
+      return parts.join(".");
+  }
 }
 
 Object.assign(
@@ -193,10 +186,10 @@ for (const type of (t.TYPES: Array<string>)) {
 
 for (const type in virtualTypes) {
     if (type[0] === "_") {
-        continue;
+        continue; 
     }
-    if (t.TYPES.indexOf(type) < 0) {
-        t.TYPES.push(type);
+    if (t.TYPES.indexOf(type) < 0) { 
+        t.TYPES.push(type); 
     }
 
     const virtualType = virtualTypes[type];

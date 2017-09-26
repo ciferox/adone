@@ -14,7 +14,7 @@ const hoistVariablesVisitor = {
     },
 
     VariableDeclaration(path) {
-        if (path.node.kind !== "var") {
+        if (path.node.kind !== "var") { 
             return; 
         }
 
@@ -47,7 +47,7 @@ const hoistVariablesVisitor = {
  *  - Remove the current node.
  */
 
-export const replaceWithMultiple = function (nodes: Array<Object>) {
+export function replaceWithMultiple(nodes: Array<Object>) {
     this.resync();
 
     nodes = this._verifyNodeList(nodes);
@@ -62,7 +62,7 @@ export const replaceWithMultiple = function (nodes: Array<Object>) {
         this.remove();
     }
     return paths;
-};
+}
 
 /**
  * Parse a string as an expression and replace the current node with the result.
@@ -72,7 +72,7 @@ export const replaceWithMultiple = function (nodes: Array<Object>) {
  * easier to use, your transforms will be extremely brittle.
  */
 
-export const replaceWithSourceString = function (replacement) {
+export function replaceWithSourceString(replacement) {
     this.resync();
 
     try {
@@ -96,13 +96,13 @@ export const replaceWithSourceString = function (replacement) {
     replacement = replacement.program.body[0].expression;
     traverse.removeProperties(replacement);
     return this.replaceWith(replacement);
-};
+}
 
 /**
  * Replace the current node with another.
  */
 
-export const replaceWith = function (replacement) {
+export function replaceWith(replacement) {
     this.resync();
 
     if (this.removed) {
@@ -146,8 +146,8 @@ export const replaceWith = function (replacement) {
     if (this.isNodeType("Statement") && t.isExpression(replacement)) {
         if (
             !this.canHaveVariableDeclarationOrExpression() &&
-            !this.canSwapBetweenExpressionAndStatement(replacement) &&
-            !this.parentPath.isExportDefaultDeclaration()
+      !this.canSwapBetweenExpressionAndStatement(replacement) &&
+      !this.parentPath.isExportDefaultDeclaration()
         ) {
             // replacing a statement with an expression so wrap it in an expression statement
             replacement = t.expressionStatement(replacement);
@@ -158,7 +158,7 @@ export const replaceWith = function (replacement) {
     if (this.isNodeType("Expression") && t.isStatement(replacement)) {
         if (
             !this.canHaveVariableDeclarationOrExpression() &&
-            !this.canSwapBetweenExpressionAndStatement(replacement)
+      !this.canSwapBetweenExpressionAndStatement(replacement)
         ) {
             // replacing an expression with a statement so let's explode it
             return this.replaceExpressionWithStatements([replacement]);
@@ -182,13 +182,13 @@ export const replaceWith = function (replacement) {
     this.requeue();
 
     return [nodePath ? this.get(nodePath) : this];
-};
+}
 
 /**
  * Description
  */
 
-export const _replaceWith = function (node) {
+export function _replaceWith(node) {
     if (!this.container) {
         throw new ReferenceError("Container is falsy");
     }
@@ -200,7 +200,7 @@ export const _replaceWith = function (node) {
     }
 
     this.node = this.container[this.key] = node;
-};
+}
 
 /**
  * This method takes an array of statements nodes and then explodes it
@@ -208,7 +208,7 @@ export const _replaceWith = function (node) {
  * extremely important to retain original semantics.
  */
 
-export const replaceExpressionWithStatements = function (nodes: Array<Object>) {
+export function replaceExpressionWithStatements(nodes: Array<Object>) {
     this.resync();
 
     const toSequenceExpression = t.toSequenceExpression(nodes, this.scope);
@@ -226,8 +226,8 @@ export const replaceExpressionWithStatements = function (nodes: Array<Object>) {
         "callee",
     ).getCompletionRecords();
     for (const path of completionRecords) {
-        if (!path.isExpressionStatement()) { 
-            continue; 
+        if (!path.isExpressionStatement()) {
+            continue;
         }
 
         const loop = path.findParent((path) => path.isLoop());
@@ -255,9 +255,9 @@ export const replaceExpressionWithStatements = function (nodes: Array<Object>) {
     callee.arrowFunctionToExpression();
 
     return callee.get("body.body");
-};
+}
 
-export const replaceInline = function (nodes: Object | Array<Object>) {
+export function replaceInline(nodes: Object | Array<Object>) {
     this.resync();
 
     if (is.array(nodes)) {
@@ -268,7 +268,8 @@ export const replaceInline = function (nodes: Object | Array<Object>) {
             return paths;
         } 
         return this.replaceWithMultiple(nodes);
-        
+    
     } 
-    return this.replaceWith(nodes);  
-};
+    return this.replaceWith(nodes);
+  
+}

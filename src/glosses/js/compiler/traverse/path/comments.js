@@ -1,28 +1,27 @@
 // This file contains methods responsible for dealing with comments.
-
 const {
+    is,
     js: { compiler: { types: t } }
 } = adone;
-
 /**
  * Share comments amongst siblings.
  */
 
-export const shareCommentsWithSiblings = function () {
+export function shareCommentsWithSiblings() {
     // NOTE: this assumes numbered keys
-    if (adone.is.string(this.key)) {
-        return;
+    if (is.string(this.key)) {
+        return; 
     }
 
     const node = this.node;
-    if (!node) {
+    if (!node) { 
         return;
     }
 
     const trailing = node.trailingComments;
     const leading = node.leadingComments;
-    if (!trailing && !leading) {
-        return;
+    if (!trailing && !leading) { 
+        return; 
     }
 
     const prev = this.getSibling(this.key - 1);
@@ -35,16 +34,16 @@ export const shareCommentsWithSiblings = function () {
     } else if (hasNext) {
         next.addComments("leading", leading);
     }
-};
+}
 
-export const addComment = function (type: string, content: string, line?: boolean) {
+export function addComment(type: string, content: string, line?: boolean) {
     t.addComment(this.node, type, content, line);
-};
+}
 
 /**
  * Give node `comments` of the specified `type`.
  */
 
-export const addComments = function (type: string, comments: Array) {
+export function addComments(type: string, comments: Array) {
     t.addComments(this.node, type, comments);
-};
+}

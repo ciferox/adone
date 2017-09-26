@@ -1,15 +1,15 @@
 export let path = new WeakMap();
 export let scope = new WeakMap();
 
-export const clearPath = () => {
-    path = new WeakMap();
-};
-
-export const clearScope = () => {
-    scope = new WeakMap();
-};
-
-export const clear = () => {
+export function clear() {
     clearPath();
     clearScope();
-};
+}
+
+export function clearPath() {
+    path = new WeakMap();
+}
+
+export function clearScope() {
+    scope = new WeakMap();
+}

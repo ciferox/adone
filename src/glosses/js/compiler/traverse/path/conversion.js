@@ -1,10 +1,10 @@
 // This file contains methods that convert the path node into another node or some other type of data.
 
 const {
-    js: { compiler: { types: t } }
+    js: { compiler: { types: t, helper: { functionName } } }
 } = adone;
 
-export const toComputedKey = function (): Object {
+export function toComputedKey(): Object {
     const node = this.node;
 
     let key;
@@ -17,28 +17,28 @@ export const toComputedKey = function (): Object {
     }
 
     if (!node.computed) {
-        if (t.isIdentifier(key)) {
-            key = t.stringLiteral(key.name); 
+        if (t.isIdentifier(key)) { 
+            key = t.stringLiteral(key.name);
         }
     }
 
     return key;
-};
+}
 
-export const ensureBlock = function () {
+export function ensureBlock() {
     return t.ensureBlock(this.node);
-};
+}
 
 /**
  * Keeping this for backward-compatibility. You should use arrowFunctionToExpression() for >=7.x.
  */
-export const arrowFunctionToShadowed = function () {
-    if (!this.isArrowFunctionExpression()) {
+export function arrowFunctionToShadowed() {
+    if (!this.isArrowFunctionExpression()) { 
         return; 
     }
 
     this.arrowFunctionToExpression();
-};
+}
 
 /**
  * Given an arbitrary function, process its content as if it were an arrow function, moving references
@@ -46,11 +46,11 @@ export const arrowFunctionToShadowed = function () {
  * you have wrapped some set of items in an IIFE or other function, but want "this", "arguments", and super"
  * to continue behaving as expected.
  */
-export const unwrapFunctionEnvironment = function () {
+export function unwrapFunctionEnvironment() {
     if (
         !this.isArrowFunctionExpression() &&
-        !this.isFunctionExpression() &&
-        !this.isFunctionDeclaration()
+    !this.isFunctionExpression() &&
+    !this.isFunctionDeclaration()
     ) {
         throw this.buildCodeFrameError(
             "Can only unwrap the environment of a function.",
@@ -58,12 +58,12 @@ export const unwrapFunctionEnvironment = function () {
     }
 
     hoistFunctionEnvironment(this);
-};
+}
 
 /**
  * Convert a given arrow function into a normal ES5 function expression.
  */
-export const arrowFunctionToExpression = function (
+export function arrowFunctionToExpression(
     { allowInsertArrow = true, specCompliant = false } = {},
 ) {
     if (!this.isArrowFunctionExpression()) {
@@ -106,20 +106,20 @@ export const arrowFunctionToExpression = function (
         this.replaceWith(
             t.callExpression(
                 t.memberExpression(
-                    adone.js.compiler.helper.functionName(this) || this.node,
+                    functionName(this) || this.node,
                     t.identifier("bind"),
                 ),
                 [checkBinding ? t.identifier(checkBinding.name) : t.thisExpression()],
             ),
         );
     }
-};
+}
 
 /**
  * Given a function, traverse its contents, and if there are references to "this", "arguments", "super",
  * or "new.target", ensure that these references reference the parent environment around this function.
  */
-const hoistFunctionEnvironment = function (
+function hoistFunctionEnvironment(
     fnPath,
     specCompliant = false,
     allowInsertArrow = true,
@@ -127,8 +127,8 @@ const hoistFunctionEnvironment = function (
     const thisEnvFn = fnPath.findParent(
         (p) =>
             (p.isFunction() && !p.isArrowFunctionExpression()) ||
-            p.isProgram() ||
-            p.isClassProperty({ static: false }),
+      p.isProgram() ||
+      p.isClassProperty({ static: false }),
     );
     const inConstructor = thisEnvFn && thisEnvFn.node.kind === "constructor";
 
@@ -157,13 +157,13 @@ const hoistFunctionEnvironment = function (
         thisEnvFn.traverse({
             Function(child) {
                 if (child.isArrowFunctionExpression()) {
-                    return; 
+                    return;
                 }
                 child.skip();
             },
             ClassProperty(child) {
-                if (child.node.static) {
-                    return; 
+                if (child.node.static) { 
+                    return;
                 }
                 child.skip();
             },
@@ -187,9 +187,9 @@ const hoistFunctionEnvironment = function (
 
         if (
             !specCompliant ||
-            // In subclass constructors, still need to rewrite because "this" can't be bound in spec mode
-            // because it might not have been initialized yet.
-            (inConstructor && hasSuperClass(thisEnvFn))
+      // In subclass constructors, still need to rewrite because "this" can't be bound in spec mode
+      // because it might not have been initialized yet.
+      (inConstructor && hasSuperClass(thisEnvFn))
         ) {
             thisPaths.forEach((thisChild) => {
                 thisChild.replaceWith(
@@ -200,7 +200,7 @@ const hoistFunctionEnvironment = function (
             });
 
             if (specCompliant) {
-                thisBinding = null; 
+                thisBinding = null;
             }
         }
     }
@@ -282,12 +282,12 @@ const hoistFunctionEnvironment = function (
     }
 
     return thisBinding;
-};
+}
 
-const standardizeSuperProperty = function (superProp) {
+function standardizeSuperProperty(superProp) {
     if (
         superProp.parentPath.isAssignmentExpression() &&
-        superProp.parentPath.node.operator !== "="
+    superProp.parentPath.node.operator !== "="
     ) {
         const assignmentPath = superProp.parentPath;
 
@@ -390,20 +390,20 @@ const standardizeSuperProperty = function (superProp) {
     }
 
     return [superProp];
-};
+}
 
-const hasSuperClass = function (thisEnvFn) {
+function hasSuperClass(thisEnvFn) {
     return (
         thisEnvFn.isClassMethod() &&
-        Boolean(thisEnvFn.parentPath.parentPath.node.superClass)
+    Boolean(thisEnvFn.parentPath.parentPath.node.superClass)
     );
-};
+}
 
 // Create a binding that evaluates to the "this" of the given function.
-const getThisBinding = function (thisEnvFn, inConstructor) {
+function getThisBinding(thisEnvFn, inConstructor) {
     return getBinding(thisEnvFn, "this", (thisBinding) => {
         if (!inConstructor || !hasSuperClass(thisEnvFn)) {
-            return t.thisExpression(); 
+            return t.thisExpression();
         }
 
         const supers = new WeakSet();
@@ -415,17 +415,17 @@ const getThisBinding = function (thisEnvFn, inConstructor) {
                 child.skip();
             },
             ClassProperty(child) {
-                if (child.node.static) {
+                if (child.node.static) { 
                     return; 
                 }
                 child.skip();
             },
             CallExpression(child) {
-                if (!child.get("callee").isSuper()) {
+                if (!child.get("callee").isSuper()) { 
                     return; 
                 }
                 if (supers.has(child.node)) {
-                    return; 
+                    return;
                 }
                 supers.add(child.node);
 
@@ -435,10 +435,10 @@ const getThisBinding = function (thisEnvFn, inConstructor) {
             }
         });
     });
-};
+}
 
 // Create a binding for a function that will call "super()" with arguments passed through.
-const getSuperBinding = function (thisEnvFn) {
+function getSuperBinding(thisEnvFn) {
     return getBinding(thisEnvFn, "supercall", () => {
         const argsBinding = thisEnvFn.scope.generateUidIdentifier("args");
         return t.arrowFunctionExpression(
@@ -448,10 +448,10 @@ const getSuperBinding = function (thisEnvFn) {
             ]),
         );
     });
-};
+}
 
 // Create a binding for a function that will call "super.foo()" or "super[foo]()".
-const getSuperPropCallBinding = function (thisEnvFn, propName) {
+function getSuperPropCallBinding(thisEnvFn, propName) {
     return getBinding(thisEnvFn, `superprop_call:${propName || ""}`, () => {
         const argsBinding = thisEnvFn.scope.generateUidIdentifier("args");
         const argsList = [t.restElement(argsBinding)];
@@ -479,10 +479,10 @@ const getSuperPropCallBinding = function (thisEnvFn, propName) {
 
         return t.arrowFunctionExpression(argsList, fnBody);
     });
-};
+}
 
 // Create a binding for a function that will call "super.foo" or "super[foo]".
-const getSuperPropBinding = function (thisEnvFn, isAssignment, propName) {
+function getSuperPropBinding(thisEnvFn, isAssignment, propName) {
     const op = isAssignment ? "set" : "get";
 
     return getBinding(thisEnvFn, `superprop_${op}:${propName || ""}`, () => {
@@ -516,9 +516,9 @@ const getSuperPropBinding = function (thisEnvFn, isAssignment, propName) {
 
         return t.arrowFunctionExpression(argsList, fnBody);
     });
-};
+}
 
-const getBinding = function (thisEnvFn, key, init) {
+function getBinding(thisEnvFn, key, init) {
     const cacheKey = `binding:${key}`;
     let data = thisEnvFn.getData(cacheKey);
     if (!data) {
@@ -533,9 +533,9 @@ const getBinding = function (thisEnvFn, key, init) {
     }
 
     return data;
-};
+}
 
-const getScopeInformation = function (fnPath) {
+function getScopeInformation(fnPath) {
     const thisPaths = [];
     const argumentsPaths = [];
     const newTargetPaths = [];
@@ -545,13 +545,13 @@ const getScopeInformation = function (fnPath) {
     fnPath.traverse({
         ClassProperty(child) {
             if (child.node.static) {
-                return; 
+                return;
             }
             child.skip();
         },
         Function(child) {
-            if (child.isArrowFunctionExpression()) {
-                return; 
+            if (child.isArrowFunctionExpression()) { 
+                return;
             }
             child.skip();
         },
@@ -559,12 +559,12 @@ const getScopeInformation = function (fnPath) {
             thisPaths.push(child);
         },
         JSXIdentifier(child) {
-            if (child.node.name !== "this") {
+            if (child.node.name !== "this") { 
                 return; 
             }
             if (
                 !child.parentPath.isJSXMemberExpression({ object: child.node }) &&
-                !child.parentPath.isJSXOpeningElement({ name: child.node })
+        !child.parentPath.isJSXOpeningElement({ name: child.node })
             ) {
                 return;
             }
@@ -572,18 +572,18 @@ const getScopeInformation = function (fnPath) {
             thisPaths.push(child);
         },
         CallExpression(child) {
-            if (child.get("callee").isSuper()) {
-                superCalls.push(child); 
+            if (child.get("callee").isSuper()) { 
+                superCalls.push(child);
             }
         },
         MemberExpression(child) {
             if (child.get("object").isSuper()) {
-                superProps.push(child); 
+                superProps.push(child);
             }
         },
         ReferencedIdentifier(child) {
-            if (child.node.name !== "arguments") {
-                return; 
+            if (child.node.name !== "arguments") { 
+                return;
             }
 
             argumentsPaths.push(child);
@@ -593,7 +593,7 @@ const getScopeInformation = function (fnPath) {
                 return; 
             }
             if (!child.get("property").isIdentifier({ name: "target" })) {
-                return; 
+                return;
             }
 
             newTargetPaths.push(child);
@@ -607,4 +607,4 @@ const getScopeInformation = function (fnPath) {
         superProps,
         superCalls
     };
-};
+}

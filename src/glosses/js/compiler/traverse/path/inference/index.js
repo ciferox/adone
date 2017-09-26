@@ -5,32 +5,31 @@ const {
     js: { compiler: { types: t } }
 } = adone;
 
-
 /**
  * Infer the type of the current `NodePath`.
  */
 
-export const getTypeAnnotation = function (): Object {
-    if (this.typeAnnotation) {
-        return this.typeAnnotation;
+export function getTypeAnnotation(): Object {
+    if (this.typeAnnotation) { 
+        return this.typeAnnotation; 
     }
 
     let type = this._getTypeAnnotation() || t.anyTypeAnnotation();
     if (t.isTypeAnnotation(type)) {
-        type = type.typeAnnotation;
+        type = type.typeAnnotation; 
     }
     return (this.typeAnnotation = type);
-};
+}
 
 /**
  * todo: split up this method
  */
 
-export const _getTypeAnnotation = function (): ?Object {
+export function _getTypeAnnotation(): ?Object {
     const node = this.node;
 
     if (!node) {
-        // handle initializerless variables, add in checks for loop initializers too
+    // handle initializerless variables, add in checks for loop initializers too
         if (this.key === "init" && this.parentPath.isVariableDeclarator()) {
             const declar = this.parentPath.parentPath;
             const declarParent = declar.parentPath;
@@ -46,9 +45,9 @@ export const _getTypeAnnotation = function (): ?Object {
             }
 
             return t.voidTypeAnnotation();
-        }
+        } 
         return;
-
+    
     }
 
     if (node.typeAnnotation) {
@@ -64,13 +63,13 @@ export const _getTypeAnnotation = function (): ?Object {
     if (inferer && inferer.validParent) {
         return this.parentPath.getTypeAnnotation();
     }
-};
+}
 
-export const isBaseType = function (baseName: string, soft?: boolean): boolean {
+export function isBaseType(baseName: string, soft?: boolean): boolean {
     return _isBaseType(baseName, this.getTypeAnnotation(), soft);
-};
+}
 
-const _isBaseType = function (baseName: string, type?, soft?): boolean {
+function _isBaseType(baseName: string, type?, soft?): boolean {
     if (baseName === "string") {
         return t.isStringTypeAnnotation(type);
     } else if (baseName === "number") {
@@ -85,17 +84,19 @@ const _isBaseType = function (baseName: string, type?, soft?): boolean {
         return t.isEmptyTypeAnnotation(type);
     } else if (baseName === "void") {
         return t.isVoidTypeAnnotation(type);
-    }
+    } 
     if (soft) {
         return false;
-    }
+    } 
     throw new Error(`Unknown base type ${baseName}`);
-};
+    
+  
+}
 
-export const couldBeBaseType = function (name: string): boolean {
+export function couldBeBaseType(name: string): boolean {
     const type = this.getTypeAnnotation();
-    if (t.isAnyTypeAnnotation(type)) {
-        return true;
+    if (t.isAnyTypeAnnotation(type)) { 
+        return true; 
     }
 
     if (t.isUnionTypeAnnotation(type)) {
@@ -105,24 +106,24 @@ export const couldBeBaseType = function (name: string): boolean {
             }
         }
         return false;
-    }
+    } 
     return _isBaseType(name, type, true);
+  
+}
 
-};
-
-export const baseTypeStrictlyMatches = function (right: NodePath) {
+export function baseTypeStrictlyMatches(right: NodePath) {
     const left = this.getTypeAnnotation();
     right = right.getTypeAnnotation();
 
     if (!t.isAnyTypeAnnotation(left) && t.isFlowBaseAnnotation(left)) {
         return right.type === left.type;
     }
-};
+}
 
-export const isGenericType = function (genericName: string): boolean {
+export function isGenericType(genericName: string): boolean {
     const type = this.getTypeAnnotation();
     return (
         t.isGenericTypeAnnotation(type) &&
-        t.isIdentifier(type.id, { name: genericName })
+    t.isIdentifier(type.id, { name: genericName })
     );
-};
+}

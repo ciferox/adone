@@ -1,4 +1,5 @@
 const {
+    is,
     js: { compiler: { types: t } }
 } = adone;
 
@@ -7,12 +8,12 @@ const { react } = t;
 const referenceVisitor = {
     // This visitor looks for bindings to establish a topmost scope for hoisting.
     ReferencedIdentifier(path, state) {
-        // Don't hoist regular JSX identifiers ('div', 'span', etc).
-        // We do have to consider member expressions for hoisting (e.g. `this.component`)
+    // Don't hoist regular JSX identifiers ('div', 'span', etc).
+    // We do have to consider member expressions for hoisting (e.g. `this.component`)
         if (
             path.isJSXIdentifier() &&
-            react.isCompatTag(path.node.name) &&
-            !path.parentPath.isJSXMemberExpression()
+      react.isCompatTag(path.node.name) &&
+      !path.parentPath.isJSXMemberExpression()
         ) {
             return;
         }
@@ -23,7 +24,7 @@ const referenceVisitor = {
             do {
                 if (
                     scope.path.isFunction() &&
-                    !scope.path.isArrowFunctionExpression()
+          !scope.path.isArrowFunctionExpression()
                 ) {
                     break;
                 }
@@ -51,7 +52,7 @@ const referenceVisitor = {
 
 export default class PathHoister {
     constructor(path, scope) {
-        // Storage for scopes we can't hoist above.
+    // Storage for scopes we can't hoist above.
         this.breakOnScopePaths = [];
         // Storage for bindings that may affect what path we can hoist to.
         this.bindings = {};
@@ -171,7 +172,7 @@ export default class PathHoister {
                 for (let i = 0; i < bodies.length; i++) {
                     // Don't attach to something that's going to get hoisted,
                     // like a default parameter
-                    if (bodies[i].node._blockHoist) { 
+                    if (bodies[i].node._blockHoist) {
                         continue;
                     }
                     return bodies[i];
@@ -189,7 +190,7 @@ export default class PathHoister {
     getNextScopeAttachmentParent() {
         const scope = this.scopes.pop();
         if (scope) { 
-            return this.getAttachmentParentForPath(scope.path); 
+            return this.getAttachmentParentForPath(scope.path);
         }
     }
 
@@ -197,10 +198,10 @@ export default class PathHoister {
     getAttachmentParentForPath(path) {
         do {
             if (
-                // Beginning of the scope
+            // Beginning of the scope
                 !path.parentPath ||
-                // Has siblings and is a statement
-                (adone.is.array(path.container) && path.isStatement())
+        // Has siblings and is a statement
+        (is.array(path.container) && path.isStatement())
             ) {
                 return path;
             }
@@ -211,7 +212,7 @@ export default class PathHoister {
     hasOwnParamBindings(scope) {
         for (const name in this.bindings) {
             if (!scope.hasOwnBinding(name)) { 
-                continue; 
+                continue;
             }
 
             const binding = this.bindings[name];
@@ -229,13 +230,13 @@ export default class PathHoister {
         this.getCompatibleScopes();
 
         const attachTo = this.getAttachmentPath();
-        if (!attachTo) {
-            return;
+        if (!attachTo) { 
+            return; 
         }
 
         // don't bother hoisting to the same function as this will cause multiple branches to be
         // evaluated more than once leading to a bad optimisation
-        if (attachTo.getFunctionParent() === this.path.getFunctionParent()) {
+        if (attachTo.getFunctionParent() === this.path.getFunctionParent()) { 
             return; 
         }
 
