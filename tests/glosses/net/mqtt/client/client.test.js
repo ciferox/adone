@@ -120,7 +120,7 @@ describe("net", "mqtt", "client", "MqttClient", () => {
 
     describe("reconnecting", () => {
         it("should attempt to reconnect once server is down", async () => {
-            const port = await adone.net.util.getFreePort();
+            const port = await adone.net.util.getPort();
             const innerServer = fork(path.join(__dirname, "helpers", "server_process.js"), [port]);
             const client = connect({ port, host: "localhost", keepalive: 1 });
 

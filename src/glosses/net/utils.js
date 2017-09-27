@@ -43,23 +43,32 @@ export const humanizeAddr = (protocol, port, host) => {
     return addr;
 };
 
-export const isFreePort = (port) => {
+export const isFreePort = (options) => {
     return new Promise((resolve) => {
         const server = adone.std.net.createServer();
         server.once("error", () => resolve(false));
-        server.listen(port, () => {
+        server.listen(options, () => {
             server.close(() => resolve(true));
         });
     });
 };
 
-export const getFreePort = async ({ exclude = null, lbound = 1025, rbound = 65535, rounds = rbound - lbound } = {}) => {
+export const getPort = async ({ port, host, exclude = null, lbound = 1025, rbound = 65535, rounds = rbound - lbound } = {}) => {
+    if (is.number(port)) {
+        if (await isFreePort({ port, host })) {
+            return port;
+        } 
+        throw new adone.x.Network(`Port ${port} is busy`);
+    }
+
+    const isExcluded = is.array(exclude) ? (port) => exclude.includes(port) : adone.falsely;
+
     for ( ; rounds >= 0; ) {
         const port = adone.math.random(lbound, rbound + 1);
-        if (is.array(exclude) && exclude.includes(port)) {
+        if (isExcluded(port)) {
             continue;
         }
-        if (await isFreePort(port)) { // eslint-disable-line no-await-in-loop
+        if (await isFreePort({ port, host })) { // eslint-disable-line no-await-in-loop
             return port;
         }
         --rounds;

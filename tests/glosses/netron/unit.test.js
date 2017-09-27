@@ -11,9 +11,9 @@ describe("netron", "native", "unit test", () => {
 
     before(async () => {
         if (!(await adone.net.util.isFreePort(defaultPort))) {
-            defaultPort = adone.net.util.getFreePort();
+            defaultPort = adone.net.util.getPort();
         }
-        NETRON_PORT = adone.net.util.getFreePort({ exclude: [defaultPort] });
+        NETRON_PORT = adone.net.util.getPort({ exclude: [defaultPort] });
     });
 
     beforeEach(async () => {
@@ -136,7 +136,7 @@ describe("netron", "native", "unit test", () => {
 
                 let result = await superNetron.ping(exNetron.uid);
                 assert.isNull(result);
-                
+
                 result = await exNetron.ping(superNetron.uid);
                 assert.isNull(result);
             });

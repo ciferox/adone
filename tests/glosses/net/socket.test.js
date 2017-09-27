@@ -64,7 +64,7 @@ describe("net", "Socket", function () {
         server.defaults();
         client.defaults();
         defaultPort = server.options.defaultPort;
-        is.null(SERVER_PORT) && (SERVER_PORT = await adone.net.util.getFreePort());
+        is.null(SERVER_PORT) && (SERVER_PORT = await adone.net.util.getPort());
     });
 
     afterEach(async function () {
@@ -319,7 +319,7 @@ describe("net", "Socket", function () {
             server = new adone.net.Server();
             socket = new adone.net.Socket();
 
-            is.null(SERVER_PORT) && (SERVER_PORT = await adone.net.util.getFreePort());
+            is.null(SERVER_PORT) && (SERVER_PORT = await adone.net.util.getPort());
 
             await server.bind({ port: SERVER_PORT });
             await socket.connect({ port: SERVER_PORT });

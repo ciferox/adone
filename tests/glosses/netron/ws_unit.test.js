@@ -9,9 +9,9 @@ describe("netron", "websocket", "unit tests", () => {
 
     before(async () => {
         if (!(await adone.net.util.isFreePort(defaultPort))) {
-            defaultPort = adone.net.util.getFreePort();
+            defaultPort = adone.net.util.getPort();
         }
-        NETRON_PORT = adone.net.util.getFreePort({ exclude: [defaultPort] });
+        NETRON_PORT = adone.net.util.getPort({ exclude: [defaultPort] });
     });
 
     beforeEach(async () => {

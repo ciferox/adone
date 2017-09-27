@@ -80,7 +80,7 @@ describe("net", "Socket", "tls", function () {
         server.defaults();
         client.defaults();
         defaultPort = server.options.defaultPort;
-        is.null(SERVER_PORT) && (SERVER_PORT = await adone.net.util.getFreePort());
+        is.null(SERVER_PORT) && (SERVER_PORT = await adone.net.util.getPort());
     });
 
     afterEach(async function () {
@@ -336,7 +336,7 @@ describe("net", "Socket", "tls", function () {
             server = new adone.net.Server();
             socket = new adone.net.Socket();
 
-            is.null(SERVER_PORT) && (SERVER_PORT = await adone.net.util.getFreePort());
+            is.null(SERVER_PORT) && (SERVER_PORT = await adone.net.util.getPort());
 
             await server.bind(Object.assign({ port: SERVER_PORT }, serverOptions));
             await socket.connect(Object.assign({ port: SERVER_PORT }, clientOptions));

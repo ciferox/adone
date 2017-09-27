@@ -40,11 +40,11 @@
                     }
                 },
                 "vendor": {
-                    "$src": "src/vendor/**/*",
+                    "$src": "src/vendor/**/*.js",
                     "$dst": "lib/vendor"
                 },
                 "npm": {
-                    "$src": "src/npm/**/*",
+                    "$src": "src/npm/**/*.js",
                     "$dst": "lib/npm"
                 },
                 "index": {
@@ -54,7 +54,7 @@
                 },
                 "omnitron": {
                     "$task": "adoneTranspile",
-                    "$src": "src/omnitron/**/*",
+                    "$src": "src/omnitron/**/*.js",
                     "$dst": "lib/omnitron"
                 }
             }
