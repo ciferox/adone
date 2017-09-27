@@ -19,7 +19,9 @@ adone.lazify({
     wrapFunction: "./wrap_function",
     // builderReactJsx: "./builder_react_jsx",
     moduleTransforms: "./module_transforms",
-    annotateAsPure: "./annotate_as_pure"
+    moduleImports: "./module_imports",
+    annotateAsPure: "./annotate_as_pure",
+    simpleAccess: "./simple_access"
 }, exports, require);
 
 
@@ -28,8 +30,8 @@ const makePath = function (path) {
 
     for (; path.parentPath; path = path.parentPath) {
         parts.push(path.key);
-        if (path.inList) { 
-            parts.push(path.listKey); 
+        if (path.inList) {
+            parts.push(path.listKey);
         }
     }
 
@@ -74,7 +76,7 @@ const getHelperMetadata = function (file) {
         },
         Statement(child) {
             if (child.isModuleDeclaration()) {
-                return; 
+                return;
             }
 
             child.skip();
@@ -86,7 +88,7 @@ const getHelperMetadata = function (file) {
             const bindings = path.scope.getAllBindings();
 
             Object.keys(bindings).forEach((name) => {
-                if (name === exportName) { 
+                if (name === exportName) {
                     return;
                 }
 
@@ -97,15 +99,15 @@ const getHelperMetadata = function (file) {
             const name = child.node.name;
             const binding = child.scope.getBinding(name);
 
-            if (!binding) { 
-                globals.add(name); 
+            if (!binding) {
+                globals.add(name);
             }
         },
         AssignmentExpression(child) {
             const left = child.get("left");
 
-            if (!(exportName in left.getBindingIdentifiers())) { 
-                return; 
+            if (!(exportName in left.getBindingIdentifiers())) {
+                return;
             }
 
             if (!left.isIdentifier()) {
@@ -122,8 +124,8 @@ const getHelperMetadata = function (file) {
         }
     });
 
-    if (!exportPath) { 
-        throw new Error("Helpers must default-export something."); 
+    if (!exportPath) {
+        throw new Error("Helpers must default-export something.");
     }
 
     // Process these in reverse so that mutating the references does not invalidate any later paths in
@@ -148,7 +150,7 @@ const permuteHelperAST = function (file, metadata, id, localBindings) {
     }
 
     if (!id) {
-        return; 
+        return;
     }
 
     const {
@@ -162,12 +164,12 @@ const permuteHelperAST = function (file, metadata, id, localBindings) {
     const bindings = new Set(localBindings || []);
     localBindingNames.forEach((name) => {
         let newName = name;
-        while (bindings.has(newName)) { 
-            newName = `_${newName}`; 
+        while (bindings.has(newName)) {
+            newName = `_${newName}`;
         }
 
-        if (newName !== name) { 
-            toRename[name] = newName; 
+        if (newName !== name) {
+            toRename[name] = newName;
         }
     });
 
@@ -196,10 +198,14 @@ const permuteHelperAST = function (file, metadata, id, localBindings) {
                     exp.replaceWith(decl);
                     path.pushContainer(
                         "body",
-                        t.assignmentExpression("=", id, t.identifier(exportName)),
+                        t.expressionStatement(
+                            t.assignmentExpression("=", id, t.identifier(exportName)),
+                        ),
                     );
                 } else {
-                    exp.replaceWith(t.assignmentExpression("=", id, decl.node));
+                    exp.replaceWith(
+                        t.expressionStatement(t.assignmentExpression("=", id, decl.node)),
+                    );
                 }
             } else {
                 throw new Error("Unexpected helper format.");
@@ -219,8 +225,8 @@ const permuteHelperAST = function (file, metadata, id, localBindings) {
 const helperData = {};
 const loadHelper = function (name) {
     if (!helperData[name]) {
-        if (!helpers[name]) { 
-            throw new ReferenceError(`Unknown helper ${name}`); 
+        if (!helpers[name]) {
+            throw new ReferenceError(`Unknown helper ${name}`);
         }
 
         const fn = () => {

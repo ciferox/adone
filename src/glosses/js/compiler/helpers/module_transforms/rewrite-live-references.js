@@ -1,5 +1,6 @@
 const {
-    js: { compiler: { types: t, template } }
+    assert,
+    js: { compiler: { types: t, template, helper: { simpleAccess } } }
 } = adone;
 
 /**
@@ -134,57 +135,6 @@ const rewriteReferencesVisitor = {
         }
     },
 
-    UpdateExpression: {
-        exit(path) {
-            const { scope, imported, exported } = this;
-
-            const arg = path.get("argument");
-            if (!arg.isIdentifier()) { return; }
-            const localName = arg.node.name;
-
-            if (!imported.has(localName) && !exported.has(localName)) {
-                return;
-            }
-
-            // redeclared in this scope
-            if (scope.getBinding(localName) !== path.scope.getBinding(localName)) {
-                return;
-            }
-
-            const exportedNames = exported.get(localName) || [];
-
-            if (exportedNames.length > 0 || imported.has(localName)) {
-                if (
-                    path.node.prefix ||
-                    (path.parentPath.isExpressionStatement() &&
-                        !path.isCompletionRecord())
-                ) {
-                    // ++i => (i += 1);
-                    path.replaceWith(
-                        t.assignmentExpression("+=", arg.node, t.numericLiteral(1)),
-                    );
-                } else {
-                    const varName = path.scope.generateDeclaredUidIdentifier("old");
-
-                    const assignment = t.binaryExpression(
-                        path.node.operator.slice(0, 1),
-                        varName,
-                        t.numericLiteral(1),
-                    );
-
-                    // i++ => (_tmp = i, i = _tmp + 1, _tmp)
-                    path.replaceWith(
-                        t.sequenceExpression([
-                            t.assignmentExpression("=", varName, arg.node),
-                            t.assignmentExpression("=", arg.node, assignment),
-                            varName
-                        ]),
-                    );
-                }
-            }
-        }
-    },
-
     AssignmentExpression: {
         exit(path) {
             const {
@@ -196,7 +146,9 @@ const rewriteReferencesVisitor = {
                 buildImportReference
             } = this;
 
-            if (seen.has(path.node)) { return; }
+            if (seen.has(path.node)) {
+                return; 
+            }
             seen.add(path.node);
 
             const left = path.get("left");
@@ -213,22 +165,12 @@ const rewriteReferencesVisitor = {
                 const exportedNames = exported.get(localName) || [];
                 const importData = imported.get(localName);
                 if (exportedNames.length > 0 || importData) {
+                    assert(path.node.operator === "=", "Path was not simplified");
+
                     const assignment = path.node;
 
                     if (importData) {
-                        assignment.left =
-                            buildImportReference(importData) || assignment.left;
-
-                        if (path.node.operator !== "=") {
-                            const op = path.node.operator.slice(0, -1);
-                            path.node.operator = "=";
-
-                            assignment.right = t.binaryExpression(
-                                op,
-                                assignment.left,
-                                assignment.right,
-                            );
-                        }
+                        assignment.left = buildImportReference(importData) || assignment.left;
 
                         assignment.right = t.sequenceExpression([
                             assignment.right,
@@ -337,6 +279,12 @@ export default function rewriteLiveReferences(
         scope: programPath.scope,
         exported // local name => exported name list
     });
+
+    simpleAccess(
+        programPath,
+        // NOTE(logan): The 'Array.from' calls are to make this code with in loose mode.
+        new Set([...Array.from(imported.keys()), ...Array.from(exported.keys())]),
+    );
 
     // Rewrite reads/writes from imports and exports to have the correct behavior.
     programPath.traverse(rewriteReferencesVisitor, {
