@@ -85,7 +85,6 @@ export default class Adapter extends adone.netron.Adapter {
                 defaultPort: adone.netron.DEFAULT_PORT,
                 responseTimeout: netron.options.responseTimeout
             });
-            peer._type = adone.netron.PEER_TYPE.ACTIVE;
             const gateId = options.id;
             if (!is.undefined(gateId)) {
                 peer.options.gateId = gateId;

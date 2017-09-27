@@ -20,7 +20,6 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         falsely: () => false,
         ok: "OK",
         bad: "BAD",
-        exts: [".js", ".tjs", ".ajs"], // .js - es6 js; .tjs - transpiled js, .ajs - adone-specific js
         log: (...args) => adone.runtime.logger.stdoutLogNoFmt(...args),
         fatal: (...args) => adone.runtime.logger.fatal(...args),
         error: (...args) => adone.runtime.logger.error(...args),
@@ -294,7 +293,8 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             console: "console",
             dns: "dns",
             timers: "timers",
-            dgram: "dgram"
+            dgram: "dgram",
+            perf_hooks: "perf_hooks"
         })),
 
         // Adone

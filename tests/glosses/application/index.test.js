@@ -59,7 +59,7 @@ describe("application", "Application", () => {
     });
 
     it("no public properties instead of application's reserved", async () => {
-        const expected = ["_", "data", "app", "argv", "name"];
+        const expected = ["_", "data", "parent", "app", "argv", "name"];
         const stdout = await execStdout("node", [fixture("public_reserved_props.js")]);
         const props = stdout.split(";");
         assert.sameMembers(props, expected);

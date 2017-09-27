@@ -36,11 +36,6 @@ export const STATUS = {
     MAX: 0x100
 };
 
-export const PEER_TYPE = {
-    PASSIVE: 0,
-    ACTIVE: 1
-};
-
 const MAX_INTEGER = Number.MAX_SAFE_INTEGER >>> 0;
 
 export class SequenceId {

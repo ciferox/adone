@@ -2,7 +2,7 @@ const {
     is,
     x,
     net,
-    netron: { DEFAULT_PORT, ACTION, STATUS, PEER_TYPE, GenesisNetron, Peer, RemoteStub }
+    netron: { DEFAULT_PORT, ACTION, STATUS, GenesisNetron, Peer, RemoteStub }
 } = adone;
 
 const IP_POLICY_NONE = 0;
@@ -114,7 +114,7 @@ export default class Netron extends GenesisNetron {
             options,
             {
                 peerFactory: (socket, server) => {
-                    const peer = this._createPeer(socket, server, PEER_TYPE.ACTIVE);
+                    const peer = this._createPeer(socket, server);
                     this._emitPeerEvent("peer create", peer);
                     return peer;
                 },
@@ -360,7 +360,7 @@ export default class Netron extends GenesisNetron {
         return false;
     }
 
-    _createPeer(socket, server, peerType = PEER_TYPE.PASSIVE) {
+    _createPeer(socket, server) {
         const peer = new Peer({
             netron: this,
             socket,
@@ -379,7 +379,6 @@ export default class Netron extends GenesisNetron {
                 peer.options.gateId = gateId;
             }
         }
-        peer._type = peerType;
         return peer;
     }
 

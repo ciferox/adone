@@ -736,7 +736,7 @@ export const lookup = async (path) => {
             return path;
         }
     } catch (err) {
-        for (const ext of adone.exts) {
+        for (const ext of [".js"]) {
             const newPath = `${path}${ext}`;
             if (await fs.exists(newPath)) {
                 return `${path}${ext}`;

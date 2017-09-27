@@ -1,4 +1,4 @@
-const { is, x, netron: { DEFAULT_PORT, ACTION, STATUS, PEER_TYPE, GenesisNetron, ws: { Peer } } } = adone;
+const { is, x, netron: { DEFAULT_PORT, ACTION, STATUS, GenesisNetron, ws: { Peer } } } = adone;
 
 export default class Netron extends GenesisNetron {
     getDefinitionByName(ctxId, uid = null) {
@@ -52,7 +52,7 @@ export default class Netron extends GenesisNetron {
         }
     }
 
-    _createPeer(socket, server, peerType = PEER_TYPE.PASSIVE) {
+    _createPeer(socket, server) {
         const peer = new Peer({
             netron: this,
             socket,
@@ -62,7 +62,6 @@ export default class Netron extends GenesisNetron {
             defaultPort: DEFAULT_PORT,
             responseTimeout: this.options.responseTimeout
         });
-        peer._type = peerType;
         return peer;
     }
 }

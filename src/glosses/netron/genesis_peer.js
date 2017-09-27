@@ -19,7 +19,6 @@ export default class GenesisPeer extends AsyncEmitter {
             const awaiter = this._removeAwaiter(streamId);
             awaiter([1, new x.NetronTimeout(`Response timeout ${this.options.responseTimeout}ms exceeded`)]);
         });
-        this._type = null;
         this._status = STATUS.OFFLINE;
         this._defs = new Map();
         this._ctxidDefs = new Map();
@@ -60,10 +59,6 @@ export default class GenesisPeer extends AsyncEmitter {
 
     write(/*data*/) {
         throw new x.NotImplemented("Method write() should be implemented");
-    }
-
-    getType() {
-        return this._type;
     }
 
     getStatus() {
