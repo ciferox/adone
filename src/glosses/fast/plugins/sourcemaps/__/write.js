@@ -1,7 +1,7 @@
 import __ from ".";
 
 export default function writeInternals(destPath, options) {
-    const { is, util, std: { path, fs } } = adone;
+    const { is, util, std: { path, fs }, text } = adone;
 
     const setSourceRoot = (file) => {
         const { sourceMap } = file;
@@ -31,7 +31,7 @@ export default function writeInternals(destPath, options) {
                     filePath = path.resolve(file.dirname, filePath).replace(file.cwd, "");
                 }
             }
-            return util.unixifyPath(filePath);
+            return util.normalizePath(filePath);
         });
     };
 
@@ -45,7 +45,7 @@ export default function writeInternals(destPath, options) {
                 if (!sourceMap.sourcesContent[i]) {
                     const sourcePath = path.resolve(file.base, sourceMap.sources[i]);
                     try {
-                        sourceMap.sourcesContent[i] = util.stripBom(fs.readFileSync(sourcePath, "utf8"));
+                        sourceMap.sourcesContent[i] = text.stripBom(fs.readFileSync(sourcePath, "utf8"));
                     } catch (e) {
                         //
                     }
@@ -79,11 +79,11 @@ export default function writeInternals(destPath, options) {
             if (options.destPath) {
                 const destSourceMapPath = path.join(file.cwd, options.destPath, mapFile);
                 const destFilePath = path.join(file.cwd, options.destPath, file.relative);
-                sourceMap.file = util.unixifyPath(path.relative(path.dirname(destSourceMapPath), destFilePath));
+                sourceMap.file = util.normalizePath(path.relative(path.dirname(destSourceMapPath), destFilePath));
                 if (is.undefined(sourceMap.sourceRoot)) {
-                    sourceMap.sourceRoot = util.unixifyPath(path.relative(path.dirname(destSourceMapPath), file.base));
+                    sourceMap.sourceRoot = util.normalizePath(path.relative(path.dirname(destSourceMapPath), file.base));
                 } else if (sourceMap.sourceRoot === "" || (sourceMap.sourceRoot && sourceMap.sourceRoot[0] === ".")) {
-                    sourceMap.sourceRoot = util.unixifyPath(
+                    sourceMap.sourceRoot = util.normalizePath(
                         path.join(
                             path.relative(path.dirname(destSourceMapPath), file.base),
                             sourceMap.sourceRoot
@@ -92,9 +92,9 @@ export default function writeInternals(destPath, options) {
                 }
             } else {
                 // best effort, can be incorrect if options.destPath not set
-                sourceMap.file = util.unixifyPath(path.relative(path.dirname(sourceMapPath), file.path));
+                sourceMap.file = util.normalizePath(path.relative(path.dirname(sourceMapPath), file.path));
                 if (sourceMap.sourceRoot === "" || (sourceMap.sourceRoot && sourceMap.sourceRoot[0] === ".")) {
-                    sourceMap.sourceRoot = util.unixifyPath(
+                    sourceMap.sourceRoot = util.normalizePath(
                         path.join(
                             path.relative(path.dirname(sourceMapPath), file.base),
                             sourceMap.sourceRoot

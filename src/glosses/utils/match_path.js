@@ -1,11 +1,13 @@
-export default function match(criteria, value = null, { index = false, start = 0, end = null, dot = false } = {}) {
+const { is } = adone;
+
+export default function matchPath(criteria, value = null, { index = false, start = 0, end = null, dot = false } = {}) {
     criteria = adone.util.arrify(criteria);
-    if (value === null) {
+    if (is.null(value)) {
         // it means we should create a matcher function
-        return (value, opts) => match(criteria, value, opts);  // TODO: optimize
+        return (value, opts) => matchPath(criteria, value, opts); // TODO: optimize
     }
     value = adone.util.arrify(value);
-    if (end === null) {
+    if (is.null(end)) {
         end = criteria.length;
     }
     // separate negative and non-negative criteria
@@ -16,7 +18,7 @@ export default function match(criteria, value = null, { index = false, start = 0
         let array = pos;
         if (adone.is.string(criterion) && criterion[0] === "!") {
             array = neg;
-            criterion = criterion.slice(1);  // remove the leading "!"
+            criterion = criterion.slice(1); // remove the leading "!"
         }
         array.push([i, criterion]);
     }

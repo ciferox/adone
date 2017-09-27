@@ -239,7 +239,7 @@ export default function (
 
     for (const testSuite of suites) {
         const blockName = name.concat(testSuite.title);
-        
+
         if (includes(suiteOpts.ignoreSuites, testSuite.title)) {
             continue;
         }
@@ -273,7 +273,7 @@ export default function (
                         extend(task.options, taskOpts);
 
                         if (dynamicOpts) {
-                            dynamicOpts(task.options, task); 
+                            dynamicOpts(task.options, task);
                         }
 
                         const throwMsg = task.options.throws;
@@ -282,11 +282,10 @@ export default function (
                             // the options object with useless options
                             delete task.options.throws;
 
-                            assert.throws(runTask, (err) => {
-                                return (
-                                    throwMsg === true || err.message.indexOf(throwMsg) >= 0
-                                );
-                            });
+                            const err = assert.throws(runTask);
+                            if (throwMsg !== true) {
+                                expect(err.message).to.include(throwMsg);
+                            }
                         } else {
                             if (task.exec.code) {
                                 const result = run(task);

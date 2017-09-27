@@ -129,7 +129,7 @@ class ConfigChainBuilder {
             // ) {
             //     return true;
             // }
-            const matcher = adone.util.match(absolutePatterns);
+            const matcher = adone.util.matchPath(absolutePatterns);
 
             for (const dir of possibleDirs) {
                 if (matcher(dir)) {

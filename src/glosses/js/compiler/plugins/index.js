@@ -36,6 +36,7 @@ const plugins = {
         es2015Spread: "./transform/es2015_spread",
         es2015ShorthandProperties: "./transform/es2015_shorthand_properties",
         es2015BlockScopedFunctions: "./transform/es2015_block_scoped_functions",
+        es2015Instanceof: "./transform/es2015_instanceof",
         regenerator: "./transform/regenerator",
         runtime: "./transform/runtime",
         numericSeparator: "./transform/numeric_separator",

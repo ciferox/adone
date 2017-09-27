@@ -59,7 +59,7 @@ export default function plugin() {
                 url = transformUrl(url);
             }
 
-            url = util.unixifyPath(url);
+            url = util.normalizePath(url);
             /**
              * Create buffer
              */

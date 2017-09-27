@@ -132,7 +132,7 @@ export const dateToString = (date, timeZone) => {
     return escapeString(str);
 };
 
-export const arrayToList = (array, timeZone) => {
+const arrayToList = (array, timeZone) => {
     let sql = "";
 
     for (let i = 0; i < array.length; i++) {
@@ -149,9 +149,9 @@ export const arrayToList = (array, timeZone) => {
     return sql;
 };
 
-export const bufferToString = (buffer) => `X${escapeString(buffer.toString("hex"))}`;
+const bufferToString = (buffer) => `X${escapeString(buffer.toString("hex"))}`;
 
-export const objectToValues = (object, timeZone) => {
+const objectToValues = (object, timeZone) => {
     let sql = "";
 
     const entries = util.entries(object);

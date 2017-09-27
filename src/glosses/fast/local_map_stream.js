@@ -12,7 +12,7 @@ export class FastLocalMapStream extends adone.fast.LocalStream {
     constructor(source, mappings, options) {
         super(source, options);
         this._mappings = mappings;
-        this._matchers = mappings.map((x) => (y) => util.match(x.from, y, { dot: options.dot }));
+        this._matchers = mappings.map((x) => (y) => util.matchPath(x.from, y, { dot: options.dot }));
     }
 
     dest(options) {

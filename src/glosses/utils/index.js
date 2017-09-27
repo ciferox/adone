@@ -179,16 +179,6 @@ export const normalizePath = (str, stripTrailing = false) => {
     return str;
 };
 
-export const unixifyPath = (filePath, unescape = false) => {
-    if (is.windows || std.path.sep === "\\") {
-        return normalizePath(filePath);
-    }
-    if (unescape) {
-        return filePath ? filePath.toString().replace(/\\(\w)/g, "$1") : "";
-    }
-    return filePath;
-};
-
 export const functionName = (fn) => {
     if (!is.function(fn)) {
         return null;
@@ -198,24 +188,6 @@ export const functionName = (fn) => {
     fnName = fnName ? fnName.replace(/^bound/, "") : "";
     fnName = fnName ? fnName.trim() : "";
     return fnName;
-};
-
-export const mapArguments = (argmap) => {
-    if (is.function(argmap)) {
-        return argmap;
-    } else if (is.numeral(argmap)) {
-        return () => slice(arguments, 0, argmap);
-    } else if (is.array(argmap)) {
-        return () => {
-            const args = arguments;
-            return argmap.reduce((ctx, hint, idx) => {
-                ctx[hint] = args[idx];
-                return ctx;
-            }, {});
-        };
-    }
-
-    return (x) => x;
 };
 
 export const parseMs = (ms) => {
@@ -419,7 +391,7 @@ export const entries = (object, { onlyEnumerable = true, followProto = false, al
 
 export const toDotNotation = (object) => {
     const result = {};
-    const stack = new collection.Stack([[object, ""]]);
+    const stack = collection.Stack.from([[object, ""]]);
     while (!stack.empty) {
         const [object, prefix] = stack.pop();
         const it = is.array(object) ? enumerate(object) : entries(object);
@@ -482,94 +454,6 @@ export const globParent = (str) => {
     return str.replace(/\\([*?|[\](){}])/g, "$1");
 };
 
-export const by = (by, compare) => {
-    compare = compare || Object.compare;
-    by = by || adone.identity;
-    const compareBy = (a, b) => compare(by(a), by(b));
-    compareBy.compare = compare;
-    compareBy.by = by;
-    return compareBy;
-};
-// ?
-export const readdir = (root, {
-    fileFilter = () => true,
-    directoryFilter = () => true,
-    depth: maximumDepth = Infinity,
-    entryType = "files",
-    lstat = false
-} = {}) => {
-    const bothEntries = entryType === "both" || entryType === "all";
-    const fileEntries = bothEntries || entryType === "files";
-    const directoryEntries = bothEntries || entryType === "directories";
-    const normalizeFilter = (filter) => {
-        filter = arrify(filter);
-        const functions = [];
-        const other = [];
-        for (const x of filter) {
-            if (is.function(x)) {
-                functions.push(x);
-            } else {
-                other.push(x);
-            }
-        }
-        const matcher = adone.util.match(other);
-        return (x) => functions.some((y) => y(x)) || matcher(x.name); // cannot mix negate and other?
-    };
-
-    fileFilter = normalizeFilter(fileFilter);
-    directoryFilter = normalizeFilter(directoryFilter);
-
-    let resolvedRoot;
-    let pending = 0;
-    const source = adone.stream.core().through(async function ([path, depth]) {
-        --pending;
-        const realPath = await adone.fs.realpath(path);
-        const relativePath = std.path.relative(realPath, resolvedRoot);
-
-        const files = await adone.fs.readdir(path);
-        const statMethod = lstat ? "lstat" : "stat";
-
-        await Promise.all(files.map((name) => {
-            const fullPath = std.path.join(realPath, name);
-            const path = std.path.join(relativePath, name);
-            const parentDir = relativePath;
-            const fullParentDir = realPath;
-            return adone.fs[statMethod](fullPath).then((stat) => {
-                const entry = { name, fullPath, path, parentDir, fullParentDir, stat };
-                if (stat.isDirectory()) {
-                    if (directoryEntries && directoryFilter(entry)) {
-                        this.push(entry);
-                    }
-                    if (depth < maximumDepth && directoryFilter(entry)) {
-                        ++pending;
-                        source.write([fullPath, depth + 1]);
-                    }
-                } else if (fileEntries && fileFilter(entry)) {
-                    this.push(entry);
-                }
-            }).catch((err) => {
-                if (err.code === "ENOENT") {
-                    // deleted
-                    return;
-                }
-                throw err;
-            });
-        }));
-        if (!pending) {
-            source.end();
-        }
-    });
-    adone.fs.realpath(root).then((_resolvedRoot) => {
-        resolvedRoot = _resolvedRoot;
-        ++pending;
-        source.write([resolvedRoot, 0]);
-    }).catch((err) => {
-        source.emit("warn", err);
-        source.end();
-    });
-    return source;
-};
-
 export const toFastProperties = (() => {
     let fastProto = null;
 
@@ -595,13 +479,6 @@ export const toFastProperties = (() => {
 
     return (o) => FastObject(o);
 })();
-
-export const stripBom = (x) => {
-    if (x.charCodeAt(0) === 0xFEFF) {
-        return x.slice(1);
-    }
-    return x;
-};
 
 export const sortKeys = (object, { deep = false, compare } = {}) => {
     const obj = {};
@@ -796,42 +673,6 @@ export const clone = (obj, { deep = true, nonPlainObjects = false, onlyEnumerabl
     return res;
 };
 
-export const toUTF8Array = (str) => {
-    let char;
-    let i = 0;
-    const utf8 = [];
-    const len = str.length;
-
-    while (i < len) {
-        char = str.charCodeAt(i++);
-        if (char < 0x80) {
-            utf8.push(char);
-        } else if (char < 0x800) {
-            utf8.push(
-                0xc0 | (char >> 6),
-                0x80 | (char & 0x3f)
-            );
-        } else if (char < 0xd800 || char >= 0xe000) {
-            utf8.push(
-                0xe0 | (char >> 12),
-                0x80 | ((char >> 6) & 0x3f),
-                0x80 | (char & 0x3f)
-            );
-        } else { // surrogate pair
-            i++;
-            char = 0x10000 + (((char & 0x3ff) << 10) | (str.charCodeAt(i) & 0x3ff));
-            utf8.push(
-                0xf0 | (char >> 18),
-                0x80 | ((char >> 12) & 0x3f),
-                0x80 | ((char >> 6) & 0x3f),
-                0x80 | (char & 0x3f)
-            );
-        }
-    }
-
-    return utf8;
-};
-
 export const asyncIter = (arr, iter, cb) => {
     let i = -1;
 
@@ -975,7 +816,8 @@ export const max = (array, func = adone.identity) => {
     }
     let maxScore = null;
     let maxElem = undefined;
-    for (const elem of array) {
+    for (let i = 0; i < array.length; ++i) {
+        const elem = array[i];
         if (is.null(maxScore)) {
             maxScore = func(elem);
             maxElem = elem;
@@ -990,8 +832,30 @@ export const max = (array, func = adone.identity) => {
     return maxElem;
 };
 
+export const min = (array, func = adone.identity) => {
+    if (!array.length) {
+        return undefined;
+    }
+    let minScore = null;
+    let minElem = undefined;
+    for (let i = 0; i < array.length; ++i) {
+        const elem = array[i];
+        if (is.null(minScore)) {
+            minScore = func(elem);
+            minElem = elem;
+            continue;
+        }
+        const score = func(elem);
+        if (score < minScore) {
+            minScore = score;
+            minElem = elem;
+        }
+    }
+    return minElem;
+};
+
 adone.lazify({
-    match: "./match",
+    matchPath: "./match",
     toposort: "./toposort",
     jsesc: "./jsesc",
     typeOf: "./typeof",

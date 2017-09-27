@@ -18,7 +18,7 @@ const toposortArray = (nodes, edges) => {
             throw new Error(`Cyclic dependency: ${JSON.stringify(node)}`);
         }
 
-        if (!~nodes.indexOf(node)) {
+        if (!nodes.includes(node)) {
             throw new Error(`Found unknown node. Make sure to provided all involved nodes. Unknown node: ${JSON.stringify(node)}`);
         }
 

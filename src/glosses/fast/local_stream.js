@@ -159,7 +159,7 @@ export const watchSource = (globs, {
         }
         let _base = base;
         if (!_base) {
-            const i = util.match(globs, path, { index: true, dot: true });
+            const i = util.matchPath(globs, path, { index: true, dot: true });
             _base = std.path.resolve(cwd, globsParents[i]);
         }
         stream.write(new adone.fast.File({

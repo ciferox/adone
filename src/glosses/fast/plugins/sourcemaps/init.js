@@ -27,7 +27,7 @@ export default function plugin({ __ }) {
 
             if (!sourceMap && options.identityMap) {
                 const fileType = file.extname;
-                const source = util.unixifyPath(file.relative);
+                const source = util.normalizePath(file.relative);
                 const generator = new sourcemap.Generator({ file: source });
 
                 if (fileType === ".js") {
@@ -59,14 +59,14 @@ export default function plugin({ __ }) {
                     version: 3,
                     names: [],
                     mappings: "",
-                    sources: [util.unixifyPath(file.relative)],
+                    sources: [util.normalizePath(file.relative)],
                     sourcesContent: [fileContent]
                 };
             } else if (!is.nil(preExistingComment)) {
                 sourceMap.preExistingComment = preExistingComment;
             }
 
-            sourceMap.file = util.unixifyPath(file.relative);
+            sourceMap.file = util.normalizePath(file.relative);
             file.sourceMap = sourceMap;
 
             this.push(file);

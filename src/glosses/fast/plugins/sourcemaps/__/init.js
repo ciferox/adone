@@ -1,7 +1,7 @@
 import __ from ".";
 
 export default function initInternals(options, file, fileContent) {
-    const { util, sourcemap, std: { path, fs } } = adone;
+    const { util, text, sourcemap, std: { path, fs } } = adone;
 
     const fixSources = (sources) => {
         // fix source paths and sourceContent for imported source map
@@ -13,7 +13,7 @@ export default function initInternals(options, file, fileContent) {
                     return;
                 }
                 let absPath = path.resolve(sources.path, source);
-                sources.map.sources[i] = util.unixifyPath(path.relative(file.base, absPath));
+                sources.map.sources[i] = util.normalizePath(path.relative(file.base, absPath));
 
                 if (!sources.map.sourcesContent[i]) {
                     let sourceContent = null;
@@ -30,7 +30,7 @@ export default function initInternals(options, file, fileContent) {
                         sourceContent = sources.content;
                     } else { //attempt load content from file
                         try {
-                            sourceContent = util.stripBom(fs.readFileSync(absPath, "utf8"));
+                            sourceContent = text.stripBom(fs.readFileSync(absPath, "utf8"));
                         } catch (e) {
                             //
                         }
@@ -80,7 +80,7 @@ export default function initInternals(options, file, fileContent) {
         sources.path = path.dirname(mapFile);
 
         try {
-            sources.map = JSON.parse(util.stripBom(fs.readFileSync(mapFile, "utf8")));
+            sources.map = JSON.parse(text.stripBom(fs.readFileSync(mapFile, "utf8")));
         } catch (e) {
             // should we really swallow this error?
         }

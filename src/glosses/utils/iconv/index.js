@@ -60,9 +60,9 @@ export const defaultCharUnicode = "�";
 export const defaultCharSingleByte = "?";
 
 // Search for a codec in iconv.encodings. Cache codec data in iconv._codecDataCache.
-export const _codecDataCache = new Map();
+const _codecDataCache = new Map();
 
-export const getCodec = (encoding) => {
+const getCodec = (encoding) => {
     // Canonicalize encoding name: strip all non-alphanumeric chars and appended year.
     let enc = (String(encoding)).toLowerCase().replace(/[^0-9a-z]|:\d{4}$/g, "");
 
@@ -133,7 +133,6 @@ export const getDecoder = (encoding, options) => {
 
     return decoder;
 };
-
 
 export const encode = (str, encoding, options) => {
     str = String(str || "");

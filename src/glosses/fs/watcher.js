@@ -1,4 +1,7 @@
-const { is } = adone;
+const {
+    is,
+    fs
+} = adone;
 
 // fsevents
 
@@ -310,18 +313,18 @@ const FSEventsHandler = {
                 }
 
                 // scan the contents of the dir
-                adone.util.readdir(wh.watchPath, {
-                    entryType: "all",
+                fs.readdirp(wh.watchPath, {
+                    directories: true,
+                    files: true,
                     fileFilter: wh.filterPath,
                     directoryFilter: wh.filterDir,
                     lstat: true,
                     depth: this.options.depth - (priorDepth || 0)
-                }).each((entry) => {
+                }).forEach((entry) => {
                     // need to check filterPath on dirs b/c filterDir is less restrictive
                     if (entry.stat.isDirectory() && !wh.filterPath(entry)) {
                         return;
                     }
-
                     const joinedPath = adone.std.path.join(wh.watchPath, entry.path);
                     const fullPath = entry.fullPath;
 
@@ -1105,7 +1108,7 @@ export default class Watcher extends adone.event.EventEmitter {
                 .filter((path) => adone.is.string(path) && !adone.is.glob(path))
                 .map((path) => `${path}/**`);
 
-            this._userIgnored = adone.util.match([...this._globIgnored, ...ignored, ...paths]);
+            this._userIgnored = adone.util.matchPath([...this._globIgnored, ...ignored, ...paths]);
         }
 
         return this._userIgnored([path, stats]);
@@ -1127,7 +1130,7 @@ export default class Watcher extends adone.event.EventEmitter {
         const watchPath = depth || this.options.disableGlobbing || !adone.is.glob(path) ? path : adone.util.globParent(path);
         const fullWatchPath = adone.std.path.resolve(watchPath);
         const hasGlob = watchPath !== path;
-        const globFilter = hasGlob ? adone.util.match(path) : false;
+        const globFilter = hasGlob ? adone.util.matchPath(path) : false;
         const follow = this.options.followSymlinks;
         let globSymlink = hasGlob && follow ? null : false;
 
@@ -1174,7 +1177,7 @@ export default class Watcher extends adone.event.EventEmitter {
                     if (part === "**") {
                         globstar = true;
                     }
-                    return globstar || !entryParts[i] || adone.util.match(part, entryParts[i]);
+                    return globstar || !entryParts[i] || adone.util.matchPath(part, entryParts[i]);
                 });
             }
             return !unmatchedGlob && this._isntIgnored(entryPath(entry), entry.stat);
@@ -1437,8 +1440,10 @@ export default class Watcher extends adone.event.EventEmitter {
                     this._remove(adone.std.path.dirname(directory), adone.std.path.basename(directory));
                     return;
                 }
-                adone.util.readdir(directory, {
-                    entryType: "all",
+
+                fs.readdirp(directory, {
+                    directories: true,
+                    files: true,
                     fileFilter: wh.filterPath,
                     directoryFilter: wh.filterDir,
                     depth: 0,
@@ -1477,12 +1482,12 @@ export default class Watcher extends adone.event.EventEmitter {
                     // but present in previous emit `remove` event
                     // and are removed from @watched[directory].
                     previous.children().filter((item) => {
-                        return item !== directory &&
-                            current.indexOf(item) === -1 &&
+                        return item !== directory
+                            && !current.includes(item)
                             // in case of intersecting globs;
                             // a path may have been filtered out of this readdir, but
                             // shouldn't be removed because it matches a different glob
-                            (!wh.hasGlob || wh.filterPath({
+                            && (!wh.hasGlob || wh.filterPath({
                                 fullPath: adone.std.path.resolve(directory, item)
                             }));
                     }).forEach((item) => {

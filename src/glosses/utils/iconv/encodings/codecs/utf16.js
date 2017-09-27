@@ -1,4 +1,12 @@
-const { is } = adone;
+const {
+    is,
+    util: { iconv }
+} = adone;
+
+const {
+    getDecoder,
+    getEncoder
+} = iconv;
 
 const detectEncoding = (buf, defaultEncoding = "utf-16le") => {
     let enc = defaultEncoding;
@@ -45,11 +53,11 @@ const detectEncoding = (buf, defaultEncoding = "utf-16le") => {
 // Encoder uses UTF-16LE and prepends BOM (which can be overridden with addBOM: false).
 
 class Utf16Encoder {
-    constructor(options = {}, codec) {
+    constructor(options = {}) {
         if (is.undefined(options.addBOM)) {
             options.addBOM = true;
         }
-        this.encoder = codec.iconv.getEncoder("utf-16le", options);
+        this.encoder = getEncoder("utf-16le", options);
     }
 
     write(str) {
@@ -84,7 +92,7 @@ class Utf16Decoder {
             // We have enough bytes -> detect endianness.
             buf = Buffer.concat(this.initialBytes);
             const encoding = detectEncoding(buf, this.options.defaultEncoding);
-            this.decoder = this.iconv.getDecoder(encoding, this.options);
+            this.decoder = getDecoder(encoding, this.options);
             this.initialBytes.length = this.initialBytesLen = 0;
         }
 
@@ -95,7 +103,7 @@ class Utf16Decoder {
         if (!this.decoder) {
             const buf = Buffer.concat(this.initialBytes);
             const encoding = detectEncoding(buf, this.options.defaultEncoding);
-            this.decoder = this.iconv.getDecoder(encoding, this.options);
+            this.decoder = getDecoder(encoding, this.options);
 
             const res = this.decoder.write(buf);
             const trail = this.decoder.end();

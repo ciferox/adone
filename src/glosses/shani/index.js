@@ -982,7 +982,7 @@ export class Engine {
             const transpiledCache = new Map();
             const loader = (module, filename) => {
                 if (!contentCache.has(filename)) {
-                    contentCache.set(filename, adone.util.stripBom(adone.std.fs.readFileSync(filename, "utf-8")));
+                    contentCache.set(filename, adone.text.stripBom(adone.std.fs.readFileSync(filename, "utf-8")));
                 }
                 const content = contentCache.get(filename);
                 module._compile(content, filename);

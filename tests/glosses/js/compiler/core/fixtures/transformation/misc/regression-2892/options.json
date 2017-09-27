@@ -1,3 +1,11 @@
 {
-  "plugins": ["transform.asyncToGenerator"]
+  "plugins": [
+    "transform.asyncToGenerator",
+    "transform.es2015ArrowFunctions",
+    "transform.es2015Classes",
+    "transform.es2015BlockScoping",
+    "transform.es2015Instanceof",
+    "transform.es2015ModulesCommonjs",
+    "transform.regenerator"
+  ]
 }

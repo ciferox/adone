@@ -9,9 +9,9 @@ export default function () {
                 }
 
                 adone.js.compiler.helper.remapAsyncToGenerator(path, state.file, {
-                    wrapAsync: state.addHelper("asyncToGenerator"),
+                    wrapAsync: state.addHelper("asyncToGenerator")
                 });
-            },
-        },
+            }
+        }
     };
 }

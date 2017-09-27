@@ -3,7 +3,7 @@ const { util: { iconv }, std: { stream: { Transform } }, x, is } = adone;
 
 export class EncodeStream extends Transform {
     constructor(conv, options = {}) {
-        options.decodeStrings = false;  // We accept only strings, so we don't need to decode them.
+        options.decodeStrings = false; // We accept only strings, so we don't need to decode them.
         super(options);
         this.conv = conv;
     }

@@ -1054,12 +1054,15 @@ class Command {
                 throw new x.IllegalState("A command name must be a non-empty string");
             }
         }
-        if (!options.handler) {
+        const [name] = options.name;
+        if (!("handler" in options)) {
             options.handler = (args, opts, { command }) => {
                 adone.log(escape(command.getHelpMessage()));
                 return 1;
             };
             options.handler[INTERNAL] = true;
+        } else if (!is.function(options.handler)) {
+            throw new x.IllegalState(`${name}: A command handler must be a function`);
         }
 
         if (!is.string(options.description)) {
@@ -1076,7 +1079,7 @@ class Command {
         if (!options.match) {
             options.match = null;
         } else if (options.name.length > 1) {
-            throw new x.IllegalState("When match is set only one name is possible");
+            throw new x.IllegalState(`${name}: When match is set only one name is possible`);
         } else {
             if (is.regexp(options.match)) {
                 const re = options.match;

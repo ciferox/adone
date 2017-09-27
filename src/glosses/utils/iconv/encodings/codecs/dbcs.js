@@ -1,6 +1,9 @@
 // Multibyte codec. In this scheme, a character is represented by 1 or more bytes.
 // Our codec supports UTF-16 surrogates, extensions for GB18030 and unicode sequences.
-const { is, x } = adone;
+const {
+    is,
+    x
+} = adone;
 
 const UNASSIGNED = -1;
 const GB18030_CODE = -2;

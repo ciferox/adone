@@ -1,5 +1,5 @@
 const {
-    util
+    text
 } = adone;
 
 const lookup = [
@@ -43,7 +43,7 @@ export default function generate(str) {
     let start = -1;
     let result = 0;
     let resultHash = 0;
-    const utf8 = util.toUTF8Array(str);
+    const utf8 = text.toUTF8Array(str);
     const { length } = utf8;
 
     while (i < length) {

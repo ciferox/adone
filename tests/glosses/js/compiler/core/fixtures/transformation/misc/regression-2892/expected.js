@@ -6,13 +6,9 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = void 0;
 
 var foo = function () {
-  var _ref2 = _asyncToGenerator(
-  /*#__PURE__*/
-  regeneratorRuntime.mark(function _callee3() {
+  var _ref2 = _asyncToGenerator(regeneratorRuntime.mark(function _callee3() {
     var bar = function () {
-      var _ref3 = _asyncToGenerator(
-      /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee2() {
+      var _ref3 = _asyncToGenerator(regeneratorRuntime.mark(function _callee2() {
         var baz;
         return regeneratorRuntime.wrap(function _callee2$(_context2) {
           while (1) {
@@ -69,9 +65,7 @@ function () {
   _createClass(Foo, [{
     key: "bar",
     value: function () {
-      var _ref = _asyncToGenerator(
-      /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee() {
+      var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee() {
         var baz;
         return regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {

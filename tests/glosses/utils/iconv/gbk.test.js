@@ -1,5 +1,6 @@
 describe("util", "iconv", "GBK tests", () => {
     const { util: { iconv }, std: { path } } = adone;
+    const { getEncoder } = iconv;
 
     const fixtures = new adone.fs.Directory(path.resolve(__dirname, "fixtures"));
     const testString = "中国abc"; //unicode contains GBK-code and ascii
@@ -59,7 +60,7 @@ describe("util", "iconv", "GBK tests", () => {
             return table.length - 1;
         };
 
-        const codec = iconv.getEncoder("gb18030");
+        const codec = getEncoder("gb18030");
 
         for (let i = 0; i < 0x100; i++) {
             assert.strictEqual(codec.findIdx(codec.gb18030.uChars, i), findIdxAlternative(codec.gb18030.uChars, i), i);

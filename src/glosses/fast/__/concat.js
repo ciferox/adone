@@ -11,7 +11,7 @@ export default class Concat {
         }
         this.separator = separator;
         if (this.sourceMapping) {
-            this._sourceMap = sourcemap.createGenerator({ file: util.unixifyPath(fileName) });
+            this._sourceMap = sourcemap.createGenerator({ file: util.normalizePath(fileName) });
             this.separatorLineOffset = 0;
             this.separatorColumnOffset = 0;
             const separatorString = this.separator.toString();
@@ -26,7 +26,7 @@ export default class Concat {
     }
 
     add(filePath, content, sourceMap) {
-        filePath = filePath && util.unixifyPath(filePath);
+        filePath = filePath && util.normalizePath(filePath);
         if (!is.buffer(content)) {
             content = Buffer.from(content);
         }

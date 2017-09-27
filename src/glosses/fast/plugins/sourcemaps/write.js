@@ -24,7 +24,7 @@ export default function plugin({ __ }) {
             }
 
             // fix paths if Windows style paths
-            file.sourceMap.file = util.unixifyPath(file.relative);
+            file.sourceMap.file = util.normalizePath(file.relative);
 
             internals.setSourceRoot(file);
             internals.loadContent(file);

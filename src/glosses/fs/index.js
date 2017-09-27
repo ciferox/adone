@@ -38,7 +38,8 @@ const fs = adone.lazify({
     }, null, require),
     which: ["./which", (mod) => mod.which],
     whichSync: ["./which", (mod) => mod.whichSync],
-    TailWatcher: "./tail_watcher"
+    TailWatcher: "./tail_watcher",
+    readdirp: "./readdirp"
 }, adone.asNamespace(exports), require);
 
 const lazy = adone.lazify({
