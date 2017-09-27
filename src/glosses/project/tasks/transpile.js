@@ -18,7 +18,9 @@ export default class TranspileTask extends adone.project.task.Transform {
             ["transform.classProperties", { loose: true }],
             "transform.es2015ModulesCommonjs",
             "transform.functionBind",
-            "transform.objectRestSpread"
+            "transform.objectRestSpread",
+            "transform.numericSeparator",
+            "transform.exponentiationOperator"
         ];
     }
 }

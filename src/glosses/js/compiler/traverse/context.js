@@ -131,7 +131,7 @@ export default class TraversalContext {
               continue;
           }
 
-          if (testing && queue.length >= 10000/*10_000*/) {
+          if (testing && queue.length >= 10_000) {
               this.trap = true;
           }
 

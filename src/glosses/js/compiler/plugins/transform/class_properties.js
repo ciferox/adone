@@ -12,7 +12,7 @@ export default function ({ types: t }) {
     };
 
     const referenceVisitor = {
-        TypeAnnotation(path) {
+        "TSTypeAnnotation|TypeAnnotation"(path) {
             path.skip();
         },
         ReferencedIdentifier(path) {
@@ -69,8 +69,8 @@ export default function ({ types: t }) {
                     }
                 }
 
-                if (!props.length) { 
-                    return;
+                if (!props.length) {
+                    return; 
                 }
 
                 const nodes = [];
@@ -131,7 +131,7 @@ export default function ({ types: t }) {
 
                     for (const prop of props) {
                         prop.traverse(referenceVisitor, collisionState);
-                        if (collisionState.collision) { 
+                        if (collisionState.collision) {
                             break; 
                         }
                     }

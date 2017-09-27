@@ -196,7 +196,9 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
                 ["transform.classProperties", { loose: true }],
                 "transform.es2015ModulesCommonjs",
                 "transform.functionBind",
-                "transform.objectRestSpread"
+                "transform.objectRestSpread",
+                "transform.numericSeparator",
+                "transform.exponentiationOperator"
             ];
             if (process.env.ADONE_COVERAGE) {
                 plugins.unshift(
@@ -205,6 +207,8 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
                     "syntax.classProperties",
                     "syntax.objectRestSpread",
                     "syntax.functionBind",
+                    "syntax.numericSeparator",
+                    "syntax.exponentiationOperator",
                     adone.js.coverage.plugin
                 );
             }

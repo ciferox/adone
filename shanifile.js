@@ -26,6 +26,8 @@ export default {
             "transform.es2015ModulesCommonjs",
             "transform.functionBind",
             "transform.objectRestSpread",
+            "transform.numericSeparator",
+            "transform.exponentiationOperator",
             ["transform.importReplace", {
                 old: "adone",
                 new: path.resolve(__dirname, "lib")

@@ -12,8 +12,9 @@ const plugins = {
         flow: "./syntax/flow",
         functionBind: "./syntax/function_bind",
         objectRestSpread: "./syntax/object_rest_spread",
-        // exponentiationOperator: "./syntax/exponentiation_operator",
         // jsx: "./syntax/jsx"
+        numericSeparator: "./syntax/numeric_separator",
+        exponentiationOperator: "./syntax/exponentiation_operator"
     }, null, require),
     transform: lazify({
         asyncToGenerator: "./transform/async_to_generator",
@@ -37,7 +38,8 @@ const plugins = {
         es2015BlockScopedFunctions: "./transform/es2015_block_scoped_functions",
         regenerator: "./transform/regenerator",
         runtime: "./transform/runtime",
-        // exponentiationOperator: "./transform/exponentiation_operator",
+        numericSeparator: "./transform/numeric_separator",
+        exponentiationOperator: "./transform/exponentiation_operator"
         // templateLiterals: "./transform/template_literals",
         // reactJsx: "./transform/react_jsx",
         // reactDisplayName: "./transform/react_display_name",

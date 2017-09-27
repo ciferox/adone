@@ -74,7 +74,7 @@ function normalizeOptions(code, opts): Format {
     }
 
     if (format.compact === "auto") {
-        format.compact = code.length > 500000;//500_000; // 500KB
+        format.compact = code.length > 500_000; // 500KB
 
         if (format.compact) {
             console.error(
