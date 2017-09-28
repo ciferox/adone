@@ -855,7 +855,7 @@ export const min = (array, func = adone.identity) => {
 };
 
 adone.lazify({
-    matchPath: "./match",
+    matchPath: "./match_path",
     toposort: "./toposort",
     jsesc: "./jsesc",
     typeOf: "./typeof",
