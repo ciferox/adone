@@ -1684,17 +1684,17 @@ export default class Application extends adone.application.Subsystem {
     }
 
     _createCommand(schema, parent) {
-        const command = new Command({
-            name: schema.name,
-            help: schema.help,
-            description: schema.description,
-            loader: schema.loader,
-            handler: schema.handler,
-            group: schema.group,
-            match: schema.match,
-            colors: schema.colors,
-            blindMode: schema.blindMode
-        });
+        const command = new Command(util.pick(schema, [
+            "name",
+            "help",
+            "description",
+            "loader",
+            "handler",
+            "group",
+            "match",
+            "colors",
+            "blindMode"
+        ]));
 
         if (parent) {
             parent.addCommand(command);
