@@ -854,7 +854,7 @@ export class Datetime {
     }
 }
 
-adone.tag.set(Datetime, adone.tag.DATETIME);
+adone.tag.add(Datetime, "DATETIME");
 
 Datetime.prototype.isUTC = Datetime.prototype.isUtc;
 Datetime.prototype.add = createAdder(1, "add");

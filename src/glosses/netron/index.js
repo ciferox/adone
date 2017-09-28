@@ -1,3 +1,17 @@
+// predicates
+adone.definePredicate("genesisNetron", "GENESIS_NETRON");
+adone.definePredicate("genesisPeer", "GENESIS_PEER");
+adone.definePredicate("netron", "NETRON");
+adone.definePredicate("netronPeer", "NETRON_PEER");
+adone.definePredicate("netronAdapter", "NETRON_ADAPTER");
+adone.definePredicate("netronDefinition", "NETRON_DEFINITION");
+adone.definePredicate("netronDefinitions", "NETRON_DEFINITIONS");
+adone.definePredicate("netronReference", "NETRON_REFERENCE");
+adone.definePredicate("netronInterface", "NETRON_INTERFACE");
+adone.definePredicate("netronStub", "NETRON_STUB");
+adone.definePredicate("netronRemoteStub", "NETRON_REMOTESTUB");
+adone.definePredicate("netronStream", "NETRON_STREAM");
+
 export const DEFAULT_PORT = 8888;
 
 export const ACTION = {
@@ -62,14 +76,14 @@ export class Definition {
         this.twin = undefined;
     }
 }
-adone.tag.set(Definition, adone.tag.NETRON_DEFINITION);
+adone.tag.add(Definition, "NETRON_DEFINITION");
 
 export class Reference {
     constructor(defId) {
         this.defId = defId;
     }
 }
-adone.tag.set(Reference, adone.tag.NETRON_REFERENCE);
+adone.tag.add(Reference, "NETRON_REFERENCE");
 
 export class Interface {
     constructor(def, uid) {
@@ -77,7 +91,7 @@ export class Interface {
         this.$uid = uid;
     }
 }
-adone.tag.set(Interface, adone.tag.NETRON_INTERFACE);
+adone.tag.add(Interface, "NETRON_INTERFACE");
 
 adone.lazify({
     decorator: "./decorators",

@@ -13,4 +13,7 @@ adone.lazify({
     Task: ["./task", (mod) => mod.Task],
     TaskObserver: ["./task", (mod) => mod.TaskObserver],
     Manager: "./manager"
-}, exports, require);
+}, adone.asNamespace(exports), require);
+
+// predicates
+adone.definePredicate("task", "TASK");

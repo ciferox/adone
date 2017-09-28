@@ -1,8 +1,7 @@
 const {
     is,
     x,
-    configuration,
-    tag
+    configuration
 } = adone;
 
 export default class Adapter {
@@ -24,4 +23,4 @@ export default class Adapter {
         throw new x.NotImplemented("method unbind() should be implemented");
     }
 }
-tag.set(Adapter, tag.NETRON_ADAPTER);
+adone.tag.add(Adapter, "NETRON_ADAPTER");

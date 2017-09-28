@@ -1,4 +1,8 @@
-const { is, x, netron: { Investigator } } = adone;
+const {
+    is,
+    x,
+    netron: { Investigator }
+} = adone;
 
 export default class Definitions {
     constructor(...args) {
@@ -65,4 +69,4 @@ export default class Definitions {
         return this._defs.splice(begin, end, ...items);
     }
 }
-adone.tag.set(Definitions, adone.tag.NETRON_DEFINITIONS);
+adone.tag.add(Definitions, "NETRON_DEFINITIONS");

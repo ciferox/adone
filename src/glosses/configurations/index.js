@@ -101,7 +101,7 @@ export class Configuration {
         return parts;
     }
 }
-adone.tag.set(Configuration, adone.tag.CONFIGURATION);
+adone.tag.add(Configuration, "CONFIGURATION");
 
 const lazy = adone.lazify({
     FileConfiguration: "./file_configuration",

@@ -280,5 +280,4 @@ export default class Valuable {
         return this.vault._setMeta(__.valuable(this.id), this.meta);
     }
 }
-adone.tag.define("VAULT_VALUABLE", "vaultValuable");
-adone.tag.set(Valuable, adone.tag.VAULT_VALUABLE);
+adone.tag.add(Valuable, "VAULT_VALUABLE");

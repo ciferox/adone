@@ -5,21 +5,20 @@ const {
     net,
     data: { mpak: { serializer } },
     configuration: { Configuration },
-    event: { AsyncEmitter }
+    event: { AsyncEmitter },
+    netron: {
+        DEFAULT_PORT,
+        ACTION,
+        STATUS,
+        Reference,
+        Interface,
+        Stub,
+        Investigator,
+        Definition,
+        Definitions,
+        SequenceId
+    }
 } = adone;
-
-const {
-    DEFAULT_PORT,
-    ACTION,
-    STATUS,
-    Reference,
-    Interface,
-    Stub,
-    Investigator,
-    Definition,
-    Definitions,
-    SequenceId
-} = adone.netron;
 
 const MAGIC_FLAG = 0x80000000 >>> 0;
 
@@ -1090,7 +1089,7 @@ export default class GenesisNetron extends AsyncEmitter {
         }
     }
 }
-adone.tag.set(GenesisNetron, adone.tag.GENESIS_NETRON);
+adone.tag.add(GenesisNetron, "GENESIS_NETRON");
 
 GenesisNetron._STREAM_ID = 0; // Идентификатор потока.
 GenesisNetron._PACKET_ID = 1; // Идентификатор/номер пакета внутри потока.

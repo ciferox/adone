@@ -36,8 +36,7 @@ export class FastLocalMapStream extends adone.fast.LocalStream {
         }, options);
     }
 }
-adone.tag.define("FAST_LOCAL_MAP_STREAM", "fastLocalMapStream");
-adone.tag.set(FastLocalMapStream, adone.tag.FAST_LOCAL_MAP_STREAM);
+adone.tag.add(FastLocalMapStream, "FAST_LOCAL_MAP_STREAM");
 
 export const map = (mappings, {
     cwd = process.cwd(),

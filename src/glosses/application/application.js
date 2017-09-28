@@ -2305,11 +2305,12 @@ export default class Application extends adone.application.Subsystem {
         return this.exit(EXIT_SUCCESS);
     }
 }
+tag.add(Application, "APPLICATION");
 
 // mark the default main as internal to be able to distinguish internal from user-defined handlers
 Application.prototype.main[INTERNAL] = true;
 
-tag.set(Application, tag.APPLICATION);
+
 // Application.Argument = Argument;
 // Application.PositionalArgument = PositionalArgument;
 // Application.OptionalArgument = OptionalArgument;

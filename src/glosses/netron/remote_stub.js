@@ -1,4 +1,9 @@
-const { is, x, vendor: { lodash }, netron: { Definition } } = adone;
+const {
+    is,
+    x,
+    vendor: { lodash },
+    netron: { Definition }
+} = adone;
 
 export default class RemoteStub {
     constructor(netron, iInstance) {
@@ -74,4 +79,4 @@ export default class RemoteStub {
         }
     }
 }
-adone.tag.set(RemoteStub, adone.tag.NETRON_REMOTESTUB);
+adone.tag.add(RemoteStub, "NETRON_REMOTESTUB");

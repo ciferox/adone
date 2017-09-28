@@ -1,4 +1,8 @@
-const { is, util, meta: { reflect } } = adone;
+const {
+    is,
+    util,
+    meta: { reflect }
+} = adone;
 
 export default class Investigator {
     constructor(instance) {

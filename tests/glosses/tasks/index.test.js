@@ -14,6 +14,13 @@ describe("", () => {
         assert.lengthOf(manager.getTaskNames(), 0);
     });
 
+    it("adone.is.task() should be defined", () => {
+        class MyTask extends task.Task {
+        }
+
+        assert.isTrue(adone.is.task(new MyTask()));
+    });
+
     it("should add only valid task", async () => {
         const InvalidTask1 = null;
         const InvalidTask2 = {};

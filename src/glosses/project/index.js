@@ -2,4 +2,4 @@ adone.lazify({
     task: "./tasks",
     Configuration: "./configuration",
     Manager: "./manager"
-}, exports, require);
+}, adone.asNamespace(exports), require);

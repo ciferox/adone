@@ -1,4 +1,8 @@
-const { is, x, netron: { Definition, Definitions, Investigator } } = adone;
+const {
+    is,
+    x,
+    netron: { Definition, Definitions, Investigator }
+} = adone;
 
 export default class Stub {
     constructor(netron, instance, ci) {
@@ -136,4 +140,4 @@ export default class Stub {
         return obj;
     }
 }
-adone.tag.set(Stub, adone.tag.NETRON_STUB);
+adone.tag.add(Stub, "NETRON_STUB");

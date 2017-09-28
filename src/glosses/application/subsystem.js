@@ -291,4 +291,4 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         this[STAGE_SYMBOL] = STAGE_UNINITIALIZED;
     }
 }
-tag.set(Subsystem, tag.SUBSYSTEM);
+tag.add(Subsystem, "SUBSYSTEM");

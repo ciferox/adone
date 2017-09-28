@@ -1,4 +1,6 @@
-const { GenesisPeer } = adone.netron;
+const {
+    GenesisPeer
+} = adone.netron;
 
 export default class Peer extends GenesisPeer {
     constructor(options = { }) {
@@ -49,4 +51,4 @@ export default class Peer extends GenesisPeer {
         this._socket.unref();
     }
 }
-adone.tag.set(Peer, adone.tag.NETRON_PEER);
+adone.tag.add(Peer, "NETRON_PEER");

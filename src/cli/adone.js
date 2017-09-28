@@ -12,7 +12,7 @@ const {
     text,
     util,
     application,
-    runtime: { term, netron }
+    runtime: { term }
 } = adone;
 
 
@@ -487,11 +487,66 @@ class AdoneCLI extends application.Application {
                     return `${styleName(name)}: ${styleType(type)} = {blue-fg}${value}{/blue-fg}`;
                 };
 
-                term.print(`${styleType("namespace")} ${styleName(namespace)}\n`);
-                for (const [key, value] of util.entries(ns, { all: opts.has("all") })) {
-                    const type = util.typeOf(value);
-                    term.print("    ");
+                const list = [];
+                for (let [key, value] of util.entries(ns, { all: opts.has("all") })) {
+                    const origType = util.typeOf(value);
+                    let type = origType;
+                    
                     switch (type) {
+                        case "function": {
+                            try {
+                                const result = adone.js.parseFunction(value);
+                                type = "";
+                                if (result.isAsync) {
+                                    type += "async ";
+                                }
+                                if (!result.isArrow) {
+                                    type += "function ";
+                                }
+                                
+                                value = result.args;
+                            } catch (err) {                                 
+                                if (value.toString().includes("[native code]")) {
+                                    type = "native function ";
+                                } else {
+                                    type = "function ";
+                                }
+
+                                value = [];
+                            }
+                            break;
+                        }
+                        case "Object": {
+                            if (is.class(value.constructor)) {
+                                type = value.constructor.name;
+                            } else {
+                                type = "object ";
+                            }
+                            break;
+                        }
+                    }
+
+                    list.push({
+                        origType,
+                        type,
+                        key,
+                        value
+                    });
+                }
+
+                list.sort((a, b) => {
+                    if (a.key < b.key) {
+                        return -1;
+                    } else if (a.key > b.key) {
+                        return 1;
+                    }
+                    return 0;
+                });
+
+                term.print(`${styleType("namespace")} ${styleName(namespace)}\n`);
+                for (const { origType, type, key, value } of list) {
+                    term.print("    ");
+                    switch (origType) {
                         case "string": {
                             term.print(`${styleLiteralValue(type, key, value)} {italic}{grey-fg}(${value.length}){/grey-fg}{/italic}`);
                             break;
@@ -501,24 +556,7 @@ class AdoneCLI extends application.Application {
                             term.print(`${styleLiteralValue(type, key, value)}`);
                             break;
                         case "function": {
-                            try {
-                                const result = adone.js.parseFunction(value);
-                                let type = "";
-                                if (result.isAsync) {
-                                    type += "async ";
-                                }
-                                if (!result.isArrow) {
-                                    type += "function ";
-                                }
-
-                                term.print(styleLiteralArgs(type, key, result.args));
-                            } catch (err) {
-                                if (value.toString().includes("[native code]")) {
-                                    term.print(styleLiteralArgs("native function ", key, []));
-                                } else {
-                                    term.print(styleLiteralArgs("function ", key, []));
-                                }
-                            }
+                            term.print(styleLiteralArgs(type, key, value));
                             break;
                         }
                         case "class": {
@@ -530,11 +568,7 @@ class AdoneCLI extends application.Application {
                             break;
                         }
                         case "Object": {
-                            if (is.class(value.constructor)) {
-                                term.print(styleLiteral(value.constructor.name, key));
-                            } else {
-                                term.print(styleLiteral("object", key));
-                            }
+                            styleLiteral(type, key);
                             break;
                         }
                         default:

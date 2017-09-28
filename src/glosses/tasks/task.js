@@ -50,8 +50,7 @@ export class Task {
         return false;
     }
 }
-adone.tag.define("TASK", "task");
-adone.tag.set(Task, adone.tag.TASK);
+adone.tag.add(Task, "TASK");
 
 export class TaskObserver {
     constructor(task) {

@@ -11,6 +11,29 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         return obj;
     };
 
+    const TAG_MARKER = 777;
+    const tag = {
+        add(Class, tagName) {
+            Class.prototype[this[tagName]] = TAG_MARKER;
+        },
+        has(obj, tagName) {
+            return obj != null && typeof obj === "object" && obj[this[tagName]] === TAG_MARKER;
+        },
+        define(tagName, predicate) {
+            this[tagName] = Symbol();
+        },
+
+        // Common tags
+        SUBSYSTEM: Symbol(),
+        APPLICATION: Symbol(),
+        CONFIGURATION: Symbol(),
+        CORE_STREAM: Symbol(),
+        BYTE_ARRAY: Symbol(),
+        LONG: Symbol(),
+        BIGNUMBER: Symbol(),
+        DATETIME: Symbol()
+    };
+
     const adone = Object.create({
         [namespaceSymbol]: true,
         null: Symbol.for("adone::null"),
@@ -103,56 +126,16 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
 
             return obj;
         },
+        definePredicate: (name, tagName) => {
+            Object.defineProperty(adone.is, name, {
+                enumerable: true,
+                value: (obj) => tag.has(obj, tagName)
+            });
+            tag.define(tagName);
+        },
         private: (obj) => obj[privateSymbol],
         asNamespace,
-        tag: {
-            set(Class, tag) {
-                Class.prototype[tag] = 1;
-            },
-            has(obj, tag) {
-                if (obj != null && typeof obj === "object") { // eslint-disable-line
-                    for (; (obj = obj.__proto__) != null;) { // eslint-disable-line
-                        if (obj[tag] === 1) {
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            },
-            define(tag, predicate) {
-                const t = adone.tag[tag] = Symbol();
-                if (typeof (predicate) === "string") { // eslint-disable-line
-                    Object.defineProperty(adone.is, predicate, {
-                        enumerable: true,
-                        value: (obj) => adone.tag.has(obj, t)
-                    });
-                }
-            },
-            SUBSYSTEM: Symbol(),
-            APPLICATION: Symbol(),
-            CONFIGURATION: Symbol(),
-            TRANSFORM: Symbol(),
-            CORE_STREAM: Symbol(),
-            LOGGER: Symbol(),
-            LONG: Symbol(),
-            BIGNUMBER: Symbol(),
-            BYTE_ARRAY: Symbol(),
-            DATETIME: Symbol(),
-            EXDATE: Symbol(),
-
-            GENESIS_NETRON: Symbol(),
-            GENESIS_PEER: Symbol(),
-            NETRON: Symbol(),
-            NETRON_PEER: Symbol(),
-            NETRON_ADAPTER: Symbol(),
-            NETRON_DEFINITION: Symbol(),
-            NETRON_DEFINITIONS: Symbol(),
-            NETRON_REFERENCE: Symbol(),
-            NETRON_INTERFACE: Symbol(),
-            NETRON_STUB: Symbol(),
-            NETRON_REMOTESTUB: Symbol(),
-            NETRON_STREAM: Symbol()
-        },
+        tag,
         bind: (libName) => require(adone.std.path.resolve(__dirname, "./native", libName)),
         getAssetAbsolutePath: (relPath) => adone.std.path.resolve(__dirname, "..", "etc", adone.std.path.normalize(relPath)),
         loadAsset: (relPath) => {

@@ -536,8 +536,7 @@ class CoreStream extends EventEmitter {
         return src;
     }
 }
-
-adone.tag.set(CoreStream, adone.tag.CORE_STREAM);
+adone.tag.add(CoreStream, "CORE_STREAM");
 
 /**
  * Creates a CoreStream instance

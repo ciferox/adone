@@ -1,4 +1,6 @@
-const { is } = adone;
+const {
+    is
+} = adone;
 
 class DestroyableTransform extends adone.std.stream.Transform {
     constructor(opts) {

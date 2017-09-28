@@ -354,4 +354,3 @@ Logger.defaultSinks = [
         ]
     }
 ];
-adone.tag.set(Logger, adone.tag.LOGGER);

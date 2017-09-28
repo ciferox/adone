@@ -6732,4 +6732,4 @@ adone.lazify({
     bgColor: ["./styles.js", (x) => x.bgColor],
     styler: ["./styles.js", (x) => x.styler],
     ui: "./ui"    
-}, exports, require);
+}, adone.asNamespace(exports), require);

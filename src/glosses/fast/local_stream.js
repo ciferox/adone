@@ -106,8 +106,7 @@ export class FastLocalStream extends adone.fast.Stream {
         });
     }
 }
-adone.tag.define("FAST_LOCAL_STREAM", "fastLocalStream");
-adone.tag.set(FastLocalStream, adone.tag.FAST_LOCAL_STREAM);
+adone.tag.add(FastLocalStream, "FAST_LOCAL_STREAM");
 
 export const src = (globs, {
     cwd = process.cwd(),

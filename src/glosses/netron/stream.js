@@ -233,4 +233,4 @@ export default class Stream extends EventEmitter {
         this.emit("accept", remoteStreamId);
     }
 }
-adone.tag.set(Stream, adone.tag.NETRON_STREAM);
+adone.tag.add(Stream, "NETRON_STREAM");

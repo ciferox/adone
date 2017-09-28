@@ -1,6 +1,12 @@
-const { is, x, util, configuration: { Configuration }, event: { AsyncEmitter } } = adone;
-const { TimedoutMap } = adone.collection;
-const { STATUS, ACTION, RemoteStub, GenesisNetron, SequenceId, Stream } = adone.netron;
+const {
+    is,
+    x,
+    util,
+    configuration: { Configuration },
+    event: { AsyncEmitter },
+    collection: { TimedoutMap },
+    netron: { STATUS, ACTION, RemoteStub, GenesisNetron, SequenceId, Stream }
+} = adone;
 
 export default class GenesisPeer extends AsyncEmitter {
     constructor(options = {}) {
@@ -363,4 +369,4 @@ export default class GenesisPeer extends AsyncEmitter {
         return stream;
     }
 }
-adone.tag.set(GenesisPeer, adone.tag.GENESIS_PEER);
+adone.tag.add(GenesisPeer, "GENESIS_PEER");

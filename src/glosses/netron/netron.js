@@ -439,4 +439,4 @@ export default class Netron extends GenesisNetron {
         }
     }
 }
-adone.tag.set(Netron, adone.tag.NETRON);
+adone.tag.add(Netron, "NETRON");

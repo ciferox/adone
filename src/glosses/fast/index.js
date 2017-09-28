@@ -2,6 +2,11 @@ const {
     lazify
 } = adone;
 
+// predicates
+adone.definePredicate("fastStream", "FAST_STREAM");
+adone.definePredicate("fastLocalStream", "FAST_LOCAL_STREAM");
+adone.definePredicate("fastLocalMapStream", "FAST_LOCAL_MAP_STREAM");
+
 const fast = lazify({
     File: "./file",
     Stream: "./stream",
@@ -47,3 +52,4 @@ fast.plugin = lazify({
 }, null, require, {
     mapper: (key, mod) => mod
 });
+

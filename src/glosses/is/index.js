@@ -60,7 +60,7 @@ const undefined_ = (value) => value === void 0;
 const function_ = (fn) => typeof fn === "function"; // eslint-disable-line
 
 // Checks whether given value is class
-export const class_ = (value) => (function_(value) && propertyOwned(value, "prototype") && value.prototype && propertyOwned(value.prototype, "constructor") && value.prototype.constructor.toString().substring(0, 5) === "class"); // eslint-disable-line
+const class_ = (value) => (function_(value) && propertyOwned(value, "prototype") && value.prototype && propertyOwned(value.prototype, "constructor") && value.prototype.constructor.toString().substring(0, 5) === "class"); // eslint-disable-line
 
 export {
     null_ as null,
@@ -81,8 +81,9 @@ export const integer = Number.isInteger; // eslint-disable-line
 // Checks whether given value is a safe integer.
 export const safeInteger = Number.isSafeInteger; // eslint-disable-line
 
-// Checks whether given value is an array.
+
 export const array = Array.isArray; // eslint-disable-line
+export const byteArray = (obj) => adone.tag.has(obj, "BYTE_ARRAY");
 
 // Checks whether given value is a string.
 export const string = (value) => (typeof value === "string"); // eslint-disable-line
@@ -121,6 +122,9 @@ export const numeral = (value) => {
 
     return finite(value);
 };
+
+export const long = (obj) => adone.tag.has(obj, "LONG");
+export const bigNumber = (obj) => adone.tag.has(obj, "BIGNUMBER");
 
 // Checks whether given value is an infinite number, i.e: +∞ or -∞.
 export const infinite = (number) => (number === +1 / 0 || number === -1 / 0);
@@ -643,15 +647,14 @@ export const shallowEqual = (a, b) => {
     return numKeysA === numKeysB;
 };
 
+// streams
+
 export const stream = (value) => (value !== null && typeof value === "object" && function_(value.pipe)); // eslint-disable-line
-
 export const writableStream = (stream) => stream(stream) && typeof stream._writableState === "object"; // eslint-disable-line
-
 export const readableStream = (stream) => stream(stream) && typeof stream._readableState === "object"; // eslint-disable-line
-
 export const duplexStream = (stream) => writableStream(stream) && readableStream(stream);
-
 export const transformStream = (stream) => stream(stream) && typeof stream._transformState === "object"; // eslint-disable-line
+export const coreStream = (obj) => adone.tag.has(obj, "CORE_STREAM");
 
 export const utf8 = (bytes) => {
     let i = 0;
@@ -768,55 +771,15 @@ export const generator = (value) => {
 
 export const uint8Array = (value) => value instanceof Uint8Array;
 
-export const configuration = (obj) => adone.tag.has(obj, adone.tag.CONFIGURATION);
-
-export const long = (obj) => adone.tag.has(obj, adone.tag.LONG);
-
-export const bigNumber = (obj) => adone.tag.has(obj, adone.tag.BIGNUMBER);
-
-export const byteArray = (obj) => adone.tag.has(obj, adone.tag.BYTE_ARRAY);
-
-export const datetime = (obj) => adone.tag.has(obj, adone.tag.DATETIME);
-
-export const transform = (obj) => adone.tag.has(obj, adone.tag.TRANSFORM);
-
-export const subsystem = (obj) => adone.tag.has(obj, adone.tag.SUBSYSTEM);
-
-export const application = (obj) => adone.tag.has(obj, adone.tag.APPLICATION);
-
-export const logger = (obj) => adone.tag.has(obj, adone.tag.LOGGER);
-
-export const coreStream = (obj) => adone.tag.has(obj, adone.tag.CORE_STREAM);
-
-export const genesisNetron = (obj) => adone.tag.has(obj, adone.tag.GENESIS_NETRON);
-
-export const genesisPeer = (obj) => adone.tag.has(obj, adone.tag.GENESIS_PEER);
-
-export const netronAdapter = (obj) => adone.tag.has(obj, adone.tag.NETRON_ADAPTER);
-
-export const netron = (obj) => adone.tag.has(obj, adone.tag.NETRON);
-
-export const netronPeer = (obj) => adone.tag.has(obj, adone.tag.NETRON_PEER);
-
-export const netronDefinition = (obj) => adone.tag.has(obj, adone.tag.NETRON_DEFINITION);
-
-export const netronDefinitions = (obj) => adone.tag.has(obj, adone.tag.NETRON_DEFINITIONS);
-
-export const netronReference = (obj) => adone.tag.has(obj, adone.tag.NETRON_REFERENCE);
-
-export const netronInterface = (obj) => adone.tag.has(obj, adone.tag.NETRON_INTERFACE);
+export const subsystem = (obj) => adone.tag.has(obj, "SUBSYSTEM");
+export const application = (obj) => adone.tag.has(obj, "APPLICATION");
+export const configuration = (obj) => adone.tag.has(obj, "CONFIGURATION");
+export const datetime = (obj) => adone.tag.has(obj, "DATETIME");
 
 export const netronContext = (obj) => adone.netron.Investigator.isContextable(obj);
-
 export const netronIMethod = (ni, name) => (function_(ni[name]) && (ni.$def.$[name].method === true));
-
 export const netronIProperty = (ni, name) => (object(ni[name]) && function_(ni[name].get) && (ni.$def.$[name].method === undefined)); // eslint-disable-line
 
-export const netronStub = (obj) => adone.tag.has(obj, adone.tag.NETRON_STUB);
-
-export const netronRemoteStub = (obj) => adone.tag.has(obj, adone.tag.NETRON_REMOTESTUB);
-
-export const netronStream = (obj) => adone.tag.has(obj, adone.tag.NETRON_STREAM);
 
 export const windows = (platform === "win32");
 export const linux = (platform === "linux");
