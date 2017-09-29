@@ -3,7 +3,6 @@ const {
     x,
     util,
     net,
-    data: { mpak: { serializer } },
     configuration: { Configuration },
     event: { AsyncEmitter },
     netron: {
@@ -14,7 +13,6 @@ const {
         Interface,
         Stub,
         Investigator,
-        Definition,
         Definitions,
         SequenceId
     }
@@ -58,46 +56,6 @@ class Flags {
         return val;
     }
 }
-
-// Netron specific encoders/decoders
-serializer.register(109, Definition, (obj, buf) => {
-    buf.writeUInt32BE(obj.id);
-    buf.writeUInt32BE(obj.parentId);
-    serializer.encode(obj.name, buf);
-    serializer.encode(obj.description, buf);
-    serializer.encode(obj.$, buf);
-    serializer.encode(obj.twin, buf);
-}, (buf) => {
-    const def = new Definition();
-    def.id = buf.readUInt32BE();
-    def.parentId = buf.readUInt32BE();
-    def.name = serializer.decode(buf);
-    def.description = serializer.decode(buf);
-    def.$ = serializer.decode(buf);
-    def.twin = serializer.decode(buf);
-    return def;
-}).register(108, Reference, (obj, buf) => {
-    buf.writeUInt32BE(obj.defId);
-}, (buf) => {
-    const ref = new Reference();
-    ref.defId = buf.readUInt32BE();
-    return ref;
-}).register(107, Definitions, (obj, buf) => {
-    const len = obj.length;
-    buf.writeUInt32BE(len);
-    for (let i = 0; i < obj.length; i++) {
-        const def = obj.get(i);
-        serializer.encode(def, buf);
-    }
-}, (buf) => {
-    const defs = new Definitions();
-    const len = buf.readUInt32BE();
-    for (let i = 0; i < len; i++) {
-        const def = serializer.decode(buf);
-        defs.push(def);
-    }
-    return defs;
-});
 
 export default class GenesisNetron extends AsyncEmitter {
     constructor(options, uid) {

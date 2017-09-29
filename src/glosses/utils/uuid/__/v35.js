@@ -1,6 +1,11 @@
-const { is, util: { uuid } } = adone;
+const {
+    is,
+    util: { uuid }
+} = adone;
 
-const { util } = adone.private(uuid);
+const {
+    util
+} = adone.private(uuid);
 
 const uuidToBytes = (uuid) => {
     // Note: We assume we're being passed a valid uuid string

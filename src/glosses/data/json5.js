@@ -1,7 +1,9 @@
 // This file is based directly off of Douglas Crockford's json_parse.js:
 // https://github.com/douglascrockford/JSON-js/blob/master/json_parse.js
 
-const { is } = adone;
+const {
+    is
+} = adone;
 
 let at; // The index of the current character
 let lineNumber; // The current line number
@@ -717,4 +719,4 @@ adone.definePrivate({
     isWordChar,
     isWordStart,
     isWord
-}, exports);
+}, adone.asNamespace(exports));

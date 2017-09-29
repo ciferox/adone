@@ -2,10 +2,11 @@ const {
     lazify
 } = adone;
 
-// predicates
-adone.definePredicate("fastStream", "FAST_STREAM");
-adone.definePredicate("fastLocalStream", "FAST_LOCAL_STREAM");
-adone.definePredicate("fastLocalMapStream", "FAST_LOCAL_MAP_STREAM");
+adone.definePredicates({
+    fastStream: "FAST_STREAM",
+    fastLocalStream: "FAST_LOCAL_STREAM",
+    fastLocalMapStream: "FAST_LOCAL_MAP_STREAM"
+});
 
 const fast = lazify({
     File: "./file",

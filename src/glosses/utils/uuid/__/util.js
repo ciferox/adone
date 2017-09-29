@@ -3,8 +3,6 @@ const { std: { crypto } } = adone;
 export const rnd16 = () => crypto.randomBytes(16);
 rnd16();
 
-export const seedBytes = rnd16();
-
 /**
  * Convert array of 16 byte values to UUID string format of the form:
  * XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX

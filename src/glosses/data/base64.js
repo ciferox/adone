@@ -1,4 +1,9 @@
-const { is, x } = adone;
+const {
+    is,
+    x
+} = adone;
+
+adone.asNamespace(exports);
 
 const intToCharMap = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".split("");
 

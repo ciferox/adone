@@ -3,7 +3,7 @@ adone.lazify({
     v3: "./v3",
     v4: "./v4",
     v5: "./v5"
-}, exports, require);
+}, adone.asNamespace(exports), require);
 
 adone.lazifyPrivate({
     util: "./__/util",

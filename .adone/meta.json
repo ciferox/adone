@@ -285,7 +285,12 @@
                         "util": {
                             "description": "Different net utilites",
                             "index": "glosses/net/utils",
-                            "src": "glosses/net/utils.js"
+                            "src": "glosses/net/utils.js",
+                            "namespace": {
+                                "description": "Different UUID implementations",
+                                "index": "glosses/utils/uuid/index",
+                                "src": "glosses/utils/uuid/**/*"
+                            }
                         }
                     }
                 },

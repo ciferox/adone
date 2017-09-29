@@ -3,8 +3,6 @@ const {
     collection: { ByteArray }
 } = adone;
 
-// Encoder
-
 export class Encoder {
     constructor(encodingTypes) {
         this._encodingTypes = encodingTypes;
@@ -175,8 +173,6 @@ export class Encoder {
         buf.write(x, undefined, len);
     }
 }
-
-// Decoder
 
 const getSize = (first) => {
     switch (first) {
@@ -651,7 +647,7 @@ adone.lazify({
 
         return s;
     }
-}, exports, require);
+}, adone.asNamespace(exports), require);
 
 export const encode = (obj) => adone.data.mpak.serializer.encode(obj).flip().toBuffer();
 export const decode = (buf) => adone.data.mpak.serializer.decode(buf);

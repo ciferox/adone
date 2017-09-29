@@ -26,7 +26,7 @@ const bson = adone.lazify({
             super(types);
         }
     }
-}, exports, require);
+}, adone.asNamespace(exports), require);
 
 export const c = {
     BSON_INT32_MIN: -0x80000000,

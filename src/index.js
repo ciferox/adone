@@ -133,6 +133,12 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             });
             tag.define(tagName);
         },
+        definePredicates: (obj) => {
+            const entries = Object.entries(obj);
+            for (const [name, tagName] of entries) {
+                adone.definePredicate(name, tagName);
+            }
+        },
         private: (obj) => obj[privateSymbol],
         asNamespace,
         tag,

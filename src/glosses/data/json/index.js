@@ -7,4 +7,4 @@ adone.lazify({
     encodeStable: "./stable",
     encodeSafe: ["./safe", (mod) => mod.stringify],
     decodeSafe: ["./safe", (mod) => mod.parse]
-}, exports, require);
+}, adone.asNamespace(exports), require);

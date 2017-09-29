@@ -11,7 +11,7 @@ const yaml = adone.lazify({
     dump: () => yaml.dumper.dump,
     safeDump: () => yaml.dumper.safeDump,
     Exception: "./exception"
-}, exports, require);
+}, adone.asNamespace(exports), require);
 
 export const encode = (object, options) => Buffer.from(yaml.safeDump(object, options));
 export const decode = (string, options) => yaml.safeLoad(string, options);

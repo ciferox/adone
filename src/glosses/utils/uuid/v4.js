@@ -1,6 +1,11 @@
-const { is, util: { uuid } } = adone;
+const {
+    is,
+    util: { uuid }
+} = adone;
 
-const { util } = adone.private(uuid);
+const {
+    util
+} = adone.private(uuid);
 
 const v4 = (options, buf, offset) => {
     const i = buf && offset || 0;

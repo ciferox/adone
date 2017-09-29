@@ -1,4 +1,6 @@
-const { util: { uuid } } = adone;
+const {
+    util: { uuid }
+} = adone;
 
 const __ = adone.private(uuid);
 
