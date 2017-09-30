@@ -3,7 +3,6 @@ const {
     x,
     util,
     net,
-    configuration: { Configuration },
     event: { AsyncEmitter },
     netron: {
         DEFAULT_PORT,
@@ -14,56 +13,17 @@ const {
         Stub,
         Investigator,
         Definitions,
-        SequenceId
+        SequenceId,
+        Packet
     }
 } = adone;
-
-const MAGIC_FLAG = 0x80000000 >>> 0;
-
-class Flags {
-    constructor(value) {
-        this.value = value;
-    }
-
-    set(bit) {
-        this.value |= (1 << bit);
-    }
-
-    get(bit) {
-        return (this.value >> bit) & 1;
-    }
-
-    write(val, bits, offset) {
-        const maxOffset = offset + bits;
-        if (val & 1) {
-            this.value |= (1 << offset);
-        }
-        for (let i = offset + 1; i < maxOffset; ++i) {
-            if (val & (1 << (i - offset))) {
-                this.value |= (1 << i);
-            }
-        }
-    }
-
-    read(bits, offset) {
-        let val = 0 >>> 0;
-        const maxOffset = offset + bits;
-        for (let i = offset; i < maxOffset; ++i) {
-            if (this.get(i)) {
-                val |= (1 << (i - offset));
-            }
-        }
-        return val;
-    }
-}
 
 export default class GenesisNetron extends AsyncEmitter {
     constructor(options, uid) {
         super();
 
         this.uid = is.nil(uid) ? util.uuid.v4() : uid;
-        this.options = new Configuration();
-        this.options.assign({
+        this.options = Object.assign({
             protocol: "netron:",
             defaultPort: DEFAULT_PORT,
             reconnects: 3,
@@ -79,11 +39,6 @@ export default class GenesisNetron extends AsyncEmitter {
             }
         }, options);
 
-        const sn = this.statusNames = new Map();
-        sn.set(STATUS.OFFLINE, "OFFLINE");
-        sn.set(STATUS.CONNECTING, "CONNECTING");
-        sn.set(STATUS.HANDSHAKING, "HANDSHAKING");
-        sn.set(STATUS.ONLINE, "ONLINE");
         this.piStatuses = [STATUS.HANDSHAKING, STATUS.ONLINE];
 
         this._svrNetronAddrs = new Map();
@@ -96,8 +51,8 @@ export default class GenesisNetron extends AsyncEmitter {
         this._stubs = new Map();
         this._nuidStubs = new Map();
         this._interfaces = new Map();
-        this._localTwins = new Map();
         this.uniqueDefId = new SequenceId();
+        this._localTwins = new Map();
 
         this.setMaxListeners(Infinity);
     }
@@ -118,7 +73,7 @@ export default class GenesisNetron extends AsyncEmitter {
                     this._svrNetronAddrs.delete(addr);
                     await this._peerDisconnected(peer);
                     if (is.null(hsStatus)) {
-                        reject(new x.Connect(`peer ${addr} refused connection`));
+                        reject(new x.Connect(`Peer ${addr} refused connection`));
                     }
                 });
                 peer._setStatus(STATUS.CONNECTING);
@@ -126,9 +81,9 @@ export default class GenesisNetron extends AsyncEmitter {
                 this._svrNetronAddrs.set(addr, peer);
                 peer._setStatus(STATUS.HANDSHAKING);
                 this._emitPeerEvent("peer connect", peer);
-                await this.send(peer, 1, peer.streamId.next(), 1, ACTION.GET, this.onSendHandshake(peer), async (packet) => {
+                await this.send(peer, 1, peer.streamId.next(), 1, ACTION.GET, this.onSendHandshake(peer), async (payload) => {
                     try {
-                        const data = packet[GenesisNetron._DATA];
+                        const data = payload.data;
                         if (!is.plainObject(data)) {
                             throw new adone.x.NotValid(`Not valid packet: ${typeof(data)}`);
                         }
@@ -220,7 +175,7 @@ export default class GenesisNetron extends AsyncEmitter {
             ctxId = instance.__proto__.constructor.name;
         }
         if (this.contexts.has(ctxId)) {
-            throw new x.Exists(`context '${ctxId}' already attached`);
+            throw new x.Exists(`Context '${ctxId}' already attached`);
         }
 
         return this._attachContext(ctxId, new Stub(this, instance, ci));
@@ -272,7 +227,7 @@ export default class GenesisNetron extends AsyncEmitter {
     async attachContextRemote(uid, instance, ctxId = null) {
         const peer = this.getPeer(uid);
         if (!peer.isSuper) {
-            throw new x.Unknown(`peer '${uid}' is not a super-netron`);
+            throw new x.Unknown(`Peer '${uid}' is not a super-netron`);
         }
         const ci = this._checkContext(instance);
         if (is.null(ctxId)) {
@@ -280,7 +235,7 @@ export default class GenesisNetron extends AsyncEmitter {
         }
         const defId = peer._attachedContexts.get(ctxId);
         if (!is.undefined(defId)) {
-            throw new x.Exists(`context '${ctxId}' already attached on the peer '${uid}' side`);
+            throw new x.Exists(`Context '${ctxId}' already attached on the peer '${uid}' side`);
         }
 
         const stub = new Stub(this, instance, ci);
@@ -295,11 +250,11 @@ export default class GenesisNetron extends AsyncEmitter {
     async detachContextRemote(uid, ctxId) {
         const peer = this.getPeer(uid);
         if (!peer.isSuper) {
-            throw new x.Unknown(`peer '${uid}' is not a super-netron`);
+            throw new x.Unknown(`Peer '${uid}' is not a super-netron`);
         }
         const defId = peer._attachedContexts.get(ctxId);
         if (is.undefined(defId)) {
-            throw new x.NotExists(`context '${ctxId}' not attached on the peer '${uid}' code`);
+            throw new x.NotExists(`Context '${ctxId}' not attached on the peer '${uid}' code`);
         }
         this._stubs.delete(defId);
         peer._attachedContexts.delete(ctxId);
@@ -329,24 +284,16 @@ export default class GenesisNetron extends AsyncEmitter {
                 peer._setAwaiter(streamId, awaiter);
             }
 
-            const flags = new Flags(MAGIC_FLAG);
-            if (impulse === 1) {
-                flags.set(GenesisNetron.FLAG_IMPULSE);
-            }
-            flags.write(status, 8, GenesisNetron.FLAG_STATUS);
-            flags.write(action, 8, GenesisNetron.FLAG_ACTION);
-
-            return peer.write([streamId, packetId, flags.value, data]);
+            return peer.write(Packet.create(packetId, streamId, impulse, action, status, data).raw);
         }
-        return Promise.reject(new x.NetronIllegalState(`cannot send data (peer status is ${this.getStatusName(status)})`));
-
+        return Promise.reject(new x.NetronIllegalState(`Cannot send data (peer status is ${this.getStatusName(status)})`));
     }
 
     set(uid, defId, name, data) {
         if (is.nil(uid)) {
             const stub = this._stubs.get(defId);
             if (is.undefined(stub)) {
-                return Promise.reject(new x.NotExists(`context with definition id '${defId}' not exists`));
+                return Promise.reject(new x.NotExists(`Context with definition id '${defId}' not exists`));
             }
             return stub.set(name, data);
         }
@@ -358,7 +305,7 @@ export default class GenesisNetron extends AsyncEmitter {
         if (is.nil(uid)) {
             const stub = this._stubs.get(defId);
             if (is.undefined(stub)) {
-                return Promise.reject(new x.NotExists(`context with definition id '${defId}' not exists`));
+                return Promise.reject(new x.NotExists(`Context with definition id '${defId}' not exists`));
             }
             return new Promise((resolve, reject) => {
                 stub.get(name, defaultData).catch(reject).then((result) => {
@@ -487,12 +434,6 @@ export default class GenesisNetron extends AsyncEmitter {
                 }
             }
         }
-
-    }
-
-    getStatusName(status) {
-        const s = this.statusNames.get(status);
-        return is.undefined(s) ? "UNKNOWN" : s;
     }
 
     onSendHandshake(/*peer*/) {
@@ -577,32 +518,35 @@ export default class GenesisNetron extends AsyncEmitter {
     //     }
     // }
 
-    customProcessPacket(/*peer, flags, action, status, packet*/) {
+    customProcessPacket(peer, packet) {
     }
 
-    async _processPacket(peer, packet) {
-        if (!is.array(packet) || packet.length !== 4) {
-            return adone.error("bad packet");
+    async _processPacket(peer, rawPacket) {
+        let packet;
+        try {
+            packet = Packet.from(rawPacket);
+        } catch (err) {
+            return adone.error(err.message);
         }
-        const flags = new Flags(packet[GenesisNetron._FLAGS] >>> 0);
-        const action = flags.read(8, GenesisNetron.FLAG_ACTION);
-        const status = flags.read(8, GenesisNetron.FLAG_STATUS);
+
+        const action = packet.getAction();
+        const status = packet.getStatus();
 
         switch (action) {
             case ACTION.SET: {
                 switch (status) {
                     case STATUS.HANDSHAKING: {
-                        if (!flags.get(GenesisNetron.FLAG_IMPULSE)) {
-                            const awaiter = peer._removeAwaiter(packet[GenesisNetron._STREAM_ID]);
+                        if (!packet.getImpulse()) {
+                            const awaiter = peer._removeAwaiter(packet.streamId);
                             !is.undefined(awaiter) && awaiter(packet);
                         } else {
-                            adone.error("illegal `impulse` flag (1) during handshake response");
+                            adone.error("Illegal `impulse` flag (1) during handshake response");
                         }
                         return;
                     }
                     case STATUS.ONLINE: {
-                        if (flags.get(GenesisNetron.FLAG_IMPULSE)) {
-                            const data = packet[GenesisNetron._DATA];
+                        if (packet.getImpulse()) {
+                            const data = packet.data;
                             const defId = data[0];
                             const name = data[1];
                             const stub = this._stubs.get(defId);
@@ -614,8 +558,8 @@ export default class GenesisNetron extends AsyncEmitter {
                                 }
                             }
                         } else { // reply
-                            const awaiter = peer._removeAwaiter(packet[GenesisNetron._STREAM_ID]);
-                            !is.undefined(awaiter) && awaiter(packet[GenesisNetron._DATA]);
+                            const awaiter = peer._removeAwaiter(packet.streamId);
+                            !is.undefined(awaiter) && awaiter(packet.data);
                         }
                         return;
                     }
@@ -628,31 +572,31 @@ export default class GenesisNetron extends AsyncEmitter {
             case ACTION.GET: {
                 switch (status) {
                     case STATUS.HANDSHAKING: {
-                        if (!flags.get(GenesisNetron.FLAG_IMPULSE)) {
+                        if (!packet.getImpulse()) {
                             peer.disconnect();
                             adone.error("Flag `impulse` cannot be zero during request of handshake");
                         } else {
-                            await this.customProcessPacket(peer, flags, action, status, packet);
+                            await this.customProcessPacket(peer, packet);
                         }
                         return;
                     }
                     case STATUS.ONLINE: {
-                        const data = packet[GenesisNetron._DATA];
+                        const data = packet.data;
                         const defId = data[0];
                         const name = data[1];
                         const stub = this._stubs.get(defId);
 
                         try {
                             if (is.undefined(stub)) {
-                                return this.send(peer, 0, packet[GenesisNetron._STREAM_ID], 1, ACTION.SET, [1, new x.NotExists("Context not exists")]);
+                                return this.send(peer, 0, packet.streamId, 1, ACTION.SET, [1, new x.NotExists("Context not exists")]);
                             }
                             const result = await stub.get(name, data[2], peer);
-                            await this.send(peer, 0, packet[GenesisNetron._STREAM_ID], 1, ACTION.SET, [0, result]);
+                            await this.send(peer, 0, packet.streamId, 1, ACTION.SET, [0, result]);
                         } catch (err) {
                             adone.error(err);
                             if (err.name !== "NetronIllegalState") {
                                 try {
-                                    await this.send(peer, 0, packet[GenesisNetron._STREAM_ID], 1, ACTION.SET, [1, err]);
+                                    await this.send(peer, 0, packet.streamId, 1, ACTION.SET, [1, err]);
                                 } catch (err) {
                                     adone.error(err);
                                 }
@@ -666,7 +610,7 @@ export default class GenesisNetron extends AsyncEmitter {
         }
 
         if (status !== STATUS.ONLINE) {
-            const result = await this.customProcessPacket(peer, flags, action, status, packet);
+            const result = await this.customProcessPacket(peer, packet);
             if (!result) {
                 adone.error(`${peer.uid} attempts '${action}' action with status ${this.getStatusName(status)}`);
             }
@@ -677,43 +621,43 @@ export default class GenesisNetron extends AsyncEmitter {
 
         switch (action) {
             case ACTION.PING: {
-                if (flags.get(GenesisNetron.FLAG_IMPULSE)) {
+                if (packet.getImpulse()) {
                     try {
-                        await this.send(peer, 0, packet[GenesisNetron._STREAM_ID], 1, ACTION.PING, null);
+                        await this.send(peer, 0, packet.streamId, 1, ACTION.PING, null);
                     } catch (err) {
                         adone.error(err);
                     }
                 } else { // reply
-                    const awaiter = peer._removeAwaiter(packet[GenesisNetron._STREAM_ID]);
-                    !is.undefined(awaiter) && awaiter(packet[GenesisNetron._DATA]);
+                    const awaiter = peer._removeAwaiter(packet.streamId);
+                    !is.undefined(awaiter) && awaiter(packet.data);
                 }
                 break;
             }
             case ACTION.CONTEXT_ATTACH: {
-                if (flags.get(GenesisNetron.FLAG_IMPULSE)) {
-                    if ((await this.customProcessPacket(peer, flags, action, status, packet)) === false) {
-                        return this.send(peer, 0, packet[GenesisNetron._STREAM_ID], 1, ACTION.SET, [1, new x.NotImplemented("This feature is not implemented")]);
+                if (packet.getImpulse()) {
+                    if ((await this.customProcessPacket(peer, packet)) === false) {
+                        return this.send(peer, 0, packet.streamId, 1, ACTION.SET, [1, new x.NotImplemented("This feature is not implemented")]);
                     }
                 } else { // reply
-                    const awaiter = peer._removeAwaiter(packet[GenesisNetron._STREAM_ID]);
-                    !is.undefined(awaiter) && awaiter(packet[GenesisNetron._DATA]);
+                    const awaiter = peer._removeAwaiter(packet.streamId);
+                    !is.undefined(awaiter) && awaiter(packet.data);
                 }
                 break;
             }
             case ACTION.CONTEXT_DETACH: {
-                if (flags.get(GenesisNetron.FLAG_IMPULSE)) {
-                    if ((await this.customProcessPacket(peer, flags, action, status, packet)) === false) {
-                        return this.send(peer, 0, packet[GenesisNetron._STREAM_ID], 1, ACTION.SET, [1, new x.NotImplemented("This feature is not implemented")]);
+                if (packet.getImpulse()) {
+                    if ((await this.customProcessPacket(peer, packet)) === false) {
+                        return this.send(peer, 0, packet.streamId, 1, ACTION.SET, [1, new x.NotImplemented("This feature is not implemented")]);
                     }
                 } else { // reply
-                    const awaiter = peer._removeAwaiter(packet[GenesisNetron._STREAM_ID]);
-                    !is.undefined(awaiter) && awaiter(packet[GenesisNetron._DATA]);
+                    const awaiter = peer._removeAwaiter(packet.streamId);
+                    !is.undefined(awaiter) && awaiter(packet.data);
                 }
                 break;
             }
             case ACTION.EVENT_ON: {
-                if (flags.get(GenesisNetron.FLAG_IMPULSE)) {
-                    const eventName = packet[GenesisNetron._DATA];
+                if (packet.getImpulse()) {
+                    const eventName = packet.data;
                     const fn = (...args) => {
                         if (this.options.isSuper) {
                             if (!is.undefined(peer._ownDefIds)) {
@@ -737,19 +681,19 @@ export default class GenesisNetron extends AsyncEmitter {
                     }
                     this.on(eventName, fn);
                     try {
-                        await this.send(peer, 0, packet[GenesisNetron._STREAM_ID], 1, ACTION.EVENT_ON, eventName);
+                        await this.send(peer, 0, packet.streamId, 1, ACTION.EVENT_ON, eventName);
                     } catch (err) {
                         adone.error(err);
                     }
                 } else { // reply
-                    const awaiter = peer._removeAwaiter(packet[GenesisNetron._STREAM_ID]);
-                    !is.undefined(awaiter) && awaiter(packet[GenesisNetron._DATA]);
+                    const awaiter = peer._removeAwaiter(packet.streamId);
+                    !is.undefined(awaiter) && awaiter(packet.data);
                 }
                 break;
             }
             case ACTION.EVENT_OFF: {
-                if (flags.get(GenesisNetron.FLAG_IMPULSE)) {
-                    const data = packet[GenesisNetron._DATA];
+                if (packet.getImpulse()) {
+                    const data = packet.data;
                     const eventName = data[0];
                     const listeners = this._remoteListeners.get(peer.uid);
                     if (!is.undefined(listeners)) {
@@ -763,19 +707,19 @@ export default class GenesisNetron extends AsyncEmitter {
                         }
                     }
                     try {
-                        await this.send(peer, 0, packet[GenesisNetron._STREAM_ID], 1, ACTION.EVENT_OFF, eventName);
+                        await this.send(peer, 0, packet.streamId, 1, ACTION.EVENT_OFF, eventName);
                     } catch (err) {
                         adone.error(err);
                     }
                 } else { // reply
-                    const awaiter = peer._removeAwaiter(packet[GenesisNetron._STREAM_ID]);
-                    !is.undefined(awaiter) && awaiter(packet[GenesisNetron._DATA]);
+                    const awaiter = peer._removeAwaiter(packet.streamId);
+                    !is.undefined(awaiter) && awaiter(packet.data);
                 }
                 break;
             }
             case ACTION.EVENT_EMIT: {
-                if (flags.get(GenesisNetron.FLAG_IMPULSE)) {
-                    const args = packet[GenesisNetron._DATA];
+                if (packet.getImpulse()) {
+                    const args = packet.data;
                     const eventName = args.shift();
                     args.unshift(peer);
                     const events = this._remoteEvents.get(peer.uid);
@@ -788,7 +732,7 @@ export default class GenesisNetron extends AsyncEmitter {
                             }
                             try {
                                 await Promise.all(promises).then(() => {
-                                    return this.send(peer, 0, packet[GenesisNetron._STREAM_ID], 1, ACTION.EVENT_EMIT);
+                                    return this.send(peer, 0, packet.streamId, 1, ACTION.EVENT_EMIT);
                                 });
                             } catch (err) {
                                 adone.error(err);
@@ -796,19 +740,19 @@ export default class GenesisNetron extends AsyncEmitter {
                         }
                     }
                 } else { // reply
-                    const awaiter = peer._removeAwaiter(packet[GenesisNetron._STREAM_ID]);
-                    !is.undefined(awaiter) && awaiter(packet[GenesisNetron._DATA]);
+                    const awaiter = peer._removeAwaiter(packet.streamId);
+                    !is.undefined(awaiter) && awaiter(packet.data);
                 }
                 break;
             }
             case ACTION.STREAM_REQUEST: {
-                if (flags.get(GenesisNetron.FLAG_IMPULSE)) {
+                if (packet.getImpulse()) {
                     peer._streamRequested(packet);
                 }
                 break;
             }
             case ACTION.STREAM_ACCEPT: {
-                if (flags.get(GenesisNetron.FLAG_IMPULSE)) {
+                if (packet.getImpulse()) {
                     peer._streamAccepted(packet);
                 }
                 break;
@@ -830,13 +774,13 @@ export default class GenesisNetron extends AsyncEmitter {
                 break;
             }
             default:
-                await this.customProcessPacket(peer, flags, action, status, packet);
+                await this.customProcessPacket(peer, packet);
                 break;
         }
     }
 
     _createPeer(socket, gate, peerType) {
-        throw new x.NotImplemented("method _createPeer() should be implemented");
+        throw new x.NotImplemented("Method _createPeer() should be implemented");
     }
 
     _createInterface(def, uid = null) {
@@ -1048,12 +992,3 @@ export default class GenesisNetron extends AsyncEmitter {
     }
 }
 adone.tag.add(GenesisNetron, "GENESIS_NETRON");
-
-GenesisNetron._STREAM_ID = 0; // Идентификатор потока.
-GenesisNetron._PACKET_ID = 1; // Идентификатор/номер пакета внутри потока.
-GenesisNetron._FLAGS = 2; // 32 бита под различные флаги и состояния.
-GenesisNetron._DATA = 3; // Данные.
-
-GenesisNetron.FLAG_IMPULSE = 30 >>> 0;
-GenesisNetron.FLAG_STATUS = 8 >>> 0;
-GenesisNetron.FLAG_ACTION = 0 >>> 0;

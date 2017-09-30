@@ -17,14 +17,14 @@ export default class Netron extends GenesisNetron {
         }
     }
 
-    async customProcessPacket(peer, flags, action, status, packet) {
-        switch (action) {
+    async customProcessPacket(peer, packet) {
+        switch (packet.getAction()) {
             case ACTION.CONTEXT_ATTACH: {
-                switch (status) {
+                switch (packet.getStatus()) {
                     case STATUS.ONLINE: {
-                        if (!flags.get(GenesisNetron.FLAG_IMPULSE)) {
-                            const awaiter = peer._removeAwaiter(packet[GenesisNetron._STREAM_ID]);
-                            !is.undefined(awaiter) && awaiter(packet[GenesisNetron._DATA]);
+                        if (!packet.getImpulse()) {
+                            const awaiter = peer._removeAwaiter(packet.streamId);
+                            !is.undefined(awaiter) && awaiter(packet.data);
                         }
                         break;
                     }
@@ -35,11 +35,11 @@ export default class Netron extends GenesisNetron {
                 break;
             }
             case ACTION.CONTEXT_DETACH: {
-                switch (status) {
+                switch (packet.getStatus()) {
                     case STATUS.ONLINE: {
-                        if (!flags.get(GenesisNetron.FLAG_IMPULSE)) {
-                            const awaiter = peer._removeAwaiter(packet[GenesisNetron._STREAM_ID]);
-                            !is.undefined(awaiter) && awaiter(packet[GenesisNetron._DATA]);
+                        if (!packet.getImpulse()) {
+                            const awaiter = peer._removeAwaiter(packet.streamId);
+                            !is.undefined(awaiter) && awaiter(packet.data);
                         }
                         break;
                     }

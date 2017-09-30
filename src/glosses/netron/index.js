@@ -214,6 +214,7 @@ lazify({
     Investigator: "./investigator",
     GenesisNetron: "./genesis_netron",
     GenesisPeer: "./genesis_peer",
+    Packet: "./packet",
     Netron: "./netron",
     Peer: "./peer",
     Stub: "./stub",

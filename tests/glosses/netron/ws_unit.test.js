@@ -1314,7 +1314,7 @@ describe("netron", "websocket", "unit tests", () => {
                 it("simple authorization", async () => {
                     class ServerNetron extends Netron {
                         async onConfirmPeer(peer, packet) {
-                            const data = packet[adone.netron.GenesisNetron._DATA];
+                            const data = packet.data;
                             if (data.secret === "right secret") {
                                 return true;
                             }
@@ -1362,10 +1362,10 @@ describe("netron", "websocket", "unit tests", () => {
                     const sendData = "hello";
                     const p = new Promise((resolve) => {
                         class ServerNetron extends Netron {
-                            customProcessPacket(peer, flags, action, status, packet) {
-                                super.customProcessPacket(peer, flags, action, status, packet).then((res) => {
+                            customProcessPacket(peer, packet) {
+                                super.customProcessPacket(peer, packet).then((res) => {
                                     if (!res) {
-                                        resolve(packet[adone.netron.GenesisNetron._DATA]);
+                                        resolve(packet.data);
                                     }
                                 });
                             }

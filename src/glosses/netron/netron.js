@@ -106,7 +106,7 @@ export default class Netron extends GenesisNetron {
         super({
             isSuper: false
         }, uid);
-        this.options.assign(
+        Object.assign(this.options,
             {
                 refGates: true,
                 refPeers: true
@@ -207,7 +207,7 @@ export default class Netron extends GenesisNetron {
             } else if (is.ip6(peerAddress)) {
                 peerIpBn = new net.address.IP6(peerAddress).toBigNumber();
             } else {
-                throw new x.Unknown(`unknown address: ${peerAddress}`);
+                throw new x.Unknown(`Unknown address: ${peerAddress}`);
             }
             if (gate.applyPolicy(peerIpBn, gate.ips)) {
                 return peer.disconnect();
@@ -258,11 +258,11 @@ export default class Netron extends GenesisNetron {
     }
 
     async _onReceiveHandshake(peer, packet) {
-        const data = packet[GenesisNetron._DATA];
+        const data = packet.data;
 
         const uid = data.uid;
         if (this.nuidPeerMap.has(uid)) {
-            throw new x.Exists(`peer '${uid}' already connected`);
+            throw new x.Exists(`Peer '${uid}' already connected`);
         }
 
         const isConfirmed = await this.onConfirmPeer(peer, packet);
@@ -270,18 +270,19 @@ export default class Netron extends GenesisNetron {
             this._onReceiveInitial(peer, data);
             this._removePeerFromNonauthList(peer);
         } else {
-            throw new x.InvalidAccess(`access denied for peer '${peer.uid}' - peer not confirmed`);
+            throw new x.InvalidAccess(`Access denied for peer '${peer.uid}' - peer not confirmed`);
         }
     }
 
-    async customProcessPacket(peer, flags, action, status, packet) {
-        switch (action) {
+    async customProcessPacket(peer, packet) {
+        const status = packet.getStatus();
+        switch (packet.getAction()) {
             case ACTION.GET: {
                 switch (status) {
                     case STATUS.HANDSHAKING: {
                         try {
                             await this._onReceiveHandshake(peer, packet);
-                            const p = this.send(peer, 0, packet[GenesisNetron._STREAM_ID], 1, ACTION.SET, this.onSendHandshake(peer));
+                            const p = this.send(peer, 0, packet.streamId, 1, ACTION.SET, this.onSendHandshake(peer));
                             peer._setStatus(STATUS.ONLINE);
                             await p;
                             this._emitPeerEvent("peer online", peer);
@@ -297,9 +298,9 @@ export default class Netron extends GenesisNetron {
             case ACTION.CONTEXT_ATTACH: {
                 switch (status) {
                     case STATUS.ONLINE: {
-                        if (flags.get(GenesisNetron.FLAG_IMPULSE)) {
+                        if (packet.getImpulse()) {
                             try {
-                                const ctxData = packet[GenesisNetron._DATA];
+                                const ctxData = packet.data;
                                 const iCtx = this._createInterface(ctxData.def, peer.uid);
                                 const stub = new RemoteStub(this, iCtx);
                                 const defId = this._attachContext(ctxData.id, stub);
@@ -307,7 +308,7 @@ export default class Netron extends GenesisNetron {
                                 ctxData.def.$remote = true;
                                 ctxData.def.$proxyDef = stub.definition;
                                 peer._updateDefinitions({ "": ctxData.def });
-                                await this.send(peer, 0, packet[GenesisNetron._STREAM_ID], 1, ACTION.CONTEXT_ATTACH, defId);
+                                await this.send(peer, 0, packet.streamId, 1, ACTION.CONTEXT_ATTACH, defId);
                             } catch (err) {
                                 adone.error(err);
                             }
@@ -323,8 +324,8 @@ export default class Netron extends GenesisNetron {
             case ACTION.CONTEXT_DETACH: {
                 switch (status) {
                     case STATUS.ONLINE: {
-                        if (flags.get(GenesisNetron.FLAG_IMPULSE)) {
-                            const ctxId = packet[GenesisNetron._DATA];
+                        if (packet.getImpulse()) {
+                            const ctxId = packet.data;
                             try {
                                 const defId = this.detachContext(ctxId/*, peer*/);
                                 peer._defs.delete(defId);
@@ -332,20 +333,20 @@ export default class Netron extends GenesisNetron {
                                 if (index >= 0) {
                                     peer._ownDefIds.splice(index, 1);
                                 }
-                                await this.send(peer, 0, packet[GenesisNetron._STREAM_ID], 1, ACTION.CONTEXT_DETACH);
+                                await this.send(peer, 0, packet.streamId, 1, ACTION.CONTEXT_DETACH);
                             } catch (err) {
                                 adone.error(err);
                                 if (err.name !== "IllegalState") {
                                     try {
-                                        await this.send(peer, 0, packet[GenesisNetron._STREAM_ID], 1, ACTION.CONTEXT_DETACH, err);
+                                        await this.send(peer, 0, packet.streamId, 1, ACTION.CONTEXT_DETACH, err);
                                     } catch (err) {
                                         adone.error(err);
                                     }
                                 }
                             }
                         } else { // reply
-                            const awaiter = peer._removeAwaiter(packet[GenesisNetron._STREAM_ID]);
-                            !is.undefined(awaiter) && awaiter(packet[GenesisNetron._DATA]);
+                            const awaiter = peer._removeAwaiter(packet.streamId);
+                            !is.undefined(awaiter) && awaiter(packet.data);
                         }
                         break;
                     }

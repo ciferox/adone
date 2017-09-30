@@ -122,7 +122,7 @@ export default class Stub {
         if (is.netronReference(obj)) {
             const stub = this.netron.getStubById(obj.defId);
             if (is.undefined(stub)) {
-                throw new x.Unknown(`unknown definition id ${obj.defId}`);
+                throw new x.Unknown(`Unknown definition id ${obj.defId}`);
             }
             return stub.instance;
         } else if (is.netronDefinition(obj)) {

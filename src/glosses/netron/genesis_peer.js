@@ -2,17 +2,15 @@ const {
     is,
     x,
     util,
-    configuration: { Configuration },
     event: { AsyncEmitter },
     collection: { TimedoutMap },
-    netron: { STATUS, ACTION, RemoteStub, GenesisNetron, SequenceId, Stream }
+    netron: { STATUS, ACTION, RemoteStub, SequenceId, Stream }
 } = adone;
 
 export default class GenesisPeer extends AsyncEmitter {
     constructor(options = {}) {
         super();
-        this.options = new Configuration();
-        this.options.assign({
+        this.options = Object.assign({
             protocol: "netron:",
             retryTimeout: 100,
             retryMaxTimeout: 10000,
@@ -326,12 +324,12 @@ export default class GenesisPeer extends AsyncEmitter {
     }
 
     _streamRequested(packet) {
-        const streamId = packet[GenesisNetron._DATA];
+        const streamId = packet.data;
         this._awaitingStreamIds.add(streamId);
     }
 
     _streamAccepted(packet) {
-        const streamIds = packet[GenesisNetron._DATA];
+        const streamIds = packet.data;
         const stream = this._requestedStreams.get(streamIds.origin);
         if (!is.undefined(stream)) {
             this._requestedStreams.delete(stream.id);
@@ -342,7 +340,7 @@ export default class GenesisPeer extends AsyncEmitter {
 
     _streamProcessData(packet) {
         const stream = this._getStreamFromPacket(packet);
-        stream && stream._push(packet[GenesisNetron._DATA], packet[GenesisNetron._PACKET_ID]);
+        stream && stream._push(packet.data, packet.id);
     }
 
     _streamPause(packet) {
@@ -357,11 +355,11 @@ export default class GenesisPeer extends AsyncEmitter {
 
     _streamEnd(packet) {
         const stream = this._getStreamFromPacket(packet);
-        stream && stream._remoteEnd(packet[GenesisNetron._PACKET_ID]);
+        stream && stream._remoteEnd(packet.id);
     }
 
     _getStreamFromPacket(packet) {
-        const streamId = packet[GenesisNetron._STREAM_ID];
+        const streamId = packet.streamId;
         const stream = this._streams.get(streamId);
         if (is.undefined(stream)) {
             return adone.log(`No local stream associated with remote stream id: ${streamId}`);
