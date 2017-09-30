@@ -7,11 +7,11 @@ const rmkids = async (p) => {
     if (files.length === 0) {
         return;
     }
-    const processes = files.map((x) => rmfile(std.path.join(p, x))); // eslint-disable-line no-use-before-define
     let error = null;
     const errorHandler = (err) => error = error || err;
+    const processes = files.map((x) => rmfile(std.path.join(p, x)).catch(errorHandler)); // eslint-disable-line no-use-before-define
     for (const process of processes) {
-        await process.catch(errorHandler); // eslint-disable-line no-await-in-loop
+        await process; // eslint-disable-line no-await-in-loop
     }
     if (error) {
         return Promise.reject(error);
@@ -83,6 +83,8 @@ export default async function rm(path, { glob = true, maxBusyTries = 3, emfileWa
         }
 
         let busyTries = 0;
+        let error = null;
+        const errorHandler = (err) => error = error || err;
 
         const processes = results.map((x) => {
             const resolve = () => {
@@ -95,22 +97,18 @@ export default async function rm(path, { glob = true, maxBusyTries = 3, emfileWa
                 if (err.code === "EBUSY" || err.code === "ENOTEMPTY" || err.code === "EPERM" && busyTries < maxBusyTries) {
                     ++busyTries;
                     const time = busyTries * 100;
-                    return promise.delay(time).then(() => rmfile(x)); // just do the same after the delay
+                    return promise.delay(time).then(() => rmfile(x)).catch(errorHandler); // just do the same after the delay
                 }
                 if (err.code === "EMFILE" && emfileTimeout < emfileWait) {
-                    return promise.delay(emfileTimeout++).then(() => rmfile(x));
+                    return promise.delay(emfileTimeout++).then(() => rmfile(x)).catch(errorHandler);
                 }
             };
 
-            return rmfile(x).then(resolve, reject);
+            return rmfile(x).then(resolve, reject).catch(errorHandler);
         });
 
-        let error = null;
-        const errorHandler = (err) => error = error || err;
-
         for (const process of processes) {
-            // eslint-disable-next-line no-await-in-loop
-            await process.catch(errorHandler);
+            await process; // eslint-disable-line no-await-in-loop
         }
         if (error) {
             return Promise.reject(error);
