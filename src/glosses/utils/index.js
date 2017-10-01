@@ -415,7 +415,7 @@ export const toDotNotation = (object) => {
     return result;
 };
 
-export const flatten = (array, { depth = 1 } = {}) => {
+export const flatten = (array, { depth = Infinity } = {}) => {
     const result = [];
     for (let i = 0; i < array.length; ++i) {
         let item = array[i];
@@ -854,6 +854,14 @@ export const min = (array, func = adone.identity) => {
     return minElem;
 };
 
+export const repeat = (item, n) => {
+    const arr = new Array(n);
+    for (let i = 0; i < n; ++i) {
+        arr[i] = item;
+    }
+    return arr;
+};
+
 adone.lazify({
     matchPath: "./match_path",
     toposort: "./toposort",
@@ -892,5 +900,11 @@ adone.lazify({
     fakeClock: "./fake_clock",
     ltgt: "./ltgt",
     LogRotator: "./log_rotator",
-    debounce: "./debounce"
+    debounce: "./debounce",
+    Snapdragon: "./snapdragon",
+    braces: "./braces",
+    toRegex: "./to_regex",
+    fillRange: "./fill_range",
+    toRegexRange: "./to_regex_range",
+    splitString: "./split_string"
 }, adone.asNamespace(exports), require);

@@ -1,12 +1,18 @@
+const {
+    x,
+    collection
+} = adone;
+
 /**
  * Represents a queue
  */
 export default class Queue {
-    /**
-     * @param length queue length, unlimited by default
-     */
-    constructor(length) {
-        this._list = new adone.collection.LinkedList(length);
+    constructor(length = Infinity) {
+        this.length = 0;
+        this.remaining = length;
+        this.maxLength = length;
+        this._incoming = new collection.Stack();
+        this._outgoing = new collection.Stack();
     }
 
     /**
@@ -15,16 +21,7 @@ export default class Queue {
      * @returns {boolean}
      */
     get full() {
-        return this._list.full;
-    }
-
-    /**
-     * The length of the queue
-     *
-     * @returns {number}
-     */
-    get length() {
-        return this._list.length;
+        return this.length === this.maxLength;
     }
 
     /**
@@ -33,7 +30,7 @@ export default class Queue {
      * @returns {boolean}
      */
     get empty() {
-        return this._list.empty;
+        return this.length === 0;
     }
 
     /**
@@ -42,7 +39,12 @@ export default class Queue {
      * @returns {this}
      */
     push(x) {
-        this._list.push(x);
+        if (this.remaining === 0) {
+            throw new x.IllegalState("This queue is full");
+        }
+        this._incoming.push(x);
+        ++this.length;
+        --this.remaining;
         return this;
     }
 
@@ -52,6 +54,22 @@ export default class Queue {
      * @returns {any} value
      */
     pop() {
-        return this._list.shift();
+        if (this._outgoing.empty) {
+            if (this._incoming.empty) {
+                return;
+            }
+            this._incoming.moveTo(this._outgoing);
+        }
+        --this.length;
+        ++this.remaining;
+        return this._outgoing.pop();
+    }
+
+    clear() {
+        this._incoming.clear();
+        this._outgoing.clear();
+        this.length = 0;
+        this.remaining = this.maxLength;
+        return this;
     }
 }

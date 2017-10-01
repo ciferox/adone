@@ -10,5 +10,12 @@ adone.lazify({
     Node: "./node",
     MappingList: "./mapping_list",
     util: "./util",
-    inline: "./inline"
+    inline: "./inline",
+    resolveSourceMap: ["./resolve", (x) => x.resolveSourceMap],
+    resolveSourceMapSync: ["./resolve", (x) => x.resolveSourceMapSync],
+    resolveSources: ["./resolve", (x) => x.resolveSources],
+    resolveSourcesSync: ["./resolve", (x) => x.resolveSourcesSync],
+    resolve: ["./resolve", (x) => x.resolve],
+    resolveSync: ["./resolve", (x) => x.resolveSync],
+    parseMapToJSON: ["./resolve", (x) => x.parseMapToJSON]
 }, adone.asNamespace(exports), require);

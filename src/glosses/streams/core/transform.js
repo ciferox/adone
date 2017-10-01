@@ -13,7 +13,7 @@ export default class Transform {
         this._onNext = noop;
         this._onEnd = noop;
         this._onError = noop;
-        this._outgoingQueue = new collection.LinkedList();
+        this._outgoingQueue = new collection.Queue();
         this._processing = false;
         this._transform = transform;
         this._flush = flush;
@@ -91,7 +91,7 @@ export default class Transform {
                 return;
             }
             while (!this._outgoingQueue.empty) {
-                this._onNext(this._outgoingQueue.shift());
+                this._onNext(this._outgoingQueue.pop());
             }
             this._paused = false;
             this.maybeFlush();

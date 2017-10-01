@@ -1,19 +1,9 @@
 /**
- * Represents the node of a stack
- */
-class Node {
-    constructor(data, next) {
-        this.data = data;
-        this.next = next;
-    }
-}
-
-/**
  * Represents a stack
  */
 export default class Stack {
     constructor() {
-        this.head = null;
+        this._list = [];
         this.length = 0;
     }
 
@@ -30,10 +20,10 @@ export default class Stack {
      * The top element of the stack
      */
     get top() {
-        if (!this.head) {
+        if (!this.length) {
             return;
         }
-        return this.head.data;
+        return this._list[this.length - 1];
     }
 
     /**
@@ -42,7 +32,7 @@ export default class Stack {
      * @returns {this}
      */
     push(v) {
-        this.head = new Node(v, this.head);
+        this._list.push(v);
         ++this.length;
         return this;
     }
@@ -53,24 +43,40 @@ export default class Stack {
      * @returns {any} top element value
      */
     pop() {
-        if (!this.head) {
+        if (!this.length) {
             return;
         }
-        const value = this.head.data;
-        this.head = this.head.next;
         --this.length;
-        return value;
+        return this._list.pop();
     }
 
     /**
      * Returns an iterator over the values
      */
     *[Symbol.iterator]() {
-        let t = this.head;
-        while (t) {
-            yield t.data;
-            t = t.next;
+        for (let i = this.length - 1; i >= 0; --i) {
+            yield this._list[i];
         }
+    }
+
+    /**
+     * Moves everything from the stack to another stack
+     */
+    moveTo(target) {
+        const len = this.length;
+        for (let i = 0; i < len; ++i) {
+            target._list.push(this._list[len - i - 1]);
+        }
+        target.length += len;
+        this.length = 0;
+        this._list.length = 0;
+        return this;
+    }
+
+    clear() {
+        this._list.length = 0;
+        this.length = 0;
+        return this;
     }
 
     /**

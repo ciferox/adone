@@ -1,0 +1,196 @@
+const {
+    is
+} = adone;
+
+/**
+ * @param {Object} `options`
+ * @return {RegExp} Converts the given `pattern` to a regex using the specified `options`.
+ */
+const not = (pattern, options) => new RegExp(not.create(pattern, options));
+
+/**
+ * Create a regex-compatible string from the given `pattern` and `options`.
+ *
+ * @param {String} `pattern`
+ * @param {Object} `options`
+ * @return {String}
+ */
+not.create = function (pattern, options) {
+    if (!is.string(pattern)) {
+        throw new TypeError("expected a string");
+    }
+
+    const opts = { ...options };
+    if (opts && opts.contains === true) {
+        opts.strictNegate = false;
+    }
+
+    const open = opts.strictOpen !== false ? "^" : "";
+    const close = opts.strictClose !== false ? "$" : "";
+    const endChar = opts.endChar ? opts.endChar : "+";
+    let str = pattern;
+
+    if (opts && opts.strictNegate === false) {
+        str = `(?:(?!(?:${pattern})).)${endChar}`;
+    } else {
+        str = `(?:(?!^(?:${pattern})$).)${endChar}`;
+    }
+
+    return open + str + close;
+};
+
+
+toRegex.MAX_LENGTH = 1024 * 64;
+toRegex.cache = {};
+
+
+/**
+ * Cache generated regex. This can result in dramatic speed improvements
+ * and simplify debugging by adding options and pattern to the regex. It can be
+ * disabled by passing setting `options.cache` to false.
+ */
+const cacheRegex = (regex, key, pattern, options) => {
+    Object.defineProperties(regex, {
+        cached: {
+            value: true,
+            enumerable: false,
+            configurable: true,
+            writable: true
+        },
+        pattern: {
+            value: pattern,
+            enumerable: false,
+            configurable: true,
+            writable: true
+        },
+        options: {
+            value: options,
+            enumerable: false,
+            configurable: true,
+            writable: true
+        },
+        key: {
+            value: key,
+            enumerable: false,
+            configurable: true,
+            writable: true
+        }
+    });
+    toRegex.cache[key] = regex;
+};
+
+/**
+ * Create the key to use for memoization. The key is generated
+ * by iterating over the options and concatenating key-value pairs
+ * to the pattern string.
+ */
+const createKey = (pattern, options) => {
+    if (!options) {
+        return pattern;
+    }
+    let key = pattern;
+    for (const prop in options) {
+        if (options.hasOwnProperty(prop)) {
+            key += `;${prop}=${String(options[prop])}`;
+        }
+    }
+    return key;
+};
+
+/**
+ * Create a regular expression from the given `pattern` string.
+ *
+ * @param {String|RegExp} `pattern` Pattern can be a string or regular expression.
+ * @param {Object} `options`
+ * @return {RegExp}
+ */
+const makeRe = (pattern, options) => {
+    if (is.regexp(pattern)) {
+        return pattern;
+    }
+
+    if (!is.string(pattern)) {
+        throw new TypeError("expected a string");
+    }
+
+    if (pattern.length > toRegex.MAX_LENGTH) {
+        throw new Error(`expected pattern to be less than ${toRegex.MAX_LENGTH} characters`);
+    }
+
+    let key = pattern;
+    // do this before shallow cloning options, it's a lot faster
+    if (!options || (options && options.cache !== false)) {
+        key = createKey(pattern, options);
+        const { cache } = toRegex;
+        if (cache.hasOwnProperty(key)) {
+            return cache[key];
+        }
+    }
+
+    const opts = { ...options };
+    if (opts.contains === true) {
+        if (opts.negate === true) {
+            opts.strictNegate = false;
+        } else {
+            opts.strict = false;
+        }
+    }
+
+    if (opts.strict === false) {
+        opts.strictOpen = false;
+        opts.strictClose = false;
+    }
+
+    const open = opts.strictOpen !== false ? "^" : "";
+    const close = opts.strictClose !== false ? "$" : "";
+    let flags = opts.flags || "";
+    let regex;
+
+    if (opts.nocase === true && !/i/.test(flags)) {
+        flags += "i";
+    }
+
+    try {
+        if (opts.negate || is.boolean(opts.strictNegate)) {
+            pattern = not.create(pattern, opts);
+        }
+        const str = `${open}(?:${pattern})${close}`;
+        regex = new RegExp(str, flags);
+    } catch (err) {
+        if (opts.strictErrors === true) {
+            err.key = key;
+            err.pattern = pattern;
+            err.originalOptions = options;
+            err.createdOptions = opts;
+            throw err;
+        }
+
+        try {
+            regex = new RegExp(`^${pattern.replace(/(\W)/g, "\\$1")}$`);
+        } catch (err) {
+            regex = /.^/; //<= match nothing
+        }
+    }
+
+    if (opts.cache !== false) {
+        cacheRegex(regex, key, pattern, opts);
+    }
+    return regex;
+};
+
+
+/**
+ * Create a regular expression from the given `pattern` string.
+ *
+ * @param {String|RegExp} `pattern` Pattern can be a string or regular expression.
+ * @param {Object} `options`
+ * @return {RegExp}
+ */
+export default function toRegex(patterns, options) {
+    if (!is.array(patterns)) {
+        return makeRe(patterns, options);
+    }
+    return makeRe(patterns.join("|"), options);
+}
+
+toRegex.makeRe = makeRe;

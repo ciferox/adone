@@ -7,7 +7,7 @@ const { collection } = adone;
 export default class AsyncQueue extends collection.Queue {
     constructor() {
         super();
-        this._awaiters = new collection.LinkedList();
+        this._awaiters = new collection.Queue();
     }
 
     /**
@@ -15,7 +15,7 @@ export default class AsyncQueue extends collection.Queue {
      */
     push(v) {
         if (!this._awaiters.empty) {
-            this._awaiters.shift()(v);
+            this._awaiters.pop()(v);
             return;
         }
         return super.push(v);

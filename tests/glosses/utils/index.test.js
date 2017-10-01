@@ -193,9 +193,9 @@ describe("util", () => {
             expect(adone.util.flatten(array, { depth: 2 })).to.be.deep.equal([1, 2, 3, [4, 5]]);
         });
 
-        it("should set the depth = 1 by default", () => {
+        it("should set the depth = Infinity by default", () => {
             const array = [1, [2, [3, [4, 5]]]];
-            expect(adone.util.flatten(array)).to.be.deep.equal([1, 2, [3, [4, 5]]]);
+            expect(adone.util.flatten(array)).to.be.deep.equal([1, 2, 3, 4, 5]);
         });
     });
 

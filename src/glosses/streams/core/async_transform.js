@@ -8,7 +8,7 @@ const { collection } = adone;
 export default class AsyncTransform extends Transform {
     constructor(transform, flush) {
         super(transform, flush);
-        this._processingQueue = new collection.LinkedList();
+        this._processingQueue = new collection.Queue();
     }
 
     async _process(value) {
@@ -30,7 +30,7 @@ export default class AsyncTransform extends Transform {
          * 3, 4, 1, 2
          */
         await null;
-        for (let processingValue = value; ; processingValue = this._processingQueue.shift()) {
+        for (let processingValue = value; ; processingValue = this._processingQueue.pop()) {
             try {
                 await this._transform(processingValue); // eslint-disable-line no-await-in-loop
             } catch (err) {

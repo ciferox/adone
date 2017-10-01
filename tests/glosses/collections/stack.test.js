@@ -60,4 +60,54 @@ describe("collection", "Stack", () => {
         }
         expect(i).to.be.equal(0);
     });
+
+    describe("moveTo", () => {
+        it("should move the contents of one stack to another", () => {
+            const s1 = Stack.from([1, 2, 3, 4, 5]);
+            const s2 = Stack.from([1, 2, 3]);
+            s1.moveTo(s2);
+            expect(s1.empty).to.be.true;
+            expect(s1.length).to.be.equal(0);
+            expect(s1.pop()).to.be.undefined;
+            expect(s2.length).to.be.equal(8);
+
+            // from s1, reversed order
+            expect(s2.pop()).to.be.equal(1);
+            expect(s2.pop()).to.be.equal(2);
+            expect(s2.pop()).to.be.equal(3);
+            expect(s2.pop()).to.be.equal(4);
+            expect(s2.pop()).to.be.equal(5);
+
+            // s2 contents
+            expect(s2.pop()).to.be.equal(3);
+            expect(s2.pop()).to.be.equal(2);
+            expect(s2.pop()).to.be.equal(1);
+        });
+
+        it("should return this", () => {
+            const s1 = Stack.from([1, 2, 3, 4, 5]);
+            const s2 = Stack.from([1, 2, 3]);
+            expect(s1.moveTo(s2)).to.be.equal(s1);
+        });
+    });
+
+    describe("clear", () => {
+        it("should reset the stack", () => {
+            const s = Stack.from([1, 2, 3]);
+            s.clear();
+            expect(s.length).to.be.equal(0);
+            expect(s.empty).to.be.true;
+            expect(s.top).to.be.undefined;
+            expect(s.pop()).to.be.undefined;
+            s.push(1);
+            expect(s.length).to.be.equal(1);
+            expect(s.empty).to.be.false;
+            expect(s.pop()).to.be.equal(1);
+        });
+
+        it("should return this", () => {
+            const s = new Stack();
+            expect(s.clear()).to.be.equal(s);
+        });
+    });
 });
