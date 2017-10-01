@@ -5,7 +5,7 @@ const {
     is,
     std,
     fs,
-    netron: { decorator: { Contextable, Public, Private, Description, Type } },
+    netron: { Context, Public },
     omnitron
 } = adone;
 
@@ -13,9 +13,9 @@ const {
     const: { DISABLED, ENABLED, ACTIVE, STATUSES }
 } = omnitron;
 
-@Private
-@Contextable
-@Description("Common omnitron context")
+@Context({
+    description: "Common omnitron context"
+})
 export default class Omnitron extends application.Application {
     async configure() {
         // Force create home directory
@@ -102,49 +102,56 @@ export default class Omnitron extends application.Application {
 
     // Omnitron interface
 
-    @Public
-    @Description("Force garbage collector")
+    @Public({
+        description: "Force garbage collector"
+    })
     gc() {
         return is.function(global.gc) && global.gc();
     }
 
-    @Public
-    @Description("Kill omnitron")
+    @Public({
+        description: "Kill omnitron"
+    })
     killSelf() {
         this._signalExit();
     }
 
-    @Public
-    @Description("Uptime of omnitron")
-    @Type(String)
+    @Public({
+        description: "Uptime of omnitron",
+        type: String
+    })
     uptime() {
         return Math.floor(process.uptime());
     }
 
-    @Public
-    @Description("The environment under which the omnitron is running")
-    @Type(String)
+    @Public({
+        description: "The environment under which the omnitron is running",
+        type: String
+    })
     environment() {
         return adone.config.environment;
     }
 
-    @Public
-    @Description("Omnitron's environment variables")
-    @Type(Object)
+    @Public({
+        description: "Omnitron's environment variables",
+        type: Object
+    })
     envs() {
         return Object.assign({}, process.env);
     }
 
-    @Public
-    @Description("Updates omnitron's environment variables")
+    @Public({
+        description: "Updates omnitron's environment variables"
+    })
     setEnvs(envs) {
         for (const [key, val] of Object.entries(envs)) {
             process.env[key] = val;
         }
     }
 
-    @Public
-    @Description("Updates omnitron's environment variables")
+    @Public({
+        description: "Updates omnitron's environment variables"
+    })
     updateEnvs(envs) {
         for (const [key, val] of Object.entries(envs)) {
             process.env[key] = val;
@@ -157,24 +164,26 @@ export default class Omnitron extends application.Application {
         }
     }
 
-    @Public
-    @Description("Version of omnitron")
-    @Type(String)
+    @Public({
+        description: "Version of omnitron",
+        type: String
+    })
     version() {
         return adone.package.version;
     }
 
-    @Public
-    @Description("Returns list of all gates")
-    @Type(Array)
+    @Public({
+        description: "Returns list of all gates",
+        type: Array
+    })
     gates() {
         return this.config.gates;
     }
 
-
-    @Public
-    @Description("Return list of all services services")
-    @Type(Array)
+    @Public({
+        description: "Return list of all services services",
+        type: Array
+    })
     async list({ status = "all" } = {}) {
         if (!STATUSES.includes(status)) {
             throw new adone.x.NotValid(`Not valid status: ${status}`);

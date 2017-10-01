@@ -139,6 +139,12 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
                 adone.definePredicate(name, tagName);
             }
         },
+        defineCustomPredicate: (name, value) => {
+            Object.defineProperty(adone.is, name, {
+                enumerable: true,
+                value
+            });
+        },
         private: (obj) => obj[privateSymbol],
         asNamespace,
         tag,

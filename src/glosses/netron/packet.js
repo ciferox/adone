@@ -12,19 +12,19 @@ export default class Packet {
     }
 
     setStatus(status) {
-        this.writeHeader(status, 8, Packet.HEADER_OFFSET_STATUS);
+        this.writeHeaderBits(status, 8, Packet.HEADER_OFFSET_STATUS);
     }
 
     getStatus() {
-        return this.readHeader(8, Packet.HEADER_OFFSET_STATUS);
+        return this.readHeaderBits(8, Packet.HEADER_OFFSET_STATUS);
     }
- 
+
     setAction(action) {
-        this.writeHeader(action, 8, Packet.HEADER_OFFSET_ACTION);
+        this.writeHeaderBits(action, 8, Packet.HEADER_OFFSET_ACTION);
     }
 
     getAction() {
-        return this.readHeader(8, Packet.HEADER_OFFSET_ACTION);
+        return this.readHeaderBits(8, Packet.HEADER_OFFSET_ACTION);
     }
 
     setImpulse(impulse) {
@@ -43,7 +43,7 @@ export default class Packet {
         return (this.header >> bit) & 1;
     }
 
-    writeHeader(val, bits, offset) {
+    writeHeaderBits(val, bits, offset) {
         const maxOffset = offset + bits;
         if (val & 1) {
             this.header |= (1 << offset);
@@ -55,7 +55,7 @@ export default class Packet {
         }
     }
 
-    readHeader(bits, offset) {
+    readHeaderBits(bits, offset) {
         let val = 0 >>> 0;
         const maxOffset = offset + bits;
         for (let i = offset; i < maxOffset; ++i) {
@@ -82,14 +82,14 @@ export default class Packet {
         return payload;
     }
 
-    static from(packet) {
-        if (!is.array(packet) || packet.length !== 4) {
+    static from(rawPacket) {
+        if (!is.array(rawPacket) || rawPacket.length !== 4) {
             throw new x.NotValid("Bad packet");
         }
 
-        const payload = new Packet();
-        [payload.header, payload.streamId, payload.id, payload.data] = packet;
-        return payload;
+        const packet = new Packet();
+        [packet.header, packet.streamId, packet.id, packet.data] = rawPacket;
+        return packet;
     }
 
     static HEADER_OFFSET_STATUS = 8 >>> 0;

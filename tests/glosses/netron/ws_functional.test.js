@@ -1,7 +1,7 @@
 const {
     is,
     x,
-    netron: { DEFAULT_PORT, Netron, decorator: { Private, Readonly, Type, Args, Description, Property, Contextable } }
+    netron: { DEFAULT_PORT, Netron, Property, Context, Public }
 } = adone;
 
 let defaultPort = DEFAULT_PORT;
@@ -180,31 +180,37 @@ describe("netron", "websocket", "functional tests", () => {
         });
 
         describe("RPC", () => {
-            @Contextable
+            @Context()
             class ContextA {
-                @Private
                 getValue2() {
                     return this.prop2;
                 }
 
-                @Type(String)
+                @Public({
+                    type: String
+                })
                 getValue1() {
                     return this.prop1;
                 }
 
-                @Args(String)
+                @Public({
+                    args: [String]
+                })
                 setValue1(value) {
                     this.prop1 = value;
                 }
 
-                @Private
                 prop1 = "prop1";
 
-                @Readonly
-                @Type(String)
+                @Public({
+                    readonly: true,
+                    type: String
+                })
                 prop2 = "prop2";
 
-                @Type(String)
+                @Public({
+                    type: String
+                })
                 prop3 = "prop3";
             }
 
@@ -307,27 +313,30 @@ describe("netron", "websocket", "functional tests", () => {
                 date: 8
             };
 
-            @Contextable
-            @Description("Object document")
+            @Context({
+                description: "Object document"
+            })
             @Property("type", { readonly: true })
             @Property("data", { readonly: true })
-            @Contextable
             class Document {
                 constructor(data, type) {
                     this.data = data;
                     this.type = type;
                 }
-
-                @Description("Returns string representation of document")
-                @Type(String)
-                @Args(Object)
+                
+                @Public({
+                    description: "Returns string representation of document",
+                    type: String,
+                    args: [Object]
+                })
                 inspect(options) {
                     return adone.std.util.inspect(this.data, options);
                 }
             }
 
-            @Contextable
-            @Description("Simple object storage")
+            @Context({
+                description: "Simple object storage"
+            })
             @Property("name", { type: String, description: "Name of the storage" })
             @Property("_totalSize", { private: true })
             class ObjectStorage {
@@ -336,33 +345,43 @@ describe("netron", "websocket", "functional tests", () => {
                     this._totalSize = size;
                 }
 
-                @Description("Returns total size of storage")
-                @Type(Number)
+                @Public({
+                    description: "Returns total size of storage",
+                    type: Number
+                })
                 getCapacity() {
                     return this._totalSize;
                 }
 
-                @Description("Sets new size of storage")
-                @Type(Number)
-                @Args(Number)
+                @Public({
+                    description: "Sets new size of storage",
+                    type: Number,
+                    args: Number
+                })
                 setCapacity(size) {
                     this._totalSize = size;
                 }
 
-                @Description("Returns supported document types")
-                @Type(Object)
+                @Public({
+                    description: "Returns supported document types",
+                    type: Object
+                })
                 supportedDocTypes() {
                     return DocumentTypes;
                 }
 
-                @Type(Number)
+                @Public({
+                    type: Number
+                })
                 getSize() {
                     return this._docs.size;
                 }
 
-                @Description("Adds document. Returns 'true' if document added to storage, otherwise 'false'")
-                @Args(String, Document)
-                @Type(Boolean)
+                @Public({
+                    description: "Adds document. Returns 'true' if document added to storage, otherwise 'false'",
+                    type: Boolean,
+                    args: [String, Document]
+                })
                 addDocument(name, doc) {
                     if (this._docs.size >= this._totalSize || this._docs.has(name)) {
                         return false;
@@ -372,18 +391,20 @@ describe("netron", "websocket", "functional tests", () => {
                     return true;
                 }
 
-                @Description("Returns document by name")
-                @Type(Document)
-                @Args(String)
+                @Public({
+                    description: "Returns document by name",
+                    type: Document,
+                    args: String
+                })
                 getDocument(name) {
                     return this._docs.get(name) || null;
                 }
 
+                @Public()
                 createDocument(data, type) {
                     return new Document(data, type);
                 }
 
-                @Private
                 _docs = new Map();
             }
 
@@ -495,19 +516,21 @@ describe("netron", "websocket", "functional tests", () => {
             });
 
             describe("Multiple definitions", () => {
-                @Contextable
+                @Context()
                 class NumField {
                     constructor(val) {
                         this._val = val;
                     }
 
+                    @Public()
                     getValue() {
                         return this._val;
                     }
                 }
 
-                @Contextable
+                @Context()
                 class NumSet {
+                    @Public()
                     getFields(start, end) {
                         const defs = new adone.netron.Definitions();
                         for (let i = start; i < end; i++) {
@@ -516,6 +539,7 @@ describe("netron", "websocket", "functional tests", () => {
                         return defs;
                     }
 
+                    @Public()
                     setFields(fields) {
                         this._fields = fields;
                     }
@@ -616,12 +640,13 @@ describe("netron", "websocket", "functional tests", () => {
                     Alive: 1
                 };
 
-                @Contextable
+                @Context()
                 class Soul {
                     constructor(name) {
                         this.name = name;
                     }
 
+                    @Public()
                     eatVitality(percentage) {
                         this.vitality -= percentage;
                         if (this.vitality <= 0) {
@@ -629,16 +654,21 @@ describe("netron", "websocket", "functional tests", () => {
                         }
                     }
 
+                    @Public()
                     doEvil(otherSoul, percentage) {
                         return otherSoul.eatVitality(percentage);
                     }
 
+                    @Public()
                     vitality = 100;
+
+                    @Public()
                     bodyStatus = BodyStatuses.Alive;
                 }
 
-                @Contextable
+                @Context()
                 class Devil {
+                    @Public()
                     sellSoul(manName, iSoul) {
                         if (this.souls.has(manName)) {
                             return false;
@@ -647,6 +677,7 @@ describe("netron", "websocket", "functional tests", () => {
                         return true;
                     }
 
+                    @Public()
                     possess(manName) {
                         const iSoul = this.souls.get(manName);
                         if (!is.undefined(iSoul)) {
@@ -654,21 +685,26 @@ describe("netron", "websocket", "functional tests", () => {
                         }
                     }
 
+                    @Public()
                     takeVitality(percentage) {
                         if (!is.undefined(this.possessedSoul)) {
                             return this.possessedSoul.eatVitality(percentage);
                         }
                     }
 
+                    @Public()
                     doEvil(manName, percentage) {
                         if (!is.undefined(this.possessedSoul)) {
                             return this.possessedSoul.doEvil(this.souls.get(manName), percentage);
                         }
                     }
 
-                    @Type(Map)
+                    @Public({
+                        type: Map
+                    })
                     souls = new Map();
 
+                    @Public()
                     possessedSoul = null;
                 }
 
@@ -768,23 +804,27 @@ describe("netron", "websocket", "functional tests", () => {
             });
 
             describe("Weak-contexts", () => {
-                @Contextable
+                @Context()
                 class Weak {
+                    @Public()
                     doSomething() {
                         return 888;
                     }
                 }
 
-                @Contextable
+                @Context()
                 class Strong {
                     constructor(netron) {
                         this.netron = netron;
                         this.weak = new Weak();
                     }
+                    
+                    @Public()
                     getWeak() {
                         return this.weak;
                     }
 
+                    @Public()
                     releaseWeak() {
                         this.netron.releaseContext(this.weak);
                         this.weak = null;
@@ -810,12 +850,13 @@ describe("netron", "websocket", "functional tests", () => {
                 it("deep contexting", async () => {
                     let depthLabel;
 
-                    @Contextable
+                    @Context()
                     class CounterKeeper {
                         constructor(keeper = null) {
                             this.keeper = keeper;
                         }
 
+                        @Public()
                         async getCounter() {
                             if (this.keeper) {
                                 depthLabel++;
@@ -825,6 +866,7 @@ describe("netron", "websocket", "functional tests", () => {
 
                         }
 
+                        @Public()
                         async getNextKeeper(keeper) {
                             return new CounterKeeper(keeper);
                         }
@@ -866,26 +908,29 @@ describe("netron", "websocket", "functional tests", () => {
 
                     it("complex weak-context inversion", async () => {
 
-                        @Contextable
+                        @Context()
                         class PM {
+                            @Public()
                             on(handle) {
                                 return handle.emit();
                             }
                         }
 
-                        @Contextable
+                        @Context()
                         class Handle {
+                            @Public()
                             emit() {
                                 return adone.ok;
                             }
                         }
 
-                        @Contextable
+                        @Context()
                         class System {
                             constructor(pm) {
                                 this.pm = pm;
                             }
 
+                            @Public()
                             register() {
                                 return this.pm.on(new Handle());
                             }
@@ -928,24 +973,27 @@ describe("netron", "websocket", "functional tests", () => {
 
                     it.skip("cycle weak-context transmission", async () => {
 
-                        @Contextable
+                        @Context()
                         class Ball {
+                            @Public()
                             hit() {
                                 return "bounce";
                             }
                         }
 
-                        @Contextable
+                        @Context()
                         class Basket {
                             constructor() {
                                 this.ball = null;
                             }
 
+                            @Public()
                             putBall(ball) {
                                 assert.instanceOf(ball, adone.netron.Interface);
                                 this.ball = ball;
                             }
 
+                            @Public()
                             getBall() {
                                 return this.ball;
                             }
@@ -992,42 +1040,49 @@ describe("netron", "websocket", "functional tests", () => {
         });
 
         describe("Referencing contexts", () => {
-            @Contextable
+            @Context()
             class TheC {
+                @Public()
                 getValue() {
                     return 8;
                 }
             }
 
-            @Contextable
+            @Context()
             class TheB {
                 constructor() {
                     this.theC = new TheC();
                 }
+
+                @Public()
                 originateC() {
                     return this.theC;
                 }
 
+                @Public()
                 updateC(c) {
                     this.theC = c;
                 }
             }
 
-            @Contextable
+            @Context()
             class TheA {
                 constructor() {
                     this.theB = new TheB();
                     this.theC = new TheC();
                 }
 
+                @Public()
                 originateB() {
                     return this.theB;
                 }
 
+                @Public()
                 updateB(b) {
                     this.theB = b;
                 }
 
+                @Public()
                 makeUpdateOnB() {
                     return this.theB.updateC(this.theC);
                 }

@@ -1,4 +1,7 @@
-const { is, netron: { Netron, DEFAULT_PORT, ACTION, STATUS, decorator: { Contextable } } } = adone;
+const {
+    is,
+    netron: { Netron, DEFAULT_PORT, ACTION, STATUS, Context, Public }
+} = adone;
 
 let defaultPort = DEFAULT_PORT;
 let NETRON_PORT = 32348;
@@ -345,13 +348,15 @@ describe("netron", "websocket", "unit tests", () => {
 
         describe("Contexts management", () => {
 
-            @Contextable
+            @Context()
             class A {
+                @Public()
                 method() { }
             }
 
-            @Contextable
+            @Context()
             class B {
+                @Public()
                 method() { }
             }
 
@@ -578,8 +583,9 @@ describe("netron", "websocket", "unit tests", () => {
 
         describe("getDefinitionByName", () => {
 
-            @Contextable
+            @Context()
             class A {
+                @Public()
                 method() { }
             }
 
@@ -629,20 +635,28 @@ describe("netron", "websocket", "unit tests", () => {
 
         describe("RPC", () => {
 
-            @Contextable
+            @Context()
             class A {
+                @Public()
                 property = null;
+
+                @Public()
                 undefinedProperty = undefined;
+
+                @Public()
                 counter = 0;
 
+                @Public()
                 method(...args) {
                     return args;
                 }
 
+                @Public()
                 errorMethod() {
                     throw Error("I'm an error!");
                 }
 
+                @Public()
                 voidMethod(increment, secondArgument) {
                     if (is.number(increment)) {
                         this.counter += increment;
@@ -778,8 +792,9 @@ describe("netron", "websocket", "unit tests", () => {
 
         describe("getInterfaceById", () => {
 
-            @Contextable
+            @Context()
             class A {
+                @Public()
                 method() { }
             }
 
@@ -818,8 +833,9 @@ describe("netron", "websocket", "unit tests", () => {
 
         describe("getInterfaceByName", () => {
 
-            @Contextable
+            @Context()
             class A {
+                @Public()
                 method() { }
             }
 
@@ -858,8 +874,9 @@ describe("netron", "websocket", "unit tests", () => {
 
         it("getStubById", () => {
 
-            @Contextable
+            @Context()
             class A {
+                @Public()
                 method() { }
             }
 
@@ -875,8 +892,9 @@ describe("netron", "websocket", "unit tests", () => {
 
         describe("getPeerForInterface", () => {
 
-            @Contextable
+            @Context()
             class A {
+                @Public()
                 method() { }
             }
 
@@ -918,21 +936,31 @@ describe("netron", "websocket", "unit tests", () => {
 
             let exNetron2;
 
-            @Contextable
+            @Context()
             class A {
+                @Public()
                 property = null;
+
+                @Public()
                 undefinedProperty = undefined;
+
+                @Public()
                 storage = null;
+
+                @Public()
                 counter = 0;
 
+                @Public()
                 method(...args) {
                     return args;
                 }
 
+                @Public()
                 errorMethod() {
                     throw Error("I'm an error!");
                 }
 
+                @Public()
                 voidMethod(...args) {
                     ++this.counter;
 
@@ -942,8 +970,9 @@ describe("netron", "websocket", "unit tests", () => {
                 }
             }
 
-            @Contextable
+            @Context()
             class B {
+                @Public()
                 getWeakContext() {
                     return (new A());
                 }

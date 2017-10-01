@@ -776,11 +776,6 @@ export const application = (obj) => adone.tag.has(obj, "APPLICATION");
 export const configuration = (obj) => adone.tag.has(obj, "CONFIGURATION");
 export const datetime = (obj) => adone.tag.has(obj, "DATETIME");
 
-export const netronContext = (obj) => adone.netron.Investigator.isContextable(obj);
-export const netronIMethod = (ni, name) => (function_(ni[name]) && (ni.$def.$[name].method === true));
-export const netronIProperty = (ni, name) => (object(ni[name]) && function_(ni[name].get) && (ni.$def.$[name].method === undefined)); // eslint-disable-line
-
-
 export const windows = (platform === "win32");
 export const linux = (platform === "linux");
 

@@ -3,7 +3,8 @@ const {
     x,
     data: { mpak: { serializer } },
     lazify,
-    tag
+    tag,
+    meta: { reflect }
 } = adone;
 
 adone.definePredicates({
@@ -20,6 +21,24 @@ adone.definePredicates({
     netronRemoteStub: "NETRON_REMOTESTUB",
     netronStream: "NETRON_STREAM"
 });
+
+adone.defineCustomPredicate("netronContext", (obj) => {
+    let isContex = false;
+    let target = undefined;
+
+    if (is.class(obj)) {
+        target = obj;
+    } else if (is.propertyDefined(obj, "__proto__") && is.propertyOwned(obj.__proto__, "constructor")) {
+        target = obj.__proto__.constructor;
+    }
+    if (!is.undefined(target)) {
+        isContex = is.object(reflect.getMetadata(adone.netron.CONTEXT_ANNOTATION, target));
+    }
+    return isContex;
+});
+
+adone.defineCustomPredicate("netronIMethod", (ni, name) => (is.function(ni[name]) && (ni.$def.$[name].method === true)));
+adone.defineCustomPredicate("netronIProperty", (ni, name) => (is.object(ni[name]) && is.function(ni[name].get) && (is.undefined(ni.$def.$[name].method))));
 
 export const DEFAULT_PORT = 8888;
 
@@ -131,7 +150,7 @@ export class Definitions {
         let ret;
         for (let i = 0; i < args.length; i++) {
             const arg = args[i];
-            if (!is.netronDefinition(arg) && !adone.netron.Investigator.isContextable(arg) && !is.netronInterface(arg)) {
+            if (!is.netronDefinition(arg) && !is.netronContext(arg) && !is.netronInterface(arg)) {
                 throw new x.InvalidArgument(`Invalid argument ${i} (${typeof(arg)})`);
             }
             ret = this._defs.push(arg);
@@ -151,7 +170,7 @@ export class Definitions {
         let ret;
         for (let i = 0; i < args.length; i++) {
             const arg = args[i];
-            if (!is.netronDefinition(arg) && !adone.netron.Investigator.isContextable(arg) && !is.netronInterface(arg)) {
+            if (!is.netronDefinition(arg) && !is.netronContext(arg) && !is.netronInterface(arg)) {
                 throw new x.InvalidArgument(`Invalid argument ${i} (${typeof(arg)})`);
             }
             ret = this._defs.unshift(arg);
@@ -210,8 +229,12 @@ serializer.register(109, Definition, (obj, buf) => {
 });
 
 lazify({
-    decorator: "./decorators",
-    Investigator: "./investigator",
+    Reflection: ["./reflection", (mod) => mod.Reflection],
+    Context: ["./reflection", (mod) => mod.Context],
+    Public: ["./reflection", (mod) => mod.Public],
+    Method: ["./reflection", (mod) => mod.Method],
+    Property: ["./reflection", (mod) => mod.Property],
+    CONTEXT_ANNOTATION: ["./reflection", (mod) => mod.CONTEXT_ANNOTATION],
     GenesisNetron: "./genesis_netron",
     GenesisPeer: "./genesis_peer",
     Packet: "./packet",

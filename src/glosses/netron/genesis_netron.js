@@ -11,7 +11,7 @@ const {
         Reference,
         Interface,
         Stub,
-        Investigator,
+        Reflection,
         Definitions,
         SequenceId,
         Packet
@@ -169,7 +169,7 @@ export default class GenesisNetron extends AsyncEmitter {
     }
 
     attachContext(instance, ctxId = null) {
-        const ci = this._checkContext(instance, ctxId);
+        const r = Reflection.from(instance);
 
         if (is.null(ctxId)) {
             ctxId = instance.__proto__.constructor.name;
@@ -178,7 +178,7 @@ export default class GenesisNetron extends AsyncEmitter {
             throw new x.Exists(`Context '${ctxId}' already attached`);
         }
 
-        return this._attachContext(ctxId, new Stub(this, instance, ci));
+        return this._attachContext(ctxId, new Stub(this, instance, r));
     }
 
     detachContext(ctxId, releaseOriginted = true) {
@@ -229,7 +229,7 @@ export default class GenesisNetron extends AsyncEmitter {
         if (!peer.isSuper) {
             throw new x.Unknown(`Peer '${uid}' is not a super-netron`);
         }
-        const ci = this._checkContext(instance);
+        const r = Reflection.from(instance);
         if (is.null(ctxId)) {
             ctxId = instance.__proto__.constructor.name;
         }
@@ -238,7 +238,7 @@ export default class GenesisNetron extends AsyncEmitter {
             throw new x.Exists(`Context '${ctxId}' already attached on the peer '${uid}' side`);
         }
 
-        const stub = new Stub(this, instance, ci);
+        const stub = new Stub(this, instance, r);
         const def = stub.definition;
         this._stubs.set(def.id, stub);
         peer._attachedContexts.set(ctxId, def.id);
@@ -898,7 +898,7 @@ export default class GenesisNetron extends AsyncEmitter {
     _processObject(uid, obj) {
         if (is.netronInterface(obj)) {
             return new Reference(obj.$def.id);
-        } else if (Investigator.isContextable(obj)) {
+        } else if (is.netronContext(obj)) {
             const def = this.refContext(uid, obj);
             def.uid = uid; // definition owner uid
             return def;
@@ -910,23 +910,6 @@ export default class GenesisNetron extends AsyncEmitter {
             return newDefs;
         }
         return obj;
-    }
-
-    _checkContext(instance, ctxId) {
-        if (is.nil(instance) || !is.propertyDefined(instance, "__proto__") || !is.propertyDefined(instance.__proto__, "constructor") || !Investigator.isContextable(instance) || is.class(instance)) {
-            throw new x.NotValid(`Instance of '${ctxId}' is not contextable`);
-        }
-
-        const ci = new Investigator(instance);
-        const classStr = ci.aClass.toString();
-        if (/class\s*{/.test(classStr)) {
-            throw new x.NotAllowed("Instances of anonymous class is not allowed");
-        }
-        if (ci.getPublicMethods().size === 0 && ci.getPublicProperties().size === 0) {
-            throw new x.NotValid("'instance' must have at least one method or property");
-        }
-
-        return ci;
     }
 
     _attachContext(ctxId, stub) {

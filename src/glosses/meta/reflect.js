@@ -1,4 +1,8 @@
-const { is } = adone;
+const {
+    is
+} = adone;
+
+adone.asNamespace(exports);
 
 // feature test for Symbol support
 const toPrimitiveSymbol = typeof Symbol.toPrimitive !== "undefined" ? Symbol.toPrimitive : "@@toPrimitive";

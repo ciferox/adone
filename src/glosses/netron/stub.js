@@ -1,46 +1,55 @@
 const {
     is,
     x,
-    netron: { Definition, Definitions, Investigator }
+    netron: { Definition, Definitions, Reflection }
 } = adone;
 
 export default class Stub {
-    constructor(netron, instance, ci) {
+    constructor(netron, instance, r) {
         this.netron = netron;
         this.instance = instance;
-        this._ci = ci || new Investigator(instance);
+        this._reflection = r || Reflection.from(instance);
         this._def = null;
     }
 
     investigator() {
-        return this._ci;
+        return this._reflection;
     }
 
     get definition() {
         if (is.null(this._def)) {
-            const ci = this._ci;
+            const r = this._reflection;
             const def = this._def = new Definition();
 
             def.id = this.netron.uniqueDefId.next();
             def.parentId = 0;
-            def.name = ci.getName();
-            def.description = ci.getDescription();
-            if (ci.hasTwin()) {
-                def.twin = ci.getTwin();
+            def.name = r.getName();
+            def.description = r.getDescription();
+            if (r.hasTwin()) {
+                def.twin = r.getTwin();
             }
 
-            const pubMethods = ci.getPublicMethods();
+            const methods = r.getMethods();
             const $ = def.$ = {};
-            for (const [method, meta] of pubMethods) {
+            for (const [method, meta] of methods) {
                 const args = [];
                 for (const arg of meta.args) {
-                    args.push([Investigator.getNameOfType(arg[0]), arg[1]]);
+                    args.push([Reflection.getNameOfType(arg[0]), arg[1]]);
                 }
-                $[method] = { method: true, type: Investigator.getNameOfType(meta.type), args, description: meta.description };
+                $[method] = {
+                    method: true,
+                    type: Reflection.getNameOfType(meta.type),
+                    args,
+                    description: meta.description
+                };
             }
-            const pubProps = ci.getPublicProperties();
-            for (const [prop, meta] of pubProps) {
-                $[prop] = { type: Investigator.getNameOfType(meta.type), readonly: meta.readonly, description: meta.description };
+            const properties = r.getProperties();
+            for (const [prop, meta] of properties) {
+                $[prop] = {
+                    type: Reflection.getNameOfType(meta.type),
+                    readonly: meta.readonly,
+                    description: meta.description
+                };
             }
         }
         return this._def;
@@ -92,7 +101,7 @@ export default class Stub {
     }
 
     _processResult(peer, result) {
-        if (Investigator.isContextable(result)) {
+        if (is.netronContext(result)) {
             const uid = (is.null(peer) ? peer : peer.uid);
             result = this.netron.refContext(uid, result);
             result.parentId = result.parentId || this._def.id;
