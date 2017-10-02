@@ -1,7 +1,8 @@
 describe("fs", "watcher", function watcherTests() {
     this.timeout(10000);
 
-    const { is, fs: { Watcher, watch } } = adone;
+    const { is, fs } = adone;
+    const { Watcher, watch } = fs;
     const { platform: os } = process;
 
     const usedWatchers = [];
@@ -148,7 +149,7 @@ describe("fs", "watcher", function watcherTests() {
                     add.waitForCall()
                 ]);
                 expect(meta.args[0]).to.be.equal(testFile.path());
-                expect(meta.args[1]).to.be.ok;  // stats
+                expect(meta.args[1]).to.be.ok; // stats
                 expect(rawSpy.callCount).not.to.be.equal(0);
             });
 
@@ -166,7 +167,7 @@ describe("fs", "watcher", function watcherTests() {
                     addDir.waitForCall()
                 ]);
                 expect(meta.args[0]).to.be.equal(dir.path());
-                expect(meta.args[1]).to.be.ok;  // stats
+                expect(meta.args[1]).to.be.ok; // stats
                 expect(rawSpy.callCount).not.to.be.equal(0);
             });
 
@@ -184,7 +185,7 @@ describe("fs", "watcher", function watcherTests() {
                     change.waitForCall()
                 ]);
                 expect(meta.args[0]).to.be.equal(file.path());
-                expect(meta.args[1]).to.be.ok;  // stats
+                expect(meta.args[1]).to.be.ok; // stats
                 expect(rawSpy.callCount).not.to.be.equal(0);
                 expect(change.callCount).to.be.equal(1);
             });
@@ -206,7 +207,7 @@ describe("fs", "watcher", function watcherTests() {
                 ]);
 
                 expect(meta.args[0]).to.be.equal(file.path());
-                expect(meta.args[1]).not.to.be.ok;  // no stats
+                expect(meta.args[1]).not.to.be.ok; // no stats
                 expect(rawSpy.callCount).not.be.equal(0);
                 expect(unlink.callCount).to.be.equal(1);
             });
@@ -224,7 +225,7 @@ describe("fs", "watcher", function watcherTests() {
                     unlinkDir.waitForCall()
                 ]);
                 expect(meta.args[0]).to.be.equal(testDir.path());
-                expect(meta.args[1]).not.to.be.ok;  // no stats
+                expect(meta.args[1]).not.to.be.ok; // no stats
                 expect(rawSpy.callCount).not.to.be.equal(0);
                 expect(unlinkDir.callCount).to.be.equal(1);
             });
@@ -249,10 +250,10 @@ describe("fs", "watcher", function watcherTests() {
                     add.waitForCall()
                 ]);
                 expect(unlinkMeta.args[0]).to.be.equal(testPath);
-                expect(unlinkMeta.args[1]).not.to.be.ok;  // no stats
+                expect(unlinkMeta.args[1]).not.to.be.ok; // no stats
                 expect(add.callCount).to.be.equal(1);
                 expect(addMeta.args[0]).to.be.equal(newFile.path());
-                expect(addMeta.args[1]).to.be.ok;  // stats
+                expect(addMeta.args[1]).to.be.ok; // stats
                 expect(rawSpy.callCount).not.to.be.equal(0);
                 if (!osXFsWatch) {
                     expect(unlink.callCount).to.be.equal(1);
@@ -334,7 +335,7 @@ describe("fs", "watcher", function watcherTests() {
                 ]);
                 expect(add.callCount).to.be.equal(1);
                 expect(add.getCall(0).args[0]).to.be.equal(testFile.path());
-                expect(add.getCall(0).args[1]).to.be.ok;  // stats
+                expect(add.getCall(0).args[1]).to.be.ok; // stats
                 expect(rawSpy.callCount).not.to.be.equal(0);
             });
 
@@ -403,7 +404,7 @@ describe("fs", "watcher", function watcherTests() {
                 ]);
                 expect(unlink.callCount).to.be.equal(1);
                 expect(unlink.getCall(0).args[0]).to.be.equal(testFile.path());
-                await sleep();  // the directory is going to be watched
+                await sleep(); // the directory is going to be watched
             });
 
             it("should detect unlink and re-add", async () => {
@@ -627,7 +628,7 @@ describe("fs", "watcher", function watcherTests() {
                         };
                     })
                 ]);
-                expect(all.callCount).to.be.equal(3);  // add "add", change "ab", unlink "a"
+                expect(all.callCount).to.be.equal(3); // add "add", change "ab", unlink "a"
                 expect(all.getCall(0).args.slice(0, 2)).to.be.deep.equal(["add", add.path()]);
                 expect(all.getCall(1).args.slice(0, 2)).to.be.deep.equal(["change", ab.path()]);
                 expect(all.getCall(2).args.slice(0, 2)).to.be.deep.equal(["unlink", a.path()]);
@@ -869,11 +870,40 @@ describe("fs", "watcher", function watcherTests() {
                     all.waitForArgs("unlinkDir", deepDir.path())
                 ]);
             });
+
+            it("should correctly handle glob with braces", async () => {
+                const s = spy();
+                const watchPath = fixtures.getFile("{subdir/*,subdir1/subsub1}/subsubsub/*.txt").path();
+                const deepFileA = fixtures.getFile("subdir/subsub/subsubsub/a.txt");
+                const deepFileB = fixtures.getFile("subdir1/subsub1/subsubsub/a.txt");
+                const subdir = await fixtures.addDirectory("subdir");
+                const subsub = await subdir.addDirectory("subsub");
+                await subsub.addDirectory("subsubsub");
+                const subdir1 = await fixtures.addDirectory("subdir1");
+                const subsub1 = await subdir1.addDirectory("subsub1");
+                await subsub1.addDirectory("subsubsub");
+                await deepFileA.write(Date.now());
+                await deepFileB.write(Date.now());
+                const ready = spy();
+                watcher = watch(watchPath, options)
+                    .on("all", s)
+                    .on("ready", ready);
+                await ready.waitForCall();
+                expect(s).to.have.been.calledWith("add", deepFileA.path());
+                expect(s).to.have.been.calledWith("add", deepFileB.path());
+                await Promise.all([
+                    deepFileA.append(Date.now()),
+                    deepFileB.append(Date.now()),
+                    s.waitForNCalls(2)
+                ]);
+                expect(s).to.have.been.calledWith("change", deepFileA.path());
+                expect(s).to.have.been.calledWith("change", deepFileB.path());
+            });
         });
 
         describe("watch symlinks", () => {
             if (os === "win32") {
-                return;  // have to have root permissions
+                return; // have to have root permissions
             }
 
             before(closeWatchers);
@@ -1064,7 +1094,7 @@ describe("fs", "watcher", function watcherTests() {
                 await sleep();
                 // only the children are matched by the glob pattern, not the link itself
                 expect(add).to.have.been.calledWith(adone.std.path.join(watchDir, "change.txt"));
-                expect(add.callCount).to.be.equal(3);  // also unlink.txt & subdir/add.txt
+                expect(add.callCount).to.be.equal(3); // also unlink.txt & subdir/add.txt
                 expect(addDir).to.have.been.calledWith(adone.std.path.join(watchDir, "subdir"));
                 const addFile = linkedDir.getFile("add.txt");
                 await Promise.all([
@@ -1449,9 +1479,9 @@ describe("fs", "watcher", function watcherTests() {
                     await ready.waitForCall();
                     await sleep();
 
-                    const vim = await fixtures.addFile(".change.txt.swp", { contents: "a" });  // vim
-                    const emacs = await fixtures.addFile("add.txt\~", { contents: "a" });  // vim/emacs
-                    const sublime = await fixtures.addFile(".subl5f4.tmp", { contents: "a" });  // sublime
+                    const vim = await fixtures.addFile(".change.txt.swp", { contents: "a" }); // vim
+                    const emacs = await fixtures.addFile("add.txt\~", { contents: "a" }); // vim/emacs
+                    const sublime = await fixtures.addFile(".subl5f4.tmp", { contents: "a" }); // sublime
 
                     await sleep(300);
 
@@ -1520,7 +1550,7 @@ describe("fs", "watcher", function watcherTests() {
                         addDir.waitForArgs("subdir-renamed")
                     ]);
                     expect(addDir.callCount).to.be.equal(1);
-                    expect(addDir.getCall(0).args[1]).to.be.ok;  // stats
+                    expect(addDir.getCall(0).args[1]).to.be.ok; // stats
                 });
 
                 it("should allow separate watchers to have different cwds", async () => {
@@ -1591,7 +1621,7 @@ describe("fs", "watcher", function watcherTests() {
             describe("ignorePermissionErrors", () => {
                 let file;
                 beforeEach(async () => {
-                    file = await fixtures.addFile("add.txt", { mode: 0o200 });  // owner writing
+                    file = await fixtures.addFile("add.txt", { mode: 0o200 }); // owner writing
                     await sleep();
                 });
 

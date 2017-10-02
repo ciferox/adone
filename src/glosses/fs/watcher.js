@@ -1,6 +1,10 @@
 const {
     is,
-    fs
+    fs,
+    std,
+    util,
+    noop,
+    event
 } = adone;
 
 // fsevents
@@ -59,9 +63,9 @@ const createFSEventsInstance = (path, callback) => new FSEvents(path).on("fseven
  * @returns {function} close function
  */
 const setFSEventsListener = (path, realPath, listener, rawEmitter) => {
-    let watchPath = adone.std.path.extname(path) ? adone.std.path.dirname(path) : path;
+    let watchPath = std.path.extname(path) ? std.path.dirname(path) : path;
     let watchContainer;
-    const parentPath = adone.std.path.dirname(watchPath);
+    const parentPath = std.path.dirname(watchPath);
 
     // If we've accumulated a substantial number of paths that
     // could have been consolidated by watching one directory
@@ -71,13 +75,13 @@ const setFSEventsListener = (path, realPath, listener, rawEmitter) => {
         watchPath = parentPath;
     }
 
-    const resolvedPath = adone.std.path.resolve(path);
+    const resolvedPath = std.path.resolve(path);
     const hasSymlink = resolvedPath !== realPath;
     const filteredListener = (fullPath, flags, info) => {
         if (hasSymlink) {
             fullPath = fullPath.replace(realPath, resolvedPath);
         }
-        if (fullPath === resolvedPath || !fullPath.indexOf(resolvedPath + adone.std.path.sep)) {
+        if (fullPath === resolvedPath || !fullPath.indexOf(resolvedPath + std.path.sep)) {
             listener(fullPath, flags, info);
         }
     };
@@ -86,7 +90,7 @@ const setFSEventsListener = (path, realPath, listener, rawEmitter) => {
     // modifies `watchPath` to the parent path when it finds a match
     const watchedParent = () => [...FSEventsWatchers.keys()].some((watchedPath) => {
         // condition is met when indexOf returns 0
-        if (!realPath.indexOf(adone.std.path.resolve(watchedPath) + adone.std.path.sep)) {
+        if (!realPath.indexOf(std.path.resolve(watchedPath) + std.path.sep)) {
             watchPath = watchedPath;
             return true;
         }
@@ -131,7 +135,7 @@ const setFSEventsListener = (path, realPath, listener, rawEmitter) => {
  */
 const depth = (path, root) => {
     let i = 0;
-    while (!path.indexOf(root) && (path = adone.std.path.dirname(path)) !== root) {
+    while (!path.indexOf(root) && (path = std.path.dirname(path)) !== root) {
         i++;
     }
     return i;
@@ -163,13 +167,13 @@ const FSEventsHandler = {
             if (!is.undefined(this.options.depth) && depth(fullPath, realPath) > this.options.depth) {
                 return;
             }
-            const path = transform(adone.std.path.join(watchPath, adone.std.path.relative(watchPath, fullPath)));
+            const path = transform(std.path.join(watchPath, std.path.relative(watchPath, fullPath)));
             if (globFilter && !globFilter(path)) {
                 return;
             }
             // ensure directories are tracked
-            const parent = adone.std.path.dirname(path);
-            const item = adone.std.path.basename(path);
+            const parent = std.path.dirname(path);
+            const item = std.path.basename(path);
             const watchedDir = this._getWatchedDir(info.type === "directory" ? path : parent);
             const checkIgnored = (stats) => {
                 if (this._isIgnored(path, stats)) {
@@ -221,18 +225,18 @@ const FSEventsHandler = {
 
             const addOrChange = () => handleEvent(watchedDir.has(item) ? "change" : "add");
             const checkFd = () => {
-                adone.std.fs.open(path, "r", (error, fd) => {
+                std.fs.open(path, "r", (error, fd) => {
                     if (fd) {
-                        adone.std.fs.close(fd, adone.noop);
+                        std.fs.close(fd, noop);
                     }
                     error && error.code !== "EACCES" ? handleEvent("unlink") : addOrChange();
                 });
             };
             // correct for wrong events emitted
             const wrongEventFlags = [69888, 70400, 71424, 72704, 73472, 131328, 131840, 262912];
-            if (wrongEventFlags.indexOf(flags) !== -1 || info.event === "unknown") {
-                if (adone.is.function(this.options.ignored)) {
-                    adone.std.fs.stat(path, (error, stats) => {
+            if (wrongEventFlags.includes(flags) || info.event === "unknown") {
+                if (is.function(this.options.ignored)) {
+                    std.fs.stat(path, (error, stats) => {
                         if (checkIgnored(stats)) {
                             return;
                         }
@@ -269,13 +273,13 @@ const FSEventsHandler = {
     _addToFsEvents(path, transform, forceAdd, priorDepth) {
 
         // applies transform if provided, otherwise returns same value
-        const processPath = adone.is.function(transform) ? transform : (x) => x;
+        const processPath = is.function(transform) ? transform : (x) => x;
 
         const emitAdd = (newPath, stats) => {
             const pp = processPath(newPath);
             const isDir = stats.isDirectory();
-            const dirObj = this._getWatchedDir(adone.std.path.dirname(pp));
-            const base = adone.std.path.basename(pp);
+            const dirObj = this._getWatchedDir(std.path.dirname(pp));
+            const base = std.path.basename(pp);
 
             // ensure empty dirs get tracked
             if (isDir) {
@@ -295,7 +299,7 @@ const FSEventsHandler = {
         const wh = this._getWatchHelpers(path);
 
         // evaluate what is at the path we're being asked to watch
-        adone.std.fs[wh.statMethod](wh.watchPath, (error, stats) => {
+        std.fs[wh.statMethod](wh.watchPath, (error, stats) => {
             if (this._handleError(error) || this._isIgnored(wh.watchPath, stats)) {
                 this._emitReady();
                 return this._emitReady();
@@ -325,13 +329,13 @@ const FSEventsHandler = {
                     if (entry.stat.isDirectory() && !wh.filterPath(entry)) {
                         return;
                     }
-                    const joinedPath = adone.std.path.join(wh.watchPath, entry.path);
+                    const joinedPath = std.path.join(wh.watchPath, entry.path);
                     const fullPath = entry.fullPath;
 
                     if (wh.followSymlinks && entry.stat.isSymbolicLink()) {
                         // preserve the current depth here since it can't be derived from
                         // real paths past the symlink
-                        const curDepth = is.undefined(this.options.depth) ? undefined : depth(joinedPath, adone.std.path.resolve(wh.watchPath)) + 1;
+                        const curDepth = is.undefined(this.options.depth) ? undefined : depth(joinedPath, std.path.resolve(wh.watchPath)) + 1;
                         this._handleFsEventsSymlink(joinedPath, fullPath, processPath, curDepth);
                     } else {
                         emitAdd(joinedPath, entry.stat);
@@ -351,7 +355,7 @@ const FSEventsHandler = {
             const initWatch = (error, realPath) => {
                 const closer = this._watchWithFsEvents(
                     wh.watchPath,
-                    adone.std.path.resolve(realPath || wh.watchPath),
+                    std.path.resolve(realPath || wh.watchPath),
                     processPath,
                     wh.globFilter
                 );
@@ -363,11 +367,11 @@ const FSEventsHandler = {
                 }
             };
 
-            if (adone.is.function(transform)) {
+            if (is.function(transform)) {
                 // realpath has already been resolved
                 initWatch();
             } else {
-                adone.std.fs.realpath(wh.watchPath, initWatch);
+                std.fs.realpath(wh.watchPath, initWatch);
             }
         }
     },
@@ -391,7 +395,7 @@ const FSEventsHandler = {
 
         this._readyCount++;
 
-        adone.std.fs.realpath(linkPath, (error, linkTarget) => {
+        std.fs.realpath(linkPath, (error, linkTarget) => {
             if (this._handleError(error) || this._isIgnored(linkTarget)) {
                 return this._emitReady();
             }
@@ -401,12 +405,12 @@ const FSEventsHandler = {
             // add the linkTarget for watching with a wrapper for transform
             // that causes emitted paths to incorporate the link's path
             this._addToFsEvents(linkTarget || linkPath, (path) => {
-                const dotSlash = `.${adone.std.path.sep}`;
+                const dotSlash = `.${std.path.sep}`;
                 let aliasedPath = linkPath;
                 if (linkTarget && linkTarget !== dotSlash) {
                     aliasedPath = path.replace(linkTarget, linkPath);
                 } else if (path !== dotSlash) {
-                    aliasedPath = adone.std.path.join(linkPath, path);
+                    aliasedPath = std.path.join(linkPath, path);
                 }
                 return transform(aliasedPath);
             }, false, curDepth);
@@ -414,11 +418,8 @@ const FSEventsHandler = {
     }
 };
 
-///////////
-
-
-const dotRe = /\..*\.(sw[px])$|\~$|\.subl.*\.tmp/;
-const replacerRe = /^\.[\/\\]/;
+const dotRe = /\..*\.(sw[px])$|~$|\.subl.*\.tmp/;
+const replacerRe = /^\.[/\\]/;
 
 
 
@@ -464,11 +465,11 @@ const createFsWatchInstance = (path, options, listener, errHandler, emitRaw) => 
         // emit based on events occuring for files from a directory's watcher in
         // case the file's watcher misses it (and rely on throttling to de-dupe)
         if (evPath && path !== evPath) {
-            fsWatchBroadcast(adone.std.path.resolve(path, evPath), "listeners", adone.std.path.join(path, evPath));
+            fsWatchBroadcast(std.path.resolve(path, evPath), "listeners", std.path.join(path, evPath));
         }
     };
     try {
-        return adone.std.fs.watch(path, options, handleEvent);
+        return std.fs.watch(path, options, handleEvent);
     } catch (error) {
         errHandler(error);
     }
@@ -507,9 +508,9 @@ const setFsWatchListener = (path, fullPath, options, handlers) => {
         watcher.on("error", (error) => {
             // Workaround for https://github.com/joyent/node/issues/4337
             if (is.windows && error.code === "EPERM") {
-                adone.std.fs.open(path, "r", (err, fd) => {
+                std.fs.open(path, "r", (err, fd) => {
                     if (fd) {
-                        adone.std.fs.close(fd);
+                        std.fs.close(fd);
                     }
                     if (!err) {
                         broadcastErr(error);
@@ -573,7 +574,7 @@ const setFsWatchFileListener = (path, fullPath, options, handlers) => {
         // settings in a very weird way, but solving for those cases
         // doesn't seem worthwhile for the added complexity.
         ({ listeners, rawEmitters } = container);
-        adone.std.fs.unwatchFile(fullPath);
+        std.fs.unwatchFile(fullPath);
         container = false;
     }
     if (!container) {
@@ -583,7 +584,7 @@ const setFsWatchFileListener = (path, fullPath, options, handlers) => {
             listeners,
             rawEmitters,
             options,
-            watcher: adone.std.fs.watchFile(fullPath, options, (curr, prev) => {
+            watcher: std.fs.watchFile(fullPath, options, (curr, prev) => {
                 // console.log("EVENT", fullPath);
                 container.rawEmitters.forEach((rawEmitter) => {
                     rawEmitter("change", fullPath, { curr, prev });
@@ -607,13 +608,13 @@ const setFsWatchFileListener = (path, fullPath, options, handlers) => {
         container.listeners.splice(container.listeners.indexOf(listener), 1);
         container.rawEmitters.splice(container.rawEmitters.indexOf(rawEmitter), 1);
         if (!container.listeners.length) {
-            adone.std.fs.unwatchFile(fullPath);
+            std.fs.unwatchFile(fullPath);
             FsWatchFileInstances.delete(fullPath);
         }
     };
 };
 
-export default class Watcher extends adone.event.EventEmitter {
+export default class Watcher extends event.EventEmitter {
     constructor({
         persistent = true,
         ignoreInitial = false,
@@ -671,14 +672,14 @@ export default class Watcher extends adone.event.EventEmitter {
             this._pendingWrites = Object.create(null);
         }
 
-        ignored = adone.util.arrify(ignored);
+        ignored = util.arrify(ignored);
 
         this._isntIgnored = (path, stat) => !this._isIgnored(path, stat);
 
         let readyCalls = 0;
         this._emitReady = () => {
             if (++readyCalls >= this._readyCount) {
-                this._emitReady = adone.noop;
+                this._emitReady = noop;
                 this._readyEmitted = true;
                 // use process.nextTick to allow time for listener to be bound
                 process.nextTick(() => this.emit("ready"));
@@ -722,20 +723,20 @@ export default class Watcher extends adone.event.EventEmitter {
     add(paths, _origAdd, _internal) {
         const { cwd } = this.options;
         this.closed = false;
-        paths = adone.util.flatten(adone.util.arrify(paths));
+        paths = util.flatten(util.arrify(paths));
 
-        if (!paths.every(adone.is.string)) {
+        if (!paths.every(is.string)) {
             throw new TypeError(`Non-string provided as watch path: ${paths}`);
         }
 
         if (cwd) {
             paths = paths.map((path) => {
-                if (adone.std.path.isAbsolute(path)) {
+                if (std.path.isAbsolute(path)) {
                     return path;
                 } else if (path[0] === "!") {
-                    return `!${adone.std.path.join(cwd, path.substring(1))}`;
+                    return `!${std.path.join(cwd, path.substring(1))}`;
                 }
-                return adone.std.path.join(cwd, path);
+                return std.path.join(cwd, path);
 
             });
         }
@@ -787,7 +788,7 @@ export default class Watcher extends adone.event.EventEmitter {
                     if (!item) {
                         continue;
                     }
-                    this.add(adone.std.path.dirname(item), adone.std.path.basename(_origAdd || item));
+                    this.add(std.path.dirname(item), std.path.basename(_origAdd || item));
                 }
             });
         }
@@ -808,15 +809,15 @@ export default class Watcher extends adone.event.EventEmitter {
         if (this.closed) {
             return this;
         }
-        paths = adone.util.flatten(adone.util.arrify(paths));
+        paths = util.flatten(util.arrify(paths));
 
         paths.forEach((path) => {
             // convert to absolute path unless relative path already matches
-            if (!adone.std.path.isAbsolute(path) && !this._closers.has(path)) {
+            if (!std.path.isAbsolute(path) && !this._closers.has(path)) {
                 if (this.options.cwd) {
-                    path = adone.std.path.join(this.options.cwd, path);
+                    path = std.path.join(this.options.cwd, path);
                 }
-                path = adone.std.path.resolve(path);
+                path = std.path.resolve(path);
             }
 
             this._closePath(path);
@@ -871,8 +872,8 @@ export default class Watcher extends adone.event.EventEmitter {
     getWatched() {
         const watchList = {};
         for (const [dir, list] of this._watched.entries()) {
-            const key = this.options.cwd ? adone.std.path.relative(this.options.cwd, dir) : dir;
-            watchList[key || "."] = adone.util.keys(list._items).sort();
+            const key = this.options.cwd ? std.path.relative(this.options.cwd, dir) : dir;
+            watchList[key || "."] = util.keys(list._items).sort();
         }
         return watchList;
     }
@@ -890,7 +891,7 @@ export default class Watcher extends adone.event.EventEmitter {
      */
     _emit(event, path, ...vals) {
         if (this.options.cwd) {
-            path = adone.std.path.relative(this.options.cwd, path);
+            path = std.path.relative(this.options.cwd, path);
         }
         const args = [event, path, ...vals];
 
@@ -909,7 +910,7 @@ export default class Watcher extends adone.event.EventEmitter {
                         this.emit("all", ...this._pendingUnlinks[path]);
                         delete this._pendingUnlinks[path];
                     });
-                }, adone.is.number(this.options.atomic) ? this.options.atomic : 100);
+                }, is.number(this.options.atomic) ? this.options.atomic : 100);
                 return this;
             } else if (event === "add" && this._pendingUnlinks[path]) {
                 event = args[0] = "change";
@@ -952,8 +953,8 @@ export default class Watcher extends adone.event.EventEmitter {
         }
 
         if (this.options.alwaysStat && vals.length === 0 && (event === "add" || event === "addDir" || event === "change")) {
-            const fullPath = this.options.cwd ? adone.std.path.join(this.options.cwd, path) : path;
-            adone.std.fs.stat(fullPath, (error, stats) => {
+            const fullPath = this.options.cwd ? std.path.join(this.options.cwd, path) : path;
+            std.fs.stat(fullPath, (error, stats) => {
                 // Suppress event when fs.stat fails, to avoid sending undefined "stat"
                 if (error || !stats) {
                     return;
@@ -1035,14 +1036,14 @@ export default class Watcher extends adone.event.EventEmitter {
         let timeoutHandler;
 
         let fullPath = path;
-        if (this.options.cwd && !adone.std.path.isAbsolute(path)) {
-            fullPath = adone.std.path.join(this.options.cwd, path);
+        if (this.options.cwd && !std.path.isAbsolute(path)) {
+            fullPath = std.path.join(this.options.cwd, path);
         }
 
         const now = new Date();
 
         const awaitWriteFinish = (prevStat) => {
-            adone.std.fs.stat(fullPath, (err, curStat) => {
+            std.fs.stat(fullPath, (err, curStat) => {
                 if (err) {
                     if (err.code !== "ENOENT") {
                         awfEmit(err);
@@ -1101,14 +1102,14 @@ export default class Watcher extends adone.event.EventEmitter {
                     if (!is.string(path)) {
                         return path;
                     }
-                    return adone.std.path.isAbsolute(path) ? path : adone.std.path.join(cwd, path);
+                    return std.path.isAbsolute(path) ? path : std.path.join(cwd, path);
                 });
             }
-            const paths = adone.util.arrify(ignored)
-                .filter((path) => adone.is.string(path) && !adone.is.glob(path))
+            const paths = util.arrify(ignored)
+                .filter((path) => is.string(path) && !is.glob(path))
                 .map((path) => `${path}/**`);
 
-            this._userIgnored = adone.util.matchPath([...this._globIgnored, ...ignored, ...paths]);
+            this._userIgnored = util.matchPath([...this._globIgnored, ...ignored, ...paths]);
         }
 
         return this._userIgnored([path, stats]);
@@ -1127,10 +1128,10 @@ export default class Watcher extends adone.event.EventEmitter {
      */
     _getWatchHelpers(path, depth) {
         path = path.replace(replacerRe, "");
-        const watchPath = depth || this.options.disableGlobbing || !adone.is.glob(path) ? path : adone.util.globParent(path);
-        const fullWatchPath = adone.std.path.resolve(watchPath);
+        const watchPath = depth || this.options.disableGlobbing || !is.glob(path) ? path : util.globParent(path);
+        const fullWatchPath = std.path.resolve(watchPath);
         const hasGlob = watchPath !== path;
-        const globFilter = hasGlob ? adone.util.matchPath(path) : false;
+        const globFilter = hasGlob ? util.matchPath(path) : false;
         const follow = this.options.followSymlinks;
         let globSymlink = hasGlob && follow ? null : false;
 
@@ -1151,7 +1152,7 @@ export default class Watcher extends adone.event.EventEmitter {
             return entry.fullPath;
         };
 
-        const entryPath = (entry) => adone.std.path.join(watchPath, adone.std.path.relative(watchPath, checkGlobSymlink(entry)));
+        const entryPath = (entry) => std.path.join(watchPath, std.path.relative(watchPath, checkGlobSymlink(entry)));
         let filterDir = null;
         const filterPath = (entry) => {
             if (entry.stat && entry.stat.isSymbolicLink()) {
@@ -1161,11 +1162,23 @@ export default class Watcher extends adone.event.EventEmitter {
             return (!hasGlob || globFilter(resolvedPath)) && this._isntIgnored(resolvedPath, entry.stat) && (this.options.ignorePermissionErrors || this._hasReadPermissions(entry.stat));
         };
 
-        const getDirParts = (path) => !hasGlob ? false : adone.std.path.relative(watchPath, path).split(/[\/\\]/);
+        const getDirParts = (path) => {
+            if (!hasGlob) {
+                return false;
+            }
+            const parts = [];
+            const expandedPath = util.braces.expand(path);
+            expandedPath.forEach((path) => parts.push(std.path.relative(watchPath, path).split(/[/\\]/)));
+            return parts;
+        };
 
         const dirParts = getDirParts(path);
-        if (dirParts && dirParts.length > 1) {
-            dirParts.pop();
+        if (dirParts) {
+            dirParts.forEach((parts) => {
+                if (parts.length > 1) {
+                    parts.pop();
+                }
+            });
         }
         let unmatchedGlob;
 
@@ -1173,11 +1186,13 @@ export default class Watcher extends adone.event.EventEmitter {
             if (hasGlob) {
                 const entryParts = getDirParts(checkGlobSymlink(entry));
                 let globstar = false;
-                unmatchedGlob = !dirParts.every((part, i) => {
-                    if (part === "**") {
-                        globstar = true;
-                    }
-                    return globstar || !entryParts[i] || adone.util.matchPath(part, entryParts[i]);
+                unmatchedGlob = !dirParts.some((parts) => {
+                    return parts.every((part, i) => {
+                        if (part === "**") {
+                            globstar = true;
+                        }
+                        return globstar || !entryParts[0][i] || util.matchPath(part, entryParts[0][i]);
+                    });
                 });
             }
             return !unmatchedGlob && this._isntIgnored(entryPath(entry), entry.stat);
@@ -1201,7 +1216,7 @@ export default class Watcher extends adone.event.EventEmitter {
      * @memberOf Watcher
      */
     _getWatchedDir(directory) {
-        const dir = adone.std.path.resolve(directory);
+        const dir = std.path.resolve(directory);
         const watcherRemove = (...args) => this._remove(...args);
         if (!this._watched.has(dir)) {
             this._watched.set(dir, {
@@ -1214,9 +1229,9 @@ export default class Watcher extends adone.event.EventEmitter {
                 remove(item) {
                     delete this._items[item];
                     if (!this.children().length) {
-                        adone.std.fs.readdir(dir, (err) => {
+                        std.fs.readdir(dir, (err) => {
                             if (err) {
-                                watcherRemove(adone.std.path.dirname(dir), adone.std.path.basename(dir));
+                                watcherRemove(std.path.dirname(dir), std.path.basename(dir));
                             }
                         });
                     }
@@ -1261,8 +1276,8 @@ export default class Watcher extends adone.event.EventEmitter {
         // if what is being deleted is a directory, get that directory's paths
         // for recursive deleting and cleaning of watched object
         // if it is not a directory, nestedDirectoryChildren will be empty array
-        const path = adone.std.path.join(directory, item);
-        const fullPath = adone.std.path.resolve(path);
+        const path = std.path.join(directory, item);
+        const fullPath = std.path.resolve(path);
         const isDirectory = this._watched.get(this._watched.has(path) ? path : fullPath);
 
         // prevent duplicate handling in case of arriving here nearly simultaneously
@@ -1293,7 +1308,7 @@ export default class Watcher extends adone.event.EventEmitter {
         // If we wait for this file to be fully written, cancel the wait.
         let relPath = path;
         if (this.options.cwd) {
-            relPath = adone.std.path.relative(this.options.cwd, path);
+            relPath = std.path.relative(this.options.cwd, path);
         }
         if (this.options.awaitWriteFinish && this._pendingWrites[relPath]) {
             const event = this._pendingWrites[relPath].cancelWait();
@@ -1322,7 +1337,7 @@ export default class Watcher extends adone.event.EventEmitter {
         }
         this._closers.get(path).forEach((x) => x());
         this._closers.delete(path);
-        this._getWatchedDir(adone.std.path.dirname(path)).remove(adone.std.path.basename(path));
+        this._getWatchedDir(std.path.dirname(path)).remove(std.path.basename(path));
     }
 
 
@@ -1340,7 +1355,7 @@ export default class Watcher extends adone.event.EventEmitter {
      * @param {function} callback - indicates whether the path was found or not
      * @returns
      */
-    _addToNodeFs(path, initialAdd, priorWh, depth, target, callback = adone.noop) {
+    _addToNodeFs(path, initialAdd, priorWh, depth, target, callback = noop) {
         const ready = this._emitReady;
         if (this._isIgnored(path) || this.closed) {
             ready();
@@ -1356,7 +1371,7 @@ export default class Watcher extends adone.event.EventEmitter {
         }
 
         // evaluate what is at the path we're being asked to watch
-        adone.std.fs[wh.statMethod](wh.watchPath, (error, stats) => {
+        std.fs[wh.statMethod](wh.watchPath, (error, stats) => {
             if (this._handleError(error)) {
                 return callback(null, path);
             }
@@ -1371,14 +1386,14 @@ export default class Watcher extends adone.event.EventEmitter {
             if (stats.isDirectory()) {
                 closer = initDir(wh.watchPath, target);
             } else if (stats.isSymbolicLink()) {
-                const parent = adone.std.path.dirname(wh.watchPath);
+                const parent = std.path.dirname(wh.watchPath);
                 this._getWatchedDir(parent).add(wh.watchPath);
                 this._emit("add", wh.watchPath, stats);
                 closer = initDir(parent, path);
 
                 // preserve this symlink's target path
-                adone.std.fs.realpath(path, (error, targetPath) => {
-                    this._symlinkPaths.set(adone.std.path.resolve(path), targetPath);
+                std.fs.realpath(path, (error, targetPath) => {
+                    this._symlinkPaths.set(std.path.resolve(path), targetPath);
                     ready();
                 });
             } else {
@@ -1409,8 +1424,8 @@ export default class Watcher extends adone.event.EventEmitter {
      * @returns {function} close function for the watcher instance
      */
     _handleDir(dir, stats, initialAdd, depth, target, wh, callback) {
-        const parentDir = this._getWatchedDir(adone.std.path.dirname(dir));
-        const tracked = parentDir.has(adone.std.path.basename(dir));
+        const parentDir = this._getWatchedDir(std.path.dirname(dir));
+        const tracked = parentDir.has(std.path.basename(dir));
         if (!(initialAdd && this.options.ignoreInitial) && !target && !tracked) {
             if (!wh.hasGlob || wh.globFilter(dir)) {
                 this._emit("addDir", dir, stats);
@@ -1418,12 +1433,12 @@ export default class Watcher extends adone.event.EventEmitter {
         }
 
         // ensure dir is tracked (harmless if redundant)
-        parentDir.add(adone.std.path.basename(dir));
+        parentDir.add(std.path.basename(dir));
         this._getWatchedDir(dir);
 
         const read = (directory, initialAdd, done) => {
             // Normalize the directory name on Windows
-            directory = adone.std.path.join(directory, "");
+            directory = std.path.join(directory, "");
 
             let throttler;
             if (!wh.hasGlob) {
@@ -1435,9 +1450,9 @@ export default class Watcher extends adone.event.EventEmitter {
 
             const previous = this._getWatchedDir(wh.path);
             const current = [];
-            adone.std.fs[wh.statMethod](directory, (err) => {
+            std.fs[wh.statMethod](directory, (err) => {
                 if (err) {
-                    this._remove(adone.std.path.dirname(directory), adone.std.path.basename(directory));
+                    this._remove(std.path.dirname(directory), std.path.basename(directory));
                     return;
                 }
 
@@ -1450,7 +1465,7 @@ export default class Watcher extends adone.event.EventEmitter {
                     lstat: true
                 }).forEach((entry) => {
                     const item = entry.path;
-                    let path = adone.std.path.join(directory, item);
+                    let path = std.path.join(directory, item);
                     current.push(item);
 
                     if (entry.stat.isSymbolicLink() && this._handleSymlink(entry, directory, path, item)) {
@@ -1464,7 +1479,7 @@ export default class Watcher extends adone.event.EventEmitter {
                         this._readyCount++;
 
                         // ensure relativeness of path is preserved in case of watcher reuse
-                        path = adone.std.path.join(dir, adone.std.path.relative(dir, path));
+                        path = std.path.join(dir, std.path.relative(dir, path));
 
                         this._addToNodeFs(path, initialAdd, wh, depth + 1);
                     }
@@ -1488,7 +1503,7 @@ export default class Watcher extends adone.event.EventEmitter {
                             // a path may have been filtered out of this readdir, but
                             // shouldn't be removed because it matches a different glob
                             && (!wh.hasGlob || wh.filterPath({
-                                fullPath: adone.std.path.resolve(directory, item)
+                                fullPath: std.path.resolve(directory, item)
                             }));
                     }).forEach((item) => {
                         this._remove(directory, item);
@@ -1534,7 +1549,7 @@ export default class Watcher extends adone.event.EventEmitter {
         if (!this.options.followSymlinks) {
             // watch symlink directly (don't follow) and detect changes
             this._readyCount++;
-            adone.std.fs.realpath(path, (error, linkPath) => {
+            std.fs.realpath(path, (error, linkPath) => {
                 if (dir.has(item)) {
                     if (this._symlinkPaths.get(full) !== linkPath) {
                         this._symlinkPaths.set(full, linkPath);
@@ -1568,8 +1583,8 @@ export default class Watcher extends adone.event.EventEmitter {
      * @returns {function} close function for the watcher instance
      */
     _handleFile(file, stats, initialAdd, callback) {
-        const dirname = adone.std.path.dirname(file);
-        const basename = adone.std.path.basename(file);
+        const dirname = std.path.dirname(file);
+        const basename = std.path.basename(file);
         const parent = this._getWatchedDir(dirname);
 
         // if the file is already being watched, do nothing
@@ -1583,7 +1598,7 @@ export default class Watcher extends adone.event.EventEmitter {
                 return;
             }
             if (!newStats || newStats && newStats.mtime.getTime() === 0) {
-                adone.std.fs.stat(file, (error, newStats) => {
+                std.fs.stat(file, (error, newStats) => {
                     // Fix issues where mtime is null but file is still present
                     if (error) {
                         this._remove(dirname, basename);
@@ -1619,17 +1634,17 @@ export default class Watcher extends adone.event.EventEmitter {
      * @param {function} listener - to be executed on fs change.
      * @returns {function} close function for the watcher instance
      */
-    _watchWithNodeFs(path, listener = adone.noop) {
-        const directory = adone.std.path.dirname(path);
-        const basename = adone.std.path.basename(path);
+    _watchWithNodeFs(path, listener = noop) {
+        const directory = std.path.dirname(path);
+        const basename = std.path.basename(path);
         const parent = this._getWatchedDir(directory);
         parent.add(basename);
-        const absolutePath = adone.std.path.resolve(path);
+        const absolutePath = std.path.resolve(path);
         const options = { persistent: this.options.persistent };
 
         let closer;
         if (this.options.usePolling) {
-            options.interval = this.enableBinaryInterval && adone.is.binaryPath(basename) ? this.options.binaryInterval : this.options.interval;
+            options.interval = this.enableBinaryInterval && is.binaryPath(basename) ? this.options.binaryInterval : this.options.interval;
             closer = setFsWatchFileListener(path, absolutePath, options, {
                 listener,
                 rawEmitter: (...args) => this.emit("raw", ...args)
@@ -1646,7 +1661,7 @@ export default class Watcher extends adone.event.EventEmitter {
 }
 
 if (canUseFSEvents()) {
-    for (const method of adone.util.keys(FSEventsHandler)) {
+    for (const method of util.keys(FSEventsHandler)) {
         Watcher.prototype[method] = FSEventsHandler[method];
     }
 }
