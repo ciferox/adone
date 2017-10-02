@@ -290,6 +290,13 @@ export default class ExpressionParser extends LValParser {
 
         const startPos = this.state.start;
         const startLoc = this.state.startLoc;
+
+        if (node.operator === "|>") {
+          this.expectPlugin("pipelineOperator");
+          // Support syntax such as 10 |> x => x + 1
+          this.state.potentialArrowAt = startPos;
+        }
+
         node.right = this.parseExprOp(
           this.parseMaybeUnary(),
           startPos,
@@ -324,6 +331,10 @@ export default class ExpressionParser extends LValParser {
       const update = this.match(tt.incDec);
       node.operator = this.state.value;
       node.prefix = true;
+
+      if (node.operator === "throw") {
+        this.expectPlugin("throwExpressions");
+      }
       this.next();
 
       const argType = this.state.type;
@@ -1397,21 +1408,17 @@ export default class ExpressionParser extends LValParser {
   }
 
   parsePropertyName(
-    prop:
-      | N.ObjectOrClassMember
-      | N.ClassPrivateProperty
-      | N.ClassPrivateMethod
-      | N.TsNamedTypeElementBase,
+    prop: N.ObjectOrClassMember | N.ClassMember | N.TsNamedTypeElementBase,
   ): N.Expression | N.Identifier {
     if (this.eat(tt.bracketL)) {
-      prop.computed = true;
+      (prop: $FlowSubtype<N.ObjectOrClassMember>).computed = true;
       prop.key = this.parseMaybeAssign();
       this.expect(tt.bracketR);
     } else {
       const oldInPropertyName = this.state.inPropertyName;
       this.state.inPropertyName = true;
       // We check if it's valid for it to be a private name when we push it.
-      prop.key =
+      (prop: $FlowFixMe).key =
         this.match(tt.num) || this.match(tt.string)
           ? this.parseExprAtom()
           : this.parseMaybePrivateName();

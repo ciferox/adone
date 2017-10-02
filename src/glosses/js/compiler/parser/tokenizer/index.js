@@ -43,6 +43,48 @@ const forbiddenNumericSeparatorSiblings = {
   ],
 };
 
+const allowedNumericSeparatorSiblings = {};
+allowedNumericSeparatorSiblings.bin = [
+  // 0 - 1
+  48,
+  49,
+];
+allowedNumericSeparatorSiblings.oct = [
+  // 0 - 7
+  ...allowedNumericSeparatorSiblings.bin,
+  50,
+  51,
+  52,
+  53,
+  54,
+  55,
+];
+allowedNumericSeparatorSiblings.dec = [
+  // 0 - 9
+  ...allowedNumericSeparatorSiblings.oct,
+  56,
+  57,
+];
+
+allowedNumericSeparatorSiblings.hex = [
+  // 0 - 9, A - F, a - f,
+  ...allowedNumericSeparatorSiblings.dec,
+  // A - F
+  65,
+  66,
+  67,
+  68,
+  69,
+  70,
+  // a - f
+  97,
+  98,
+  99,
+  100,
+  101,
+  102,
+];
+
 // Object type used to represent tokens. Note that normally, tokens
 // simply exist as properties on the parser object. This is only
 // used for the onToken callback and the external tokenizer.
@@ -411,9 +453,16 @@ export default class Tokenizer extends LocationParser {
     const next = this.input.charCodeAt(this.state.pos + 1);
     if (next === code)
       return this.finishOp(code === 124 ? tt.logicalOR : tt.logicalAND, 2);
+    if (code === 124) {
+      // '|>'
+      if (next === 62) {
+        return this.finishOp(tt.pipeline, 2);
+      } else if (next === 125 && this.hasPlugin("flow")) {
+        // '|}'
+        return this.finishOp(tt.braceBarR, 2);
+      }
+    }
     if (next === 61) return this.finishOp(tt.assign, 2);
-    if (code === 124 && next === 125 && this.hasPlugin("flow"))
-      return this.finishOp(tt.braceBarR, 2);
     return this.finishOp(code === 124 ? tt.bitwiseOR : tt.bitwiseAND, 1);
   }
 
@@ -718,6 +767,15 @@ export default class Tokenizer extends LocationParser {
       radix === 16
         ? forbiddenNumericSeparatorSiblings.hex
         : forbiddenNumericSeparatorSiblings.decBinOct;
+    const allowedSiblings =
+      radix === 16
+        ? allowedNumericSeparatorSiblings.hex
+        : radix === 10
+          ? allowedNumericSeparatorSiblings.dec
+          : radix === 8
+            ? allowedNumericSeparatorSiblings.oct
+            : allowedNumericSeparatorSiblings.bin;
+
     let total = 0;
 
     for (let i = 0, e = len == null ? Infinity : len; i < e; ++i) {
@@ -728,12 +786,16 @@ export default class Tokenizer extends LocationParser {
         const prev = this.input.charCodeAt(this.state.pos - 1);
         const next = this.input.charCodeAt(this.state.pos + 1);
         if (code === 95) {
+          if (allowedSiblings.indexOf(next) === -1) {
+            this.raise(this.state.pos, "Invalid or unexpected token");
+          }
+
           if (
             forbiddenSiblings.indexOf(prev) > -1 ||
             forbiddenSiblings.indexOf(next) > -1 ||
             Number.isNaN(next)
           ) {
-            this.raise(this.state.pos, "Invalid NumericLiteralSeparator");
+            this.raise(this.state.pos, "Invalid or unexpected token");
           }
 
           // Ignore this _ character
