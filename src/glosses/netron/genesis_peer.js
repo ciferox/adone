@@ -36,33 +36,22 @@ export default class GenesisPeer extends AsyncEmitter {
         this._awaitingStreamIds = new Set();
 
         this.uid = null;
-
-        this._onRemoteContextAttach = (peer, ctxData) => {
-            const def = {};
-            def[ctxData.id] = ctxData.def;
-            this._updateStrongDefinitions(def);
-        };
-
-        this._onRemoteContextDetach = (peer, ctxData) => {
-            this._ctxidDefs.delete(ctxData.id);
-            this._defs.delete(ctxData.defId);
-        };
     }
 
     connect(/*options*/) {
-        throw new x.NotImplemented("Method connect() should be implemented");
+        throw new x.NotImplemented("Method connect() is not implemented");
     }
 
     disconnect() {
-        throw new x.NotImplemented("Method disconnect() should be implemented");
+        throw new x.NotImplemented("Method disconnect() is not implemented");
     }
 
     isConnected() {
-        throw new x.NotImplemented("Method isConnected() should be implemented");
+        throw new x.NotImplemented("Method isConnected() is not implemented");
     }
 
     write(/*data*/) {
-        throw new x.NotImplemented("Method write() should be implemented");
+        throw new x.NotImplemented("Method write() is not implemented");
     }
 
     getStatus() {
@@ -230,8 +219,8 @@ export default class GenesisPeer extends AsyncEmitter {
     // }
 
     async _subscribe() {
-        await this.netron.onRemote(this.uid, "context attach", this._onRemoteContextAttach);
-        await this.netron.onRemote(this.uid, "context detach", this._onRemoteContextDetach);
+        await this.netron.onRemote(this.uid, "context attach", (peer, ctxData) => this._onRemoteContextAttach(peer, ctxData));
+        await this.netron.onRemote(this.uid, "context detach", (peer, ctxData) => this._onRemoteContextDetach(peer, ctxData));
     }
 
     _setAwaiter(streamId, awaiter) {
@@ -365,6 +354,17 @@ export default class GenesisPeer extends AsyncEmitter {
             return adone.log(`No local stream associated with remote stream id: ${streamId}`);
         }
         return stream;
+    }
+
+    _onRemoteContextAttach(peer, ctxData) {
+        const def = {};
+        def[ctxData.id] = ctxData.def;
+        this._updateStrongDefinitions(def);
+    }
+
+    _onRemoteContextDetach(peer, ctxData) {
+        this._ctxidDefs.delete(ctxData.id);
+        this._defs.delete(ctxData.defId);
     }
 }
 adone.tag.add(GenesisPeer, "GENESIS_PEER");

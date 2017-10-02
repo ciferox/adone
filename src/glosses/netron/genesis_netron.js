@@ -19,10 +19,10 @@ const {
 } = adone;
 
 export default class GenesisNetron extends AsyncEmitter {
-    constructor(options, uid) {
+    constructor(options) {
         super();
 
-        this.uid = is.nil(uid) ? util.uuid.v4() : uid;
+        this.uid = util.uuid.v4();
         this.options = Object.assign({
             protocol: "netron:",
             defaultPort: DEFAULT_PORT,
@@ -58,6 +58,13 @@ export default class GenesisNetron extends AsyncEmitter {
     }
 
     connect(options = {}) {
+        if (is.null(options)) {
+            const ownPeer = new adone.netron.OwnPeer({
+                netron: this
+            });
+
+            return ownPeer;
+        }
         const [port, host] = net.util.normalizeAddr(options.port, options.host, this.options.defaultPort);
         const addr = net.util.humanizeAddr(this.options.protocol, port, host);
         const peer = this._svrNetronAddrs.get(addr);
@@ -85,7 +92,7 @@ export default class GenesisNetron extends AsyncEmitter {
                     try {
                         const data = payload.data;
                         if (!is.plainObject(data)) {
-                            throw new adone.x.NotValid(`Not valid packet: ${typeof(data)}`);
+                            throw new adone.x.NotValid(`Not valid packet: ${typeof (data)}`);
                         }
                         this._onReceiveInitial(peer, data);
                         peer._setStatus(STATUS.ONLINE);

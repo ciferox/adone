@@ -58,7 +58,6 @@ export const getPort = async ({ port, host, exclude = null, lbound = 1025, rboun
         if (await isFreePort({ port, host })) {
             return port;
         } 
-        throw new adone.x.Network(`Port ${port} is busy`);
     }
 
     const isExcluded = is.array(exclude) ? (port) => exclude.includes(port) : adone.falsely;

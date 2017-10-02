@@ -1,4 +1,7 @@
-const { net: { util } } = adone;
+const {
+    is,
+    net: { util }
+} = adone;
 
 describe("net", "util", "getPort()", () => {
     it("call with no agguments", async () => {
@@ -41,17 +44,18 @@ describe("net", "util", "getPort()", () => {
         }
     });
 
-    it("call with busy 'port' should have throw exception", async () => {
+    it("call with busy 'port' should return random port", async () => {
         const somePort = await util.getPort();
 
         const server = adone.std.net.createServer();
         await new Promise((resolve) => server.listen(somePort, resolve));
 
-        const err = await assert.throws(async () => util.getPort({
+        const randomPort = await util.getPort({
             port: somePort
-        }));
-        assert.instanceOf(err, adone.x.Network);
+        });
 
+        assert.isTrue(is.number(randomPort));
+        
         await new Promise((resolve) => server.close(resolve));
     });
 

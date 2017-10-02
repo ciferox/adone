@@ -1,4 +1,8 @@
-const { is, x, netron: { DEFAULT_PORT, ACTION, STATUS, GenesisNetron, ws: { Peer } } } = adone;
+const {
+    is,
+    x,
+    netron: { DEFAULT_PORT, ACTION, STATUS, GenesisNetron, ws: { Peer } }
+} = adone;
 
 export default class Netron extends GenesisNetron {
     getDefinitionByName(ctxId, uid = null) {

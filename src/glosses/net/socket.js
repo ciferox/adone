@@ -1,7 +1,7 @@
 const { is, net } = adone;
 
 export default class Socket extends adone.event.EventEmitter {
-    constructor(options = { }) {
+    constructor(options = {}) {
         super();
         this.options = new adone.configuration.Configuration();
         this.options.assign({
@@ -80,7 +80,7 @@ export default class Socket extends adone.event.EventEmitter {
                     buffer.write(x, buffer.limit);
                     buffer.limit += x.length;
 
-                    for ( ; ; ) {
+                    for (; ;) {
                         if (buffer.remaining() <= 4) {
                             break;
                         }
@@ -111,7 +111,7 @@ export default class Socket extends adone.event.EventEmitter {
         }
     }
 
-    connect(options = { }) {
+    connect(options = {}) {
         return new Promise((resolve, reject) => {
             [options.port, options.host] = adone.net.util.normalizeAddr(options.port, options.host, this.options.defaultPort);
             let connected = false;

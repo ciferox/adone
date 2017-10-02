@@ -1,5 +1,6 @@
 const {
     is,
+    net,
     std: { path },
     netron: { DEFAULT_PORT, ACTION, STATUS, Netron, Reflection, Context, Public }
 } = adone;
@@ -9,16 +10,14 @@ let NETRON_PORT = 32348;
 
 const fixturePath = (relPath) => path.join(__dirname, "..", "fixtures", relPath);
 
-describe("netron", "native", "unit test", function () {
+describe("netron", "common", function () {
     this.timeout(10 * 1000);
     let exNetron;
     let superNetron;
 
     before(async () => {
-        if (!(await adone.net.util.isFreePort(defaultPort))) {
-            defaultPort = adone.net.util.getPort();
-        }
-        NETRON_PORT = adone.net.util.getPort({ exclude: [defaultPort] });
+        defaultPort = await net.util.getPort(defaultPort);
+        NETRON_PORT = await net.util.getPort({ exclude: [defaultPort] });
     });
 
     beforeEach(async () => {
@@ -32,22 +31,21 @@ describe("netron", "native", "unit test", function () {
     });
 
     it("constructor", () => {
-        const n1 = new Netron();
-        assert.instanceOf(n1, Netron);
-        assert(/[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}/.test(n1.uid));
-
-        const n2 = new Netron();
-        assert.instanceOf(n2, Netron);
+        const n = new Netron();
+        assert.isTrue(/[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}/.test(n.uid));
+        assert.isTrue(is.plainObject(n.options));
     });
 
-    describe("Connect", () => {
+    describe("connection", () => {
         it("connect with defaults", async () => {
             await superNetron.bind();
             await exNetron.connect();
         });
 
         it("reconnect attempts", async () => {
-            const customExNetron = new Netron({ reconnects: 4 });
+            const customExNetron = new Netron({
+                reconnects: 4
+            });
             let reconnects = 0;
             customExNetron.on("peer create", (peer) => {
                 peer.on("reconnect attempt", () => {
@@ -55,7 +53,9 @@ describe("netron", "native", "unit test", function () {
                 });
             });
 
-            const err = await assert.throws(async () => customExNetron.connect({ port: NETRON_PORT }));
+            const err = await assert.throws(async () => customExNetron.connect({
+                port: NETRON_PORT
+            }));
             assert.instanceOf(err, adone.x.Connect);
             assert.equal(reconnects, 4);
         });
@@ -65,33 +65,83 @@ describe("netron", "native", "unit test", function () {
             let index = 0;
             await superNetron.bind();
             exNetron.on("peer create", (peer) => {
-                expect(sequence[index++]).to.be.equal(peer.getStatus());
+                assert.equal(sequence[index++], peer.getStatus());
                 peer.on("status", (status) => {
                     if (status === 0) {
                         return;
                     }
-                    expect(sequence[index++]).to.be.equal(status);
+                    assert.equal(sequence[index++], status);
                 });
             });
             await exNetron.connect();
-            expect(index).to.be.equal(4);
+            assert.equal(index, 4);
         });
 
         it("no awaiters after connect", async () => {
             await superNetron.bind();
             const peer = await exNetron.connect();
-            expect(peer.getNumberOfAwaiters()).to.be.equal(0);
+            assert.equal(peer.getNumberOfAwaiters(), 0);
         });
 
-        it("try to connect after connect", async () => {
+        it("try to connect after connect (connection cache)", async () => {
             await superNetron.bind();
             const peer1 = await exNetron.connect();
             const peer2 = await exNetron.connect();
             assert.strictEqual(peer1, peer2);
         });
+
+        it("Peer#disconnect() from client", async (done) => {
+            await superNetron.bind();
+            const peer = await exNetron.connect();
+            assert.isOk(superNetron.getPeer(exNetron.uid));
+            assert.isOk(exNetron.getPeer(superNetron.uid));
+
+            exNetron.on("peer offline", (peer) => {
+                assert.equal(peer.uid, superNetron.uid);
+                done();
+            });
+
+            peer.disconnect();
+        });
+
+        it("Peer#disconnect() from server", async (done) => {
+            await superNetron.bind();
+            await exNetron.connect();
+
+            superNetron.on("peer offline", (peer) => {
+                assert.equal(peer.uid, exNetron.uid);
+                done();
+            });
+
+            superNetron.getPeer(exNetron.uid).disconnect();
+        });
+
+        it("Netron#disconnect(uid)", async (done) => {
+            await superNetron.bind();
+            await exNetron.connect();
+
+            superNetron.on("peer offline", (peer) => {
+                assert.equal(peer.uid, exNetron.uid);
+                done();
+            });
+
+            superNetron.disconnect(exNetron.uid);
+        });
+
+        it("Netron#disconnect()", async (done) => {
+            await superNetron.bind();
+            await exNetron.connect();
+
+            superNetron.on("peer offline", (peer) => {
+                assert.equal(peer.uid, exNetron.uid);
+                done();
+            });
+
+            superNetron.disconnect();
+        });
     });
 
-    it("netron-specific predicates", async () => {
+    it("predicates", async () => {
         @Context()
         class A {
             @Public({
@@ -128,11 +178,11 @@ describe("netron", "native", "unit test", function () {
             assert.isNull(await superNetron.ping());
         });
 
-        it("ping() unknown netron", async () => {
+        it("ping() unknown netron should have thrown", async () => {
             await assert.throws(async () => exNetron.ping(adone.util.uuid.v4()), adone.x.Unknown);
         });
 
-        it("ping remote netron should", async () => {
+        it("ping remote netron", async () => {
             await superNetron.bind();
             await exNetron.connect();
 
@@ -144,106 +194,48 @@ describe("netron", "native", "unit test", function () {
         });
     });
 
-    describe("getPeer", () => {
-        it("getPeer(null)", () => {
-            assert.throws(() => exNetron.getPeer(null), adone.x.InvalidArgument);
-        });
-
-        it("getPeer(uid)", async () => {
-            await superNetron.bind();
-
-            let peer = await exNetron.connect();
-            assert.isOk(peer);
-            assert.equal(peer, exNetron.getPeer(superNetron.uid));
-
-            peer = superNetron.getPeer(exNetron.uid);
-            assert.isOk(peer);
-            assert.equal(peer.uid, exNetron.uid);
-        });
+    it("getPeer(null)", () => {
+        assert.throws(() => exNetron.getPeer(null), adone.x.InvalidArgument);
     });
 
-    describe("getPeers", () => {
-        it("getPeers()", async () => {
-            await superNetron.bind();
+    it("getPeer(uid)", async () => {
+        await superNetron.bind();
 
-            const peer = await exNetron.connect();
-            assert.isOk(peer);
-            const exNetronPeers = exNetron.getPeers();
-            assert.isOk(exNetronPeers.has(superNetron.uid));
-            assert.equal(exNetronPeers.get(superNetron.uid), peer);
+        let peer = await exNetron.connect();
+        assert.isOk(peer);
+        assert.equal(peer, exNetron.getPeer(superNetron.uid));
 
-            const superNetronPeers = superNetron.getPeers();
-            assert.isOk(superNetronPeers.has(exNetron.uid));
-            assert.equal(superNetronPeers.get(exNetron.uid).uid, exNetron.uid);
-        });
+        peer = superNetron.getPeer(exNetron.uid);
+        assert.isOk(peer);
+        assert.equal(peer.uid, exNetron.uid);
     });
 
-    describe("disconnect", () => {
-        it("Peer.disconnect() from client", async (done) => {
-            await superNetron.bind();
-            const peer = await exNetron.connect();
-            assert.isOk(superNetron.getPeer(exNetron.uid));
-            assert.isOk(exNetron.getPeer(superNetron.uid));
+    it("getPeers()", async () => {
+        await superNetron.bind();
 
-            exNetron.on("peer offline", (peer) => {
-                assert.equal(peer.uid, superNetron.uid);
-                done();
-            });
+        const peer = await exNetron.connect();
+        assert.isOk(peer);
+        const exNetronPeers = exNetron.getPeers();
+        assert.isOk(exNetronPeers.has(superNetron.uid));
+        assert.equal(exNetronPeers.get(superNetron.uid), peer);
 
-            peer.disconnect();
-        });
-
-        it("Peer.disconnect() from server", async (done) => {
-            await superNetron.bind();
-            await exNetron.connect();
-
-            superNetron.on("peer offline", (peer) => {
-                assert.equal(peer.uid, exNetron.uid);
-                done();
-            });
-
-            superNetron.getPeer(exNetron.uid).disconnect();
-        });
-
-        it("Netron.disconnect(uid)", async (done) => {
-            await superNetron.bind();
-            await exNetron.connect();
-
-            superNetron.on("peer offline", (peer) => {
-                assert.equal(peer.uid, exNetron.uid);
-                done();
-            });
-
-            superNetron.disconnect(exNetron.uid);
-        });
-
-        it("Netron.disconnect()", async (done) => {
-            await superNetron.bind();
-            await exNetron.connect();
-
-            superNetron.on("peer offline", (peer) => {
-                assert.equal(peer.uid, exNetron.uid);
-                done();
-            });
-
-            superNetron.disconnect();
-        });
+        const superNetronPeers = superNetron.getPeers();
+        assert.isOk(superNetronPeers.has(exNetron.uid));
+        assert.equal(superNetronPeers.get(exNetron.uid).uid, exNetron.uid);
     });
 
-    describe("Peer.get/setStatus", () => {
-        it("Peer.get/setStatus", () => {
-            const p = new adone.netron.Peer();
+    it("Peer#getStatus()/Peer#setStatus()", () => {
+        const p = new adone.netron.Peer();
 
-            const newStatus = Math.floor(Math.random() * STATUS.MAX);
-            p._setStatus(newStatus);
-            assert.equal(p.getStatus(), newStatus, "status changed");
+        const newStatus = Math.floor(Math.random() * STATUS.MAX);
+        p._setStatus(newStatus);
+        assert.equal(p.getStatus(), newStatus, "status changed");
 
-            p._setStatus(-1);
-            assert.equal(p.getStatus(), newStatus, "negative numbers don't change status");
-        });
+        p._setStatus(-1);
+        assert.equal(p.getStatus(), newStatus, "negative numbers don't change status");
     });
 
-    describe("Events", () => {
+    describe("events", () => {
         describe("Netron", () => {
             it("peer create", async () => {
                 await superNetron.bind();
@@ -377,14 +369,14 @@ describe("netron", "native", "unit test", function () {
             method() { }
         }
 
-        it("Netron.getContextNames()", () => {
+        it("Netron#getContextNames()", () => {
             const contexts = superNetron.getContextNames();
 
             assert(is.array(contexts));
             assert.equal(contexts.length, 0);
         });
 
-        it("Peer.getContextNames()", async () => {
+        it("Peer#getContextNames()", async () => {
             await superNetron.bind();
             const peer = await exNetron.connect();
             const contexts = peer.getContextNames();
@@ -393,10 +385,7 @@ describe("netron", "native", "unit test", function () {
             assert.equal(contexts.length, 0);
         });
 
-        // Я решил включить тест приватного метода для того, чтобы избежать
-        // ненужного повтора тестов на неверные аргументы для attachContext
-        // и attachContextRemote. Позже можно будет сделать как-нибудь лучше.
-        describe("_checkContext", () => {
+        describe("Reflection.from()", () => {
             it("not instance", () => {
                 const err = assert.throws(() => Reflection.from("a"));
                 assert.instanceOf(err, adone.x.NotValid);
@@ -451,7 +440,7 @@ describe("netron", "native", "unit test", function () {
             });
         });
 
-        describe("attachContext", () => {
+        describe("attach contexts", () => {
             it("attach", async () => {
                 superNetron.attachContext(new A(), "a");
                 superNetron.attachContext(new B());
@@ -488,7 +477,7 @@ describe("netron", "native", "unit test", function () {
             });
         });
 
-        describe("attachContextRemote", () => {
+        describe("attach remote contexts", () => {
             let exNetron2;
 
             beforeEach(async () => {
@@ -500,7 +489,7 @@ describe("netron", "native", "unit test", function () {
                 await superNetron.unbind();
             });
 
-            it("attach", async () => {
+            it("netrons should exchange contexts when connected", async () => {
                 await superNetron.bind();
                 const peer = await exNetron.connect();
                 await exNetron.attachContextRemote(peer.uid, new A(), "a");
@@ -516,7 +505,7 @@ describe("netron", "native", "unit test", function () {
                 assert.include(peer2.getContextNames(), "B");
             });
 
-            it("context attach notification", async () => {
+            it("attach notifications should be sent between the netrons when new contexts are attached", async () => {
                 await superNetron.bind();
                 const peer = await exNetron.connect();
                 const peer2 = await exNetron2.connect();
@@ -533,7 +522,7 @@ describe("netron", "native", "unit test", function () {
                 assert.include(peer2.getContextNames(), "B");
             });
 
-            it("double attach same context", async () => {
+            it("double attach same context should have thrown", async () => {
                 const ctx = new A();
 
                 await superNetron.bind();
@@ -545,7 +534,7 @@ describe("netron", "native", "unit test", function () {
             });
         });
 
-        describe("detachContext", () => {
+        describe("detach contexts", () => {
             it("detach not existing context", () => {
                 const e = assert.throws(() => superNetron.detachContext("this_context_not_exists"));
                 assert.instanceOf(e, adone.x.Unknown);
@@ -561,7 +550,7 @@ describe("netron", "native", "unit test", function () {
                 assert.notInclude(superNetron.getContextNames(), "B");
             });
 
-            it("context detach notification", async () => {
+            it("detach notification", async () => {
                 await superNetron.bind();
                 superNetron.attachContext(new A(), "a");
                 superNetron.attachContext(new B());
@@ -576,7 +565,7 @@ describe("netron", "native", "unit test", function () {
             });
         });
 
-        describe("detachContextRemote", () => {
+        describe("detach remote contexts", () => {
             let exNetron2;
 
             beforeEach(async () => {
@@ -613,7 +602,7 @@ describe("netron", "native", "unit test", function () {
                 assert.notInclude(superNetron.getContextNames(), "B");
             });
 
-            it("context detach notification", async () => {
+            it("detach notification", async () => {
                 await superNetron.bind();
                 const peer = await exNetron.connect();
                 await exNetron.attachContextRemote(peer.uid, new A(), "a");
@@ -1551,447 +1540,5 @@ describe("netron", "native", "unit test", function () {
                 assert.equal(await p, sendData);
             });
         });
-
-        // describe.skip("Interface twins", () => {
-        //     class TwinA extends adone.netron.Interface {
-        //         async method2() {
-        //             const twinValue = await this.$twin.method2();
-        //             return `twin.${twinValue}`;
-        //         }
-
-        //         method3() {
-        //             return "method3";
-        //         }
-        //     }
-
-        //     @Context()
-        //     @Property("prop1", { private: false, type: String })
-        //     // @Twin(TwinA)
-        //     class A {
-        //         constructor() {
-        //             this.prop1 = "prop1";
-        //             this.prop2 = "prop2";
-        //         }
-        //         method1() {
-        //             return "method1";
-        //         }
-
-        //         method2() {
-        //             return "method2";
-        //         }
-        //     }
-
-        //     @Contextable
-        //     @Property("prop1", { private: false, type: String })
-        //     @Twin(" \
-        //         class B extends adone.netron.Interface { \
-        //             async method2() { \
-        //                 await adone.promise.delay(10); \
-        //                 const twinValue = await this.$twin.method2(); \
-        //                 return `twin.${twinValue}`; \
-        //             } \
-        //             method3() { \
-        //                 return 'method3'; \
-        //             } \
-        //         }")
-        //     class B {
-        //         constructor() {
-        //             this.prop1 = "prop1";
-        //             this.prop2 = "prop2";
-        //         }
-        //         method1() {
-        //             return "method1";
-        //         }
-
-        //         method2() {
-        //             return "method2";
-        //         }
-        //     }
-
-        //     it("twin interface validation", () => {
-        //         assert.throws(() => exNetron.setInterfaceTwin("a"), adone.x.InvalidArgument);
-        //         assert.throws(() => exNetron.setInterfaceTwin("a", 1), adone.x.InvalidArgument);
-        //         assert.throws(() => exNetron.setInterfaceTwin("a", {}), adone.x.InvalidArgument);
-        //         assert.throws(() => exNetron.setInterfaceTwin("a", []), adone.x.InvalidArgument);
-        //         assert.throws(() => exNetron.setInterfaceTwin("a", "twin"), adone.x.InvalidArgument);
-        //         assert.throws(() => exNetron.setInterfaceTwin("a", new TwinA()), adone.x.InvalidArgument);
-        //         assert.doesNotThrow(() => exNetron.setInterfaceTwin("a", TwinA));
-        //     });
-
-        //     it("set twin interface double times", () => {
-        //         assert.doesNotThrow(() => exNetron.setInterfaceTwin("a", TwinA));
-        //         assert.throws(() => exNetron.setInterfaceTwin("a", TwinA), adone.x.Exists);
-        //     });
-
-        //     it("local interface twin - basic access", async () => {
-        //         superNetron.attachContext(new A(), "a");
-        //         await superNetron.bind();
-        //         exNetron.options.acceptTwins = false;
-        //         exNetron.setInterfaceTwin("A", TwinA);
-
-        //         const peer = await exNetron.connect();
-        //         const iTwinA = peer.getInterfaceByName("a");
-        //         assert.equal(await iTwinA.method1(), "method1");
-        //         assert.equal(await iTwinA.method2(), "twin.method2");
-        //         assert.equal(await iTwinA.method3(), "method3");
-        //         assert.equal(await iTwinA.prop1.get(), "prop1");
-        //         assert.equal(await iTwinA.prop2.get(), "prop2");
-        //     });
-
-        //     it("remote interface twin - basic access", async () => {
-        //         superNetron.attachContext(new B(), "b");
-        //         await superNetron.bind();
-
-        //         const peer = await exNetron.connect();
-        //         const iTwinA = peer.getInterfaceByName("b");
-        //         assert.equal(await iTwinA.method1(), "method1");
-        //         assert.equal(await iTwinA.method2(), "twin.method2");
-        //         assert.equal(await iTwinA.method3(), "method3");
-        //         assert.equal(await iTwinA.prop1.get(), "prop1");
-        //         assert.equal(await iTwinA.prop2.get(), "prop2");
-        //     });
-        // });
     });
-
-    describe.skip("Streams", function () {
-        this.timeout(60 * 1000);
-
-        it("should add stream and requested stream id to associated sets", async () => {
-            await superNetron.bind();
-            const clientPeer = await exNetron.connect();
-            const wStream = await clientPeer.createStream();
-            const cstreams = clientPeer._getAwaitingStreams();
-            assert.equal(cstreams.length, 1);
-            assert.deepEqual(cstreams[0], wStream);
-            await adone.promise.delay(500);
-            const serverPeer = superNetron.getPeer(exNetron.uid);
-            const sstreamIds = serverPeer._getRequestedStreamIds();
-            assert.equal(sstreamIds.length, 1);
-            assert.deepEqual(sstreamIds[0], wStream.id);
-        });
-
-        it("should await for other side accept", async () => {
-            await superNetron.bind();
-            const clientPeer = await exNetron.connect();
-            const wStream = await clientPeer.createStream();
-            const serverPeer = superNetron.getPeer(exNetron.uid);
-            await adone.promise.delay(500);
-            const p = serverPeer.createStream({ remoteStreamId: wStream.id });
-            const acceptedStreamId = await wStream.waitForAccept();
-            const rStream = await p;
-            assert.equal(acceptedStreamId, rStream.id);
-        });
-
-        for (const allowHalfOpen of [true, false]) {
-            for (const dataCase of ["without", "with"]) {
-                for (const checkType of ["native", "core"]) {
-                    // eslint-disable-next-line
-                    it(`should end stream on readable side (allowHalfOpen=${allowHalfOpen} + ${dataCase} data + ${checkType})`, async () => {
-                        await superNetron.bind();
-                        const clientPeer = await exNetron.connect();
-                        const wStream = await clientPeer.createStream({ allowHalfOpen });
-                        const serverPeer = superNetron.getPeer(exNetron.uid);
-                        await adone.promise.delay(500);
-                        let p = serverPeer.createStream({ remoteStreamId: wStream.id, allowHalfOpen });
-                        await wStream.waitForAccept();
-
-                        let wEnd = false;
-                        let rEnd = false;
-                        wStream.on("end", () => {
-                            wEnd = true;
-                        });
-
-                        const rStream = await p;
-
-                        let data = null;
-                        if (checkType === "native") {
-                            rStream._readableState.flowing = true; // crazy hack
-                            rStream.on("data", (d) => {
-                                data = d;
-                            }).on("end", () => {
-                                rEnd = true;
-                            });
-
-                            (dataCase === "with") && wStream.write("adone");
-                            wStream.end();
-                            await p;
-                            await adone.promise.delay(1000);
-                        } else {
-                            p = adone.core(rStream).map((d) => data = d).on("end", () => rEnd = true);
-                            (dataCase === "with") && wStream.write("adone");
-                            wStream.end();
-                            await p;
-                        }
-
-                        if (dataCase === "with") {
-                            assert.equal(data, "adone", "Expected data on end but nothing");
-                        } else {
-                            assert.equal(data, null, "Unexpected data on end");
-                        }
-                        assert.equal(wEnd, !allowHalfOpen, "On writable side 'end' event was not happened");
-                        assert.equal(rEnd, true, "On readable side 'end' event was not happened");
-                    });
-                }
-            }
-        }
-
-        it("should not write data after end", async () => {
-            await superNetron.bind();
-            const clientPeer = await exNetron.connect();
-            const wStream = await clientPeer.createStream();
-            const serverPeer = superNetron.getPeer(exNetron.uid);
-            await adone.promise.delay(500);
-            let p = serverPeer.createStream({ remoteStreamId: wStream.id });
-            await wStream.waitForAccept();
-
-            let wEnd = false;
-            let rEnd = false;
-            wStream.on("end", () => {
-                wEnd = true;
-            });
-
-            const rStream = await p;
-
-            let data = null;
-            p = adone.core(rStream).map((d) => data = d).on("end", () => rEnd = true);
-
-            wStream.write("adone");
-            wStream.end();
-
-            assert.throws(() => wStream.write("bad idea"), Error);
-
-            await p;
-            assert.equal(data, "adone", "Expected data on end but nothing");
-            assert.equal(wEnd, false, "On writable side 'end' event was not happened");
-            assert.equal(rEnd, true, "On readable side 'end' event was not happened");
-        });
-
-        it("should receive data after end", async () => {
-            await superNetron.bind();
-            const clientPeer = await exNetron.connect();
-            const wStream = await clientPeer.createStream();
-            const serverPeer = superNetron.getPeer(exNetron.uid);
-            await adone.promise.delay(500);
-            let p = serverPeer.createStream({ remoteStreamId: wStream.id });
-            await wStream.waitForAccept();
-
-            let wEnd = false;
-            let rEnd = false;
-            wStream.on("end", () => {
-                wEnd = true;
-            });
-
-            const rStream = await p;
-
-            let data = null;
-            p = adone.core(rStream).map((d) => data = d).on("end", () => rEnd = true);
-
-            wStream.write("adone");
-            wStream.end();
-
-            assert.throws(() => wStream.write("bad idea"), Error);
-
-            await p;
-
-            assert.equal(data, "adone", "Expected data on end but nothing");
-            assert.equal(wEnd, false, "On writable side 'end' event was not happened");
-            assert.equal(rEnd, true, "On readable side 'end' event was not happened");
-
-            p = adone.core(wStream).map((d) => data = d).on("end", () => wEnd = true);
-            rStream.write("enoda");
-            rStream.end();
-
-            await p;
-
-            assert.equal(data, "enoda", "Expected data on end but nothing");
-            assert.equal(wEnd, true, "On writable side 'end' event was not happened");
-        });
-
-        it("one way data sending", async () => {
-            await superNetron.bind();
-            const clientPeer = await exNetron.connect();
-            const wStream = await clientPeer.createStream();
-            const serverPeer = superNetron.getPeer(exNetron.uid);
-
-            const rMessages = [];
-            await adone.promise.delay(500);
-            let p = serverPeer.createStream({ remoteStreamId: wStream.id });
-            await wStream.waitForAccept();
-            const rStream = await p;
-
-            const rActualMessages = [];
-            p = adone.core(rStream).map((data) => {
-                rActualMessages.push(data);
-                return data;
-            });
-
-            for (let i = 0; i < 1000; i++) {
-                const msg = adone.text.random(adone.math.random(10, 10000));
-                rMessages.push(msg);
-                wStream.write(msg);
-            }
-
-            wStream.end();
-
-            await p;
-            assert.sameMembers(rMessages, rActualMessages);
-        });
-
-        for (const tcase of ["initiator", "acceptor"]) {
-            // eslint-disable-next-line
-            it(`two way data sending - end initiated by ${tcase}`, async () => {
-                await superNetron.bind();
-                const clientPeer = await exNetron.connect();
-                const wStream = await clientPeer.createStream({ allowHalfOpen: false });
-                const serverPeer = superNetron.getPeer(exNetron.uid);
-
-                const wMessages = [];
-                const rMessages = [];
-                await adone.promise.delay(500);
-                const p = serverPeer.createStream({ remoteStreamId: wStream.id, allowHalfOpen: false });
-                await wStream.waitForAccept();
-                const rStream = await p;
-
-                const wActualMessages = [];
-                const p1 = adone.core(rStream).map((data) => {
-                    wActualMessages.push(data);
-                    return data;
-                });
-
-                const rActualMessages = [];
-                const p2 = adone.core(wStream).map((data) => {
-                    rActualMessages.push(data);
-                    return data;
-                });
-
-                for (let i = 0; i < 3000; i++) {
-                    let msg = adone.text.random(adone.math.random(10, 10000));
-                    wMessages.push(msg);
-                    wStream.write(msg);
-
-                    msg = adone.text.random(adone.math.random(10, 10000));
-                    rMessages.push(msg);
-                    rStream.write(msg);
-                }
-
-                if (tcase === "initiator") {
-                    wStream.end();
-                } else {
-                    rStream.end();
-                }
-
-                await Promise.all([p1, p2]);
-                expect(rMessages).to.have.lengthOf(rActualMessages.length);
-                expect(wMessages).to.have.lengthOf(wActualMessages.length);
-                expect(rMessages).to.be.deep.equal(rActualMessages);
-                expect(wMessages).to.be.deep.equal(wActualMessages);
-            });
-        }
-
-        it("should flow data after resume", async () => {
-            await superNetron.bind();
-            const clientPeer = await exNetron.connect();
-            const wStream = await clientPeer.createStream();
-            const serverPeer = superNetron.getPeer(exNetron.uid);
-            await adone.promise.delay(500);
-            const p = serverPeer.createStream({ remoteStreamId: wStream.id });
-            await wStream.waitForAccept();
-            const rStream = await p;
-
-            const sampleDatas = ["data1", "data2", "data3", "data4", "data5", "data6", "data7", "data8"];
-
-            for (const d of sampleDatas) {
-                wStream.write(d);
-            }
-
-            const datas = [];
-            rStream.on("data", (d) => {
-                datas.push(d);
-            });
-
-            await adone.promise.delay(1000);
-
-            assert.equal(datas.length, 0);
-            rStream.resume();
-            assert.sameMembers(datas, sampleDatas);
-
-            wStream.end();
-        });
-
-        for (const fileName of ["small", "big"]) {
-            // eslint-disable-next-line
-            it(`should send ${fileName} file`, async () => {
-                await superNetron.bind();
-                const clientPeer = await exNetron.connect();
-                const wStream = await clientPeer.createStream({ allowHalfOpen: false });
-                const serverPeer = superNetron.getPeer(exNetron.uid);
-                await adone.promise.delay(500);
-                const p = serverPeer.createStream({ remoteStreamId: wStream.id });
-                await wStream.waitForAccept();
-                const rStream = await p;
-
-                const bs = new adone.stream.buffer.WritableStream();
-                rStream.pipe(bs);
-
-                const p1 = new Promise((resolve) => {
-                    rStream.on("end", resolve);
-                });
-
-                adone.std.fs.createReadStream(fixturePath(fileName)).pipe(wStream);
-
-                await p1;
-
-                const origBuff = adone.std.fs.readFileSync(fixturePath(fileName));
-                assert.deepEqual(bs.getContents(), origBuff);
-            });
-        }
-
-        for (const dataSize of [1024 * 1024, 10 * 1024 * 1024, 50 * 1024 * 1024]) {
-            // eslint-disable-next-line
-            it(`should send ${dataSize / 1024 / 1024}MB of data`, async () => {
-                await superNetron.bind();
-                const clientPeer = await exNetron.connect();
-                const wStream = await clientPeer.createStream({ allowHalfOpen: false });
-                const serverPeer = superNetron.getPeer(exNetron.uid);
-                await adone.promise.delay(500);
-                const p = serverPeer.createStream({ remoteStreamId: wStream.id });
-                await wStream.waitForAccept();
-                const rStream = await p;
-
-                const bs = new adone.stream.buffer.WritableStream();
-                rStream.pipe(bs);
-
-                const p1 = new Promise((resolve) => {
-                    rStream.on("end", resolve);
-                });
-
-                const buff = new adone.collection.ByteArray();
-                let remaining = dataSize;
-
-                while (remaining > 0) {
-                    let chunkSize = adone.math.random(256, 65536);
-                    if (chunkSize > remaining) {
-                        chunkSize = remaining;
-                    }
-                    remaining -= chunkSize;
-                    const data = adone.std.crypto.randomBytes(chunkSize);
-                    buff.write(data);
-                    wStream.write(data);
-                }
-
-                wStream.end();
-
-                await p1;
-
-                buff.flip();
-                assert.deepEqual(bs.getContents(), buff.toBuffer());
-            });
-        }
-    });
-
-    // it("", async function () {
-    //     await superNetron.bind();
-    //     const clientPeer = await exNetron.connect();
-
-    // });
 });

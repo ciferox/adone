@@ -240,7 +240,6 @@ export default class Netron extends GenesisNetron {
             }
         }
 
-        // подготавливаем все определения для зарегистрированных контекстов
         const defs = {};
         let hasContexts = false;
         for (const [name, stub] of this.contexts.entries()) {

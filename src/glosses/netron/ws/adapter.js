@@ -1,4 +1,7 @@
-const { is, x } = adone;
+const {
+    is,
+    x
+} = adone;
 
 export default class Adapter extends adone.netron.Adapter {
     constructor(options) {
