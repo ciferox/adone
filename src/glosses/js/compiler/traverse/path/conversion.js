@@ -17,7 +17,7 @@ export function toComputedKey(): Object {
     }
 
     if (!node.computed) {
-        if (t.isIdentifier(key)) { 
+        if (t.isIdentifier(key)) {
             key = t.stringLiteral(key.name);
         }
     }
@@ -26,15 +26,58 @@ export function toComputedKey(): Object {
 }
 
 export function ensureBlock() {
-    return t.ensureBlock(this.node);
+    const body = this.get("body");
+    const bodyNode = body.node;
+
+    if (Array.isArray(body)) {
+        throw new Error("Can't convert array path to a block statement");
+    }
+    if (!bodyNode) {
+        throw new Error("Can't convert node without a body");
+    }
+
+    if (body.isBlockStatement()) {
+        return bodyNode;
+    }
+
+    const statements = [];
+
+    let stringPath = "body";
+    let key;
+    let listKey;
+    if (body.isStatement()) {
+        listKey = "body";
+        key = 0;
+        statements.push(body.node);
+    } else {
+        stringPath += ".body.0";
+        if (this.isFunction()) {
+            key = "argument";
+            statements.push(t.returnStatement(body.node));
+        } else {
+            key = "expression";
+            statements.push(t.expressionStatement(body.node));
+        }
+    }
+
+    this.node.body = t.blockStatement(statements);
+    const parentPath = this.get(stringPath);
+    body.setup(
+        parentPath,
+        listKey ? parentPath.node[listKey] : parentPath.node,
+        listKey,
+        key,
+    );
+
+    return this.node;
 }
 
 /**
  * Keeping this for backward-compatibility. You should use arrowFunctionToExpression() for >=7.x.
  */
 export function arrowFunctionToShadowed() {
-    if (!this.isArrowFunctionExpression()) { 
-        return; 
+    if (!this.isArrowFunctionExpression()) {
+        return;
     }
 
     this.arrowFunctionToExpression();
@@ -49,8 +92,8 @@ export function arrowFunctionToShadowed() {
 export function unwrapFunctionEnvironment() {
     if (
         !this.isArrowFunctionExpression() &&
-    !this.isFunctionExpression() &&
-    !this.isFunctionDeclaration()
+        !this.isFunctionExpression() &&
+        !this.isFunctionDeclaration()
     ) {
         throw this.buildCodeFrameError(
             "Can only unwrap the environment of a function.",
@@ -127,8 +170,8 @@ function hoistFunctionEnvironment(
     const thisEnvFn = fnPath.findParent(
         (p) =>
             (p.isFunction() && !p.isArrowFunctionExpression()) ||
-      p.isProgram() ||
-      p.isClassProperty({ static: false }),
+            p.isProgram() ||
+            p.isClassProperty({ static: false }),
     );
     const inConstructor = thisEnvFn && thisEnvFn.node.kind === "constructor";
 
@@ -162,14 +205,14 @@ function hoistFunctionEnvironment(
                 child.skip();
             },
             ClassProperty(child) {
-                if (child.node.static) { 
+                if (child.node.static) {
                     return;
                 }
                 child.skip();
             },
             CallExpression(child) {
                 if (!child.get("callee").isSuper()) {
-                    return; 
+                    return;
                 }
                 allSuperCalls.push(child);
             }
@@ -187,9 +230,9 @@ function hoistFunctionEnvironment(
 
         if (
             !specCompliant ||
-      // In subclass constructors, still need to rewrite because "this" can't be bound in spec mode
-      // because it might not have been initialized yet.
-      (inConstructor && hasSuperClass(thisEnvFn))
+            // In subclass constructors, still need to rewrite because "this" can't be bound in spec mode
+            // because it might not have been initialized yet.
+            (inConstructor && hasSuperClass(thisEnvFn))
         ) {
             thisPaths.forEach((thisChild) => {
                 thisChild.replaceWith(
@@ -287,7 +330,7 @@ function hoistFunctionEnvironment(
 function standardizeSuperProperty(superProp) {
     if (
         superProp.parentPath.isAssignmentExpression() &&
-    superProp.parentPath.node.operator !== "="
+        superProp.parentPath.node.operator !== "="
     ) {
         const assignmentPath = superProp.parentPath;
 
@@ -301,45 +344,45 @@ function standardizeSuperProperty(superProp) {
             assignmentPath
                 .get("left")
                 .replaceWith(
-                    t.memberExpression(
-                        superProp.node.object,
-                        t.assignmentExpression("=", tmp, superProp.node.property),
-                        true /* computed */,
-                    ),
-                );
+                t.memberExpression(
+                    superProp.node.object,
+                    t.assignmentExpression("=", tmp, superProp.node.property),
+                    true /* computed */,
+                ),
+            );
 
             assignmentPath
                 .get("right")
                 .replaceWith(
-                    t.binaryExpression(
-                        op,
-                        t.memberExpression(
-                            superProp.node.object,
-                            t.identifier(tmp.name),
-                            true /* computed */,
-                        ),
-                        value,
+                t.binaryExpression(
+                    op,
+                    t.memberExpression(
+                        superProp.node.object,
+                        t.identifier(tmp.name),
+                        true /* computed */,
                     ),
-                );
+                    value,
+                ),
+            );
         } else {
             assignmentPath
                 .get("left")
                 .replaceWith(
-                    t.memberExpression(superProp.node.object, superProp.node.property),
-                );
+                t.memberExpression(superProp.node.object, superProp.node.property),
+            );
 
             assignmentPath
                 .get("right")
                 .replaceWith(
-                    t.binaryExpression(
-                        op,
-                        t.memberExpression(
-                            superProp.node.object,
-                            t.identifier(superProp.node.property.name),
-                        ),
-                        value,
+                t.binaryExpression(
+                    op,
+                    t.memberExpression(
+                        superProp.node.object,
+                        t.identifier(superProp.node.property.name),
                     ),
-                );
+                    value,
+                ),
+            );
         }
         return [
             assignmentPath.get("left"),
@@ -395,7 +438,7 @@ function standardizeSuperProperty(superProp) {
 function hasSuperClass(thisEnvFn) {
     return (
         thisEnvFn.isClassMethod() &&
-    Boolean(thisEnvFn.parentPath.parentPath.node.superClass)
+        Boolean(thisEnvFn.parentPath.parentPath.node.superClass)
     );
 }
 
@@ -410,19 +453,19 @@ function getThisBinding(thisEnvFn, inConstructor) {
         thisEnvFn.traverse({
             Function(child) {
                 if (child.isArrowFunctionExpression()) {
-                    return; 
+                    return;
                 }
                 child.skip();
             },
             ClassProperty(child) {
-                if (child.node.static) { 
-                    return; 
+                if (child.node.static) {
+                    return;
                 }
                 child.skip();
             },
             CallExpression(child) {
-                if (!child.get("callee").isSuper()) { 
-                    return; 
+                if (!child.get("callee").isSuper()) {
+                    return;
                 }
                 if (supers.has(child.node)) {
                     return;
@@ -550,7 +593,7 @@ function getScopeInformation(fnPath) {
             child.skip();
         },
         Function(child) {
-            if (child.isArrowFunctionExpression()) { 
+            if (child.isArrowFunctionExpression()) {
                 return;
             }
             child.skip();
@@ -559,12 +602,12 @@ function getScopeInformation(fnPath) {
             thisPaths.push(child);
         },
         JSXIdentifier(child) {
-            if (child.node.name !== "this") { 
-                return; 
+            if (child.node.name !== "this") {
+                return;
             }
             if (
                 !child.parentPath.isJSXMemberExpression({ object: child.node }) &&
-        !child.parentPath.isJSXOpeningElement({ name: child.node })
+                !child.parentPath.isJSXOpeningElement({ name: child.node })
             ) {
                 return;
             }
@@ -572,7 +615,7 @@ function getScopeInformation(fnPath) {
             thisPaths.push(child);
         },
         CallExpression(child) {
-            if (child.get("callee").isSuper()) { 
+            if (child.get("callee").isSuper()) {
                 superCalls.push(child);
             }
         },
@@ -582,7 +625,7 @@ function getScopeInformation(fnPath) {
             }
         },
         ReferencedIdentifier(child) {
-            if (child.node.name !== "arguments") { 
+            if (child.node.name !== "arguments") {
                 return;
             }
 
@@ -590,7 +633,7 @@ function getScopeInformation(fnPath) {
         },
         MetaProperty(child) {
             if (!child.get("meta").isIdentifier({ name: "new" })) {
-                return; 
+                return;
             }
             if (!child.get("property").isIdentifier({ name: "target" })) {
                 return;

@@ -95,6 +95,17 @@ export function Binary(node: Object, parent: Object): boolean {
     return false;
 }
 
+export function UnionTypeAnnotation(node: Object, parent: Object): boolean {
+    return (
+        t.isArrayTypeAnnotation(parent) ||
+        t.isNullableTypeAnnotation(parent) ||
+        t.isIntersectionTypeAnnotation(parent) ||
+        t.isUnionTypeAnnotation(parent)
+    );
+}
+
+export { UnionTypeAnnotation as IntersectionTypeAnnotation };
+
 export function TSAsExpression() {
     return true;
 }
@@ -196,7 +207,7 @@ export function ConditionalExpression(node: Object, parent: Object): boolean {
 export function AssignmentExpression(node: Object): boolean {
     if (t.isObjectPattern(node.left)) {
         return true;
-    } 
+    }
     return ConditionalExpression(...arguments);
 }
 

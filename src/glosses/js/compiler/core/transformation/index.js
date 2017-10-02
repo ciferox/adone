@@ -1,4 +1,4 @@
-/* global BabelFileResult, BabelFileMetadata */
+/* global BabelFileResult */
 import File from "./file";
 import loadConfig from "../config";
 
@@ -20,15 +20,6 @@ export const transform = (code: string, opts?: Object): BabelFileResult => {
         file.parseCode(code);
         return file.transform();
     });
-};
-
-export const analyse = (code: string, opts: Object = {}, visitor?: Object): ?BabelFileMetadata => {
-    opts.code = false;
-    if (visitor) {
-        opts.plugins = opts.plugins || [];
-        opts.plugins.push({ visitor });
-    }
-    return transform(code, opts).metadata;
 };
 
 export const transformFromAst = (ast: Object, code: string, opts: Object): BabelFileResult => {

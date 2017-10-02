@@ -20,32 +20,34 @@ export function insertBefore(nodes) {
 
     if (
         this.parentPath.isExpressionStatement() ||
-    this.parentPath.isLabeledStatement()
+        this.parentPath.isLabeledStatement()
     ) {
         return this.parentPath.insertBefore(nodes);
     } else if (
-        (this.isNodeType("Expression") && this.listKey !== "params") ||
-    (this.parentPath.isForStatement() && this.key === "init")
+        (this.isNodeType("Expression") &&
+            this.listKey !== "params" &&
+            this.listKey !== "arguments") ||
+        (this.parentPath.isForStatement() && this.key === "init")
     ) {
-        if (this.node) {nodes.push(this.node);}
+        if (this.node) { nodes.push(this.node); }
         return this.replaceExpressionWithStatements(nodes);
     } else if (is.array(this.container)) {
         return this._containerInsertBefore(nodes);
     } else if (this.isStatementOrBlock()) {
         const shouldInsertCurrentNode =
-      this.node &&
-      (!this.isExpressionStatement() || !is.nil(this.node.expression));
+            this.node &&
+            (!this.isExpressionStatement() || !is.nil(this.node.expression));
 
         this.replaceWith(
             t.blockStatement(shouldInsertCurrentNode ? [this.node] : []),
         );
         return this.unshiftContainer("body", nodes);
-    } 
+    }
     throw new Error(
         "We don't know what to do with this node type. " +
         "We were previously a Statement but we can't fit in here?",
     );
-  
+
 }
 
 export function _containerInsert(from, nodes) {
@@ -97,12 +99,12 @@ export function insertAfter(nodes) {
 
     if (
         this.parentPath.isExpressionStatement() ||
-    this.parentPath.isLabeledStatement()
+        this.parentPath.isLabeledStatement()
     ) {
         return this.parentPath.insertAfter(nodes);
     } else if (
         this.isNodeType("Expression") ||
-    (this.parentPath.isForStatement() && this.key === "init")
+        (this.parentPath.isForStatement() && this.key === "init")
     ) {
         if (this.node) {
             const temp = this.scope.generateDeclaredUidIdentifier();
@@ -116,19 +118,19 @@ export function insertAfter(nodes) {
         return this._containerInsertAfter(nodes);
     } else if (this.isStatementOrBlock()) {
         const shouldInsertCurrentNode =
-      this.node &&
-      (!this.isExpressionStatement() || !is.nil(this.node.expression));
+            this.node &&
+            (!this.isExpressionStatement() || !is.nil(this.node.expression));
 
         this.replaceWith(
             t.blockStatement(shouldInsertCurrentNode ? [this.node] : []),
         );
         return this.pushContainer("body", nodes);
-    } 
+    }
     throw new Error(
         "We don't know what to do with this node type. " +
         "We were previously a Statement but we can't fit in here?",
     );
-  
+
 }
 
 /**
@@ -137,8 +139,8 @@ export function insertAfter(nodes) {
 
 export function updateSiblingKeys(fromIndex, incrementBy) {
     if (!this.parent) {
- return; 
-}
+        return;
+    }
 
     const paths = pathCache.get(this.parent);
     for (let i = 0; i < paths.length; i++) {

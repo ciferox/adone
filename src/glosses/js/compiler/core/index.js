@@ -8,7 +8,7 @@ import buildConfigChain from "./config/build_config_chain";
 import manageOptions from "./config/option_manager";
 
 const {
-    js: { compiler: { types, messages, template } }
+    js: { compiler: { types, template } }
 } = adone;
 
 export {
@@ -17,7 +17,6 @@ export {
     buildExternalHelpers,
     getEnv,
     types,
-    messages,
     template,
     makeStrongCache,
     makeWeakCache,
@@ -46,11 +45,10 @@ export class OptionManager {
 
 export {
     transform,
-    analyse,
     transformFromAst,
     transformFile,
     transformFileSync
-} from "./transformation/pipeline";
+} from "./transformation";
 
 /**
  * Recommended set of compilable extensions. Not used in babel-core directly, but meant as

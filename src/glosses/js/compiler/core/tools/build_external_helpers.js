@@ -1,5 +1,5 @@
 const {
-    js: { compiler: { helper, messages, generate, template, types: t } }
+    js: { compiler: { helper, generate, template, types: t } }
 } = adone;
 
 const keywordHelpers = ["typeof", "extends", "instanceof"];
@@ -179,7 +179,7 @@ export default function (
     if (build) {
         tree = build(namespace, builder);
     } else {
-        throw new Error(messages.get("unsupportedOutputType", outputType));
+        throw new Error(`Unsupported output type ${outputType}`);
     }
 
     return generate(tree).code;

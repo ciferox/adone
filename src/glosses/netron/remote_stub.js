@@ -1,7 +1,7 @@
 const {
     is,
     x,
-    vendor: { lodash },
+    util,
     netron: { Definition }
 } = adone;
 
@@ -21,7 +21,7 @@ export default class RemoteStub {
             def.name = origDef.name;
             def.description = origDef.description;
             def.twin = origDef.twin;
-            def.$ = lodash.cloneDeep(origDef.$);
+            def.$ = util.clone(origDef.$);
         }
         return this._def;
     }

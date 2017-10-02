@@ -8,7 +8,7 @@ const {
     std: { fs, path }
 } = adone;
 
-type ConfigFile = {
+export type ConfigFile = {
     filepath: string,
     dirname: string,
     options: {},

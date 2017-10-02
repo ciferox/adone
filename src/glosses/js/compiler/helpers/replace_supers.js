@@ -1,6 +1,6 @@
 const {
     is,
-    js: { compiler: { types: t, messages } }
+    js: { compiler: { types: t } }
 } = adone;
 
 // ✌️
@@ -263,7 +263,7 @@ export default class ReplaceSupers {
         const node = path.node;
 
         if (isIllegalBareSuper(node, parent)) {
-            throw path.buildCodeFrameError(messages.get("classesIllegalBareSuper"));
+            throw path.buildCodeFrameError("Illegal use of bare super");
         }
 
         if (t.isCallExpression(node)) {

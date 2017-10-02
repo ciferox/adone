@@ -28,21 +28,17 @@ export default class ImportBuilder {
     }
 
     import() {
-        const importedSource = this._file.resolveModuleSource(this._importedSource);
-
         this._statements.push(
-            t.importDeclaration([], t.stringLiteral(importedSource)),
+            t.importDeclaration([], t.stringLiteral(this._importedSource)),
         );
         return this;
     }
 
     require() {
-        const importedSource = this._file.resolveModuleSource(this._importedSource);
-
         this._statements.push(
             t.expressionStatement(
                 t.callExpression(t.identifier("require"), [
-                    t.stringLiteral(importedSource),
+                    t.stringLiteral(this._importedSource),
                 ]),
             ),
         );
@@ -90,11 +86,10 @@ export default class ImportBuilder {
             statement = t.expressionStatement(this._resultName);
             this._statements.push(statement);
         }
-        this._statements[
-            this._statements.length - 1
-        ] = t.variableDeclaration("var", [
-            t.variableDeclarator(name, statement.expression),
-        ]);
+        this._statements[this._statements.length - 1] = t.variableDeclaration(
+            "var",
+            [t.variableDeclarator(name, statement.expression)],
+        );
         this._resultName = t.clone(name);
         return this;
     }

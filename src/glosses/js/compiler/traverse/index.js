@@ -3,7 +3,7 @@ import * as visitors from "./visitors";
 import * as cache from "./cache";
 
 const {
-    js: { compiler: { types: t, messages } },
+    js: { compiler: { types: t } },
     vendor: { lodash: { includes } }
 } = adone;
 
@@ -14,16 +14,20 @@ export default function traverse(
     state: Object,
     parentPath: Object,
 ) {
-    if (!parent) { 
-        return; 
+    if (!parent) {
+        return;
     }
-    if (!opts) { 
-        opts = {}; 
+    if (!opts) {
+        opts = {};
     }
 
     if (!opts.noScope && !scope) {
         if (parent.type !== "Program" && parent.type !== "File") {
-            throw new Error(messages.get("traverseNeedsParent", parent.type));
+            throw new Error(
+                "You must pass a scope and parentPath unless traversing a Program/File. " +
+                `Instead of that you tried to traverse a ${parent.type} node without ` +
+                "passing scope and parentPath.",
+            );
         }
     }
 
@@ -58,17 +62,17 @@ traverse.node = function (
     skipKeys?,
 ) {
     const keys: Array = t.VISITOR_KEYS[node.type];
-    if (!keys) { 
-        return; 
+    if (!keys) {
+        return;
     }
 
     const context = new TraversalContext(scope, opts, state, parentPath);
     for (const key of keys) {
-        if (skipKeys && skipKeys[key]) { 
-            continue; 
+        if (skipKeys && skipKeys[key]) {
+            continue;
         }
-        if (context.visit(node, key)) { 
-            return; 
+        if (context.visit(node, key)) {
+            return;
         }
     }
 };
@@ -97,13 +101,13 @@ traverse.hasType = function (
     blacklistTypes: Array<string>,
 ): boolean {
     // the node we're searching in is blacklisted
-    if (includes(blacklistTypes, tree.type)) { 
-        return false; 
+    if (includes(blacklistTypes, tree.type)) {
+        return false;
     }
 
     // the type we're looking for is the same as the passed node
-    if (tree.type === type) { 
-        return true; 
+    if (tree.type === type) {
+        return true;
     }
 
     const state = {

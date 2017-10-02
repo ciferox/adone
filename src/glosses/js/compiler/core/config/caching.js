@@ -32,7 +32,7 @@ export const makeStrongCache = function <ArgT, ResultT> (handler: (ArgT, CacheCo
  * configures its caching behavior. Cached values are stored weakly and the function argument must be
  * an object type.
  */
-export const makeWeakCache = function <ArgT: {}, ResultT > (
+export const makeWeakCache = function <ArgT: {} | Array<*>, ResultT > (
     handler: (ArgT, CacheConfigurator) => ResultT,
     autoPermacache ?: boolean,
 ): ArgT => ResultT {

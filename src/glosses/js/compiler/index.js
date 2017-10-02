@@ -7,7 +7,6 @@ adone.lazify({
     esutils: "./esutils",
     codeFrame: ["./code_frame", (x) => x.codeFrame],
     codeFrameColumns: ["./code_frame", (x) => x.codeFrameColumns],
-    messages: "./messages",
     types: "./types",
     helper: "./helpers",
     traverse: "./traverse",

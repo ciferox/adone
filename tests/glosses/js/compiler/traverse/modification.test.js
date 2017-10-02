@@ -50,6 +50,19 @@ describe("js", "compiler", "traverse", "modification", () => {
 
             assert.equal(generateCode(rootPath), "function test(a) {\n  b;\n}");
         });
+
+        it("properly handles more than one arguments", () => {
+            const code = "foo(a, b);";
+            const ast = parse(code);
+            traverse(ast, {
+                CallExpression(path) {
+                    path.unshiftContainer("arguments", t.identifier("d"));
+                    assert.equal(generateCode(path), "foo(d, a, b);");
+                    path.unshiftContainer("arguments", t.stringLiteral("s"));
+                    assert.equal(generateCode(path), "foo(\"s\", d, a, b);");
+                }
+            });
+        });
     });
 
     describe("insertBefore", () => {

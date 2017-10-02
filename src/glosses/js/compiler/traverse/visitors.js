@@ -2,7 +2,7 @@ import * as virtualTypes from "./path/lib/virtual-types";
 
 const {
     is,
-    js: { compiler: { types: t, messages } },
+    js: { compiler: { types: t } },
     vendor: { lodash: { clone } }
 } = adone;
 
@@ -23,20 +23,20 @@ const {
  *   visitors
  */
 export function explode(visitor) {
-    if (visitor._exploded) { 
+    if (visitor._exploded) {
         return visitor;
     }
     visitor._exploded = true;
 
     // normalise pipes
     for (const nodeType in visitor) {
-        if (shouldIgnoreKey(nodeType)) { 
-            continue; 
+        if (shouldIgnoreKey(nodeType)) {
+            continue;
         }
 
         const parts: Array<string> = nodeType.split("|");
-        if (parts.length === 1) { 
-            continue; 
+        if (parts.length === 1) {
+            continue;
         }
 
         const fns = visitor[nodeType];
@@ -62,13 +62,13 @@ export function explode(visitor) {
 
     // add type wrappers
     for (const nodeType of (Object.keys(visitor): Array)) {
-        if (shouldIgnoreKey(nodeType)) { 
+        if (shouldIgnoreKey(nodeType)) {
             continue;
         }
 
         const wrapper = virtualTypes[nodeType];
         if (!wrapper) {
-            continue; 
+            continue;
         }
 
         // wrap all the functions
@@ -96,8 +96,8 @@ export function explode(visitor) {
 
     // add aliases
     for (const nodeType in visitor) {
-        if (shouldIgnoreKey(nodeType)) { 
-            continue; 
+        if (shouldIgnoreKey(nodeType)) {
+            continue;
         }
 
         const fns = visitor[nodeType];
@@ -113,7 +113,7 @@ export function explode(visitor) {
         }
 
         if (!aliases) {
-            continue; 
+            continue;
         }
 
         // clear it from the visitor
@@ -130,7 +130,7 @@ export function explode(visitor) {
     }
 
     for (const nodeType in visitor) {
-        if (shouldIgnoreKey(nodeType)) { 
+        if (shouldIgnoreKey(nodeType)) {
             continue;
         }
 
@@ -142,11 +142,14 @@ export function explode(visitor) {
 
 export function verify(visitor) {
     if (visitor._verified) {
-        return; 
+        return;
     }
 
     if (is.function(visitor)) {
-        throw new Error(messages.get("traverseVerifyRootFunction"));
+        throw new Error(
+            "You passed `traverse()` a function when it expected a visitor object, " +
+            "are you sure you didn't mean `{ enter: Function }`?",
+        );
     }
 
     for (const nodeType in visitor) {
@@ -155,11 +158,13 @@ export function verify(visitor) {
         }
 
         if (shouldIgnoreKey(nodeType)) {
-            continue; 
+            continue;
         }
 
         if (t.TYPES.indexOf(nodeType) < 0) {
-            throw new Error(messages.get("traverseVerifyNodeType", nodeType));
+            throw new Error(
+                `You gave us a visitor for the node type ${nodeType} but it's not a valid type`,
+            );
         }
 
         const visitors = visitor[nodeType];
@@ -173,7 +178,8 @@ export function verify(visitor) {
                     );
                 } else {
                     throw new Error(
-                        messages.get("traverseVerifyVisitorProperty", nodeType, visitorKey),
+                        "You passed `traverse()` a visitor object with the property " +
+                        `${nodeType} that has the invalid property ${visitorKey}`,
                     );
                 }
             }
@@ -230,8 +236,8 @@ function wrapWithStateOrWrapper(oldVisitor, state, wrapper: ?Function) {
         let fns = oldVisitor[key];
 
         // not an enter/exit array of callbacks
-        if (!is.array(fns)) { 
-            continue; 
+        if (!is.array(fns)) {
+            continue;
         }
 
         fns = fns.map((fn) => {
@@ -258,8 +264,8 @@ function wrapWithStateOrWrapper(oldVisitor, state, wrapper: ?Function) {
 
 function ensureEntranceObjects(obj) {
     for (const key in obj) {
-        if (shouldIgnoreKey(key)) { 
-            continue; 
+        if (shouldIgnoreKey(key)) {
+            continue;
         }
 
         const fns = obj[key];
@@ -291,11 +297,11 @@ function wrapCheck(wrapper, fn) {
 function shouldIgnoreKey(key) {
     // internal/hidden key
     if (key[0] === "_") {
-        return true; 
+        return true;
     }
 
     // ignore function keys
-    if (key === "enter" || key === "exit" || key === "shouldSkip") { 
+    if (key === "enter" || key === "exit" || key === "shouldSkip") {
         return true;
     }
 

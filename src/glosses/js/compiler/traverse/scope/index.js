@@ -6,7 +6,7 @@ import { scope as scopeCache } from "../cache";
 
 const {
     is,
-    js: { compiler: { messages, types: t } },
+    js: { compiler: { types: t } },
     vendor: { lodash: { includes, repeat, defaults } }
 } = adone;
 
@@ -409,8 +409,8 @@ export default class Scope {
       } 
       const id = this.generateUidIdentifierBasedOnNode(node);
       if (!dontPush) {
- this.push({ id }); 
-}
+          this.push({ id }); 
+      }
       return id;
     
   }
@@ -444,7 +444,7 @@ export default class Scope {
       if (duplicate) {
           throw this.hub.file.buildCodeFrameError(
               id,
-              messages.get("scopeDuplicateDeclaration", name),
+              `Duplicate declaration "${name}"`,
               TypeError,
           );
       }
@@ -685,11 +685,11 @@ export default class Scope {
       if (t.isIdentifier(node)) {
           const binding = this.getBinding(node.name);
           if (!binding) { 
-return false;
- }
+              return false;
+          }
           if (constantsOnly) {
- return binding.constant; 
-}
+              return binding.constant; 
+          }
           return true;
       } else if (t.isClass(node)) {
           if (node.superClass && !this.isPure(node.superClass, constantsOnly)) {
@@ -699,8 +699,8 @@ return false;
       } else if (t.isClassBody(node)) {
           for (const method of node.body) {
               if (!this.isPure(method, constantsOnly)) {
- return false;
- }
+                  return false;
+              }
           }
           return true;
       } else if (t.isBinary(node)) {
@@ -711,29 +711,29 @@ return false;
       } else if (t.isArrayExpression(node)) {
           for (const elem of (node.elements: Array<Object>)) {
               if (!this.isPure(elem, constantsOnly)) { 
-return false; 
-}
+                  return false; 
+              }
           }
           return true;
       } else if (t.isObjectExpression(node)) {
           for (const prop of (node.properties: Array<Object>)) {
               if (!this.isPure(prop, constantsOnly)) { 
-return false;
- }
+                  return false;
+              }
           }
           return true;
       } else if (t.isClassMethod(node)) {
           if (node.computed && !this.isPure(node.key, constantsOnly)) { 
-return false; 
-}
+              return false; 
+          }
           if (node.kind === "get" || node.kind === "set") { 
-return false; 
-}
+              return false; 
+          }
           return true;
       } else if (t.isClassProperty(node) || t.isObjectProperty(node)) {
           if (node.computed && !this.isPure(node.key, constantsOnly)) {
- return false;
- }
+              return false;
+          }
           return this.isPure(node.value, constantsOnly);
       } else if (t.isUnaryExpression(node)) {
           return this.isPure(node.argument, constantsOnly);
@@ -746,8 +746,8 @@ return false;
       } else if (t.isTemplateLiteral(node)) {
           for (const expression of (node.expressions: Array<Object>)) {
               if (!this.isPure(expression, constantsOnly)) { 
-return false; 
-}
+                  return false; 
+              }
           }
           return true;
       } 
@@ -926,7 +926,7 @@ return false;
       }
 
       if (path.isLoop() || path.isCatchClause() || path.isFunction()) {
-          t.ensureBlock(path.node);
+          path.ensureBlock();
           path = path.get("body");
       }
 

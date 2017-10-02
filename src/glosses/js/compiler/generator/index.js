@@ -2,8 +2,7 @@ import SourceMap from "./source_map";
 import Printer, { type Format } from "./printer";
 
 const {
-    is,
-    js: { compiler: { messages } }
+    is
 } = adone;
 
 /**
@@ -78,7 +77,8 @@ function normalizeOptions(code, opts): Format {
 
         if (format.compact) {
             console.error(
-                `[BABEL] ${messages.get("codeGeneratorDeopt", opts.filename, "500KB")}`,
+                "[BABEL] Note: The code generator has deoptimised the styling of " +
+                `${opts.filename} as it exceeds the max of ${"500KB"}.`,
             );
         }
     }
