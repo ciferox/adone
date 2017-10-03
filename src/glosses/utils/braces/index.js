@@ -1,53 +1,13 @@
 import * as _util from "./utils";
 
 const {
+    x,
     is,
     util
 } = adone;
 
-braces.MAX_LENGTH = 1024 * 64;
-let cache = {};
-
-/**
- * Memoizes a generated regex or function. A unique key is generated
- * from the method name, pattern, and user-defined options. Set
- * options.memoize to false to disable.
- */
-const memoize = (type, pattern, options, fn) => {
-    const key = _util.createKey(`${type}:${pattern}`, options);
-    const disabled = options && options.cache === false;
-    if (disabled) {
-        braces.clearCache();
-        return fn(pattern, options);
-    }
-
-    if (cache.hasOwnProperty(key)) {
-        return cache[key];
-    }
-
-    const res = fn(pattern, options);
-    cache[key] = res;
-    return res;
-};
-
-/**
- * Converts the given `braces` pattern into a regex-compatible string.
- * By default, only one string is generated for every input string.
- * Set `options.expand` to true to return an array of patterns (similar to Bash or minimatch).
- *
- * @param {String} `str`
- * @param {Object} `options`
- * @return {String}
- */
-export default function braces(pattern, options) {
-    const key = _util.createKey(String(pattern), options);
+const _braces = (pattern, options) => {
     let arr = [];
-
-    const disabled = options && options.cache === false;
-    if (!disabled && cache.hasOwnProperty(key)) {
-        return cache[key];
-    }
-
     if (is.array(pattern)) {
         for (let i = 0; i < pattern.length; i++) {
             arr.push.apply(arr, braces.create(pattern[i], options));
@@ -59,20 +19,44 @@ export default function braces(pattern, options) {
     if (options && options.nodupes === true) {
         arr = util.unique(arr);
     }
-
-    if (!disabled) {
-        cache[key] = arr;
-    }
     return arr;
+};
+
+/**
+ * Converts the given `braces` pattern into a regex-compatible string.
+ * By default, only one string is generated for every input string.
+ * Set `options.expand` to true to return an array of patterns (similar to Bash or minimatch).
+ *
+ * @param {string} str
+ * @param {object} options
+ * @return {string}
+ */
+export default function braces(pattern, options) {
+    // eslint-disable-next-line no-use-before-define
+    return memoize("braces", pattern, options, _braces);
 }
+
+braces.MAX_LENGTH = 1024 * 64;
+
+const memoize = _util.memoize(braces, ["braces", "create", "makeRe"]);
+
+adone.lazifyPrivate({
+    util: "./utils",
+    parser: "./parsers",
+    compiler: "./compilers",
+    Braces: "./braces"
+}, braces, require);
+
+const __ = adone.private(braces);
+
 
 /**
  * Expands a brace pattern into an array.
  * This method is called by the main braces function when `options.expand` is true
  *
- * @param {String} `pattern` Brace pattern
- * @param {Object} `options`
- * @return {Array} Returns an array of expanded values.
+ * @param {string} pattern Brace pattern
+ * @param {object} options
+ * @return {string[]} Returns an array of expanded values.
  */
 braces.expand = function (pattern, options) {
     return braces.create(pattern, { ...options, expand: true });
@@ -82,9 +66,9 @@ braces.expand = function (pattern, options) {
  * Expands a brace pattern into a regex-compatible, optimized string.
  * This method is called by the main braces function by default.
  *
- * @param {String} `pattern` Brace pattern
- * @param {Object} `options`
- * @return {Array} Returns an array of expanded values.
+ * @param {string} pattern Brace pattern
+ * @param {object} options
+ * @return {string[]} Returns an array of expanded values.
  */
 braces.optimize = function (pattern, options) {
     return braces.create(pattern, options);
@@ -95,17 +79,17 @@ braces.optimize = function (pattern, options) {
  * a highly optimized regex-compatible string.
  * This method is called by the main braces function.
  *
- * @param {String} `pattern` Brace pattern
- * @param {Object} `options`
- * @return {Array} Returns an array of expanded values.
+ * @param {string} pattern Brace pattern
+ * @param {object} options
+ * @return {string[]} Returns an array of expanded values.
  */
 braces.create = function (pattern, options) {
     if (!is.string(pattern)) {
-        throw new TypeError("expected a string");
+        throw new x.InvalidArgument("expected a string");
     }
 
     if (pattern.length >= braces.MAX_LENGTH) {
-        throw new Error(`expected pattern to be less than ${braces.MAX_LENGTH} characters`);
+        throw new x.LimitExceeded(`expected pattern to be less than ${braces.MAX_LENGTH} characters`);
     }
 
     const create = () => {
@@ -154,17 +138,17 @@ braces.create = function (pattern, options) {
 /**
  * Creates a regular expression from the given string `pattern`.
  *
- * @param {String} `pattern` The pattern to convert to regex.
- * @param {Object} `options`
+ * @param {string} pattern The pattern to convert to regex.
+ * @param {object} options
  * @return {RegExp}
  */
 braces.makeRe = function (pattern, options) {
     if (!is.string(pattern)) {
-        throw new TypeError("expected a string");
+        throw new x.InvalidArgument("expected a string");
     }
 
     if (pattern.length >= braces.MAX_LENGTH) {
-        throw new Error(`expected pattern to be less than ${braces.MAX_LENGTH} characters`);
+        throw new x.LimitExceeded(`expected pattern to be less than ${braces.MAX_LENGTH} characters`);
     }
 
     const makeRe = () => {
@@ -179,11 +163,11 @@ braces.makeRe = function (pattern, options) {
 /**
  * Parses the given `str` with the given `options`.
  *
- * @param {String} `pattern` Brace pattern to parse
- * @param {Object} `options`
- * @return {Object} Returns an AST
+ * @param {string} pattern Brace pattern to parse
+ * @param {object} options
+ * @return {object} Returns an AST
  */
-braces.parse = function (pattern, options) {
+braces.parse = (pattern, options) => {
     const proto = new __.Braces(options);
     return proto.parse(pattern, options);
 };
@@ -191,30 +175,11 @@ braces.parse = function (pattern, options) {
 /**
  * Compiles the given `ast` or string with the given `options`.
  *
- * @param {Object|String} `ast` AST from [.parse](#parse). If a string is passed it will be parsed first.
- * @param {Object} `options`
- * @return {Object} Returns an object that has an `output` property with the compiled string.
+ * @param {object | string} ast AST from .parse. If a string is passed it will be parsed first.
+ * @param {object} options
+ * @return {object} Returns an object that has an `output` property with the compiled string.
  */
-braces.compile = function (ast, options) {
+braces.compile = (ast, options) => {
     const proto = new __.Braces(options);
     return proto.compile(ast, options);
 };
-
-/**
- * Clears the regex cache.
- *
- */
-braces.clearCache = function () {
-    cache = braces.cache = {};
-};
-
-braces.cache = cache;
-
-adone.lazifyPrivate({
-    util: "./utils",
-    parser: "./parsers",
-    compiler: "./compilers",
-    Braces: "./braces"
-}, braces, require);
-
-const __ = adone.private(braces);

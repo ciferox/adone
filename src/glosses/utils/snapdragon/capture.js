@@ -42,7 +42,6 @@ export default function () {
 
         } else if (snapdragon.isParser) {
             snapdragon.define("capture", capture);
-
         } else {
             throw new Error("expected an instance of snapdragon or snapdragon.parser");
         }

@@ -1,11 +1,13 @@
-const { is } = adone;
+const {
+    x,
+    is
+} = adone;
 
 const cache = {};
 
 /**
  * Zip strings (`for in` can be used on string characters)
  */
-
 const zip = (a, b) => {
     const arr = [];
     for (const ch in a) {
@@ -18,9 +20,9 @@ const toCharacterClass = (a, b) => `[${a}${(b - a === 1) ? "" : "-"}${b}]`;
 
 /**
  * Convert a range to a regex pattern
- * @param {Number} `start`
- * @param {Number} `stop`
- * @return {String}
+ * @param {number} start
+ * @param {number} stop
+ * @returns {string}
  */
 const rangeToPattern = (start, stop, options) => {
     if (start === stop) {
@@ -56,7 +58,6 @@ const rangeToPattern = (start, stop, options) => {
 
     return { pattern, digits: [digits] };
 };
-
 
 const padZeros = (val, tok) => {
     if (tok.isPadded) {
@@ -209,7 +210,7 @@ const padding = (str) => /^-?(0+)\d/.exec(str);
 
 export default function toRegexRange(min, max, options) {
     if (!is.numeral(min)) {
-        throw new RangeError("toRegexRange: first argument is invalid.");
+        throw new x.InvalidArgument("toRegexRange: first argument is invalid.");
     }
 
     if (is.undefined(max) || min === max) {
@@ -217,7 +218,7 @@ export default function toRegexRange(min, max, options) {
     }
 
     if (!is.numeral(max)) {
-        throw new RangeError("toRegexRange: second argument is invalid.");
+        throw new x.InvalidArgument("toRegexRange: second argument is invalid.");
     }
 
     options = options || {};

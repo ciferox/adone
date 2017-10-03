@@ -15,16 +15,14 @@ const {
 /**
  * Returns true if the character is an extglob character.
  */
-const isExtglobChar = (ch) => {
-    return ch === "!" || ch === "@" || ch === "*" || ch === "?" || ch === "+";
-};
+const isExtglobChar = (ch) => ch === "!" || ch === "@" || ch === "*" || ch === "?" || ch === "+";
 
 /**
  * Combine text nodes, and calculate empty sets (`{,,}`)
  *
- * @param {Function} `pos` Function to calculate node position
- * @param {Object} `node` AST node
- * @return {Object}
+ * @param {Function} pos Function to calculate node position
+ * @param {object} node AST node
+ * @return {object}
  */
 const concatNodes = function (pos, node, parent, options) {
     node.orig = node.val;

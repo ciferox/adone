@@ -13,5 +13,7 @@ adone.lazify({
     ByteArray: "./byte_array",
     Queue: "./queue",
     AsyncQueue: "./async_queue",
-    PriorityQueue: "./priority_queue"
+    PriorityQueue: "./priority_queue",
+    MapCache: "./map_cache",
+    NSCache: "./ns_cache"
 }, adone.asNamespace(exports), require);

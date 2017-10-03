@@ -1,44 +1,8 @@
 const {
-    is
+    x,
+    is,
+    util
 } = adone;
-
-/**
- * @param {Object} `options`
- * @return {RegExp} Converts the given `pattern` to a regex using the specified `options`.
- */
-const not = (pattern, options) => new RegExp(not.create(pattern, options));
-
-/**
- * Create a regex-compatible string from the given `pattern` and `options`.
- *
- * @param {String} `pattern`
- * @param {Object} `options`
- * @return {String}
- */
-not.create = function (pattern, options) {
-    if (!is.string(pattern)) {
-        throw new TypeError("expected a string");
-    }
-
-    const opts = { ...options };
-    if (opts && opts.contains === true) {
-        opts.strictNegate = false;
-    }
-
-    const open = opts.strictOpen !== false ? "^" : "";
-    const close = opts.strictClose !== false ? "$" : "";
-    const endChar = opts.endChar ? opts.endChar : "+";
-    let str = pattern;
-
-    if (opts && opts.strictNegate === false) {
-        str = `(?:(?!(?:${pattern})).)${endChar}`;
-    } else {
-        str = `(?:(?!^(?:${pattern})$).)${endChar}`;
-    }
-
-    return open + str + close;
-};
-
 
 toRegex.MAX_LENGTH = 1024 * 64;
 toRegex.cache = {};
@@ -100,8 +64,8 @@ const createKey = (pattern, options) => {
 /**
  * Create a regular expression from the given `pattern` string.
  *
- * @param {String|RegExp} `pattern` Pattern can be a string or regular expression.
- * @param {Object} `options`
+ * @param {string | RegExp} pattern Pattern can be a string or regular expression.
+ * @param {object} options
  * @return {RegExp}
  */
 const makeRe = (pattern, options) => {
@@ -110,11 +74,11 @@ const makeRe = (pattern, options) => {
     }
 
     if (!is.string(pattern)) {
-        throw new TypeError("expected a string");
+        throw new x.InvalidArgument("expected a string");
     }
 
     if (pattern.length > toRegex.MAX_LENGTH) {
-        throw new Error(`expected pattern to be less than ${toRegex.MAX_LENGTH} characters`);
+        throw new x.LimitExceeded(`expected pattern to be less than ${toRegex.MAX_LENGTH} characters`);
     }
 
     let key = pattern;
@@ -152,7 +116,7 @@ const makeRe = (pattern, options) => {
 
     try {
         if (opts.negate || is.boolean(opts.strictNegate)) {
-            pattern = not.create(pattern, opts);
+            pattern = util.regexNot.create(pattern, opts);
         }
         const str = `${open}(?:${pattern})${close}`;
         regex = new RegExp(str, flags);
@@ -182,8 +146,8 @@ const makeRe = (pattern, options) => {
 /**
  * Create a regular expression from the given `pattern` string.
  *
- * @param {String|RegExp} `pattern` Pattern can be a string or regular expression.
- * @param {Object} `options`
+ * @param {string | RegExp} pattern Pattern can be a string or regular expression.
+ * @param {object} options
  * @return {RegExp}
  */
 export default function toRegex(patterns, options) {

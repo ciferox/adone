@@ -247,7 +247,12 @@ export default class Node {
         }
         const tok = this.idx !== -1 ? this.siblings[this.idx] : null;
         if (tok !== this) {
-            this.idx = this.siblings.indexOf(this);
+            Object.defineProperty(this, "idx", {
+                value: this.siblings.indexOf(this),
+                configurable: true,
+                enumerable: false,
+                writable: true
+            });
         }
         return this.idx;
     }

@@ -144,10 +144,28 @@ describe("collection", "FastLRU", () => {
             expect(cache.size).to.be.equal(3);
             cache.clear();
             expect(cache.size).to.be.equal(0);
+        });
+    });
 
-            // internal things
-            expect(cache.queue.length).to.be.equal(0);
-            expect(cache.cache.size).to.be.equal(0);
+    describe("resize", () => {
+        it("should resize the cache", () => {
+            const cache = new FastLRU(5);
+            cache.set(1, "1");
+            cache.set(2, "2");
+            cache.set(3, "3");
+            cache.set(4, "4");
+            cache.set(5, "5");
+            cache.set(6, "6");
+            expect(cache.has(1)).to.be.false;
+            cache.resize(10);
+            cache.set(7, "7");
+            cache.set(8, "8");
+            cache.set(9, "9");
+            cache.set(10, "10");
+            cache.set(11, "11");
+            expect(cache.has(2)).to.be.true;
+            cache.set(12, "12");
+            expect(cache.has(2)).to.be.false;
         });
     });
 });

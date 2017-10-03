@@ -1,4 +1,5 @@
 const {
+    x,
     is
 } = adone;
 
@@ -26,7 +27,7 @@ const keepEscaping = (opts, str, idx) => {
 
 export default function splitString(str, options, fn) {
     if (!is.string(str)) {
-        throw new TypeError("expected a string");
+        throw new x.InvalidArgument("expected a string");
     }
 
     if (is.function(options)) {
@@ -98,7 +99,7 @@ export default function splitString(str, options, fn) {
                         continue;
                     }
 
-                    if (quotes.indexOf(s) !== -1) {
+                    if (quotes.includes(s)) {
                         i = getClosingQuote(str, s, i + 1);
                         continue;
                     }
@@ -130,7 +131,7 @@ export default function splitString(str, options, fn) {
             tok.idx = idx = closeIdx;
         }
 
-        if (quotes.indexOf(ch) !== -1) {
+        if (quotes.includes(ch)) {
             closeIdx = getClosingQuote(str, ch, idx + 1);
             if (closeIdx === -1) {
                 arr[arr.length - 1] += ch;

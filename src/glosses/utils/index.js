@@ -904,7 +904,10 @@ adone.lazify({
     Snapdragon: "./snapdragon",
     braces: "./braces",
     toRegex: "./to_regex",
+    regexNot: "./regex_not",
     fillRange: "./fill_range",
     toRegexRange: "./to_regex_range",
-    splitString: "./split_string"
+    splitString: "./split_string",
+    match: "./match",
+    arrayDiff: "./array_diff"
 }, adone.asNamespace(exports), require);

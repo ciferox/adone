@@ -499,7 +499,8 @@ export default class Parser extends event.EventEmitter {
 
         // ? or call balanceSets: balanceSets(this, this.stack.pop());
         if (this.stack.length && this.options.strict === true) {
-            throw this.error(`imbalanced "${this.stack.pop().type}": "${this.orig}"`);
+            const node = this.stack[0];
+            throw this.error(`imbalanced "${node.type}": "${this.orig}"`, node);
         }
 
         // create end-of-string node

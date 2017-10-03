@@ -11,8 +11,9 @@ for (let i = 0; i < 100; ++i) {
 
 export default (() => {
     const suites = {};
-    for (const n of [5, 10, 15, 30, 45]) {
+    for (const n of [50]) {
         const _map = new Map();
+        const _mapcache = new adone.collection.MapCache();
         const _object = {};
         const _objectNull = Object.create(null);
         const keys = [...new Array(n)].map((x, i) => `hello${i}`);
@@ -27,6 +28,11 @@ export default (() => {
                 Map: () => {
                     for (let i = 0; i < keys.length; ++i) {
                         _map.get(keys[i]);
+                    }
+                },
+                MapCache: () => {
+                    for (let i = 0; i < keys.length; ++i) {
+                        _mapcache.get(keys[i]);
                     }
                 },
                 Object: () => {
@@ -46,6 +52,11 @@ export default (() => {
                         _map.has(keys[i]);
                     }
                 },
+                MapCache: () => {
+                    for (let i = 0; i < keys.length; ++i) {
+                        _mapcache.has(keys[i]);
+                    }
+                },
                 Object: () => {
                     for (let i = 0; i < keys.length; ++i) {
                         keys[i] in _object;
@@ -62,6 +73,11 @@ export default (() => {
                     const m = new Map();
                     for (let i = 0; i < keys.length; ++i) {
                         m.set(keys[i], values[i]);
+                    }
+                },
+                MapCache: () => {
+                    for (let i = 0; i < keys.length; ++i) {
+                        _mapcache.set(keys[i], values[i]);
                     }
                 },
                 Object: () => {

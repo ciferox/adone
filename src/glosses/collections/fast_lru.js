@@ -7,9 +7,9 @@ export default class FastLRU {
     /**
      * @param {number} size Cache size, unlimited by default
      */
-    constructor(size, { dispose = null } = {}) {
+    constructor(size, { dispose = null, primitiveKeys = true } = {}) {
         this.queue = new collection.LinkedList(size);
-        this.cache = new Map();
+        this.cache = primitiveKeys ? new collection.MapCache() : new Map();
         this.dispose = dispose;
     }
 
@@ -20,6 +20,10 @@ export default class FastLRU {
      */
     get size() {
         return this.queue.length;
+    }
+
+    resize(newSize) {
+        this.queue.resize(newSize);
     }
 
     /**

@@ -14,15 +14,16 @@ describe("util", "braces", "options", () => {
     describe("options.cache", () => {
         it("should disable caching", () => {
             braces("a/{b,c}/d");
-            assert(braces.cache.hasOwnProperty("a/{b,c}/d"));
+            assert(braces.getCache().has("braces", "braces=a/{b,c}/d"));
             braces("a/{b,c}/d");
-            assert(braces.cache.hasOwnProperty("a/{b,c}/d"));
+            assert(braces.getCache().has("braces", "braces=a/{b,c}/d"));
             braces("a/{b,c}/d");
-            assert(braces.cache.hasOwnProperty("a/{b,c}/d"));
+            assert(braces.getCache().has("braces", "braces=a/{b,c}/d"));
+            braces.clearCache();
             braces("a/{b,c}/d", { cache: false });
             braces("a/{b,c}/d", { cache: false });
             braces("a/{b,c}/d", { cache: false });
-            assert.deepEqual(braces.cache, {});
+            assert(!braces.getCache().has("braces", "braces=a/{b,c}/d"));
         });
     });
 

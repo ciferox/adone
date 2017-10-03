@@ -1,4 +1,4 @@
-const { util: { fillRange, range, repeat } } = adone;
+const { util: { fillRange, range } } = adone;
 
 const toRegex = (...args) => {
     const str = fillRange(...args);
@@ -209,9 +209,9 @@ describe("util", "fillRange", () => {
 
         describe("alphanumeric", () => {
             it("should increment alphanumeric ranges", () => {
-                exact(fillRange("9", "B"), ["9", "", ";", "<", "=", ">", "?", "@", "A", "B"]);
-                exact(fillRange("A", "10"), ["A", "@", "?", ">", "=", "<", ";", "", "9", "8", "7", "6", "5", "4", "3", "2", "1"]);
-                exact(fillRange("a", "10"), ["a", "`", "_", "^", "]", "\\", "[", "Z", "Y", "X", "W", "V", "U", "T", "S", "R", "Q", "P", "O", "N", "M", "L", "K", "J", "I", "H", "G", "F", "E", "D", "C", "B", "A", "@", "?", ">", "=", "<", ";", "", "9", "8", "7", "6", "5", "4", "3", "2", "1"]);
+                exact(fillRange("9", "B"), ["9", ":", ";", "<", "=", ">", "?", "@", "A", "B"]);
+                exact(fillRange("A", "10"), ["A", "@", "?", ">", "=", "<", ";", ":", "9", "8", "7", "6", "5", "4", "3", "2", "1"]);
+                exact(fillRange("a", "10"), ["a", "`", "_", "^", "]", "\\", "[", "Z", "Y", "X", "W", "V", "U", "T", "S", "R", "Q", "P", "O", "N", "M", "L", "K", "J", "I", "H", "G", "F", "E", "D", "C", "B", "A", "@", "?", ">", "=", "<", ";", ":", "9", "8", "7", "6", "5", "4", "3", "2", "1"]);
             });
 
             it("should step alphanumeric ranges", () => {
@@ -219,7 +219,7 @@ describe("util", "fillRange", () => {
             });
 
             it("should decrement alphanumeric ranges", () => {
-                exact(fillRange("C", "9"), ["C", "B", "A", "@", "?", ">", "=", "<", ";", "", "9"]);
+                exact(fillRange("C", "9"), ["C", "B", "A", "@", "?", ">", "=", "<", ";", ":", "9"]);
             });
         });
 
@@ -346,25 +346,25 @@ describe("util", "fillRange", () => {
             it("should throw on invalid range arguments are invalid and options.strict is true", () => {
                 assert.throws(() => {
                     fillRange("0a", "0z", { strictRanges: true });
-                }, /invalid range arguments: \[ \'0a\', \'0z\' \]/);
+                }, /invalid range arguments: \[ '0a', '0z' \]/);
 
                 assert.throws(() => {
-                    fillRange("", "*", 2, { strictRanges: true });
-                }, /invalid range arguments: \[ \'\.\', \'\*\' \]/);
+                    fillRange(".", "*", 2, { strictRanges: true });
+                }, /invalid range arguments: \[ '\.', '\*' \]/);
 
                 assert.throws(() => {
                     fillRange("!", "$", { strictRanges: true });
-                }, /invalid range arguments: \[ \'\!\', \'\$\' \]/);
+                }, /invalid range arguments: \[ '!', '\$' \]/);
             });
 
             it("should throw when args are incompatible", () => {
                 assert.throws(() => {
                     fillRange("a8", 10, { strictRanges: true });
-                }, /invalid range arguments: \[ \'a8\', 10 \]/);
+                }, /invalid range arguments: \[ 'a8', 10 \]/);
 
                 assert.throws(() => {
                     fillRange(1, "zz", { strictRanges: true });
-                }, /invalid range arguments: \[ 1, \'zz\' \]/);
+                }, /invalid range arguments: \[ 1, 'zz' \]/);
             });
 
             it("should throw when the step is bad", () => {
@@ -473,7 +473,7 @@ describe("util", "fillRange", () => {
 
     describe("custom function for expansions", () => {
         it("should expose the current value as the first param", () => {
-            const arr = fillRange(1, 5, (val, a, b, step, idx, arr, options) => {
+            const arr = fillRange(1, 5, (val) => {
                 return val;
             });
             exact(arr, [1, 2, 3, 4, 5]);
@@ -495,7 +495,7 @@ describe("util", "fillRange", () => {
         });
 
         it("should expose the index as the fifth param", () => {
-            const arr = fillRange("a", "e", (val, a, b, step, idx, arr, options) => {
+            const arr = fillRange("a", "e", (val, a, b, step, idx) => {
                 return val + (idx - 1);
             });
             exact(arr, ["a0", "b1", "c2", "d3", "e4"]);

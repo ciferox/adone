@@ -1,25 +1,29 @@
 const {
     is,
-    util
+    util,
+    collection
 } = adone;
-
 
 /**
  * Returns true if the given string looks like a regex quantifier
- * @return {Boolean}
+ *
+ * @return {boolean}
  */
 export const isQuantifier = (str) => /^(?:[0-9]?,[0-9]|[0-9],)$/.test(str);
 
 /**
  * Cast `val` to an array.
- * @param {*} `val`
+ *
+ * @param {any} val
+ * @returns {string[]}
  */
 export const stringifyArray = (arr) => [util.arrify(arr).join("|")];
 
 /**
  * Get the last element from `array`
- * @param {Array} `array`
- * @return {*}
+ *
+ * @param {any[]} array
+ * @return {any}
  */
 
 export const last = (arr, n = 1) => arr[arr.length - (n || 1)];
@@ -58,6 +62,52 @@ export const createKey = (pattern, options) => {
         id += `;${key}=${String(options[key])}`;
     }
     return id;
+};
+
+/**
+ * Memoize a generated regex or function. A unique key is generated
+ * from the `type` (usually method name), the `pattern`, and
+ * user-defined options.
+ */
+export const memoize = (target, namespaces) => {
+    let cache = null;
+    let size = 50;
+
+    target.clearCache = () => {
+        if (cache) {
+            cache.clear();
+        }
+    };
+
+    target.resizeCache = (newSize) => {
+        if (cache) {
+            cache.resize(newSize);
+        } else {
+            size = newSize;
+        }
+    };
+
+    target.getCache = () => cache;
+
+    return (type, pattern, options, fn) => {
+        if (options && options.cache === false) {
+            return fn(pattern, options);
+        }
+
+        const key = createKey(`${type}=${pattern}`, options);
+
+        if (!cache) {
+            cache = new collection.NSCache(size, namespaces);
+        }
+
+        if (cache.has(type, key)) {
+            return cache.get(type, key);
+        }
+
+        const val = fn(pattern, options);
+        cache.set(type, key, val);
+        return val;
+    };
 };
 
 /**
@@ -121,8 +171,8 @@ export const join = (a, b, options) => {
 
 /**
  * Ensure commas inside brackets and parens are not split.
- * @param {Object} `tok` Token from the `split-string` module
- * @return {undefined}
+ *
+ * @param {object} tok Token from the `split-string` module
  */
 export const escapeBrackets = (options) => (tok) => {
     if (tok.escaped && tok.val === "b") {
@@ -201,9 +251,9 @@ export const split = (str, options) => {
 /**
  * Expand ranges or sets in the given `pattern`.
  *
- * @param {String} `str`
- * @param {Object} `options`
- * @return {Object}
+ * @param {string} str
+ * @param {object} options
+ * @return {object}
  */
 export const expand = (str, options) => {
     const opts = { rangeLimit: 10000, ...options };
