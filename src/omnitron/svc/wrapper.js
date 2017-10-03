@@ -1,9 +1,11 @@
-const adone = require("../..").default;
+require("../..").default;
 
-const { is } = adone;
+const {
+    is
+} = adone;
 
 adone.application.run({
-    initialize() {
+    configure() {
         this.defineArguments({
             commands: [
                 {

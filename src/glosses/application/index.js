@@ -6,14 +6,16 @@ const {
 export const SUBSYSTEMS_SYMBOL = Symbol();
 export const STAGE_SYMBOL = Symbol();
 
-export const STAGE_NEW = 0;
-export const STAGE_CONFIGURING = 1;
-export const STAGE_CONFIGURED = 2;
-export const STAGE_INITIALIZING = 3;
-export const STAGE_INITIALIZED = 4;
-export const STAGE_RUNNING = 5;
-export const STAGE_UNINITIALIZING = 6;
-export const STAGE_UNINITIALIZED = 7;
+export const STATE = {
+    CREATED: 0,
+    CONFIGURING: 1,
+    CONFIGURED: 2,
+    INITIALIZING: 3,
+    INITIALIZED: 4,
+    RUNNING: 5,
+    UNINITIALIZING: 6,
+    UNINITIALIZED: 7
+};
 
 export const EXIT_SUCCESS = 0;
 export const EXIT_ERROR = 1;

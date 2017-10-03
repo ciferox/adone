@@ -53,9 +53,18 @@
                     "$dst": "lib"
                 },
                 "omnitron": {
-                    "$task": "adoneTranspile",
-                    "$src": "src/omnitron/**/*.js",
-                    "$dst": "lib/omnitron"
+                    "js": {
+                        "$task": "adoneTranspile",
+                        "$src": "src/omnitron/**/*.js",
+                        "$dst": "lib/omnitron"
+                    },
+                    "other": {
+                        "$src": [
+                            "src/omnitron/**/*",
+                            "!src/omnitron/**/*.js"
+                        ],
+                        "$dst": "lib/omnitron"
+                    }
                 }
             }
         }

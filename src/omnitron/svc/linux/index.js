@@ -1,4 +1,7 @@
-const { std: { path, fs }, templating: { nunjucks } } = adone;
+const {
+    std: { path, fs },
+    templating: { nunjucks }
+} = adone;
 
 const supportedos = ["debian", "centos", "redhat", "fedora", "ubuntu"];
 
@@ -95,7 +98,7 @@ export default class Service {
                 } else {
                     pathPrefix = adone.std.path.join("/home", context.user);
                 }
-                const adoneHomePath = adone.std.path.join(pathPrefix, adone.runtime.app.config.adone.dirName);
+                const adoneHomePath = adone.std.path.join(pathPrefix, adone.config.dirName);
                 if (!(await adone.fs.exists(adoneHomePath))) {
                     throw new adone.x.NotExists(`Adone home directory '${adoneHomePath}' not exists`);
                 }

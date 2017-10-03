@@ -11,7 +11,7 @@ const {
         EXIT_SUCCESS,
         EXIT_ERROR,
         STAGE_SYMBOL,
-        STAGE_RUNNING
+        STATE
     }
 } = adone;
 
@@ -1427,6 +1427,30 @@ export default class Application extends adone.application.Subsystem {
         }
     }
 
+    exposeCliInterface(ctxId = "cli") {
+        if (adone.runtime.netron.hasContext(ctxId)) {
+            return;
+        }
+
+        @adone.netron.Context()
+        class CliContext {
+            constructor(app) {
+                this.app = app;
+            }
+
+            @adone.netron.Public()
+            defineArguments(options) {
+                return this.app.defineArguments(options);
+            }
+
+            @adone.netron.Public()
+            defineCommand(subsystem, ...args) {
+                return this.app.defineCommand(subsystem, ...args);
+            }
+        }
+        adone.runtime.netron.attachContext(new CliContext(this), ctxId);
+    }
+
     reportEnabled() {
         return !is.null(this[REPORT]);
     }
@@ -1515,7 +1539,7 @@ export default class Application extends adone.application.Subsystem {
                 await this.exit(code);
                 return;
             }
-            this[STAGE_SYMBOL] = STAGE_RUNNING;
+            this[STAGE_SYMBOL] = STATE.RUNNING;
         } catch (err) {
             if (this[ERROR_SCOPE]) {
                 return this._fireException(err);
@@ -1627,26 +1651,6 @@ export default class Application extends adone.application.Subsystem {
             currentPath = nextPath;
         }
         return this[VERSION] = undefined;
-    }
-
-    defineArguments(options = {}) {
-        const mainOptionsGroups = this[MAIN_COMMAND].optionsGroups
-            .filter((x) => x.name !== UNNAMED)
-            .map((x) => ({ name: x.name, description: x.description }));
-        const mainCommandsGroups = this[MAIN_COMMAND].commandsGroups
-            .filter((x) => x.name !== UNNAMED)
-            .map((x) => ({ name: x.name, description: x.description }));
-        const optionsGroups = options.optionsGroups ? options.optionsGroups.map((x) => {
-            const group = new Group(x);
-            return { name: group.name, description: group.description };
-        }) : [];
-        const commandsGroups = options.commandsGroups ? options.commandsGroups.map((x) => {
-            const group = new Group(x);
-            return { name: group.name, description: group.description };
-        }) : [];
-        options.commandsGroups = mergeGroupsLists(mainCommandsGroups, commandsGroups);
-        options.optionsGroups = mergeGroupsLists(mainOptionsGroups, optionsGroups);
-        this.defineMainCommand(options);
     }
 
     defineMainCommand(options) {
@@ -1761,7 +1765,7 @@ export default class Application extends adone.application.Subsystem {
                     break;
                 }
             }
-            if (!subcmd) {
+            if (is.undefined(subcmd)) {
                 if (create) {
                     subcmd = this._createCommand({ name }, cmd);
                 } else {
@@ -1771,6 +1775,26 @@ export default class Application extends adone.application.Subsystem {
             cmd = subcmd;
         }
         return cmd;
+    }
+
+    defineArguments(options = {}) {
+        const mainOptionsGroups = this[MAIN_COMMAND].optionsGroups
+            .filter((x) => x.name !== UNNAMED)
+            .map((x) => ({ name: x.name, description: x.description }));
+        const mainCommandsGroups = this[MAIN_COMMAND].commandsGroups
+            .filter((x) => x.name !== UNNAMED)
+            .map((x) => ({ name: x.name, description: x.description }));
+        const optionsGroups = options.optionsGroups ? options.optionsGroups.map((x) => {
+            const group = new Group(x);
+            return { name: group.name, description: group.description };
+        }) : [];
+        const commandsGroups = options.commandsGroups ? options.commandsGroups.map((x) => {
+            const group = new Group(x);
+            return { name: group.name, description: group.description };
+        }) : [];
+        options.commandsGroups = mergeGroupsLists(mainCommandsGroups, commandsGroups);
+        options.optionsGroups = mergeGroupsLists(mainOptionsGroups, optionsGroups);
+        this.defineMainCommand(options);
     }
 
     defineCommand(...args) {
@@ -1789,7 +1813,7 @@ export default class Application extends adone.application.Subsystem {
             const command = subsystem[COMMAND];
             if (command instanceof Command) {
                 this._initCommand(command, cmdParams, false);
-                command._subsystem = subsystem;
+                command._subsystem = subsystem; // Set correct subsystem
                 return;
             }
         }

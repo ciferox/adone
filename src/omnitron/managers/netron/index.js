@@ -1,49 +1,39 @@
 const {
     application,
-    is,
-    netron
+    runtime
 } = adone;
 
 export default class NetronManager extends application.Subsystem {
     configure() {
-        this.netron = null;
-    }
+        runtime.netron.options.isSuper = true;
 
-    async initialize() {
-        // Initialize netron and bind its gates.
-        this.netron = new netron.Netron({
-            isSuper: true
-        });
+        runtime.netron.registerAdapter("ws", adone.netron.ws.Adapter);
 
-        this.netron.registerAdapter("ws", adone.netron.ws.Adapter);
-
-        this.netron.on("peer online", (peer) => {
+        runtime.netron.on("peer online", (peer) => {
             adone.info(`Peer '${peer.getRemoteAddress().full}' (uid: ${peer.uid}) connected`);
         }).on("peer offline", (peer) => {
             adone.info(`Peer '${peer.getRemoteAddress().full}' (uid: ${peer.uid}) disconnected`);
         });
+    }
 
+    async initialize() {
         // Bind all gates.
-        for (const gate of this.app.config.gates) {
-            await this.netron.bind(gate); // eslint-disable-line
+        for (const gate of this.parent.config.gates) {
+            await runtime.netron.bind(gate); // eslint-disable-line
         }
 
-        this.servicePort = this.app.config.gates[0].port;
+        this.servicePort = this.parent.config.gates[0].port;
     }
 
     async unintialize() {
         try {
-            if (!is.null(this.netron)) {
-                await this.netron.disconnect();
-                await this.netron.unbind();
+            await runtime.netron.disconnect();
+            await runtime.netron.unbind();
 
-                // Let netron gracefully complete all disconnects
-                await adone.promise.delay(500);
-            }
+            // // Let netron gracefully complete all disconnects
+            // await adone.promise.delay(500);
         } catch (err) {
             adone.error(err);
-        } finally {
-            this.netron = null;
         }
     }
 

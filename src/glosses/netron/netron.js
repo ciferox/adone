@@ -104,14 +104,11 @@ class Gate {
 export default class Netron extends GenesisNetron {
     constructor(options = {}, uid) {
         super({
-            isSuper: false
+            refGates: true,
+            refPeers: true,
+            ...options
         }, uid);
         Object.assign(this.options,
-            {
-                refGates: true,
-                refPeers: true
-            },
-            options,
             {
                 peerFactory: (socket, server) => {
                     const peer = this._createPeer(socket, server);

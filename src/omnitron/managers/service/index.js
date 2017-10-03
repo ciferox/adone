@@ -169,7 +169,7 @@ export default class ServiceManager extends application.Subsystem {
 
     async startAll() {
         const groups = await this.enumerateGroups();
-        const port = this.app.subsystem("netron").getServicePort();
+        const port = this.parent.subsystem("netron").getServicePort();
 
         for (const [group, services] of groups.entries()) {
             const maintainer = new ServiceMaintainer({ group, services, port });

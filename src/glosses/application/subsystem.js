@@ -7,13 +7,7 @@ const {
     application: {
         STAGE_SYMBOL,
         SUBSYSTEMS_SYMBOL,
-        STAGE_NEW,
-        STAGE_CONFIGURING,
-        STAGE_CONFIGURED,
-        STAGE_INITIALIZING,
-        STAGE_INITIALIZED,
-        STAGE_UNINITIALIZING,
-        STAGE_UNINITIALIZED
+        STATE
     }
 } = adone;
 
@@ -22,12 +16,10 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         super();
 
         this.name = name;
-
-        this[STAGE_SYMBOL] = STAGE_NEW;
         this[SUBSYSTEMS_SYMBOL] = [];
         this.parent = null;
-        this.app = this;
         this._ = this.data = {};
+        this[STAGE_SYMBOL] = STATE.CREATED;
     }
 
     /**
@@ -129,10 +121,15 @@ export default class Subsystem extends adone.event.AsyncEmitter {
                 break;
             }
         }
-    }    
+    }
 
-    defineCommand(...args) {
-        return this.app.defineCommand(this, ...args);
+    /**
+     * Returns interface to context.
+     * 
+     * @param {string} name context name
+     */
+    getInterface(name) {
+        return adone.runtime.netron.getInterfaceByName(name);
     }
 
     /**
@@ -169,7 +166,6 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         }
 
         instance.parent = this;
-        instance.app = this;
 
         const sysInfo = {
             name,
@@ -177,7 +173,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
             group,
             configureArgs,
             instance,
-            stage: STAGE_NEW
+            stage: STATE.CREATED
         };
 
         this[SUBSYSTEMS_SYMBOL].push(sysInfo);
@@ -193,7 +189,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
      * @returns {Promise<void>}
      */
     async addSubsystemsFrom(path, { useFilename = false, filter, group = "subsystem", configureArgs = [], addOnCommand = false } = {}) {
-        if (this[STAGE_SYMBOL] !== STAGE_CONFIGURING) {
+        if (this[STAGE_SYMBOL] !== STATE.CONFIGURING) {
             throw new x.NotAllowed("Subsystem can be added only during configuration of the application");
         }
 
@@ -243,52 +239,48 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         throw new x.Unknown(`Unknown subsystem: ${name}`);
     }
 
-    netron() {
-
-    }
-
     async _configureSubsystem(sysInfo) {
-        sysInfo.stage = STAGE_CONFIGURING;
+        sysInfo.stage = STATE.CONFIGURING;
         await sysInfo.instance._configure(...sysInfo.configureArgs);
-        sysInfo.stage = STAGE_CONFIGURED;
+        sysInfo.stage = STATE.CONFIGURED;
     }
 
     async _initializeSubsystem(sysInfo) {
-        if (sysInfo.stage === STAGE_CONFIGURED) {
-            sysInfo.stage = STAGE_INITIALIZING;
+        if (sysInfo.stage === STATE.CONFIGURED) {
+            sysInfo.stage = STATE.INITIALIZING;
             await sysInfo.instance._initialize();
-            sysInfo.stage = STAGE_INITIALIZED;
+            sysInfo.stage = STATE.INITIALIZED;
         }
     }
 
     async _uninitializeSubsystem(sysInfo) {
-        if (sysInfo.stage === STAGE_INITIALIZED) {
-            sysInfo.stage = STAGE_UNINITIALIZING;
+        if (sysInfo.stage === STATE.INITIALIZED) {
+            sysInfo.stage = STATE.UNINITIALIZING;
             await sysInfo.instance._uninitialize();
-            sysInfo.stage = STAGE_UNINITIALIZED;
+            sysInfo.stage = STATE.UNINITIALIZED;
         }
     }
 
     async _configure(...args) {
-        this[STAGE_SYMBOL] = STAGE_CONFIGURING;
+        this[STAGE_SYMBOL] = STATE.CONFIGURING;
         const result = await this.configure(...args);
         await this.configureSubsystems();
-        this[STAGE_SYMBOL] = STAGE_CONFIGURED;
+        this[STAGE_SYMBOL] = STATE.CONFIGURED;
         return result;
     }
 
     async _initialize() {
-        this[STAGE_SYMBOL] = STAGE_INITIALIZING;
+        this[STAGE_SYMBOL] = STATE.INITIALIZING;
         await this.initialize();
         await this.initializeSubsystems();
-        this[STAGE_SYMBOL] = STAGE_INITIALIZED;
+        this[STAGE_SYMBOL] = STATE.INITIALIZED;
     }
 
     async _uninitialize() {
-        this[STAGE_SYMBOL] = STAGE_UNINITIALIZING;
+        this[STAGE_SYMBOL] = STATE.UNINITIALIZING;
         await this.uninitialize();
         await this.uninitializeSubsystems();
-        this[STAGE_SYMBOL] = STAGE_UNINITIALIZED;
+        this[STAGE_SYMBOL] = STATE.UNINITIALIZED;
     }
 }
 tag.add(Subsystem, "SUBSYSTEM");

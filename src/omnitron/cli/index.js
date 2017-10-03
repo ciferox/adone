@@ -1,7 +1,6 @@
 const {
     is,
     text: { pretty },
-    std,
     util
 } = adone;
 const { STATUSES } = adone.omnitron.const;
@@ -20,8 +19,8 @@ const runtime = adone.lazify({
 });
 
 export default class extends adone.application.Subsystem {
-    configure() {
-        this.defineCommand({
+    async configure() {
+        await this.getInterface("cli").defineCommand(this, {
             options: [
                 {
                     name: "--version",

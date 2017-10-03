@@ -3,7 +3,8 @@ const {
     x,
     std,
     netron,
-    omnitron
+    omnitron,
+    runtime
 } = adone;
 
 const {
@@ -18,9 +19,9 @@ export default class Dispatcher {
         this.noisily = noisily;
         this._configuration = configuration;
         this.omnitron = omnitron;
-        this.netron = new netron.Netron(netronOptions);
+        Object.assign(runtime.netron.options, netronOptions);
 
-        this.netron.on("peer online", (peer) => {
+        runtime.netron.on("peer online", (peer) => {
             noisily && adone.info(`Peer '${peer.getRemoteAddress().full}' (${peer.uid}) connected`);
         }).on("peer offline", (peer) => {
             noisily && adone.info(`Peer '${peer.getRemoteAddress().full}' (${peer.uid}) disconnected`);
@@ -34,13 +35,13 @@ export default class Dispatcher {
     }
 
     bind(options) {
-        return this.netron.bind(options);
+        return runtime.netron.bind(options);
     }
 
     async bindGates(gates, { adapters = null } = {}) {
         if (is.plainObject(adapters)) {
             for (const [name, AdapterClass] of Object.entries(adapters)) {
-                this.netron.registerAdapter(name, AdapterClass);
+                runtime.netron.registerAdapter(name, AdapterClass);
             }
         }
 
@@ -67,7 +68,7 @@ export default class Dispatcher {
             return this.connectLocal();
         }
 
-        this.peer = await this.netron.connect(gate);
+        this.peer = await runtime.netron.connect(gate);
         return this.peer;
     }
 
@@ -85,7 +86,7 @@ export default class Dispatcher {
 
             let peer = null;
             try {
-                peer = await this.netron.connect(localGate);
+                peer = await runtime.netron.connect(localGate);
                 status = _counter >= 1 ? 0 : 1;
             } catch (err) {
                 if (!forceStart || _counter >= 3) {
@@ -105,8 +106,8 @@ export default class Dispatcher {
 
     async disconnect() {
         if (this.connected) {
-            await this.netron.disconnect();
-            await this.netron.unbind();
+            await runtime.netron.disconnect();
+            await runtime.netron.unbind();
             this.peer = null;
         }
     }
@@ -159,7 +160,7 @@ export default class Dispatcher {
                             this.noisily && adone.error(err.message);
                         }
                     } else {
-                        this.netron && await this.netron.disconnect();
+                        await runtime.netron.disconnect();
                         this.peer = null;
 
                         try {
@@ -238,7 +239,7 @@ export default class Dispatcher {
     async ping() {
         try {
             await this.connectLocal(undefined, false);
-            return is.null(await this.netron.ping());
+            return is.null(await runtime.netron.ping());
         } catch (err) {
             return false;
         }

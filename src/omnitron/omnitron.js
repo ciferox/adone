@@ -6,7 +6,8 @@ const {
     std,
     fs,
     netron: { Context, Public },
-    omnitron
+    omnitron,
+    runtime
 } = adone;
 
 const {
@@ -14,7 +15,7 @@ const {
 } = omnitron;
 
 @Context({
-    description: "Common omnitron context"
+    description: "Omnitron"
 })
 export default class Omnitron extends application.Application {
     async configure() {
@@ -56,10 +57,10 @@ export default class Omnitron extends application.Application {
 
     async main() {
         // Attach common omnitron context
-        this.subsystem("netron").netron.attachContext(this, "omnitron");
+        runtime.netron.attachContext(this, "omnitron");
 
         try {
-            await this.subsystem("services").startAll();
+            await this.subsystem("service").startAll();
         } catch (err) {
             adone.error(err);
         }
@@ -67,7 +68,7 @@ export default class Omnitron extends application.Application {
 
     async uninitialize() {
         try {
-            await this.subsystem("services").stopAll();
+            await this.subsystem("service").stopAll();
         } catch (err) {
             adone.error(err);
         }
@@ -189,7 +190,7 @@ export default class Omnitron extends application.Application {
             throw new adone.x.NotValid(`Not valid status: ${status}`);
         }
 
-        const services = await this.subsystem("services").enumerate();
+        const services = await this.subsystem("service").enumerate();
         return services.filter((x) => x.status === status || status === "all");
     }
 

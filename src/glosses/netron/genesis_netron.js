@@ -30,6 +30,7 @@ export default class GenesisNetron extends AsyncEmitter {
             retryTimeout: 300,
             retryMaxTimeout: 3000,
             responseTimeout: 60000 * 3,
+            isSuper: false,
             acceptTwins: true,
             transpiler: {
                 plugins: [
@@ -41,6 +42,7 @@ export default class GenesisNetron extends AsyncEmitter {
 
         this.piStatuses = [STATUS.HANDSHAKING, STATUS.ONLINE];
 
+        this._ownPeer = null;
         this._svrNetronAddrs = new Map();
         this.nuidPeerMap = new Map();
         this._peerEvents = new Map();
@@ -57,13 +59,18 @@ export default class GenesisNetron extends AsyncEmitter {
         this.setMaxListeners(Infinity);
     }
 
-    connect(options = {}) {
-        if (is.null(options)) {
-            const ownPeer = new adone.netron.OwnPeer({
+    getOwnPeer() {
+        if (is.null(this._ownPeer)) {
+            this._ownPeer = new adone.netron.OwnPeer({
                 netron: this
             });
+        }
+        return this._ownPeer;
+    }
 
-            return ownPeer;
+    connect(options = {}) {
+        if (is.null(options)) {
+            return this.getOwnPeer();
         }
         const [port, host] = net.util.normalizeAddr(options.port, options.host, this.options.defaultPort);
         const addr = net.util.humanizeAddr(this.options.protocol, port, host);
@@ -199,7 +206,10 @@ export default class GenesisNetron extends AsyncEmitter {
             return defId;
         }
         throw new x.Unknown(`Unknown context '${ctxId}'`);
+    }
 
+    hasContext(ctxId) {
+        return this.contexts.has(ctxId);
     }
 
     getContextNames() {

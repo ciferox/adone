@@ -251,6 +251,9 @@ class AdoneCLI extends application.Application {
             });
         }
 
+        // expose cli interface for subsystems.
+        this.exposeCliInterface();
+
         this.defineArguments({
             commandsGroups: this.config.cli.groups,
             blindMode: true,

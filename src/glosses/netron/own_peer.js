@@ -7,14 +7,6 @@ export default class OwnPeer extends GenesisPeer {
     constructor(options) {
         super(options);
         this.uid = this.netron.uid;
-
-        if (this.netron.contexts.size > 0) {
-            const defs = {};
-            for (const [name, stub] of this.netron.contexts.entries()) {
-                defs[name] = stub.definition;
-            }
-            this._updateStrongDefinitions(defs);
-        }
     }
 
     isConnected() {
