@@ -40,11 +40,11 @@ describe("application", "Application", () => {
         assert.equal(stdout, "configured\ninitialized\nrun\nuninitialized");
     });
 
-    it("should self referenced by 'app' property", () => {
+    it("parent subsystem should be 'null' for main application", () => {
         class TestApp extends Application {
         }
         const testApp = new TestApp();
-        assert.deepEqual(testApp, testApp.app);
+        assert.isNull(testApp.parent);
     });
 
     it("Compact application with properties", async () => {
@@ -59,7 +59,7 @@ describe("application", "Application", () => {
     });
 
     it("no public properties instead of application's reserved", async () => {
-        const expected = ["_", "data", "parent", "app", "argv", "name"];
+        const expected = ["_", "data", "parent", "argv", "name"];
         const stdout = await execStdout("node", [fixture("public_reserved_props.js")]);
         const props = stdout.split(";");
         assert.sameMembers(props, expected);
@@ -77,9 +77,24 @@ describe("application", "Application", () => {
     });
 
     describe("Subsystems", () => {
-        it("add subsystem by instance", async () => {
-            const stdout = await execStdout("node", [fixture("add_subsystem_by_instance.js")]);
+        it("add valid subsystem", async () => {
+            const stdout = await execStdout("node", [fixture("add_valid_subsystem.js")]);
             assert.equal(stdout, "configure\ninitialize\nuninitialize");
+        });
+
+        it("add valid subsystem from path", async () => {
+            const stdout = await execStdout("node", [fixture("add_valid_subsystem_from_path.js")]);
+            assert.equal(stdout, "configure\ninitialize\nuninitialize");
+        });
+
+        it("add not valid subsystem", async () => {
+            const stdout = await execStdout("node", [fixture("add_not_valid_subsystem.js")]);
+            assert.equal(stdout, "incorrect subsystem");
+        });
+
+        it("add not valid subsystem from", async () => {
+            const stdout = await execStdout("node", [fixture("add_not_valid_subsystem_from_path.js")]);
+            assert.equal(stdout, "incorrect subsystem");
         });
 
         it("initialization and deinitialization of subsystems in accordance with the order of their addition", async () => {

@@ -3,7 +3,9 @@ const {
     std
 } = adone;
 
-const { util: { format } } = std;
+const {
+    util: { format }
+} = std;
 
 const LOG_NOFORMAT = 255;
 

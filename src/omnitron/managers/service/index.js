@@ -10,7 +10,6 @@ const {
     system: { process: { exec } }
 } = adone;
 
-const SERVICE_NAME_PREFIX = "service.";
 const SERVICE_APP_PATH = std.path.join(__dirname, "service_application.js");
 
 class ServiceMaintainer {
@@ -44,6 +43,7 @@ class ServiceMaintainer {
         });
 
         this.process = serviceProcess;
+        return serviceProcess;
     }
 
     async stop() {
@@ -62,7 +62,7 @@ class ServiceMaintainer {
 export default class ServiceManager extends application.Subsystem {
     async configure() {
         this.meta = null;
-        // this.services = null;
+        this.services = null;
         this.maintainers = new Map();
         this.servicesDb = new vault.Vault({
             location: std.path.join(adone.config.varPath, "omnitron", "services.db")
@@ -83,14 +83,17 @@ export default class ServiceManager extends application.Subsystem {
         }
 
         this.services = vault.slice(this.meta, "service");
+
+        await this.startAll();
     }
 
     async uninitialize() {
+        await this.stopAll();
         await this.servicesDb.close();
     }
 
     async enumerate() {
-        const actualNames = [];
+        const existingNames = [];
         const services = [];
 
         const servicesPath = adone.config.omnitron.servicesPath;
@@ -102,10 +105,10 @@ export default class ServiceManager extends application.Subsystem {
                 try {
                     const path = std.path.join(servicesPath, file);
                     // eslint-disable-next-line
-                    const adoneConf = await configuration.load(std.path.join(path, "adone.conf.js"), null, {
+                    const adoneConf = await configuration.load(std.path.join(path, "adone.conf.json"), null, {
                         transpile: true
                     });
-                    actualNames.push(adoneConf.name);
+                    existingNames.push(adoneConf.name);
                     services.push({
                         name: adoneConf.name,
                         description: adoneConf.description,
@@ -122,7 +125,7 @@ export default class ServiceManager extends application.Subsystem {
 
         // Remove uninstalled services
         for (const name of names) {
-            if (!actualNames.includes(name)) {
+            if (!existingNames.includes(name)) {
                 await this.services.delete(name); // eslint-disable-line
             }
         }
@@ -169,19 +172,39 @@ export default class ServiceManager extends application.Subsystem {
 
     async startAll() {
         const groups = await this.enumerateGroups();
-        const port = this.parent.subsystem("netron").getServicePort();
+        const port = this.parent.subsystem("netron").getPort();
 
+        const promises = [];
         for (const [group, services] of groups.entries()) {
-            const maintainer = new ServiceMaintainer({ group, services, port });
+            const maintainer = new ServiceMaintainer({
+                group,
+                services,
+                port
+            });
             this.maintainers.set(group, maintainer);
-            await maintainer.start(); // eslint-disable-line
+            promises.push(maintainer.start());
         }
+
+        return Promise.all(promises);
     }
 
     async stopAll() {
         for (const maintainer of this.maintainers.values()) {
             await maintainer.stop(); // eslint-disable-line
         }
+    }
+
+    static createMaintainer(options) {
+        let maintainer;
+
+        switch (options.group) {
+            case "omnitron":
+            default:
+                maintainer = new ServiceMaintainer(options);
+        }
+
+
+        return maintainer;
     }
 
     getGroups() {

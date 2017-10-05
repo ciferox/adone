@@ -154,10 +154,12 @@ export default class Subsystem extends adone.event.AsyncEmitter {
             if (SomeSubsystem.__esModule === true) {
                 SomeSubsystem = SomeSubsystem.default;
             }
-            instance = new SomeSubsystem({ name });
-        } else if (is.subsystem(subsystem)) {
-            instance = subsystem;
+            instance = new SomeSubsystem();
         } else {
+            instance = subsystem;
+        }
+        
+        if (!is.subsystem(instance)) {
             throw new x.NotValid("'subsystem' should be path or instance of adone.application.Subsystem");
         }
 

@@ -25,50 +25,41 @@ export default class Omnitron extends application.Application {
         this.logsPath = std.path.join(adone.config.varPath, "logs", "omnitron");
 
         // Load omnitron configuration
-        this.config = new omnitron.Configuration();
-        await this.config.loadAll();
+        this.config = await omnitron.Configuration.load();
 
+        // Add managers as subsystems
         await this.addSubsystemsFrom(std.path.join(__dirname, "managers"), {
             useFilename: true,
             group: "manager"
         });
-    }
 
-    async initialize() {
         this.exitOnSignal("SIGQUIT", "SIGTERM", "SIGINT");
         process.on("SIGILL", () => {
             if (is.function(global.gc)) {
                 global.gc();
-                adone.info("Force garbage collector");
+                adone.info("Forced garbage collector");
             }
         });
+    }
 
+    async initialize() {
         await this.createPidFile();
+    }
 
+    async main() {
         if (is.function(process.send)) {
             process.send({ pid: process.pid });
         }
 
-        await this.initializeSubsystems();
+        adone.info(`Omnitron v${adone.package.version} started`);
 
-        // Log information message and force load of package.json.
-        adone.info(`Omnitron v${adone.package.version} initialized`);
-    }
-
-    async main() {
         // Attach common omnitron context
         runtime.netron.attachContext(this, "omnitron");
-
-        try {
-            await this.subsystem("service").startAll();
-        } catch (err) {
-            adone.error(err);
-        }
     }
 
     async uninitialize() {
         try {
-            await this.subsystem("service").stopAll();
+            await this.uninitializeSubsystems();
         } catch (err) {
             adone.error(err);
         }
@@ -84,9 +75,9 @@ export default class Omnitron extends application.Application {
         }
     }
 
-    deletePidFile() {
+    async deletePidFile() {
         try {
-            return fs.rm(adone.config.omnitron.pidFilePath);
+            await fs.rm(adone.config.omnitron.pidFilePath);
         } catch (err) {
             adone.error(err.message);
         }

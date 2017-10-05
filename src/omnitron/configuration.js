@@ -54,4 +54,10 @@ export default class Configuration extends configuration.FileConfiguration {
             adone.error(err);
         }
     }
+
+    static async load() {
+        const config = new Configuration();
+        await config.loadAll();
+        return config;
+    }
 }

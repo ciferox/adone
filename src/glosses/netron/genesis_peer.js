@@ -136,6 +136,10 @@ export default class GenesisPeer extends AsyncEmitter {
         return this.netron.ping(this.uid);
     }
 
+    hasContext(ctxId) {
+        return this._ctxidDefs.has(ctxId);
+    }
+
     attachContextRemote(instance, ctxId) {
         return this.netron.attachContextRemote(this.uid, instance, ctxId);
     }
@@ -174,6 +178,18 @@ export default class GenesisPeer extends AsyncEmitter {
 
     getNumberOfAwaiters() {
         return this._responseAwaiters.size;
+    }
+
+    onRemote(eventName, handler) {
+        return this.netron.onRemote(this.uid, eventName, (peer, ...args) => handler(...args));
+    }
+
+    onContextAttach(handler) {
+        return this.onRemote("context attach", handler);
+    }
+
+    onContextDetach(handler) {
+        return this.onRemote("context detach", handler);
     }
 
     _setStatus(status) {
@@ -218,9 +234,20 @@ export default class GenesisPeer extends AsyncEmitter {
     //     }
     // }
 
-    async _subscribe() {
-        await this.netron.onRemote(this.uid, "context attach", (peer, ctxData) => this._onRemoteContextAttach(peer, ctxData));
-        await this.netron.onRemote(this.uid, "context detach", (peer, ctxData) => this._onRemoteContextDetach(peer, ctxData));
+    /**
+     * Method called when peer successfully connected to netron. Override this method allow custom handling of peer connection.
+     */
+    async connected() {
+        await this.onContextAttach((ctxData) => {
+            const def = {};
+            def[ctxData.id] = ctxData.def;
+            this._updateStrongDefinitions(def);
+        });
+
+        await this.onContextDetach((ctxData) => {
+            this._ctxidDefs.delete(ctxData.id);
+            this._defs.delete(ctxData.defId);
+        });
     }
 
     _setAwaiter(streamId, awaiter) {
@@ -354,17 +381,6 @@ export default class GenesisPeer extends AsyncEmitter {
             return adone.log(`No local stream associated with remote stream id: ${streamId}`);
         }
         return stream;
-    }
-
-    _onRemoteContextAttach(peer, ctxData) {
-        const def = {};
-        def[ctxData.id] = ctxData.def;
-        this._updateStrongDefinitions(def);
-    }
-
-    _onRemoteContextDetach(peer, ctxData) {
-        this._ctxidDefs.delete(ctxData.id);
-        this._defs.delete(ctxData.defId);
     }
 }
 adone.tag.add(GenesisPeer, "GENESIS_PEER");

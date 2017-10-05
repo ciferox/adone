@@ -4,38 +4,30 @@ const {
     is,
     application,
     configuration,
-    netron,
+    runtime,
     std,
     x
 } = adone;
 
 class ServiceApplication extends application.Application {
     async configure() {
-        this.netron = null;
-        this.peer = null;
         this.omnitronPort = process.env.OMNITRON_PORT;
         this.group = process.env.OMNITRON_SERVICE_GROUP;
         this.servicePaths = process.env.OMNITRON_SERVICES.split(";");
 
-        this.netron = new netron.Netron();
-        this.peer = await this.netron.connect({
+        this.peer = await runtime.netron.connect({
             port: this.omnitronPort
         });
 
         for (const path of this.servicePaths) {
             // eslint-disable-next-line
-            const adoneConf = await configuration.load("adone.conf.js", null, {
+            const adoneConf = await configuration.load("adone.conf.json", null, {
                 base: path,
                 transpile: true
             });
 
             if (adoneConf.project.type !== "service") {
-                throw new x.NotValid("Not a service");
-            }
-
-            const ServiceSubsystem = require(std.path.join(path, adoneConf.project.main)).default;
-            if (!is.class(ServiceSubsystem)) {
-                throw new x.NotValid("Not valid service export");
+                throw new x.NotValid(`Invalid type of project: ${adoneConf.project.type}`);
             }
 
             // eslint-disable-next-line
@@ -43,10 +35,23 @@ class ServiceApplication extends application.Application {
                 name: adoneConf.name,
                 description: adoneConf.description,
                 group: this.group,
-                subsystem: new ServiceSubsystem(),
+                subsystem: std.path.join(path, is.string(adoneConf.project.main) ? adoneConf.project.main : "index.js"),
                 configureArgs: [this.peer]
             });
         }
+
+        // Waiting for omnitron context is available.
+        return new Promise((resolve) => {
+            if (this.peer.hasContext("omnitron")) {
+                resolve();
+            } else {
+                this.peer.onContextAttach((ctxData) => {
+                    if (ctxData.id === "omnitron") {
+                        resolve();
+                    }
+                });
+            }
+        });
     }
 
     async initialize() {

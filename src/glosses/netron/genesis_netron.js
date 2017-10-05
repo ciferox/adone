@@ -104,7 +104,7 @@ export default class GenesisNetron extends AsyncEmitter {
                         this._onReceiveInitial(peer, data);
                         peer._setStatus(STATUS.ONLINE);
                         this._emitPeerEvent("peer online", peer);
-                        await peer._subscribe();
+                        await peer.connected();
                         hsStatus = 1;
                         resolve(peer);
                     } catch (err) {
@@ -395,11 +395,11 @@ export default class GenesisNetron extends AsyncEmitter {
 
     }
 
-    async onRemote(uid, eventName, listener) {
+    async onRemote(uid, eventName, handler) {
         if (is.nil(uid)) {
             const promises = [];
             for (const uid of this.nuidPeerMap.keys()) {
-                promises.push(this.onRemote(uid, eventName, listener));
+                promises.push(this.onRemote(uid, eventName, handler));
             }
             return Promise.all(promises);
         }
@@ -407,20 +407,20 @@ export default class GenesisNetron extends AsyncEmitter {
         let events = this._remoteEvents.get(uid);
         if (is.undefined(events)) {
             events = new Map();
-            events.set(eventName, [listener]);
+            events.set(eventName, [handler]);
             this._remoteEvents.set(uid, events);
             await (new Promise((resolve, reject) => {
                 this.send(peer, 1, peer.streamId.next(), 1, ACTION.EVENT_ON, eventName, resolve).catch(reject);
             }));
         } else {
-            const listeners = events.get(eventName);
-            if (is.undefined(listeners)) {
-                events.set(eventName, [listener]);
+            const handlers = events.get(eventName);
+            if (is.undefined(handlers)) {
+                events.set(eventName, [handler]);
                 await (new Promise((resolve, reject) => {
                     this.send(peer, 1, peer.streamId.next(), 1, ACTION.EVENT_ON, eventName, resolve).catch(reject);
                 }));
             } else {
-                listeners.push(listener);
+                handlers.push(handler);
             }
         }
 
@@ -741,10 +741,10 @@ export default class GenesisNetron extends AsyncEmitter {
                     args.unshift(peer);
                     const events = this._remoteEvents.get(peer.uid);
                     if (!is.undefined(events)) {
-                        const listeners = events.get(eventName);
-                        if (!is.undefined(listeners)) {
+                        const handlers = events.get(eventName);
+                        if (!is.undefined(handlers)) {
                             const promises = [];
-                            for (const fn of listeners) {
+                            for (const fn of handlers) {
                                 promises.push(Promise.resolve(fn.apply(this, args)));
                             }
                             try {

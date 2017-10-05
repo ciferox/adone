@@ -29,6 +29,10 @@ export default class OwnPeer extends GenesisPeer {
         return this.netron.ping();
     }
 
+    hasContext(ctxId) {
+        return this.netron.hasContext(ctxId);
+    }
+
     attachContextRemote(instance, ctxId) {
         return this.netron.attachContext(instance, ctxId);
     }
