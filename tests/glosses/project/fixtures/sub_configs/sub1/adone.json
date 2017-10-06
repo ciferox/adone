@@ -1,0 +1,12 @@
+{
+    "project": {
+        "type": "adone-cli",
+        "structure": {
+            "src": {
+                "$task": "transpile",
+                "$src": "src/*",
+                "$dst": "dst"
+            }
+        }
+    }
+}

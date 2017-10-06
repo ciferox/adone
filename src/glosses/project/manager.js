@@ -8,7 +8,6 @@ const {
     // templating: { nunjucks },
     // management: { c: { DEST_OPTIONS } },
     task,
-    vendor: { lodash },
     project
 } = adone;
 
@@ -51,9 +50,7 @@ export default class Manager extends task.Manager {
         super();
         this.name = null;
         this.path = path;
-        this.config = new project.Configuration({
-            cwd: this.path
-        });
+        this.config = null;
         this._loaded = false;
     }
 
@@ -99,7 +96,9 @@ export default class Manager extends task.Manager {
             throw new adone.x.IllegalState("Project already loaded");
         }
 
-        await this.config.load(std.path.join(this.path, "adone.conf.json"));
+        this.config = await project.Configuration.load({
+            cwd: this.path
+        });
 
         // Add default tasks
         await this.addTask("delete", project.task.Delete);
@@ -120,34 +119,13 @@ export default class Manager extends task.Manager {
         this._loaded = true;
     }
 
-    getProjectEntries(path) {
-        const units = {};
-
-        this._parseProjectStructure("", this.config.project.structure, units);
-
-        // Convert object to array
-        const keys = Object.keys(units);
-        const entries = [];
-
-        for (const key of keys) {
-            entries.push(Object.assign({
-                $id: key
-            }, units[key]));
-        }
-
-        if (is.string(path)) {
-            return entries.filter((entry) => entry.$id.startsWith(path));
-        }
-        return entries;
-    }
-
     async clean(path) {
         this._checkLoaded();
-        const entries = this.getProjectEntries(path);
+        const entries = this.config.getProjectEntries(path);
 
         const results = [];
-        for (const unit of entries) {
-            const observer = await this.run("delete", unit); // eslint-disable-line
+        for (const entry of entries) {
+            const observer = await this.run("delete", entry); // eslint-disable-line
             results.push(observer.result);
         }
 
@@ -156,15 +134,15 @@ export default class Manager extends task.Manager {
 
     async build(path) {
         this._checkLoaded();
-        const units = this.getProjectEntries(path);
+        const entries = this.config.getProjectEntries(path);
 
         const promises = [];
-        for (const unit of units) {
-            if (!is.string(unit.$task)) {
-                unit.$task = "copy";
+        for (const entry of entries) {
+            if (!this._checkEntry(entry)) {
+                continue;
             }
 
-            const observer = await this.run(unit.$task, unit); // eslint-disable-line
+            const observer = await this.run(entry.$task, entry); // eslint-disable-line
             promises.push(observer.result);
         }
 
@@ -178,19 +156,31 @@ export default class Manager extends task.Manager {
 
     async watch(path) {
         this._checkLoaded();
-        const units = this.getProjectEntries(path);
+        const entries = this.config.getProjectEntries(path);
 
         const promises = [];
-        for (const unit of units) {
-            if (!is.string(unit.$task)) {
-                unit.$task = "copy";
+        for (const entry of entries) {
+            if (!this._checkEntry(entry)) {
+                continue;
             }
 
-            const observer = await this.runOnce(project.task.Watch, unit); // eslint-disable-line
+            const observer = await this.runOnce(project.task.Watch, entry); // eslint-disable-line
             promises.push(observer.result);
         }
 
         return Promise.all(promises);
+    }
+
+    _checkEntry(entry) {
+        if (is.nil(entry.$dst)) {
+            return false;
+        }
+
+        if (!is.string(entry.$task)) {
+            entry.$task = "copy";
+        }
+
+        return true;
     }
 
     // async create({ name = "app", type = "application", subDir = "./", sourceDir = "src", skipGit = false, skipNpm = false, skipTests = false } = {}) {
@@ -233,19 +223,6 @@ export default class Manager extends task.Manager {
 
     //     await adoneConfig.save();
     // }
-
-    _parseProjectStructure(prefix, schema, units) {
-        for (const [key, val] of Object.entries(schema)) {
-            if (key.startsWith("$")) {
-                if (!is.propertyOwned(units, prefix)) {
-                    units[prefix] = {};
-                }
-                units[prefix][key] = val;
-            } else if (is.plainObject(val)) {
-                this._parseProjectStructure((prefix.length > 0 ? `${prefix}.${key}` : key), val, units);
-            }
-        }
-    }
 
     // _createAdoneConfig(subDir) {
     //     let config;

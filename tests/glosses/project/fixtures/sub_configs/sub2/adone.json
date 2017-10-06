@@ -1,0 +1,25 @@
+{
+    "name": "another_name",
+    "description": "another_descr",
+    "version": "2.0.0",
+    "author": "noname",
+    "project": {
+        "type": "omnitron-service",
+        "structure": {
+            "src": {
+                "js": {
+                    "$task": "transpile",
+                    "$src": "src/**/*.js",
+                    "$dst": "lib"
+                },
+                "other": {
+                    "$src": [
+                        "!src/**/*.js",
+                        "src/**/*"
+                    ],
+                    "$dst": "lib"
+                }
+            }
+        }
+    }
+}

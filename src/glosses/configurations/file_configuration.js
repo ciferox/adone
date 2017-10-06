@@ -78,6 +78,10 @@ export default class FileConfiguration extends adone.configuration.Configuration
         }, {});
     }
 
+    getCwd() {
+        return this[CWD_PATH];
+    }
+
     registerFormat(ext, decode, encode) {
         this[SERIALIZER][ext] = {
             decode,

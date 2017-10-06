@@ -1,0 +1,12 @@
+{
+    "name": "sample",
+    "description": "descr",
+    "version": "1.0.0",
+    "author": "unknown",
+    "project": {
+        "structure": {
+            "sub1": "sub1",
+            "sub2": "sub2"
+        }
+    }
+}
