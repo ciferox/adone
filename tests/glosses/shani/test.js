@@ -2992,7 +2992,7 @@ describe("Engine", () => {
                 firstFailExit: true,
                 transpilerOptions: {
                     plugins: [
-                        "transform.ESModules"
+                        "transform.es2015ModulesCommonjs"
                     ]
                 }
             });

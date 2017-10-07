@@ -83,7 +83,7 @@ const findMainFiles = async (config, component, componentConfigFile) => {
     let acc = [];
     for (const filePath of filePaths) {
         acc = acc.concat(
-            (await fs.glob(filePath, { cwd, root: "/" }))
+            (await fs.glob(filePath, { cwd }))
                 .map((path) => adone.std.path.join(cwd, path))
         );
     }

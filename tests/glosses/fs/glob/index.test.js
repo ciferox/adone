@@ -1,1589 +1,1913 @@
-const { is, std: { fs, path } } = adone;
-
-const checkGlobResult = (glob, done, checking) => {
-    glob.toArray((result) => {
-        result.sort();
-        try {
-            checking(result);
-            done();
-        } catch (error) {
-            done(error);
-        }
-    }).on("error", done);
-};
-
-const alphasort = (a, b) => {
-    a = a.toLowerCase();
-    b = b.toLowerCase();
-    return a > b ? 1 : a < b ? -1 : 0;
-};
-
-const cleanResults = (m) => {
-    for (let i = 0; i < m.length; ++i) {
-        m[i] = m[i].replace(/\/+/g, "/").replace(/\/$/, "");
-    }
-
-    if (is.windows) {
-        for (let i = 0; i < m.length; ++i) {
-            m[i] = m[i].replace(/^[a-zA-Z]:\\\\/, "/").replace(/\\/g, "/");
-        }
-    }
-
-    return adone.util.unique(m).sort(alphasort);
-};
-
-// verify that path cache keys are all absolute
-const verifyGlobCacheIsAbsolute = (glob) => {
-    const caches = ["cache", "statCache", "symlinks"];
-    for (const cache of caches) {
-        for (const p of Object.keys(glob[cache])) {
-            assert.isOk(adone.is.pathAbsolute(p), `${p} should be absolute`);
-        }
-    }
-};
-
 describe("fs", "glob", () => {
-    const fixtureDir = path.resolve(__dirname, "fixtures");
+    const { fs } = adone;
+    const { glob } = fs;
+    const { Glob } = glob;
+    const { delay } = adone.promise;
 
-    before(async () => {
-        let files = [
-            "a/.abcdef/x/y/z/a",
-            "a/abcdef/g/h",
-            "a/abcfed/g/h",
-            "a/b/c/d",
-            "a/bc/e/f",
-            "a/c/d/c/b",
-            "a/cb/e/f",
-            "a/x/.y/b",
-            "a/z/.y/b",
-            "b",
-            "c"
-        ];
+    const virtual = new fs.engine.MemoryEngine();
 
-        const symlinkTo = path.resolve(fixtureDir, "a/symlink/a/b/c");
-        const symlinkFrom = "../..";
+    before(() => {
+        const stdfs = new fs.engine.StandardEngine().mount(virtual, "/virtual");
+        stdfs.mock(adone.std.fs);
+    });
 
-        files = files.map((f) => {
-            return path.resolve(fixtureDir, f);
-        });
+    after(() => {
+        adone.std.fs.restore();
+    });
 
-        await adone.fs.rm(fixtureDir);
+    beforeEach(() => {
+        virtual.clean();
+    });
 
-        await Promise.all(files.sort().map(async (f) => {
-            f = path.resolve(fixtureDir, f);
-            await adone.fs.mkdir(path.dirname(f), 0o755);
-            await adone.fs.writeFile(f, "i like tests");
+    it("should return files from directory when *", async () => {
+        virtual.addFiles("{1..10}", () => "hello");
+        const result = await glob("/virtual/*");
+        expect(result).to.have.lengthOf(10);
+        expect(result.sort()).to.be.deep.equal([
+            "/virtual/1",
+            "/virtual/10",
+            "/virtual/2",
+            "/virtual/3",
+            "/virtual/4",
+            "/virtual/5",
+            "/virtual/6",
+            "/virtual/7",
+            "/virtual/8",
+            "/virtual/9"
+        ]);
+    });
+
+    it("should return only directories when */ and mark them with /", async () => {
+        virtual.add((ctx) => ({
+            "{a..e}": {
+                a: ctx.file("hello")
+            },
+            f: ctx.file("hello"),
+            g: ctx.file("hello")
         }));
 
-        if (!is.windows) {
-            const d = path.dirname(symlinkTo);
-            await adone.fs.mkdir(d, 0o755);
-            await adone.fs.symlink(symlinkFrom, symlinkTo, "dir");
-        }
+        const result = await glob("/virtual/*/");
+        expect(result.sort()).to.be.deep.equal([
+            "/virtual/a/",
+            "/virtual/b/",
+            "/virtual/c/",
+            "/virtual/d/",
+            "/virtual/e/"
+        ]);
+    });
 
-        await Promise.all(["foo", "bar", "baz", "asdf", "quux", "qwer", "rewq"].map((w) => {
-            w = `/tmp/glob-test/${w}`;
-            return adone.fs.mkdir(w);
-        }));
-
-        // generate the bash pattern test-fixtures if possible
-        if (is.windows || !process.env.TEST_REGEN) {
-            adone.info("Windows, or TEST_REGEN unset. Using cached fixtures.");
-            return;
-        }
-
-        const globs = [
-            // put more patterns here.
-            // anything that would be directly in / should be in /tmp/glob-test
-            "a/*/+(c|g)/./d",
-            "a/**/[cg]/../[cg]",
-            "a/{b,c,d,e,f}/**/g",
-            "a/b/**",
-            "**/g",
-            "a/abc{fed,def}/g/h",
-            "a/abc{fed/g,def}/**/",
-            "a/abc{fed/g,def}/**///**/",
-            "**/a/**/",
-            "+(a|b|c)/a{/,bc*}/**",
-            "*/*/*/f",
-            "**/f",
-            "a/symlink/a/b/c/a/b/c/a/b/c//a/b/c////a/b/c/**/b/c/**",
-            "{./*/*,/tmp/glob-test/*}",
-            "{/tmp/glob-test/*,*}", // evil owl face!    how you taunt me!
-        ];
-        if (!is.windows) {
-            globs.push("a/!(symlink)/**", "a/symlink/a/**/*");
-        }
-        const bashOutput = {};
-
-        const flatten = (chunks) => {
-            let s = 0;
-            for (const c of chunks) {
-                s += c.length;
-            }
-            const out = new Buffer(s);
-            s = 0;
-            for (const c of chunks) {
-                c.copy(out, s);
-                s += c.length;
-            }
-
-            return out.toString().trim();
-        };
-
-        await Promise.all(globs.map((pattern) => {
-            return new Promise((resolve, reject) => {
-                const opts = [
-                    "-O", "globstar",
-                    "-O", "extglob",
-                    "-O", "nullglob",
-                    "-c",
-                    `for i in ${pattern}; do echo $i; done`
-                ];
-                const cp = adone.std.child_process.spawn("bash", opts, { cwd: fixtureDir });
-                let out = [];
-                cp.stdout.on("data", (c) => {
-                    out.push(c);
-                });
-                cp.stderr.pipe(process.stderr);
-                cp.on("close", (code) => {
-                    out = flatten(out);
-                    if (!out) {
-                        out = [];
-                    } else {
-                        out = cleanResults(out.split(/\r*\n/));
+    it("should recursively walk through directories when **", async () => {
+        virtual.add((ctx) => ({
+            a: {
+                b: {
+                    c: {
+                        d: ctx.file("hello")
                     }
-
-                    bashOutput[pattern] = out;
-                    if (code) {
-                        reject(new Error(`Bash exit with code ${code}`));
-                    }
-                    resolve();
-                });
-            });
+                },
+                e: ctx.file("hello")
+            },
+            f: ctx.file("hello")
         }));
 
-        const fname = path.resolve(__dirname, "bash-results.json");
-        const data = `${JSON.stringify(bashOutput, null, 2)}\n`;
-        await adone.fs.writeFile(fname, data);
+        const result = await glob("/virtual/**");
+        expect(result.sort()).to.be.deep.equal([
+            "/virtual/",
+            "/virtual/a",
+            "/virtual/a/b",
+            "/virtual/a/b/c",
+            "/virtual/a/b/c/d",
+            "/virtual/a/e",
+            "/virtual/f"
+        ]);
     });
 
-    //remove the fixtures
-    after(async () => {
-        await adone.fs.rm(fixtureDir);
+    it("should return only directories when **/", async () => {
+        virtual.add((ctx) => ({
+            a: {
+                b: {
+                    c: {
+                        d: ctx.file("hello")
+                    }
+                },
+                e: ctx.file("hello")
+            },
+            f: ctx.file("hello")
+        }));
+
+        const result = await glob("/virtual/**/");
+        expect(result.sort()).to.be.deep.equal([
+            "/virtual/",
+            "/virtual/a/",
+            "/virtual/a/b/",
+            "/virtual/a/b/c/"
+        ]);
     });
 
-    it("should end if the input is empty", async () => {
-        await adone.fs.glob([]);
+    it("should not return the root when **/*", async () => {
+        virtual.add((ctx) => ({
+            a: {
+                b: {
+                    c: {
+                        d: ctx.file("hello")
+                    }
+                },
+                e: ctx.file("hello")
+            },
+            f: ctx.file("hello")
+        }));
+
+        const result = await glob("/virtual/**/*");
+        expect(result.sort()).to.be.deep.equal([
+            "/virtual/a",
+            "/virtual/a/b",
+            "/virtual/a/b/c",
+            "/virtual/a/b/c/d",
+            "/virtual/a/e",
+            "/virtual/f"
+        ]);
     });
 
-    it("with cwd", async () => {
-        await adone.fs.glob("*.js", { cwd: process.cwd() });
+    it("should return only nested directories when **/*/", async () => {
+        virtual.add((ctx) => ({
+            a: {
+                b: {
+                    c: {
+                        d: ctx.file("hello")
+                    }
+                },
+                e: ctx.file("hello")
+            },
+            f: ctx.file("hello")
+        }));
+
+        const result = await glob("/virtual/**/*/");
+        expect(result.sort()).to.be.deep.equal([
+            "/virtual/a/",
+            "/virtual/a/b/",
+            "/virtual/a/b/c/"
+        ]);
     });
 
-    it("without cwd", async () => {
-        await adone.fs.glob("*.js", {});
-    });
-
-    it("*", (done) => {
-        const g = adone.fs.glob("*", { cwd: __dirname });
-
-        checkGlobResult(g, done, (result) => {
-            result = result.map((x) => path.join(__dirname, x));
-            assert.include(result, path.resolve(__filename));
-        });
-    });
-
-    describe("globs arrays", () => {
-        const tests = [
-            [["b", "c"], ["b", "c"], {}],
-            [["*", "!c"], ["!c", "a", "b"], {}],
-            [["a", "!c"], ["!c", "a"], { nonegate: true }]
-        ];
-
-        const newFixtureName = path.join(fixtureDir, "!c");
-
-        before(() => {
-            fs.writeFileSync(newFixtureName, "hello");
-        });
-
-        after(() => {
-            fs.unlinkSync(newFixtureName);
-        });
-
-        for (const test of tests) {
-            const [pattern, expect, opts] = test;
-            opts.cwd = fixtureDir;
-            it(JSON.stringify(pattern), (done) => {
-                const g = adone.fs.glob(pattern, opts);
-
-                checkGlobResult(g, done, (result) => {
-                    assert.deepEqual(result, expect);
-                });
-            });
-        }
-    });
-
-    it("absolute path", (done) => {
-        const g = adone.fs.glob(path.join(__dirname, "*.js"));
-
-        checkGlobResult(g, done, (result) => {
-            if (is.windows) {
-                result = result.map((p) => {
-                    return path.resolve(p);
-                });
+    it("should return only matched files with **", async () => {
+        virtual.add((ctx) => ({
+            a: {
+                b: {
+                    c: {
+                        d: ctx.file("hello")
+                    },
+                    e: ctx.file("hello")
+                },
+                e: {
+                    e: ctx.file("hello")
+                }
+            },
+            f: ctx.file("hello"),
+            fe: {
+                fe: ctx.file("hello")
             }
-            assert.include(result, path.resolve(__filename));
-        });
+        }));
+
+        const result = await glob("/virtual/**/*e");
+        expect(result.sort()).to.be.deep.equal([
+            "/virtual/a/b/e",
+            "/virtual/a/e",
+            "/virtual/a/e/e",
+            "/virtual/fe",
+            "/virtual/fe/fe"
+        ]);
     });
 
-    it("path to file", (done) => {
-        const g = adone.fs.glob(__filename);
-
-        checkGlobResult(g, done, (result) => {
-            if (is.windows) {
-                result = result.map((p) => {
-                    return path.resolve(p);
-                });
-            }
-            assert.include(result, path.resolve(__filename));
-        });
-    });
-
-    it("* in root should not be recursive", async () => {
-        await adone.fs.glob("*", { cwd: path.resolve("/") });
-    });
-
-    describe("bash-comparison", () => {
-        // basic test
-        // show that it does the same thing by default as the shell.
-        const bashResults = JSON.parse(fs.readFileSync(path.join(__dirname, "./bash-results.json")));
-        const globs = Object.keys(bashResults);
-        const origCwd = process.cwd();
-
-        before(async () => {
-            process.chdir(fixtureDir);
-        });
-
-        after(() => {
-            process.chdir(origCwd);
-        });
-
-        for (const pattern of globs) {
-            const expect = bashResults[pattern];
-            // anything regarding the symlink thing will fail on windows, so just skip it
-            if (is.windows &&
-                expect.some((m) => /\bsymlink\b/.test(m))) {
-                return;
-            }
-
-            it(pattern, (done) => {
-                adone.fs.glob(pattern, {}).toArray((matches) => {
-                    // sort and unmark, just to match the shell results
-                    matches = cleanResults(matches);
-                    assert.deepEqual(matches, expect, pattern);
-                    done();
-                }).once("error", done);
-            });
-        }
-    });
-
-    if (!is.windows) {
-        describe("broken-symlink", () => {
-            const link = "a/broken-link/link";
-
-            const patterns = [
-                "a/broken-link/*",
-                "a/broken-link/**",
-                "a/broken-link/**/link",
-                "a/broken-link/**/*",
-                "a/broken-link/link",
-                "a/broken-link/{link,asdf}",
-                "a/broken-link/+(link|asdf)",
-                "a/broken-link/!(asdf)"
-            ];
-
-            const opts = [
-                undefined,
-                { nonull: true },
-                { mark: true },
-                { stat: true },
-                { follow: true }
-            ];
-
-            const cleanup = () => {
-                try {
-                    fs.unlinkSync("a/broken-link/link");
-                    fs.rmdirSync("a/broken-link");
-                    fs.rmdirSync("a");
-                } catch (e) {
-                    if (e.code !== "ENOENT") {
-                        throw e;
+    it("should return only matched directories with **", async () => {
+        virtual.add((ctx) => ({
+            a: {
+                b: {
+                    c: {
+                        d: ctx.file("hello")
+                    },
+                    e: ctx.file("hello")
+                },
+                e: {
+                    e: {
+                        e: ctx.file("hello")
                     }
                 }
-            };
+            },
+            f: ctx.file("hello"),
+            fe: {
+                fe: ctx.file("hello")
+            }
+        }));
 
-            before(async () => {
-                cleanup();
-                await adone.fs.mkdir("a/broken-link");
-                fs.symlinkSync("this-does-not-exist", "a/broken-link/link");
-            });
+        const result = await glob("/virtual/**/*e/");
+        expect(result.sort()).to.be.deep.equal([
+            "/virtual/a/e/",
+            "/virtual/a/e/e/",
+            "/virtual/fe/"
+        ]);
+    });
 
-            for (const pattern of patterns) {
-                it(pattern, async () => {
-                    for (const opt of opts) {
-                        const msg = `${pattern} with opt=${JSON.stringify(opt)}`;
-                        // eslint-disable-next-line no-await-in-loop
-                        let res = await adone.fs.glob(pattern, opt);
+    it("should match nested patterns", async () => {
+        virtual.add((ctx) => ({
+            a: {
+                b: {
+                    c: ctx.file("hello")
+                }
+            },
+            b: {
+                b: {
+                    c: ctx.file("hello")
+                }
+            }
+        }));
 
-                        if (opt && opt.stat) {
-                            res = res.map((x) => x.path);
-                        }
+        const result = await glob("/virtual/**/b/*");
 
-                        assert.isOk(res.includes(link), msg);
+        expect(result.sort()).to.be.deep.equal([
+            "/virtual/a/b/c",
+            "/virtual/b/b",
+            "/virtual/b/b/c"
+        ]);
+    });
+
+    describe("non-glob patterns", () => {
+        it("should return a file", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello")
+            }));
+
+            const result = await glob("/virtual/a");
+            expect(result).to.be.deep.equal(["/virtual/a"]);
+        });
+
+        it("should return a directory", async () => {
+            virtual.add((ctx) => ({
+                a: {
+                    b: ctx.file("hello")
+                }
+            }));
+
+            const result = await glob("/virtual/a/");
+            expect(result).to.be.deep.equal(["/virtual/a/"]);
+        });
+
+        it("should return nothing if not a directory matches to a directory pattern", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello")
+            }));
+
+            const result = await glob("/virtual/a/");
+            expect(result).to.be.empty;
+        });
+
+        it("should return nothing if there is no match", async () => {
+            const result = await glob("/virtual/a");
+            expect(result).to.be.empty;
+        });
+    });
+
+    describe("symlinks", () => {
+        it("should stop recursion on a symlink", async () => {
+            virtual.add((ctx) => ({
+                a: {
+                    b: ctx.symlink("../b")
+                },
+                b: {
+                    c: ctx.file("hello"),
+                    d: {
+                        e: ctx.file("hello"),
+                        f: ctx.file("hello")
                     }
-                });
-            }
+                }
+            }));
 
-            after(cleanup);
-        });
-    }
-
-    describe("cwd-test", () => {
-        const origCwd = process.cwd();
-
-        before(() => {
-            process.chdir(fixtureDir);
-        });
-
-        after(() => {
-            process.chdir(origCwd);
-        });
-
-        describe("changing cwd and searching for **/d", () => {
-            it("no cwd", async () => {
-                const stream = adone.fs.glob("**/d", {});
-                const matches = await stream;
-                matches.sort();
-                assert.deepEqual(matches, ["a/b/c/d", "a/c/d"]);
-                verifyGlobCacheIsAbsolute(stream.globs[0]);
-            });
-
-            it("a", async () => {
-                const stream = adone.fs.glob("**/d", { cwd: path.resolve("a") });
-                const matches = await stream;
-                matches.sort();
-                assert.deepEqual(matches, ["b/c/d", "c/d"]);
-                verifyGlobCacheIsAbsolute(stream.globs[0]);
-            });
-
-            it("a/b", async () => {
-                const stream = adone.fs.glob("**/d", { cwd: path.resolve("a/b") });
-                const matches = await stream;
-                matches.sort();
-                assert.deepEqual(matches, ["c/d"]);
-                verifyGlobCacheIsAbsolute(stream.globs[0]);
-            });
-
-            it("a/b/", async () => {
-                const stream = adone.fs.glob("**/d", { cwd: path.resolve("a/b/") });
-                const matches = await stream;
-                matches.sort();
-                assert.deepEqual(matches, ["c/d"]);
-                verifyGlobCacheIsAbsolute(stream.globs[0]);
-            });
-
-            it(".", async () => {
-                const stream = adone.fs.glob("**/d", { cwd: process.cwd() });
-                const matches = await stream;
-                matches.sort();
-                assert.deepEqual(matches, ["a/b/c/d", "a/c/d"]);
-                verifyGlobCacheIsAbsolute(stream.globs[0]);
-            });
+            const result = await glob("/virtual/**/*");
+            expect(result.sort()).to.be.deep.equal([
+                "/virtual/a",
+                "/virtual/a/b",
+                "/virtual/a/b/c",
+                "/virtual/a/b/d",
+                "/virtual/b",
+                "/virtual/b/c",
+                "/virtual/b/d",
+                "/virtual/b/d/e",
+                "/virtual/b/d/f"
+            ]);
         });
 
-        it("non-dir cwd should raise error", (done) => {
-            const notdir = "a/b/c/d";
-            const notdirRE = /a[\\\/]b[\\\/]c[\\\/]d/;
-            const abs = path.resolve(notdir);
-            const expect = new Error(`ENOTDIR invalid cwd ${abs}`);
-            expect.code = "ENOTDIR";
-            expect.path = notdirRE;
-            expect.stack = undefined;
+        it("should not get into an infinite loop with cyclic references", async () => {
+            virtual.add((ctx) => ({
+                a: {
+                    b: ctx.symlink("../b"),
+                    c: ctx.file("hello")
+                },
+                b: {
+                    a: ctx.symlink("../a"),
+                    c: ctx.file("hello")
+                }
+            }));
 
-            adone.fs.glob("*", { cwd: notdir }).on("error", (error) => {
-                assert.equal(error.code, expect.code);
-                assert.match(error.path, expect.path);
-                done();
-            });
-        });
-    });
-
-    describe("empty-set", () => {
-        // Patterns that cannot match anything
-        const patterns = [
-            "# comment",
-            " ",
-            "\n",
-            "just doesnt happen to match anything so this is a control"
-        ];
-
-        for (const p of patterns) {
-            it(JSON.stringify(p), async () => {
-                const result = await adone.fs.glob(p);
-                assert.deepEqual(result, [], "no returned values");
-            });
-        }
-    });
-
-    if (!is.windows) {
-        describe("follow", () => {
-            const origCwd = process.cwd();
-
-            before(() => {
-                process.chdir(fixtureDir);
-            });
-
-            after(() => {
-                process.chdir(origCwd);
-            });
-
-            it("follow symlinks", async () => {
-                const pattern = "a/symlink/**";
-
-                const res = await adone.fs.glob(pattern, { follow: true });
-                const follow = res.sort();
-
-                const long = "a/symlink/a/b/c/a/b/c/a/b/c/a/b/c/a/b/c/a/b/c/a/b/c";
-                assert.isOk(follow.includes(long), "follow should have long entry");
-            });
-        });
-    }
-
-    it("globstar should not have dupe matches", async () => {
-        const pattern = "a/**/[gh]";
-        const matches = await adone.fs.glob(pattern, { cwd: fixtureDir });
-        matches.sort();
-        const uniqMatches = adone.util.unique(matches);
-        assert.deepEqual(matches, uniqMatches, "should have same set of matches");
-    });
-
-    describe("instanceOf", () => {
-        it("create Core-stream object through function", () => {
-            assert.instanceOf(adone.fs.glob("a", { noprocess: true }), adone.fs.glob.Core);
+            const result = await glob("/virtual/**/*");
+            expect(result.sort()).to.be.deep.equal([
+                "/virtual/a",
+                "/virtual/a/b",
+                "/virtual/a/b/a",
+                "/virtual/a/b/c",
+                "/virtual/a/c",
+                "/virtual/b",
+                "/virtual/b/a",
+                "/virtual/b/a/b",
+                "/virtual/b/a/c",
+                "/virtual/b/c"
+            ]);
         });
 
-        it("create glob object without processing", () => {
-            assert.instanceOf(new adone.fs.glob.Glob("a", { noprocess: true }), adone.fs.glob.Glob);
+        it("should not fail on dead links", async () => {
+            virtual.add((ctx) => ({
+                a: {
+                    a0: ctx.file("hello"),
+                    b: ctx.symlink("../c")
+                }
+            }));
+
+            const result = await glob("/virtual/**/*");
+            expect(result).to.be.deep.equal([
+                "/virtual/a",
+                "/virtual/a/a0",
+                "/virtual/a/b"
+            ]);
         });
 
-        it("create Core object without processing", () => {
-            assert.instanceOf(new adone.fs.glob.Core("a", { noprocess: true }), adone.fs.glob.Core);
-        });
-    });
-
-    describe("ignore", () => {
-        // Ignore option test
-        // Show that glob ignores results matching pattern on ignore option
-
-        // [pattern, ignore, expect, opt (object) or cwd (string)]
-        const cases = [
-            ["*", null, ["abcdef", "abcfed", "b", "bc", "c", "cb", "symlink", "x", "z"], "a"],
-            ["*", "b", ["abcdef", "abcfed", "bc", "c", "cb", "symlink", "x", "z"], "a"],
-            ["*", "b*", ["abcdef", "abcfed", "c", "cb", "symlink", "x", "z"], "a"],
-            ["b/**", "b/c/d", ["b", "b/c"], "a"],
-            ["b/**", "d", ["b", "b/c", "b/c/d"], "a"],
-            ["b/**", "b/c/**", ["b"], "a"],
-            ["**/d", "b/c/d", ["c/d"], "a"],
-            ["a/**/[gh]", ["a/abcfed/g/h"], ["a/abcdef/g", "a/abcdef/g/h", "a/abcfed/g"]],
-            ["*", ["c", "bc", "symlink", "abcdef"], ["abcfed", "b", "cb", "x", "z"], "a"],
-            ["**", ["c/**", "bc/**", "symlink/**", "abcdef/**"], ["abcfed", "abcfed/g", "abcfed/g/h", "b", "b/c", "b/c/d", "cb", "cb/e", "cb/e/f", "x", "z"], "a"],
-            ["a/**", ["a/**"], []],
-            ["a/**", ["a/**/**"], []],
-            ["a/b/**", ["a/b"], ["a/b/c", "a/b/c/d"]],
-            ["**", ["b"], ["abcdef", "abcdef/g", "abcdef/g/h", "abcfed", "abcfed/g", "abcfed/g/h", "b/c", "b/c/d", "bc", "bc/e", "bc/e/f", "c", "c/d", "c/d/c", "c/d/c/b", "cb", "cb/e", "cb/e/f", "symlink", "symlink/a", "symlink/a/b", "symlink/a/b/c", "x", "z"], "a"],
-            ["**", ["b", "c"], ["abcdef", "abcdef/g", "abcdef/g/h", "abcfed", "abcfed/g", "abcfed/g/h", "b/c", "b/c/d", "bc", "bc/e", "bc/e/f", "c/d", "c/d/c", "c/d/c/b", "cb", "cb/e", "cb/e/f", "symlink", "symlink/a", "symlink/a/b", "symlink/a/b/c", "x", "z"], "a"],
-            ["**", ["b**"], ["abcdef", "abcdef/g", "abcdef/g/h", "abcfed", "abcfed/g", "abcfed/g/h", "b/c", "b/c/d", "bc/e", "bc/e/f", "c", "c/d", "c/d/c", "c/d/c/b", "cb", "cb/e", "cb/e/f", "symlink", "symlink/a", "symlink/a/b", "symlink/a/b/c", "x", "z"], "a"],
-            ["**", ["b/**"], ["abcdef", "abcdef/g", "abcdef/g/h", "abcfed", "abcfed/g", "abcfed/g/h", "bc", "bc/e", "bc/e/f", "c", "c/d", "c/d/c", "c/d/c/b", "cb", "cb/e", "cb/e/f", "symlink", "symlink/a", "symlink/a/b", "symlink/a/b/c", "x", "z"], "a"],
-            ["**", ["b**/**"], ["abcdef", "abcdef/g", "abcdef/g/h", "abcfed", "abcfed/g", "abcfed/g/h", "c", "c/d", "c/d/c", "c/d/c/b", "cb", "cb/e", "cb/e/f", "symlink", "symlink/a", "symlink/a/b", "symlink/a/b/c", "x", "z"], "a"],
-            ["**", ["ab**ef/**"], ["abcfed", "abcfed/g", "abcfed/g/h", "b", "b/c", "b/c/d", "bc", "bc/e", "bc/e/f", "c", "c/d", "c/d/c", "c/d/c/b", "cb", "cb/e", "cb/e/f", "symlink", "symlink/a", "symlink/a/b", "symlink/a/b/c", "x", "z"], "a"],
-            ["**", ["abc{def,fed}/**"], ["b", "b/c", "b/c/d", "bc", "bc/e", "bc/e/f", "c", "c/d", "c/d/c", "c/d/c/b", "cb", "cb/e", "cb/e/f", "symlink", "symlink/a", "symlink/a/b", "symlink/a/b/c", "x", "z"], "a"],
-            ["**", ["abc{def,fed}/*"], ["abcdef", "abcdef/g/h", "abcfed", "abcfed/g/h", "b", "b/c", "b/c/d", "bc", "bc/e", "bc/e/f", "c", "c/d", "c/d/c", "c/d/c/b", "cb", "cb/e", "cb/e/f", "symlink", "symlink/a", "symlink/a/b", "symlink/a/b/c", "x", "z"], "a"],
-            ["c/**", ["c/*"], ["c", "c/d/c", "c/d/c/b"], "a"],
-            ["a/c/**", ["a/c/*"], ["a/c", "a/c/d/c", "a/c/d/c/b"]],
-            ["a/c/**", ["a/c/**", "a/c/*", "a/c/*/c"], []],
-            ["a/**/.y", ["a/x/**"], ["a/z/.y"]],
-            ["a/**/.y", ["a/x/**"], ["a/z/.y"], { dot: true }],
-            ["a/**/b", ["a/x/**"], ["a/b", "a/c/d/c/b", "a/symlink/a/b"]],
-            ["a/**/b", ["a/x/**"], ["a/b", "a/c/d/c/b", "a/symlink/a/b", "a/z/.y/b"], { dot: true }],
-            ["*/.abcdef", "a/**", []],
-            ["a/*/.y/b", "a/x/**", ["a/z/.y/b"]]
-        ];
-
-        const origCwd = process.cwd();
-        before(() => {
-            process.chdir(fixtureDir);
-        });
-
-        after(() => {
-            process.chdir(origCwd);
-        });
-
-        for (const [i, c] of adone.util.enumerate(cases)) {
-            const [pattern, ignore] = c;
-            let [, , expect, opt] = c;
-            expect = expect.sort();
-
-            let name = `${i} ${pattern} ${JSON.stringify(ignore)}`;
-            if (is.string(opt)) {
-                opt = { cwd: opt };
-            }
-
-            if (opt) {
-                name += ` ${JSON.stringify(opt)}`;
-            } else {
-                opt = {};
-            }
-
-            const matches = [];
-
-            opt.ignore = ignore;
-
-            it(name, (done) => {
-                const stream = adone.fs.glob(pattern, opt);
-                const glob = stream.globs[0];
-                glob.on("end", (res) => {
-                    if (is.windows) {
-                        expect = expect.filter((f) => {
-                            return !/\bsymlink\b/.test(f);
-                        });
+        it("should follow symlinks when follow = true", async () => {
+            virtual.add((ctx) => ({
+                a: {
+                    a0: ctx.file("hello")
+                },
+                b: {
+                    b0: ctx.file("hello"),
+                    a: ctx.symlink("../a")
+                },
+                c: {
+                    c0: ctx.file("hello"),
+                    d: {
+                        d0: ctx.file("hello"),
+                        b: ctx.symlink("../../b"),
+                        d1: ctx.file("hello")
                     }
+                }
+            }));
 
-                    assert.deepEqual(res.sort(), expect, "async");
-                    assert.deepEqual(matches.sort(), expect, "match events");
-                    done();
-                }).once("error", done);
+            const result = await glob("/virtual/**/*", { follow: true });
+            expect(result.sort()).to.be.deep.equal([
+                "/virtual/a",
+                "/virtual/a/a0",
+                "/virtual/b",
+                "/virtual/b/a",
+                "/virtual/b/a/a0",
+                "/virtual/b/b0",
+                "/virtual/c",
+                "/virtual/c/c0",
+                "/virtual/c/d",
+                "/virtual/c/d/b",
+                "/virtual/c/d/b/a",
+                "/virtual/c/d/b/a/a0",
+                "/virtual/c/d/b/b0",
+                "/virtual/c/d/d0",
+                "/virtual/c/d/d1"
+            ]);
+        });
 
-                glob.on("match", (p) => {
-                    matches.push(p);
-                });
-            });
-        }
+        it("should get into an infinite loop with cyclic references when follow = true but stop when the ELOOP raises", async () => {
+            virtual.add((ctx) => ({
+                a: {
+                    b: ctx.symlink("../b"),
+                    c: ctx.file("hello")
+                },
+                b: {
+                    a: ctx.symlink("../a"),
+                    c: ctx.file("hello")
+                }
+            }));
 
-        describe("race condition", () => {
-            const origCwd = process.cwd();
-            const jumpTo = path.resolve(fixtureDir, "..");
+            const result = await glob("/virtual/**/*", { follow: true });
+            expect(result.length).to.be.greaterThan(10); // 10 with no follow, here we must have much more
+            expect(result).to.include("/virtual/a/b/a");
+            expect(result).to.include("/virtual/a/b/a/b/a/b/a/b");
+            expect(result).to.include("/virtual/b/a/b");
+            expect(result).to.include("/virtual/b/a/b/a/b/a/b/a");
+        });
 
-            before(() => {
-                process.chdir(jumpTo);
-            });
+        it("should return a directory when directories are requested if a symlink refers to a directory", async () => {
+            virtual.add((ctx) => ({
+                a: {
+                    b: ctx.symlink("../b"),
+                    c: ctx.file("hello")
+                },
+                b: {
+                    c: ctx.file("hello")
+                },
+                c: ctx.symlink("b")
+            }));
+            {
+                const result = await glob("/virtual/**/*/");
+                expect(result.sort()).to.be.deep.equal([
+                    "/virtual/a/",
+                    "/virtual/a/b/",
+                    "/virtual/b/",
+                    "/virtual/c/"
+                ]);
+            }
+            {
+                const result = await glob("/virtual/c/");
+                expect(result).to.be.deep.equal(["/virtual/c/"]);
+            }
+            {
+                const result = await glob("/virtual/*/");
+                expect(result.sort()).to.be.deep.equal([
+                    "/virtual/a/",
+                    "/virtual/b/",
+                    "/virtual/c/"
+                ]);
+            }
+        });
 
-            after(() => {
-                process.chdir(origCwd);
-            });
-
-            const pattern = "fixtures/*";
-            for (const dot of [true, false]) {
-                for (const ignore of ["fixtures/**", null]) {
-                    for (const nonull of [false, true]) {
-                        for (const cwd of [false, jumpTo, "."]) {
-                            const opt = { dot, ignore, nonull };
-                            const expect = ignore ? [] : ["fixtures/a", "fixtures/b", "fixtures/c"];
-
-                            if (cwd) {
-                                opt.cwd = cwd;
+        it("should correctly work with nested globstars", async () => {
+            virtual.add((ctx) => ({
+                a: {
+                    symlink: {
+                        a: {
+                            b: {
+                                c: ctx.symlink("../..")
                             }
-
-                            it(JSON.stringify(opt), async () => {
-                                const res = await adone.fs.glob(pattern, opt);
-                                assert.deepEqual(res, expect);
-                            });
                         }
                     }
                 }
+            }));
+
+            {
+                const result = await glob("a/symlink/a/b/c/**/b/c/**", { cwd: "/virtual" });
+                expect(result.sort()).to.be.deep.equal([
+                    "a/symlink/a/b/c/a/b/c",
+                    "a/symlink/a/b/c/a/b/c/a",
+                    "a/symlink/a/b/c/a/b/c/a/b",
+                    "a/symlink/a/b/c/a/b/c/a/b/c"
+                ]);
+            }
+            {
+                const result = await glob("a/symlink/a/b/c/**/b/c/**/b/c/**", { cwd: "/virtual" });
+                expect(result.sort()).to.be.deep.equal([
+                    "a/symlink/a/b/c/a/b/c/a/b/c",
+                    "a/symlink/a/b/c/a/b/c/a/b/c/a",
+                    "a/symlink/a/b/c/a/b/c/a/b/c/a/b",
+                    "a/symlink/a/b/c/a/b/c/a/b/c/a/b/c"
+                ]);
+            }
+            {
+                const result = await glob("a/symlink/a/b/**/b/c/**", { cwd: "/virtual" });
+                expect(result).to.be.empty;
+            }
+        });
+
+        it("should correctly work with non normalized paths", async () => {
+            virtual.add((ctx) => ({
+                a: {
+                    symlink: {
+                        a: {
+                            b: {
+                                c: ctx.symlink("../..")
+                            }
+                        }
+                    }
+                }
+            }));
+
+            const result = await glob("a/symlink/a/b/c/a/b/c/a/b/c//a/b/c////a/b/c/**/b/c/**", { cwd: "/virtual" });
+            expect(result.sort()).to.be.deep.equal([
+                "a/symlink/a/b/c/a/b/c/a/b/c//a/b/c////a/b/c/a/b/c",
+                "a/symlink/a/b/c/a/b/c/a/b/c//a/b/c////a/b/c/a/b/c/a",
+                "a/symlink/a/b/c/a/b/c/a/b/c//a/b/c////a/b/c/a/b/c/a/b",
+                "a/symlink/a/b/c/a/b/c/a/b/c//a/b/c////a/b/c/a/b/c/a/b/c"
+            ]);
+        });
+
+        it("should correctly work with many links", async () => {
+            virtual.add((ctx) => ({
+                a: {
+                    b: ctx.symlink("../b")
+                },
+                b: {
+                    c: ctx.symlink("../c")
+                },
+                c: {
+                    d: ctx.symlink("../d")
+                },
+                d: {
+                    e: ctx.symlink("../e")
+                },
+                e: {
+                    f: {
+                        g: {
+                            h: ctx.symlink("../../../b")
+                        }
+                    },
+                    t: {
+                        u: ctx.symlink("../../a"),
+                        v: ctx.symlink("../../f")
+                    }
+                },
+                f: {
+                    a: ctx.file("hello")
+                }
+            }));
+            {
+                const result = await glob("/virtual/**/*");
+                expect(result.sort()).to.be.deep.equal([
+                    "/virtual/a",
+                    "/virtual/a/b",
+                    "/virtual/a/b/c",
+                    "/virtual/b",
+                    "/virtual/b/c",
+                    "/virtual/b/c/d",
+                    "/virtual/c",
+                    "/virtual/c/d",
+                    "/virtual/c/d/e",
+                    "/virtual/d",
+                    "/virtual/d/e",
+                    "/virtual/d/e/f",
+                    "/virtual/d/e/t",
+                    "/virtual/e",
+                    "/virtual/e/f",
+                    "/virtual/e/f/g",
+                    "/virtual/e/f/g/h",
+                    "/virtual/e/f/g/h/c",
+                    "/virtual/e/t",
+                    "/virtual/e/t/u",
+                    "/virtual/e/t/u/b",
+                    "/virtual/e/t/v",
+                    "/virtual/e/t/v/a",
+                    "/virtual/f",
+                    "/virtual/f/a"
+                ]);
+            }
+            {
+                const result = await glob("/virtual/**/*/");
+                expect(result.sort()).to.be.deep.equal([
+                    "/virtual/a/",
+                    "/virtual/a/b/",
+                    "/virtual/a/b/c/",
+                    "/virtual/b/",
+                    "/virtual/b/c/",
+                    "/virtual/b/c/d/",
+                    "/virtual/c/",
+                    "/virtual/c/d/",
+                    "/virtual/c/d/e/",
+                    "/virtual/d/",
+                    "/virtual/d/e/",
+                    "/virtual/d/e/f/",
+                    "/virtual/d/e/t/",
+                    "/virtual/e/",
+                    "/virtual/e/f/",
+                    "/virtual/e/f/g/",
+                    "/virtual/e/f/g/h/",
+                    "/virtual/e/f/g/h/c/",
+                    "/virtual/e/t/",
+                    "/virtual/e/t/u/",
+                    "/virtual/e/t/u/b/",
+                    "/virtual/e/t/v/",
+                    "/virtual/f/"
+                ]);
+            }
+            {
+                const result = await glob("/virtual/**/*/*");
+                expect(result.sort()).to.be.deep.equal([
+                    "/virtual/a/b",
+                    "/virtual/a/b/c",
+                    "/virtual/a/b/c/d",
+                    "/virtual/b/c",
+                    "/virtual/b/c/d",
+                    "/virtual/b/c/d/e",
+                    "/virtual/c/d",
+                    "/virtual/c/d/e",
+                    "/virtual/c/d/e/f",
+                    "/virtual/c/d/e/t",
+                    "/virtual/d/e",
+                    "/virtual/d/e/f",
+                    "/virtual/d/e/f/g",
+                    "/virtual/d/e/t",
+                    "/virtual/d/e/t/u",
+                    "/virtual/d/e/t/v",
+                    "/virtual/e/f",
+                    "/virtual/e/f/g",
+                    "/virtual/e/f/g/h",
+                    "/virtual/e/f/g/h/c",
+                    "/virtual/e/f/g/h/c/d",
+                    "/virtual/e/t",
+                    "/virtual/e/t/u",
+                    "/virtual/e/t/u/b",
+                    "/virtual/e/t/u/b/c",
+                    "/virtual/e/t/v",
+                    "/virtual/e/t/v/a",
+                    "/virtual/f/a"
+                ]);
             }
         });
     });
 
-    describe("mark", () => {
-        const origCwd = process.cwd();
-        const oldStat = adone.fs.glob.Glob.prototype._stat;
-        before(() => {
-            // expose timing issues
-            let lag = 5;
-            adone.fs.glob.Glob.prototype._stat = function (o) {
-                return function (f, cb) {
-                    setTimeout(() => {
-                        o.call(this, f, cb);
-                    }, lag += 5);
-                };
-            }(adone.fs.glob.Glob.prototype._stat);
-
-            process.chdir(fixtureDir);
-        });
-
-        after(() => {
-            adone.fs.glob.Glob.prototype._stat = oldStat;
-            process.chdir(origCwd);
-        });
-
-
-        it("mark with cwd", async () => {
-            const pattern = "*/*";
-            const opt = { mark: true, cwd: "a" };
-
-            const expect = [
-                "abcdef/g/",
-                "abcfed/g/",
-                "b/c/",
-                "bc/e/",
-                "c/d/",
-                "cb/e/"
-            ].sort();
-
-            if (!is.windows) {
-                expect.push("symlink/a/");
-            }
-
-            const res = await adone.fs.glob(pattern, opt);
-            assert.deepEqual(res.sort(), expect);
-        });
-
-        it("mark, with **", async () => {
-            const pattern = "a/*b*/**";
-            const opt = { mark: true };
-
-            const expect = [
-                "a/abcdef/",
-                "a/abcdef/g/",
-                "a/abcdef/g/h",
-                "a/abcfed/",
-                "a/abcfed/g/",
-                "a/abcfed/g/h",
-                "a/b/",
-                "a/b/c/",
-                "a/b/c/d",
-                "a/bc/",
-                "a/bc/e/",
-                "a/bc/e/f",
-                "a/cb/",
-                "a/cb/e/",
-                "a/cb/e/f"
-            ];
-
-            const results = await adone.fs.glob(pattern, opt);
-            assert.deepEqual(results.sort(), expect);
-        });
-
-        it("mark, no / on pattern", (done) => {
-            const pattern = "a/*";
-            const opt = { mark: true };
-            const stream = adone.fs.glob(pattern, opt);
-            const glob = stream.globs[0];
-
-            stream.toArray((results) => {
-                const expect = [
-                    "a/abcdef/",
-                    "a/abcfed/",
-                    "a/b/",
-                    "a/bc/",
-                    "a/c/",
-                    "a/cb/",
-                    "a/x/",
-                    "a/z/"
-                ];
-
-                if (!is.windows) {
-                    expect.push("a/symlink/");
-                }
-
-                assert.deepEqual(results.sort(), expect.sort());
-                done();
-            }).once("error", done);
-
-            glob.on("match", (m) => {
-                assert.match(m, /\/$/);
-            });
-        });
-
-        it("mark=false, no / on pattern", (done) => {
-            const pattern = "a/*";
-            const opt = null;
-            const stream = adone.fs.glob(pattern, opt);
-            const glob = stream.globs[0];
-
-            stream.toArray((results) => {
-                const expect = [
-                    "a/abcdef",
-                    "a/abcfed",
-                    "a/b",
-                    "a/bc",
-                    "a/c",
-                    "a/cb",
-                    "a/x",
-                    "a/z"
-                ];
-
-                if (!is.windows) {
-                    expect.push("a/symlink");
-                }
-
-                assert.deepEqual(results.sort(), expect.sort());
-                done();
-            }).once("error", done);
-
-            glob.on("match", (m) => {
-                assert.match(m, /[^\/]$/);
-            });
-        });
-
-        it("mark=true, / on pattern", (done) => {
-            const pattern = "a/*/";
-            const opt = { mark: true };
-            const stream = adone.fs.glob(pattern, opt);
-            const glob = stream.globs[0];
-
-            stream.toArray((results) => {
-                const expect = [
-                    "a/abcdef/",
-                    "a/abcfed/",
-                    "a/b/",
-                    "a/bc/",
-                    "a/c/",
-                    "a/cb/",
-                    "a/x/",
-                    "a/z/"
-                ];
-
-                if (!is.windows) {
-                    expect.push("a/symlink/");
-                }
-
-                assert.deepEqual(results, expect.sort());
-                done();
-            }).once("error", done);
-
-            glob.on("match", (m) => {
-                assert.match(m, /\/$/);
-            });
-        });
-
-        it("mark=false, / on pattern", (done) => {
-            const pattern = "a/*/";
-            const opt = null;
-            const stream = adone.fs.glob(pattern, opt);
-            const glob = stream.globs[0];
-
-            stream.toArray((results) => {
-                const expect = [
-                    "a/abcdef/",
-                    "a/abcfed/",
-                    "a/b/",
-                    "a/bc/",
-                    "a/c/",
-                    "a/cb/",
-                    "a/x/",
-                    "a/z/"
-                ];
-
-                if (!is.windows) {
-                    expect.push("a/symlink/");
-                }
-
-                assert.deepEqual(results.sort(), expect.sort());
-                done();
-            }).once("error", done);
-
-            glob.on("match", (m) => {
-                assert.match(m, /\/$/);
-            });
-        });
-
-        const cwd = process.cwd().replace(/[\/\\]+$/, "").replace(/\\/g, "/");
-        for (const mark of [true, false]) {
-            for (const slash of [true, false]) {
-                it(`cwd mark:${mark} slash:${slash}`, async () => {
-                    const pattern = cwd + (slash ? "/" : "");
-                    const results = await adone.fs.glob(pattern, { mark });
-
-                    assert.equal(results.length, 1);
-                    const res = results[0].replace(/\\/g, "/");
-
-                    if (slash || mark) {
-                        assert.equal(res, `${cwd}/`);
-                    } else {
-                        assert.equal(res.indexOf(cwd), 0);
+    describe(". link", () => {
+        it("should work", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello")
                     }
-                });
+                }
+            }));
+
+            {
+                const result = await glob("/virtual/.");
+                expect(result.sort()).to.be.deep.equal([
+                    "/virtual/."
+                ]);
             }
+            {
+                const result = await glob("/virtual/./");
+                expect(result.sort()).to.be.deep.equal([
+                    "/virtual/./"
+                ]);
+            }
+            {
+                const result = await glob("/virtual/./*");
+                expect(result.sort()).to.be.deep.equal([
+                    "/virtual/./a",
+                    "/virtual/./b"
+                ]);
+            }
+            {
+                const result = await glob("/virtual/*/.");
+                expect(result.sort()).to.be.deep.equal([
+                    "/virtual/b/."
+                ]);
+            }
+        });
+
+        it("should work with **", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob("/virtual/**/./*");
+            expect(result.sort()).to.be.deep.equal([
+                "/virtual/./a",
+                "/virtual/./b",
+                "/virtual/b/./b0",
+                "/virtual/b/./c",
+                "/virtual/b/c/./c0"
+            ]);
+        });
+
+        it("should normally handle . in differenct places", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob("/virtual/**/././*/./");
+            expect(result.sort()).to.be.deep.equal([
+                "/virtual/././b/./",
+                "/virtual/b/././c/./"
+            ]);
+        });
+    });
+
+    describe(".. link", () => {
+        it("should work", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello")
+                    }
+                }
+            }));
+
+            {
+                const result = await glob("/virtual/..");
+                expect(result.sort()).to.be.deep.equal([
+                    "/virtual/.."
+                ]);
+            }
+            {
+                const result = await glob("/virtual/../");
+                expect(result.sort()).to.be.deep.equal([
+                    "/virtual/../"
+                ]);
+            }
+            {
+                const result = await glob("/virtual/b/../b/../*");
+                expect(result.sort()).to.be.deep.equal([
+                    "/virtual/b/../b/../a",
+                    "/virtual/b/../b/../b"
+                ]);
+            }
+            {
+                const result = await glob("/virtual/*/..");
+                expect(result.sort()).to.be.deep.equal([
+                    "/virtual/b/.."
+                ]);
+            }
+        });
+
+        it("should work with **", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob("/virtual/*/**/../*");
+            expect(result.sort()).to.be.deep.equal([
+                "/virtual/b/../a",
+                "/virtual/b/../b",
+                "/virtual/b/c/../b0",
+                "/virtual/b/c/../c"
+            ]);
+        });
+
+        it("should normally handle .. in differenct places", async () => {
+            virtual.add((ctx) => ({
+                e: {
+                    a: ctx.file("hello"),
+                    b: {
+                        b0: ctx.file("hello"),
+                        c: {
+                            c0: ctx.file("hello")
+                        }
+                    },
+                    c: {
+                        e: ctx.symlink("../b")
+                    }
+                }
+            }));
+
+            const result = await glob("/virtual/*/**/././../*/./..");
+            expect(result.sort()).to.be.deep.equal([
+                "/virtual/e/././../e/./..",
+                "/virtual/e/b/././../b/./..",
+                "/virtual/e/b/././../c/./..",
+                "/virtual/e/b/c/././../c/./..",
+                "/virtual/e/c/././../b/./..",
+                "/virtual/e/c/././../c/./..",
+                "/virtual/e/c/e/././../b/./..",
+                "/virtual/e/c/e/././../c/./.."
+            ]);
+        });
+    });
+
+    describe("cwd option", () => {
+        it("should set cwd for patterns and return relative results", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob("**/*", { cwd: "/virtual" });
+            expect(result.sort()).to.be.deep.equal([
+                "a",
+                "b",
+                "b/b0",
+                "b/c",
+                "b/c/c0"
+            ]);
+        });
+
+        it("should properly handle ..", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob("../**/*", { cwd: "/virtual/b" });
+            expect(result.sort()).to.be.deep.equal([
+                "../a",
+                "../b",
+                "../b/b0",
+                "../b/c",
+                "../b/c/c0"
+            ]);
+        });
+
+        it("should properly handle .", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob("./**/*", { cwd: "/virtual" });
+            expect(result.sort()).to.be.deep.equal([
+                "./a",
+                "./b",
+                "./b/b0",
+                "./b/c",
+                "./b/c/c0"
+            ]);
+        });
+    });
+
+    describe("nodir option", () => {
+        it("should exclude directories from the result", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob("/virtual/**/*", { nodir: true });
+            expect(result).to.be.deep.equal([
+                "/virtual/a",
+                "/virtual/b/b0",
+                "/virtual/b/c/c0"
+            ]);
+        });
+    });
+
+    describe("rawEntries option", () => {
+        it("should not extract path from the entries and pass them into the stream", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob("/virtual/**/*", { rawEntries: true });
+            expect(result).to.have.lengthOf(5);
+            for (const res of result) {
+                expect(res).not.to.be.a("string");
+                expect(res).to.have.property("path");
+                expect(res).to.have.property("absolutePath");
+                expect(res).to.have.property("stat");
+            }
+        });
+    });
+
+    describe("stat option", () => {
+        it("should provide stat for all the entries and return raw entries", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob("/virtual/**/*", { stat: true });
+            expect(result).to.have.lengthOf(5);
+            for (const res of result) {
+                expect(res).not.to.be.a("string");
+                const { stat } = res;
+                expect(stat).to.be.instanceOf(adone.std.fs.Stats);
+            }
+        });
+    });
+
+    describe("dot option", () => {
+        it("should not emit dotted(hidden) entries by default", async () => {
+            virtual.add((ctx) => ({
+                ".a": ctx.file("hello"),
+                b: {
+                    ".b0": ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello"),
+                        ".d": {
+                            d0: ctx.file("hello")
+                        }
+                    }
+                }
+            }));
+
+            const result = await glob("/virtual/**/*");
+            expect(result.sort()).to.be.deep.equal([
+                "/virtual/b",
+                "/virtual/b/c",
+                "/virtual/b/c/c0"
+            ]);
+        });
+
+        it("should emit hidden entries when dot is true", async () => {
+            virtual.add((ctx) => ({
+                ".a": ctx.file("hello"),
+                b: {
+                    ".b0": ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello"),
+                        ".d": {
+                            d0: ctx.file("hello")
+                        }
+                    }
+                }
+            }));
+
+            const result = await glob("/virtual/**/*", { dot: true });
+            expect(result.sort()).to.be.deep.equal([
+                "/virtual/.a",
+                "/virtual/b",
+                "/virtual/b/.b0",
+                "/virtual/b/c",
+                "/virtual/b/c/.d",
+                "/virtual/b/c/.d/d0",
+                "/virtual/b/c/c0"
+            ]);
+        });
+
+        it("should emit hidden entries when it is explicitly set", async () => {
+            virtual.add((ctx) => ({
+                ".a": ctx.file("hello"),
+                b: {
+                    ".b0": ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello"),
+                        ".d": {
+                            d0: ctx.file("hello")
+                        }
+                    }
+                }
+            }));
+
+            const result = await glob("/virtual/**/.*");
+            expect(result.sort()).to.be.deep.equal([
+                "/virtual/.a",
+                "/virtual/b/.b0",
+                "/virtual/b/c/.d"
+            ]);
+        });
+    });
+
+    describe("absolute option", () => {
+        it("should return absolute paths, not relative to the cwd", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob("**/*", { cwd: "/virtual", absolute: true });
+            expect(result).to.be.deep.equal([
+                "/virtual/a",
+                "/virtual/b",
+                "/virtual/b/b0",
+                "/virtual/b/c",
+                "/virtual/b/c/c0"
+            ]);
+        });
+
+        it("should return normalized absolute patterns when absolute, normalized and cwd are set", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob("*/./*", { cwd: "/virtual", absolute: true, normalized: true });
+            expect(result).to.be.deep.equal([
+                "/virtual/b/b0",
+                "/virtual/b/c"
+            ]);
+        });
+    });
+
+    describe("normalized option", () => {
+        it("should not normalize by default", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob("/virtual/*/./*");
+            expect(result).to.be.deep.equal([
+                "/virtual/b/./b0",
+                "/virtual/b/./c"
+            ]);
+        });
+
+        it("should return normalized paths when normalized is set", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob("/virtual/*/./*", { normalized: true });
+            expect(result).to.be.deep.equal([
+                "/virtual/b/b0",
+                "/virtual/b/c"
+            ]);
+        });
+
+        it("should return normalized relative paths for relative patterns", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob("*/./*", { normalized: true, cwd: "/virtual" });
+            expect(result).to.be.deep.equal([
+                "b/b0",
+                "b/c"
+            ]);
+        });
+    });
+
+    describe("multiple patterns", () => {
+        it("should support multiple patterns when the first argument is an array", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob(["/virtual/**/a", "/virtual/**/*0"]);
+            expect(result.sort()).to.be.deep.equal([
+                "/virtual/a",
+                "/virtual/b/b0",
+                "/virtual/b/c/c0"
+            ]);
+        });
+
+        it("should correctly handle relative and non relative given patterns", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob(["**/*0", "/virtual/**/c"], { cwd: "/virtual" });
+            expect(result.sort()).to.be.deep.equal([
+                "/virtual/b/c",
+                "b/b0",
+                "b/c/c0"
+            ]);
+        });
+    });
+
+    describe("unique option", () => {
+        it("should remove duplicates by default", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob(["**/a*", "**/*a"], { cwd: "/virtual" });
+            expect(result.sort()).to.be.deep.equal([
+                "a"
+            ]);
+        });
+
+        it("should not remove duplicates when unique is unset", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob(["**/a*", "**/*a"], { cwd: "/virtual", unique: false });
+            expect(result.sort()).to.be.deep.equal([
+                "a",
+                "a"
+            ]);
+        });
+
+        it("should remove duplicates when absolute is set and relative and absolute patterns are given", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello")
+                    }
+                }
+            }));
+            {
+                const result = await glob(["/virtual/**/a*", "**/*a"], { cwd: "/virtual" });
+                expect(result.sort()).to.be.deep.equal([
+                    "/virtual/a",
+                    "a"
+                ]);
+            }
+            {
+                const result = await glob(["/virtual/**/a*", "**/*a"], { cwd: "/virtual", absolute: true });
+                expect(result.sort()).to.be.deep.equal([
+                    "/virtual/a"
+                ]);
+            }
+        });
+
+        it("should remove duplicates when normalized is set", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello")
+                    }
+                }
+            }));
+
+            {
+                const result = await glob(["**/b/.", "**/b"], { cwd: "/virtual" });
+                expect(result.sort()).to.be.deep.equal([
+                    "b",
+                    "b/."
+                ]);
+            }
+            {
+                const result = await glob(["**/b/.", "**/b"], { cwd: "/virtual", normalized: true });
+                expect(result.sort()).to.be.deep.equal([
+                    "b"
+                ]);
+            }
+
+        });
+    });
+
+    describe("index option", () => {
+        it("should return rawEntries if index option is set", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob(["**/*0", "/virtual/**/c"], { cwd: "/virtual", index: true });
+            expect(result.map((x) => x.path).sort()).to.be.deep.equal([
+                "/virtual/b/c",
+                "b/b0",
+                "b/c/c0"
+            ]);
+            for (const res of result) {
+                switch (res.path) {
+                    case "/virtual/b/c": {
+                        expect(res.index).to.be.equal(1);
+                        break;
+                    }
+                    case "b/b0":
+                    case "b/c/c0": {
+                        expect(res.index).to.be.equal(0);
+                        break;
+                    }
+                }
+            }
+        });
+
+        it("should calculate index among the matching patterns", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob(["**/*0", "!**/*.js", "/virtual/**/c"], { cwd: "/virtual", index: true });
+            expect(result.map((x) => x.path).sort()).to.be.deep.equal([
+                "/virtual/b/c",
+                "b/b0",
+                "b/c/c0"
+            ]);
+            for (const res of result) {
+                switch (res.path) {
+                    case "/virtual/b/c": {
+                        expect(res.index).to.be.equal(1);
+                        break;
+                    }
+                    case "b/b0":
+                    case "b/c/c0": {
+                        expect(res.index).to.be.equal(0);
+                        break;
+                    }
+                }
+            }
+        });
+    });
+
+    describe("ignoring", () => {
+        it("should support ignore patterns via ! prefix", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello"),
+                        e: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob(["**/*", "!**/c*"], { cwd: "/virtual" });
+            expect(result.sort()).to.be.deep.equal([
+                "a",
+                "b",
+                "b/b0",
+                "b/c/e"
+            ]);
+        });
+
+        it("should exclude subtree with **", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello"),
+                        e: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob(["**/*", "!b/**"], { cwd: "/virtual" });
+            expect(result.sort()).to.be.deep.equal([
+                "a"
+            ]);
+        });
+
+        it("should not exclude the directory itself when **/*", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello"),
+                        e: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob(["**/*", "!b/**/*"], { cwd: "/virtual" });
+            expect(result.sort()).to.be.deep.equal([
+                "a",
+                "b"
+            ]);
+        });
+
+        it("should not exclude files with matching name for **", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                c: {
+                    baa: ctx.file("hello"),
+                    b: {
+                        noway: ctx.file("hello")
+                    }
+                },
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello"),
+                        e: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob(["**/*", "!**/b*/**/*"], { cwd: "/virtual" });
+            expect(result.sort()).to.be.deep.equal([
+                "a",
+                "b",
+                "c",
+                "c/b",
+                "c/baa"
+            ]);
+        });
+
+        it("should support multiple ignore patterns", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                c: {
+                    baa: ctx.file("hello"),
+                    b: {
+                        noway: ctx.file("hello")
+                    }
+                },
+                b: {
+                    b0: ctx.file("hello"),
+                    c: {
+                        c0: ctx.file("hello"),
+                        e: ctx.file("hello")
+                    }
+                },
+                d: {
+                    a: {
+                        b: ctx.file("hello")
+                    },
+                    b: ctx.file("hello")
+                },
+                e: {
+                    e: {
+                        f: ctx.file("1")
+                    },
+                    g: ctx.file("1")
+                },
+                f: {
+                    asdasdy: ctx.file("1"),
+                    h: ctx.file("1"),
+                    i: {
+                        j: {
+                            k: {
+                                l: ctx.file("1")
+                            },
+                            c: {
+                                a: ctx.file("2")
+                            }
+                        },
+                        e: {
+                            b: ctx.file("3")
+                        }
+                    }
+                }
+            }));
+
+            const result = await glob(["**/*", "!**/c/**", "!**/*y", "!d/a/b", "!*/e/*"], { cwd: "/virtual" });
+            expect(result.sort()).to.be.deep.equal([
+                "a",
+                "b",
+                "b/b0",
+                "d",
+                "d/a",
+                "d/b",
+                "e",
+                "e/e",
+                "e/g",
+                "f",
+                "f/h",
+                "f/i",
+                "f/i/e",
+                "f/i/e/b",
+                "f/i/j",
+                "f/i/j/k",
+                "f/i/j/k/l"
+            ]);
+        });
+
+        it("should support dotted files", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("hello"),
+                c: {
+                    baa: ctx.file("hello"),
+                    b: {
+                        ".noway": ctx.file("hello")
+                    }
+                },
+                b: {
+                    b0: ctx.file("hello"),
+                    ".c": {
+                        c0: ctx.file("hello"),
+                        e: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob(["**/*", "!**/.*", "!**/.*/**"], { cwd: "/virtual", dot: true });
+            expect(result.sort()).to.be.deep.equal([
+                "a",
+                "b",
+                "b/b0",
+                "c",
+                "c/b",
+                "c/baa"
+            ]);
+        });
+    });
+
+    it("should support braces", async () => {
+        virtual.add((ctx) => ({
+            a: {
+                b: ctx.file("hello"),
+                c: {
+                    d: ctx.file("hello")
+                }
+            },
+            b: {
+                c: ctx.file("hello"),
+                d: {
+                    e: ctx.file("hello")
+                }
+            }
+        }));
+
+        const result = await glob("/virtual/{a,b}/**");
+        expect(result.sort()).to.be.deep.equal([
+            "/virtual/a/",
+            "/virtual/a/b",
+            "/virtual/a/c",
+            "/virtual/a/c/d",
+            "/virtual/b/",
+            "/virtual/b/c",
+            "/virtual/b/d",
+            "/virtual/b/d/e"
+        ]);
+    });
+
+    it("should correctly handle non normalized cases", async () => {
+        virtual.add((ctx) => ({
+            a: {
+                abcdef: {
+                    g: {
+                        h: ctx.file("hello")
+                    }
+                },
+                abcfed: {
+                    g: {
+                        h: ctx.file("hello")
+                    }
+                }
+            }
+        }));
+
+        {
+            const result = await glob("/virtual/a/abc{fed/g,def}/**///**/");
+            expect(result.sort()).to.be.deep.equal([
+                "/virtual/a/abcdef/",
+                "/virtual/a/abcdef/g/",
+                "/virtual/a/abcfed/g/"
+            ]);
         }
     });
 
-    describe("absolute", () => {
-        const pattern = "a/b/**";
-        const bashResults = JSON.parse(fs.readFileSync(path.join(__dirname, "./bash-results.json")));
-
-        const origCwd = process.cwd();
-        before(() => {
-            process.chdir(fixtureDir);
-        });
-
-        after(() => {
-            process.chdir(origCwd);
-        });
-
-        it("emits absolute matches if option set", (done) => {
-            const g = new adone.fs.glob.Glob(pattern, { absolute: true });
-
-            let matchCount = 0;
-            g.on("match", (m) => {
-                assert.isOk(is.pathAbsolute(m), "path must be absolute");
-                matchCount++;
-            });
-
-            g.on("end", (results) => {
-                assert.equal(matchCount, bashResults[pattern].length, "must match all files");
-                assert.equal(results.length, bashResults[pattern].length, "must match all files");
-
-                for (const m of results) {
-                    assert.isOk(is.pathAbsolute(m), "path must be absolute");
+    it("should support subpaths in braces", async () => {
+        virtual.add((ctx) => ({
+            a: {
+                b: ctx.file("hello"),
+                c: {
+                    d: ctx.file("hello")
                 }
-
-                done();
-            });
-        });
-    });
-
-    describe("match-base", () => {
-
-        const pattern = "a*";
-        const expect = [
-            "a",
-            "a/abcdef",
-            "a/abcfed"
-        ];
-
-        if (!is.windows) {
-            expect.push("a/symlink/a", "a/symlink/a/b/c/a");
-        }
-
-        it("chdir", async () => {
-            const origCwd = process.cwd();
-            process.chdir(fixtureDir);
-            let res;
-
-            try {
-                res = await adone.fs.glob(pattern, { matchBase: true });
-            } catch (e) {
-                process.chdir(origCwd);
-                throw e;
-            }
-
-            process.chdir(origCwd);
-            assert.deepEqual(res, expect);
-        });
-
-        it("cwd", async () => {
-            const res = await adone.fs.glob(pattern, { matchBase: true, cwd: fixtureDir });
-            assert.deepEqual(res, expect);
-        });
-
-        it("noglobstar", () => {
-            assert.throws(() => {
-                adone.fs.glob(pattern, { matchBase: true, noglobstar: true });
-            });
-        });
-    });
-
-    describe("nocase-nomagic", () => {
-
-        const cwd = process.cwd();
-        let drive = "c";
-        if (/^[a-zA-Z]:[\\\/]/.test(cwd)) {
-            drive = cwd.charAt(0).toLowerCase();
-        }
-
-        const oldStat = fs.stat;
-        const oldStatSync = fs.statSync;
-        const oldReaddir = fs.readdir;
-        const oldReaddirSync = fs.readdirSync;
-
-        before("mock fs", () => {
-            const fakeStat = (path) => {
-                switch (path.toLowerCase().replace(/\\/g, "/")) {
-                    case "/tmp":
-                    case "/tmp/":
-                    case `${drive}:\\tmp`:
-                    case `${drive}:\\tmp\\`:
-                        return { isDirectory: () => true };
-                    case "/tmp/a": case `${drive}:/tmp/a`:
-                        return { isDirectory: () => false };
-                }
-            };
-
-            fs.stat = function (path, cb) {
-                const f = fakeStat(path);
-                if (f) {
-                    process.nextTick(() => {
-                        cb(null, f);
-                    });
-                } else {
-                    oldStat.call(fs, path, cb);
-                }
-            };
-
-            fs.statSync = function (path) {
-                return fakeStat(path) || oldStatSync.call(fs, path);
-            };
-
-            const fakeReaddir = (path) => {
-                switch (path.toLowerCase().replace(/\\/g, "/")) {
-                    case "/tmp":
-                    case "/tmp/":
-                    case `${drive}:/tmp`:
-                    case `${drive}:/tmp/`:
-                        return ["a", "A"];
-                    case "/":
-                    case `${drive}:/`:
-                        return ["tmp", "tMp", "tMP", "TMP"];
-                }
-            };
-
-            fs.readdir = function (path, cb) {
-                const f = fakeReaddir(path);
-                if (f) {
-                    process.nextTick(() => {
-                        cb(null, f);
-                    });
-                } else {
-                    oldReaddir.call(fs, path, cb);
-                }
-            };
-
-            fs.readdirSync = function (path) {
-                return fakeReaddir(path) || oldReaddirSync.call(fs, path);
-            };
-        });
-
-        after("revert fs mock", () => {
-            fs.stat = oldStat;
-            fs.statSync = oldStatSync;
-            fs.readdir = oldReaddir;
-            fs.readdirSync = oldReaddirSync;
-        });
-
-        it("nocase, nomagic", async () => {
-            let want = [
-                "/TMP/A",
-                "/TMP/a",
-                "/tMP/A",
-                "/tMP/a",
-                "/tMp/A",
-                "/tMp/a",
-                "/tmp/A",
-                "/tmp/a"
-            ];
-            if (is.windows) {
-                want = want.map((p) => {
-                    return `${drive}:${p}`;
-                });
-            }
-
-            const p = [];
-
-            for (let i = 0; i < 2; i++) {
-                p.push(adone.fs.glob("/tmp/a", { nocase: true }).then((res) => {
-                    if (is.windows) {
-                        res = res.map((r) => {
-                            return r.replace(/\\/g, "/").replace(new RegExp(`^${drive}:`, "i"), `${drive}:`);
-                        });
+            },
+            b: {
+                c: ctx.file("hello"),
+                d: {
+                    e: ctx.file("hello"),
+                    f: {
+                        g: ctx.file("hello")
                     }
-                    assert.deepEqual(res.sort(), want);
-                }));
+                }
             }
+        }));
 
-            await Promise.all(p);
+        const result = await glob("/virtual/{a,b/d}/**/*");
+        expect(result.sort()).to.be.deep.equal([
+            "/virtual/a/b",
+            "/virtual/a/c",
+            "/virtual/a/c/d",
+            "/virtual/b/d/e",
+            "/virtual/b/d/f",
+            "/virtual/b/d/f/g"
+        ]);
+    });
+
+    describe("extglob", () => {
+        it("should support negation inside patterns", async () => {
+            virtual.add((ctx) => ({
+                a: {
+                    b: ctx.file("hello"),
+                    c: {
+                        d: ctx.file("hello"),
+                        "a.js": ctx.file("hello")
+                    },
+                    d: {
+                        "b.js": ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob("/virtual/**/!(*.js|b)");
+            expect(result.sort()).to.be.deep.equal([
+                "/virtual/a",
+                "/virtual/a/c",
+                "/virtual/a/c/d",
+                "/virtual/a/d"
+            ]);
         });
 
-        it("nocase, with some magic", async () => {
-            let want = [
-                "/TMP/A",
-                "/TMP/a",
-                "/tMP/A",
-                "/tMP/a",
-                "/tMp/A",
-                "/tMp/a",
-                "/tmp/A",
-                "/tmp/a"
-            ];
-            if (is.windows) {
-                want = want.map((p) => {
-                    return `${drive}:${p}`;
-                });
-            }
-
-            const p = [];
-
-            for (let i = 0; i < 2; i++) {
-                p.push(adone.fs.glob("/tmp/*", { nocase: true }).then((res) => {
-                    if (is.windows) {
-                        res = res.map((r) => {
-                            return r.replace(/\\/g, "/").replace(new RegExp(`^${drive}:`, "i"), `${drive}:`);
-                        });
+        it("should support ?", async () => {
+            virtual.add((ctx) => ({
+                a: {
+                    c: {
+                        a: ctx.file("hello")
+                    },
+                    c0: {
+                        b: ctx.file("hello")
+                    },
+                    c1: {
+                        c: ctx.file("hello")
+                    },
+                    c2: {
+                        d: ctx.file("hello")
                     }
-                    assert.deepEqual(res.sort(), want);
-                }));
-            }
+                }
+            }));
 
-            await Promise.all(p);
+            const result = await glob("/virtual/**/c?(0|2|3)/*");
+            expect(result.sort()).to.be.deep.equal([
+                "/virtual/a/c/a",
+                "/virtual/a/c0/b",
+                "/virtual/a/c2/d"
+            ]);
+        });
+
+        it("should support *", async () => {
+            virtual.add((ctx) => ({
+                a: {
+                    bcore: {
+                        a: ctx.file("hello")
+                    },
+                    beorc: {
+                        b: ctx.file("hello")
+                    },
+                    bcorecoreeroc: {
+                        c: ctx.file("hello")
+                    },
+                    bcorew: {
+                        d: ctx.file("hello")
+                    },
+                    b: {
+                        e: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob("/virtual/**/b*(c|o|r|e)/*");
+            expect(result.sort()).to.be.deep.equal([
+                "/virtual/a/b/e",
+                "/virtual/a/bcore/a",
+                "/virtual/a/bcorecoreeroc/c",
+                "/virtual/a/beorc/b"
+            ]);
+        });
+
+        it("should support +", async () => {
+            virtual.add((ctx) => ({
+                a: {
+                    core: {
+                        a: ctx.file("hello")
+                    },
+                    eorc: {
+                        b: ctx.file("hello")
+                    },
+                    corecoreeroc: {
+                        c: ctx.file("hello")
+                    },
+                    corew: {
+                        d: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob("/virtual/**/+(c|o|r|e)/*");
+            expect(result.sort()).to.be.deep.equal([
+                "/virtual/a/core/a",
+                "/virtual/a/corecoreeroc/c",
+                "/virtual/a/eorc/b"
+            ]);
+        });
+
+        it("should support @", async () => {
+            virtual.add((ctx) => ({
+                a: {
+                    core: {
+                        a: ctx.file("hello")
+                    },
+                    eorc: {
+                        b: ctx.file("hello")
+                    },
+                    corew: {
+                        d: ctx.file("hello")
+                    },
+                    hew: {
+                        e: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const result = await glob("/virtual/**/@(core*|*w)/*");
+            expect(result.sort()).to.be.deep.equal([
+                "/virtual/a/core/a",
+                "/virtual/a/corew/d",
+                "/virtual/a/hew/e"
+            ]);
         });
     });
 
-    describe("nodir", () => {
+    it("should support regex character classes", async () => {
+        virtual.add((ctx) => ({
+            a: ctx.file("hello"),
+            b: ctx.file("hello"),
+            c: ctx.file("hello"),
+            a5: ctx.file("hello")
+        }));
 
-        const origCwd = process.cwd();
-        before(() => {
-            process.chdir(fixtureDir);
+        const result = await glob("/virtual/[ab]?([1-5])");
+        expect(result.sort()).to.be.deep.equal([
+            "/virtual/a",
+            "/virtual/a5",
+            "/virtual/b"
+        ]);
+    });
+
+    it("should emit error event when some error occures", async () => {
+        virtual.add((ctx) => ({
+            a: ctx.file("hello"),
+            b: ctx.file("hello"),
+            c: ctx.file("hello"),
+            a5: ctx.file({
+                contents: "hello",
+                beforeHook() {
+                    // each syscall will throw
+                    throw new Error("Hello");
+                }
+            })
+        }));
+
+        const err = await assert.throws(async () => {
+            await glob("/virtual/**/*");
         });
+        expect(err.message).to.be.equal("Hello");
+    });
 
-        after(() => {
-            process.chdir(origCwd);
-        });
-
-        const root = path.resolve(fixtureDir, "a");
-
-        // [pattern, options, expect]
-        const cases = [
-            [
-                "*/**",
-                { cwd: "a" },
-                [
-                    "abcdef/g/h",
-                    "abcfed/g/h",
-                    "b/c/d",
-                    "bc/e/f",
-                    "c/d/c/b",
-                    "cb/e/f"
-                ]
-            ],
-            [
-                "a/*b*/**",
-                {},
-                [
-                    "a/abcdef/g/h",
-                    "a/abcfed/g/h",
-                    "a/b/c/d",
-                    "a/bc/e/f",
-                    "a/cb/e/f"
-                ]
-            ],
-            ["a/*b*/**/", {}, []],
-            ["*/*", { cwd: "a" }, []],
-            ["/*/*", { root }, []],
-            [
-                "/b*/**",
-                { root },
-                [
-                    "/b/c/d",
-                    "/bc/e/f"
-                ].map((m) => {
-                    return path.join(root, m).replace(/\\/g, "/");
+    it("should stop the stream on the first error", async () => {
+        const fileHook1 = spy();
+        const fileHook2 = spy();
+        virtual.add((ctx) => ({
+            a: ctx.file("hello"),
+            b: ctx.file("hello"),
+            c: ctx.file("hello"),
+            a5: ctx.file("hello"),
+            d: [{
+                e: ctx.file({
+                    contents: "hello",
+                    beforeHook: fileHook1
                 })
-            ]
-        ];
-
-        for (const c of cases) {
-            const pattern = c[0];
-            const options = c[1] || {};
-            options.nodir = true;
-            const expect = c[2].sort();
-            it(`${pattern} ${JSON.stringify(options)}`, async () => {
-                const stream = adone.fs.glob(pattern, options);
-                let results = await stream;
-                results = results.sort();
-
-                await new Promise((resolve) => {
-                    new adone.fs.glob.Glob(pattern, options, (er, res) => {
-                        res = res.sort();
-                        assert.deepEqual(res, expect, "async results");
-                        assert.deepEqual(results, expect, "async results");
-                        verifyGlobCacheIsAbsolute(stream.globs[0]);
-                        resolve();
-                    });
-                });
-            });
-        }
-    });
-
-    describe("nonull", () => {
-
-        // [pattern, options, expect]
-        const cases = [
-            ["a/*NOFILE*/**/", {}, ["a/*NOFILE*/**/"]],
-            ["*/*", { cwd: "NODIR" }, ["*/*"]],
-            ["NOFILE", {}, ["NOFILE"]],
-            ["NOFILE", { cwd: "NODIR" }, ["NOFILE"]]
-        ];
-
-        for (const c of cases) {
-            const pattern = c[0];
-            const options = c[1] || {};
-            options.nonull = true;
-            const expect = c[2].sort();
-            it(`${pattern} ${JSON.stringify(options)}`, async () => {
-                let res = await adone.fs.glob(pattern, options);
-                res = res.sort();
-                assert.deepEqual(res, expect, "async results");
-            });
-        }
-    });
-
-    describe("pause-resume", () => {
-
-        // show that no match events happen while paused.
-        // just some gnarly pattern with lots of matches
-        const pattern = "a/!(symlink)/**";
-        const bashResults = JSON.parse(fs.readFileSync(path.join(__dirname, "./bash-results.json")));
-
-        const origCwd = process.cwd();
-        before(() => {
-            process.chdir(fixtureDir);
-        });
-
-        after(() => {
-            process.chdir(origCwd);
-        });
-
-        for (const opt of [undefined, { stats: true }]) {
-            const name = `use a Glob object, and pause/resume it ${opt ? JSON.stringify(opt) : ""}`;
-            it(name, (done) => {
-                let globResults = [];
-                const g = new adone.fs.glob.Glob(pattern, opt);
-                const expect = bashResults[pattern];
-
-                g.on("match", (m) => {
-                    assert.notOk(g.paused, "must not be paused");
-                    globResults.push(m);
-                    g.pause();
-                    assert.ok(g.paused, "must be paused");
-                    setTimeout(() => g.resume(), 10);
-                });
-
-                g.on("end", (matches) => {
-                    globResults = cleanResults(globResults);
-                    matches = cleanResults(matches);
-                    assert.deepEqual(matches, globResults,
-                        "end event matches should be the same as match events");
-                    assert.deepEqual(matches, expect,
-                        "adone.fs.glob matches should be the same as bash results");
-
-                    done();
-                });
-            });
-        }
-    });
-
-    describe("readme-issue", () => {
-
-        const dir = `${__dirname}/package`;
-
-        before("setup", async () => {
-            await adone.fs.mkdir(dir);
-            fs.writeFileSync(`${dir}/package.json`, "{}", "ascii");
-            fs.writeFileSync(`${dir}/README`, "x", "ascii");
-        });
-
-        it("glob", async () => {
-            const opt = {
-                cwd: dir,
-                nocase: true,
-                mark: true
-            };
-
-            const files = await adone.fs.glob("README?(.*)", opt);
-            assert.deepEqual(files, ["README"]);
-        });
-
-        after("cleanup", async () => {
-            await adone.fs.rm(dir);
-        });
-    });
-
-    if (!is.windows) {
-        describe("realpath", () => {
-
-            // pattern to find a bunch of duplicates
-            const pattern = "a/symlink/{*,**/*/*/*,*/*/**,*/*/*/*/*/*}";
-
-            const origCwd = process.cwd();
-            before(() => {
-                process.chdir(fixtureDir);
-            });
-
-            after(() => {
-                process.chdir(origCwd);
-            });
-
-            // options, results
-            // realpath:true set on each option
-            const cases = [
-                [{},
-                ["a/symlink", "a/symlink/a", "a/symlink/a/b"]],
-
-                [{ mark: true },
-                ["a/symlink/", "a/symlink/a/", "a/symlink/a/b/"]],
-
-                [{ follow: true },
-                ["a/symlink", "a/symlink/a", "a/symlink/a/b"]],
-
-                [{ cwd: "a" }, ["symlink", "symlink/a", "symlink/a/b"], pattern.substr(2)],
-
-                [{ cwd: "a" },
-                [],
-                    "no one here but us chickens"],
-
-                [{ nonull: true },
-                ["no one here but us chickens", "no one here but us sheep"],
-                    "no one here but us {chickens,sheep}"]
-
-                // В отличии от оригинала, опции nounique + realpath
-                // не спасает от дубликатов при зацикливании симлинков
-            ];
-
-            for (const c of cases) {
-                const opt = c[0];
-                let expect = c[1];
-                if (!(opt.nonull && expect[0].match(/^no one here/))) {
-                    expect = expect.map((d) => {
-                        d = `${opt.cwd ? path.join(fixtureDir, opt.cwd) : fixtureDir}/${d}`;
-                        return d.replace(/\\/g, "/");
-                    });
+            }, {
+                beforeHook() {
+                    // throw on each syscall
+                    throw new Error("hello");
                 }
-                const p = c[2] || pattern;
-
-                opt.realpath = true;
-
-                it(`"${p}" ${JSON.stringify(opt)}`, async () => {
-                    const result = await adone.fs.glob(p, opt);
-                    result.sort();
-                    assert.deepEqual(result, expect);
-                });
-            }
-        });
-    }
-
-    describe("root-nomount", () => {
-
-        const origCwd = process.cwd();
-        before(() => {
-            process.chdir(fixtureDir);
-        });
-
-        after(() => {
-            process.chdir(origCwd);
-        });
-
-        describe("changing root and searching for /b*/**", () => {
-            it(".", async () => {
-                const stream = adone.fs.glob("/b*/**", { root: ".", nomount: true });
-                const matches = await stream;
-                assert.deepEqual(matches, []);
-                verifyGlobCacheIsAbsolute(stream.globs[0]);
-            });
-
-            it("a", async () => {
-                const stream = adone.fs.glob("/b*/**", { root: path.resolve("a"), nomount: true });
-                const matches = await stream;
-                matches.sort();
-                assert.deepEqual(matches, ["/b", "/b/c", "/b/c/d", "/bc", "/bc/e", "/bc/e/f"]);
-                verifyGlobCacheIsAbsolute(stream.globs[0]);
-            });
-
-            it("root=a, cwd=a/b", async () => {
-                const stream = adone.fs.glob("/b*/**", { root: "a", cwd: path.resolve("a/b"), nomount: true });
-                const matches = await stream;
-                matches.sort();
-                assert.deepEqual(matches, ["/b", "/b/c", "/b/c/d", "/bc", "/bc/e", "/bc/e/f"]);
-                verifyGlobCacheIsAbsolute(stream.globs[0]);
-            });
-        });
-    });
-
-    describe("root", () => {
-
-        const origCwd = process.cwd();
-        before(() => {
-            process.chdir(fixtureDir);
-        });
-
-        after(() => {
-            process.chdir(origCwd);
-        });
-
-        it(".", async () => {
-            const stream = adone.fs.glob("/b*/**", { root: "." });
-            const matches = await stream;
-            matches.sort();
-            assert.deepEqual(matches, []);
-            verifyGlobCacheIsAbsolute(stream.globs[0]);
-        });
-
-
-        it("a", async () => {
-            const stream = adone.fs.glob("/b*/**", { root: path.resolve("a") });
-            const matches = await stream;
-            matches.sort();
-
-            const expected = ["/b", "/b/c", "/b/c/d", "/bc", "/bc/e", "/bc/e/f"].map((m) => {
-                return path.join(path.resolve("a"), m).replace(/\\/g, "/");
-            });
-
-            assert.deepEqual(matches, expected);
-            verifyGlobCacheIsAbsolute(stream.globs[0]);
-        });
-
-        it("root=a, cwd=a/b", async () => {
-            const stream = adone.fs.glob("/b*/**", { root: "a", cwd: path.resolve("a/b") });
-            const matches = await stream;
-            matches.sort();
-
-            const expected = ["/b", "/b/c", "/b/c/d", "/bc", "/bc/e", "/bc/e/f"].map((m) => {
-                return path.join(path.resolve("a"), m).replace(/\\/g, "/");
-            });
-
-            assert.deepEqual(matches, expected);
-            verifyGlobCacheIsAbsolute(stream.globs[0]);
-        });
-
-        it("combined with absolute option", async () => {
-            const stream = adone.fs.glob("/b*/**", { root: path.resolve("a"), absolute: true });
-            const matches = await stream;
-            matches.sort();
-
-            const expect = ["/b", "/b/c", "/b/c/d", "/bc", "/bc/e", "/bc/e/f"].map((m) => {
-                return path.join(path.resolve("a"), m).replace(/\\/g, "/");
-            });
-
-            assert.deepEqual(matches, expect);
-            verifyGlobCacheIsAbsolute(stream.globs[0]);
-        });
-
-        it("cwdAbs when root=a, absolute=true", async () => {
-            const stream = adone.fs.glob("/b*/**", { root: path.resolve("a"), absolute: true });
-            await stream;
-
-            assert.equal(stream.globs[0].cwdAbs, process.cwd().replace(/\\/g, "/"));
-        });
-
-        it("cwdAbs when root=a, absolute=true, cwd=__dirname", async () => {
-            const stream = adone.fs.glob("/b*/**", { root: path.resolve("a"), absolute: true, cwd: __dirname });
-            await stream;
-
-            assert.equal(stream.globs[0].cwdAbs, __dirname.replace(/\\/g, "/"));
-        });
-    });
-
-    describe("slash-cwd", () => {
-
-        // regression test to make sure that slash-ended patterns
-        // don't match files when using a different cwd.
-        const pattern = "../{b*,a}/";
-        const expect = ["../a/"];
-        const cwd = path.join(fixtureDir, "a");
-
-        const origCwd = process.cwd();
-        before(() => {
-            process.chdir(`${__dirname}/..`);
-        });
-
-        after(() => {
-            process.chdir(origCwd);
-        });
-
-        it("slashes only match directories", async () => {
-            const result = await adone.fs.glob(pattern, { cwd });
-            assert.deepEqual(result, expect);
-        });
-    });
-
-    describe("stat", () => {
-
-        it("stat all the things", (done) => {
-            const g = new adone.fs.glob.Glob("a/*abc*/**", { stat: true, cwd: fixtureDir });
-
-            let matches = [];
-            g.on("match", (m) => {
-                matches.push(m);
-            });
-
-            let stats = [];
-            g.on("match", (m, st) => {
-                stats.push(m);
-                assert.ok(st instanceof adone.std.fs.Stats);
-            });
-
-            g.on("end", (endMatches) => {
-                stats = stats.sort();
-                matches = matches.sort();
-                endMatches = endMatches.sort();
-                assert.deepEqual(stats, matches);
-                assert.deepEqual(endMatches, matches);
-
-                const statCache = [...g.statCache.keys()];
-                assert.deepEqual(statCache.map((f) => {
-                    return path.relative(fixtureDir, f).replace(/\\/g, "/");
-                }).sort(), matches);
-
-                done();
-            });
-        });
-
-        it("stream stat", async () => {
-            const result = await adone.fs.glob("*", { stat: true, cwd: fixtureDir });
-            assert.deepEqual(result.map((x) => x.path).sort(), ["a", "b", "c"]);
-        });
-
-        describe("EPERM errors", () => {
-            const expect = [
-                "a/abcdef",
-                "a/abcdef/g",
-                "a/abcdef/g/h",
-                "a/abcfed",
-                "a/abcfed/g",
-                "a/abcfed/g/h"
-            ];
-
-            const oldLstat = fs.lstat;
-            const oldLstatSync = fs.lstatSync;
-            const badPaths = /\ba[\\\/]?$|\babcdef\b/;
-
-            before(() => {
-                fs.lstat = function (path, cb) {
-                    // synthetically generate a non-ENOENT error
-                    if (badPaths.test(path)) {
-                        const er = new Error("synthetic");
-                        er.code = "EPERM";
-                        return process.nextTick(cb.bind(null, er));
+            }],
+            e: {
+                f: {
+                    g: {
+                        h: ctx.file({
+                            contents: "hello",
+                            beforeHook: fileHook2
+                        })
                     }
-
-                    return oldLstat.call(fs, path, cb);
-                };
-
-                fs.lstatSync = function (path) {
-                    // synthetically generate a non-ENOENT error
-                    if (badPaths.test(path)) {
-                        const er = new Error("synthetic");
-                        er.code = "EPERM";
-                        throw er;
-                    }
-
-                    return oldLstatSync.call(fs, path);
-                };
-            });
-
-            after(() => {
-                fs.lstat = oldLstat;
-                fs.lstatSync = oldLstatSync;
-            });
-
-            it("stat errors other than ENOENT are ok", async () => {
-                let matches = await adone.fs.glob("a/*abc*/**", { stat: true, cwd: fixtureDir });
-                matches = matches.map((x) => x.path).sort();
-                assert.deepEqual(matches, expect);
-            });
-
-            it("globstar with error in root", async () => {
-                const expect = [
-                    "a",
-                    "a/abcdef",
-                    "a/abcdef/g",
-                    "a/abcdef/g/h",
-                    "a/abcfed",
-                    "a/abcfed/g",
-                    "a/abcfed/g/h",
-                    "a/b",
-                    "a/b/c",
-                    "a/b/c/d",
-                    "a/bc",
-                    "a/bc/e",
-                    "a/bc/e/f",
-                    "a/c",
-                    "a/c/d",
-                    "a/c/d/c",
-                    "a/c/d/c/b",
-                    "a/cb",
-                    "a/cb/e",
-                    "a/cb/e/f"
-                ];
-
-                if (!is.windows) {
-                    expect.push(
-                        "a/symlink",
-                        "a/symlink/a",
-                        "a/symlink/a/b",
-                        "a/symlink/a/b/c",
-                    );
-                }
-
-                expect.push("a/x", "a/z");
-
-                const pattern = "a/**";
-                const matches = await adone.fs.glob(pattern, { cwd: fixtureDir });
-                matches.sort();
-                assert.deepEqual(matches, expect);
-            });
-        });
-    });
-
-    describe("stat bug", () => {
-        const createDirectories = async (n, level, p) => {
-            for (let i = 0; i < n; ++i) {
-                const q = path.join(p, String(i));
-                if (level === 0) {
-                    fs.writeFileSync(q, "hello");
-                } else {
-                    // eslint-disable-next-line no-await-in-loop
-                    await adone.fs.mkdir(q);
-                    // eslint-disable-next-line no-await-in-loop
-                    await createDirectories(n, level - 1, q);
                 }
             }
-        };
+        }));
 
-        const hello = path.join(fixtureDir, "hello");
-        const dirWidth = 4;
-        const dirDepth = 1;
+        const stream = glob("/virtual/**/*");
+        const data = spy();
+        const error = spy();
+        const end = spy();
+        stream.on("error", error).on("data", data).on("end", end).resume();
+        await end.waitForCall();
+        expect(error).to.have.been.calledOnce;
+        // a a5 b c d e, d will throw on lstat and the stream should stop e/f should not be emitted
+        expect(data).to.have.callCount(6);
+        expect(fileHook1).to.have.not.been.called;
+        expect(fileHook2).to.have.not.been.called;
+    });
+
+    describe("Glob", () => {
+        describe("pause/resume", () => {
+            beforeEach(() => {
+                virtual.add((ctx) => ({
+                    a: ctx.file("hello")
+                }));
+            });
+
+            it("should be paused by default", async () => {
+                const s = spy();
+                const glob = new Glob("/virtual/**/*");
+                glob.on("match", s);
+                expect(glob.isPaused()).to.be.true;
+                await delay(10);
+                expect(s).to.have.not.been.called;
+            });
+
+            it("should resume the process asynchronously", async () => {
+                const s = spy();
+                const glob = new Glob("/virtual/**/*");
+                glob.on("match", s);
+                expect(glob.isPaused()).to.be.true;
+                glob.resume();
+                expect(glob.isPaused()).to.be.true;
+                expect(s).to.have.not.been.called;
+                await delay(10);
+                expect(s).to.have.been.calledOnce;
+            });
+
+            it("should not resume if paused synchronously", async () => {
+                const s = spy();
+                const glob = new Glob("/virtual/**/*");
+                glob.on("match", s);
+                expect(glob.isPaused()).to.be.true;
+                glob.resume();
+                glob.pause();
+                await delay(10);
+                expect(s).to.have.not.been.called;
+            });
+        });
+
+        describe("end", () => {
+            it("should emit end event when the process ends", async () => {
+                virtual.add((ctx) => ({
+                    "{1..10}": {
+                        "{a..f}": ctx.file("hello")
+                    }
+                }));
+
+                const glob = new Glob("/virtual/**/*");
+                const match = spy();
+                const end = spy();
+                glob.on("match", match).on("end", end).resume();
+                await end.waitForCall();
+                expect(match).to.have.callCount(10 + 6 * 10);
+            });
+
+            it("should end the process and do not emit further match events", async () => {
+                virtual.add((ctx) => ({
+                    "{1..10}": {
+                        "{a..f}": ctx.file("hello")
+                    }
+                }));
+
+                const glob = new Glob("/virtual/**/*");
+                const match = spy();
+                const end = spy();
+                glob.on("match", match).on("end", end).on("match", () => glob.end()).resume();
+                await end.waitForCall();
+                await delay(100);
+                expect(match).to.have.been.calledOnce;
+            });
+
+            it("should end synchronously end the process but asynchronously emit end event", async () => {
+                virtual.add((ctx) => ({
+                    "{1..10}": {
+                        "{a..f}": ctx.file("hello")
+                    }
+                }));
+
+                const glob = new Glob("/virtual/**/*");
+                const end = spy();
+                glob.on("end", end).end();
+                expect(end).to.have.not.been.called;
+                await delay(10);
+                expect(end).to.have.been.calledOnce;
+            });
+
+            it("should synchronously end synchronously resumed stream and the stream should not emit match events", async () => {
+                virtual.add((ctx) => ({
+                    "{1..10}": {
+                        "{a..f}": ctx.file("hello")
+                    }
+                }));
+
+                const glob = new Glob("/virtual/**/*");
+                const match = spy();
+                const end = spy();
+                glob.on("match", match).on("end", end).resume().end();
+                expect(end).to.have.not.been.called;
+                await delay(50);
+                expect(end).to.have.been.calledOnce;
+                expect(match).to.have.not.been.called;
+            });
+        });
+    });
+
+    describe("integration", () => {
+        /**
+         * @type {adone.fs.Directory}
+         */
+        let fixtures = null;
+
+        /**
+         * @type {string}
+         */
+        let cwd;
 
         before(async () => {
-            await adone.fs.mkdir(hello);
-            await createDirectories(dirWidth, dirDepth, hello);
+            fixtures = await fs.Directory.createTmp();
+            cwd = fixtures.path();
+
+            await fixtures.addFile("b");
+            await fixtures.addFile("c");
+            const a = await fixtures.addDirectory("a");
+            await a.addFile("abcdef", "g", "h");
+            await a.addFile(".acbdef", "x", "y", "z");
+            await a.addFile("abcfed", "g", "h");
+            await a.addFile("b", "c", "d");
+            await a.addFile("bc", "e", "f");
+            await a.addFile("c", "d", "c", "b");
+            await a.addFile("cb", "e", "f");
+            const c = await a.addDirectory("symlink", "a", "b");
+            await fs.symlink("../..", c.getDirectory("c").path());
+            await a.addFile("x", ".y", "b");
+            await a.addFile("z", ".y", "b");
         });
 
         after(async () => {
-            await adone.fs.rm(hello);
+            await fixtures.unlink();
         });
 
-        it("should correct emit end with { stat: true }", (done) => {
-            const g = new adone.fs.glob.Glob(path.join(hello, "**", "*"), { stat: true });
+        const cases = JSON.parse(fs.readFileSync(adone.std.path.join(__dirname, "bash_results.json")));
 
-            let i = 0;
-            g.on("match", () => {
-                if (++i % 16 === 0) {
-                    g.pause();
-                    setTimeout(() => {
-                        g.resume();
-                    }, 100);
-                }
+        for (const [pattern, expected] of Object.entries(cases)) {
+            it(pattern, async () => { // eslint-disable-line
+                const result = await glob(pattern, { cwd });
+                expect(result.sort()).to.be.deep.equal(expected);
             });
-
-            g.on("end", () => {
-                try {
-                    assert.equal(i, Math.pow(dirWidth, dirDepth + 1) + dirWidth);
-                    done();
-                } catch (e) {
-                    done(e);
-                }
-            });
-        });
+        }
     });
 });

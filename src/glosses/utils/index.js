@@ -872,7 +872,6 @@ adone.lazify({
     userid: () => adone.native.UserId,
     StreamSearch: "./streamsearch",
     delegate: "./delegate",
-    GlobExp: "./globexp",
     iconv: "./iconv",
     sqlstring: "./sqlstring",
     Editor: "./editor",

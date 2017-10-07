@@ -45,12 +45,13 @@ describe("fs", "readdirp", () => {
 
     it("reading root without filter", async () => {
         const result = await fs.readdirp(root);
-        expect(result).to.have.lengthOf(totalFiles);
+        expect(result).to.have.lengthOf(totalFiles + totalDirs);
     });
 
     it("normal ['*.ext1', '*.ext3']", async () => {
         const result = await fs.readdirp(root, {
-            fileFilter: ["*.ext1", "*.ext3"]
+            fileFilter: ["*.ext1", "*.ext3"],
+            directories: false
         });
         expect(result).to.have.lengthOf(ext1Files + ext3Files);
     });
@@ -65,7 +66,7 @@ describe("fs", "readdirp", () => {
 
     it("directories only", async () => {
         const result = await fs.readdirp(root, {
-            entryType: "directories"
+            files: false
         });
         expect(result).to.have.lengthOf(totalDirs);
     });
@@ -79,7 +80,7 @@ describe("fs", "readdirp", () => {
 
     it("directory filter with directories only", async () => {
         const result = await fs.readdirp(root, {
-            entryType: "directories",
+            files: false,
             directoryFilter: ["root_dir1", "*dir1_subdir1"]
         });
         expect(result).to.have.lengthOf(2);
@@ -95,7 +96,8 @@ describe("fs", "readdirp", () => {
 
     it("negated: ['!*.ext1', '!*.ext3']", async () => {
         const result = await fs.readdirp(root, {
-            fileFilter: ["!*.ext1", "!*.ext3"]
+            fileFilter: ["!*.ext1", "!*.ext3"],
+            directories: false
         });
         expect(result).to.have.lengthOf(totalFiles - ext1Files - ext3Files);
     });
@@ -104,7 +106,7 @@ describe("fs", "readdirp", () => {
         const result = await fs.readdirp(root, {
             lstat: true
         });
-        expect(result).to.have.lengthOf(totalFiles);
+        expect(result).to.have.lengthOf(totalFiles + totalDirs);
     });
 
     it("reading root with symlinks using lstat", async function () {

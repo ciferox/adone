@@ -24,7 +24,7 @@ export default class LinuxFS extends adone.metrics.FileSystem {
             const parts = mount.split(" ");
             // structure from fstab(5) manpage
             if (parts.length < 6) {
-                continue; 
+                continue;
             }
             const path = parts[1].replace(/\\040/g, " ");
             const type = parts[2];
@@ -32,12 +32,12 @@ export default class LinuxFS extends adone.metrics.FileSystem {
                 continue;
             }
 
-            const volume = parts[0].replace(/\\040/g, " "); 
+            const volume = parts[0].replace(/\\040/g, " ");
             let name = volume;
             if (path === "/") {
                 name = "/";
             }
-            
+
             let uuid;
             if (uuidMap.has(parts[0])) {
                 uuid = uuidMap.get(parts[0]);
@@ -79,7 +79,7 @@ export default class LinuxFS extends adone.metrics.FileSystem {
         const lines = await adone.fs.readLines(filepath);
         if (!is.null(lines) && lines.length > 0) {
             const parts = lines[0].split(/\D+/);
-            return Number.parseInt(parts[index], 10); 
+            return Number.parseInt(parts[index], 10);
         }
     }
 

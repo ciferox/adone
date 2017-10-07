@@ -1,941 +1,754 @@
+// @ts-check
+
 const {
-    std: { fs, path },
-    util: { GlobExp },
-    is
+    std,
+    fs,
+    collection,
+    is,
+    util,
+    event: { EventEmitter },
+    stream: { CoreStream },
+    identity
 } = adone;
 
+const split = (pattern) => pattern.split(/\//);
+const { resolve, sep, normalize } = std.path;
+const join = (a, b) => a ? a === sep ? `${sep}${b}` : `${a}${sep}${b}` : b;
+const joinMany = (parts) => parts.join(sep);
 
-class CallbackCache {
-    constructor() {
-        this._cache = new Map();
+class StaticValue {
+    constructor(part) {
+        if (part === "") {
+            this.isEmpty = true;
+        } else if (part === ".") {
+            this.isCurrent = true;
+        } else if (part === "..") {
+            this.isPrev = true;
+        } else if (part[0] === ".") {
+            this.isDotted = true;
+        }
+
+        this.part = part;
     }
 
-    inflight(key, callback) {
-        if (!is.function(callback)) {
-            throw new TypeError("Callback must be a function");
-        }
-
-        if (this._cache.has(key)) {
-            this._cache.get(key).push(callback);
-            return null;
-        }
-        this._cache.set(key, [callback]);
-        return (...args) => {
-            const callbacks = this._cache.get(key);
-
-            for (let i = 0; i < callbacks.length; i++) {
-                callbacks[i](...args);
-            }
-
-            this._cache.delete(key);
-        };
-
+    test(value) {
+        return this.part === value;
     }
 }
 
-class Glob extends adone.event.EventEmitter {
-    constructor(pattern, options = {}, cb) {
-        super();
-
-        if (is.function(options)) {
-            cb = options;
-            options = {};
-        }
-
-        // base-matching: just use globstar for that.
-        if (options.matchBase && !pattern.includes("/")) {
-            if (options.noglobstar) {
-                throw new Error("base matching requires globstar");
-            }
-            pattern = `**/${pattern}`;
-        }
-
-        this.silent = Boolean(options.silent);
-        this.pattern = pattern;
-        this.strict = Boolean(options.strict);
-        this.realpath = Boolean(options.realpath);
-        this.follow = Boolean(options.follow);
-        this.dot = Boolean(options.dot);
-        this.mark = Boolean(options.mark);
-        this.nodir = Boolean(options.nodir);
-        if (this.nodir) {
-            this.mark = true;
-        }
-        this.nounique = Boolean(options.nounique);
-        this.nonull = Boolean(options.nonull);
-        this.nosort = Boolean(options.nosort);
-        this.nocase = Boolean(options.nocase);
-        this.stat = Boolean(options.stat);
-        this.absolute = Boolean(options.absolute);
-        this.maxLength = options.maxLength || Infinity;
-
-        this.cache = options.cache || new Map();
-        this.statCache = options.statCache || new Map();
-        this.realpathCache = options.realpathCache || new Map();
-        this.callbackCache = new CallbackCache();
-        this.cacheEmitter = new adone.event.EventEmitter();
-        this.symlinks = options.symlinks || Object.create(null);
-
-        this._setupIgnores(options);
-
-        this.changedCwd = false;
-        const cwd = process.cwd();
-        if (is.exist(options.cwd)) {
-            this.cwd = path.resolve(options.cwd);
-            this.changedCwd = this.cwd !== cwd;
+class DynamicValue {
+    /**
+     * @param {string} part
+     */
+    constructor(part) {
+        if (part === "**") {
+            this.isGlobstar = true;
         } else {
-            this.cwd = cwd;
-        }
-
-        this.root = options.root || path.resolve("/");
-        this.root = path.resolve(this.root);
-        if (is.windows) {
-            this.root = this.root.replace(/\\/g, "/");
-        }
-
-        this.cwdAbs = is.pathAbsolute(this.cwd) ? this.cwd : this._makeAbs(this.cwd);
-        if (is.windows) {
-            this.cwdAbs = this.cwdAbs.replace(/\\/g, "/");
-        }
-        this.nomount = Boolean(options.nomount);
-
-        this.globexp = new GlobExp(pattern, options);
-        this.options = this.globexp.options;
-
-        // process each pattern in the globexp set
-        let n = this.globexp.set.length;
-
-        // The matches are stored as {<filename>: true,...} so that
-        // duplicates are automagically pruned.
-        // Later, we do an Object.keys() on these.
-        // Keep them as a list so we can fill in when nonull is set.
-        this.matches = [];
-        for (let i = 0; i < n; i++) {
-            this.matches.push(new Set());
-        }
-
-        this.found = [];
-
-        if (is.function(cb)) {
-            this.on("error", cb);
-            this.on("end", (matches) => {
-                cb(null, matches);
-            });
-        }
-
-        n = this.globexp.set.length;
-        this._processCounter = 0;
-        this._processQueue = [];
-
-        this._emitQueue = [];
-        this.paused = false;
-
-        process.nextTick(() => {
-            const done = () => {
-                --this._processCounter;
-                if (this._processCounter <= 0 && this._emitQueue.length === 0) {
-                    this._finish();
-                }
-            };
-
-            if (n === 0) {
-                return done();
-            }
-
-            for (let i = 0; i < n; i++) {
-                this._process(this.globexp.set[i], i, false, done);
-            }
-        });
-    }
-
-    _setupIgnores(options) {
-        this.ignore = options.ignore ? adone.util.arrify(options.ignore) : [];
-
-        if (this.ignore.length > 0) {
-            // ignore patterns are always in dot:true mode.
-            this.ignore = this.ignore.map((pattern) => {
-                let gmatcher = null;
-                if (pattern.slice(-3) === "/**") {
-                    const gpattern = pattern.replace(/(\/\*\*)+$/, "");
-                    gmatcher = new GlobExp(gpattern, { dot: true });
-                }
-
-                return {
-                    matcher: new GlobExp(pattern, { dot: true }),
-                    gmatcher
-                };
-            });
-        }
-    }
-
-    // Return true, if pattern ends with globstar '**', for the accompanying parent directory.
-    // Ex:- If node_modules/** is the pattern, add 'node_modules' to ignore list along with it's contents
-    isIgnored(path) {
-        if (!this.ignore.length) {
-            return false;
-        }
-
-        return this.ignore.some((item) => {
-            return item.matcher.test(path) || (item.gmatcher ? item.gmatcher.test(path) : false);
-        });
-    }
-
-    _finish() {
-        if (this.aborted) {
-            return;
-        }
-
-        if (!this.nosort) {
-            if (this.nocase) {
-                this.found = this.found.sort(
-                    (a, b) => a.toLowerCase().localeCompare(b.toLowerCase())
-                );
+            if (part[0] === ".") {
+                this.isDotted = true;
+                this.re = util.match.makeRe(part.slice(1));
             } else {
-                this.found = this.found.sort((a, b) => a.localeCompare(b));
+                this.re = util.match.makeRe(part, { dot: true });
             }
         }
 
-        if (this.nonull) {
-            for (let i = 0, l = this.matches.length; i < l; i++) {
-                if (this.matches[i].size === 0) {
-                    const literal = this.globexp.globSet[i];
-                    if (!this.isIgnored(literal)) {
-                        if (!this.nounique || !this.found.includes(literal)) {
-                            this.emit("match", literal, this.statCache.get(this._makeAbs(literal)));
-                        }
-                    }
-                }
-            }
-        }
-
-        this.emit("end", this.found);
+        this.part = part;
     }
 
-    _mark(p) {
-        const abs = is.pathAbsolute(p) ? p : this._makeAbs(p);
-        const c = this.cache.get(abs);
-        let m = p;
-        if (c) {
-            const isDir = c === "DIR" || is.array(c);
-            const slash = p.slice(-1) === "/";
-
-            if (isDir && !slash) {
-                m += "/";
-            } else if (!isDir && slash) {
-                m = m.slice(0, -1);
-            }
-
-            if (m !== p) {
-                const mabs = this._makeAbs(m);
-                this.statCache.set(mabs, this.statCache.get(abs));
-                this.cache.set(mabs, c);
-            }
+    test(value) {
+        if (this.isDotted) {
+            return value[0] === "." && this.re.test(value.slice(1));
         }
-
-        return m;
+        return this.re.test(value);
     }
 
-    _makeAbs(f) {
-        let abs = f;
-        if (f.charAt(0) === "/") {
-            abs = path.join(this.root, f);
-        } else if (is.pathAbsolute(f) || f === "") {
-            abs = f;
-        } else if (this.changedCwd) {
-            abs = path.resolve(this.cwd, f);
+    toString() {
+        return this.part;
+    }
+}
+
+class StaticPart {
+    /**
+     * @param {string} absolute
+     * @param {string} relative
+     */
+    constructor(absolute, relative) {
+        this.absolute = absolute;
+        this.relative = relative;
+    }
+
+    join(part) {
+        return new StaticPart(join(this.absolute, part), join(this.relative, part));
+    }
+}
+
+class Entry {
+    /**
+     * @param {StaticPart} staticPart
+     * @param {adone.fs.I.Stats} stat
+     */
+    constructor(staticPart, stat, index) {
+        this.path = staticPart.relative;
+        this.absolutePath = staticPart.absolute;
+        this.stat = stat;
+        this.index = index;
+    }
+
+    get normalizedRelative() {
+        return normalize(this.path);
+    }
+
+    get normalizedAbsolute() {
+        return normalize(this.absolutePath);
+    }
+}
+
+class Runtime {
+    constructor(isChildIgnored, isChildDirIgnored, dot, stat, strict, follow, realpath) {
+        this.lstatCache = new collection.MapCache();
+        this.readdirCache = new collection.MapCache();
+        this.isChildIgnored = isChildIgnored;
+        this.isChildDirIgnored = isChildDirIgnored;
+        this.dot = dot;
+        this.stat = stat;
+        this.strict = strict;
+        this.follow = follow;
+        this.realpath = realpath;
+    }
+
+    clearCache() {
+        this.lstatCache.clear();
+        this.readdirCache.clear();
+    }
+}
+
+const emptyDynamicPart = [];
+
+class Pattern {
+    /**
+     * @param {StaticPart} staticPart static part of the pattern
+     * @param {Array<StaticValue | DynamicValue>} dynamicPart dynamic part of the pattern
+     * @param {Runtime} runtime runtime options from the glob
+     */
+    constructor(staticPart, dynamicPart, runtime, index, insideGlobStar = false, root = false) {
+        this.staticPart = staticPart;
+        this.dynamicPart = dynamicPart;
+        this.runtime = runtime;
+        this.root = root;
+        this.index = index;
+        this.insideGlobStar = insideGlobStar;
+    }
+
+    async process(processor) {
+        let stat;
+        const { runtime, staticPart } = this;
+        const { absolute: absoluteStaticPart } = staticPart;
+
+        const { lstatCache } = runtime;
+
+        if (lstatCache.has(absoluteStaticPart)) {
+            stat = await lstatCache.get(absoluteStaticPart);
         } else {
-            abs = path.resolve(f);
+            const promise = fs.lstat(absoluteStaticPart).catch(identity);
+            lstatCache.set(absoluteStaticPart, promise); // cache a promise for concurrent processes
+            stat = await promise;
+            lstatCache.set(absoluteStaticPart, stat); // replace the promise with the value
         }
 
-        if (is.windows) {
-            abs = abs.replace(/\\/g, "/");
-        }
-
-        return abs;
-    }
-
-    abort() {
-        this.aborted = true;
-        this.emit("abort");
-    }
-
-    pause() {
-        if (!this.paused) {
-            this.paused = true;
-            this.emit("pause");
-        }
-    }
-
-    resume() {
-        if (this.paused) {
-            this.emit("resume");
-            this.paused = false;
-            if (this._emitQueue.length) {
-                const eq = this._emitQueue;
-                this._emitQueue = [];
-
-                for (let i = 0; i < eq.length; i++) {
-                    this._emitMatch(...eq[i]);
-                }
-
-                if (this._processQueue.length === 0) {
-                    this._finish();
-                }
+        if (is.error(stat)) {
+            if (
+                runtime.strict
+                && stat.code !== "ENOENT" // race condition
+                && stat.code !== "ENOTDIR" // we tried to stat a directory wich does not exist, the path has / at the end
+                && stat.code !== "ELOOP" // too many links, symlink loop
+            ) {
+                throw stat;
             }
-            if (this._processQueue.length) {
-                const pq = this._processQueue;
-                this._processQueue = [];
-                for (let i = 0; i < pq.length; i++) {
-                    this._processCounter--;
-                    this._process(...pq[i]);
-                }
-            }
-        }
-    }
-
-    isChildrenIgnored(path) {
-        if (!this.ignore.length) {
-            return false;
-        }
-
-        return this.ignore.some((item) => {
-            return Boolean(item.gmatcher && item.gmatcher.test(path));
-        });
-    }
-
-    _process(pattern, index, inGlobStar, cb) {
-        if (this.aborted) {
+            // just swallow
             return;
         }
 
-        this._processCounter++;
-        if (this.paused) {
-            this._processQueue.push([pattern, index, inGlobStar, cb]);
-            return;
-        }
+        let { dynamicPart, index, insideGlobStar } = this;
 
-        // Get the first [n] parts of pattern that are all strings.
-        let n = 0;
-        while (is.string(pattern[n])) {
-            n++;
-        }
-        // now n is the index of the first one that is *not* a string.
+        if (!stat.isDirectory()) {
+            let follow = false;
 
-        // see if there's anything else
-        let prefix;
-        switch (n) {
-            // if not, then this is rather simple
-            case pattern.length: {
-                this._processSimple(pattern.join("/"), index, cb);
-                return;
-            }
-
-            case 0:
-                // pattern *starts* with some non-trivial item.
-                // going to readdir(cwd), but not include the prefix in matches.
-                prefix = null;
-                break;
-
-            default:
-                // pattern has some string bits in the front.
-                // whatever it starts with, whether that's 'absolute' like /foo/bar,
-                // or 'relative' like '../baz'
-                prefix = pattern.slice(0, n).join("/");
-                break;
-        }
-
-        const remain = pattern.slice(n);
-
-        // get the list of entries.
-        let read;
-        if (is.null(prefix)) {
-            read = ".";
-        } else if (is.pathAbsolute(prefix) || is.pathAbsolute(pattern.join("/"))) {
-            if (!prefix || !is.pathAbsolute(prefix)) {
-                prefix = `/${prefix}`;
-            }
-            read = prefix;
-        } else {
-            read = prefix;
-        }
-
-        const abs = this._makeAbs(read);
-
-        //if ignored, skip _processing
-        if (this.isChildrenIgnored(read)) {
-            return cb();
-        }
-
-        const isGlobStar = remain[0] === GlobExp.GLOBSTAR;
-        if (isGlobStar) {
-            this._processGlobStar(prefix, read, abs, remain, index, inGlobStar, cb);
-        } else {
-            this._processReaddir(prefix, read, abs, remain, index, inGlobStar, cb);
-        }
-    }
-
-    _processReaddir(prefix, read, abs, remain, index, inGlobStar, cb) {
-        this._readdir(abs, inGlobStar, (er, entries) => {
-            return this._processReaddir2(prefix, read, abs, remain, index, inGlobStar, entries, cb);
-        });
-    }
-
-    _processReaddir2(prefix, read, abs, remain, index, inGlobStar, entries, cb) {
-        // if the abs isn't a dir, then nothing can match!
-        if (!entries) {
-            return cb();
-        }
-
-        // It will only match dot entries if it starts with a dot, or if
-        // dot is set.    Stuff like @(.foo|.bar) isn't allowed.
-        const pn = remain[0];
-        const negate = Boolean(this.globexp.negate);
-        const rawGlob = pn._glob;
-        const dotOk = this.dot || rawGlob.charAt(0) === ".";
-
-        const matchedEntries = [];
-        for (let i = 0; i < entries.length; i++) {
-            const e = entries[i];
-            if (e.charAt(0) !== "." || dotOk) {
-                let m;
-                if (negate && !prefix) {
-                    m = !e.match(pn);
-                } else {
-                    m = e.match(pn);
-                }
-                if (m) {
-                    matchedEntries.push(e);
-                }
-            }
-        }
-
-        const len = matchedEntries.length;
-        // If there are no matched entries, then nothing matches.
-        if (len === 0) {
-            return cb();
-        }
-
-        // if this is the last remaining pattern bit, then no need for
-        // an additional stat *unless* the user has specified mark or
-        // stat explicitly. We know they exist, since readdir returned
-        // them.
-
-        if (remain.length === 1 && !this.mark && !this.stat) {
-            for (let i = 0; i < len; i++) {
-                let e = matchedEntries[i];
-                if (prefix) {
-                    if (prefix !== "/") {
-                        e = `${prefix}/${e}`;
-                    } else {
-                        e = prefix + e;
-                    }
-                }
-
-                if (e.charAt(0) === "/" && !this.nomount) {
-                    e = path.join(this.root, e);
-                }
-                this._emitMatch(index, e);
-            }
-            // This was the last one, and no stats were needed
-            return cb();
-        }
-
-        // now test all matched entries as stand-ins for that part
-        // of the pattern.
-        remain.shift();
-        for (let i = 0; i < len; i++) {
-            let e = matchedEntries[i];
-            if (prefix) {
-                if (prefix !== "/") {
-                    e = `${prefix}/${e}`;
-                } else {
-                    e = prefix + e;
-                }
-            }
-            this._process([e].concat(remain), index, inGlobStar, cb);
-        }
-        cb();
-    }
-
-    _emitMatch(index, e) {
-        if (this.aborted) {
-            return;
-        }
-
-        if (this.matches[index].has(e)) {
-            return;
-        }
-
-        if (this.isIgnored(e)) {
-            return;
-        }
-
-        const abs = is.pathAbsolute(e) ? e : this._makeAbs(e);
-
-        if (this.nodir) {
-            const c = this.cache.get(e) || this.cache.get(abs);
-            if (c === "DIR" || is.array(c)) {
-                return;
-            }
-        }
-
-        if (this.paused) {
-            this._emitQueue.push([index, e]);
-            return;
-        }
-
-        this.matches[index].add(e);
-
-        if (this.realpath) {
-            if (this.realpathCache.has(abs)) {
-                e = this.realpathCache.get(abs);
-            } else {
+            // handle symlink following for symlinks to directories
+            if (stat.isSymbolicLink()) {
+                // check if it is a directory symlink
+                let targetStat;
                 try {
-                    // benchmarks show that glob with sync realpath is fastest
-                    e = adone.fs.realpathSync(abs);
-                } catch (error) {
-                    if (error.syscall === "stat") {
-                        e = abs;
+                    targetStat = await fs.stat(absoluteStaticPart);
+                } catch (err) {
+                    if (err.code !== "ELOOP" && err.code !== "ENOENT" && runtime.strict) {
+                        throw err;
+                    }
+                    // found a loop or a dead link, just do not follow and emit the file
+                }
+                if (targetStat && targetStat.isDirectory()) {
+                    if (insideGlobStar) {
+                        if (runtime.follow) {
+                            follow = true;
+                            stat = targetStat;
+                        } else {
+                            // if we do not follow symlinks, then we just stop the recursion here
+                            // remove globstar from the dynamic part and follow the rest
+                            //
+                            dynamicPart = dynamicPart.slice(1);
+                            follow = true;
+                            stat = targetStat;
+                        }
                     } else {
-                        this.emit("error", error);
+                        follow = true;
+                        stat = targetStat;
                     }
                 }
             }
-        }
 
-        if (this.mark) {
-            e = this._mark(e);
-        }
-
-        if (this.absolute) {
-            e = is.pathAbsolute(e) ? e : this._makeAbs(e);
-        }
-
-        this.found.push(e);
-        this.emit("match", e, this.statCache.get(abs));
-
-    }
-
-    _readdirInGlobStar(abs, cb) {
-        if (this.aborted) {
-            return;
-        }
-
-        // follow all symlinked directories forever
-        // just proceed as if this is a non-globstar situation
-        if (this.follow) {
-            return this._readdir(abs, false, cb);
-        }
-
-        const _lstatcb = (er, lstat) => {
-            if (er && er.code === "ENOENT") {
-                return cb();
-            }
-
-            const isSym = lstat && lstat.isSymbolicLink();
-            this.symlinks[abs] = isSym;
-
-            // If it's not a symlink or a dir, then it's definitely a regular file.
-            // don't bother doing a readdir in that case.
-            if (!isSym && lstat && !lstat.isDirectory()) {
-                this.cache.set(abs, "FILE");
-                cb();
-            } else {
-                this._readdir(abs, false, cb);
-            }
-        };
-
-        const lstatkey = `lstat\0${abs}`;
-        const lstatcb = this.callbackCache.inflight(lstatkey, _lstatcb);
-
-        if (lstatcb) {
-            fs.lstat(abs, lstatcb);
-        }
-    }
-
-    _readdir(abs, inGlobStar, cb) {
-        if (this.aborted) {
-            return;
-        }
-
-        cb = this.callbackCache.inflight(`readdir\0${abs}\0${inGlobStar}`, cb);
-        if (!cb) {
-            return;
-        }
-
-        if (inGlobStar && !is.propertyOwned(this.symlinks, abs)) {
-            return this._readdirInGlobStar(abs, cb);
-        }
-
-        if (this.cache.has(abs)) {
-            const c = this.cache.get(abs);
-            if (!c || c === "FILE") {
-                return cb();
-            }
-
-            if (is.array(c)) {
-                return cb(null, c);
-            }
-        }
-
-        fs.readdir(abs, (er, entries) => {
-            if (er) {
-                this._readdirError(abs, er, cb);
-            } else {
-                this._readdirEntries(abs, entries, cb);
-            }
-        });
-    }
-
-    _readdirEntries(abs, entries, cb) {
-        if (this.aborted) {
-            return;
-        }
-
-        // if we haven't asked to stat everything, then just
-        // assume that everything in there exists, so we can avoid
-        // having to stat it a second time.
-        if (!this.mark && !this.stat) {
-            for (let i = 0; i < entries.length; i++) {
-                let e = entries[i];
-                if (abs === "/") {
-                    e = abs + e;
-                } else {
-                    e = `${abs}/${e}`;
+            if (!follow) {
+                // if there are no dynamic parts or it is **, we have an exact match
+                if (
+                    dynamicPart.length === 0
+                    || (dynamicPart.length === 1 && dynamicPart[0].isGlobstar) // **
+                ) {
+                    processor(new Entry(staticPart, stat, index));
                 }
-                this.cache.set(e, true);
+                // this is a file, but there are some dynamic things that must be resolved
+                // so it does not match
+                return;
             }
+            // this is a symlink to a directory we must follow
         }
 
-        this.cache.set(abs, entries);
-        return cb(null, entries);
-    }
+        // a directory or a symlink to a direcotry
 
-    _readdirError(f, er, cb) {
-        if (this.aborted) {
+        // now we know that this is a directory, we can check if it is ignored
+        if (runtime.isChildDirIgnored(staticPart.relative)) {
             return;
         }
 
-        // handle errors, and cache the information
-        switch (er.code) {
-            case "ENOTSUP": // can happen when working off some Windows Network Mapped Drives using DFS
-            case "ENOTDIR": { // totally normal. means it *does* exist.
-                const abs = this._makeAbs(f);
-                this.cache.set(abs, "FILE");
-                if (abs === this.cwdAbs) {
-                    const error = new Error(`${er.code} invalid cwd ${this.cwd}`);
-                    error.path = this.cwd;
-                    error.code = er.code;
-                    this.emit("error", error);
-                    this.abort();
-                }
-                break;
+        if (dynamicPart.length === 0) {
+            // no dynamic parts, so emit the directory
+            processor(new Entry(staticPart, stat, index));
+            return;
+        }
+        if (dynamicPart.length === 1) {
+            const part = dynamicPart[0];
+            if (part.isGlobstar) {
+                // dynamic part is **, emit the directory
+                // only root is marked with trailing / (virtual/** -> virtual/)
+                processor(new Entry(this.root ? staticPart.join("") : staticPart, stat, index));
+            } else if (part.isEmpty) {
+                // empty part means patterns like this a/, */ we have to emit only the directory itself
+                processor(new Entry(staticPart.join(""), stat, index)); // mark the path
+                return;
             }
-            case "ENOENT":
-            case "ELOOP":
-            case "ENAMETOOLONG":
-            case "UNKNOWN":
-                this.cache.set(this._makeAbs(f), false);
-                break;
+        }
 
-            default: // some unusual error. Treat as failure.
-                this.cache.set(this._makeAbs(f), false);
-                if (this.strict) {
-                    this.emit("error", er);
-                    this.abort();
+        if (dynamicPart.length >= 2) {
+            if (dynamicPart[0].isGlobstar) {
+                if (dynamicPart[1].isEmpty) {
+                    if (dynamicPart.length === 2) {
+                        // **/
+                        processor(new Entry(staticPart.join(""), stat, index));
+                    } else {
+                        // **/smth
+                        processor(new Pattern(staticPart, [dynamicPart[0]].concat(dynamicPart.slice(2)), runtime, index));
+                        return;
+                    }
+                } else if (dynamicPart[1].isGlobstar) {
+                    // consequent **/**
+                    processor(new Pattern(staticPart, dynamicPart.slice(1), runtime, index));
+                    return;
                 }
-                if (!this.silent) {
-                    adone.error("glob error", er);
+            }
+        }
+
+        if (dynamicPart[0].isEmpty) {
+            // /
+            processor(new Pattern(staticPart, dynamicPart.slice(1), runtime, index));
+            return;
+        }
+
+        if (dynamicPart[0].isCurrent) {
+            // handle "."
+            processor(new Pattern(staticPart.join("."), dynamicPart.slice(1), runtime, index));
+            return;
+        }
+
+        if (dynamicPart[0].isPrev) {
+            // handle ".."
+            processor(new Pattern(staticPart.join(".."), dynamicPart.slice(1), runtime, index));
+            return;
+        }
+
+        let dynamicSlice1 = null;
+        let dynamicSlice2 = null;
+
+        if (dynamicPart.length > 1 && dynamicPart[0].isGlobstar) {
+            if (dynamicPart[1].isCurrent) {
+                dynamicSlice2 = dynamicPart.slice(2);
+                processor(new Pattern(staticPart.join("."), dynamicSlice2, runtime, index));
+            } else if (dynamicPart[1].isPrev) {
+                dynamicSlice2 = dynamicPart.slice(2);
+                processor(new Pattern(staticPart.join(".."), dynamicSlice2, runtime, index));
+            }
+        }
+
+        // there are some dynamic parts, go further
+
+        const { readdirCache } = runtime;
+
+        let files;
+        if (readdirCache.has(absoluteStaticPart)) {
+            files = await readdirCache.get(absoluteStaticPart);
+        } else {
+            const promise = fs.readdir(absoluteStaticPart).catch(identity);
+            readdirCache.set(absoluteStaticPart, promise);
+            files = await promise;
+            readdirCache.set(absoluteStaticPart, files);
+        }
+
+        if (!is.array(files)) {
+            // race condition if ENOENT
+            if (files.code !== "ENOENT" && runtime.strict) {
+                throw files;
+            }
+            // just swallow
+            throw files;
+        }
+
+        for (const file of files) {
+            if (!runtime.dot && file[0] === ".") {
+                if (dynamicPart[0].isGlobstar) {
+                    if (dynamicPart.length === 1) {
+                        // ** and dot is false, does not match
+                        continue;
+                    }
+                    if (!dynamicPart[1].isDotted) {
+                        // the next pattern is not explicitly dotted, does not match
+                        continue;
+                    }
+                    // we have **/.smth
+                } else if (!dynamicPart[0].isDotted) {
+                    // the pattern is not explicitly dotted, does not match
+                    continue;
                 }
-                break;
-        }
+                // we have either **/.smth or .smth
+            }
 
-        return cb();
-    }
+            const nextStaticPart = staticPart.join(file);
 
-    _processGlobStar(prefix, read, abs, remain, index, inGlobStar, cb) {
-        this._readdir(abs, inGlobStar, (er, entries) => {
-            this._processGlobStar2(prefix, read, abs, remain, index, inGlobStar, entries, cb);
-        });
-    }
-
-    _processGlobStar2(prefix, read, abs, remain, index, inGlobStar, entries, cb) {
-        // no entries means not a dir, so it can never have matches
-        // foo.txt/** doesn't match foo.txt
-        if (!entries) {
-            return cb();
-        }
-
-        // test without the globstar, and with every child both below
-        // and replacing the globstar.
-        const remainWithoutGlobStar = remain.slice(1);
-        const gspref = prefix ? [prefix] : [];
-        const noGlobStar = gspref.concat(remainWithoutGlobStar);
-
-        // the noGlobStar pattern exits the inGlobStar state
-        this._process(noGlobStar, index, false, cb);
-
-        const isSym = this.symlinks[abs];
-        const len = entries.length;
-
-        // If it's a symlink, and we're in a globstar, then stop
-        if (isSym && inGlobStar) {
-            return cb();
-        }
-
-        for (let i = 0; i < len; i++) {
-            const e = entries[i];
-            if (e.charAt(0) === "." && !this.dot) {
+            if (runtime.isChildIgnored(nextStaticPart.relative)) {
                 continue;
             }
 
-            // these two cases enter the inGlobStar state
-            const instead = gspref.concat(entries[i], remainWithoutGlobStar);
-            this._process(instead, index, true, cb);
+            const childDirIgnored = runtime.isChildDirIgnored(nextStaticPart.relative);
 
-            const below = gspref.concat(entries[i], remain);
-            this._process(below, index, true, cb);
-        }
+            if (dynamicPart[0].isGlobstar) {
+                // static part that includes the file and the same dynamic part
+                processor(new Pattern(nextStaticPart, dynamicPart, runtime, index, true));
 
-        cb();
-    }
+                // it can match the next pattern
+                if (dynamicPart.length > 1) {
+                    // here we will not meet **/**
+                    if (dynamicPart[1].test(file)) {
+                        // it matches the part after the globstar, assume the globstar matches nothing src/**/a -> src/a.
+                        // remove the globstar and the next thing
 
-    _processSimple(prefix, index, cb) {
-        // XXX review this. Shouldn't it be doing the mounting etc
-        // before doing stat? kinda weird?
-        this._stat(prefix, (er, exists) => {
-            this._processSimple2(prefix, index, er, exists, cb);
-        });
-    }
-
-    _processSimple2(prefix, index, er, exists, cb) {
-        // If it doesn't exist, then just mark the lack of results
-        if (!exists) {
-            return cb();
-        }
-
-        if (prefix && is.pathAbsolute(prefix) && !this.nomount) {
-            const trail = /[\/\\]$/.test(prefix);
-            if (prefix.charAt(0) === "/") {
-                prefix = path.join(this.root, prefix);
-            } else {
-                prefix = path.resolve(this.root, prefix);
-                if (trail) {
-                    prefix += "/";
-                }
-            }
-        }
-
-        if (is.windows) {
-            prefix = prefix.replace(/\\/g, "/");
-        }
-
-        // Mark this as a match
-        this._emitMatch(index, prefix);
-        cb();
-    }
-
-    _stat(f, cb) {
-        if (f.length > this.maxLength) {
-            return cb();
-        }
-
-        const abs = this._makeAbs(f);
-        const needDir = f.slice(-1) === "/";
-
-        if (!this.stat && this.cache.has(abs)) {
-            let c = this.cache.get(abs);
-
-            if (is.array(c)) {
-                c = "DIR";
-            }
-
-            // It exists, but maybe not how we need it
-            if (!needDir || c === "DIR") {
-                return cb(null, c);
-            }
-
-            if (needDir && c === "FILE") {
-                return cb();
-            }
-
-            // otherwise we have to stat, because maybe c=true
-            // if we know it exists, but not what it is.
-        }
-
-        const stat = this.statCache.get(abs);
-        if (!is.undefined(stat)) {
-            if (stat === false) {
-                return cb(null, stat);
-            }
-            const type = stat.isDirectory() ? "DIR" : "FILE";
-            if (needDir && type === "FILE") {
-                return cb();
-            }
-            return cb(null, type, stat);
-
-
-        }
-
-        const _lstatcb = (er, lstat) => {
-            if (lstat && lstat.isSymbolicLink()) {
-                // If it's a symlink, then treat it as the target, unless
-                // the target does not exist, then treat it as a file.
-                return fs.stat(abs, (er, stat) => {
-                    if (er) {
-                        this._stat2(f, abs, null, lstat, cb);
-                    } else {
-                        this._stat2(f, abs, er, stat, cb);
+                        // if there are no other things we have an exact match
+                        if (dynamicPart.length === 2) {
+                            // if child dir with the same name is ignored, we have to stat to determine whether this is a directory or not
+                            if (runtime.stat || childDirIgnored) {
+                                processor(new Pattern(nextStaticPart, emptyDynamicPart, runtime, index));
+                            } else {
+                                processor(new Entry(nextStaticPart, undefined, index));
+                            }
+                        } else {
+                            if (!dynamicSlice2) {
+                                dynamicSlice2 = dynamicPart.slice(2);
+                            }
+                            processor(new Pattern(nextStaticPart, dynamicSlice2, runtime, index));
+                        }
                     }
-                });
+                } else {
+                    // the dynamic part is only **, we have exact match
+                    // but we have no stat and dont know what it is, if we want stats we have to go further
+                    // also, directory symlinks are handled before
+
+                    // this case must be handlded by the above pattern
+
+                    // if (runtime.stat) {
+                    //     processor(new Pattern(nextStaticPart, emptyDynamicPart, runtime));
+                    // } else {
+                    //     processor(new Entry(nextStaticPart, undefined));
+                    // }
+                }
+            } else if (dynamicPart[0].test(file)) { // it matches the part, so we have less dynamic parts
+                // if there are no other dynamic parts we have an exact match
+                if (dynamicPart.length === 1) {
+                    // if child dir with the same name is ignored, we have to stat to determine whether this is a directory or not
+                    if (runtime.stat || childDirIgnored) {
+                        processor(new Pattern(nextStaticPart, emptyDynamicPart, runtime, index));
+                    } else {
+                        processor(new Entry(nextStaticPart, undefined, index));
+                    }
+                } else {
+                    if (!dynamicSlice1) {
+                        dynamicSlice1 = dynamicPart.slice(1);
+                    }
+                    processor(new Pattern(nextStaticPart, dynamicSlice1, runtime, index));
+                }
+
             }
-            this._stat2(f, abs, er, lstat, cb);
-
-        };
-
-        const statcb = this.callbackCache.inflight(`stat\0${abs}`, _lstatcb);
-        if (statcb) {
-            fs.lstat(abs, statcb);
         }
     }
 
-    _stat2(f, abs, er, stat, cb) {
-        if (er && (er.code === "ENOENT" || er.code === "ENOTDIR")) {
-            this.statCache.set(abs, false);
-            return cb();
-        }
-
-        this.statCache.set(abs, stat);
-
-        if (abs.slice(-1) === "/" && stat && !stat.isDirectory()) {
-            return cb(null, false, stat);
-        }
-
-
-        let c = true;
-        if (stat) {
-            c = stat.isDirectory() ? "DIR" : "FILE";
-        }
-        this.cache.set(abs, this.cache.get(abs) || c);
-
-        const needDir = f.slice(-1) === "/";
-
-        if (needDir && c === "FILE") {
-            return cb();
-        }
-
-        return cb(null, c, stat);
+    inspect() {
+        return `<Pattern "${joinMany([this.staticPart, ...this.dynamicPart.map((x) => {
+            if (is.regexp(x)) {
+                return x.result[0].input;
+            }
+            return x;
+        })])}">`;
     }
 }
 
-const isNegative = (pattern) => {
-    if (is.string(pattern)) {
-        return pattern[0] === "!";
-    }
-    if (pattern instanceof RegExp) {
-        return true;
-    }
-    return false;
-};
+const absoluteGetter = (entry) => entry.absolutePath;
+const relativeGetter = (entry) => entry.path;
+const normalizedAbsoluteGetter = (entry) => entry.normalizedAbsolute;
+const normalizedRelativeGetter = (entry) => entry.normalizedRelative;
 
-class GlobCore extends adone.stream.CoreStream {
-    constructor(patterns, options = {}) {
+class Glob extends EventEmitter {
+    constructor(patterns, {
+        cwd = process.cwd(),
+        stat = false,
+        dot = false,
+        nodir = false,
+        strict = true,
+        follow = false,
+        unique = true,
+        rawEntries = false,
+        absolute = false,
+        normalized = false,
+        realpath = false,
+        index = false
+    } = {}) {
         super();
-        if (!options) {
-            options = {};
+        this.emitQueue = new collection.Queue();
+        this.processQueue = new collection.Queue();
+
+        const matchPatterns = [];
+
+        const ignoreList = [];
+        for (const pattern of util.arrify(patterns)) {
+            if (pattern[0] === "!") {
+                ignoreList.push(pattern.slice(1));
+            } else {
+                matchPatterns.push(pattern);
+            }
         }
 
-        patterns = adone.util.arrify(patterns);
-        let activeGlobs = 0;
-        this.globs = [];
-        if (patterns.length) {
-            const negativeMatchers = [];
-            patterns.forEach((pattern, patternIndex) => {
-                if (isNegative(pattern) && !options.nonegate) {
-                    if (pattern[0] === "!") {
-                        pattern = pattern.slice(1);
-                    }
-                    negativeMatchers.push(new GlobExp(pattern));
-                } else {
-                    const g = new Glob(pattern, options);
-                    ++activeGlobs;
+        let isIgnored = adone.falsely;
+        let isChildIgnored = adone.falsely;
+        let isChildDirIgnored = adone.falsely;
 
-                    g.on("match", (file, stat) => {
-                        if (!options.stat && !options.patternIndex) {
-                            this.write(file);
-                            return;
-                        }
-                        const res = { path: file };
-                        if (options.stat) {
-                            res.stat = stat;
-                        }
-                        if (options.patternIndex) {
-                            res.patternIndex = patternIndex;
-                        }
-                        this.write(res);
-                    });
+        if (ignoreList.length) {
+            const childPatterns = [];
+            const childDirPatterns = [];
+            const overallPatterns = [];
+            for (const pattern of ignoreList) {
+                const re = util.match.makeRe(pattern, { dot: true });
 
-                    g.on("end", () => {
-                        if (--activeGlobs === 0) {
-                            this.end();
-                        }
-                    });
+                // in this case we can exclude entrire subtrees while walking
+                if (pattern.endsWith("/**")) {
+                    childPatterns.push(re); // for childs
 
-                    g.on("error", (error) => {
-                        this.emit("error", error);
-                    });
-                    this.globs.push(g);
+                    const dirRe = util.match.makeRe(pattern.slice(0, -3), { dot: true }); // for child dir
+                    childDirPatterns.push(dirRe);
+
+                } else if (pattern.endsWith("/**/*")) {
+                    childPatterns.push(re); // only for childs
                 }
-            });
-            if (negativeMatchers.length) {
-                this.filter((match) => {
-                    const path = (options.stat || options.patternIndex) ? match.path : match;
-                    for (let i = 0; i < negativeMatchers.length; i++) {
-                        if (negativeMatchers[i].test(path)) {
-                            return false;
+                overallPatterns.push(re);
+            }
+
+            // we can have no patterns for child nodes
+            if (childPatterns.length) {
+                isChildIgnored = (path) => {
+                    for (const re of childPatterns) {
+                        if (re.test(path)) {
+                            return true;
                         }
+                        return false;
                     }
-                    return true;
-                });
+                };
             }
-            if (!options.nonunique) {
-                if (options.stat) {
-                    this.unique((x) => x.path);
-                } else {
-                    this.unique();
+
+            if (childDirPatterns.length) {
+                isChildDirIgnored = (path) => {
+                    for (const re of childDirPatterns) {
+                        if (re.test(path)) {
+                            return true;
+                        }
+                        return false;
+                    }
+                };
+            }
+
+            // we will always have at least one pattern here
+            isIgnored = (path) => {
+                for (const re of overallPatterns) {
+                    if (re.test(path)) {
+                        return true;
+                    }
                 }
-            }
-        } else if (options.end !== false) {
-            process.nextTick(() => this.end());
+                return false;
+            };
         }
+
+        /**
+         * Runtime that is passed to the patterns
+         */
+        this.runtime = new Runtime(
+            isChildIgnored,
+            isChildDirIgnored,
+            dot,
+            stat || nodir, // if nodir or mark is enabled we have to stat all the entries to know where directories are
+            strict,
+            follow,
+            realpath
+        );
+
+        this.nodir = nodir;
+        this.cwd = cwd;
+        this.unique = unique;
+        this.rawEntries = rawEntries || stat || index;
+        this.absolute = absolute;
+        this.normalized = normalized;
+        this._ended = false;
+        this._paused = true;
+        this._resumeScheduled = false;
+        this._pausedAfterResume = false;
+        this._endEmitted = false;
+
+        this._processes = 0;
+        this.__processor = this._processor.bind(this);
+        this.__pathGetter = this.normalized
+            ? this.absolute ? normalizedAbsoluteGetter : normalizedRelativeGetter
+            : this.absolute ? absoluteGetter : relativeGetter;
+        this.__isIgnored = isIgnored;
+
+        this.emitCache = unique && new collection.MapCache();
+        this.__onError = (err) => this.emit("error", err);
+        this.once("end", () => {
+            this.runtime.clearCache();
+            this.emitCache && this.emitCache.clear();
+        });
+
+        for (let i = 0; i < matchPatterns.length; ++i) {
+            const expanded = util.braces.expand(matchPatterns[i]);
+            for (const subpattern of expanded) {
+                const compiled = this._getFirstPattern(subpattern, i);
+                if (isIgnored(compiled.staticPart.relative)) {
+                    continue;
+                } else {
+                    this.processQueue.push(compiled);
+                }
+            }
+        }
+    }
+
+    _normalizeDynamicPart(parts) {
+        const normalized = [];
+        for (let i = 0; i < parts.length; ++i) {
+            const part = parts[i];
+            const lastPart = normalized.length > 0 && normalized[normalized.length - 1];
+            if (part === "**" && lastPart === "**") { // **/** === **
+                continue;
+            }
+            normalized.push(part);
+        }
+        return normalized;
+    }
+
+    _getFirstPattern(pattern, index) {
+        const parts = split(pattern);
+        let i;
+        for (i = 0; i < parts.length; ++i) {
+            const part = parts[i];
+            // the first glob part means that the static part is over and the dynamic part starts
+            if (is.glob(part)) {
+                break;
+            }
+        }
+        let relativeStaticPart;
+        let absoluteStaticPart;
+
+        if (i === 0) { // there is no static part, the pattern is relative
+            absoluteStaticPart = this.cwd;
+            relativeStaticPart = "";
+        } else {
+            if (parts[0] === "") { // the pattern is absolute
+                relativeStaticPart = join(resolve("/"), joinMany(parts.slice(1, i)));
+                absoluteStaticPart = relativeStaticPart;
+            } else { // the pattern is relative
+                relativeStaticPart = joinMany(parts.slice(0, i));
+                absoluteStaticPart = join(this.cwd, relativeStaticPart);
+            }
+        }
+        const staticPart = new StaticPart(absoluteStaticPart, relativeStaticPart); // normalize absolute?
+        const dynamicPart = this._normalizeDynamicPart(parts.slice(i)).map((x) => {
+            if (is.glob(x)) {
+                return new DynamicValue(x);
+            }
+            return new StaticValue(x);
+        });
+        return new Pattern(staticPart, dynamicPart, this.runtime, index, false, true);
+    }
+
+    isPaused() {
+        return this._paused;
     }
 
     pause() {
-        for (const glob of this.globs) {
-            glob.pause();
+        this._paused = true;
+        if (this._resumeScheduled) {
+            this._pausedAfterResume = true;
         }
+        return this;
+    }
+
+    resume() {
+        if (!this.isPaused() || this._ended) {
+            return this;
+        }
+        if (this._resumeScheduled) {
+            if (this._pausedAfterResume) {
+                this._pausedAfterResume = false;
+            }
+            return this;
+        }
+        this._resumeScheduled = true;
+        process.nextTick(() => {
+            if (this._ended) {
+                return;
+            }
+            this._resumeScheduled = false;
+            if (this._pausedAfterResume) {
+                this._pausedAfterResume = false;
+                return;
+            }
+            while (!this.emitQueue.empty) {
+                this.emit("match", this.emitQueue.pop());
+            }
+            if (this.processQueue.empty && !this._endEmitted) {
+                this.emit("end");
+                this._endEmitted = true;
+            } else {
+                while (!this.processQueue.empty) {
+                    this.process(this.processQueue.pop());
+                }
+            }
+            this._paused = false;
+        });
+        return this;
+    }
+
+    end() {
+        if (this._ended || this._endEmitted) {
+            return this;
+        }
+        this._ended = true;
+        this.processQueue.clear();
+        this.emitQueue.clear();
+        if (this.isPaused()) {
+            process.nextTick(() => {
+                this.emit("end");
+                this._endEmitted = true;
+            });
+        }
+        return this;
+    }
+
+    _processor(sub) {
+        if (this._ended) {
+            return;
+        }
+        if (sub instanceof Pattern) {
+            if (this._paused) {
+                this.processQueue.push(sub);
+            } else {
+                this.process(sub);
+            }
+            return;
+        }
+        if (this.nodir && sub.stat.isDirectory()) { // it nodir is set, stats are always present
+            return;
+        }
+        const path = this.__pathGetter(sub);
+        if (this.__isIgnored(path)) {
+            return;
+        }
+        if (this.unique) {
+            if (this.emitCache.has(path)) {
+                return;
+            }
+            this.emitCache.set(path, true);
+        }
+        if (!this.rawEntries) {
+            sub = path;
+        }
+        if (this._paused) {
+            this.emitQueue.push(sub);
+        } else {
+            this.emit("match", sub);
+        }
+    }
+
+    async process(pattern) {
+        ++this._processes;
+        await pattern.process(this.__processor).catch(this.__onError);
+        --this._processes;
+        if (this._processes === 0 && this.emitQueue.empty && this.processQueue.empty && !this._endEmitted) {
+            this.emit("end");
+            this._endEmitted = true;
+        }
+    }
+}
+
+class GlobStream extends CoreStream {
+    constructor(patterns, options) {
+        super();
+        this.glob = new Glob(patterns, options);
+        this.glob
+            .on("end", () => super.end())
+            .on("match", (match) => this.write(match))
+            .on("error", (err) => {
+                // if we have an error we immediately stop the stream
+                this.emit("error", err);
+                this.end();
+            });
+    }
+
+    pause() {
+        this.glob.pause();
         return super.pause();
     }
 
     resume() {
-        const res = super.resume();
-        for (const glob of this.globs) {
-            glob.resume();
-        }
-        return res;
+        this.glob.resume();
+        return super.resume();
     }
 
-    end(...args) {
-        for (const glob of this.globs) {
-            glob.abort();
-        }
-        super.end(...args);
+    end() {
+        this.glob.end();
+        return this;
     }
 }
 
 export default function glob(patterns, options) {
-    return new GlobCore(patterns, options);
+    return new GlobStream(patterns, options);
 }
 
-glob.Core = GlobCore;
 glob.Glob = Glob;

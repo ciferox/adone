@@ -1,19 +1,72 @@
 const { is, x, promise: { promisify }, std } = adone;
 
 const fs = adone.lazify({
-    readlink: () => promisify(std.fs.readlink),
-    unlink: () => promisify(std.fs.unlink), // we have rm, should we have this one?
-    chmod: () => promisify(std.fs.chmod),
-    chown: () => promisify(std.fs.chown),
-    rmdir: () => promisify(std.fs.rmdir),
-    readdir: () => promisify(std.fs.readdir),
-    lstat: () => promisify(std.fs.lstat),
-    stat: () => promisify(std.fs.stat),
-    writeFile: () => promisify(std.fs.writeFile),
-    appendFile: () => promisify(std.fs.appendFile),
-    access: () => promisify(std.fs.access),
-    symlink: () => promisify(std.fs.symlink),
-    truncate: () => promisify(std.fs.truncate),
+    readlink: () => (path, options) => new Promise((resolve, reject) => {
+        std.fs.readlink(path, options, (err, result) => {
+            err ? reject(err) : resolve(result);
+        });
+    }),
+    unlink: () => (path) => new Promise((resolve, reject) => {
+        std.fs.unlink(path, (err) => {
+            err ? reject(err) : resolve();
+        });
+    }),
+    chmod: () => (path, mode) => new Promise((resolve, reject) => {
+        std.fs.chmod(path, mode, (err) => {
+            err ? reject(err) : resolve();
+        });
+    }),
+    chown: () => (path, uid, gid) => new Promise((resolve, reject) => {
+        std.fs.chown(path, uid, gid, (err) => {
+            err ? reject(err) : resolve();
+        });
+    }),
+    rmdir: () => (path) => new Promise((resolve, reject) => {
+        std.fs.rmdir(path, (err) => {
+            err ? reject(err) : resolve();
+        });
+    }),
+    readdir: () => (path, options) => new Promise((resolve, reject) => {
+        std.fs.readdir(path, options, (err, files) => {
+            err ? reject(err) : resolve(files);
+        });
+    }),
+    lstat: () => (path) => new Promise((resolve, reject) => {
+        std.fs.lstat(path, (err, stats) => {
+            err ? reject(err) : resolve(stats);
+        });
+    }),
+    stat: () => (path) => new Promise((resolve, reject) => {
+        std.fs.stat(path, (err, stat) => {
+            err ? reject(err) : resolve(stat);
+        });
+    }),
+    writeFile: () => (file, data, options) => new Promise((resolve, reject) => {
+        std.fs.writeFile(file, data, options, (err) => {
+            err ? reject(err) : resolve();
+        });
+    }),
+    appendFile: () => (file, data, options) => new Promise((resolve, reject) => {
+        std.fs.appendFile(file, data, options, (err) => {
+            err ? reject(err) : resolve();
+        });
+    }),
+    appendFileSync: () => (file, data, options) => std.fs.appendFileSync(file, data, options),
+    access: () => (path, mode) => new Promise((resolve, reject) => {
+        std.fs.access(path, mode, (err) => {
+            err ? reject(err) : resolve();
+        });
+    }),
+    symlink: () => (target, path, type) => new Promise((resolve, reject) => {
+        std.fs.symlink(target, path, type, (err) => {
+            err ? reject(err) : resolve();
+        });
+    }),
+    truncate: () => (path, len) => new Promise((resolve, reject) => {
+        std.fs.truncate(path, len, (err) => {
+            err ? reject(err) : resolve();
+        });
+    }),
     // realpath: () => promisify(std.fs.realpath),
     rm: "./rm",
     File: "./file",
@@ -39,7 +92,16 @@ const fs = adone.lazify({
     which: ["./which", (mod) => mod.which],
     whichSync: ["./which", (mod) => mod.whichSync],
     TailWatcher: "./tail_watcher",
-    readdirp: "./readdirp"
+    readdirp: "./readdirp",
+    engine: "./engines",
+    lstatSync: () => (path) => std.fs.lstatSync(path),
+    statSync: () => (path) => std.fs.statSync(path),
+    writeFileSync: () => (path, data, options) => std.fs.writeFileSync(path, data, options),
+    readdirSync: () => (path, options) => std.fs.readdirSync(path, options),
+    accessSync: () => (path, mode) => std.fs.accessSync(path, mode),
+    unlinkSync: () => (path) => std.fs.unlinkSync(path),
+    createReadStream: () => (path, options) => std.fs.createReadStream(path, options),
+    createWriteStream: () => (path, options) => std.fs.createWriteStream(path, options)
 }, adone.asNamespace(exports), require);
 
 const lazy = adone.lazify({
@@ -77,27 +139,68 @@ const stringToFlockFlags = (flag) => {
     }
 };
 
-export const fd = {
-    open: promisify(std.fs.open),
-    openSync: std.fs.openSync,
-    close: promisify(std.fs.close),
-    closeSync: std.fs.closeSync,
-    utimes: promisify(std.fs.futimes),
-    utimesSync: std.fs.futimesSync,
-    stat: promisify(std.fs.fstat),
-    statSync: std.fs.fstat,
-    truncate: promisify(std.fs.ftruncate),
-    truncateSync: std.fs.ftruncateSync,
-    read: promisify(std.fs.read),
-    readSync: std.fs.readSync,
-    write: promisify(std.fs.write),
-    writeSync: std.fs.writeSync,
-    sync: promisify(std.fs.fsync),
-    syncSync: std.fs.fsyncSync,
-    chown: promisify(std.fs.fchown),
-    chmod: promisify(std.fs.fchmod),
-
-    seek: (fd, offset, whence) => {
+export const fd = adone.lazify({
+    open: () => (path, flags, mode) => new Promise((resolve, reject) => {
+        std.fs.open(path, flags, mode, (err, fd) => {
+            err ? reject(err) : resolve(fd);
+        });
+    }),
+    openSync: () => (path, flags, mode) => std.fs.openSync(path, flags, mode), // wrapper to make it mockable
+    close: () => (fd) => new Promise((resolve, reject) => {
+        std.fs.close(fd, (err) => {
+            err ? reject(err) : resolve();
+        });
+    }),
+    closeSync: () => (fd) => std.fs.closeSync(fd),
+    utimes: () => (fd, atime, mtime) => new Promise((resolve, reject) => {
+        std.fs.futimes(fd, atime, mtime, (err) => {
+            err ? reject(err) : resolve();
+        });
+    }),
+    utimesSync: () => (fd, atime, mtime) => std.fs.futimesSync(fd, atime, mtime),
+    stat: () => (fd) => new Promise((resolve, reject) => {
+        std.fs.fstat(fd, (err, stats) => {
+            err ? reject(err) : resolve(stats);
+        });
+    }),
+    statSync: () => (fd) => std.fs.fstat(fd),
+    truncate: () => (fd, len) => new Promise((resolve, reject) => {
+        std.fs.ftruncate(fd, len, (err) => {
+            err ? reject(err) : resolve();
+        });
+    }),
+    truncateSync: () => (fd, len) => std.fs.ftruncateSync(fd, len),
+    read: () => (fd, buffer, offset, length, position) => new Promise((resolve, reject) => {
+        std.fs.read(fd, buffer, offset, length, position, (err, bytesRead) => {
+            err ? reject(err) : resolve(bytesRead);
+        });
+    }),
+    readSync: () => (fd, buffer, offset, length, position) => std.fs.readSync(fd, buffer, offset, length, position),
+    write: () => (fd, buffer, offset, length, position) => new Promise((resolve, reject) => {
+        std.fs.write(fd, buffer, offset, length, position, (err, bytesWritten) => {
+            err ? reject(err) : resolve(bytesWritten);
+        });
+    }),
+    writeSync: () => (fd, buffer, offset, length, position) => std.fs.writeSync(fd, buffer, offset, length, position),
+    sync: () => (fd) => new Promise((resolve, reject) => {
+        std.fs.fsync(fd, (err) => {
+            err ? reject(err) : resolve();
+        });
+    }),
+    syncSync: () => (fd) => std.fs.fsyncSync(fd),
+    chown: () => (fd, uid, gid) => new Promise((resolve, reject) => {
+        std.fs.fchown(fd, uid, gid, (err) => {
+            err ? reject(err) : resolve();
+        });
+    }),
+    chownSYnc: () => (fd, uid, gid) => std.fs.fchownSync(fd, uid, gid),
+    chmod: () => (fd, mode) => new Promise((resolve, reject) => {
+        std.fs.fchmod(fd, mode, (err) => {
+            err ? reject(err) : resolve();
+        });
+    }),
+    chmodSync: () => (fd, mode) => std.fs.fchmodSync(fd, mode),
+    seek: () => (fd, offset, whence) => {
         return new Promise((resolve, reject) => {
             lazy.seek(fd, offset, whence, (err, filePos) => {
                 if (err) {
@@ -107,7 +210,7 @@ export const fd = {
             });
         });
     },
-    lock: (fd, flags) => {
+    lock: () => (fd, flags) => {
         const oper = stringToFlockFlags(flags);
         return new Promise((resolve, reject) => {
             lazy.flock(fd, oper, (err) => {
@@ -118,7 +221,7 @@ export const fd = {
             });
         });
     }
-};
+});
 
 const ok = /^v[0-5]\./.test(process.version);
 
@@ -130,16 +233,16 @@ let splitRootRe;
 // Regexp that finds the next partion of a (partial) path
 // result is [base_with_slash, base], e.g. ['somedir/', 'somedir']
 if (is.windows) {
-    nextPartRe = /(.*?)(?:[\/\\]+|$)/g;
+    nextPartRe = /(.*?)(?:[/\\]+|$)/g;
 } else {
-    nextPartRe = /(.*?)(?:[\/]+|$)/g;
+    nextPartRe = /(.*?)(?:[/]+|$)/g;
 }
 
 // Regex to find the device root, including trailing slash. E.g. 'c:\\'.
 if (is.windows) {
-    splitRootRe = /^(?:[a-zA-Z]:|[\\\/]{2}[^\\\/]+[\\\/][^\\\/]+)?[\\\/]*/;
+    splitRootRe = /^(?:[a-zA-Z]:|[\\/]{2}[^\\/]+[\\/][^\\/]+)?[\\/]*/;
 } else {
-    splitRootRe = /^[\/]*/;
+    splitRootRe = /^[/]*/;
 }
 
 export const realpath = (p, cache) => {
@@ -415,11 +518,6 @@ export const realpathSync = (p, cache) => {
     }
 };
 
-export const lstatSync = std.fs.lstatSync;
-export const statSync = std.fs.statSync;
-export const writeFileSync = std.fs.writeFileSync;
-export const readdirSync = std.fs.readdirSync;
-
 const expandReadOptions = (options = {}) => {
     if (is.string(options)) {
         return { encoding: options };
@@ -510,8 +608,6 @@ export const constants = {
     LOCK_UN: 8
 };
 
-export const accessSync = std.fs.accessSync;
-
 export const exists = (path) => adone.fs.access(path, constants.F_OK).then(() => true, (err) => {
     if (err.code === "ENOENT") {
         return false;
@@ -521,7 +617,7 @@ export const exists = (path) => adone.fs.access(path, constants.F_OK).then(() =>
 
 export const existsSync = (path) => {
     try {
-        accessSync(path, constants.F_OK);
+        fs.accessSync(path, constants.F_OK);
         return true;
     } catch (err) {
         if (err.code === "ENOENT") {
@@ -690,10 +786,6 @@ export const statVFS = (path) => new Promise((resolve, reject) => {
     });
 });
 
-export const unlinkSync = std.fs.unlinkSync;
-export const createReadStream = std.fs.createReadStream;
-export const createWriteStream = std.fs.createWriteStream;
-
 const TEMPLATE_PATTERN = /XXXXXX/;
 const osTmpDir = std.os.tmpdir();
 export const tmpName = async ({ name = null, tries = 3, template = null, dir = osTmpDir, prefix = "tmp-", ext = "" } = {}) => {
@@ -717,7 +809,7 @@ export const tmpName = async ({ name = null, tries = 3, template = null, dir = o
         const path = std.path.join(dir, `${prefix}${process.pid}${adone.text.random(12)}${ext}`);
 
         try {
-            await adone.fs.stat(path);
+            await adone.fs.stat(path); // eslint-disable-line no-await-in-loop
             continue;
         } catch (err) {
             return path;
@@ -739,7 +831,7 @@ export const lookup = async (path) => {
     } catch (err) {
         for (const ext of [".js"]) {
             const newPath = `${path}${ext}`;
-            if (await fs.exists(newPath)) {
+            if (await fs.exists(newPath)) { // eslint-disable-line no-await-in-loop
                 return `${path}${ext}`;
             }
         }

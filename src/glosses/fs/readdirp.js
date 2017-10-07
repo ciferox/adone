@@ -17,7 +17,7 @@ const normalizeFilter = (filter) => {
             other.push(x);
         }
     }
-    const matcher = adone.util.matchPath(other);
+    const matcher = adone.util.matchPath(other, null, { dot: true });
     return (x) => functions.some((y) => y(x)) || matcher(x.name); // cannot mix negate and other?
 };
 
