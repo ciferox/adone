@@ -1,0 +1,70 @@
+{
+    "name": "adone",
+    "description": "The generalized core of 'cyber-fractal systems' infrastructure.",
+    "version": "0.6.60",
+    "author": "Adone Core Team <info@adone.io>",
+    "structure": {
+        "src": {
+            "bin": {
+                "$task": "adoneTranspileExe",
+                "$src": "src/cli/adone.js",
+                "$dst": "bin"
+            },
+            "cli": {
+                "$task": "adoneTranspile",
+                "$src": [
+                    "src/cli/**/*",
+                    "!src/cli/adone.js"
+                ],
+                "$dst": "lib/cli"
+            },
+            "glosses": {
+                "js": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/**/*.js",
+                    "$dst": "lib/glosses"
+                },
+                "dot": {
+                    "$task": "adoneDotCompiler",
+                    "$src": "src/glosses/schema/__/dot/*.jst",
+                    "$dst": "lib/glosses/schema/__/dot"
+                },
+                "other": {
+                    "$src": [
+                        "src/glosses/**/*",
+                        "!src/glosses/**/*.js",
+                        "!src/glosses/schema/__/dot/*"
+                    ],
+                    "$dst": "lib/glosses"
+                }
+            },
+            "vendor": {
+                "$src": "src/vendor/**/*.js",
+                "$dst": "lib/vendor"
+            },
+            "npm": {
+                "$src": "src/npm/**/*.js",
+                "$dst": "lib/npm"
+            },
+            "index": {
+                "$task": "transpile",
+                "$src": "src/index.js",
+                "$dst": "lib"
+            },
+            "omnitron": {
+                "js": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/omnitron/**/*.js",
+                    "$dst": "lib/omnitron"
+                },
+                "other": {
+                    "$src": [
+                        "src/omnitron/**/*",
+                        "!src/omnitron/**/*.js"
+                    ],
+                    "$dst": "lib/omnitron"
+                }
+            }
+        }
+    }
+}

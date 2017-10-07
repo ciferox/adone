@@ -32,7 +32,7 @@ export default class ProjectConfiguration extends adone.configuration.FileConfig
 
         const units = {};
 
-        await this._parseProjectStructure("", this.project.structure, units);
+        await this._parseProjectStructure("", this.structure, units);
 
         // Convert object to array
         const keys = Object.keys(units);
@@ -106,7 +106,7 @@ export default class ProjectConfiguration extends adone.configuration.FileConfig
                     relativeDir: val
                 });
 
-                adone.vendor.lodash.defaults(subConfig, adone.vendor.lodash.omit(this, ["project"]));
+                adone.vendor.lodash.defaults(subConfig, adone.vendor.lodash.omit(this, ["structure"]));
 
                 this[SUB_CONFIGS].set(fullKey, subConfig);
             }

@@ -65,35 +65,35 @@ class Installer {
 
     async installLocal(path, { symlink }) {
         this.bar.setSchema(` :spinner installing from: ${path}`);
-        let adoneConfPath;
-        if (std.path.basename(path) === "adone.conf.json") {
-            adoneConfPath = path;
-            path = std.path.dirname(path);
-        } else {
-            adoneConfPath = std.path.join(path, "adone.conf.json");
-        }
-        if (!(await fs.exists(adoneConfPath))) {
-            throw new x.NotExists(`File '${adoneConfPath}' not exists`);
-        }
 
-        const adoneConf = await configuration.load(adoneConfPath, null, {
-            transpile: true
+        const adoneConf = await adone.project.Configuration.load({
+            cwd: path
         });
 
+        // if (adoneConf.project.type === "composite") {
+        //     for (const [key, relativeDir] of Object.entries(adoneConf.project.structure)) {
+
+        //     }
+        // }
+
         switch (adoneConf.project.type) {
-            case "subsystem":
-                await this._installCliSubsystem(adoneConf, path, { symlink });
+            case "adone-cli":
+                await this._installAdoneCliSubsystem(adoneConf, path, {
+                    symlink
+                });
                 break;
-            case "service":
-                await this._installOmnitronService(adoneConf, path, { symlink });
+            case "omnitron-service":
+                await this._installOmnitronService(adoneConf, path, {
+                    symlink
+                });
                 break;
         }
         return adoneConf;
     }
 
-    async _installCliSubsystem(adoneConf, cwd, { symlink } = {}) {
+    async _installAdoneCliSubsystem(adoneConf, cwd, { symlink } = {}) {
         const destPath = std.path.join(CLI_SUBSYSTEMS_PATH, adoneConf.name);
-        
+
         // force create dir
         await fs.mkdir(CLI_SUBSYSTEMS_PATH);
 
@@ -213,23 +213,23 @@ class Installer {
                 value: adoneConf.author
             }
         ], {
-            noHeader: true,
-            borderless: true,
-            style: {
-                compact: true
-            },
-            model: [
-                {
-                    id: "name",
-                    style: "{green-fg}",
-                    align: "right",
-                    format: (val) => `${val} `
+                noHeader: true,
+                borderless: true,
+                style: {
+                    compact: true
                 },
-                {
-                    id: "value"
-                }
-            ]
-        }));
+                model: [
+                    {
+                        id: "name",
+                        style: "{green-fg}",
+                        align: "right",
+                        format: (val) => `${val} `
+                    },
+                    {
+                        id: "value"
+                    }
+                ]
+            }));
     }
 }
 
@@ -494,7 +494,7 @@ class AdoneCLI extends application.Application {
                 for (let [key, value] of util.entries(ns, { all: opts.has("all") })) {
                     const origType = util.typeOf(value);
                     let type = origType;
-                    
+
                     switch (type) {
                         case "function": {
                             try {
@@ -506,9 +506,9 @@ class AdoneCLI extends application.Application {
                                 if (!result.isArrow) {
                                     type += "function ";
                                 }
-                                
+
                                 value = result.args;
-                            } catch (err) {                                 
+                            } catch (err) {
                                 if (value.toString().includes("[native code]")) {
                                     type = "native function ";
                                 } else {

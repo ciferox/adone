@@ -21,8 +21,8 @@ describe("project", "configuration", () => {
             assert.equal(config.description, "descr");
             assert.equal(config.version, "1.0.0");
             assert.equal(config.author, "unknown");
-            assert.equal(config.project.type, "app");
-            assert.isTrue(is.plainObject(config.project.structure));
+            assert.equal(config.type, "app");
+            assert.isTrue(is.plainObject(config.structure));
         });
 
         it("project entries", async () => {

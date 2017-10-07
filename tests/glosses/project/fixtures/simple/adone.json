@@ -3,14 +3,12 @@
     "description": "descr",
     "version": "1.0.0",
     "author": "unknown",
-    "project": {
-        "type": "app",
-        "structure": {
-            "src": {
-                "$task": "transpile",
-                "$src": "src/*",
-                "$dst": "dst"
-            }
+    "type": "app",
+    "structure": {
+        "src": {
+            "$task": "transpile",
+            "$src": "src/*",
+            "$dst": "dst"
         }
     }
 }
