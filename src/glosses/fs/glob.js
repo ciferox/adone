@@ -209,7 +209,6 @@ class Pattern {
                 // if there are no dynamic parts or it is **, we have an exact match
                 if (
                     dynamicPart.length === 0
-                    || (dynamicPart.length === 1 && dynamicPart[0].isGlobstar) // **
                 ) {
                     processor(new Entry(staticPart, stat, index));
                 }
@@ -237,7 +236,11 @@ class Pattern {
             if (part.isGlobstar) {
                 // dynamic part is **, emit the directory
                 // only root is marked with trailing / (virtual/** -> virtual/)
-                processor(new Entry(this.root ? staticPart.join("") : staticPart, stat, index));
+                // but only if we have some relative part
+                // because ** for some cwd should not match /
+                if (staticPart.relative) {
+                    processor(new Entry(this.root ? staticPart.join("") : staticPart, stat, index));
+                }
             } else if (part.isEmpty) {
                 // empty part means patterns like this a/, */ we have to emit only the directory itself
                 processor(new Entry(staticPart.join(""), stat, index)); // mark the path
@@ -376,13 +379,11 @@ class Pattern {
                     // but we have no stat and dont know what it is, if we want stats we have to go further
                     // also, directory symlinks are handled before
 
-                    // this case must be handlded by the above pattern
-
-                    // if (runtime.stat) {
-                    //     processor(new Pattern(nextStaticPart, emptyDynamicPart, runtime));
-                    // } else {
-                    //     processor(new Entry(nextStaticPart, undefined));
-                    // }
+                    if (runtime.stat || childDirIgnored) {
+                        processor(new Pattern(nextStaticPart, emptyDynamicPart, runtime, index));
+                    } else {
+                        processor(new Entry(nextStaticPart, undefined, index));
+                    }
                 }
             } else if (dynamicPart[0].test(file)) { // it matches the part, so we have less dynamic parts
                 // if there are no other dynamic parts we have an exact match
@@ -560,6 +561,9 @@ class Glob extends EventEmitter {
     }
 
     _normalizeDynamicPart(parts) {
+        if (!parts.length) {
+            return parts;
+        }
         const normalized = [];
         for (let i = 0; i < parts.length; ++i) {
             const part = parts[i];

@@ -843,6 +843,22 @@ describe("fs", "glob", () => {
                 "./b/c/c0"
             ]);
         });
+
+        it("should not emit the empty root when **", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("a"),
+                b: {
+                    a: ctx.file("a")
+                }
+            }));
+
+            const result = await glob("**", { cwd: "/virtual" });
+            expect(result).to.be.deep.equal([
+                "a",
+                "b",
+                "b/a"
+            ]);
+        });
     });
 
     describe("nodir option", () => {
@@ -1759,6 +1775,26 @@ describe("fs", "glob", () => {
         expect(fileHook2).to.have.not.been.called;
     });
 
+    it("should not emit 1-level files for **/*/**", async () => {
+        virtual.add((ctx) => ({
+            a: {
+                a: ctx.file("hello"),
+                d: {
+                    e: ctx.file("hello")
+                }
+            },
+            b: ctx.file("hello")
+        }));
+
+        const result = await glob("**/*/**", { cwd: "/virtual" });
+        expect(result).to.be.deep.equal([
+            "a",
+            "a/a",
+            "a/d",
+            "a/d/e"
+        ]);
+    });
+
     describe("Glob", () => {
         describe("pause/resume", () => {
             beforeEach(() => {
@@ -1885,7 +1921,7 @@ describe("fs", "glob", () => {
             await fixtures.addFile("c");
             const a = await fixtures.addDirectory("a");
             await a.addFile("abcdef", "g", "h");
-            await a.addFile(".acbdef", "x", "y", "z");
+            await a.addFile(".abcdef", "x", "y", "z", "a");
             await a.addFile("abcfed", "g", "h");
             await a.addFile("b", "c", "d");
             await a.addFile("bc", "e", "f");
