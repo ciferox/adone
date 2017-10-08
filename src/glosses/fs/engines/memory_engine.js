@@ -356,11 +356,17 @@ class VFS {
         for (let i = 0; i < parts.length; ++i) {
             const part = parts[i];
             if (part === "." || part === "") {
-                continue;
+                if (root instanceof Directory) {
+                    continue;
+                }
+                throw new ENOTDIR(`not a directory, ${path.nonRelativeJoin(newPath)}`);
             }
             if (part === "..") {
-                root = root.parent;
-                continue;
+                if (root instanceof Directory) {
+                    root = root.parent;
+                    continue;
+                }
+                throw new ENOTDIR(`not a directory, ${path.nonRelativeJoin(newPath)}`);
             }
             if (!(root instanceof Directory) || !root.exists(part)) {
                 return null;

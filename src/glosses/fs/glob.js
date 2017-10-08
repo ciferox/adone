@@ -11,21 +11,42 @@ const {
     identity
 } = adone;
 
+const { S_IFMT, S_IFDIR, S_IFLNK } = fs.constants;
+
 const split = (pattern) => pattern.split(/\//);
 const { resolve, sep, normalize } = std.path;
 const join = (a, b) => a ? a === sep ? `${sep}${b}` : `${a}${sep}${b}` : b;
 const joinMany = (parts) => parts.join(sep);
 
+const GLOBSTAR = "globstar";
+const EMPTY = "empty";
+const PREV = "prev";
+const CURRENT = "current";
+const STATIC = "static";
+const DYNAMIC = "dynamic";
+
 class StaticValue {
     constructor(part) {
-        if (part === "") {
-            this.isEmpty = true;
-        } else if (part === ".") {
-            this.isCurrent = true;
-        } else if (part === "..") {
-            this.isPrev = true;
-        } else if (part[0] === ".") {
-            this.isDotted = true;
+        switch (part) {
+            case "": {
+                this.type = EMPTY;
+                this.isDotted = false;
+                break;
+            }
+            case ".": {
+                this.type = CURRENT;
+                this.isDotted = false;
+                break;
+            }
+            case "..": {
+                this.type = PREV;
+                this.isDotted = false;
+                break;
+            }
+            default: {
+                this.type = STATIC;
+                this.isDotted = part[0] === ".";
+            }
         }
 
         this.part = part;
@@ -42,12 +63,15 @@ class DynamicValue {
      */
     constructor(part) {
         if (part === "**") {
-            this.isGlobstar = true;
+            this.type = GLOBSTAR;
+            this.isDotted = false;
         } else {
+            this.type = DYNAMIC;
             if (part[0] === ".") {
                 this.isDotted = true;
                 this.re = util.match.makeRe(part.slice(1));
             } else {
+                this.isDotted = false;
                 this.re = util.match.makeRe(part, { dot: true });
             }
         }
@@ -77,17 +101,34 @@ class StaticPart {
         this.relative = relative;
     }
 
+    joinMany(parts) {
+        return new StaticPart(
+            joinMany([this.absolute].concat(parts)),
+            joinMany([this.relative].concat(parts))
+        );
+    }
+
     join(part) {
-        return new StaticPart(join(this.absolute, part), join(this.relative, part));
+        return new StaticPart(
+            join(this.absolute, part),
+            join(this.relative, part)
+        );
     }
 }
 
+/**
+ * @typedef EntryOptions
+ * @property {StaticPart} staticPart entry's static part
+ * @property {adone.fs.I.Stats} [stat] stats object for the entry, can be unset if not requested
+ * @property {number} index index of the matched mattern
+ */
+
 class Entry {
-    /**
-     * @param {StaticPart} staticPart
-     * @param {adone.fs.I.Stats} stat
-     */
-    constructor(staticPart, stat, index) {
+    constructor(/** @type {EntryOptions} */{
+        staticPart,
+        stat = null,
+        index
+    }) {
         this.path = staticPart.relative;
         this.absolutePath = staticPart.absolute;
         this.stat = stat;
@@ -104,8 +145,15 @@ class Entry {
 }
 
 class Runtime {
-    constructor(isChildIgnored, isChildDirIgnored, dot, stat, strict, follow, realpath) {
-        this.lstatCache = new collection.MapCache();
+    constructor({
+        isChildIgnored,
+        isChildDirIgnored,
+        dot,
+        stat,
+        strict,
+        follow
+    }) {
+        this.statCache = new collection.MapCache();
         this.readdirCache = new collection.MapCache();
         this.isChildIgnored = isChildIgnored;
         this.isChildDirIgnored = isChildDirIgnored;
@@ -113,217 +161,197 @@ class Runtime {
         this.stat = stat;
         this.strict = strict;
         this.follow = follow;
-        this.realpath = realpath;
     }
 
     clearCache() {
-        this.lstatCache.clear();
+        this.statCache.clear();
         this.readdirCache.clear();
     }
 }
 
+const takePart = (x) => x.part;
 const emptyDynamicPart = [];
 
+/**
+ * @typedef PatternOptions
+ * @property {Function} processor pattern/entry processor from the glob instance, it processes derived entries/patterns
+ * @property {StaticPart} staticPart static part of the pattern
+ * @property {Array<StaticValue | DynamicValue>} dynamicPart dynamic part of the pattern
+ * @property {Runtime} runtime runtime options from the glob
+ * @property {number} index index of the input pattern
+ * @property {boolean} [insideGlobStar] whether we are inside **
+ * @property {boolean} [root] whether the pattern is a root pattern, not derived from Pattern.process
+ */
+
 class Pattern {
-    /**
-     * @param {StaticPart} staticPart static part of the pattern
-     * @param {Array<StaticValue | DynamicValue>} dynamicPart dynamic part of the pattern
-     * @param {Runtime} runtime runtime options from the glob
-     */
-    constructor(staticPart, dynamicPart, runtime, index, insideGlobStar = false, root = false) {
+    constructor(/** @type {PatternOptions} */{
+        processor,
+        staticPart,
+        dynamicPart,
+        runtime,
+        index,
+        insideGlobStar = false,
+        root = false
+    }) {
+        this.processor = processor;
         this.staticPart = staticPart;
-        this.dynamicPart = dynamicPart;
         this.runtime = runtime;
         this.root = root;
         this.index = index;
         this.insideGlobStar = insideGlobStar;
+        this.dynamicPart = this.reduce(dynamicPart);
     }
 
-    async process(processor) {
-        let stat;
-        const { runtime, staticPart } = this;
-        const { absolute: absoluteStaticPart } = staticPart;
-
-        const { lstatCache } = runtime;
-
-        if (lstatCache.has(absoluteStaticPart)) {
-            stat = await lstatCache.get(absoluteStaticPart);
-        } else {
-            const promise = fs.lstat(absoluteStaticPart).catch(identity);
-            lstatCache.set(absoluteStaticPart, promise); // cache a promise for concurrent processes
-            stat = await promise;
-            lstatCache.set(absoluteStaticPart, stat); // replace the promise with the value
+    /**
+     * Analyses the dynamic part to strip static values from it.
+     * Reduces the number of syscalls
+     * For example when "a/b/c" we dont have to read "a" and then "b" to determine that "c" exists
+     * But an empty static value is a special case..
+     *
+     * @param {Array<DynamicValue | StaticValue>} dynamicPart
+     * @returns {Array<DynamicValue | StaticValue>}
+     */
+    reduce(dynamicPart) {
+        if (!dynamicPart.length) {
+            return dynamicPart;
         }
-
-        if (is.error(stat)) {
-            if (
-                runtime.strict
-                && stat.code !== "ENOENT" // race condition
-                && stat.code !== "ENOTDIR" // we tried to stat a directory wich does not exist, the path has / at the end
-                && stat.code !== "ELOOP" // too many links, symlink loop
-            ) {
-                throw stat;
-            }
-            // just swallow
-            return;
-        }
-
-        let { dynamicPart, index, insideGlobStar } = this;
-
-        if (!stat.isDirectory()) {
-            let follow = false;
-
-            // handle symlink following for symlinks to directories
-            if (stat.isSymbolicLink()) {
-                // check if it is a directory symlink
-                let targetStat;
-                try {
-                    targetStat = await fs.stat(absoluteStaticPart);
-                } catch (err) {
-                    if (err.code !== "ELOOP" && err.code !== "ENOENT" && runtime.strict) {
-                        throw err;
-                    }
-                    // found a loop or a dead link, just do not follow and emit the file
-                }
-                if (targetStat && targetStat.isDirectory()) {
-                    if (insideGlobStar) {
-                        if (runtime.follow) {
-                            follow = true;
-                            stat = targetStat;
-                        } else {
-                            // if we do not follow symlinks, then we just stop the recursion here
-                            // remove globstar from the dynamic part and follow the rest
-                            //
-                            dynamicPart = dynamicPart.slice(1);
-                            follow = true;
-                            stat = targetStat;
-                        }
-                    } else {
-                        follow = true;
-                        stat = targetStat;
-                    }
-                }
-            }
-
-            if (!follow) {
-                // if there are no dynamic parts or it is **, we have an exact match
-                if (
-                    dynamicPart.length === 0
-                ) {
-                    processor(new Entry(staticPart, stat, index));
-                }
-                // this is a file, but there are some dynamic things that must be resolved
-                // so it does not match
-                return;
-            }
-            // this is a symlink to a directory we must follow
-        }
-
-        // a directory or a symlink to a direcotry
-
-        // now we know that this is a directory, we can check if it is ignored
-        if (runtime.isChildDirIgnored(staticPart.relative)) {
-            return;
-        }
-
-        if (dynamicPart.length === 0) {
-            // no dynamic parts, so emit the directory
-            processor(new Entry(staticPart, stat, index));
-            return;
-        }
-        if (dynamicPart.length === 1) {
-            const part = dynamicPart[0];
-            if (part.isGlobstar) {
-                // dynamic part is **, emit the directory
-                // only root is marked with trailing / (virtual/** -> virtual/)
-                // but only if we have some relative part
-                // because ** for some cwd should not match /
-                if (staticPart.relative) {
-                    processor(new Entry(this.root ? staticPart.join("") : staticPart, stat, index));
-                }
-            } else if (part.isEmpty) {
-                // empty part means patterns like this a/, */ we have to emit only the directory itself
-                processor(new Entry(staticPart.join(""), stat, index)); // mark the path
-                return;
+        let i;
+        for (i = 0; i < dynamicPart.length; ++i) {
+            const part = dynamicPart[i];
+            if (part instanceof DynamicValue || part.type === EMPTY) {
+                break;
             }
         }
-
-        if (dynamicPart.length >= 2) {
-            if (dynamicPart[0].isGlobstar) {
-                if (dynamicPart[1].isEmpty) {
-                    if (dynamicPart.length === 2) {
-                        // **/
-                        processor(new Entry(staticPart.join(""), stat, index));
-                    } else {
-                        // **/smth
-                        processor(new Pattern(staticPart, [dynamicPart[0]].concat(dynamicPart.slice(2)), runtime, index));
-                        return;
-                    }
-                } else if (dynamicPart[1].isGlobstar) {
-                    // consequent **/**
-                    processor(new Pattern(staticPart, dynamicPart.slice(1), runtime, index));
-                    return;
-                }
-            }
+        if (i === 0) {
+            return dynamicPart;
         }
+        this.staticPart = this.staticPart.joinMany(dynamicPart.slice(0, i).map(takePart));
+        return dynamicPart.slice(i);
+    }
 
-        if (dynamicPart[0].isEmpty) {
-            // /
-            processor(new Pattern(staticPart, dynamicPart.slice(1), runtime, index));
-            return;
+    producePattern(staticPart, dynamicPart, insideGlobStar) {
+        const { processor, runtime, index } = this;
+        processor(new Pattern({
+            processor,
+            dynamicPart,
+            staticPart,
+            runtime,
+            index,
+            insideGlobStar
+        }));
+    }
+
+    produceEntry(staticPart, stat) {
+        this.processor(new Entry({
+            staticPart,
+            index: this.index,
+            stat
+        }));
+    }
+
+    async lstat() {
+        const { staticPart, runtime } = this;
+        const { statCache } = runtime;
+        const { absolute } = staticPart;
+
+        if (statCache.has(absolute)) {
+            return statCache.get(absolute);
         }
+        const promise = fs.lstat(absolute).catch(identity);
+        statCache.set(absolute, promise);
+        return promise;
+    }
 
-        if (dynamicPart[0].isCurrent) {
-            // handle "."
-            processor(new Pattern(staticPart.join("."), dynamicPart.slice(1), runtime, index));
-            return;
+    async stat() {
+        const { staticPart, runtime } = this;
+        const { statCache } = runtime;
+        const { absolute } = staticPart;
+
+        const key = `\x00stat\x00${absolute}`; // use the same cache for stat calls, but a prefixed key
+
+        if (statCache.has(key)) {
+            return statCache.get(key);
         }
+        const promise = fs.stat(absolute).catch(identity);
+        statCache.set(key, promise);
+        return promise;
+    }
 
-        if (dynamicPart[0].isPrev) {
-            // handle ".."
-            processor(new Pattern(staticPart.join(".."), dynamicPart.slice(1), runtime, index));
-            return;
-        }
-
-        let dynamicSlice1 = null;
-        let dynamicSlice2 = null;
-
-        if (dynamicPart.length > 1 && dynamicPart[0].isGlobstar) {
-            if (dynamicPart[1].isCurrent) {
-                dynamicSlice2 = dynamicPart.slice(2);
-                processor(new Pattern(staticPart.join("."), dynamicSlice2, runtime, index));
-            } else if (dynamicPart[1].isPrev) {
-                dynamicSlice2 = dynamicPart.slice(2);
-                processor(new Pattern(staticPart.join(".."), dynamicSlice2, runtime, index));
-            }
-        }
-
-        // there are some dynamic parts, go further
-
+    async readdir() {
+        const { staticPart, runtime } = this;
         const { readdirCache } = runtime;
+        const { absolute } = staticPart;
 
-        let files;
-        if (readdirCache.has(absoluteStaticPart)) {
-            files = await readdirCache.get(absoluteStaticPart);
-        } else {
-            const promise = fs.readdir(absoluteStaticPart).catch(identity);
-            readdirCache.set(absoluteStaticPart, promise);
-            files = await promise;
-            readdirCache.set(absoluteStaticPart, files);
+        if (readdirCache.has(absolute)) {
+            return readdirCache.get(absolute);
         }
+        const promise = fs.readdir(absolute).catch(identity);
+        readdirCache.set(absolute, promise);
+        return promise;
+    }
 
-        if (!is.array(files)) {
-            // race condition if ENOENT
-            if (files.code !== "ENOENT" && runtime.strict) {
-                throw files;
+    _handleDynamicPartUnderGlobstar(file, nextStaticPart, dynamicPart, childDirIgnored) {
+        const { runtime } = this;
+
+        // static part that includes the file and the same dynamic part
+        this.producePattern(nextStaticPart, dynamicPart, true); // mark that we are inside globstar
+
+        // it can match the next pattern
+        if (dynamicPart.length > 1) {
+            // here we will not meet **/**
+            if (dynamicPart[1].test(file)) {
+                // it matches the part after the globstar, assume the globstar matches nothing src/**/a -> src/a.
+                // remove the globstar and the next thing
+
+                // if there are no other things we have an exact match
+                if (dynamicPart.length === 2) {
+                    // if child dir with the same name is ignored, we have to stat to determine whether this is a directory or not
+                    if (runtime.stat || childDirIgnored) {
+                        this.producePattern(nextStaticPart, emptyDynamicPart);
+                    } else {
+                        this.produceEntry(nextStaticPart);
+                    }
+                } else {
+                    this.producePattern(nextStaticPart, dynamicPart.slice(2));
+                }
             }
-            // just swallow
-            throw files;
+        } else {
+            // the dynamic part is only **, we have exact match
+            // but we have no stat and dont know what it is, if we want stats we have to go further
+            // also, directory symlinks are handled before
+
+            if (runtime.stat || childDirIgnored) {
+                this.producePattern(nextStaticPart, emptyDynamicPart);
+            } else {
+                this.produceEntry(nextStaticPart);
+            }
         }
+    }
+
+    _handleDynamicPart(file, nextStaticPart, dynamicPart, childDirIgnored) {
+        const { runtime } = this;
+
+        // it matches the part, so we have less dynamic parts
+        // if there are no other dynamic parts we have an exact match
+        if (dynamicPart.length === 1) {
+            // if child dir with the same name is ignored, we have to stat to determine whether this is a directory or not
+            if (runtime.stat || childDirIgnored) {
+                this.producePattern(nextStaticPart, emptyDynamicPart);
+            } else {
+                this.produceEntry(nextStaticPart);
+            }
+        } else {
+            this.producePattern(nextStaticPart, dynamicPart.slice(1));
+        }
+    }
+
+    _handleChildren(dynamicPart, files) {
+        const { runtime, staticPart } = this;
+        const { dot, isChildIgnored, isChildDirIgnored } = runtime;
 
         for (const file of files) {
-            if (!runtime.dot && file[0] === ".") {
-                if (dynamicPart[0].isGlobstar) {
+            if (!dot && file[0] === ".") {
+                if (dynamicPart[0].type === GLOBSTAR) {
                     if (dynamicPart.length === 1) {
                         // ** and dot is false, does not match
                         continue;
@@ -342,76 +370,309 @@ class Pattern {
 
             const nextStaticPart = staticPart.join(file);
 
-            if (runtime.isChildIgnored(nextStaticPart.relative)) {
+            if (isChildIgnored(nextStaticPart.relative)) {
                 continue;
             }
 
-            const childDirIgnored = runtime.isChildDirIgnored(nextStaticPart.relative);
-
-            if (dynamicPart[0].isGlobstar) {
-                // static part that includes the file and the same dynamic part
-                processor(new Pattern(nextStaticPart, dynamicPart, runtime, index, true));
-
-                // it can match the next pattern
-                if (dynamicPart.length > 1) {
-                    // here we will not meet **/**
-                    if (dynamicPart[1].test(file)) {
-                        // it matches the part after the globstar, assume the globstar matches nothing src/**/a -> src/a.
-                        // remove the globstar and the next thing
-
-                        // if there are no other things we have an exact match
-                        if (dynamicPart.length === 2) {
-                            // if child dir with the same name is ignored, we have to stat to determine whether this is a directory or not
-                            if (runtime.stat || childDirIgnored) {
-                                processor(new Pattern(nextStaticPart, emptyDynamicPart, runtime, index));
-                            } else {
-                                processor(new Entry(nextStaticPart, undefined, index));
-                            }
-                        } else {
-                            if (!dynamicSlice2) {
-                                dynamicSlice2 = dynamicPart.slice(2);
-                            }
-                            processor(new Pattern(nextStaticPart, dynamicSlice2, runtime, index));
-                        }
-                    }
-                } else {
-                    // the dynamic part is only **, we have exact match
-                    // but we have no stat and dont know what it is, if we want stats we have to go further
-                    // also, directory symlinks are handled before
-
-                    if (runtime.stat || childDirIgnored) {
-                        processor(new Pattern(nextStaticPart, emptyDynamicPart, runtime, index));
-                    } else {
-                        processor(new Entry(nextStaticPart, undefined, index));
-                    }
-                }
-            } else if (dynamicPart[0].test(file)) { // it matches the part, so we have less dynamic parts
-                // if there are no other dynamic parts we have an exact match
-                if (dynamicPart.length === 1) {
-                    // if child dir with the same name is ignored, we have to stat to determine whether this is a directory or not
-                    if (runtime.stat || childDirIgnored) {
-                        processor(new Pattern(nextStaticPart, emptyDynamicPart, runtime, index));
-                    } else {
-                        processor(new Entry(nextStaticPart, undefined, index));
-                    }
-                } else {
-                    if (!dynamicSlice1) {
-                        dynamicSlice1 = dynamicPart.slice(1);
-                    }
-                    processor(new Pattern(nextStaticPart, dynamicSlice1, runtime, index));
-                }
-
+            if (dynamicPart[0].type === GLOBSTAR) {
+                // **/smth
+                this._handleDynamicPartUnderGlobstar(
+                    file,
+                    nextStaticPart,
+                    dynamicPart,
+                    isChildDirIgnored(nextStaticPart.relative)
+                );
+            } else if (dynamicPart[0].test(file)) {
+                // smth
+                this._handleDynamicPart(
+                    file,
+                    nextStaticPart,
+                    dynamicPart,
+                    isChildDirIgnored(nextStaticPart.relative)
+                );
             }
         }
     }
 
-    inspect() {
-        return `<Pattern "${joinMany([this.staticPart, ...this.dynamicPart.map((x) => {
-            if (is.regexp(x)) {
-                return x.result[0].input;
+    async _readAndHandleChildren(dynamicPart) {
+        const files = await this.readdir();
+
+        if (!is.array(files)) {
+            // race condition if ENOENT
+            if (files.code !== "ENOENT" && this.runtime.strict) {
+                throw files;
             }
-            return x;
-        })])}">`;
+            // just swallow
+            throw files;
+        }
+
+        if (!files.length) {
+            return;
+        }
+
+        return this._handleChildren(dynamicPart, files);
+    }
+
+    _handleDir(stat, dynamicPart, files) {
+        const { runtime, staticPart } = this;
+
+        // now we know that this is a directory, we can check if it is ignored
+        if (runtime.isChildDirIgnored(staticPart.relative)) {
+            return;
+        }
+
+        switch (dynamicPart.length) {
+            case 0: {
+                // no dynamic parts, so emit the directory
+                this.produceEntry(staticPart, stat);
+                return;
+            }
+            case 1: {
+                switch (dynamicPart[0].type) {
+                    case EMPTY: {
+                        // empty part means patterns like this a/, */ we have to emit only the directory itself
+                        this.produceEntry(staticPart.join(""), stat);
+                        return;
+                    }
+                    case CURRENT: {
+                        // handle "."
+                        this.producePattern(staticPart.join("."), dynamicPart.slice(1));
+                        return;
+                    }
+                    case PREV: {
+                        // handle ".."
+                        this.producePattern(staticPart.join(".."), dynamicPart.slice(1));
+                        return;
+                    }
+                    case GLOBSTAR: {
+                        // dynamic part is **, emit the directory
+                        // only root is marked with trailing / (virtual/** -> virtual/)
+                        // but only if we have some relative part, because ** for the given cwd should not match / (cwd itself)
+                        if (staticPart.relative) {
+                            this.produceEntry(this.root ? staticPart.join("") : staticPart, stat);
+                        }
+                        break;
+                    }
+                }
+                break;
+            }
+            default: { // >= 2
+                switch (dynamicPart[0].type) {
+                    case GLOBSTAR: {
+                        switch (dynamicPart[1].type) {
+                            case EMPTY: {
+                                if (dynamicPart.length === 2) {
+                                    // **/
+                                    this.produceEntry(staticPart.join(""), stat);
+                                } else {
+                                    // **/smth
+                                    this.producePattern(staticPart, [dynamicPart[0]].concat(dynamicPart.slice(2)));
+                                    return;
+                                }
+                                break;
+                            }
+                            case GLOBSTAR: {
+                                // consequent **/**
+                                this.producePattern(staticPart, dynamicPart.slice(1));
+                                return;
+                            }
+                            case CURRENT: {
+                                this.producePattern(staticPart.join("."), dynamicPart.slice(2));
+                                break;
+                            }
+                            case PREV: {
+                                this.producePattern(staticPart.join(".."), dynamicPart.slice(2));
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    case EMPTY: {
+                        // /
+                        this.producePattern(staticPart, dynamicPart.slice(1));
+                        break;
+                    }
+                    case CURRENT: {
+                        // handle "."
+                        this.producePattern(staticPart.join("."), dynamicPart.slice(1));
+                        return;
+                    }
+                    case PREV: {
+                        // handle ".."
+                        this.producePattern(staticPart.join(".."), dynamicPart.slice(1));
+                        return;
+                    }
+                }
+            }
+        }
+
+        // files can come from _handleAsDir or not in case of _handleAsFile
+
+        if (files) {
+            return this._handleChildren(dynamicPart, files);
+        }
+        return this._readAndHandleChildren(dynamicPart);
+    }
+
+    async _handleSymlink(stat) {
+        const { runtime, insideGlobStar, dynamicPart } = this;
+
+        const targetStat = await this.stat();
+
+        if (is.error(targetStat)) {
+            switch (targetStat.code) {
+                case "ELOOP": // symlink loop
+                case "ENOTDIR": // symlink refers to a directory that does not exist, but exists a file with the same name, dead link
+                case "ENOENT": { // symlink refers to a file that does not exist, dead link
+                    // expected errors
+                    break;
+                }
+                default: {
+                    if (runtime.strict) {
+                        throw targetStat;
+                    }
+                }
+            }
+        } else if (targetStat.isDirectory()) {
+            if (insideGlobStar) {
+                if (runtime.follow) {
+                    return this._handleDir(targetStat, dynamicPart);
+                }
+                // if we do not follow symlinks, then we just stop the recursion here
+                // remove globstar from the dynamic part and follow the rest
+                return this._handleDir(targetStat, dynamicPart.slice(1));
+
+            }
+            return this._handleDir(targetStat, dynamicPart);
+        }
+        return this._handleExistingFile(stat);
+    }
+
+    async _handleAsFile() {
+        // we dont know whether it exists or not
+
+        const { runtime } = this;
+
+        const stat = await this.lstat();
+
+        if (is.error(stat)) {
+            switch (stat.code) {
+                case "ENOTDIR": // we tried to stat a directory wich does not exist, the path has / at the end
+                case "ELOOP": // too many links, symlink loop
+                case "ENOENT": { // unexistent file was requested, must be race condition
+                    // expected errors
+                    break;
+                }
+                default: {
+                    if (runtime.strict) {
+                        throw stat;
+                    }
+                }
+            }
+            return;
+        }
+
+        switch (stat.mode & S_IFMT) {
+            case S_IFDIR: {
+                return this._handleDir(stat, this.dynamicPart);
+            }
+            case S_IFLNK: {
+                // handle symlink following for symlinks to directories
+                return this._handleSymlink(stat);
+            }
+            default: {
+                return this._handleExistingFile(stat);
+            }
+        }
+    }
+
+    async _handleExistingFile(stat) {
+        // we know it exists, this is not a directory
+
+        const { staticPart, dynamicPart, runtime } = this;
+        const { absolute } = staticPart;
+
+        if (dynamicPart.length !== 0 || absolute.endsWith("/")) {
+            // there are some dynamic parts that must be resolved,
+            // or it ends with /, means it must be a directory
+            return;
+        }
+        if (runtime.stat && !stat) {
+            stat = await fs.lstat(absolute);
+        }
+        this.produceEntry(this.staticPart, stat);
+    }
+
+    async _handleAsDir() {
+        // symlink directories restrictions are handled before
+        // here we can have symlink directory
+
+        const { runtime } = this;
+
+        const files = await this.readdir();
+
+        if (is.array(files)) {
+            if (!runtime.stat) {
+                return this._handleDir(undefined, this.dynamicPart, files);
+            }
+            return this._handleDir(await this.lstat(), this.dynamicPart, files);
+        }
+
+        // files is an error
+
+        switch (files.code) {
+            case "ENOTSUP": // https://github.com/isaacs/node-glob/issues/205
+            case "ENOTDIR": {
+                // this is not a directory but it exists
+                return this._handleExistingFile();
+            }
+            case "ELOOP":
+            case "ENAMETOOLONG":
+            case "UNKNOWN":
+            case "ENOENT": {
+                // expected errors
+                break;
+            }
+            default: {
+                if (runtime.strict) {
+                    throw files;
+                }
+            }
+        }
+    }
+
+    async process() {
+        const { insideGlobStar, runtime, dynamicPart } = this;
+
+        /**
+         * 2 ways
+         * 1. readdir and then determine what it is by the result
+         * 2. lstat and then we also know what it is
+         *
+         * the first way can reduce the number of syscalls:
+         * if the entry is a directory it will be read and throw if it is not a directory
+         * if it throws we know either it exists or not, so we can reduce stat calls
+         *
+         * the second way requires lstat and only then readdir,
+         * but for some cases, like "*", we can find what we want only by a readdir call
+         *
+         * but if we are inside ** and the follow option is disabled we have to know exactly what it is,
+         * because if it is a symlink to a directory we must stop the recursion here, so just use the first way
+         *
+         * and if there are no dynamic parts we handle it as a file, just stat and emit if it is ok
+         */
+        if (
+            (insideGlobStar && !runtime.follow)
+            || dynamicPart.length === 0
+        ) {
+            return this._handleAsFile();
+        }
+
+        return this._handleAsDir();
+    }
+
+    inspect() {
+        return `<Pattern "${joinMany([this.staticPart.relative, ...this.dynamicPart.map(takePart)])}">`;
     }
 }
 
@@ -432,7 +693,6 @@ class Glob extends EventEmitter {
         rawEntries = false,
         absolute = false,
         normalized = false,
-        realpath = false,
         index = false
     } = {}) {
         super();
@@ -450,8 +710,13 @@ class Glob extends EventEmitter {
             }
         }
 
+        /** @type {(x: string) => boolean}  */
         let isIgnored = adone.falsely;
+
+        /** @type {(x: string) => boolean}  */
         let isChildIgnored = adone.falsely;
+
+        /** @type {(x: string) => boolean}  */
         let isChildDirIgnored = adone.falsely;
 
         if (ignoreList.length) {
@@ -511,15 +776,14 @@ class Glob extends EventEmitter {
         /**
          * Runtime that is passed to the patterns
          */
-        this.runtime = new Runtime(
+        this.runtime = new Runtime({
             isChildIgnored,
             isChildDirIgnored,
             dot,
-            stat || nodir, // if nodir or mark is enabled we have to stat all the entries to know where directories are
+            stat: stat || nodir, // if nodir is enabled we have to stat all the entries to know where directories are
             strict,
-            follow,
-            realpath
-        );
+            follow
+        });
 
         this.nodir = nodir;
         this.cwd = cwd;
@@ -561,9 +825,6 @@ class Glob extends EventEmitter {
     }
 
     _normalizeDynamicPart(parts) {
-        if (!parts.length) {
-            return parts;
-        }
         const normalized = [];
         for (let i = 0; i < parts.length; ++i) {
             const part = parts[i];
@@ -608,7 +869,15 @@ class Glob extends EventEmitter {
             }
             return new StaticValue(x);
         });
-        return new Pattern(staticPart, dynamicPart, this.runtime, index, false, true);
+        return new Pattern({
+            processor: this.__processor,
+            staticPart,
+            dynamicPart,
+            runtime: this.runtime,
+            index,
+            insideGlobStar: false,
+            root: true
+        });
     }
 
     isPaused() {
@@ -687,7 +956,7 @@ class Glob extends EventEmitter {
             }
             return;
         }
-        if (this.nodir && sub.stat.isDirectory()) { // it nodir is set, stats are always present
+        if (this.nodir && sub.stat.isDirectory()) { // if nodir is set, stats are always present
             return;
         }
         const path = this.__pathGetter(sub);
@@ -700,19 +969,17 @@ class Glob extends EventEmitter {
             }
             this.emitCache.set(path, true);
         }
-        if (!this.rawEntries) {
-            sub = path;
-        }
+        const value = this.rawEntries ? sub : path;
         if (this._paused) {
-            this.emitQueue.push(sub);
+            this.emitQueue.push(value);
         } else {
-            this.emit("match", sub);
+            this.emit("match", value);
         }
     }
 
     async process(pattern) {
         ++this._processes;
-        await pattern.process(this.__processor).catch(this.__onError);
+        await pattern.process().catch(this.__onError);
         --this._processes;
         if (this._processes === 0 && this.emitQueue.empty && this.processQueue.empty && !this._endEmitted) {
             this.emit("end");
