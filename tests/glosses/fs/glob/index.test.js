@@ -704,15 +704,15 @@ describe("fs", "glob", () => {
             }));
 
             {
-                const result = await glob("/virtual/..");
+                const result = await glob("/virtual/b/..");
                 expect(result.sort()).to.be.deep.equal([
-                    "/virtual/.."
+                    "/virtual/b/.."
                 ]);
             }
             {
-                const result = await glob("/virtual/../");
+                const result = await glob("/virtual/b/../");
                 expect(result.sort()).to.be.deep.equal([
-                    "/virtual/../"
+                    "/virtual/b/../"
                 ]);
             }
             {
@@ -857,6 +857,72 @@ describe("fs", "glob", () => {
                 "a",
                 "b",
                 "b/a"
+            ]);
+        });
+
+        it("should strip trailing slashes", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("a"),
+                b: {
+                    a: ctx.file("a")
+                }
+            }));
+
+            const result = await glob("**", { cwd: "/virtual///////////" });
+            expect(result).to.be.deep.equal([
+                "a",
+                "b",
+                "b/a"
+            ]);
+        });
+    });
+
+    describe("root option", () => {
+        it("should use the given root insead of default", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("a"),
+                b: {
+                    a: ctx.file("a"),
+                    c: ctx.file("a")
+                }
+            }));
+
+            const result = await glob("/*", { root: "/virtual/b" });
+            expect(result).to.be.deep.equal([
+                "/virtual/b/a",
+                "/virtual/b/c"
+            ]);
+        });
+
+        it("should strip trailing slashes", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("a"),
+                b: {
+                    a: ctx.file("a"),
+                    c: ctx.file("a")
+                }
+            }));
+
+            const result = await glob("/*", { root: "/virtual/b/////////" });
+            expect(result).to.be.deep.equal([
+                "/virtual/b/a",
+                "/virtual/b/c"
+            ]);
+        });
+
+        it("should support roots relative to the cwd", async () => {
+            virtual.add((ctx) => ({
+                a: ctx.file("a"),
+                b: {
+                    a: ctx.file("a"),
+                    c: ctx.file("a")
+                }
+            }));
+
+            const result = await glob("/*", { root: "b", cwd: "/virtual" });
+            expect(result).to.be.deep.equal([
+                "/virtual/b/a",
+                "/virtual/b/c"
             ]);
         });
     });

@@ -1,10 +1,19 @@
 const {
-    x,
     is,
     std
 } = adone;
 
+const sep = std.path.sep;
+let defaultRoot = std.path.resolve("/").replace(/\\/g, "/").slice(0, -1).split("/");
+if (is.windows && defaultRoot[0] === "" && defaultRoot[1] === "") {
+    // network resource on windows
+    defaultRoot = ["\\"].concat(defaultRoot.slice(2));
+}
+
 export class Path {
+    /**
+     * @param {string} path
+     */
     constructor(path) {
         this.path = path;
         this.parts = null;
@@ -17,20 +26,20 @@ export class Path {
     }
 
     clone() {
-        const path = new Path(this.path);
+        const path = new this.constructor(this.path);
         path.strip(this.startIndex);
         return path;
     }
 
     join(part) {
         const p = this.clone();
-        p.path = `${p.path}/${part}`;
+        p.path = `${p.path}${sep}${part}`;
         p.parts.push(part);
         return p;
     }
 
     nonRelativeJoin(path) {
-        return ["", ...this.parts.slice(0, this.startIndex), ...path.parts].join("/");
+        return [...this.parts.slice(0, this.startIndex), ...path.parts].join(sep);
     }
 
     strip(level) {
@@ -45,7 +54,7 @@ export class Path {
     }
 
     fullPath() {
-        return `${this.absolute ? "/" : ""}${this.parts.join("/")}`;
+        return this.parts.join(sep);
     }
 
     // non relative join
@@ -54,7 +63,7 @@ export class Path {
      * relative to the target engine
      */
     relativePath() {
-        return `${this.absolute ? "/" : ""}${this.relativeParts.join("/")}`;
+        return this.relativeParts.join(sep);
     }
 
     filename() {
@@ -62,7 +71,7 @@ export class Path {
     }
 
     _normalize() {
-        this.path = this.path.replace(/\/+/, "/");
+        this.path = this.path.replace(/\\+/g, "/");
         if (this.path[this.path.length - 1] === "/") {
             this.trailingSlash = true;
             this.path = this.path.slice(0, -1);
@@ -72,36 +81,55 @@ export class Path {
     }
 
     _parse() {
-        const parts = this.path.split(/\//);
-        if (parts[0] === "") { // starts with /
-            parts.shift();
+        let parts = this.path.split(/\//);
+        const [firstPart] = parts;
+
+        this.absolute = false;
+
+        if (firstPart === "") { // starts with / or \
             this.absolute = true;
+            if (is.windows && parts.length > 1 && parts[1] === "") { // \\ is a windows network resource
+                parts = ["\\"].concat(parts.slice(2));
+            } else {
+                parts = this.defaultRoot.concat(parts.slice(1));
+            }
         } else {
-            this.absolute = false;
+            const c = firstPart.charCodeAt(0);
+            if ((c >= 65 /*A*/ && c <= 90 /*Z*/) || (c >= 98/*a*/ && c <= 122/*z*/)) {
+                if (firstPart.length === 2 && firstPart.charCodeAt(1) === 58) {
+                    this.absolute = true;
+                    parts = [firstPart].concat(parts.slice(1));
+                }
+            }
         }
+
         this.parts = parts;
     }
 
     _resolve() {
-        const parts = [];
-        for (let i = 0; i < this.parts.length; ++i) {
-            const part = this.parts[i];
-            // if (part === ".") {
-            //     continue;
-            // }
-            // if (part === ".." && (this.absolute || (parts.length > 0 && parts[parts.length - 1] !== ".."))) {
-            //     parts.pop();
-            //     continue;
-            // }
-            parts.push(part);
-        }
-        this.parts = parts;
         this.path = this.fullPath();
+    }
+
+    static resolve(path) {
+        if (std.path.isAbsolute(path)) {
+            return new Path(path);
+        }
+        const cwd = process.cwd();
+        return new Path(`${cwd}${sep}${path}`);
+    }
+
+    static configure({ root }) {
+        class XPath extends Path {}
+        XPath.prototype.defaultRoot = root;
+        return XPath;
     }
 }
 
+Path.prototype.defaultRoot = defaultRoot;
+
 const ENGINE = Symbol("ENGINE");
 const LEVEL = Symbol("LEVEL");
+const PARENT = Symbol("PARENT");
 
 const methodsToMock = [
     "readFile",
@@ -128,15 +156,15 @@ export class AbstractEngine {
         }
         options.encoding = options.encoding || null;
         options.flag = options.flag || "r";
-        return this._handlePath("_readFile", new Path(path), [options, callback]);
+        return this._handlePath("_readFile", Path.resolve(path), [options, callback]);
     }
 
     stat(path, callback) {
-        return this._handlePath("_stat", new Path(path), [callback]);
+        return this._handlePath("_stat", Path.resolve(path), [callback]);
     }
 
     lstat(path, callback) {
-        return this._handlePath("_lstat", new Path(path), [callback]);
+        return this._handlePath("_lstat", Path.resolve(path), [callback]);
     }
 
     readdir(path, options, callback) {
@@ -148,7 +176,7 @@ export class AbstractEngine {
         options.encoding = options.encoding || "utf8";
 
 
-        path = new Path(path);
+        path = Path.resolve(path);
 
         /**
          * If we readdir /, and we have mounted /tmp, tmp must be added to the list
@@ -173,7 +201,7 @@ export class AbstractEngine {
         }
         options.encoding = options.encoding || "utf8";
 
-        return this._handlePath("_realpath", new Path(path), [options, callback]);
+        return this._handlePath("_realpath", Path.resolve(path), [options, callback]);
     }
 
     _getSiblingMounts(path) {
@@ -193,7 +221,19 @@ export class AbstractEngine {
 
     _getEngineNode(path) {
         let node = this.structure;
-        for (const part of path.parts) {
+        const { parts } = path;
+
+        for (let i = 0; i < parts.length; ++i) {
+            const part = parts[i];
+            if (part === "." || (part === "" && (!path.absolute || i > 0))) {
+                continue;
+            }
+            if (part === "..") {
+                if (PARENT in node) {
+                    node = node[PARENT];
+                }
+                continue;
+            }
             if (!(part in node)) {
                 break;
             }
@@ -212,14 +252,15 @@ export class AbstractEngine {
     }
 
     mount(engine, path) {
-        path = new Path(path);
+        path = Path.resolve(path);
         let root = this.structure;
         let level = 1;
         for (let i = 0; i < path.parts.length; ++i) {
             const part = path.parts[i];
             if (!(part in root)) {
                 root[part] = {
-                    [LEVEL]: level
+                    [LEVEL]: level,
+                    [PARENT]: root
                 };
             }
             root = root[part];

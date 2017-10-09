@@ -13,10 +13,86 @@ const {
 
 const { S_IFMT, S_IFDIR, S_IFLNK } = fs.constants;
 
-const split = (pattern) => pattern.split(/\//);
-const { resolve, sep, normalize } = std.path;
-const join = (a, b) => a ? a === sep ? `${sep}${b}` : `${a}${sep}${b}` : b;
-const joinMany = (parts) => parts.join(sep);
+const { resolve, normalize: stdNormalize } = std.path;
+
+/**
+ * @param {string} pattern
+ */
+const split = (pattern) => pattern.split("/");
+
+// use / slash everywhere while processing
+
+/**
+ * @param {string} a
+ * @param {string} b
+ */
+const joinAbsolute = (a, b) => {
+    if (a[a.length - 1] === "/") {
+        return `${a}${b}`;
+    }
+    return `${a}/${b}`;
+};
+
+/**
+ * @param {string} a
+ * @param {string} b
+ */
+const joinRelative = (a, b) => {
+    if (!a) {
+        return b;
+    }
+    if (a[a.length - 1] === "/") {
+        return `${a}${b}`;
+    }
+    return `${a}/${b}`;
+};
+
+/**
+ * @param {string[]} parts
+ */
+const joinMany = (parts) => parts.join("/");
+
+/**
+ * @param {string} path
+ */
+const normalize = (path) => path.replace(/\\/g, "/");
+
+/**
+ * Replace back paths on windows..
+ *
+ * @param {string} path
+ */
+const toWindowsPaths = (path) => path.replace(/\//g, "\\");
+
+/**
+ * @param {string} path
+ */
+const removeTrailingSlashes = (path) => path.replace(/\/+$/, "");
+
+/** @type {(path: string) => boolean} */
+const isAbsolute = is.windows
+    ? (path) => {
+        const { length } = path;
+        if (length === 0) {
+            return false;
+        }
+        const c = path.charCodeAt(0);
+        if (c === 47 /*/*/) {
+            return true;
+        }
+        if (length <= 2) {
+            return false;
+        }
+        if ((c >= 65 /*A*/ && c <= 90 /*Z*/) || (c >= 98/*a*/ && c <= 122/*z*/)) {
+            if (path.charCodeAt(1) === 58/*:*/) {
+                const c2 = path.charCodeAt(2);
+                return c2 === 47/*/*/;
+            }
+        }
+        return false;
+
+    }
+    : (path) => path.length > 0 && path.charCodeAt(0) === 47/*/*/;
 
 const GLOBSTAR = "globstar";
 const EMPTY = "empty";
@@ -26,6 +102,9 @@ const STATIC = "static";
 const DYNAMIC = "dynamic";
 
 class StaticValue {
+    /**
+     * @param {string} part
+     */
     constructor(part) {
         switch (part) {
             case "": {
@@ -52,6 +131,9 @@ class StaticValue {
         this.part = part;
     }
 
+    /**
+     * @param {string} value
+     */
     test(value) {
         return this.part === value;
     }
@@ -79,6 +161,10 @@ class DynamicValue {
         this.part = part;
     }
 
+    /**
+     * @param {string} value
+     * @returns {boolean}
+     */
     test(value) {
         if (this.isDotted) {
             return value[0] === "." && this.re.test(value.slice(1));
@@ -101,17 +187,35 @@ class StaticPart {
         this.relative = relative;
     }
 
+    /**
+     * @param {string[]} parts
+     */
     joinMany(parts) {
-        return new StaticPart(
-            joinMany([this.absolute].concat(parts)),
-            joinMany([this.relative].concat(parts))
-        );
+        if (parts.length === 1) {
+            return this.join(parts[0]);
+        }
+
+        const { relative, absolute } = this;
+
+        let newAbsolute = joinAbsolute(absolute, parts[0]);
+        let newRelative = joinRelative(relative, parts[0]);
+
+        for (let i = 1; i < parts.length; ++i) {
+            newAbsolute = `${newAbsolute}/${parts[i]}`;
+            newRelative = `${newRelative}/${parts[i]}`;
+        }
+        return new StaticPart(newAbsolute, newRelative);
     }
 
+    /**
+     * @param {string} part
+     */
     join(part) {
+        const { absolute, relative } = this;
+
         return new StaticPart(
-            join(this.absolute, part),
-            join(this.relative, part)
+            joinAbsolute(absolute, part),
+            joinRelative(relative, part)
         );
     }
 }
@@ -135,12 +239,18 @@ class Entry {
         this.index = index;
     }
 
+    toWindowsPaths() {
+        this.path = toWindowsPaths(this.path);
+        this.absolutePath = toWindowsPaths(this.absolutePath);
+        return this;
+    }
+
     get normalizedRelative() {
-        return normalize(this.path);
+        return stdNormalize(this.path);
     }
 
     get normalizedAbsolute() {
-        return normalize(this.absolutePath);
+        return stdNormalize(this.absolutePath);
     }
 }
 
@@ -397,20 +507,27 @@ class Pattern {
     async _readAndHandleChildren(dynamicPart) {
         const files = await this.readdir();
 
-        if (!is.array(files)) {
-            // race condition if ENOENT
-            if (files.code !== "ENOENT" && this.runtime.strict) {
-                throw files;
+        if (is.array(files)) {
+            if (!files.length) {
+                return;
             }
-            // just swallow
-            throw files;
+            return this._handleChildren(dynamicPart, files);
         }
 
-        if (!files.length) {
-            return;
+        switch (files.code) {
+            case "ELOOP": // can this appear here?
+            case "ENAMETOOLONG": // can this appear here?
+            case "UNKNOWN": // can this appear here?
+            case "ENOENT": {
+                // expected errors
+                break;
+            }
+            default: {
+                if (this.runtime.strict) {
+                    throw files;
+                }
+            }
         }
-
-        return this._handleChildren(dynamicPart, files);
     }
 
     _handleDir(stat, dynamicPart, files) {
@@ -680,6 +797,7 @@ const absoluteGetter = (entry) => entry.absolutePath;
 const relativeGetter = (entry) => entry.path;
 const normalizedAbsoluteGetter = (entry) => entry.normalizedAbsolute;
 const normalizedRelativeGetter = (entry) => entry.normalizedRelative;
+const defaultRoot = resolve("/");
 
 class Glob extends EventEmitter {
     constructor(patterns, {
@@ -693,7 +811,8 @@ class Glob extends EventEmitter {
         rawEntries = false,
         absolute = false,
         normalized = false,
-        index = false
+        index = false,
+        root = defaultRoot
     } = {}) {
         super();
         this.emitQueue = new collection.Queue();
@@ -710,13 +829,13 @@ class Glob extends EventEmitter {
             }
         }
 
-        /** @type {(x: string) => boolean}  */
+        /** @type {(x: string) => boolean} */
         let isIgnored = adone.falsely;
 
-        /** @type {(x: string) => boolean}  */
+        /** @type {(x: string) => boolean} */
         let isChildIgnored = adone.falsely;
 
-        /** @type {(x: string) => boolean}  */
+        /** @type {(x: string) => boolean} */
         let isChildDirIgnored = adone.falsely;
 
         if (ignoreList.length) {
@@ -724,16 +843,17 @@ class Glob extends EventEmitter {
             const childDirPatterns = [];
             const overallPatterns = [];
             for (const pattern of ignoreList) {
-                const re = util.match.makeRe(pattern, { dot: true });
+                const normalizedPattern = normalize(pattern);
+                const re = util.match.makeRe(normalizedPattern, { dot: true });
 
                 // in this case we can exclude entrire subtrees while walking
-                if (pattern.endsWith("/**")) {
+                if (normalizedPattern.endsWith("/**")) {
                     childPatterns.push(re); // for childs
 
-                    const dirRe = util.match.makeRe(pattern.slice(0, -3), { dot: true }); // for child dir
+                    const dirRe = util.match.makeRe(normalizedPattern.slice(0, -3), { dot: true }); // for child dir
                     childDirPatterns.push(dirRe);
 
-                } else if (pattern.endsWith("/**/*")) {
+                } else if (normalizedPattern.endsWith("/**/*")) {
                     childPatterns.push(re); // only for childs
                 }
                 overallPatterns.push(re);
@@ -786,11 +906,14 @@ class Glob extends EventEmitter {
         });
 
         this.nodir = nodir;
-        this.cwd = cwd;
+        this.cwd = removeTrailingSlashes(normalize(cwd));
         this.unique = unique;
         this.rawEntries = rawEntries || stat || index;
         this.absolute = absolute;
         this.normalized = normalized;
+        this.root = root === defaultRoot
+            ? root
+            : `${removeTrailingSlashes(normalize(resolve(this.cwd, root)))}/`;
         this._ended = false;
         this._paused = true;
         this._resumeScheduled = false;
@@ -798,7 +921,7 @@ class Glob extends EventEmitter {
         this._endEmitted = false;
 
         this._processes = 0;
-        this.__processor = this._processor.bind(this);
+        this.__processor = (x) => this._processor(x);
         this.__pathGetter = this.normalized
             ? this.absolute ? normalizedAbsoluteGetter : normalizedRelativeGetter
             : this.absolute ? absoluteGetter : relativeGetter;
@@ -812,7 +935,8 @@ class Glob extends EventEmitter {
         });
 
         for (let i = 0; i < matchPatterns.length; ++i) {
-            const expanded = util.braces.expand(matchPatterns[i]);
+            const normalizedPattern = normalize(matchPatterns[i]);
+            const expanded = util.braces.expand(normalizedPattern);
             for (const subpattern of expanded) {
                 const compiled = this._getFirstPattern(subpattern, i);
                 if (isIgnored(compiled.staticPart.relative)) {
@@ -837,7 +961,12 @@ class Glob extends EventEmitter {
         return normalized;
     }
 
+    /**
+     * @param {string} pattern
+     * @param {number} index
+     */
     _getFirstPattern(pattern, index) {
+        // const normalizedPattern = pattern;
         const parts = split(pattern);
         let i;
         for (i = 0; i < parts.length; ++i) {
@@ -854,15 +983,27 @@ class Glob extends EventEmitter {
             absoluteStaticPart = this.cwd;
             relativeStaticPart = "";
         } else {
-            if (parts[0] === "") { // the pattern is absolute
-                relativeStaticPart = join(resolve("/"), joinMany(parts.slice(1, i)));
-                absoluteStaticPart = relativeStaticPart;
+            if (isAbsolute(pattern)) { // the pattern is absolute
+                /**
+                 * when the pattern starts with /, parts[0] is empty
+                 * on windows we can have absolute paths like C:\ D:\ and parts[0] is C: or D:, so it will be handled properly
+                 * and paths like \ are also handled properly, here parts[0] is empty
+                 */
+                if (parts[0]) { // custom root on windows C:, D: or something else
+                    absoluteStaticPart = `${parts[0]}/`;
+                } else {
+                    absoluteStaticPart = this.root;
+                }
+                if (parts.length > 1) {
+                    absoluteStaticPart = joinAbsolute(absoluteStaticPart, joinMany(parts.slice(1, i)));
+                }
+                relativeStaticPart = absoluteStaticPart;
             } else { // the pattern is relative
                 relativeStaticPart = joinMany(parts.slice(0, i));
-                absoluteStaticPart = join(this.cwd, relativeStaticPart);
+                absoluteStaticPart = joinAbsolute(this.cwd, relativeStaticPart);
             }
         }
-        const staticPart = new StaticPart(absoluteStaticPart, relativeStaticPart); // normalize absolute?
+        const staticPart = new StaticPart(absoluteStaticPart, relativeStaticPart);
         const dynamicPart = this._normalizeDynamicPart(parts.slice(i)).map((x) => {
             if (is.glob(x)) {
                 return new DynamicValue(x);
@@ -969,7 +1110,15 @@ class Glob extends EventEmitter {
             }
             this.emitCache.set(path, true);
         }
-        const value = this.rawEntries ? sub : path;
+
+        let value;
+
+        if (this.rawEntries) {
+            value = is.windows ? sub.toWindowsPaths() : sub;
+        } else {
+            value = is.windows ? toWindowsPaths(path) : path;
+        }
+
         if (this._paused) {
             this.emitQueue.push(value);
         } else {

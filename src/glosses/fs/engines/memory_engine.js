@@ -1,8 +1,8 @@
 const {
     fs: {
         engine: {
-            Path,
-    AbstractEngine
+            Path: Path0,
+            AbstractEngine
         }
     },
     is,
@@ -14,9 +14,11 @@ const {
 } = adone;
 
 const lazy = adone.lazify({
-    uid: () => adone.util.userid.uid().uid,
-    gid: () => adone.util.userid.uid().gid
+    uid: () => is.windows ? -1 : adone.util.userid.uid().uid,
+    gid: () => is.windows ? -1 : adone.util.userid.uid().gid
 });
+
+const Path = Path0.configure({ root: [""] }); // use custom root as /
 
 class ENOENT extends x.Exception { }
 ENOENT.prototype.code = "ENOENT";
