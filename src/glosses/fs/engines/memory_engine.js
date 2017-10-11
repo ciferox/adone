@@ -1,40 +1,26 @@
 const {
     fs: {
         engine: {
-            Path: Path0,
+            Path,
             AbstractEngine
         }
     },
     is,
-    x,
     std,
     util,
-    noop,
-    identity
+    noop
 } = adone;
+
+const { sep } = std.path;
+
+// limit to detect symlink loops
+const UNWIND_LIMIT = 100;
+const SYMLINK_LOOP = Symbol();
 
 const lazy = adone.lazify({
     uid: () => is.windows ? -1 : adone.util.userid.uid().uid,
     gid: () => is.windows ? -1 : adone.util.userid.uid().gid
 });
-
-const Path = Path0.configure({ root: [""] }); // use custom root as /
-
-class ENOENT extends x.Exception { }
-ENOENT.prototype.code = "ENOENT";
-ENOENT.prototype.name = "ENOENT";
-
-class EISDIR extends x.Exception { }
-EISDIR.prototype.code = "EISDIR";
-EISDIR.prototype.name = "EISDIR";
-
-class ENOTDIR extends x.Exception { }
-ENOTDIR.prototype.code = "ENOTDIR";
-ENOTDIR.prototype.name = "ENOTDIR";
-
-class ELOOP extends x.Exception { }
-ELOOP.prototype.code = "ELOOP";
-ELOOP.prototype.name = "ELOOP";
 
 class File {
     constructor(parent, path, {
@@ -51,7 +37,7 @@ class File {
     } = {}) {
         this.parent = parent;
         this.path = path;
-        this.contents = contents;
+        this.contents = is.buffer(contents) ? contents : Buffer.from(contents);
         const now = new Date();
         this.mtime = mtime || now;
         this.atime = atime || now;
@@ -150,19 +136,22 @@ class Symlink {
         });
     }
 
-    getTargetNode() {
-        return this.vfs.getNode(this.targetPath, true, false, this.parent);
+    getTargetNode(syscall) {
+        return this.vfs.getNode(this.targetPath, syscall, false, false, this.parent);
     }
 
     /**
      * @returns null or the real node
      */
-    unwindTarget() {
-        const target = this.getTargetNode();
+    unwindTarget(syscall, level = 0) {
+        const target = this.getTargetNode(syscall);
         if (is.null(target) || !(target instanceof Symlink)) {
             return target;
         }
-        return target.unwindTarget();
+        if (level === UNWIND_LIMIT - 1) {
+            return SYMLINK_LOOP;
+        }
+        return target.unwindTarget(syscall, level + 1);
     }
 
     lstat() {
@@ -189,9 +178,12 @@ class Symlink {
     }
 
     stat() {
-        const target = this.unwindTarget();
+        const target = this.unwindTarget("stat");
+        if (target === SYMLINK_LOOP) {
+            this.vfs.throw("ELOOP", this.targetPath, "stat");
+        }
         if (is.null(target)) {
-            throw new ENOENT(`no such file or direcory ${this.targetPath.fullPath()}`);
+            this.vfs.throw("ENOENT", this.targetPath, "stat");
         }
         return target.stat();
     }
@@ -293,11 +285,16 @@ class Directory {
 }
 
 class VFS {
-    constructor() {
-        this.root = new Directory(this, undefined, new Path("/"));
+    constructor(engine) {
+        this.engine = engine;
+        this.root = new Directory(this, undefined, new Path(sep, { root: sep }));
     }
 
-    _getDirectory(path, create = true) {
+    throw(code, path, syscall) {
+        this.engine.throw(code, path, syscall);
+    }
+
+    _getDirectory(path, syscall, create = true) {
         let root = this.root;
         const parts = path.relativeParts;
         for (let i = 0; i < parts.length - 1; ++i) {
@@ -317,17 +314,20 @@ class VFS {
             }
             root = root.get(part);
             if (root instanceof Symlink) {
-                root = root.unwindTarget(); // unwind symlink references, find the real node
+                root = root.unwindTarget(syscall); // unwind symlink references, find the real node
+                if (root === SYMLINK_LOOP) {
+                    this.throw("ELOOP", path, syscall);
+                }
             }
             if (!(root instanceof Directory)) {
-                throw new x.IllegalState(`${part} of ${path} is not a directory`);
+                this.throw("ENOTDIR", path);
             }
         }
         return root;
     }
 
     addFile(path, options) {
-        path = new Path(path);
+        path = Path.wrap(path);
         const directory = this._getDirectory(path);
         if (!is.object(options)) {
             options = { contents: options };
@@ -336,8 +336,8 @@ class VFS {
     }
 
     addSymlink(target, linkname, options) {
-        target = new Path(target);
-        linkname = new Path(linkname);
+        target = Path.wrap(target);
+        linkname = Path.wrap(linkname);
         const linknameDirectory = this._getDirectory(linkname);
         // if (is.null(linknameDirectory)) {
         //     throw new ENOENT(`no such file or directory ${linkname.fullPath()}`);
@@ -346,12 +346,12 @@ class VFS {
     }
 
     addDirectory(path, options) {
-        path = new Path(path);
+        path = Path.wrap(path);
         const dir = this._getDirectory(path);
         dir.addDirectory(path.filename(), options);
     }
 
-    getNode(path, handleLeafSymlink = true, returnNewPath = false, root = this.root) {
+    getNode(path, syscall, handleLeafSymlink = true, returnNewPath = false, root = this.root) {
         let unwinds = 0;
         let newPath = root.path;
         const parts = path.relativeParts;
@@ -361,24 +361,31 @@ class VFS {
                 if (root instanceof Directory) {
                     continue;
                 }
-                throw new ENOTDIR(`not a directory, ${path.nonRelativeJoin(newPath)}`);
+                this.throw("ENOTDIR", path, syscall);
+                // throw new ENOTDIR(`not a directory, ${path.nonRelativeJoin(newPath)}`);
             }
             if (part === "..") {
                 if (root instanceof Directory) {
                     root = root.parent;
                     continue;
                 }
-                throw new ENOTDIR(`not a directory, ${path.nonRelativeJoin(newPath)}`);
+                this.throw("ENOTDIR", path, syscall);
+                // throw new ENOTDIR(`not a directory, ${path.nonRelativeJoin(newPath)}`);
             }
             if (!(root instanceof Directory) || !root.exists(part)) {
                 return null;
             }
             root = root.get(part);
             if (root instanceof Symlink && (handleLeafSymlink || i !== parts.length - 1)) {
-                if (unwinds > 100) {
-                    throw new ELOOP(`too many symbolic links encountered, '${path.nonRelativeJoin(newPath)}'`);
+                if (unwinds > UNWIND_LIMIT) {
+                    this.throw("ELOOP", path, syscall);
+                    // throw new ELOOP(path.nonRelativeJoin(newPath), syscall);
                 }
-                root = root.unwindTarget();
+                root = root.unwindTarget(syscall, unwinds); // here we will not count inner unwinds, ok?
+                if (root === SYMLINK_LOOP) {
+                    this.throw("ELOOP", path, syscall);
+                    // throw new ELOOP(path.nonRelativeJoin(newPath), syscall);
+                }
                 ++unwinds;
                 if (!root) {
                     return null;
@@ -393,45 +400,41 @@ class VFS {
         return root;
     }
 
-    getDirectory(path) {
-        const node = this.getNode(path);
+    getDirectory(path, syscall) {
+        const node = this.getNode(path, syscall);
         if (is.null(node)) {
-            throw new ENOENT(`no such file ${path.fullPath()}`);
+            this.throw("ENOENT", path, syscall);
+            // throw new ENOENT(path.fullPath, syscall);
         }
         if (!(node instanceof Directory)) {
-            throw new ENOTDIR(`not a direcory ${path.fullPath()}`);
+            this.throw("ENOTDIR", path, syscall);
+            // throw new ENOTDIR(path.fullPath, syscall);
         }
         return node;
     }
 
-    getFile(path) {
-        const node = this.getNode(path);
+    getFile(path, syscall) {
+        const node = this.getNode(path, syscall);
         if (is.null(node)) {
-            throw new ENOENT(`no such file ${path.fullPath()}`);
+            this.throw("ENOENT", path);
+            // throw new ENOENT(`no such file ${path.fullPath}`);
         }
         if (node instanceof Directory) {
-            throw new EISDIR(`is a directory ${path.fullPath()}`);
+            this.throw("EISDIR", path);
+            // throw new EISDIR(`is a directory ${path.fullPath}`);
         }
         return node;
     }
 
     clean() {
-        this.root = new Directory(this, undefined, new Path("/"));
+        this.root = new Directory(this, undefined, new Path(sep, { root: sep }));
     }
 }
-
-const callbackify = (target, key, descriptor) => {
-    const fn = descriptor.value;
-    descriptor.value = function (...args) {
-        const cb = args.pop();
-        adone.promise.nodeify(fn.apply(this, args), cb);
-    };
-};
 
 export default class MemoryEngine extends AbstractEngine {
     constructor() {
         super();
-        this.vfs = new VFS();
+        this.vfs = new VFS(this);
     }
 
     addFile(path, options) {
@@ -476,7 +479,7 @@ export default class MemoryEngine extends AbstractEngine {
             })
         };
         const structure = callback.call(context, context);
-        const p = new Path("/");
+        const p = new Path(sep, { root: sep });
         const visit = (path, obj) => {
             for (const [key, value] of util.entries(obj)) {
                 const parts = util.braces.expand(key);
@@ -488,16 +491,16 @@ export default class MemoryEngine extends AbstractEngine {
                             if (is.function(options)) {
                                 options = options(part, q);
                             }
-                            this.addFile(q.fullPath(), options);
+                            this.addFile(q, options);
                             break;
                         }
                         case "symlink": {
-                            this.addSymlink(value.path, q.fullPath(), value.options);
+                            this.addSymlink(value.path, q, value.options);
                             break;
                         }
                         default: {
                             if (is.array(value)) {
-                                this.addDirectory(q.fullPath(), value[1]);
+                                this.addDirectory(q, value[1]);
                                 visit(q, value[0]);
                             } else {
                                 visit(q, value);
@@ -516,43 +519,35 @@ export default class MemoryEngine extends AbstractEngine {
         return this;
     }
 
-    @callbackify
-    async _readFile(path, options) {
-        const node = this.vfs.getFile(path);
-        const { encoding } = options;
-        await node.beforeHook("readFile");
-        const result = encoding ? node.contents.toString(encoding) : node.contents;
-        return (await node.afterHook("readFile", result)) || result;
-    }
-
-    @callbackify
     async _stat(path) {
-        const node = this.vfs.getNode(path);
+        const node = this.vfs.getNode(path, "stat");
         if (is.null(node)) {
-            throw new ENOENT(`no such file or directory ${path.fullPath()}`);
+            this.throw("ENOENT", path, "stat");
+            // throw new ENOENT(`no such file or directory ${path.fullPath}`);
         }
         if (path.trailingSlash && !(node instanceof Directory)) {
-            throw new ENOTDIR(`not a directory ${path.fullPath()}`);
+            this.throw("ENOENT", path, "stat");
+            // throw new ENOTDIR(`not a directory ${path.fullPath}`);
         }
         await node.beforeHook("stat");
         const stat = node.stat();
         return (await node.afterHook("stat", stat)) || stat;
     }
 
-    @callbackify
     async _lstat(path) {
-        const node = this.vfs.getNode(path, false);
+        const node = this.vfs.getNode(path, "lstat", false);
         if (is.null(node)) {
-            throw new ENOENT(`no such file or directory ${path.fullPath()}`);
+            this.throw("ENOENT", path, "lstat");
+            // throw new ENOENT(`no such file or directory ${path.fullPath}`);
         }
         if (path.trailingSlash) {
             if (node instanceof Symlink) {
-                const target = node.unwindTarget();
+                const target = node.unwindTarget("lstat");
                 if (!(target instanceof Directory)) {
-                    throw new ENOTDIR(`not a directory ${path.fullPath()}`);
+                    this.throw("ENOTDIR", path, "lstat");
                 }
             } else if (!(node instanceof Directory)) {
-                throw new ENOTDIR(`not a directory ${path.fullPath()}`);
+                this.throw("ENOTDIR", path, "lstat");
             }
         }
         await node.beforeHook("lstat");
@@ -560,9 +555,8 @@ export default class MemoryEngine extends AbstractEngine {
         return (await node.afterHook("lstat", stat)) || stat;
     }
 
-    @callbackify
     async _readdir(path, options) {
-        const node = this.vfs.getDirectory(path);
+        const node = this.vfs.getDirectory(path, "scandir");
         await node.beforeHook("readdir");
         let children = node.getChildren();
         if (options.encoding === "buffer") {
@@ -571,11 +565,10 @@ export default class MemoryEngine extends AbstractEngine {
         return (await node.afterHook("readdir", children)) || children;
     }
 
-    @callbackify
     async _realpath(path, options) {
         const node = this.vfs.getNode(path);
         if (is.null(node)) {
-            throw new ENOENT(`no such file or directory, '${path.fullPath()}'`);
+            this.throw("ENOENT", path);
         }
 
         await node.beforeHook("realpath");
@@ -587,5 +580,21 @@ export default class MemoryEngine extends AbstractEngine {
         }
 
         return (await node.afterHook("realpath", realpath)) || realpath;
+    }
+
+    async _readlink(path, options) {
+        const node = this.vfs.getNode(path, "readlink", false);
+        if (is.null(node)) {
+            this.throw("ENOENT", path, "readlink");
+        }
+        if (!(node instanceof Symlink)) {
+            this.throw("EINVAL", path, "readlink");
+        }
+        await node.beforeHook("readlink");
+        let target = node.targetPath.fullPath;
+        if (options.encoding === "buffer") {
+            target = Buffer.from(target);
+        }
+        return (await node.afterHook("readlink", target)) || target;
     }
 }

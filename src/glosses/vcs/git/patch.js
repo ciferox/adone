@@ -12,6 +12,8 @@ Patch.fromDiff = promisifyAll(Patch.fromDiff);
 Patch.prototype.getHunk = promisifyAll(Patch.prototype.getHunk);
 Patch.prototype.getLineInHunk = promisifyAll(Patch.prototype.getLineInHunk);
 Patch.convenientFromDiff = promisifyAll(Patch.convenientFromDiff);
-Patch.prototype.hunks = promisifyAll(Patch.prototype.hunks);
+
+// no such method
+// Patch.prototype.hunks = promisifyAll(Patch.prototype.hunks);
 
 export default Patch;

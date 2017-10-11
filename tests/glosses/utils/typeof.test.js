@@ -376,4 +376,8 @@ describe("util", "typeOf", () => {
             assert(util.typeOf(eval("(function * foo () {}())")) === "Generator");
         });
     });
+
+    it("buffer", () => {
+        expect(util.typeOf(Buffer.from("123"))).to.be.equal("Buffer");
+    });
 });

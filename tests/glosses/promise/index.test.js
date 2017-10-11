@@ -183,6 +183,15 @@ describe("promise", () => {
             expect(err.message).to.be.equal("hello 1 + 2");
             expect(res).to.be.undefined;
         });
+
+        it("should not pop the last argument if it is not a callback", async () => {
+            const fn = async (a, b) => {
+                return a + b;
+            };
+            const fn2 = callbackify(fn);
+            const res = await fn2(1, 2);
+            expect(res).to.be.equal(3);
+        });
     });
 
     describe("promisify", () => {
@@ -289,7 +298,7 @@ describe("promise", () => {
             expect(b.b).to.be.equal(a.b);
         });
 
-        it("should copy the source object", () => {
+        it("should wrap the source object", () => {
             const a = {
                 f: (cb) => cb(null, 1),
                 b: (cb) => cb(null, 2)
@@ -297,7 +306,7 @@ describe("promise", () => {
             const b = promise.promisifyAll(a);
             expect(a).not.to.be.equal(b);
             a.new = 1;
-            expect(b.new).to.be.undefined;
+            expect(b.new).to.be.equal(1);
             b.new = 2;
             expect(a.new).to.be.equal(1);
         });

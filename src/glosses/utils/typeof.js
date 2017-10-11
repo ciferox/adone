@@ -51,6 +51,10 @@ export default function typeOf(obj) {
         return "Array";
     }
 
+    if (is.buffer(obj)) {
+        return "Buffer";
+    }
+
     const stringTag = obj[Symbol.toStringTag];
     if (is.string(stringTag)) {
         return stringTag;

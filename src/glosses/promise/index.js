@@ -1,4 +1,7 @@
-const { is } = adone;
+const {
+    is,
+    util
+} = adone;
 
 adone.asNamespace(exports);
 
@@ -113,12 +116,11 @@ export const callbackify = (fn) => {
         throw new adone.x.InvalidArgument("The first argument must be a function");
     }
     return function (...args) {
-        const cb = args.pop();
-        const promise = fn.apply(this, args);
-        if (is.function(cb)) {
-            nodeify(promise, cb);
+        if (args.length && is.function(args[args.length - 1])) {
+            const cb = args.pop();
+            return nodeify(fn.apply(this, args), cb);
         }
-        return promise;
+        return fn.apply(this, args);
     };
 };
 
@@ -189,8 +191,8 @@ export const promisifyAll = (source, { suffix = "Async", filter = adone.truly, c
         return promisify(source, { context, promisifier });
     }
 
-    const target = adone.o(source);
-    for (const [key, value] of adone.util.entries(source)) {
+    const target = Object.create(source);
+    for (const [key, value] of util.entries(source, { all: true })) {
         if (is.function(value) && filter(key)) {
             target[`${key}${suffix}`] = promisify(value, { context, promisifier });
         }
