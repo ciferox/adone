@@ -1,11 +1,14 @@
 // @ts-check
 
 const {
-    x,
     is,
     std,
-    util
+    util,
+    collection,
+    x
 } = adone;
+
+const constants = std.fs.constants;
 
 const sep = std.path.sep;
 const defaultRoot = std.path.resolve("/");
@@ -193,7 +196,7 @@ class FSException extends Error {
     }
 
     _updateMessage() {
-        this.message = `${this.code}: ${this.description}${this._syscall ? `, ${this._syscall}` : ""} '${this._path.fullPath}'`;
+        this.message = `${this.code}: ${this.description}${this._syscall ? `, ${this._syscall}` : ""}${this._path ? ` '${this._path.fullPath}'` : ""}`;
     }
 
     /**
@@ -204,12 +207,36 @@ class FSException extends Error {
     }
 }
 
+// converts Date or number to a fractional UNIX timestamp
+const toUnixTimestamp = (time) => {
+    // eslint-disable-next-line eqeqeq
+    if (is.string(time) && Number(time) == time) {
+        return Number(time);
+    }
+    if (is.finite(time)) {
+        if (time < 0) {
+            return Date.now() / 1000;
+        }
+        return time;
+    }
+    if (is.date(time)) {
+        // convert to 123.456 UNIX timestamp
+        return time.getTime() / 1000;
+    }
+    throw new x.InvalidArgument(`cannot convert the given argument to a number: ${time}`);
+};
+
 const errors = {
     ENOENT: (path, syscall) => new FSException("ENOENT", "no such file or directory", path, syscall),
     EISDIR: (path, syscall) => new FSException("EISDIR", "illegal operation on a directory", path, syscall),
     ENOTDIR: (path, syscall) => new FSException("ENOTDIR", "not a directory", path, syscall),
     ELOOP: (path, syscall) => new FSException("ELOOP", "too many symbolic links encountered", path, syscall),
-    EINVAL: (path, syscall) => new FSException("EINVAL", "invalid argument", path, syscall)
+    EINVAL: (path, syscall) => new FSException("EINVAL", "invalid argument", path, syscall),
+    EBADF: (path, syscall) => new FSException("EBADF", "bad file descriptor", syscall),
+    EEXIST: (path, syscall) => new FSException("EEXIST", "file already exists", path, syscall),
+    ENOTEMPTY: (path, syscall) => new FSException("ENOTEMPTY", "directory not empty", path, syscall),
+    EACCESS: (path, syscall) => new FSException("EACCESS", "permission denied", path, syscall),
+    EPERM: (path, syscall) => new FSException("EPERM", "operation not permitted", path, syscall)
 };
 
 const ENGINE = Symbol("ENGINE");
@@ -228,7 +255,10 @@ const syscallMap = {
     lstat: "lstat",
     stat: "stat",
     readdir: "scandir",
-    readlink: "readlink"
+    readlink: "readlink",
+    open: "open",
+    close: "close",
+    read: "read"
 };
 
 // nodejs callbacks support
@@ -244,10 +274,178 @@ export class AbstractEngine {
         this.structure = {};
         this._numberOfEngines = 0;
         this.mount(this, "/");
+        this._fd = 100; // generally, no matter which initial value we use, this is a fd counter for internal mappings
+        this._fdMap = new collection.MapCache();
     }
 
     throw(code, path, syscall) {
         throw errors[code](path, syscall);
+    }
+
+    @callbackify
+    async open(path, flags, mode = 0o666) {
+        return this._handlePath("open", Path.resolve(path), [flags, mode]);
+    }
+
+    @callbackify
+    async close(fd) {
+        return this._handleFd("close", fd, []);
+    }
+
+    @callbackify
+    async read(fd, buffer, offset, length, position) {
+        return this._handleFd("read", fd, [buffer, offset, length, position]);
+    }
+
+    @callbackify
+    //  write(fd, buffer[, offset[, length[, position]]]);
+    //  write(fd, string[, position[, encoding]]);
+    async write(fd, buffer, offset, length, position) {
+        if (is.buffer(buffer)) {
+            if (!is.number(offset)) {
+                offset = 0;
+            }
+            if (!is.number(length)) {
+                length = buffer.length - offset;
+            }
+            if (!is.number(position)) {
+                position = null;
+            }
+            return this._handleFd("write", fd, [buffer, offset, length, position]);
+        }
+        if (!is.string(buffer)) {
+            buffer = String(buffer);
+        }
+        if (is.string(offset)) {
+            length = offset;
+            offset = null;
+        }
+        if (!is.number(offset)) {
+            offset = null;
+        }
+        if (!is.string(length)) {
+            length = "utf8";
+        }
+        return this._handleFd("write", fd, [buffer, offset, length]);
+    }
+
+    @callbackify
+    async ftruncate(fd, length = 0) {
+        return this._handleFd("ftruncate", fd, [length]);
+    }
+
+    @callbackify
+    async truncate(path, length = 0) {
+        if (is.number(path)) {
+            return this.ftruncate(path, length);
+        }
+        const fd = await this.open(path, "r+");
+        try {
+            await this.ftruncate(fd, length);
+        } finally {
+            await this.close(fd);
+        }
+    }
+
+    @callbackify
+    async utimes(path, atime, mtime) {
+        return this._handlePath("utimes", Path.resolve(path), [
+            toUnixTimestamp(atime),
+            toUnixTimestamp(mtime)
+        ]);
+    }
+
+    @callbackify
+    async unlink(path) {
+        return this._handlePath("unlink", Path.resolve(path), []);
+    }
+
+    @callbackify
+    async rmdir(path) {
+        return this._handlePath("rmdir", Path.resolve(path), []);
+    }
+
+    @callbackify
+    async mkdir(path, mode = 0o777) {
+        return this._handlePath("mkdir", Path.resolve(path), [mode]);
+    }
+
+    @callbackify
+    async access(path, mode = constants.F_OK) {
+        return this._handlePath("access", Path.resolve(path), [mode]);
+    }
+
+    @callbackify
+    async chmod(path, mode) {
+        return this._handlePath("chmod", Path.resolve(path), [mode]);
+    }
+
+    @callbackify
+    async chown(path, uid, gid) {
+        return this._handlePath("chown", Path.resolve(path), [uid, gid]);
+    }
+
+    async rename(rawOldPath, rawNewPath) {
+        const oldPath = Path.resolve(rawOldPath);
+        const newPath = Path.resolve(rawNewPath);
+
+        if (this._numberOfEngines === 1) {
+            // only one engine can handle it, itself
+            return this._rename(oldPath, newPath);
+        }
+        const [engine1, node1, parts1] = await this._chooseEngine(oldPath, "rename");
+        const [engine2, node2, parts2] = await this._chooseEngine(newPath, "rename");
+
+        const oldPath2 = new Path(`/${parts1.slice(node1[LEVEL]).join("/")}`);
+        const newPath2 = new Path(`/${parts2.slice(node2[LEVEL]).join("/")}`);
+
+        if (engine1 === engine2) {
+            return engine1.rename(oldPath2, newPath2);
+        }
+        // TODO: copy from one location to another and then delete the source?
+        throw new x.NotSupported("for now cross engine renamings are not supported");
+    }
+
+    @callbackify
+    async symlink(target, path, type) {
+        // omg, here we have to swap them...
+        return this._handlePath("symlink", Path.resolve(path), [new Path(target), type]);
+    }
+
+    @callbackify
+    async link(rawExistingPath, rawNewPath) {
+        const existingPath = Path.resolve(rawExistingPath);
+        const newPath = Path.resolve(rawNewPath);
+
+        if (this._numberOfEngines === 1) {
+            // only one engine can handle it, itself
+            return this._link(existingPath, newPath);
+        }
+        const [engine1, node1, parts1] = await this._chooseEngine(existingPath, "link");
+        const [engine2, node2, parts2] = await this._chooseEngine(newPath, "link");
+
+        const existingPath2 = new Path(`/${parts1.slice(node1[LEVEL]).join("/")}`);
+        const newPath2 = new Path(`/${parts2.slice(node2[LEVEL]).join("/")}`);
+
+        if (engine1 === engine2) {
+            return engine1.rename(existingPath2, newPath2);
+        }
+        throw new x.NotSupported("Cross engine hark links are not supported");
+    }
+
+    @callbackify
+    async fstat(fd) {
+        return this._handleFd("fstat", fd);
+    }
+
+    @callbackify
+    async fsync(fd) {
+        return this._handleFd("fsync", fd);
+    }
+
+    @callbackify
+    async fdatasync(fd) {
+        return this._handleFd("fdatasync", fd);
     }
 
     @callbackify
@@ -302,23 +500,32 @@ export class AbstractEngine {
         return this._handlePath("readlink", Path.resolve(path), [options]);
     }
 
-    /**
-     * @param {string} method
-     * @param {string} rawPath
-     * @param {any[]} args
-     */
-    async _handlePath(method, path, args) {
-        let parts;
+    async _handleFd(method, mappedFd, args = []) {
+        if (!this._fdMap.has(mappedFd)) {
+            this.throw("EBADF", undefined, syscallMap[method]);
+        }
+        const { fd, engine } = this._fdMap.get(mappedFd);
+        const res = await engine === this
+            ? engine[`_${method}`](fd, ...args)
+            : engine[method](fd, ...args);
+        if (method === "close") {
+            // fd has been closed, we can delete the key
+            this._fdMap.delete(mappedFd);
+        }
+        return res;
+    }
 
-        chooseEngine: for ( ; ; ) {
+    _storeFd(fd, engine) {
+        const mapped = this._fd++;
+        this._fdMap.set(mapped, { fd, engine });
+        return mapped;
+    }
+
+    async _chooseEngine(path, method) {
+        let parts = path.parts.slice();
+
+        chooseEngine: for (; ;) {
             let node = this.structure[path.root];
-
-            if (this._numberOfEngines === 1) {
-                // only one engine can handle it, itself
-                return this[`_${method}`](path, ...args);
-            }
-
-            parts = parts || path.parts.slice();
 
             let i;
             for (i = 0; i < parts.length; ++i) {
@@ -425,15 +632,41 @@ export class AbstractEngine {
                 }
             }
             if (parts.length >= i) {
-                let p;
-                const level = node[LEVEL];
-                const newPath = new Path(`/${parts.slice(level).join("/")}`);
-                if (engine === this) {
-                    p = engine[`_${method}`](newPath, ...args);
-                } else {
-                    p = engine[method](newPath, ...args);
-                }
-                if (level === 0 && method === "readdir") {
+                return [engine, node, parts];
+            }
+        }
+    }
+
+    /**
+     * @param {string} method
+     * @param {string} rawPath
+     * @param {any[]} args
+     */
+    async _handlePath(method, path, args) {
+        if (this._numberOfEngines === 1) {
+            // only one engine can handle it, itself
+            let p = this[`_${method}`](path, ...args);
+            if (method === "open") {
+                // store fd
+                p = p.then((fd) => this._storeFd(fd, this));
+            }
+            return p;
+        }
+
+        const [engine, node, parts] = await this._chooseEngine(path, method);
+
+        let p;
+        const level = node[LEVEL];
+        const newPath = new Path(`/${parts.slice(level).join("/")}`);
+        if (engine === this) {
+            p = engine[`_${method}`](newPath, ...args);
+        } else {
+            p = engine[method](newPath, ...args);
+        }
+
+        switch (method) {
+            case "readdir": { // TODO: not only level === 0
+                if (level === 0) {
                     const [options] = args;
                     p = p.then((files) => { // eslint-disable-line
                         const siblings = this._getSiblingMounts(newPath);
@@ -446,14 +679,23 @@ export class AbstractEngine {
                         return files.concat(siblings);
                     });
                 }
-                return p.catch((err) => {
-                    if (err instanceof FSException) {
-                        err.path = path;
-                    }
-                    return Promise.reject(err);
-                });
+                break;
+            }
+            case "open": {
+                /**
+                 * this method returns a file descriptor
+                 * we must remember which engine returned it to perform reverse substitutions
+                 */
+                p = p.then((fd) => this._storeFd(fd, engine));
             }
         }
+
+        return p.catch((err) => {
+            if (err instanceof FSException) {
+                err.path = path;
+            }
+            return Promise.reject(err);
+        });
     }
 
     _getSiblingMounts(path) {
@@ -530,4 +772,4 @@ export class AbstractEngine {
     }
 }
 
-AbstractEngine.prototype.constants = std.fs.constants; // provide the same constants
+AbstractEngine.prototype.constants = constants; // provide the same constants

@@ -19,6 +19,9 @@ describe("fs", "engine", "AbstactEngine", () => {
             expect(await abstract.readdir("/a/b/c/../../.././/../a/../a/b///////./././././/../../../")).to.be.deep.equal([
                 "a", "memory", "memory2"
             ]);
+
+            abstract.mount(new MemoryEngine(), "a/b/w");
+            expect(await abstract.readdir("/a/b")).to.be.deep.equal(["c", "w"]);
         });
     });
 

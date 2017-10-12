@@ -11,7 +11,26 @@ const {
             lstat,
             readdir,
             realpath,
-            readlink
+            readlink,
+            open,
+            close,
+            read,
+            write,
+            truncate,
+            ftruncate,
+            unlink,
+            utimes,
+            rmdir,
+            mkdir,
+            access,
+            chmod,
+            chown,
+            rename,
+            symlink,
+            link,
+            fstat,
+            fsync,
+            fdatasync
         }
     },
     promise
@@ -45,5 +64,101 @@ export default class StandardEngine extends AbstractEngine {
     @promisify
     _readlink(path, options, callback) {
         readlink(path.relativePath, options, callback);
+    }
+
+    @promisify
+    _open(path, flags, mode, callback) {
+        open(path.relativePath, flags, mode, callback);
+    }
+
+    @promisify
+    _close(fd, callback) {
+        close(fd, callback);
+    }
+
+    @promisify
+    _read(fd, buffer, offset, length, position, callback) {
+        read(fd, buffer, offset, length, position, callback);
+    }
+
+    @promisify
+    _write(fd, buffer, offset, length, position, callback) {
+        write(fd, buffer, offset, length, position, callback);
+    }
+
+    @promisify
+    _truncate(path, length, callback) {
+        truncate(path.relativePath, length, callback);
+    }
+
+    @promisify
+    _ftruncate(fd, length, callback) {
+        ftruncate(fd, length, callback);
+    }
+
+    @promisify
+    _unlink(path, callback) {
+        unlink(path.relativePath, callback);
+    }
+
+    @promisify
+    _utimes(path, atime, mtime, callback) {
+        utimes(path.relativePath, atime, mtime, callback);
+    }
+
+    @promisify
+    _rmdir(path, callback) {
+        rmdir(path.relativePath, callback);
+    }
+
+    @promisify
+    _mkdir(path, mode, callback) {
+        mkdir(path.relativePath, mode, callback);
+    }
+
+    @promisify
+    _access(path, mode, callback) {
+        access(path.relativePath, mode, callback);
+    }
+
+    @promisify
+    _chmod(path, mode, callback) {
+        chmod(path.relativePath, mode, callback);
+    }
+
+    @promisify
+    _chown(path, uid, gid, callback) {
+        chown(path.relativePath, uid, gid, callback);
+    }
+
+    @promisify
+    _rename(oldPath, newPath, callback) {
+        rename(oldPath.relativePath, newPath.relativePath, callback);
+    }
+
+    @promisify
+    _symlink(path, target, type, callback) {
+        symlink(target.fullPath, path.relativePath, type, callback);
+    }
+
+    @promisify
+    _link(existingPath, newPath, callback) {
+        // no cross engine links
+        link(existingPath.fullPath, newPath.fullPath, callback);
+    }
+
+    @promisify
+    _fstat(fd, callback) {
+        fstat(fd, callback);
+    }
+
+    @promisify
+    _fsync(fd, callback) {
+        fsync(fd, callback);
+    }
+
+    @promisify
+    _fdatasync(fd, callback) {
+        fdatasync(fd, callback);
     }
 }

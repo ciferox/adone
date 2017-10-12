@@ -107,6 +107,7 @@ const fs = adone.lazify({
     unlinkSync: () => (path) => std.fs.unlinkSync(path),
     createReadStream: () => (path, options) => std.fs.createReadStream(path, options),
     createWriteStream: () => (path, options) => std.fs.createWriteStream(path, options),
+    fuse: "./fuse",
     lock: ["./lock_file", (mod) => mod.lock],
     unlock: ["./lock_file", (mod) => mod.unlock],
     checkLock: ["./lock_file", (mod) => mod.check]

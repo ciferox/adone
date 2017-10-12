@@ -3,5 +3,6 @@ adone.lazify({
     Structure: ["./abstract_engine", (x) => x.Structure],
     Path: ["./abstract_engine", (x) => x.Path],
     MemoryEngine: "./memory_engine",
-    StandardEngine: "./standard_engine"
+    StandardEngine: "./standard_engine",
+    FuseEngine: "./fuse_engine"
 }, exports, require);
