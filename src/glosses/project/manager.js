@@ -119,6 +119,10 @@ export default class Manager extends task.Manager {
         this._loaded = true;
     }
 
+    getProjectEntries(path) {
+        return this.config.getProjectEntries(path);
+    }
+
     async clean(path) {
         this._checkLoaded();
         const entries = this.config.getProjectEntries(path);

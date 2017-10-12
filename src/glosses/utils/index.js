@@ -908,5 +908,6 @@ adone.lazify({
     toRegexRange: "./to_regex_range",
     splitString: "./split_string",
     match: "./match",
-    arrayDiff: "./array_diff"
+    arrayDiff: "./array_diff",
+    retry: "./retry"
 }, adone.asNamespace(exports), require);

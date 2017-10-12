@@ -1,8 +1,12 @@
-const { std: { fs: sfs, path: spath }, is, fs } = adone;
+const {
+    std: { fs: stdFs, path: stdPath },
+    is,
+    fs
+} = adone;
 
 export default class File {
     constructor(...path) {
-        this._path = spath.resolve(...path);
+        this._path = stdPath.resolve(...path);
         this._encoding = "utf8";
     }
 
@@ -33,7 +37,7 @@ export default class File {
     }
 
     statSync() {
-        return sfs.statSync(this._path);
+        return stdFs.statSync(this._path);
     }
 
     lstat() {
@@ -41,7 +45,7 @@ export default class File {
     }
 
     lstatSync() {
-        return sfs.lstatSync(this._path);
+        return stdFs.lstatSync(this._path);
     }
 
     mode() {
@@ -57,30 +61,30 @@ export default class File {
     }
 
     dirname() {
-        return spath.dirname(this._path);
+        return stdPath.dirname(this._path);
     }
 
     filename() {
-        return spath.basename(this._path);
+        return stdPath.basename(this._path);
     }
 
     extname() {
-        return spath.extname(this._path);
+        return stdPath.extname(this._path);
     }
 
     stem() {
-        return spath.basename(this._path, this.extname());
+        return stdPath.basename(this._path, this.extname());
     }
 
     relativePath(path) {
         if (path instanceof adone.fs.Directory) {
             path = path.path();
         }
-        return spath.relative(path, this._path);
+        return stdPath.relative(path, this._path);
     }
 
     exists() {
-        return fs.access(this._path, sfs.constants.F_OK).then(() => true, () => false);
+        return fs.access(this._path, stdFs.constants.F_OK).then(() => true, () => false);
     }
 
     create({ mode = 0o755 } = {}) {
@@ -113,12 +117,12 @@ export default class File {
 
     contentsSync(encoding = this._encoding) {
         encoding = this._handleEncoding(encoding);
-        return sfs.readFileSync(this._path, encoding);
+        return stdFs.readFileSync(this._path, encoding);
     }
 
     contentsStream(encoding = this._encoding) {
         encoding = this._handleEncoding(encoding);
-        return sfs.createReadStream(this._path, { encoding });
+        return stdFs.createReadStream(this._path, { encoding });
     }
 
     chmod(mode) {
@@ -132,7 +136,7 @@ export default class File {
         if (name instanceof File) {
             name = name.filename();
         }
-        const newPath = spath.join(this.dirname(), name);
+        const newPath = stdPath.join(this.dirname(), name);
         await fs.rename(this._path, newPath);
         this._path = newPath;
     }

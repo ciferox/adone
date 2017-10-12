@@ -1,538 +1,546 @@
 {
-    "namespace": {
-        "global": {
-            "description": "Global namespace"
-        },
-        "adone": {
-            "description": "Adone root namespace",
-            "index": "index",
-            "src": [
-                "index",
-                "glosses/common/**/*"
-            ],
-            "namespace": {
-                "global": {
-                    "description": "Global namespace"
-                },
-                "std": {
-                    "description": "Node.js standard modules"
-                },
-                "npm": {
-                    "description": "Npm's packages mounted as namespaces",
-                    "index": "npm"
-                },
-                "application": {
-                    "description": "Application framework",
-                    "index": "glosses/application/index",
-                    "src": "glosses/application/**/*"
-                },
-                "archive": {
-                    "description": "Archivers",
-                    "index": "glosses/archives/index",
-                    "src": "glosses/archives/**/*"
-                },
-                "assertion": {
-                    "description": "Assertion utilites",
-                    "index": "glosses/assertion/index",
-                    "src": "glosses/assertion/**/*"
-                },
-                "collection": {
-                    "description": "Implementations of common collections",
-                    "index": "glosses/collections/index",
-                    "src": "glosses/collections/**/*"
-                },
-                "compressor": {
-                    "description": "Compressors",
-                    "index": "glosses/compressors/index",
-                    "src": "glosses/compressors/**/*",
-                    "namespace": {
-                        "gz": {
-                            "description": "Implementation of gzip compressor",
-                            "index": "glosses/compressors/gzip",
-                            "src": "glosses/compressors/gzip.js"
-                        },
-                        "deflate": {
-                            "description": "Implementation of deflate compressor",
-                            "index": "glosses/compressors/deflate",
-                            "src": "glosses/compressors/deflate.js"
-                        },
-                        "brotli": {
-                            "description": "Implementation of brotli compressor",
-                            "index": "glosses/compressors/brotli",
-                            "src": "glosses/compressors/brotli.js"
-                        },
-                        "lzma": {
-                            "description": "Implementation of lzma compressor",
-                            "index": "glosses/compressors/lzma",
-                            "src": "glosses/compressors/lzma.js"
-                        },
-                        "xz": {
-                            "description": "Implementation of xz compressor",
-                            "index": "glosses/compressors/xz",
-                            "src": "glosses/compressors/xz.js"
-                        },
-                        "snappy": {
-                            "description": "Implementation of snappy compressor",
-                            "index": "glosses/compressors/snappy",
-                            "src": "glosses/compressors/snappy.js"
-                        }
+    "global": {
+        "description": "Global namespace"
+    },
+    "adone": {
+        "description": "Adone namespace",
+        "index": "index",
+        "src": [
+            "index.js",
+            "glosses/**/*",
+            "omnitron/**/*",
+            "native/**/*",
+            "npm/**/*",
+            "vendor/**/*"
+        ],
+        "namespace": {
+            "global": {
+                "description": "Global namespace"
+            },
+            "std": {
+                "description": "Namespace consisting of node.js standard modules"
+            },
+            "npm": {
+                "description": "Namespace consisting of npm adone-based modules",
+                "index": "npm",
+                "src": "npm/**/*"
+            },
+            "application": {
+                "description": "Application framework",
+                "index": "glosses/application/index",
+                "src": "glosses/application/**/*"
+            },
+            "archive": {
+                "description": "Archivers",
+                "index": "glosses/archives/index",
+                "src": "glosses/archives/**/*"
+            },
+            "assertion": {
+                "description": "Assertion utilites",
+                "index": "glosses/assertion/index",
+                "src": "glosses/assertion/**/*"
+            },
+            "collection": {
+                "description": "Implementations of common collections",
+                "index": "glosses/collections/index",
+                "src": "glosses/collections/**/*"
+            },
+            "compressor": {
+                "description": "Compressors",
+                "index": "glosses/compressors/index",
+                "src": "glosses/compressors/**/*",
+                "namespace": {
+                    "gz": {
+                        "description": "Implementation of gzip compressor",
+                        "index": "glosses/compressors/gzip",
+                        "src": "glosses/compressors/gzip.js"
+                    },
+                    "deflate": {
+                        "description": "Implementation of deflate compressor",
+                        "index": "glosses/compressors/deflate",
+                        "src": "glosses/compressors/deflate.js"
+                    },
+                    "brotli": {
+                        "description": "Implementation of brotli compressor",
+                        "index": "glosses/compressors/brotli",
+                        "src": "glosses/compressors/brotli.js"
+                    },
+                    "lzma": {
+                        "description": "Implementation of lzma compressor",
+                        "index": "glosses/compressors/lzma",
+                        "src": "glosses/compressors/lzma.js"
+                    },
+                    "xz": {
+                        "description": "Implementation of xz compressor",
+                        "index": "glosses/compressors/xz",
+                        "src": "glosses/compressors/xz.js"
+                    },
+                    "snappy": {
+                        "description": "Implementation of snappy compressor",
+                        "index": "glosses/compressors/snappy",
+                        "src": "glosses/compressors/snappy.js"
                     }
-                },
-                "configuration": {
-                    "description": "Configurations",
-                    "index": "glosses/configurations/index",
-                    "src": "glosses/configurations/**/*"
-                },
-                "core": {
-                    "description": "Promise based transformation streaming engine",
-                    "index": "glosses/core/index",
-                    "src": "glosses/core/**/*"
-                },
-                "crypto": {
-                    "description": "Common cryptographic utilites",
-                    "index": "glosses/crypto/index",
-                    "src": "glosses/crypto/**/*",
-                    "namespace": {
-                        "password": {
-                            "description": "Password-specific utilites",
-                            "index": "glosses/crypto/password",
-                            "src": "glosses/crypto/password.js"
-                        }
+                }
+            },
+            "configuration": {
+                "description": "Configurations",
+                "index": "glosses/configurations/index",
+                "src": "glosses/configurations/**/*"
+            },
+            "core": {
+                "description": "Promise based transformation streaming engine",
+                "index": "glosses/core/index",
+                "src": "glosses/core/**/*"
+            },
+            "crypto": {
+                "description": "Common cryptographic utilites",
+                "index": "glosses/crypto/index",
+                "src": "glosses/crypto/**/*",
+                "namespace": {
+                    "password": {
+                        "description": "Password-specific utilites",
+                        "index": "glosses/crypto/password",
+                        "src": "glosses/crypto/password.js"
                     }
-                },
-                "data": {
-                    "description": "Data generic manipulation utilites and serializers",
-                    "index": "glosses/data/index",
-                    "src": "glosses/data/**/*",
-                    "namespace": {
-                        "base64": {
-                            "description": "Implementation of BASE64 serializer",
-                            "index": "glosses/data/base64",
-                            "src": "glosses/data/base64.js"
-                        },
-                        "bson": {
-                            "description": "Implementation of BSON serializer",
-                            "index": "glosses/data/bson/index",
-                            "src": "glosses/data/bson/**/*"
-                        },
-                        "json": {
-                            "description": "Implementation of JSON serializers",
-                            "index": "glosses/data/json/index",
-                            "src": "glosses/data/json/**/*"
-                        },
-                        "json5": {
-                            "description": "Implementation of JSON5 serializer",
-                            "index": "glosses/data/json5",
-                            "src": "glosses/data/json5.js"
-                        },
-                        "mpak": {
-                            "description": "Implementation of MessagePack serializer",
-                            "index": "glosses/data/mpak",
-                            "src": "glosses/data/mpak.js"
-                        },
-                        "yaml": {
-                            "description": "Implementation of YAML serializer",
-                            "index": "glosses/data/yaml/index",
-                            "src": "glosses/data/yaml/**/*"
-                        }
+                }
+            },
+            "data": {
+                "description": "Data generic manipulation utilites and serializers",
+                "index": "glosses/data/index",
+                "src": "glosses/data/**/*",
+                "namespace": {
+                    "base64": {
+                        "description": "Implementation of BASE64 serializer",
+                        "index": "glosses/data/base64",
+                        "src": "glosses/data/base64.js"
+                    },
+                    "bson": {
+                        "description": "Implementation of BSON serializer",
+                        "index": "glosses/data/bson/index",
+                        "src": "glosses/data/bson/**/*"
+                    },
+                    "json": {
+                        "description": "Implementation of JSON serializers",
+                        "index": "glosses/data/json/index",
+                        "src": "glosses/data/json/**/*"
+                    },
+                    "json5": {
+                        "description": "Implementation of JSON5 serializer",
+                        "index": "glosses/data/json5",
+                        "src": "glosses/data/json5.js"
+                    },
+                    "mpak": {
+                        "description": "Implementation of MessagePack serializer",
+                        "index": "glosses/data/mpak",
+                        "src": "glosses/data/mpak.js"
+                    },
+                    "yaml": {
+                        "description": "Implementation of YAML serializer",
+                        "index": "glosses/data/yaml/index",
+                        "src": "glosses/data/yaml/**/*"
                     }
-                },
-                "database": {
-                    "description": "Databases",
-                    "index": "glosses/databases/index",
-                    "src": "glosses/databases/**/*",
-                    "namespace": {
-                        "level": {
-                            "description": "Implementation of LevelDB",
-                            "index": "glosses/databases/level/index",
-                            "src": "glosses/databases/level/**/*"
-                        }
+                }
+            },
+            "database": {
+                "description": "Databases",
+                "index": "glosses/databases/index",
+                "src": "glosses/databases/**/*",
+                "namespace": {
+                    "level": {
+                        "description": "Implementation of LevelDB",
+                        "index": "glosses/databases/level/index",
+                        "src": "glosses/databases/level/**/*"
                     }
-                },
-                "datetime": {
-                    "description": "Datetime utilites",
-                    "index": "glosses/datetime/index",
-                    "src": "glosses/datetime/**/*"
-                },
-                "diff": {
-                    "description": "Text differencing",
-                    "index": "glosses/diff/index",
-                    "src": "glosses/diff/**/*"
-                },
-                "event": {
-                    "description": "Event emitters and other event utilites",
-                    "index": "glosses/events/index",
-                    "src": "glosses/events/**/*"
-                },
-                "fast": {
-                    "description": "File automation streaming templates/transforms",
-                    "index": "glosses/fast/index",
-                    "src": "glosses/fast/**/*"
-                },
-                "fs": {
-                    "description": "Filesystem utilites",
-                    "index": "glosses/fs/index",
-                    "src": "glosses/fs/**/*"
-                },
-                "geoip": {
-                    "description": "Geolocation utilites",
-                    "index": "glosses/geoip"
-                },
-                "hardware": {
-                    "description": "Hardware stuff",
-                    "index": "glosses/hardware/index",
-                    "src": "glosses/hardware/**/*",
-                    "namespace": {
-                        "hid": {
-                            "description": "USB HID stuff",
-                            "index": "glosses/hardware/hid",
-                            "src": "glosses/hardware/hid.js"
-                        }
+                }
+            },
+            "datetime": {
+                "description": "Datetime utilites",
+                "index": "glosses/datetime/index",
+                "src": "glosses/datetime/**/*"
+            },
+            "diff": {
+                "description": "Text differencing",
+                "index": "glosses/diff/index",
+                "src": "glosses/diff/**/*"
+            },
+            "event": {
+                "description": "Event emitters and other event utilites",
+                "index": "glosses/events/index",
+                "src": "glosses/events/**/*"
+            },
+            "fast": {
+                "description": "File automation streaming templates/transforms",
+                "index": "glosses/fast/index",
+                "src": "glosses/fast/**/*"
+            },
+            "fs": {
+                "description": "Filesystem utilites",
+                "index": "glosses/fs/index",
+                "src": "glosses/fs/**/*"
+            },
+            "geoip": {
+                "description": "Geolocation utilites",
+                "index": "glosses/geoip"
+            },
+            "hardware": {
+                "description": "Hardware stuff",
+                "index": "glosses/hardware/index",
+                "src": "glosses/hardware/**/*",
+                "namespace": {
+                    "hid": {
+                        "description": "USB HID stuff",
+                        "index": "glosses/hardware/hid",
+                        "src": "glosses/hardware/hid.js"
                     }
-                },
-                "is": {
-                    "description": "Implementation of common predicates",
-                    "index": "glosses/common/is",
-                    "src": "glosses/common/is.js"
-                },
-                "js": {
-                    "description": "JavaScript language stuff",
-                    "index": "glosses/js/index",
-                    "src": "glosses/js/**/*",
-                    "namespace": {
-                        "adone": {
-                            "description": "Implementation of adone code analysis and modification toolkit",
-                            "index": "glosses/js/adone/index",
-                            "src": "glosses/js/adone/**/*"
-                        },
-                        "compiler": {
-                            "description": "Compiler",
-                            "index": "glosses/js/compiler/index",
-                            "src": "glosses/js/compiler/**/*",
-                            "namespace": {}
-                        }
+                }
+            },
+            "is": {
+                "description": "Implementation of common predicates",
+                "index": "glosses/common/is",
+                "src": "glosses/common/is.js"
+            },
+            "js": {
+                "description": "JavaScript language stuff",
+                "index": "glosses/js/index",
+                "src": "glosses/js/**/*",
+                "namespace": {
+                    "adone": {
+                        "description": "Implementation of adone code analysis and modification toolkit",
+                        "index": "glosses/js/adone/index",
+                        "src": "glosses/js/adone/**/*"
+                    },
+                    "compiler": {
+                        "description": "Compiler",
+                        "index": "glosses/js/compiler/index",
+                        "src": "glosses/js/compiler/**/*",
+                        "namespace": {}
                     }
-                },
-                "math": {
-                    "description": "Implementation of common math classes and primitives",
-                    "index": "glosses/math/index",
-                    "src": "glosses/math/**/*",
-                    "namespace": {
-                        "matrix": {
-                            "description": "Implementation of vector and matrix math",
-                            "index": "glosses/math/matrix/index",
-                            "src": "glosses/math/matrix/**/*"
-                        }
+                }
+            },
+            "math": {
+                "description": "Implementation of common math classes and primitives",
+                "index": "glosses/math/index",
+                "src": "glosses/math/**/*",
+                "namespace": {
+                    "matrix": {
+                        "description": "Implementation of vector and matrix math",
+                        "index": "glosses/math/matrix/index",
+                        "src": "glosses/math/matrix/**/*"
                     }
-                },
-                "meta": {
-                    "description": "Meta utilites and implementation of adone-specific inspection",
-                    "index": "glosses/meta/index",
-                    "src": "glosses/meta/**/*",
-                    "namespace": {
-                        "reflect": {
-                            "description": "Metadata reflection",
-                            "index": "glosses/meta/reflect",
-                            "src": "glosses/meta/reflect.js"
-                        }
+                }
+            },
+            "meta": {
+                "description": "Meta utilites and implementation of adone-specific inspection",
+                "index": "glosses/meta/index",
+                "src": "glosses/meta/**/*",
+                "namespace": {
+                    "reflect": {
+                        "description": "Metadata reflection",
+                        "index": "glosses/meta/reflect",
+                        "src": "glosses/meta/reflect.js"
                     }
-                },
-                "metrics": {
-                    "description": "Different metrics",
-                    "index": "glosses/metrics/index",
-                    "src": "glosses/metrics/**/*"
-                },
-                "net": {
-                    "description": "Implementation of different network abstractions, protocols and associated stuff",
-                    "index": "glosses/net/index",
-                    "src": "glosses/net/**/*",
-                    "namespace": {
-                        "address": {
-                            "description": "Some usefull utilites for manipulating of IPv4/IPv6 addresses",
-                            "index": "glosses/net/address/index",
-                            "src": "glosses/net/address/**/*"
-                        },
-                        "http": {
-                            "description": "Implementation of http client/server",
-                            "index": "glosses/net/http/index",
-                            "src": "glosses/net/http/**/*"
-                        },
-                        "mail": {
-                            "description": "Implementation of mail client",
-                            "index": "glosses/net/mail/index",
-                            "src": "glosses/net/mail/**/*"
-                        },
-                        "mqtt": {
-                            "description": "Implementation of mqtt client/server",
-                            "index": "glosses/net/mqtt/index",
-                            "src": "glosses/net/mqtt/index"
-                        },
-                        "proxy": {
-                            "description": "Different proxy implementations",
-                            "index": "glosses/net/proxies/index",
-                            "src": "glosses/net/proxies/**/*"
-                        },
-                        "ssh": {
-                            "description": "Implementation of ssh client/server",
-                            "index": "glosses/net/ssh/index",
-                            "src": "glosses/net/ssh/**/*"
-                        },
-                        "ws": {
-                            "description": "Implementation of websockets client/server",
-                            "index": "glosses/net/ws/index",
-                            "src": "glosses/net/ws/**/*"
-                        },
-                        "util": {
-                            "description": "Different net utilites",
-                            "index": "glosses/net/utils",
-                            "src": "glosses/net/utils.js",
-                            "namespace": {
-                                "description": "Different UUID implementations",
-                                "index": "glosses/utils/uuid/index",
-                                "src": "glosses/utils/uuid/**/*"
-                            }
-                        }
-                    }
-                },
-                "netron": {
-                    "description": "Implementation of Netron",
-                    "index": "glosses/netron/index",
-                    "src": "glosses/netron/**/*",
-                    "namespace": {
-                        "decorator": {
-                            "description": "",
-                            "index": "glosses/netron/decorators",
-                            "src": "glosses/netron/decorators.js"
-                        },
-                        "ws": {
-                            "description": "WebSocket adapter and implementation of netron/peer",
-                            "index": "glosses/netron/ws/index",
-                            "src": "glosses/netron/ws/src"
-                        }
-                    }
-                },
-                "netscan": {
-                    "description": "Network scanning utilites",
-                    "index": "glosses/netscan/index",
-                    "src": "glosses/netscan/**/*"
-                },
-                "notifier": {
-                    "description": "Implementation of system notifier",
-                    "index": "glosses/notifier/index",
-                    "src": "glosses/notifier/**/*"
-                },
-                "omnitron": {
-                    "description": "Omnitron",
-                    "index": "omnitron/index",
-                    "src": "omnitron/**/*"
-                },
-                "project": {
-                    "description": "Adone project management stuff",
-                    "index": "glosses/project/index",
-                    "src": "glosses/project/**/*",
-                    "namespace": {
-                        "task": {
-                            "description": "Project tasks",
-                            "index": "glosses/project/tasks/index",
-                            "src": "glosses/project/tasks/**/*"
-                        }
-                    }
-                },
-                "promise": {
-                    "description": "Promise utilites",
-                    "index": "glosses/promise/index",
-                    "src": "glosses/promise/**/*"
-                },
-                "punycode": {
-                    "description": "IMplementation of punycode",
-                    "index": "glosses/punycode/index",
-                    "src": "glosses/punycode/**/*"
-                },
-                "regex": {
-                    "description": "Regular expression utiliter and common regular expressions",
-                    "index": "glosses/regex/index",
-                    "src": "glosses/regex/**/*"
-                },
-                "schema": {
-                    "description": "Schema validators",
-                    "index": "glosses/schema/index",
-                    "src": "glosses/schema/**/*"
-                },
-                "semver": {
-                    "description": "Semantic version parser",
-                    "index": "glosses/semver/index",
-                    "src": "glosses/semver/**/*"
-                },
-                "shani": {
-                    "description": "Testing framework",
-                    "index": "glosses/shani/index",
-                    "src": "glosses/shani/**/*"
-                },
-                "sourcemap": {
-                    "description": "Sourcemaps",
-                    "index": "glosses/sourcemap/index",
-                    "src": "glosses/sourcemap/**/*"
-                },
-                "stream": {
-                    "description": "Different streams and stream utilites",
-                    "index": "glosses/streams/index",
-                    "src": "glosses/streams/**/*"
-                },
-                "system": {
-                    "description": "System utilites",
-                    "index": "glosses/system/index",
-                    "src": "glosses/system/**/*"
-                },
-                "tasks": {
-                    "description": "Tasks management",
-                    "index": "glosses/tasks/index",
-                    "src": "glosses/tasks/**/*"
-                },
-                "templating": {
-                    "description": "Template engines",
-                    "index": "glosses/templating/index",
-                    "src": "glosses/templating/**/*"
-                },
-                "terminal": {
-                    "description": "Terminal stuff",
-                    "index": "glosses/terminal/index",
-                    "src": "glosses/terminal/**/*",
-                    "namespace": {
-                        "ui": {
-                            "description": "Console user interface framework",
-                            "index": "glosses/cui/index",
-                            "src": "glosses/cui/**/*",
-                            "namespace": {
-                                "widget": {
-                                    "description": "Implementations of CUI widgets",
-                                    "index": "glosses/cui/widgets/index",
-                                    "src": "glosses/cui/widgets/**/*"
-                                }
-                            }
-                        }
-                    }
-                },
-                "text": {
-                    "description": "Text utilites",
-                    "index": "glosses/text/index",
-                    "src": "glosses/text/**/*",
-                    "namespace": {
-                        "ansi": {
-                            "description": "Common ansi utilites",
-                            "index": "glosses/text/index"
-                        },
-                        "pretty": {
-                            "description": "Implementation of pretty-printers",
-                            "index": "glosses/text/pretties/?",
-                            "src": "glosses/text/pretties/**/*"
-                        },
-                        "unicode": {
-                            "description": "Common unicode utilites",
-                            "index": "glosses/text/unicode",
-                            "src": "glosses/text/unicode.js",
-                            "namespace": {
-                                "symbol": {
-                                    "description": "Set of useful unicode symbols",
-                                    "index": "glosses/text/unicode",
-                                    "src": "glosses/text/unicode.js"
-                                }
-                            }
-                        },
-                        "spinner": {
-                            "description": "Text spinners",
-                            "index": "glosses/text/spinners",
-                            "src": "glosses/text/spinners.js"
-                        },
-                        "table": {
-                            "description": "Implementation of cli table",
-                            "index": "glosses/text/table",
-                            "src": "glosses/text/table.js"
-                        }
-                    }
-                },
-                "util": {
-                    "description": "Utilites",
-                    "index": "glosses/utils/index",
-                    "src": "glosses/utils/**/*",
-                    "namespace": {
-                        "uuid": {
-                            "description": "UUID v1/v4/v5",
+                }
+            },
+            "metrics": {
+                "description": "Different metrics",
+                "index": "glosses/metrics/index",
+                "src": "glosses/metrics/**/*"
+            },
+            "net": {
+                "description": "Implementation of different network abstractions, protocols and associated stuff",
+                "index": "glosses/net/index",
+                "src": "glosses/net/**/*",
+                "namespace": {
+                    "address": {
+                        "description": "Some usefull utilites for manipulating of IPv4/IPv6 addresses",
+                        "index": "glosses/net/address/index",
+                        "src": "glosses/net/address/**/*"
+                    },
+                    "http": {
+                        "description": "Implementation of http client/server",
+                        "index": "glosses/net/http/index",
+                        "src": "glosses/net/http/**/*"
+                    },
+                    "mail": {
+                        "description": "Implementation of mail client",
+                        "index": "glosses/net/mail/index",
+                        "src": "glosses/net/mail/**/*"
+                    },
+                    "mqtt": {
+                        "description": "Implementation of mqtt client/server",
+                        "index": "glosses/net/mqtt/index",
+                        "src": "glosses/net/mqtt/index"
+                    },
+                    "proxy": {
+                        "description": "Different proxy implementations",
+                        "index": "glosses/net/proxies/index",
+                        "src": "glosses/net/proxies/**/*"
+                    },
+                    "ssh": {
+                        "description": "Implementation of ssh client/server",
+                        "index": "glosses/net/ssh/index",
+                        "src": "glosses/net/ssh/**/*"
+                    },
+                    "ws": {
+                        "description": "Implementation of websockets client/server",
+                        "index": "glosses/net/ws/index",
+                        "src": "glosses/net/ws/**/*"
+                    },
+                    "util": {
+                        "description": "Different net utilites",
+                        "index": "glosses/net/utils",
+                        "src": "glosses/net/utils.js",
+                        "namespace": {
+                            "description": "Different UUID implementations",
                             "index": "glosses/utils/uuid/index",
                             "src": "glosses/utils/uuid/**/*"
-                        },
-                        "fakeClock": {
-                            "description": "Fake clock and timers",
-                            "index": "glosses/net/utils/fake_clock",
-                            "src": "glosses/net/utils/fake_clock.js"
-                        },
-                        "iconv": {
-                            "description": "Iconv",
-                            "index": "glosses/net/utils/iconv/index",
-                            "src": "glosses/net/utils/iconv/**/*"
-                        },
-                        "ltgt": {
-                            "description": "Comparators",
-                            "index": "glosses/net/utils/ltgt",
-                            "src": "glosses/net/utils/ltgt.js"
                         }
                     }
-                },
-                "shell": {
-                    "description": "Implementation of some shell utilites",
-                    "index": "glosses/shell/index",
-                    "src": "glosses/shell/**/*"
-                },
-                "vault": {
-                    "description": "Vault implementation on top of leveldb",
-                    "index": "glosses/vault/index",
-                    "src": "glosses/vault/**/*"
-                },
-                "vcs": {
-                    "description": "Version control systems",
-                    "index": "glosses/vcs/index",
-                    "src": "glosses/vcs/**/*",
-                    "namespace": {
-                        "git": {
-                            "description": "Git client implementation",
-                            "index": "glosses/vcs/git/index",
-                            "src": "glosses/vcs/git/**/*"
-                        }
-                    }
-                },
-                "vendor": {
-                    "description": "Vendor's code",
-                    "index": "vendor/index",
-                    "src": "vendor/**/*",
-                    "namespace": {
-                        "lodash": {
-                            "description": "",
-                            "index": "glosses/vendor/lodash",
-                            "src": "glosses/vendor/lodash.js"
-                        }
-                    }
-                },
-                "virtualization": {
-                    "description": "Some stuff for virtualization",
-                    "index": "glosses/virtualization/index",
-                    "src": "glosses/virtualization/**/*",
-                    "namespace": {
-                        "libvirt": {
-                            "sescription": "IMplementation of libvirt",
-                            "index": "glosses/virtualization/libvirt/index",
-                            "src": "glosses/virtualization/libvirt/**/*"
-                        },
-                        "virtualbox": {
-                            "sescription": "VirtualBox client",
-                            "index": "glosses/virtualization/virtualbox/index",
-                            "src": "glosses/virtualization/virtualbox/**/*"
-                        }
-                    }
-                },
-                "x": {
-                    "description": "Exceptions and helpers",
-                    "index": "glosses/common/x",
-                    "src": "glosses/common/x.js"
                 }
+            },
+            "netron": {
+                "description": "Implementation of Netron",
+                "index": "glosses/netron/index",
+                "src": "glosses/netron/**/*",
+                "namespace": {
+                    "decorator": {
+                        "description": "",
+                        "index": "glosses/netron/decorators",
+                        "src": "glosses/netron/decorators.js"
+                    },
+                    "ws": {
+                        "description": "WebSocket adapter and implementation of netron/peer",
+                        "index": "glosses/netron/ws/index",
+                        "src": "glosses/netron/ws/src"
+                    }
+                }
+            },
+            "netscan": {
+                "description": "Network scanning utilites",
+                "index": "glosses/netscan/index",
+                "src": "glosses/netscan/**/*"
+            },
+            "notifier": {
+                "description": "Implementation of system notifier",
+                "index": "glosses/notifier/index",
+                "src": "glosses/notifier/**/*"
+            },
+            "omnitron": {
+                "description": "Omnitron",
+                "index": "omnitron/index",
+                "src": "omnitron/**/*"
+            },
+            "project": {
+                "description": "Adone project management stuff",
+                "index": "glosses/project/index",
+                "src": "glosses/project/**/*",
+                "namespace": {
+                    "task": {
+                        "description": "Project tasks",
+                        "index": "glosses/project/tasks/index",
+                        "src": "glosses/project/tasks/**/*"
+                    }
+                }
+            },
+            "promise": {
+                "description": "Promise utilites",
+                "index": "glosses/promise/index",
+                "src": "glosses/promise/**/*"
+            },
+            "punycode": {
+                "description": "IMplementation of punycode",
+                "index": "glosses/punycode/index",
+                "src": "glosses/punycode/**/*"
+            },
+            "regex": {
+                "description": "Regular expression utiliter and common regular expressions",
+                "index": "glosses/regex/index",
+                "src": "glosses/regex/**/*"
+            },
+            "schema": {
+                "description": "Schema validators",
+                "index": "glosses/schema/index",
+                "src": "glosses/schema/**/*"
+            },
+            "semver": {
+                "description": "Semantic version parser",
+                "index": "glosses/semver/index",
+                "src": "glosses/semver/**/*"
+            },
+            "shani": {
+                "description": "Testing framework",
+                "index": "glosses/shani/index",
+                "src": "glosses/shani/**/*"
+            },
+            "sourcemap": {
+                "description": "Sourcemaps",
+                "index": "glosses/sourcemap/index",
+                "src": "glosses/sourcemap/**/*"
+            },
+            "stream": {
+                "description": "Different streams and stream utilites",
+                "index": "glosses/streams/index",
+                "src": "glosses/streams/**/*"
+            },
+            "system": {
+                "description": "System utilites",
+                "index": "glosses/system/index",
+                "src": "glosses/system/**/*"
+            },
+            "tasks": {
+                "description": "Tasks management",
+                "index": "glosses/tasks/index",
+                "src": "glosses/tasks/**/*"
+            },
+            "templating": {
+                "description": "Template engines",
+                "index": "glosses/templating/index",
+                "src": "glosses/templating/**/*"
+            },
+            "terminal": {
+                "description": "Terminal stuff",
+                "index": "glosses/terminal/index",
+                "src": "glosses/terminal/**/*",
+                "namespace": {
+                    "ui": {
+                        "description": "Console user interface framework",
+                        "index": "glosses/cui/index",
+                        "src": "glosses/cui/**/*",
+                        "namespace": {
+                            "widget": {
+                                "description": "Implementations of CUI widgets",
+                                "index": "glosses/cui/widgets/index",
+                                "src": "glosses/cui/widgets/**/*"
+                            }
+                        }
+                    }
+                }
+            },
+            "text": {
+                "description": "Text utilites",
+                "index": "glosses/text/index",
+                "src": "glosses/text/**/*",
+                "namespace": {
+                    "ansi": {
+                        "description": "Common ansi utilites",
+                        "index": "glosses/text/index"
+                    },
+                    "pretty": {
+                        "description": "Implementation of pretty-printers",
+                        "index": "glosses/text/pretties/?",
+                        "src": "glosses/text/pretties/**/*"
+                    },
+                    "unicode": {
+                        "description": "Common unicode utilites",
+                        "index": "glosses/text/unicode",
+                        "src": "glosses/text/unicode.js",
+                        "namespace": {
+                            "symbol": {
+                                "description": "Set of useful unicode symbols",
+                                "index": "glosses/text/unicode",
+                                "src": "glosses/text/unicode.js"
+                            }
+                        }
+                    },
+                    "spinner": {
+                        "description": "Text spinners",
+                        "index": "glosses/text/spinners",
+                        "src": "glosses/text/spinners.js"
+                    },
+                    "table": {
+                        "description": "Implementation of cli table",
+                        "index": "glosses/text/table",
+                        "src": "glosses/text/table.js"
+                    }
+                }
+            },
+            "util": {
+                "description": "Utilites",
+                "index": "glosses/utils/index",
+                "src": "glosses/utils/**/*",
+                "namespace": {
+                    "uuid": {
+                        "description": "UUID v1/v4/v5",
+                        "index": "glosses/utils/uuid/index",
+                        "src": "glosses/utils/uuid/**/*"
+                    },
+                    "fakeClock": {
+                        "description": "Fake clock and timers",
+                        "index": "glosses/net/utils/fake_clock",
+                        "src": "glosses/net/utils/fake_clock.js"
+                    },
+                    "iconv": {
+                        "description": "Iconv",
+                        "index": "glosses/net/utils/iconv/index",
+                        "src": "glosses/net/utils/iconv/**/*"
+                    },
+                    "ltgt": {
+                        "description": "Comparators",
+                        "index": "glosses/net/utils/ltgt",
+                        "src": "glosses/net/utils/ltgt.js"
+                    },
+                    "retry": {
+                        "description": "Abstraction for exponential and custom retry strategies for failed operations",
+                        "index": "glosses/net/utils/retry",
+                        "src": "glosses/net/utils/retry.js"
+                    }
+                }
+            },
+            "shell": {
+                "description": "Implementation of some shell utilites",
+                "index": "glosses/shell/index",
+                "src": "glosses/shell/**/*"
+            },
+            "vault": {
+                "description": "Vault implementation on top of leveldb",
+                "index": "glosses/vault/index",
+                "src": "glosses/vault/**/*"
+            },
+            "vcs": {
+                "description": "Version control systems",
+                "index": "glosses/vcs/index",
+                "src": "glosses/vcs/**/*",
+                "namespace": {
+                    "git": {
+                        "description": "Git client implementation",
+                        "index": "glosses/vcs/git/index",
+                        "src": "glosses/vcs/git/**/*"
+                    }
+                }
+            },
+            "vendor": {
+                "description": "Vendor's code",
+                "index": "vendor/index",
+                "src": "vendor/**/*",
+                "namespace": {
+                    "lodash": {
+                        "description": "",
+                        "index": "glosses/vendor/lodash",
+                        "src": "glosses/vendor/lodash.js"
+                    }
+                }
+            },
+            "virtualization": {
+                "description": "Some stuff for virtualization",
+                "index": "glosses/virtualization/index",
+                "src": "glosses/virtualization/**/*",
+                "namespace": {
+                    "libvirt": {
+                        "sescription": "IMplementation of libvirt",
+                        "index": "glosses/virtualization/libvirt/index",
+                        "src": "glosses/virtualization/libvirt/**/*"
+                    },
+                    "virtualbox": {
+                        "sescription": "VirtualBox client",
+                        "index": "glosses/virtualization/virtualbox/index",
+                        "src": "glosses/virtualization/virtualbox/**/*"
+                    }
+                }
+            },
+            "x": {
+                "description": "Exceptions and helpers",
+                "index": "glosses/common/x",
+                "src": "glosses/common/x.js"
             }
         }
     }

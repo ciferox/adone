@@ -239,7 +239,8 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             adone.lazify({
                 term: () => new adone.terminal.Terminal(),
                 logger: () => adone.application.Logger.default(),
-                netron: () => new adone.netron.Netron()
+                netron: () => new adone.netron.Netron(),
+                realm: () => new adone.realm.Realm()
             }, runtime);
 
             return runtime;
@@ -342,6 +343,9 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         regex: "./glosses/regex",
         task: "./glosses/tasks",
         project: "./glosses/project",
+
+        // Realm
+        realm: "./realm",
 
         // Omnitron
         omnitron: "./omnitron",

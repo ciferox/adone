@@ -1,4 +1,9 @@
-const { is, x, promise: { promisify }, std } = adone;
+const {
+    is,
+    x,
+    promise: { promisify },
+    std
+} = adone;
 
 const fs = adone.lazify({
     readlink: () => (path, options) => new Promise((resolve, reject) => {
@@ -67,7 +72,7 @@ const fs = adone.lazify({
             err ? reject(err) : resolve();
         });
     }),
-    // realpath: () => promisify(std.fs.realpath),
+    realpath: () => promisify(std.fs.realpath),
     rm: "./rm",
     File: "./file",
     Directory: "./directory",
@@ -101,7 +106,10 @@ const fs = adone.lazify({
     accessSync: () => (path, mode) => std.fs.accessSync(path, mode),
     unlinkSync: () => (path) => std.fs.unlinkSync(path),
     createReadStream: () => (path, options) => std.fs.createReadStream(path, options),
-    createWriteStream: () => (path, options) => std.fs.createWriteStream(path, options)
+    createWriteStream: () => (path, options) => std.fs.createWriteStream(path, options),
+    lock: ["./lock_file", (mod) => mod.lock],
+    unlock: ["./lock_file", (mod) => mod.unlock],
+    checkLock: ["./lock_file", (mod) => mod.check]
 }, adone.asNamespace(exports), require);
 
 const lazy = adone.lazify({
@@ -222,301 +230,6 @@ export const fd = adone.lazify({
         });
     }
 });
-
-const ok = /^v[0-5]\./.test(process.version);
-
-const newError = (err) => err && err.syscall === "realpath" && (err.code === "ELOOP" || err.code === "ENOMEM" || err.code === "ENAMETOOLONG");
-
-let nextPartRe;
-let splitRootRe;
-
-// Regexp that finds the next partion of a (partial) path
-// result is [base_with_slash, base], e.g. ['somedir/', 'somedir']
-if (is.windows) {
-    nextPartRe = /(.*?)(?:[/\\]+|$)/g;
-} else {
-    nextPartRe = /(.*?)(?:[/]+|$)/g;
-}
-
-// Regex to find the device root, including trailing slash. E.g. 'c:\\'.
-if (is.windows) {
-    splitRootRe = /^(?:[a-zA-Z]:|[\\/]{2}[^\\/]+[\\/][^\\/]+)?[\\/]*/;
-} else {
-    splitRootRe = /^[/]*/;
-}
-
-export const realpath = (p, cache) => {
-    if (ok) {
-        return new Promise((resolve, reject) => {
-            std.fs.realpath(p, cache, (err, resolvedPath) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(resolvedPath);
-            });
-        });
-    }
-
-    return new Promise((resolve, reject) => {
-        std.fs.realpath(p, cache, (err, result) => {
-            if (newError(err)) {
-                // make p is absolute
-                p = std.path.resolve(p);
-
-                if (cache && Object.prototype.hasOwnProperty.call(cache, p)) {
-                    return process.nextTick(resolve, cache[p]);
-                }
-
-                const original = p;
-                const seenLinks = {};
-                const knownHard = {};
-
-                // current character position in p
-                let pos;
-                // the partial path so far, including a trailing slash if any
-                let current;
-                // the partial path without a trailing slash (except when pointing at a root)
-                let base;
-                // the partial path scanned in the previous round, with slash
-                let previous;
-
-                let start = null;
-                let loop = null;
-
-                const gotResolvedLink = (resolvedLink) => {
-                    // resolve the link, then start over
-                    p = std.path.resolve(resolvedLink, p.slice(pos));
-                    start();
-                };
-
-                const gotTarget = (err, target, base) => {
-                    if (err) {
-                        return reject(err);
-                    }
-
-                    const resolvedLink = std.path.resolve(previous, target);
-                    if (cache) {
-                        cache[base] = resolvedLink;
-                    }
-                    gotResolvedLink(resolvedLink);
-                };
-
-                const gotStat = (err, stat) => {
-                    if (err) {
-                        return reject(err);
-                    }
-
-                    // if not a symlink, skip to the next path part
-                    if (!stat.isSymbolicLink()) {
-                        knownHard[base] = true;
-                        if (cache) {
-                            cache[base] = base;
-                        }
-                        return process.nextTick(loop);
-                    }
-
-                    // stat & read the link if not read before
-                    // call gotTarget as soon as the link target is known
-                    // dev/ino always return 0 on windows, so skip the check.
-                    let id = null;
-                    if (!is.windows) {
-                        id = `${stat.dev.toString(32)}:${stat.ino.toString(32)}`;
-                        if (seenLinks.hasOwnProperty(id)) {
-                            return gotTarget(null, seenLinks[id], base);
-                        }
-                    }
-                    fs.stat(base, (err) => {
-                        if (err) {
-                            return reject(err);
-                        }
-
-                        fs.readlink(base, (err, target) => {
-                            if (!is.windows) {
-                                seenLinks[id] = target;
-                            }
-                            gotTarget(err, target);
-                        });
-                    });
-                };
-
-                // walk down the path, swapping out linked pathparts for their real values
-                loop = () => {
-                    // stop if scanned past end of path
-                    if (pos >= p.length) {
-                        if (cache) {
-                            cache[original] = p;
-                        }
-                        return resolve(p);
-                    }
-
-                    // find the next part
-                    nextPartRe.lastIndex = pos;
-                    const result = nextPartRe.exec(p);
-                    previous = current;
-                    current += result[0];
-                    base = previous + result[1];
-                    pos = nextPartRe.lastIndex;
-
-                    // continue if not a symlink
-                    if (knownHard[base] || (cache && cache[base] === base)) {
-                        return process.nextTick(loop);
-                    }
-
-                    if (cache && Object.prototype.hasOwnProperty.call(cache, base)) {
-                        // known symbolic link.  no need to stat again.
-                        return gotResolvedLink(cache[base]);
-                    }
-
-                    return fs.lstat(base, gotStat);
-                };
-
-                start = () => {
-                    // Skip over roots
-                    const m = splitRootRe.exec(p);
-                    pos = m[0].length;
-                    current = m[0];
-                    base = m[0];
-                    previous = "";
-
-                    // On windows, check that the root exists. On unix there is no need.
-                    if (is.windows && !knownHard[base]) {
-                        fs.lstat(base, (err) => {
-                            if (err) {
-                                return reject(err);
-                            }
-                            knownHard[base] = true;
-                            loop();
-                        });
-                    } else {
-                        process.nextTick(loop);
-                    }
-                };
-
-                start();
-            } else {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(result);
-            }
-        });
-    });
-};
-
-export const realpathSync = (p, cache) => {
-    if (ok) {
-        return std.fs.realpathSync(p, cache);
-    }
-
-    try {
-        return std.fs.realpathSync(p, cache);
-    } catch (err) {
-        if (newError(err)) {
-            p = std.path.resolve(p);
-
-            if (cache && Object.prototype.hasOwnProperty.call(cache, p)) {
-                return cache[p];
-            }
-
-            const original = p;
-            const seenLinks = {};
-            const knownHard = {};
-
-            // current character position in p
-            let pos;
-            // the partial path so far, including a trailing slash if any
-            let current;
-            // the partial path without a trailing slash (except when pointing at a root)
-            let base;
-            // the partial path scanned in the previous round, with slash
-            let previous;
-
-            const start = () => {
-                // Skip over roots
-                const m = splitRootRe.exec(p);
-                pos = m[0].length;
-                current = m[0];
-                base = m[0];
-                previous = "";
-
-                // On windows, check that the root exists. On unix there is no need.
-                if (is.windows && !knownHard[base]) {
-                    fs.lstatSync(base);
-                    knownHard[base] = true;
-                }
-            };
-
-            start();
-
-            // walk down the path, swapping out linked pathparts for their real values
-            // NB: p.length changes.
-            while (pos < p.length) {
-                // find the next part
-                nextPartRe.lastIndex = pos;
-                const result = nextPartRe.exec(p);
-                previous = current;
-                current += result[0];
-                base = previous + result[1];
-                pos = nextPartRe.lastIndex;
-
-                // continue if not a symlink
-                if (knownHard[base] || (cache && cache[base] === base)) {
-                    continue;
-                }
-
-                let resolvedLink;
-                if (cache && Object.prototype.hasOwnProperty.call(cache, base)) {
-                    // some known symbolic link.  no need to stat again.
-                    resolvedLink = cache[base];
-                } else {
-                    const stat = fs.lstatSync(base);
-                    if (!stat.isSymbolicLink()) {
-                        knownHard[base] = true;
-                        if (cache) {
-                            cache[base] = base;
-                        }
-                        continue;
-                    }
-
-                    // read the link if it wasn't read before
-                    // dev/ino always return 0 on windows, so skip the check.
-                    let linkTarget = null;
-                    let id = null;
-                    if (!is.windows) {
-                        id = `${stat.dev.toString(32)}:${stat.ino.toString(32)}`;
-                        if (seenLinks.hasOwnProperty(id)) {
-                            linkTarget = seenLinks[id];
-                        }
-                    }
-                    if (is.null(linkTarget)) {
-                        fs.statSync(base);
-                        linkTarget = fs.readlinkSync(base);
-                    }
-                    resolvedLink = std.path.resolve(previous, linkTarget);
-                    // track this, if given a cache.
-                    if (cache) {
-                        cache[base] = resolvedLink;
-                    }
-                    if (!is.windows) {
-                        seenLinks[id] = linkTarget;
-                    }
-                }
-
-                // resolve the link, then start over
-                p = std.path.resolve(resolvedLink, p.slice(pos));
-                start();
-            }
-
-            if (cache) {
-                cache[original] = p;
-            }
-
-            return p;
-        }
-        throw err;
-
-    }
-};
 
 const expandReadOptions = (options = {}) => {
     if (is.string(options)) {
@@ -648,10 +361,9 @@ const mkdirp = (path, mode, fn, made) => {
             case "ENOENT":
                 mkdirp(std.path.dirname(path), mode, (err2, made) => {
                     if (err2) {
-                        cb(err2, made);
-                    } else {
-                        mkdirp(path, mode, cb, made);
+                        return cb(err2, made);
                     }
+                    mkdirp(path, mode, cb, made);
                 });
                 break;
             // In the case of any other error, just see if there"s a dir there already. If so, then hooray! If not, then something is borked.
@@ -660,10 +372,9 @@ const mkdirp = (path, mode, fn, made) => {
                     // if the stat fails, then that"s super weird.
                     // let the original error be the failure reason.
                     if (err2 || !stat.isDirectory()) {
-                        cb(err, made);
-                    } else {
-                        cb(null, made);
+                        return cb(err, made);
                     }
+                    return cb(null, made);
                 });
                 break;
         }

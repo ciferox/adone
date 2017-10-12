@@ -53,4 +53,3 @@ fast.plugin = lazify({
 }, null, require, {
     mapper: (key, mod) => mod
 });
-

@@ -18,7 +18,7 @@ adone.lazify({
 const metaNamespace = require("../../../.adone/meta.json");
 
 export const namespaces = [];
-export const namespaceMap = metaNamespace.namespace;
+export const namespaceMap = metaNamespace;
 
 const collectNamespace = (namespaceMap, prefix) => {
     if (is.nil(namespaceMap)) {
@@ -33,7 +33,7 @@ const collectNamespace = (namespaceMap, prefix) => {
     }
 };
 
-collectNamespace(metaNamespace.namespace, null);
+collectNamespace(metaNamespace, null);
 
 
 export const parseName = (name) => {

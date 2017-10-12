@@ -114,24 +114,24 @@ export default class Dispatcher {
 
     spawn(spiritualWay = true) {
         if (spiritualWay) {
-            return new Promise((resolve, reject) => {
-                this.configuration().then((/*configuration*/) => {
-                    const omnitronConfig = adone.config.omnitron;
-                    this.descriptors.stdout = std.fs.openSync(omnitronConfig.logFilePath, "a");
-                    this.descriptors.stderr = std.fs.openSync(omnitronConfig.errorLogFilePath, "a");
-                    const child = std.child_process.spawn(process.execPath || "node", [std.path.resolve(adone.rootPath, "lib/omnitron/omnitron.js")], {
-                        detached: true,
-                        cwd: process.cwd(),
-                        stdio: ["ipc", this.descriptors.stdout, this.descriptors.stderr]
-                    });
-                    child.unref();
-                    child.once("error", reject);
-                    child.once("message", (msg) => {
-                        child.removeListener("error", reject);
-                        child.disconnect();
-                        this.noisily && adone.log(`Omnitron successfully started (pid: ${msg.pid})`);
-                        resolve(msg.pid);
-                    });
+            return new Promise(async (resolve, reject) => {
+                await this.configuration();
+                const omnitronConfig = adone.config.omnitron;
+                await adone.fs.mkdir(std.path.dirname(omnitronConfig.logFilePath));
+                this.descriptors.stdout = std.fs.openSync(omnitronConfig.logFilePath, "a");
+                this.descriptors.stderr = std.fs.openSync(omnitronConfig.errorLogFilePath, "a");
+                const child = std.child_process.spawn(process.execPath || "node", [std.path.resolve(adone.rootPath, "lib/omnitron/omnitron.js")], {
+                    detached: true,
+                    cwd: process.cwd(),
+                    stdio: ["ipc", this.descriptors.stdout, this.descriptors.stderr]
+                });
+                child.unref();
+                child.once("error", reject);
+                child.once("message", (msg) => {
+                    child.removeListener("error", reject);
+                    child.disconnect();
+                    this.noisily && adone.log(`Omnitron successfully started (pid: ${msg.pid})`);
+                    resolve(msg.pid);
                 });
             });
         }

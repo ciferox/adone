@@ -19,10 +19,8 @@ const {
 })
 export default class Omnitron extends application.Application {
     async configure() {
-        // Force create home directory
-        await fs.mkdir(adone.homePath);
-
-        this.logsPath = std.path.join(adone.config.varPath, "logs", "omnitron");
+        // Force create home and runtime directories
+        await fs.mkdir(adone.config.runtimePath);
 
         // Load omnitron configuration
         this.config = await omnitron.Configuration.load();

@@ -31,10 +31,12 @@ export default class Configuration extends configuration.FileConfiguration {
                 if (err instanceof x.NotExists) {
                     this.gates = [
                         {
-                            port: (is.windows ? "\\\\.\\pipe\\omnitron.sock" : std.path.join(adone.homePath, "omnitron.sock"))
+                            port: (is.windows ? "\\\\.\\pipe\\omnitron.sock" : std.path.join(adone.config.runtimePath, "omnitron.sock"))
                         }
                     ];
-                    await this.save("gates.json", true);
+                    await this.save("gates.json", true, {
+                        space: "    "
+                    });
                 } else {
                     adone.error(err);
                 }

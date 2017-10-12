@@ -51,6 +51,11 @@
                 "$src": "src/index.js",
                 "$dst": "lib"
             },
+            "realm": {
+                "$task": "transpile",
+                "$src": "src/realm/**/*.js",
+                "$dst": "lib/realm"
+            },
             "omnitron": {
                 "js": {
                     "$task": "adoneTranspile",

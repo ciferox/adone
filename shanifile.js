@@ -2,7 +2,7 @@ const { std: { path }, fs } = adone;
 
 export default {
     options: {
-        tests: "tests/{glosses,omnitron,polyfills}/**/*.test.js",
+        tests: "tests/{glosses,omnitron,realm,polyfills}/**/*.test.js",
         first: false,
         timeout: 30000,
         showHandles: false,
