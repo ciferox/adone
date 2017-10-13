@@ -527,7 +527,8 @@ export const deepEqual = (leftHandOperand, rightHandOperand, options) => {
             case "Uint32Array":
             case "Float32Array":
             case "Float64Array":
-            case "Array": {
+            case "Array":
+            case "Buffer": {
                 return iterableEqual(leftHandOperand, rightHandOperand, options);
             }
             case "RegExp": {

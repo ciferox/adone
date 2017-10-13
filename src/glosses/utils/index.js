@@ -1,5 +1,55 @@
 const { is, std, noop, collection } = adone;
 
+const util = adone.lazify({
+    matchPath: "./match_path",
+    toposort: "./toposort",
+    jsesc: "./jsesc",
+    typeOf: "./typeof",
+    memcpy: () => adone.native.Memory,
+    uuid: "./uuid",
+    userid: () => adone.native.UserId,
+    StreamSearch: "./streamsearch",
+    delegate: "./delegate",
+    iconv: "./iconv",
+    sqlstring: "./sqlstring",
+    Editor: "./editor",
+    binarySearch: "./binary_search",
+    buffer: () => ({
+        concat: (list, totalLength) => {
+            const target = Buffer.allocUnsafe(totalLength);
+            let offset = 0;
+
+            for (let i = 0; i < list.length; i++) {
+                const buf = list[i];
+                buf.copy(target, offset);
+                offset += buf.length;
+            }
+
+            return target;
+        },
+        mask: adone.native.Common.maskBuffer,
+        unmask: adone.native.Common.unmaskBuffer
+    }),
+    shebang: "./shebang",
+    reinterval: "./reinterval",
+    RateLimiter: "./rate_limiter",
+    throttle: "./throttle",
+    fakeClock: "./fake_clock",
+    ltgt: "./ltgt",
+    LogRotator: "./log_rotator",
+    debounce: "./debounce",
+    Snapdragon: "./snapdragon",
+    braces: "./braces",
+    toRegex: "./to_regex",
+    regexNot: "./regex_not",
+    fillRange: "./fill_range",
+    toRegexRange: "./to_regex_range",
+    splitString: "./split_string",
+    match: "./match",
+    arrayDiff: "./array_diff",
+    retry: "./retry"
+}, adone.asNamespace(exports), require);
+
 const irregularPlurals = {
     addendum: "addenda",
     aircraft: "aircraft",
@@ -395,7 +445,7 @@ export const toDotNotation = (object) => {
     while (!stack.empty) {
         const [object, prefix] = stack.pop();
         const it = is.array(object) ? enumerate(object) : entries(object);
-        for (let [k, v] of it) {
+        for (let [k, v] of it) { // eslint-disable-line prefer-const
             let nextPrefix;
             if (!is.identifier(k)) {
                 if (!is.number(k) && !is.digits(k)) {
@@ -861,53 +911,3 @@ export const repeat = (item, n) => {
     }
     return arr;
 };
-
-adone.lazify({
-    matchPath: "./match_path",
-    toposort: "./toposort",
-    jsesc: "./jsesc",
-    typeOf: "./typeof",
-    memcpy: () => adone.native.Memory,
-    uuid: "./uuid",
-    userid: () => adone.native.UserId,
-    StreamSearch: "./streamsearch",
-    delegate: "./delegate",
-    iconv: "./iconv",
-    sqlstring: "./sqlstring",
-    Editor: "./editor",
-    binarySearch: "./binary_search",
-    buffer: () => ({
-        concat: (list, totalLength) => {
-            const target = Buffer.allocUnsafe(totalLength);
-            let offset = 0;
-
-            for (let i = 0; i < list.length; i++) {
-                const buf = list[i];
-                buf.copy(target, offset);
-                offset += buf.length;
-            }
-
-            return target;
-        },
-        mask: adone.native.Common.maskBuffer,
-        unmask: adone.native.Common.unmaskBuffer
-    }),
-    shebang: "./shebang",
-    reinterval: "./reinterval",
-    RateLimiter: "./rate_limiter",
-    throttle: "./throttle",
-    fakeClock: "./fake_clock",
-    ltgt: "./ltgt",
-    LogRotator: "./log_rotator",
-    debounce: "./debounce",
-    Snapdragon: "./snapdragon",
-    braces: "./braces",
-    toRegex: "./to_regex",
-    regexNot: "./regex_not",
-    fillRange: "./fill_range",
-    toRegexRange: "./to_regex_range",
-    splitString: "./split_string",
-    match: "./match",
-    arrayDiff: "./array_diff",
-    retry: "./retry"
-}, adone.asNamespace(exports), require);
