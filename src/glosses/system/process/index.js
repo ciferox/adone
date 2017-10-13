@@ -658,7 +658,6 @@ export const execSync = (cmd, args, opts) => {
 
 export const shellSync = (cmd, opts) => handleShell(execSync, cmd, opts);
 
-
 export const isRunning = function (pid) {
     try {
         return process.kill(pid, 0);

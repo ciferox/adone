@@ -3,7 +3,8 @@ const {
     x,
     lazify,
     hrtime,
-    util
+    util,
+    std
 } = adone;
 
 const shani = lazify({
@@ -675,9 +676,9 @@ export class Engine {
                 // walk through the tree and prepare the nodes, sequentially
                 await (async function prepare(block) {
                     for (const child of block.children) {
-                        await child.prepare();
+                        await child.prepare(); // eslint-disable-line
                         if (child instanceof Block) {
-                            await prepare(child);
+                            await prepare(child); // eslint-disable-line
                         }
                     }
                 })(root);
@@ -1022,7 +1023,13 @@ export class Engine {
                             try {
                                 const source = getSource();
                                 if (!is.null(source)) {
-                                    args.unshift(`[${adone.std.path.relative(cwd, source.filename)}:${source.line}:${source.column}]`);
+                                    const location = `${adone.std.path.relative(cwd, source.filename)}:${source.line}:${source.column}`;
+                                    if (prop === "dir") {
+                                        // it does not support rest args..
+                                        args[0] = [location, args[0]];
+                                    } else {
+                                        args.unshift(`[${location}]`);
+                                    }
                                 }
                             } catch (err) {
                                 // just skip
@@ -1057,6 +1064,7 @@ export class Engine {
                     "skip"
                 ];
 
+                const dirname = std.path.dirname(path);
 
                 const m = new TestModule(path, {
                     transform,
@@ -1075,7 +1083,10 @@ export class Engine {
                     nock: () => shani.util.nock,
                     FS: () => shani.util.FS,
                     include: () => (p) => m.require(p, { cache: false }),
-                    fakeClock: () => util.fakeClock
+                    fakeClock: () => util.fakeClock,
+                    system: () => shani.util.system,
+                    forkProcess: () => shani.util.system.process.bindFork(dirname),
+                    forkProcessSync: () => shani.util.system.process.bindForkSync(dirname)
                 }, global.$, m.require.bind(m), { configurable: true });
 
                 adone.lazify({
@@ -1089,7 +1100,10 @@ export class Engine {
                     nock: () => global.$.nock,
                     include: () => global.$.include,
                     FS: () => global.$.FS,
-                    fakeClock: () => global.$.fakeClock
+                    fakeClock: () => global.$.fakeClock,
+                    system: () => global.$.system,
+                    forkProcess: () => global.$.forkProcess,
+                    forkProcessSync: () => global.$.forkProcessSync
                 }, global, null, { configurable: true });
 
                 for (const name of topass) {

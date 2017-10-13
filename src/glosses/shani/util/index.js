@@ -11,5 +11,6 @@ lazify({
     stub: "./stub",
     nock: "./nock",
     request: "./request",
-    FS: "./fs"
+    FS: "./fs",
+    system: "./system"
 }, exports, require);
