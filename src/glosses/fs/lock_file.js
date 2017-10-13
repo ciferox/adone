@@ -1,5 +1,6 @@
 const {
     is,
+    fs,
     std,
     util: { retry }
 } = adone;
@@ -10,71 +11,53 @@ const isLockStale = (stat, options) => stat.mtime.getTime() < Date.now() - optio
 
 const getLockFile = (file) => `${file}.lock`;
 
-const canonicalPath = (file, options, callback) => {
+const canonicalPath = (file, options) => {
     if (!options.realpath) {
-        return callback(null, std.path.resolve(file));
+        return std.path.resolve(file);
     }
 
-    // Use realpath to resolve symlinks
-    // It also resolves relative paths
-    options.fs.realpath(file, callback);
+    // Use realpath to resolve symlinks. It also resolves relative paths.
+    return options.fs.realpath(file);
 };
 
-const removeLock = (file, options, callback) => {
-    // Remove lockfile, ignoring ENOENT errors
-    options.fs.rmdir(getLockFile(file), (err) => {
-        if (err && err.code !== "ENOENT") {
-            return callback(err);
-        }
-
-        callback(null);
-    });
-};
-
-const acquireLock = (file, options, callback) => {
+const acquireLock = async (file, options) => {
     // Use mkdir to create the lockfile (atomic operation)
-    options.fs.mkdir(getLockFile(file), (err) => {
-        // If successful, we are done
-        if (!err) {
-            return callback(null);
-        }
-
+    try {
+        await options.fs.mkdir(getLockFile(file));
+    } catch (err) {
         // If error is not EEXIST then some other error occurred while locking
         if (err.code !== "EEXIST") {
-            return callback(err);
+            throw err;
         }
 
         // Otherwise, check if lock is stale by analyzing the file mtime
         if (options.stale <= 0) {
-            return callback(Object.assign(new Error("Lock file is already being hold"), { code: "ELOCKED", file }));
+            throw Object.assign(new Error("Lock file is already being hold"), { code: "ELOCKED", file });
         }
 
-        options.fs.stat(getLockFile(file), (err, stat) => {
-            if (err) {
-                // Retry if the lockfile has been removed (meanwhile)
-                // Skip stale check to avoid recursiveness
-                if (err.code === "ENOENT") {
-                    return acquireLock(file, Object.assign({}, options, { stale: 0 }), callback);
-                }
-
-                return callback(err);
-            }
-
-            if (!isLockStale(stat, options)) {
-                return callback(Object.assign(new Error("Lock file is already being hold"), { code: "ELOCKED", file }));
-            }
-
-            // If it's stale, remove it and try again!
+        let stat;
+        try {
+            stat = await options.fs.stat(getLockFile(file));
+        } catch (err1) {
+            // Retry if the lockfile has been removed (meanwhile)
             // Skip stale check to avoid recursiveness
-            removeLock(file, options, (err) => {
-                if (err) {
-                    return callback(err);
-                }
+            if (err1.code === "ENOENT") {
+                return acquireLock(file, Object.assign({}, options, { stale: 0 }));
+            }
 
-                acquireLock(file, Object.assign({}, options, { stale: 0 }), callback);
-            });
-        });
-    });
+            throw err1;
+        }
+
+        if (!isLockStale(stat, options)) {
+            throw Object.assign(new Error("Lock file is already being hold"), { code: "ELOCKED", file });
+        }
+
+        // If it's stale, remove it and try again!
+        // Skip stale check to avoid recursiveness
+        await options.fs.rm(getLockFile(file));
+
+        return acquireLock(file, Object.assign({}, options, { stale: 0 }));
+    }
 };
 
 const compromisedLock = (file, lock, err) => {
@@ -98,44 +81,49 @@ const updateLock = (file, options) => {
     }
 
     lock.updateDelay = lock.updateDelay || options.update;
-    lock.updateTimeout = setTimeout(() => {
+    lock.updateTimeout = setTimeout(async () => {
         const mtime = Date.now() / 1000;
 
         lock.updateTimeout = null;
+        let error = null;
+        try {
+            await options.fs.utimes(getLockFile(file), mtime, mtime);
+        } catch (err) {
+            error = err;
+        }
 
-        options.fs.utimes(getLockFile(file), mtime, mtime, (err) => {
-            // Ignore if the lock was released
-            if (lock.released) {
-                return;
+        // Ignore if the lock was released
+        if (lock.released) {
+            return;
+        }
+
+        // Verify if we are within the stale threshold
+        if (lock.lastUpdate <= Date.now() - options.stale && lock.lastUpdate > Date.now() - options.stale * 2) {
+            return compromisedLock(file, lock, Object.assign(new Error(lock.updateError || "Unable to update lock within the stale threshold"), {
+                code: "ECOMPROMISED"
+            }));
+        }
+
+        // If the file is older than (stale * 2), we assume the clock is moved manually,
+        // which we consider a valid case
+
+        // If it failed to update the lockfile, keep trying unless
+        // the lockfile was deleted!
+        if (error) {
+            if (error.code === "ENOENT") {
+                return compromisedLock(file, lock, Object.assign(error, { code: "ECOMPROMISED" }));
             }
 
-            // Verify if we are within the stale threshold
-            if (lock.lastUpdate <= Date.now() - options.stale &&
-                lock.lastUpdate > Date.now() - options.stale * 2) {
-                return compromisedLock(file, lock, Object.assign(new Error(lock.updateError || "Unable to update lock within the stale threshold"), { code: "ECOMPROMISED" }));
-            }
+            lock.updateError = error;
+            lock.updateDelay = 1000;
+            return updateLock(file, options);
+        }
 
-            // If the file is older than (stale * 2), we assume the clock is moved manually,
-            // which we consider a valid case
-
-            // If it failed to update the lockfile, keep trying unless
-            // the lockfile was deleted!
-            if (err) {
-                if (err.code === "ENOENT") {
-                    return compromisedLock(file, lock, Object.assign(err, { code: "ECOMPROMISED" }));
-                }
-
-                lock.updateError = err;
-                lock.updateDelay = 1000;
-                return updateLock(file, options);
-            }
-
-            // All ok, keep updating..
-            lock.lastUpdate = Date.now();
-            lock.updateError = null;
-            lock.updateDelay = null;
-            updateLock(file, options);
-        });
+        // All ok, keep updating..
+        lock.lastUpdate = Date.now();
+        lock.updateError = null;
+        lock.updateDelay = null;
+        updateLock(file, options);
     }, lock.updateDelay);
 
     // Unref the timer so that the nodejs process can exit freely
@@ -150,59 +138,37 @@ const updateLock = (file, options) => {
     }
 };
 
-export const unlock = (file, options, callback) => {
-    if (is.function(options)) {
-        callback = options;
-        options = null;
-    }
-
+export const unlock = async (file, options) => {
     options = Object.assign({
-        fs: std.fs,
+        fs,
         realpath: true
     }, options);
 
-    callback = callback || function () { };
-
     // Resolve to a canonical file path
-    canonicalPath(file, options, (err, file) => {
-        if (err) {
-            return callback(err);
-        }
+    const realFile = await canonicalPath(file, options);
+    // Skip if the lock is not acquired
+    const lock = locks[realFile];
 
-        // Skip if the lock is not acquired
-        const lock = locks[file];
+    if (!lock) {
+        throw Object.assign(new Error("Lock is not acquired/owned by you"), { code: "ENOTACQUIRED" });
+    }
 
-        if (!lock) {
-            return callback(Object.assign(new Error("Lock is not acquired/owned by you"), { code: "ENOTACQUIRED" }));
-        }
+    lock.updateTimeout && clearTimeout(lock.updateTimeout); // Cancel lock mtime update
+    lock.released = true; // Signal the lock has been released
+    delete locks[realFile]; // Delete from locks
 
-        lock.updateTimeout && clearTimeout(lock.updateTimeout); // Cancel lock mtime update
-        lock.released = true; // Signal the lock has been released
-        delete locks[file]; // Delete from locks
-
-        removeLock(file, options, callback);
-    });
+    return options.fs.rm(getLockFile(realFile));
 };
 
-
-export const lock = (file, options, compromised, callback) => {
-    if (is.function(options)) {
-        callback = compromised;
-        compromised = options;
-        options = null;
-    }
-
-    if (!callback) {
-        callback = compromised;
-        compromised = null;
-    }
-
+export const lock = async (file, options, compromised = (err) => {
+    throw err;
+}) => {
     options = Object.assign({
         stale: 10000,
         update: null,
         realpath: true,
         retries: 0,
-        fs: std.fs
+        fs
     }, options);
 
     options.retries = options.retries || 0;
@@ -210,87 +176,70 @@ export const lock = (file, options, compromised, callback) => {
     options.stale = Math.max(options.stale || 0, 2000);
     options.update = is.nil(options.update) ? options.stale / 2 : options.update || 0;
     options.update = Math.max(Math.min(options.update, options.stale / 2), 1000);
-    compromised = compromised || function (err) {
-        throw err;
-    };
 
     // Resolve to a canonical file path
-    canonicalPath(file, options, (err, file) => {
-        if (err) {
-            return callback(err);
-        }
+    const realFile = await canonicalPath(file, options);
 
-        // Attempt to acquire the lock
-        const operation = retry.operation(options.retries);
+    // Attempt to acquire the lock
+    const operation = retry.operation(options.retries);
 
-        operation.attempt(() => {
-            acquireLock(file, options, (err) => {
+    return new Promise((resolve, reject) => {
+        operation.attempt(async () => {
+            try {
+                await acquireLock(realFile, options);
+            } catch (err) {
                 if (operation.retry(err)) {
                     return;
                 }
 
-                if (err) {
-                    return callback(operation.mainError());
+                return reject(operation.mainError());
+            }
+
+            // We now own the lock
+            const lock = locks[realFile] = {
+                options,
+                compromised,
+                lastUpdate: Date.now()
+            };
+
+            // We must keep the lock fresh to avoid staleness
+            updateLock(realFile, options);
+
+            resolve(() => {
+                if (lock.released) {
+                    throw Object.assign(new Error("Lock is already released"), { code: "ERELEASED" });
                 }
 
-                // We now own the lock
-                const lock = locks[file] = {
-                    options,
-                    compromised,
-                    lastUpdate: Date.now()
-                };
-
-                // We must keep the lock fresh to avoid staleness
-                updateLock(file, options);
-
-                callback(null, (releasedCallback) => {
-                    if (lock.released) {
-                        return releasedCallback && releasedCallback(Object.assign(new Error("Lock is already released"), { code: "ERELEASED" }));
-                    }
-
-                    // Not necessary to use realpath twice when unlocking
-                    unlock(file, Object.assign({}, options, { realpath: false }), releasedCallback);
-                });
+                // Not necessary to use realpath twice when unlocking
+                return unlock(realFile, Object.assign({}, options, { realpath: false }));
             });
         });
     });
 };
 
-export const check = (file, options, callback) => {
-    if (is.function(options)) {
-        callback = options;
-        options = null;
-    }
-
+export const check = async (file, options) => {
     options = Object.assign({
         stale: 10000,
         realpath: true,
-        fs: std.fs
+        fs
     }, options);
 
     options.stale = Math.max(options.stale || 0, 2000);
 
     // Resolve to a canonical file path
-    canonicalPath(file, options, (err, file) => {
-        if (err) {
-            return callback(err);
+    const realFile = await canonicalPath(file, options);
+
+    try {
+        const stat = await options.fs.stat(getLockFile(realFile));
+
+        return (options.stale <= 0) ? true : !isLockStale(stat, options);
+    } catch (err) {
+        // if does not exist, file is not locked. Otherwise, callback with error
+        if (err.code === "ENOENT") {
+            return false;
         }
-
-        // Check if lockfile exists
-        options.fs.stat(getLockFile(file), (err, stat) => {
-            if (err) {
-                // if does not exist, file is not locked. Otherwise, callback with error
-                return (err.code === "ENOENT") ? callback(null, false) : callback(err);
-            }
-
-            if (options.stale <= 0) {
-                return callback(null, true);
-            }
-
-            // Otherwise, check if lock is stale by analyzing the file mtime
-            return callback(null, !isLockStale(stat, options));
-        });
-    });
+        throw err;
+    }
 };
 
 // Remove acquired locks on exit

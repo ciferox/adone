@@ -14,50 +14,42 @@ describe("fs", "file locking", () => {
     const tmpFileSymlinkLock = `${tmpFileSymlinkRealPath}.lock`;
     const tmpNonExistentFile = path.join(__dirname, "nonexistentfile");
 
-    const createPromise = (fn) => new Promise((resolve, reject) => fn(resolve, reject));
-
     const clearLocks = async () => {
-        const promises = [];
-
-        promises.push(createPromise((resolve, reject) => {
-            unlock(tmpFile, { realpath: false }, (err) => {
-                if (!err || err.code === "ENOTACQUIRED") {
-                    return resolve();
-                }
-                reject(err);
-            });
-        }));
-
-        promises.push(createPromise((resolve, reject) => {
-            unlock(tmpNonExistentFile, { realpath: false }, (err) => {
-                if (!err || err.code === "ENOTACQUIRED") {
-                    return resolve();
-                }
-                reject(err);
-            });
-        }));
-
-        promises.push(createPromise((resolve, reject) => {
-            unlock(tmpFileSymlink, { realpath: false }, (err) => {
-                if (!err || err.code === "ENOTACQUIRED") {
-                    return resolve();
-                }
-                reject(err);
-            });
-        }));
+        const files = [
+            {
+                file: tmpFile,
+                realpath: false
+            },
+            {
+                file: tmpNonExistentFile,
+                realpath: false
+            },
+            {
+                file: tmpFileSymlink,
+                realpath: false
+            }
+        ];
 
         if (await fs.exists(tmpFileSymlink)) {
-            promises.push(createPromise((resolve, reject) => {
-                unlock(tmpFileSymlink, (err) => {
-                    if (!err || err.code === "ENOTACQUIRED") {
-                        return resolve();
-                    }
-                    reject(err);
-                });
-            }));
+            files.push({
+                file: tmpFileSymlink,
+                realpath: true
+            });
         }
 
-        await Promise.all(promises);
+        for (const f of files) {
+            try {
+                // eslint-disable-next-line
+                await unlock(f.file, {
+                    realpath: f.realpath
+                });
+            } catch (err) {
+                if (err.code !== "ENOTACQUIRED") {
+                    throw err;
+                }
+            }
+        }
+
         await fs.rm(tmpFile);
         await fs.rm(tmpFileLock);
         await fs.rm(tmpFileSymlink);
@@ -72,370 +64,334 @@ describe("fs", "file locking", () => {
 
         afterEach(clearLocks);
 
-        it("should fail if the file does not exist by default", (done) => {
-            lock(tmpNonExistentFile, (err) => {
-                assert.instanceOf(err, Error);
-                assert.equal(err.code, "ENOENT");
+        it("should fail if the file does not exist by default", async () => {
+            const err = await assert.throws(async () => lock(tmpNonExistentFile));
+            assert.instanceOf(err, Error);
+            assert.equal(err.code, "ENOENT");
+        });
 
-                done();
+        it("should not fail if the file does not exist and realpath is false", async () => {
+            await lock(tmpNonExistentFile, { realpath: false });
+        });
+
+        it("should fail if impossible to create the lockfile", async () => {
+            const err = await assert.throws(async () => lock("nonexistentdir/nonexistentfile", { realpath: false }));
+            assert.instanceOf(err, Error);
+            assert.equal(err.code, "ENOENT");
+        });
+
+        it("should create the lockfile", async () => {
+            await lock(tmpFile);
+            assert.isTrue(fs.existsSync(tmpFileLock));
+        });
+
+        it("should fail if already locked", async () => {
+            await lock(tmpFile);
+            const err = await assert.throws(async () => lock(tmpFile));
+            assert.instanceOf(err, Error);
+            assert.equal(err.code, "ELOCKED");
+            assert.equal(err.file, tmpFileRealPath);
+        });
+
+        it("should retry several times if retries were specified", async () => {
+            const unlock = await lock(tmpFile);
+
+            setTimeout(unlock, 4000);
+
+            await lock(tmpFile, {
+                retries: {
+                    retries: 5,
+                    maxTimeout: 1000
+                }
             });
         });
 
-        it("should not fail if the file does not exist and realpath is false", (done) => {
-            lock(tmpNonExistentFile, { realpath: false }, (err) => {
-                assert.isNull(err);
-
-                done();
-            });
-        });
-
-        it("should fail if impossible to create the lockfile", (done) => {
-            lock("nonexistentdir/nonexistentfile", { realpath: false }, (err) => {
-                assert.instanceOf(err, Error);
-                assert.equal(err.code, "ENOENT");
-
-                done();
-            });
-        });
-
-        it("should create the lockfile", (done) => {
-            lock(tmpFile, (err) => {
-                assert.isNull(err);
-                assert.isTrue(fs.existsSync(tmpFileLock));
-
-                done();
-            });
-        });
-
-        it("should fail if already locked", (done) => {
-            lock(tmpFile, (err) => {
-                assert.isNull(err);
-
-                lock(tmpFile, (err) => {
-                    assert.instanceOf(err, Error);
-                    assert.equal(err.code, "ELOCKED");
-                    assert.equal(err.file, tmpFileRealPath);
-
-                    done();
-                });
-            });
-        });
-
-        it("should retry several times if retries were specified", (done) => {
-            lock(tmpFile, (err, unlock) => {
-                assert.isNull(err);
-
-                setTimeout(unlock, 4000);
-
-                lock(tmpFile, { retries: { retries: 5, maxTimeout: 1000 } }, (err) => {
-                    assert.isNull(err);
-
-                    done();
-                });
-            });
-        });
-
-        it("should use the custom fs", (done) => {
+        it("should use the custom fs", async () => {
             const customFs = Object.assign({}, fs);
 
-            customFs.realpath = function (path, callback) {
+            customFs.realpath = async (path) => {
                 customFs.realpath = fs.realpath;
-                callback(new Error("foo"));
+                throw new Error("foo");
             };
 
-            lock(tmpFile, { fs: customFs }, (err) => {
-                assert.instanceOf(err, Error);
-                assert.equal(err.message, "foo");
+            const err = await assert.throws(async () => lock(tmpFile, {
+                fs: customFs
+            }));
 
-                done();
-            });
+            assert.instanceOf(err, Error);
+            assert.equal(err.message, "foo");
         });
 
-        it("should resolve symlinks by default", (done) => {
+        it("should resolve symlinks by default", async () => {
             // Create a symlink to the tmp file
-            stdFs.symlinkSync(tmpFileRealPath, tmpFileSymlinkRealPath);
+            await fs.symlink(tmpFileRealPath, tmpFileSymlinkRealPath);
 
-            lock(tmpFileSymlink, (err) => {
-                assert.isNull(err);
+            await lock(tmpFileSymlink);
+            let err = await assert.throws(async () => lock(tmpFile));
+            assert.instanceOf(err, Error);
+            assert.equal(err.code, "ELOCKED");
 
-                lock(tmpFile, (err) => {
-                    assert.instanceOf(err, Error);
-                    assert.equal(err.code, "ELOCKED");
+            err = await assert.throws(async () => lock(`${tmpFile}/../../lock_file/tmp`));
 
-                    lock(`${tmpFile}/../../lock_file/tmp`, (err) => {
-                        assert.instanceOf(err, Error);
-                        assert.equal(err.code, "ELOCKED");
-
-                        done();
-                    });
-                });
-            });
+            assert.instanceOf(err, Error);
+            assert.equal(err.code, "ELOCKED");
         });
 
-        it("should not resolve symlinks if realpath is false", (done) => {
+        it("should not resolve symlinks if realpath is false", async () => {
             // Create a symlink to the tmp file
-            stdFs.symlinkSync(tmpFileRealPath, tmpFileSymlinkRealPath);
+            await fs.symlink(tmpFileRealPath, tmpFileSymlinkRealPath);
 
-            lock(tmpFileSymlink, { realpath: false }, (err) => {
-                assert.isNull(err);
-
-                lock(tmpFile, { realpath: false }, (err) => {
-                    assert.isNull(err);
-
-                    lock(`${tmpFile}/../../lock_file/tmp`, { realpath: false }, (err) => {
-                        assert.instanceOf(err, Error);
-                        assert.equal(err.code, "ELOCKED");
-
-                        done();
-                    });
-                });
+            await lock(tmpFileSymlink, {
+                realpath: false
             });
+
+            await lock(tmpFile, {
+                realpath: false
+            });
+
+            const err = await assert.throws(async () => lock(`${tmpFile}/../../lock_file/tmp`, {
+                realpath: false
+            }));
+            assert.instanceOf(err, Error);
+            assert.equal(err.code, "ELOCKED");
         });
 
-        it("should remove and acquire over stale locks", (done) => {
+        it("should remove and acquire over stale locks", async () => {
             const mtime = (Date.now() - 60000) / 1000;
 
-            stdFs.mkdirSync(tmpFileLock);
-            stdFs.utimesSync(tmpFileLock, mtime, mtime);
+            await fs.mkdir(tmpFileLock);
+            await fs.utimes(tmpFileLock, mtime, mtime);
 
-            lock(tmpFile, (err) => {
-                assert.isNull(err);
-                expect(fs.statSync(tmpFileLock).mtime.getTime()).to.be.greaterThan(Date.now() - 3000);
-
-                done();
-            });
+            await lock(tmpFile);
+            expect(fs.statSync(tmpFileLock).mtime.getTime()).to.be.greaterThan(Date.now() - 3000);
         });
 
-        it.skip("should retry if the lockfile was removed when verifying staleness", (done) => {
+        it("should retry if the lockfile was removed when verifying staleness", async () => {
             const mtime = (Date.now() - 60000) / 1000;
             const customFs = Object.assign({}, fs);
 
-            customFs.stat = function (path, callback) {
-                rimraf.sync(tmpFileLock);
-                fs.stat(path, callback);
+            customFs.stat = async (path, callback) => {
+                await fs.rm(tmpFileLock);
+                const result = await fs.stat(path, callback);
                 customFs.stat = fs.stat;
+                return result;
             };
 
-            stdFs.mkdirSync(tmpFileLock);
-            stdFs.utimesSync(tmpFileLock, mtime, mtime);
+            await fs.mkdir(tmpFileLock);
+            await fs.utimes(tmpFileLock, mtime, mtime);
 
-            lock(tmpFile, { fs: customFs }, (err) => {
-                assert.isNull(err);
-                expect(fs.statSync(tmpFileLock).mtime.getTime()).to.be.greaterThan(Date.now() - 3000);
-
-                done();
+            await lock(tmpFile, {
+                fs: customFs
             });
+
+            expect(fs.statSync(tmpFileLock).mtime.getTime()).to.be.greaterThan(Date.now() - 3000);
         });
 
-        it("should retry if the lockfile was removed when verifying staleness (not recursively)", (done) => {
+        it("should retry if the lockfile was removed when verifying staleness (not recursively)", async () => {
             const mtime = (Date.now() - 60000) / 1000;
             const customFs = Object.assign({}, fs);
 
-            customFs.stat = function (path, callback) {
+            customFs.stat = async (path) => {
                 const err = new Error();
-
                 err.code = "ENOENT";
-
-                return callback(err);
+                throw err;
             };
 
-            stdFs.mkdirSync(tmpFileLock);
-            stdFs.utimesSync(tmpFileLock, mtime, mtime);
+            await fs.mkdir(tmpFileLock);
+            await fs.utimes(tmpFileLock, mtime, mtime);
 
-            lock(tmpFile, { fs: customFs }, (err) => {
+            const err = await assert.throws(async () => lock(tmpFile, {
+                fs: customFs
+            }));
+
+            assert.instanceOf(err, Error);
+            assert.equal(err.code, "ELOCKED");
+        });
+
+        it("should fail if stating the lockfile errors out when verifying staleness", async () => {
+            const mtime = (Date.now() - 60000) / 1000;
+            const customFs = Object.assign({}, fs);
+
+            customFs.stat = (path) => {
+                throw new Error("foo");
+            };
+
+            await fs.mkdir(tmpFileLock);
+            await fs.utimes(tmpFileLock, mtime, mtime);
+
+            const err = await assert.throws(async () => lock(tmpFile, {
+                fs: customFs
+            }));
+
+            assert.instanceOf(err, Error);
+            assert.equal(err.message, "foo");
+        });
+
+        it("should fail if removing a stale lockfile errors out", async () => {
+            const mtime = (Date.now() - 60000) / 1000;
+            const customFs = Object.assign({}, fs);
+
+            customFs.rm = (path) => {
+                throw new Error("foo");
+            };
+
+            await fs.mkdir(tmpFileLock);
+            await fs.utimes(tmpFileLock, mtime, mtime);
+
+            const err = await await assert.throws(async () => lock(tmpFile, {
+                fs: customFs
+            }));
+            assert.instanceOf(err, Error);
+            assert.equal(err.message, "foo");
+        });
+
+        it("should update the lockfile mtime automatically", async (done) => {
+            await lock(tmpFile, {
+                update: 1000
+            });
+
+            let mtime = (await fs.stat(tmpFileLock)).mtime;
+
+            // First update occurs at 1000ms
+            setTimeout(() => {
+                const stat = stdFs.statSync(tmpFileLock);
+
+                expect(stat.mtime.getTime()).to.be.greaterThan(mtime.getTime());
+                mtime = stat.mtime;
+            }, 1500);
+
+            // Second update occurs at 2000ms
+            setTimeout(() => {
+                const stat = stdFs.statSync(tmpFileLock);
+
+                expect(stat.mtime.getTime()).to.be.greaterThan(mtime.getTime());
+                mtime = stat.mtime;
+
+                done();
+            }, 2500);
+        });
+
+        it("should set stale to a minimum of 2000", async (done) => {
+            await fs.mkdir(tmpFileLock);
+
+            setTimeout(async () => {
+                const err = await assert.throws(async () => lock(tmpFile, {
+                    stale: 100
+                }));
                 assert.instanceOf(err, Error);
                 assert.equal(err.code, "ELOCKED");
-
-                done();
-            });
-        });
-
-        it("should fail if stating the lockfile errors out when verifying staleness", (done) => {
-            const mtime = (Date.now() - 60000) / 1000;
-            const customFs = Object.assign({}, fs);
-
-            customFs.stat = function (path, callback) {
-                callback(new Error("foo"));
-            };
-
-            stdFs.mkdirSync(tmpFileLock);
-            stdFs.utimesSync(tmpFileLock, mtime, mtime);
-
-            lock(tmpFile, { fs: customFs }, (err) => {
-                assert.instanceOf(err, Error);
-                assert.equal(err.message, "foo");
-
-                done();
-            });
-        });
-
-        it.skip("should fail if removing a stale lockfile errors out", (done) => {
-            const mtime = (Date.now() - 60000) / 1000;
-            const customFs = Object.assign({}, fs);
-
-            customFs.rmdir = function (path, callback) {
-                callback(new Error("foo"));
-            };
-
-            stdFs.mkdirSync(tmpFileLock);
-            stdFs.utimesSync(tmpFileLock, mtime, mtime);
-
-            lock(tmpFile, { fs: customFs }, (err) => {
-                assert.instanceOf(err, Error);
-                assert.equal(err.message, "foo");
-
-                done();
-            });
-        });
-
-        it("should update the lockfile mtime automatically", (done) => {
-            lock(tmpFile, { update: 1000 }, (err) => {
-                assert.isNull(err);
-
-                let mtime = fs.statSync(tmpFileLock).mtime;
-
-                // First update occurs at 1000ms
-                setTimeout(() => {
-                    const stat = fs.statSync(tmpFileLock);
-
-                    expect(stat.mtime.getTime()).to.be.greaterThan(mtime.getTime());
-                    mtime = stat.mtime;
-                }, 1500);
-
-                // Second update occurs at 2000ms
-                setTimeout(() => {
-                    const stat = fs.statSync(tmpFileLock);
-
-                    expect(stat.mtime.getTime()).to.be.greaterThan(mtime.getTime());
-                    mtime = stat.mtime;
-
-                    done();
-                }, 2500);
-            });
-        });
-
-        it("should set stale to a minimum of 2000", (done) => {
-            stdFs.mkdirSync(tmpFileLock);
-
-            setTimeout(() => {
-                lock(tmpFile, { stale: 100 }, (err) => {
-                    assert.instanceOf(err, Error);
-                    assert.equal(err.code, "ELOCKED");
-                });
             }, 200);
 
-            setTimeout(() => {
-                lock(tmpFile, { stale: 100 }, (err) => {
-                    assert.isNull(err);
-
-                    done();
+            setTimeout(async () => {
+                await lock(tmpFile, {
+                    stale: 100
                 });
+                done();
             }, 2200);
         });
 
-        it("should set stale to a minimum of 2000 (falsy)", (done) => {
-            stdFs.mkdirSync(tmpFileLock);
+        it("should set stale to a minimum of 2000 (falsy)", async (done) => {
+            await fs.mkdir(tmpFileLock);
 
-            setTimeout(() => {
-                lock(tmpFile, { stale: false }, (err) => {
-                    assert.instanceOf(err, Error);
-                    assert.equal(err.code, "ELOCKED");
-                });
+            setTimeout(async () => {
+                const err = await assert.throws(async () => lock(tmpFile, {
+                    stale: false
+                }));
+                assert.instanceOf(err, Error);
+                assert.equal(err.code, "ELOCKED");
             }, 200);
 
-            setTimeout(() => {
-                lock(tmpFile, { stale: false }, (err) => {
-                    assert.isNull(err);
-
-                    done();
+            setTimeout(async () => {
+                await lock(tmpFile, {
+                    stale: false
                 });
+                done();
             }, 2200);
         });
 
-        it("should call the compromised function if ENOENT was detected when updating the lockfile mtime", (done) => {
-            lock(tmpFile, { update: 1000 }, (err) => {
+        it("should call the compromised function if ENOENT was detected when updating the lockfile mtime", async (done) => {
+            await lock(tmpFile, {
+                update: 1000
+            }, async (err) => {
                 assert.instanceOf(err, Error);
                 assert.equal(err.code, "ECOMPROMISED");
                 assert.isTrue(err.message.includes("ENOENT"));
 
-                lock(tmpFile, (err) => {
-                    assert.isNull(err);
-
-                    done();
-                }, done);
-            }, (err) => {
-                assert.isNull(err);
-
-                fs.rm(tmpFileLock);
+                await lock(tmpFile);
+                done();
             });
+            await fs.rm(tmpFileLock);
         });
 
-        it("should call the compromised function if failed to update the lockfile mtime too many times", (done) => {
+        it("should call the compromised function if failed to update the lockfile mtime too many times", async (done) => {
             const customFs = Object.assign({}, fs);
 
-            customFs.utimes = function (path, atime, mtime, callback) {
-                callback(new Error("foo"));
+            customFs.utimes = async (path, atime, mtime) => {
+                throw new Error("foo");
             };
 
-            lock(tmpFile, { fs: customFs, update: 1000, stale: 5000 }, (err) => {
+            await lock(tmpFile, {
+                fs: customFs,
+                update: 1000,
+                stale: 5000
+            }, (err) => {
                 assert.instanceOf(err, Error);
                 assert.isTrue(err.message.includes("foo"));
                 assert.equal(err.code, "ECOMPROMISED");
 
                 done();
-            }, (err) => {
-                assert.isNull(err);
             });
         });
 
-        it("should call the compromised function if updating the lockfile took too much time", (done) => {
+        it("should call the compromised function if updating the lockfile took too much time", async (done) => {
             const customFs = Object.assign({}, fs);
 
-            customFs.utimes = function (path, atime, mtime, callback) {
-                setTimeout(() => {
-                    callback(new Error("foo"));
-                }, 6000);
+            customFs.utimes = async (path, atime, mtime) => {
+                await adone.promise.delay(6000);
+                throw new Error("foo");
             };
 
-            lock(tmpFile, { fs: customFs, update: 1000, stale: 5000 }, (err) => {
+            await lock(tmpFile, {
+                fs: customFs,
+                update: 1000,
+                stale: 5000
+            }, (err) => {
                 assert.instanceOf(err, Error);
                 assert.equal(err.code, "ECOMPROMISED");
                 assert.isTrue(err.message.includes("threshold"));
                 assert.isTrue(fs.existsSync(tmpFileLock));
 
                 done();
-            }, (err) => {
-                assert.isNull(err);
             });
         });
 
-        it("should call the compromised function if lock was acquired by someone else due to staleness", (done) => {
+        it("should call the compromised function if lock was acquired by someone else due to staleness", async (done) => {
             const customFs = Object.assign({}, fs);
 
-            customFs.utimes = function (path, atime, mtime, callback) {
-                setTimeout(() => {
-                    callback(new Error("foo"));
-                }, 6000);
+            customFs.utimes = async (path, atime, mtime, ) => {
+                await adone.promise.delay(6000);
+                throw new Error("foo");
             };
 
-            lock(tmpFile, { fs: customFs, update: 1000, stale: 5000 }, (err) => {
+            await lock(tmpFile, {
+                fs: customFs,
+                update: 1000,
+                stale: 5000
+            }, (err) => {
                 assert.instanceOf(err, Error);
                 assert.equal(err.code, "ECOMPROMISED");
                 assert.isTrue(fs.existsSync(tmpFileLock));
 
                 done();
-            }, (err) => {
-                assert.isNull(err);
+            });
 
-                setTimeout(() => {
-                    lock(tmpFile, { stale: 5000 }, (err) => {
-                        assert.isNull(err);
-                    });
-                }, 5500);
+            await adone.promise.delay(5500);
+            await lock(tmpFile, {
+                stale: 5000
             });
         });
 
-        it("should throw an error by default when the lock is compromised", (only) => {
+        it.skip("should throw an error by default when the lock is compromised", async (done) => {
             const originalException = process.listeners("uncaughtException").pop();
 
             process.removeListener("uncaughtException", originalException);
@@ -446,69 +402,65 @@ describe("fs", "file locking", () => {
 
                 process.nextTick(() => {
                     process.on("uncaughtException", originalException);
-                    only();
+                    done();
                 });
             });
 
-            lock(tmpFile, { update: 1000 }, (err) => {
-                assert.isNull(err);
-
-                fs.rm(tmpFileLock);
+            await lock(tmpFile, {
+                update: 1000
             });
+
+            await fs.rm(tmpFileLock);
         });
 
-        it("should set update to a minimum of 1000", (next) => {
-            lock(tmpFile, { update: 100 }, (err) => {
-                const mtime = fs.statSync(tmpFileLock).mtime.getTime();
+        it("should set update to a minimum of 1000", async (done) => {
+            await lock(tmpFile, { update: 100 });
+            const mtime = stdFs.statSync(tmpFileLock).mtime.getTime();
 
-                assert.isNull(err);
+            setTimeout(() => {
+                assert.equal(mtime, stdFs.statSync(tmpFileLock).mtime.getTime());
+            }, 200);
 
-                setTimeout(() => {
-                    assert.equal(mtime, stdFs.statSync(tmpFileLock).mtime.getTime());
-                }, 200);
+            setTimeout(() => {
+                expect(fs.statSync(tmpFileLock).mtime.getTime()).to.be.greaterThan(mtime);
 
-                setTimeout(() => {
-                    expect(fs.statSync(tmpFileLock).mtime.getTime()).to.be.greaterThan(mtime);
-
-                    next();
-                }, 1200);
-            });
+                done();
+            }, 1200);
         });
 
-        it("should set update to a minimum of 1000 (falsy)", (done) => {
-            lock(tmpFile, { update: false }, (err) => {
-                const mtime = fs.statSync(tmpFileLock).mtime.getTime();
-
-                assert.isNull(err);
-
-                setTimeout(() => {
-                    assert.equal(mtime, fs.statSync(tmpFileLock).mtime.getTime());
-                }, 200);
-
-                setTimeout(() => {
-                    expect(fs.statSync(tmpFileLock).mtime.getTime()).to.be.greaterThan(mtime);
-
-                    done();
-                }, 1200);
+        it("should set update to a minimum of 1000 (falsy)", async (done) => {
+            await lock(tmpFile, {
+                update: false
             });
+            const mtime = stdFs.statSync(tmpFileLock).mtime.getTime();
+
+            setTimeout(() => {
+                assert.equal(mtime, fs.statSync(tmpFileLock).mtime.getTime());
+            }, 200);
+
+            setTimeout(() => {
+                expect(fs.statSync(tmpFileLock).mtime.getTime()).to.be.greaterThan(mtime);
+
+                done();
+            }, 1200);
         });
 
-        it("should set update to a maximum of stale / 2", (done) => {
-            lock(tmpFile, { update: 6000, stale: 5000 }, (err) => {
-                const mtime = fs.statSync(tmpFileLock).mtime.getTime();
-
-                assert.isNull(err);
-
-                setTimeout(() => {
-                    assert.equal(fs.statSync(tmpFileLock).mtime.getTime(), mtime);
-                }, 2000);
-
-                setTimeout(() => {
-                    expect(fs.statSync(tmpFileLock).mtime.getTime()).to.be.greaterThan(mtime);
-
-                    done();
-                }, 3000);
+        it("should set update to a maximum of stale / 2", async (done) => {
+            await lock(tmpFile, {
+                update: 6000,
+                stale: 5000
             });
+            const mtime = stdFs.statSync(tmpFileLock).mtime.getTime();
+
+            setTimeout(() => {
+                assert.equal(fs.statSync(tmpFileLock).mtime.getTime(), mtime);
+            }, 2000);
+
+            setTimeout(() => {
+                expect(fs.statSync(tmpFileLock).mtime.getTime()).to.be.greaterThan(mtime);
+
+                done();
+            }, 3000);
         });
     });
 
@@ -520,189 +472,140 @@ describe("fs", "file locking", () => {
 
         afterEach(clearLocks);
 
-        it("should fail if the lock is not acquired", (done) => {
-            unlock(tmpFile, (err) => {
-                assert.instanceOf(err, Error);
-                assert.equal(err.code, "ENOTACQUIRED");
+        it("should fail if the lock is not acquired", async () => {
+            const err = await assert.throws(async () => unlock(tmpFile));
+            assert.instanceOf(err, Error);
+            assert.equal(err.code, "ENOTACQUIRED");
+        });
 
+        it("should release the lock", async () => {
+            await lock(tmpFile);
+            await unlock(tmpFile);
+            await lock(tmpFile);
+        });
+
+        it("should release the lock (without callback)", async (done) => {
+            await lock(tmpFile);
+            await unlock(tmpFile);
+
+            setTimeout(async () => {
+                await lock(tmpFile);
                 done();
-            });
+            }, 2000);
         });
 
-        it("should release the lock", (done) => {
-            lock(tmpFile, (err) => {
-                assert.isNull(err);
+        it("should remove the lockfile", async () => {
+            await lock(tmpFile);
+            assert.isTrue(fs.existsSync(tmpFileLock));
 
-                unlock(tmpFile, (err) => {
-                    assert.isNull(err);
-
-                    lock(tmpFile, (err) => {
-                        assert.isNull(err);
-
-                        done();
-                    });
-                });
-            });
+            await unlock(tmpFile);
+            assert.isFalse(fs.existsSync(tmpFileLock));
         });
 
-        it("should release the lock (without callback)", (next) => {
-            lock(tmpFile, (err) => {
-                assert.isNull(err);
-
-                unlock(tmpFile);
-
-                setTimeout(() => {
-                    lock(tmpFile, (err) => {
-                        assert.isNull(err);
-
-                        next();
-                    });
-                }, 2000);
-            });
-        });
-
-        it("should remove the lockfile", (done) => {
-            lock(tmpFile, (err) => {
-                assert.isNull(err);
-                assert.isTrue(fs.existsSync(tmpFileLock));
-
-                unlock(tmpFile, (err) => {
-                    assert.isNull(err);
-                    assert.isFalse(fs.existsSync(tmpFileLock));
-
-                    done();
-                });
-            });
-        });
-
-        it("should fail if removing the lockfile errors out", (done) => {
+        it("should fail if removing the lockfile errors out", async () => {
             const customFs = Object.assign({}, fs);
 
-            customFs.rmdir = function (path, callback) {
-                callback(new Error("foo"));
+            customFs.rm = (path) => {
+                throw new Error("foo");
             };
 
-            lock(tmpFile, (err) => {
-                assert.isNull(err);
-
-                unlock(tmpFile, { fs: customFs }, (err) => {
-                    assert.instanceOf(err, Error);
-                    assert.equal(err.message, "foo");
-
-                    done();
-                });
-            });
+            await lock(tmpFile);
+            const err = await assert.throws(async () => unlock(tmpFile, {
+                fs: customFs
+            }));
+            assert.instanceOf(err, Error);
+            assert.equal(err.message, "foo");
         });
 
-        it.skip("should ignore ENOENT errors when removing the lockfile", (done) => {
+        it("should ignore ENOENT errors when removing the lockfile", async () => {
             const customFs = Object.assign({}, fs);
-            let called;
+            let called = false;
 
-            customFs.rmdir = function (path, callback) {
+            customFs.rm = async (path) => {
                 called = true;
-                rimraf.sync(path);
-                fs.rmdir(path, callback);
+                await fs.rm(path);
             };
 
-            lock(tmpFile, (err) => {
-                assert.isNull(err);
-
-                unlock(tmpFile, { fs: customFs }, (err) => {
-                    assert.isNull(err);
-                    assert.isTrue(called);
-
-                    done();
-                });
+            await lock(tmpFile);
+            await unlock(tmpFile, {
+                fs: customFs
             });
+            assert.isTrue(called);
         });
 
-        it("should stop updating the lockfile mtime", (done) => {
-            lock(tmpFile, { update: 2000 }, (err) => {
-                assert.isNull(err);
-
-                unlock(tmpFile, (err) => {
-                    assert.isNull(err);
-
-                    // First update occurs at 2000ms
-                    setTimeout(done, 2500);
-                });
+        it("should stop updating the lockfile mtime", async (done) => {
+            await lock(tmpFile, {
+                update: 2000
             });
+
+            await unlock(tmpFile);
+            // First update occurs at 2000ms
+            setTimeout(done, 2500);
         });
 
-        it("should stop updating the lockfile mtime (slow fs)", (done) => {
+        it("should stop updating the lockfile mtime (slow fs)", async (done) => {
             const customFs = Object.assign({}, fs);
 
-            customFs.utimes = function (path, atime, mtime, callback) {
-                setTimeout(stdFs.utimes.bind(fs, path, atime, mtime, callback), 2000);
+            customFs.utimes = async (path, atime, mtime) => {
+                await adone.promise.delay(2000);
+                await fs.utimes(path, atime, mtime);
             };
 
-            lock(tmpFile, { fs: customFs, update: 2000 }, (err) => {
-                assert.isNull(err);
-
-                setTimeout(() => {
-                    unlock(tmpFile, (err) => {
-                        assert.isNull(err);
-                    });
-                }, 3000);
-
-                setTimeout(done, 6000);
+            await lock(tmpFile, {
+                fs: customFs,
+                update: 2000
             });
+
+            setTimeout(async () => {
+                await unlock(tmpFile);
+            }, 3000);
+
+            setTimeout(done, 6000);
         });
 
-        it("should stop updating the lockfile mtime (slow fs + new lock)", (done) => {
+        it("should stop updating the lockfile mtime (slow fs + new lock)", async (done) => {
             const customFs = Object.assign({}, fs);
 
-            customFs.utimes = function (path, atime, mtime, callback) {
-                setTimeout(stdFs.utimes.bind(fs, path, atime, mtime, callback), 2000);
+            customFs.utimes = async (path, atime, mtime) => {
+                await adone.promise.delay(2000);
+                await fs.utimes(path, atime, mtime);
             };
 
-            lock(tmpFile, { fs: customFs, update: 2000 }, (err) => {
-                assert.isNull(err);
-
-                setTimeout(() => {
-                    unlock(tmpFile, (err) => {
-                        assert.isNull(err);
-
-                        lock(tmpFile, (err) => {
-                            assert.isNull(err);
-                        });
-                    });
-                }, 3000);
-
-                setTimeout(done, 6000);
+            await lock(tmpFile, {
+                fs: customFs,
+                update: 2000
             });
+
+            setTimeout(async () => {
+                await unlock(tmpFile);
+                await lock(tmpFile);
+            }, 3000);
+
+            setTimeout(done, 6000);
         });
 
-        it("should resolve to a canonical path", (done) => {
+        it("should resolve to a canonical path", async () => {
             // Create a symlink to the tmp file
-            stdFs.symlinkSync(tmpFileRealPath, tmpFileSymlinkRealPath);
+            await fs.symlink(tmpFileRealPath, tmpFileSymlinkRealPath);
 
-            lock(tmpFile, (err) => {
-                assert.isNull(err);
-
-                unlock(tmpFile, (err) => {
-                    assert.isNull(err);
-                    assert.isFalse(stdFs.existsSync(tmpFileLock));
-
-                    done();
-                });
-            });
+            await lock(tmpFile);
+            await unlock(tmpFile);
+            assert.isFalse(stdFs.existsSync(tmpFileLock));
         });
 
-        it("should use the custom fs", (done) => {
+        it("should use the custom fs", async () => {
             const customFs = Object.assign({}, fs);
 
-            customFs.realpath = function (path, callback) {
+            customFs.realpath = async (path, callback) => {
                 customFs.realpath = fs.realpath;
-                callback(new Error("foo"));
+                throw new Error("foo");
             };
 
-            unlock(tmpFile, { fs: customFs }, (err) => {
-                assert.instanceOf(err, Error);
-                assert.equal(err.message, "foo");
-
-                done();
-            });
+            const err = await assert.throws(async () => unlock(tmpFile, {
+                fs: customFs
+            }));
+            assert.instanceOf(err, Error);
+            assert.equal(err.message, "foo");
         });
     });
 
@@ -714,157 +617,125 @@ describe("fs", "file locking", () => {
 
         afterEach(clearLocks);
 
-        it("should fail if the file does not exist by default", (done) => {
-            checkLock(tmpNonExistentFile, (err) => {
-                assert.instanceOf(err, Error);
-                assert.equal(err.code, "ENOENT");
+        it("should fail if the file does not exist by default", async () => {
+            const err = await assert.throws(async () => checkLock(tmpNonExistentFile));
+            assert.instanceOf(err, Error);
+            assert.equal(err.code, "ENOENT");
+        });
 
-                done();
+        it("should not fail if the file does not exist and realpath is false", async () => {
+            await checkLock(tmpNonExistentFile, {
+                realpath: false
             });
         });
 
-        it("should not fail if the file does not exist and realpath is false", (done) => {
-            checkLock(tmpNonExistentFile, { realpath: false }, (err) => {
-                assert.isNull(err);
-
-                done();
-            });
+        it("should callback with true if file is locked", async () => {
+            await lock(tmpFile);
+            const locked = await checkLock(tmpFile);
+            assert.isTrue(locked);
         });
 
-        it("should callback with true if file is locked", (next) => {
-            lock(tmpFile, (err) => {
-                assert.isNull(err);
-
-                checkLock(tmpFile, (err, locked) => {
-                    assert.isNull(err);
-                    assert.isTrue(locked);
-                    next();
-                });
-            });
+        it("should callback with false if file is not locked", async () => {
+            const locked = await checkLock(tmpFile);
+            assert.isFalse(locked);
         });
 
-        it("should callback with false if file is not locked", (done) => {
-            checkLock(tmpFile, (err, locked) => {
-                assert.isNull(err);
-                assert.isFalse(locked);
-                done();
-            });
-        });
-
-        it("should use the custom fs", (done) => {
+        it("should use the custom fs", async () => {
             const customFs = Object.assign({}, fs);
 
-            customFs.realpath = function (path, callback) {
+            customFs.realpath = async (path) => {
                 customFs.realpath = fs.realpath;
-                callback(new Error("foo"));
+                throw new Error("foo");
             };
 
-            checkLock(tmpFile, { fs: customFs }, (err, locked) => {
-                assert.instanceOf(err, Error);
-                assert.isUndefined(locked);
-
-                done();
-            });
+            const err = await assert.throws(async () => checkLock(tmpFile, {
+                fs: customFs
+            }));
+            assert.instanceOf(err, Error);
         });
 
-        it("should resolve symlinks by default", (next) => {
+        it("should resolve symlinks by default", async () => {
             // Create a symlink to the tmp file
-            stdFs.symlinkSync(tmpFileRealPath, tmpFileSymlinkRealPath);
+            await fs.symlink(tmpFileRealPath, tmpFileSymlinkRealPath);
 
-            lock(tmpFileSymlink, (err) => {
-                assert.isNull(err);
+            await lock(tmpFileSymlink);
+            let locked = await checkLock(tmpFile);
+            assert.isTrue(locked);
 
-                checkLock(tmpFile, (err, locked) => {
-                    assert.isNull(err);
-                    assert.isTrue(locked);
-
-                    checkLock(`${tmpFile}/../../lock_file/tmp`, (err, locked) => {
-                        assert.isNull(err);
-                        assert.isTrue(locked);
-                        next();
-                    });
-                });
-            });
+            locked = await checkLock(`${tmpFile}/../../lock_file/tmp`);
+            assert.isTrue(locked);
         });
 
-        it("should not resolve symlinks if realpath is false", (next) => {
+        it("should not resolve symlinks if realpath is false", async () => {
             // Create a symlink to the tmp file
-            stdFs.symlinkSync(tmpFileRealPath, tmpFileSymlinkRealPath);
+            await fs.symlink(tmpFileRealPath, tmpFileSymlinkRealPath);
 
-            lock(tmpFileSymlink, { realpath: false }, (err) => {
-                assert.isNull(err);
-
-                checkLock(tmpFile, { realpath: false }, (err, locked) => {
-                    assert.isNull(err);
-                    assert.isFalse(locked);
-
-                    checkLock(`${tmpFile}/../../lock_file/tmp`, { realpath: false }, (err, locked) => {
-                        assert.isNull(err);
-                        assert.isFalse(locked);
-
-                        next();
-                    });
-                });
+            await lock(tmpFileSymlink, {
+                realpath: false
             });
+
+            let locked = await checkLock(tmpFile, {
+                realpath: false
+            });
+            assert.isFalse(locked);
+
+            locked = await checkLock(`${tmpFile}/../../lock_file/tmp`, {
+                realpath: false
+            });
+            assert.isFalse(locked);
         });
 
-        it("should fail if stating the lockfile errors out when verifying staleness", (next) => {
+        it("should fail if stating the lockfile errors out when verifying staleness", async () => {
             const mtime = (Date.now() - 60000) / 1000;
             const customFs = Object.assign({}, fs);
 
-            customFs.stat = function (path, callback) {
-                callback(new Error("foo"));
+            customFs.stat = async (path) => {
+                throw new Error("foo");
             };
 
-            stdFs.mkdirSync(tmpFileLock);
-            stdFs.utimesSync(tmpFileLock, mtime, mtime);
+            await fs.mkdir(tmpFileLock);
+            await fs.utimes(tmpFileLock, mtime, mtime);
 
-            checkLock(tmpFile, { fs: customFs }, (err, locked) => {
-                assert.instanceOf(err, Error);
-                assert.equal(err.message, "foo");
-                assert.isUndefined(locked);
-
-                next();
-            });
+            const err = await assert.throws(async () => checkLock(tmpFile, {
+                fs: customFs
+            }));
+            assert.instanceOf(err, Error);
+            assert.equal(err.message, "foo");
         });
 
-        it("should set stale to a minimum of 2000", (next) => {
-            stdFs.mkdirSync(tmpFileLock);
+        it("should set stale to a minimum of 2000", async (done) => {
+            await fs.mkdir(tmpFileLock);
 
-            setTimeout(() => {
-                lock(tmpFile, { stale: 2000 }, (err) => {
-                    assert.instanceOf(err, Error);
-                    assert.equal(err.code, "ELOCKED");
-                });
+            setTimeout(async () => {
+                const err = await assert.throws(async () => lock(tmpFile, {
+                    stale: 2000
+                }));
+                assert.instanceOf(err, Error);
+                assert.equal(err.code, "ELOCKED");
             }, 200);
 
-            setTimeout(() => {
-                checkLock(tmpFile, { stale: 100 }, (err, locked) => {
-                    assert.isNull(err);
-                    assert.isFalse(locked);
-
-                    next();
-                });
+            setTimeout(async () => {
+                const locked = await checkLock(tmpFile, { stale: 100 });
+                assert.isFalse(locked);
+                done();
             }, 2200);
         });
 
-        it("should set stale to a minimum of 2000 (falsy)", (next) => {
-            stdFs.mkdirSync(tmpFileLock);
+        it("should set stale to a minimum of 2000 (falsy)", async (done) => {
+            await fs.mkdir(tmpFileLock);
 
-            setTimeout(() => {
-                lock(tmpFile, { stale: 2000 }, (err) => {
-                    assert.instanceOf(err, Error);
-                    assert.equal(err.code, "ELOCKED");
-                });
+            setTimeout(async () => {
+                const err = await assert.throws(async () => lock(tmpFile, {
+                    stale: 2000
+                }));
+                assert.instanceOf(err, Error);
+                assert.equal(err.code, "ELOCKED");
             }, 200);
 
-            setTimeout(() => {
-                checkLock(tmpFile, { stale: false }, (err, locked) => {
-                    assert.isNull(err);
-                    assert.isFalse(locked);
-
-                    next();
-                });
+            setTimeout(async () => {
+                const locked = await checkLock(tmpFile, { stale: false });
+                assert.isFalse(locked);
+                done();
             }, 2200);
         });
     });
@@ -876,37 +747,18 @@ describe("fs", "file locking", () => {
 
         afterEach(clearLocks);
 
-        it("should release the lock after calling the provided release function", (next) => {
-            lock(tmpFile, (err, release) => {
-                assert.isNull(err);
-
-                release((err) => {
-                    assert.isNull(err);
-
-                    lock(tmpFile, (err) => {
-                        assert.isNull(err);
-
-                        next();
-                    });
-                });
-            });
+        it("should release the lock after calling the provided release function", async () => {
+            const release = await lock(tmpFile);
+            await release();
+            await lock(tmpFile);
         });
 
-        it("should fail when releasing twice", (next) => {
-            lock(tmpFile, (err, release) => {
-                assert.isNull(err);
-
-                release((err) => {
-                    assert.isNull(err);
-
-                    release((err) => {
-                        assert.instanceOf(err, Error);
-                        assert.equal(err.code, "ERELEASED");
-
-                        next();
-                    });
-                });
-            });
+        it("should fail when releasing twice", async () => {
+            const release = await lock(tmpFile);
+            await release();
+            const err = await assert.throws(async () => release());
+            assert.instanceOf(err, Error);
+            assert.equal(err.code, "ERELEASED");
         });
     });
 

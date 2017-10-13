@@ -1,5 +1,7 @@
-const { fs } = adone;
-const { path } = adone.std;
+const {
+    fs,
+    std: { path }
+} = adone;
 
 describe("fs", () => {
     let rootTmp = null;
@@ -97,7 +99,6 @@ describe("fs", () => {
     });
 
     describe("Stat", () => {
-
         it("should return a `fs.Mode` instance with `new`", () => {
             const m = new fs.Mode({});
             expect(m instanceof fs.Mode).to.be.true;

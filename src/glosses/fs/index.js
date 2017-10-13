@@ -1,7 +1,6 @@
 const {
     is,
     x,
-    promise: { promisify },
     std
 } = adone;
 
@@ -72,7 +71,22 @@ const fs = adone.lazify({
             err ? reject(err) : resolve();
         });
     }),
-    realpath: () => promisify(std.fs.realpath),
+    realpath: () => (path, options) => new Promise((resolve, reject) => {
+        std.fs.realpath(path, options, (err, result) => {
+            err ? reject(err) : resolve(result);
+        });
+    }),
+    utimes: () => (path, atime, mtime) => new Promise((resolve, reject) => {
+        std.fs.utimes(path, atime, mtime, (err) => {
+            err ? reject(err) : resolve();
+        });
+    }),
+    mkdir: () => (path, mode) => new Promise((resolve, reject) => {
+        std.fs.mkdir(path, mode, (err) => {
+            err ? reject(err) : resolve();
+        });
+    }),
+    mkdirp: "./mkdirp",
     rm: "./rm",
     File: "./file",
     Directory: "./directory",
@@ -341,58 +355,6 @@ export const existsSync = (path) => {
     }
 };
 
-const mkdirp = (path, mode, fn, made) => {
-    const xfs = std.fs;
-    if (is.nil(mode)) {
-        mode = 0o777 & (~process.umask());
-    }
-    if (!made) {
-        made = null;
-    }
-
-    const cb = fn || (adone.noop);
-    path = std.path.resolve(path);
-
-    xfs.mkdir(path, mode, (err) => {
-        if (!err) {
-            made = made || path;
-            return cb(null, made);
-        }
-        switch (err.code) {
-            case "ENOENT":
-                mkdirp(std.path.dirname(path), mode, (err2, made) => {
-                    if (err2) {
-                        return cb(err2, made);
-                    }
-                    mkdirp(path, mode, cb, made);
-                });
-                break;
-            // In the case of any other error, just see if there"s a dir there already. If so, then hooray! If not, then something is borked.
-            default:
-                xfs.stat(path, (err2, stat) => {
-                    // if the stat fails, then that"s super weird.
-                    // let the original error be the failure reason.
-                    if (err2 || !stat.isDirectory()) {
-                        return cb(err, made);
-                    }
-                    return cb(null, made);
-                });
-                break;
-        }
-    });
-};
-
-export const mkdir = (path, mode) => {
-    if (is.array(path)) {
-        return Promise.all(path.map((x) => mkdir(x, mode))).then(adone.noop);
-    }
-    return new Promise((resolve, reject) => {
-        mkdirp(path, mode, (err) => {
-            err ? reject(err) : resolve();
-        });
-    });
-};
-
 export const copy = async (srcPath, dstPath, { ignoreExisting = false, cwd = undefined } = {}) => {
     const baseSrcPath = adone.util.globParent(srcPath);
     if (is.string(cwd)) {
@@ -417,7 +379,7 @@ export const copy = async (srcPath, dstPath, { ignoreExisting = false, cwd = und
             return;
         }
         const dstFilePath = fData[0];
-        await mkdir(std.path.dirname(dstFilePath));
+        await fs.mkdir(std.path.dirname(dstFilePath));
         return adone.fs.writeFile(dstFilePath, content);
     });
 };
