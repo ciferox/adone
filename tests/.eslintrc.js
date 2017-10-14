@@ -23,6 +23,7 @@ module.exports = {
         "$": true,
         "request": true,
         "specter": true,
-        "include": true
+        "include": true,
+        "forkProcess": true
     }
 };

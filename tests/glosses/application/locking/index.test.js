@@ -1,11 +1,10 @@
 const {
+    application: { locking },
     fs,
-    std: { path, fs: stdFs, child_process: cp }
+    std: { path, fs: stdFs }
 } = adone;
 
-const { lock, unlock, checkLock } = fs;
-
-describe("fs", "file locking", () => {
+describe("application", "locking", () => {
     const tmpFileRealPath = path.join(__dirname, "tmp");
     const tmpFile = path.relative(process.cwd(), tmpFileRealPath);
     const tmpFileLock = `${tmpFileRealPath}.lock`;
@@ -40,7 +39,7 @@ describe("fs", "file locking", () => {
         for (const f of files) {
             try {
                 // eslint-disable-next-line
-                await unlock(f.file, {
+                await locking.release(f.file, {
                     realpath: f.realpath
                 });
             } catch (err) {
@@ -56,7 +55,7 @@ describe("fs", "file locking", () => {
         await fs.rm(tmpFileSymlinkLock);
     };
 
-    describe("lock()", () => {
+    describe("create()", () => {
         beforeEach(async () => {
             await fs.writeFile(tmpFile, "");
             await fs.rm(tmpFileSymlink);
@@ -65,40 +64,40 @@ describe("fs", "file locking", () => {
         afterEach(clearLocks);
 
         it("should fail if the file does not exist by default", async () => {
-            const err = await assert.throws(async () => lock(tmpNonExistentFile));
+            const err = await assert.throws(async () => locking.create(tmpNonExistentFile));
             assert.instanceOf(err, Error);
             assert.equal(err.code, "ENOENT");
         });
 
         it("should not fail if the file does not exist and realpath is false", async () => {
-            await lock(tmpNonExistentFile, { realpath: false });
+            await locking.create(tmpNonExistentFile, { realpath: false });
         });
 
         it("should fail if impossible to create the lockfile", async () => {
-            const err = await assert.throws(async () => lock("nonexistentdir/nonexistentfile", { realpath: false }));
+            const err = await assert.throws(async () => locking.create("nonexistentdir/nonexistentfile", { realpath: false }));
             assert.instanceOf(err, Error);
             assert.equal(err.code, "ENOENT");
         });
 
         it("should create the lockfile", async () => {
-            await lock(tmpFile);
+            await locking.create(tmpFile);
             assert.isTrue(fs.existsSync(tmpFileLock));
         });
 
         it("should fail if already locked", async () => {
-            await lock(tmpFile);
-            const err = await assert.throws(async () => lock(tmpFile));
+            await locking.create(tmpFile);
+            const err = await assert.throws(async () => locking.create(tmpFile));
             assert.instanceOf(err, Error);
             assert.equal(err.code, "ELOCKED");
             assert.equal(err.file, tmpFileRealPath);
         });
 
         it("should retry several times if retries were specified", async () => {
-            const unlock = await lock(tmpFile);
+            const release = await locking.create(tmpFile);
 
-            setTimeout(unlock, 4000);
+            setTimeout(release, 4000);
 
-            await lock(tmpFile, {
+            await locking.create(tmpFile, {
                 retries: {
                     retries: 5,
                     maxTimeout: 1000
@@ -114,7 +113,7 @@ describe("fs", "file locking", () => {
                 throw new Error("foo");
             };
 
-            const err = await assert.throws(async () => lock(tmpFile, {
+            const err = await assert.throws(async () => locking.create(tmpFile, {
                 fs: customFs
             }));
 
@@ -126,12 +125,12 @@ describe("fs", "file locking", () => {
             // Create a symlink to the tmp file
             await fs.symlink(tmpFileRealPath, tmpFileSymlinkRealPath);
 
-            await lock(tmpFileSymlink);
-            let err = await assert.throws(async () => lock(tmpFile));
+            await locking.create(tmpFileSymlink);
+            let err = await assert.throws(async () => locking.create(tmpFile));
             assert.instanceOf(err, Error);
             assert.equal(err.code, "ELOCKED");
 
-            err = await assert.throws(async () => lock(`${tmpFile}/../../lock_file/tmp`));
+            err = await assert.throws(async () => locking.create(`${tmpFile}/../../locking/tmp`));
 
             assert.instanceOf(err, Error);
             assert.equal(err.code, "ELOCKED");
@@ -141,15 +140,15 @@ describe("fs", "file locking", () => {
             // Create a symlink to the tmp file
             await fs.symlink(tmpFileRealPath, tmpFileSymlinkRealPath);
 
-            await lock(tmpFileSymlink, {
+            await locking.create(tmpFileSymlink, {
                 realpath: false
             });
 
-            await lock(tmpFile, {
+            await locking.create(tmpFile, {
                 realpath: false
             });
 
-            const err = await assert.throws(async () => lock(`${tmpFile}/../../lock_file/tmp`, {
+            const err = await assert.throws(async () => locking.create(`${tmpFile}/../../locking/tmp`, {
                 realpath: false
             }));
             assert.instanceOf(err, Error);
@@ -162,7 +161,7 @@ describe("fs", "file locking", () => {
             await fs.mkdir(tmpFileLock);
             await fs.utimes(tmpFileLock, mtime, mtime);
 
-            await lock(tmpFile);
+            await locking.create(tmpFile);
             expect(fs.statSync(tmpFileLock).mtime.getTime()).to.be.greaterThan(Date.now() - 3000);
         });
 
@@ -180,7 +179,7 @@ describe("fs", "file locking", () => {
             await fs.mkdir(tmpFileLock);
             await fs.utimes(tmpFileLock, mtime, mtime);
 
-            await lock(tmpFile, {
+            await locking.create(tmpFile, {
                 fs: customFs
             });
 
@@ -200,7 +199,7 @@ describe("fs", "file locking", () => {
             await fs.mkdir(tmpFileLock);
             await fs.utimes(tmpFileLock, mtime, mtime);
 
-            const err = await assert.throws(async () => lock(tmpFile, {
+            const err = await assert.throws(async () => locking.create(tmpFile, {
                 fs: customFs
             }));
 
@@ -219,7 +218,7 @@ describe("fs", "file locking", () => {
             await fs.mkdir(tmpFileLock);
             await fs.utimes(tmpFileLock, mtime, mtime);
 
-            const err = await assert.throws(async () => lock(tmpFile, {
+            const err = await assert.throws(async () => locking.create(tmpFile, {
                 fs: customFs
             }));
 
@@ -238,7 +237,7 @@ describe("fs", "file locking", () => {
             await fs.mkdir(tmpFileLock);
             await fs.utimes(tmpFileLock, mtime, mtime);
 
-            const err = await await assert.throws(async () => lock(tmpFile, {
+            const err = await await assert.throws(async () => locking.create(tmpFile, {
                 fs: customFs
             }));
             assert.instanceOf(err, Error);
@@ -246,7 +245,7 @@ describe("fs", "file locking", () => {
         });
 
         it("should update the lockfile mtime automatically", async (done) => {
-            await lock(tmpFile, {
+            await locking.create(tmpFile, {
                 update: 1000
             });
 
@@ -275,7 +274,7 @@ describe("fs", "file locking", () => {
             await fs.mkdir(tmpFileLock);
 
             setTimeout(async () => {
-                const err = await assert.throws(async () => lock(tmpFile, {
+                const err = await assert.throws(async () => locking.create(tmpFile, {
                     stale: 100
                 }));
                 assert.instanceOf(err, Error);
@@ -283,7 +282,7 @@ describe("fs", "file locking", () => {
             }, 200);
 
             setTimeout(async () => {
-                await lock(tmpFile, {
+                await locking.create(tmpFile, {
                     stale: 100
                 });
                 done();
@@ -294,7 +293,7 @@ describe("fs", "file locking", () => {
             await fs.mkdir(tmpFileLock);
 
             setTimeout(async () => {
-                const err = await assert.throws(async () => lock(tmpFile, {
+                const err = await assert.throws(async () => locking.create(tmpFile, {
                     stale: false
                 }));
                 assert.instanceOf(err, Error);
@@ -302,7 +301,7 @@ describe("fs", "file locking", () => {
             }, 200);
 
             setTimeout(async () => {
-                await lock(tmpFile, {
+                await locking.create(tmpFile, {
                     stale: false
                 });
                 done();
@@ -310,14 +309,14 @@ describe("fs", "file locking", () => {
         });
 
         it("should call the compromised function if ENOENT was detected when updating the lockfile mtime", async (done) => {
-            await lock(tmpFile, {
+            await locking.create(tmpFile, {
                 update: 1000
             }, async (err) => {
                 assert.instanceOf(err, Error);
                 assert.equal(err.code, "ECOMPROMISED");
                 assert.isTrue(err.message.includes("ENOENT"));
 
-                await lock(tmpFile);
+                await locking.create(tmpFile);
                 done();
             });
             await fs.rm(tmpFileLock);
@@ -330,7 +329,7 @@ describe("fs", "file locking", () => {
                 throw new Error("foo");
             };
 
-            await lock(tmpFile, {
+            await locking.create(tmpFile, {
                 fs: customFs,
                 update: 1000,
                 stale: 5000
@@ -351,7 +350,7 @@ describe("fs", "file locking", () => {
                 throw new Error("foo");
             };
 
-            await lock(tmpFile, {
+            await locking.create(tmpFile, {
                 fs: customFs,
                 update: 1000,
                 stale: 5000
@@ -373,7 +372,7 @@ describe("fs", "file locking", () => {
                 throw new Error("foo");
             };
 
-            await lock(tmpFile, {
+            await locking.create(tmpFile, {
                 fs: customFs,
                 update: 1000,
                 stale: 5000
@@ -386,7 +385,7 @@ describe("fs", "file locking", () => {
             });
 
             await adone.promise.delay(5500);
-            await lock(tmpFile, {
+            await locking.create(tmpFile, {
                 stale: 5000
             });
         });
@@ -406,7 +405,7 @@ describe("fs", "file locking", () => {
                 });
             });
 
-            await lock(tmpFile, {
+            await locking.create(tmpFile, {
                 update: 1000
             });
 
@@ -414,7 +413,7 @@ describe("fs", "file locking", () => {
         });
 
         it("should set update to a minimum of 1000", async (done) => {
-            await lock(tmpFile, { update: 100 });
+            await locking.create(tmpFile, { update: 100 });
             const mtime = stdFs.statSync(tmpFileLock).mtime.getTime();
 
             setTimeout(() => {
@@ -429,7 +428,7 @@ describe("fs", "file locking", () => {
         });
 
         it("should set update to a minimum of 1000 (falsy)", async (done) => {
-            await lock(tmpFile, {
+            await locking.create(tmpFile, {
                 update: false
             });
             const mtime = stdFs.statSync(tmpFileLock).mtime.getTime();
@@ -446,7 +445,7 @@ describe("fs", "file locking", () => {
         });
 
         it("should set update to a maximum of stale / 2", async (done) => {
-            await lock(tmpFile, {
+            await locking.create(tmpFile, {
                 update: 6000,
                 stale: 5000
             });
@@ -464,7 +463,7 @@ describe("fs", "file locking", () => {
         });
     });
 
-    describe("unlock()", () => {
+    describe("release()", () => {
         beforeEach(async () => {
             await fs.writeFile(tmpFile, "");
             await fs.rm(tmpFileSymlink);
@@ -473,32 +472,32 @@ describe("fs", "file locking", () => {
         afterEach(clearLocks);
 
         it("should fail if the lock is not acquired", async () => {
-            const err = await assert.throws(async () => unlock(tmpFile));
+            const err = await assert.throws(async () => locking.release(tmpFile));
             assert.instanceOf(err, Error);
             assert.equal(err.code, "ENOTACQUIRED");
         });
 
         it("should release the lock", async () => {
-            await lock(tmpFile);
-            await unlock(tmpFile);
-            await lock(tmpFile);
+            await locking.create(tmpFile);
+            await locking.release(tmpFile);
+            await locking.create(tmpFile);
         });
 
         it("should release the lock (without callback)", async (done) => {
-            await lock(tmpFile);
-            await unlock(tmpFile);
+            await locking.create(tmpFile);
+            await locking.release(tmpFile);
 
             setTimeout(async () => {
-                await lock(tmpFile);
+                await locking.create(tmpFile);
                 done();
             }, 2000);
         });
 
         it("should remove the lockfile", async () => {
-            await lock(tmpFile);
+            await locking.create(tmpFile);
             assert.isTrue(fs.existsSync(tmpFileLock));
 
-            await unlock(tmpFile);
+            await locking.release(tmpFile);
             assert.isFalse(fs.existsSync(tmpFileLock));
         });
 
@@ -509,8 +508,8 @@ describe("fs", "file locking", () => {
                 throw new Error("foo");
             };
 
-            await lock(tmpFile);
-            const err = await assert.throws(async () => unlock(tmpFile, {
+            await locking.create(tmpFile);
+            const err = await assert.throws(async () => locking.release(tmpFile, {
                 fs: customFs
             }));
             assert.instanceOf(err, Error);
@@ -526,19 +525,19 @@ describe("fs", "file locking", () => {
                 await fs.rm(path);
             };
 
-            await lock(tmpFile);
-            await unlock(tmpFile, {
+            await locking.create(tmpFile);
+            await locking.release(tmpFile, {
                 fs: customFs
             });
             assert.isTrue(called);
         });
 
         it("should stop updating the lockfile mtime", async (done) => {
-            await lock(tmpFile, {
+            await locking.create(tmpFile, {
                 update: 2000
             });
 
-            await unlock(tmpFile);
+            await locking.release(tmpFile);
             // First update occurs at 2000ms
             setTimeout(done, 2500);
         });
@@ -551,13 +550,13 @@ describe("fs", "file locking", () => {
                 await fs.utimes(path, atime, mtime);
             };
 
-            await lock(tmpFile, {
+            await locking.create(tmpFile, {
                 fs: customFs,
                 update: 2000
             });
 
             setTimeout(async () => {
-                await unlock(tmpFile);
+                await locking.release(tmpFile);
             }, 3000);
 
             setTimeout(done, 6000);
@@ -571,14 +570,14 @@ describe("fs", "file locking", () => {
                 await fs.utimes(path, atime, mtime);
             };
 
-            await lock(tmpFile, {
+            await locking.create(tmpFile, {
                 fs: customFs,
                 update: 2000
             });
 
             setTimeout(async () => {
-                await unlock(tmpFile);
-                await lock(tmpFile);
+                await locking.release(tmpFile);
+                await locking.create(tmpFile);
             }, 3000);
 
             setTimeout(done, 6000);
@@ -588,20 +587,20 @@ describe("fs", "file locking", () => {
             // Create a symlink to the tmp file
             await fs.symlink(tmpFileRealPath, tmpFileSymlinkRealPath);
 
-            await lock(tmpFile);
-            await unlock(tmpFile);
+            await locking.create(tmpFile);
+            await locking.release(tmpFile);
             assert.isFalse(stdFs.existsSync(tmpFileLock));
         });
 
         it("should use the custom fs", async () => {
             const customFs = Object.assign({}, fs);
 
-            customFs.realpath = async (path, callback) => {
+            customFs.realpath = async (path) => {
                 customFs.realpath = fs.realpath;
                 throw new Error("foo");
             };
 
-            const err = await assert.throws(async () => unlock(tmpFile, {
+            const err = await assert.throws(async () => locking.release(tmpFile, {
                 fs: customFs
             }));
             assert.instanceOf(err, Error);
@@ -609,7 +608,7 @@ describe("fs", "file locking", () => {
         });
     });
 
-    describe("checkLock()", () => {
+    describe("check()", () => {
         beforeEach(async () => {
             await fs.writeFile(tmpFile, "");
             await fs.rm(tmpFileSymlink);
@@ -618,25 +617,25 @@ describe("fs", "file locking", () => {
         afterEach(clearLocks);
 
         it("should fail if the file does not exist by default", async () => {
-            const err = await assert.throws(async () => checkLock(tmpNonExistentFile));
+            const err = await assert.throws(async () => locking.check(tmpNonExistentFile));
             assert.instanceOf(err, Error);
             assert.equal(err.code, "ENOENT");
         });
 
         it("should not fail if the file does not exist and realpath is false", async () => {
-            await checkLock(tmpNonExistentFile, {
+            await locking.check(tmpNonExistentFile, {
                 realpath: false
             });
         });
 
         it("should callback with true if file is locked", async () => {
-            await lock(tmpFile);
-            const locked = await checkLock(tmpFile);
+            await locking.create(tmpFile);
+            const locked = await locking.check(tmpFile);
             assert.isTrue(locked);
         });
 
         it("should callback with false if file is not locked", async () => {
-            const locked = await checkLock(tmpFile);
+            const locked = await locking.check(tmpFile);
             assert.isFalse(locked);
         });
 
@@ -648,7 +647,7 @@ describe("fs", "file locking", () => {
                 throw new Error("foo");
             };
 
-            const err = await assert.throws(async () => checkLock(tmpFile, {
+            const err = await assert.throws(async () => locking.check(tmpFile, {
                 fs: customFs
             }));
             assert.instanceOf(err, Error);
@@ -658,11 +657,11 @@ describe("fs", "file locking", () => {
             // Create a symlink to the tmp file
             await fs.symlink(tmpFileRealPath, tmpFileSymlinkRealPath);
 
-            await lock(tmpFileSymlink);
-            let locked = await checkLock(tmpFile);
+            await locking.create(tmpFileSymlink);
+            let locked = await locking.check(tmpFile);
             assert.isTrue(locked);
 
-            locked = await checkLock(`${tmpFile}/../../lock_file/tmp`);
+            locked = await locking.check(`${tmpFile}/../../locking/tmp`);
             assert.isTrue(locked);
         });
 
@@ -670,16 +669,16 @@ describe("fs", "file locking", () => {
             // Create a symlink to the tmp file
             await fs.symlink(tmpFileRealPath, tmpFileSymlinkRealPath);
 
-            await lock(tmpFileSymlink, {
+            await locking.create(tmpFileSymlink, {
                 realpath: false
             });
 
-            let locked = await checkLock(tmpFile, {
+            let locked = await locking.check(tmpFile, {
                 realpath: false
             });
             assert.isFalse(locked);
 
-            locked = await checkLock(`${tmpFile}/../../lock_file/tmp`, {
+            locked = await locking.check(`${tmpFile}/../../locking/tmp`, {
                 realpath: false
             });
             assert.isFalse(locked);
@@ -696,7 +695,7 @@ describe("fs", "file locking", () => {
             await fs.mkdir(tmpFileLock);
             await fs.utimes(tmpFileLock, mtime, mtime);
 
-            const err = await assert.throws(async () => checkLock(tmpFile, {
+            const err = await assert.throws(async () => locking.check(tmpFile, {
                 fs: customFs
             }));
             assert.instanceOf(err, Error);
@@ -707,7 +706,7 @@ describe("fs", "file locking", () => {
             await fs.mkdir(tmpFileLock);
 
             setTimeout(async () => {
-                const err = await assert.throws(async () => lock(tmpFile, {
+                const err = await assert.throws(async () => locking.create(tmpFile, {
                     stale: 2000
                 }));
                 assert.instanceOf(err, Error);
@@ -715,7 +714,7 @@ describe("fs", "file locking", () => {
             }, 200);
 
             setTimeout(async () => {
-                const locked = await checkLock(tmpFile, { stale: 100 });
+                const locked = await locking.check(tmpFile, { stale: 100 });
                 assert.isFalse(locked);
                 done();
             }, 2200);
@@ -725,7 +724,7 @@ describe("fs", "file locking", () => {
             await fs.mkdir(tmpFileLock);
 
             setTimeout(async () => {
-                const err = await assert.throws(async () => lock(tmpFile, {
+                const err = await assert.throws(async () => locking.create(tmpFile, {
                     stale: 2000
                 }));
                 assert.instanceOf(err, Error);
@@ -733,7 +732,7 @@ describe("fs", "file locking", () => {
             }, 200);
 
             setTimeout(async () => {
-                const locked = await checkLock(tmpFile, { stale: false });
+                const locked = await locking.check(tmpFile, { stale: false });
                 assert.isFalse(locked);
                 done();
             }, 2200);
@@ -748,13 +747,13 @@ describe("fs", "file locking", () => {
         afterEach(clearLocks);
 
         it("should release the lock after calling the provided release function", async () => {
-            const release = await lock(tmpFile);
+            const release = await locking.create(tmpFile);
             await release();
-            await lock(tmpFile);
+            await locking.create(tmpFile);
         });
 
         it("should fail when releasing twice", async () => {
-            const release = await lock(tmpFile);
+            const release = await locking.create(tmpFile);
             await release();
             const err = await assert.throws(async () => release());
             assert.instanceOf(err, Error);
@@ -763,50 +762,40 @@ describe("fs", "file locking", () => {
     });
 
 
-    describe.skip("misc", () => {
+    describe("misc", () => {
         afterEach(clearLocks);
 
-        it("should remove open locks if the process crashes", (next) => {
-            cp.exec(`node ${__dirname}/crash.js`, (err, stdout, stderr) => {
-                if (!err) {
-                    return next(new Error("Should have failed"));
-                }
+        it("should remove open locks if the process crashes", async () => {
+            const err = await assert.throws(async () => forkProcess("crash.js"));
+            if (err.code === 25) {
+                throw new Error("Lock failed");
+            }
 
-                if (err.code === 25) {
-                    adone.log("gfdgd");
-                    return next(new Error("Lock failed"));
-                }
-
-                adone.log(stderr);
-                assert.isTrue(stderr.includes("crash"));
-                assert.isFalse(stdFs.existsSync(tmpFileLock));
-
-                next();
-            });
+            assert.isTrue(err.stderr.includes("Error: crashed"));
+            assert.isFalse(await fs.exists(tmpFileLock));
         });
 
-        it("should not hold the process if it has no more work to do", (next) => {
-            cp.spawn("node", [`${__dirname}/unref.js`], next);
+        it("should not hold the process if it has no more work to do", async () => {
+            await forkProcess("unref.js");
         });
 
-        it("should work on stress conditions", function (next) {
-            this.timeout(80000);
+        // it.skip("should work on stress conditions", async function (next) {
+        //     this.timeout(80000);
 
-            cp.spawn("node", [`${__dirname}/fixtures/stress.js`], (err, stdout) => {
-                if (err) {
-                    stdout = stdout || "";
+        //     const result = await forkProcess("stress.js");
+        //     if (err) {
+        //         stdout = stdout || "";
 
-                    if (process.env.TRAVIS) {
-                        process.stdout.write(stdout);
-                    } else {
-                        stdFs.writeFileSync(`${__dirname}/stress.log`, stdout);
-                    }
+        //         if (process.env.TRAVIS) {
+        //             process.stdout.write(stdout);
+        //         } else {
+        //             stdFs.writeFileSync(`${__dirname}/stress.log`, stdout);
+        //         }
 
-                    return next(err);
-                }
+        //         return next(err);
+        //     }
 
-                next();
-            });
-        });
+        //     next();
+        // });
     });
 });

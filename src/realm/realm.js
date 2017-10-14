@@ -1,4 +1,5 @@
 const {
+    application: { locking },
     configuration,
     x,
     is,
@@ -10,6 +11,7 @@ const {
 } = adone;
 
 const CONFIG_NAME = "realm.json";
+const LOCK_FILE = std.path.join(adone.config.runtimePath, "realm");
 
 export default class Realm {
     constructor() {
@@ -20,8 +22,15 @@ export default class Realm {
         await this._loadConfig();
     }
 
-    install(options) {
-        
+    async install(options) {
+        try {
+            await this._lock();
+
+        } catch (err) {
+            adone.error(err);
+        } finally {
+            await this._unlock();
+        }
     }
 
     // listFiles({ adone = true, extensions = true, apps = true, configs = true, data = true, logs = true } = {}) {
@@ -44,5 +53,13 @@ export default class Realm {
         } else {
             this.config = new configuration.FileConfiguration();
         }
+    }
+
+    _lock() {
+        return locking.create(LOCK_FILE);
+    }
+
+    _unlock() {
+        return locking.release(LOCK_FILE);
     }
 }

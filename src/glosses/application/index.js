@@ -24,8 +24,13 @@ adone.lazify({
     Subsystem: "./subsystem",
     Application: "./application",
     Logger: "./logger",
-    report: "./report"
+    report: "./report",
+    locking: "./locking"
 }, adone.asNamespace(exports), require);
+
+adone.definePrivate({
+    locks: {} // used by adone.application.locking
+}, exports);
 
 export const run = async (App, ignoreArgs = false) => {
     if (is.null(adone.runtime.app) && is.class(App)) {

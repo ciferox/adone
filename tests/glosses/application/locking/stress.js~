@@ -1,11 +1,11 @@
-'use strict';
 
-const cluster = require('cluster');
-const fs = require('fs');
-const os = require('os');
-const rimraf = require('rimraf');
-const sort = require('stable');
-const lockfile = require('../../');
+
+const cluster = require("cluster");
+const fs = require("fs");
+const os = require("os");
+const rimraf = require("rimraf");
+const sort = require("stable");
+const lockfile = require("../../");
 
 const file = `${__dirname}/../tmp`;
 
@@ -20,30 +20,30 @@ function master() {
     let logs = [];
     let acquired;
 
-    fs.writeFileSync(file, '');
+    fs.writeFileSync(file, "");
     rimraf.sync(`${file}.lock`);
 
     for (let i = 0; i < numCPUs; i += 1) {
         cluster.fork();
     }
 
-    cluster.on('online', (worker) => {
-        worker.on('message', (data) => {
+    cluster.on("online", (worker) => {
+        worker.on("message", (data) => {
             logs.push(data.toString().trim());
         });
     });
 
-    cluster.on('exit', () => {
-        throw new Error('Child died prematurely');
+    cluster.on("exit", () => {
+        throw new Error("Child died prematurely");
     });
 
     setTimeout(() => {
-        cluster.removeAllListeners('exit');
+        cluster.removeAllListeners("exit");
 
         cluster.disconnect(() => {
             // Parse & sort logs
             logs = logs.map((log) => {
-                const split = log.split(' ');
+                const split = log.split(" ");
 
                 return { timestamp: Number(split[0]), message: split[1] };
             });
@@ -55,10 +55,10 @@ function master() {
                 if (log1.timestamp < log2.timestamp) {
                     return -1;
                 }
-                if (log1.message === 'LOCK_RELEASED') {
+                if (log1.message === "LOCK_RELEASED") {
                     return -1;
                 }
-                if (log2.message === 'LOCK_RELEASED') {
+                if (log2.message === "LOCK_RELEASED") {
                     return 1;
                 }
 
@@ -68,7 +68,7 @@ function master() {
             // Validate logs
             logs.forEach((log, index) => {
                 switch (log.message) {
-                    case 'LOCK_ACQUIRED':
+                    case "LOCK_ACQUIRED":
                         if (acquired) {
                             process.stdout.write(`\nInconsistent at line ${index + 1}\n`);
                             printExcerpt(logs, index);
@@ -78,7 +78,7 @@ function master() {
 
                         acquired = true;
                         break;
-                    case 'LOCK_RELEASED':
+                    case "LOCK_RELEASED":
                         if (!acquired) {
                             process.stdout.write(`\nInconsistent at line ${index + 1}\n`);
                             printExcerpt(logs, index);
@@ -98,7 +98,7 @@ function master() {
 }
 
 function slave() {
-    process.on('disconnect', () => process.exit(0));
+    process.on("disconnect", () => process.exit(0));
 
     const tryLock = () => {
         setTimeout(() => {

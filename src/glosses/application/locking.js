@@ -5,11 +5,13 @@ const {
     util: { retry }
 } = adone;
 
-const locks = {};
+adone.asNamespace(exports);
+
+const locks = adone.private(adone.application).locks;
 
 const isLockStale = (stat, options) => stat.mtime.getTime() < Date.now() - options.stale;
 
-const getLockFile = (file) => `${file}.lock`;
+export const getLockFile = (file) => `${file}.lock`;
 
 const canonicalPath = (file, options) => {
     if (!options.realpath) {
@@ -138,7 +140,7 @@ const updateLock = (file, options) => {
     }
 };
 
-export const unlock = async (file, options) => {
+export const release = async (file, options) => {
     options = Object.assign({
         fs,
         realpath: true
@@ -160,7 +162,7 @@ export const unlock = async (file, options) => {
     return options.fs.rm(getLockFile(realFile));
 };
 
-export const lock = async (file, options, compromised = (err) => {
+export const create = async (file, options, compromised = (err) => {
     throw err;
 }) => {
     options = Object.assign({
@@ -210,8 +212,8 @@ export const lock = async (file, options, compromised = (err) => {
                     throw Object.assign(new Error("Lock is already released"), { code: "ERELEASED" });
                 }
 
-                // Not necessary to use realpath twice when unlocking
-                return unlock(realFile, Object.assign({}, options, { realpath: false }));
+                // Not necessary to use realpath twice when releasing
+                return release(realFile, Object.assign({}, options, { realpath: false }));
             });
         });
     });
@@ -241,12 +243,3 @@ export const check = async (file, options) => {
         throw err;
     }
 };
-
-// Remove acquired locks on exit
-process.on("exit", () => {
-    Object.keys(locks).forEach((file) => {
-        try {
-            locks[file].options.fs.rmdirSync(getLockFile(file));
-        } catch (e) { /* empty */ }
-    });
-});

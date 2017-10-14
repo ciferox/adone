@@ -7,13 +7,15 @@ const {
     runtime: { term },
     tag,
     terminal: { styler },
-    application: {
-        EXIT_SUCCESS,
-        EXIT_ERROR,
-        STAGE_SYMBOL,
-        STATE
-    }
+    application 
 } = adone;
+
+const {
+    EXIT_SUCCESS,
+    EXIT_ERROR,
+    STAGE_SYMBOL,
+    STATE
+} = application;
 
 const noStyleLength = (x) => text.ansi.stripEscapeCodes(x).length;
 
@@ -1342,7 +1344,7 @@ const mergeGroupsLists = (a, b) => {
     return result;
 };
 
-export default class Application extends adone.application.Subsystem {
+export default class Application extends application.Subsystem {
     constructor({
         name = std.path.basename(process.argv[1], std.path.extname(process.argv[1])),
         interactive = true,
@@ -1412,7 +1414,7 @@ export default class Application extends adone.application.Subsystem {
         filename = process.env.ADONE_REPORT_FILENAME,
         directory = process.env.ADONE_REPORT_DIRECTORY
     } = {}) {
-        this[REPORT] = adone.application.report;
+        this[REPORT] = application.report;
         if (events) {
             this[REPORT].setEvents(events);
         }
@@ -1510,7 +1512,7 @@ export default class Application extends adone.application.Subsystem {
             for (const error of errors) {
                 adone.log(escape(error.message));
             }
-            await this.exit(adone.application.EXIT_ERROR);
+            await this.exit(application.EXIT_ERROR);
         }
 
         return [command, match, rest];
@@ -1545,7 +1547,7 @@ export default class Application extends adone.application.Subsystem {
                 return this._fireException(err);
             }
             adone.error(err.stack || err.message || err);
-            return this.exit(adone.application.EXIT_ERROR);
+            return this.exit(application.EXIT_ERROR);
         }
     }
 
@@ -1613,6 +1615,17 @@ export default class Application extends adone.application.Subsystem {
 
         if (this[IS_MAIN]) {
             term.destroy();
+        }
+
+        // Remove acquired locks on exit
+        const locks = adone.private(application).locks;
+        const lockFiles = Object.keys(locks);
+        for (const file of lockFiles) {
+            try {
+                await locks[file].options.fs.rm(application.locking.getLockFile(file)); // eslint-disable-line
+            } catch (e) {
+                //
+            }
         }
 
         process.exit(code);
