@@ -39,11 +39,9 @@ class RetryOperation {
             clearTimeout(this._timeout);
         }
 
-        if (!err) {
-            return false;
+        if (err) {
+            this._errors.push(err);
         }
-
-        this._errors.push(err);
 
         let timeout = this._timeouts.shift();
         if (is.undefined(timeout)) {

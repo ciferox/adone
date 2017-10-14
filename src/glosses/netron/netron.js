@@ -364,9 +364,7 @@ export default class Netron extends GenesisNetron {
             packetHandler: this._processPacket,
             handlerThisArg: this,
             protocol: this.options.protocol,
-            retryTimeout: this.options.retryTimeout,
-            retryMaxTimeout: this.options.retryMaxTimeout,
-            reconnects: this.options.reconnects,
+            retries: this.options.retries,
             defaultPort: DEFAULT_PORT,
             responseTimeout: this.options.responseTimeout
         });

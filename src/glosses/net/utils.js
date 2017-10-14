@@ -1,4 +1,6 @@
-const { is } = adone;
+const {
+    is
+} = adone;
 
 export const isLocal = (port, host) => ((is.nil(port) && is.nil(host)) || is.string(port));
 

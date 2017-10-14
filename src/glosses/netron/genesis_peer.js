@@ -8,14 +8,9 @@ const {
 } = adone;
 
 export default class GenesisPeer extends AsyncEmitter {
-    constructor(options = {}) {
+    constructor(options) {
         super();
-        this.options = Object.assign({
-            protocol: "netron:",
-            retryTimeout: 100,
-            retryMaxTimeout: 10000,
-            reconnects: 3
-        }, options);
+        this.options = Object.assign({}, options);
 
         this.netron = this.options.netron;
         this.streamId = new SequenceId();

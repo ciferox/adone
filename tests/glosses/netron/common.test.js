@@ -44,7 +44,9 @@ describe("netron", "common", function () {
 
         it("reconnect attempts", async () => {
             const customExNetron = new Netron({
-                reconnects: 4
+                retries: {
+                    retries: 4
+                }
             });
             let reconnects = 0;
             customExNetron.on("peer create", (peer) => {

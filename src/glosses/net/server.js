@@ -1,10 +1,12 @@
-const { is, net } = adone;
+const {
+    is,
+    net
+} = adone;
 
 export default class Server extends adone.event.EventEmitter {
     constructor(options = {}) {
         super();
-        this.options = new adone.configuration.Configuration();
-        this.options.assign({
+        this.options = Object.assign({
             backlog: 511,
             protocol: "tcp:",
             defaultPort: 1024

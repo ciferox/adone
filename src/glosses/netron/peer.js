@@ -1,8 +1,4 @@
-const {
-    GenesisPeer
-} = adone.netron;
-
-export default class Peer extends GenesisPeer {
+export default class Peer extends adone.netron.GenesisPeer {
     constructor(options) {
         super(options);
         this.options.packetOwner = this;

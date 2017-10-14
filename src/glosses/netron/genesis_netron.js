@@ -26,9 +26,6 @@ export default class GenesisNetron extends AsyncEmitter {
         this.options = Object.assign({
             protocol: "netron:",
             defaultPort: DEFAULT_PORT,
-            reconnects: 3,
-            retryTimeout: 300,
-            retryMaxTimeout: 3000,
             responseTimeout: 60000 * 3,
             isSuper: false,
             acceptTwins: true,
@@ -39,6 +36,12 @@ export default class GenesisNetron extends AsyncEmitter {
                 compact: false
             }
         }, options);
+
+        this.options.retries = Object.assign({
+            retries: 3,
+            minTimeout: 300,
+            maxTimeout: 3000
+        }, options ? options.retries : null);
 
         this.piStatuses = [STATUS.HANDSHAKING, STATUS.ONLINE];
 

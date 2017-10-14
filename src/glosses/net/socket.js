@@ -1,16 +1,22 @@
-const { is, net } = adone;
+const {
+    is,
+    net
+} = adone;
 
 export default class Socket extends adone.event.EventEmitter {
     constructor(options = {}) {
         super();
-        this.options = new adone.configuration.Configuration();
-        this.options.assign({
+        this.options = Object.assign({
             protocol: "tcp:",
-            defaultPort: 1024,
-            retryTimeout: 100,
-            retryMaxTimeout: 10000,
-            reconnects: 3
+            defaultPort: 1024
         }, options);
+
+        this.options.retries = Object.assign({
+            retries: 3,
+            minTimeout: 100,
+            maxTimeout: 10000
+        }, options ? options.retries : null);
+
         this._localAddr = null;
         this._remoteAddr = null;
         this.nodeSocket = this.options.socket;
@@ -114,66 +120,64 @@ export default class Socket extends adone.event.EventEmitter {
     connect(options = {}) {
         return new Promise((resolve, reject) => {
             [options.port, options.host] = adone.net.util.normalizeAddr(options.port, options.host, this.options.defaultPort);
-            let connected = false;
-            let attempts = 0;
-            const reconnects = this.options.reconnects;
-            let retry = this.options.retryTimeout;
-            const max = this.options.retryMaxTimeout;
-            let connectEvent;
-            let nodeSocket;
+            const operation = adone.util.retry.operation(this.options.retries);
 
             if (is.string(options.port)) {
                 options.path = options.port;
                 options.port = 0;
             }
-            if (options.useTls) {
-                nodeSocket = this.nodeSocket = adone.std.tls.connect(options);
-                connectEvent = "secureConnect";
-            } else {
-                nodeSocket = this.nodeSocket = new adone.std.net.Socket();
-                nodeSocket.connect(options);
-                connectEvent = "connect";
-            }
 
-            nodeSocket.setNoDelay();
-            nodeSocket.on("error", (err) => {
-                this.emit("socket error", err);
-                if (adone.net.util.ignoredErrors.includes(err.code)) {
-                    return this.emit("ignored error", err);
-                }
-                this.emit("error", err);
-                if (!connected) {
-                    reject(new adone.x.Connect(err.message));
-                }
-            }).once(connectEvent, () => {
-                connected = true;
-                this.setPacketHandler();
-                // Т. к. локальный и удалённый адреса можно получить только после успешного подключения сокета и до разрыва соединения,
-                // то форсируем вызов методов, чтобы можно было получить информацию после закрытия соединения.
-                this.getLocalAddress();
-                this.getRemoteAddress();
-                this.emit("connect");
-                resolve();
-            }).on("close", () => {
-                if (connected) {
-                    this.nodeSocket = null;
-                    return this.emit("disconnect");
-                }
-                if (++attempts <= reconnects) {
-                    setTimeout(() => {
-                        this.emit("reconnect attempt");
-                        nodeSocket.destroy();
-                        nodeSocket.connect(options);
-                        retry = Math.round(Math.min(max, retry * 1.5)) >>> 0;
-                    }, retry);
+            operation.attempt(() => {
+                let connected = false;
+                let connectEvent;
+                let nodeSocket;
+
+                if (options.useTls) {
+                    nodeSocket = this.nodeSocket = adone.std.tls.connect(options);
+                    connectEvent = "secureConnect";
                 } else {
+                    nodeSocket = this.nodeSocket = new adone.std.net.Socket();
+                    nodeSocket.connect(options);
+                    connectEvent = "connect";
+                }
+
+                nodeSocket.setNoDelay();
+                nodeSocket.on("error", (err) => {
+                    this.emit("socket error", err);
+                    if (adone.net.util.ignoredErrors.includes(err.code)) {
+                        return this.emit("ignored error", err);
+                    }
+                    this.emit("error", err);
+                    if (!connected) {
+                        reject(new adone.x.Connect(err.message));
+                    }
+                }).once(connectEvent, () => {
+                    connected = true;
+                    this.setPacketHandler();
+                    // Т. к. локальный и удалённый адреса можно получить только после успешного подключения сокета и до разрыва соединения,
+                    // то форсируем вызов методов, чтобы можно было получить информацию после закрытия соединения.
+                    this.getLocalAddress();
+                    this.getRemoteAddress();
+                    this.emit("connect");
+                    resolve();
+                }).on("close", () => {
+                    if (connected) {
+                        this.nodeSocket = null;
+                        return this.emit("disconnect");
+                    }
+
+                    if (operation.retry()) {
+                        this.emit("reconnect attempt");
+                        return;
+                    }
+
                     this.nodeSocket = null;
                     if (options.port === 0) {
                         reject(new adone.x.Connect(`Host ${net.util.humanizeAddr(this.options.protocol, options.path)} is unreachable`));
                     } else {
                         reject(new adone.x.Connect(`Host ${net.util.humanizeAddr(this.options.protocol, options.port, options.host)} is unreachable`));
                     }
-                }
+                });
             });
         });
     }
