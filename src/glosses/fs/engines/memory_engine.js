@@ -168,7 +168,7 @@ class OpenedFile {
 
 class File extends event.EventEmitter {
     constructor({
-        size,
+        size = 0,
         contents = adone.emptyBuffer,
         mtime,
         atime,
