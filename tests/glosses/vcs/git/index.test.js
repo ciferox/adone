@@ -14,7 +14,7 @@ describe("vcs", "git", () => {
         return adone.fs.rm(local("repos")).then(() => {
             return adone.fs.rm(local("home"));
         }).then(() => {
-            return adone.fs.mkdir(local("repos"));
+            return adone.fs.mkdirp(local("repos"));
         }).then(() => {
             return exec(`git init ${local("repos", "empty")}`);
         }).then(() => {
@@ -26,11 +26,11 @@ describe("vcs", "git", () => {
         }).then(() => {
             return exec("git checkout master", { cwd: workdirPath });
         }).then(() => {
-            return adone.fs.mkdir(local("repos", "nonrepo"));
+            return adone.fs.mkdirp(local("repos", "nonrepo"));
         }).then(() => {
             return adone.fs.writeFile(local("repos", "nonrepo", "file.txt"), "This is a bogus file");
         }).then(() => {
-            return adone.fs.mkdir(local("home"));
+            return adone.fs.mkdirp(local("home"));
         }).then(() => {
             return adone.fs.writeFile(local("home", ".gitconfig"), "[user]\n  name = John Doe\n  email = johndoe@example.com");
         });

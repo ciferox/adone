@@ -32,7 +32,7 @@ describe("database", "pouch", "prefix", () => {
 
                 const prefix = adone.std.path.join(util.tmppath, "testfolder");
 
-                await adone.fs.mkdir(prefix);
+                await adone.fs.mkdirp(prefix);
 
                 const CustomPouch = DB.defaults({ prefix });
 

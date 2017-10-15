@@ -172,6 +172,6 @@ export default class Persistence {
     }
 
     static ensureDirectoryExists(dir) {
-        return adone.fs.mkdir(dir);
+        return adone.fs.mkdirp(dir);
     }
 }

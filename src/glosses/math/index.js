@@ -13,3 +13,5 @@ export const random = (min = 0, max = 0xFFFFFFFF) => {
     const val = (b[0] | b[1] << 8 | b[2] << 16 | b[3] << 24) >>> 0;
     return min + (val % (max - min));
 };
+
+export const hash = (algo, data, encoding = "hex") => adone.std.crypto.createHash(algo).update(data).digest(encoding);

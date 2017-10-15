@@ -61,12 +61,12 @@ export class WeakOmnitron extends adone.omnitron.Omnitron {
                     fullPath = adone.std.path.join(this.servicesPath, serviceName);
                 }
 
-                return adone.fs.mkdir(fullPath).then(() => fullPath);
+                return adone.fs.mkdirp(fullPath).then(() => fullPath);
             }
         };
         // await this.createPidFile();
 
-        // await adone.fs.mkdir(this.config.omnitron.servicesPath);
+        // await adone.fs.mkdirp(this.config.omnitron.servicesPath);
 
         await this.initializeNetron({ isSuper: true });
 

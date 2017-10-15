@@ -10,7 +10,7 @@ describe("fs", "is", () => {
     describe("executable", () => {
         before(async () => {
             await adone.fs.rm(fixture);
-            await adone.fs.mkdir(fixture);
+            await adone.fs.mkdirp(fixture);
             fs.writeFileSync(meow, "#!/usr/bin/env cat\nmeow\n");
             fs.chmodSync(meow, parseInt("0755", 8));
             fs.writeFileSync(fail, "#!/usr/bin/env false\n");

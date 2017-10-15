@@ -14,7 +14,7 @@ export const setup = async () => {
     DB = adone.database.pouch.DB.defaults({
         prefix
     });
-    await fs.mkdir(tmppath);
+    await fs.mkdirp(tmppath);
     return DB;
 };
 

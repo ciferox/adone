@@ -167,7 +167,7 @@ export const packStream = (cwd = process.cwd(), opts = {}) => {
 };
 
 const mkdirfix = async (name, opts) => {
-    const made = await adone.fs.mkdir(name);
+    const made = await adone.fs.mkdirp(name);
     if (made && opts.own) {
         await adone.fs.chownr(made, opts.uid, opts.gid);
     }
@@ -324,7 +324,7 @@ export const unpackStream = (cwd = process.cwd(), opts = {}) => {
 
         if (header.type === "directory") {
             stack.push([name, header.mtime]);
-            return adone.fs.mkdir(name).then(stat, stat);
+            return adone.fs.mkdirp(name).then(stat, stat);
         }
 
         mkdirfix(path.dirname(name), { own, uid: header.uid, gid: header.gid }).then(() => {

@@ -158,7 +158,7 @@ describe("application", "locking", () => {
         it("should remove and acquire over stale locks", async () => {
             const mtime = (Date.now() - 60000) / 1000;
 
-            await fs.mkdir(tmpFileLock);
+            await fs.mkdirp(tmpFileLock);
             await fs.utimes(tmpFileLock, mtime, mtime);
 
             await locking.create(tmpFile);
@@ -176,7 +176,7 @@ describe("application", "locking", () => {
                 return result;
             };
 
-            await fs.mkdir(tmpFileLock);
+            await fs.mkdirp(tmpFileLock);
             await fs.utimes(tmpFileLock, mtime, mtime);
 
             await locking.create(tmpFile, {
@@ -196,7 +196,7 @@ describe("application", "locking", () => {
                 throw err;
             };
 
-            await fs.mkdir(tmpFileLock);
+            await fs.mkdirp(tmpFileLock);
             await fs.utimes(tmpFileLock, mtime, mtime);
 
             const err = await assert.throws(async () => locking.create(tmpFile, {
@@ -215,7 +215,7 @@ describe("application", "locking", () => {
                 throw new Error("foo");
             };
 
-            await fs.mkdir(tmpFileLock);
+            await fs.mkdirp(tmpFileLock);
             await fs.utimes(tmpFileLock, mtime, mtime);
 
             const err = await assert.throws(async () => locking.create(tmpFile, {
@@ -234,7 +234,7 @@ describe("application", "locking", () => {
                 throw new Error("foo");
             };
 
-            await fs.mkdir(tmpFileLock);
+            await fs.mkdirp(tmpFileLock);
             await fs.utimes(tmpFileLock, mtime, mtime);
 
             const err = await await assert.throws(async () => locking.create(tmpFile, {
@@ -271,7 +271,7 @@ describe("application", "locking", () => {
         });
 
         it("should set stale to a minimum of 2000", async (done) => {
-            await fs.mkdir(tmpFileLock);
+            await fs.mkdirp(tmpFileLock);
 
             setTimeout(async () => {
                 const err = await assert.throws(async () => locking.create(tmpFile, {
@@ -290,7 +290,7 @@ describe("application", "locking", () => {
         });
 
         it("should set stale to a minimum of 2000 (falsy)", async (done) => {
-            await fs.mkdir(tmpFileLock);
+            await fs.mkdirp(tmpFileLock);
 
             setTimeout(async () => {
                 const err = await assert.throws(async () => locking.create(tmpFile, {
@@ -692,7 +692,7 @@ describe("application", "locking", () => {
                 throw new Error("foo");
             };
 
-            await fs.mkdir(tmpFileLock);
+            await fs.mkdirp(tmpFileLock);
             await fs.utimes(tmpFileLock, mtime, mtime);
 
             const err = await assert.throws(async () => locking.check(tmpFile, {
@@ -703,7 +703,7 @@ describe("application", "locking", () => {
         });
 
         it("should set stale to a minimum of 2000", async (done) => {
-            await fs.mkdir(tmpFileLock);
+            await fs.mkdirp(tmpFileLock);
 
             setTimeout(async () => {
                 const err = await assert.throws(async () => locking.create(tmpFile, {
@@ -721,7 +721,7 @@ describe("application", "locking", () => {
         });
 
         it("should set stale to a minimum of 2000 (falsy)", async (done) => {
-            await fs.mkdir(tmpFileLock);
+            await fs.mkdirp(tmpFileLock);
 
             setTimeout(async () => {
                 const err = await assert.throws(async () => locking.create(tmpFile, {

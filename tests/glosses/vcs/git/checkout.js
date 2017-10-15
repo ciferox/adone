@@ -45,14 +45,14 @@ describe("Checkout", () => {
         assert.notEqual(readmeContent, "");
 
         try {
-            await fs.mkdir(path.dirname(readMePath));
+            await fs.mkdirp(path.dirname(readMePath));
         } catch (err) {
             //
         }
         await fs.writeFile(readMePath, "");
 
         try {
-            await fs.mkdir(path.dirname(packageJsonPath));
+            await fs.mkdirp(path.dirname(packageJsonPath));
         } catch (err) {
             //
         }

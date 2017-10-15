@@ -27,7 +27,7 @@ const repositorySetup = {
 
         // fse.ensure allows us to write files inside new folders
         try {
-            await fs.mkdir(path.dirname(filePath));
+            await fs.mkdirp(path.dirname(filePath));
         } catch (err) {
             //
         }
@@ -41,7 +41,7 @@ const repositorySetup = {
         // Create a new repository in a clean directory
         await fs.rm(repoPath);
         try {
-            await fs.mkdir(repoPath);
+            await fs.mkdirp(repoPath);
         } catch (err) {
             //
         }

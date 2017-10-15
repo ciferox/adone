@@ -376,7 +376,7 @@ export const copy = async (srcPath, dstPath, { ignoreExisting = false, cwd = und
             return;
         }
         const dstFilePath = fData[0];
-        await fs.mkdir(std.path.dirname(dstFilePath));
+        await fs.mkdirp(std.path.dirname(dstFilePath));
         return adone.fs.writeFile(dstFilePath, content);
     });
 };

@@ -68,7 +68,7 @@ export default class ServiceManager extends application.Subsystem {
             location: std.path.join(adone.config.varPath, "omnitron", "services.db")
         });
 
-        await fs.mkdir(std.path.dirname(this.servicesDb.options.location));
+        await fs.mkdirp(std.path.dirname(this.servicesDb.options.location));
     }
 
     async initialize() {

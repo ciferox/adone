@@ -56,6 +56,7 @@ const config = {
     configsPath,
     varPath,
     logsPath,
+    packagesPath: join(home, "packages"),
 
     cli: {
         extsPath: cliExtsPath,

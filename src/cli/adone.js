@@ -56,7 +56,7 @@ class AdoneCLI extends application.Application {
                             name: "name",
                             type: String,
                             required: true,
-                            help: "Extension name or absolute path to local project"
+                            help: "Full name or absolute path to local project"
                         }
                     ],
                     options: [
@@ -70,6 +70,14 @@ class AdoneCLI extends application.Application {
                 {
                     name: "uninstall",
                     help: "Uninstall adone glosses, extensions, applications, etc.",
+                    arguments: [
+                        {
+                            name: "name",
+                            type: String,
+                            required: true,
+                            help: "Full name or absolute path to local project"
+                        }
+                    ],
                     handler: this.uninstallCommand
                 },
                 {
@@ -168,7 +176,7 @@ class AdoneCLI extends application.Application {
             ]
         });
 
-        for (const ss of this.config.cli.subsystems) {
+        for (const ss of this.config.cli.commands) {
             // eslint-disable-next-line
             await this.addSubsystem(Object.assign({
                 addOnCommand: true
@@ -178,11 +186,9 @@ class AdoneCLI extends application.Application {
 
     async installCommand(args, opts) {
         try {
-            const manager = new adone.realm.Installer({
-                name: args.get("name")
-            });
-
-            await manager.install({
+            const realm = await adone.realm.getLocal();
+            await realm.install({
+                name: args.get("name"),
                 symlink: opts.has("symlink")
             });
 
@@ -194,8 +200,19 @@ class AdoneCLI extends application.Application {
         }
     }
 
-    uninstallCommand(args) {
+    async uninstallCommand(args) {
+        try {
+            const realm = await adone.realm.getLocal();
+            await realm.uninstall({
+                name: args.get("name")
+            });
 
+            return 0;
+        } catch (err) {
+            adone.log(err);
+            // term.print(`{red-fg}${err.message}{/}`);
+            return 1;
+        }
     }
 
     async main(args, opts, { rest }) {

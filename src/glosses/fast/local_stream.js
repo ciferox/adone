@@ -79,7 +79,7 @@ export class FastLocalStream extends adone.fast.Stream {
             file.stat = file.stat || new std.fs.Stats();
             file.stat.mode = file.stat.mode || mode;
 
-            await adone.fs.mkdir(dirname);
+            await adone.fs.mkdirp(dirname);
 
             const fd = await adone.fs.fd.open(destPath, flag, mode);
             try {

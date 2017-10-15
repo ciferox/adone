@@ -117,7 +117,7 @@ export default class Dispatcher {
             return new Promise(async (resolve, reject) => {
                 await this.configuration();
                 const omnitronConfig = adone.config.omnitron;
-                await adone.fs.mkdir(std.path.dirname(omnitronConfig.logFilePath));
+                await adone.fs.mkdirp(std.path.dirname(omnitronConfig.logFilePath));
                 this.descriptors.stdout = std.fs.openSync(omnitronConfig.logFilePath, "a");
                 this.descriptors.stderr = std.fs.openSync(omnitronConfig.errorLogFilePath, "a");
                 const child = std.child_process.spawn(process.execPath || "node", [std.path.resolve(adone.rootPath, "lib/omnitron/omnitron.js")], {

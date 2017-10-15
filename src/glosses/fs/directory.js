@@ -42,7 +42,7 @@ export default class Directory {
 
     async create({ mode = 0o777 } = {}) {
         if (!(await this.exists())) {
-            return fs.mkdir(this._path, mode);
+            return fs.mkdirp(this._path, mode);
         }
     }
 

@@ -23,7 +23,7 @@ describe("database", "pouch", "defaults", () => {
 
     it("should allow prefixes", async () => {
         const prefix = util.tmpdir.getDirectory("path", "to", "db", "1").path();
-        await adone.fs.mkdir(prefix);
+        await adone.fs.mkdirp(prefix);
 
         const db = new DB("mydb", { prefix });
         const info = await db.info();
@@ -40,7 +40,7 @@ describe("database", "pouch", "defaults", () => {
 
     it("should allow us to set a prefix by default", async () => {
         const prefix = util.tmpdir.getDirectory("path", "to", "db", "2").path();
-        await adone.fs.mkdir(prefix);
+        await adone.fs.mkdirp(prefix);
 
         const CustomPouch = DB.defaults({
             prefix
