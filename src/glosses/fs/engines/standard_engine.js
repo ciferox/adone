@@ -10,7 +10,6 @@ const {
             stat,
             lstat,
             readdir,
-            realpath,
             readlink,
             open,
             close,
@@ -30,7 +29,15 @@ const {
             link,
             fstat,
             fsync,
-            fdatasync
+            fdatasync,
+            copyFile,
+            realpath,
+            watchFile,
+            watch,
+            lchmod,
+            lchown,
+            fchown,
+            mkdtemp
         }
     },
     promise
@@ -54,11 +61,6 @@ export default class StandardEngine extends AbstractEngine {
     @promisify
     _readdir(path, options, callback) {
         readdir(path.relativePath, options, callback);
-    }
-
-    @promisify
-    _realpath(path, options, callback) {
-        realpath(path.relativePath, options, callback);
     }
 
     @promisify
@@ -127,8 +129,23 @@ export default class StandardEngine extends AbstractEngine {
     }
 
     @promisify
+    _lchmod(path, mode, callback) {
+        lchmod(path.relativePath, mode, callback);
+    }
+
+    @promisify
     _chown(path, uid, gid, callback) {
         chown(path.relativePath, uid, gid, callback);
+    }
+
+    @promisify
+    _lchown(path, uid, gid, callback) {
+        lchown(path.relativePath, uid, gid, callback);
+    }
+
+    @promisify
+    _fchown(fd, uid, gid, callback) {
+        fchown(fd, uid, gid, callback);
     }
 
     @promisify
@@ -160,5 +177,31 @@ export default class StandardEngine extends AbstractEngine {
     @promisify
     _fdatasync(fd, callback) {
         fdatasync(fd, callback);
+    }
+
+    @promisify
+    _copyFile(src, dest, flags, callback) {
+        copyFile(src.relativePath, dest.relativePath, flags, callback);
+    }
+
+    @promisify
+    _realpath(path, options, callback) {
+        realpath(path.relativePath, options, callback);
+    }
+
+    _watchFile(filename, options, listener, watcher) {
+        watchFile(filename.relativePath, options, (prev, curr) => {
+            watcher.emit("change", prev, curr);
+        });
+    }
+
+    _watch(filename, options, listener, watcher) {
+        const internalWatcher = watch(filename.relativePath, options);
+        watcher.setWatcher(internalWatcher);
+    }
+
+    @promisify
+    _mkdtemp(prefix, options, callback) {
+        mkdtemp(prefix, options, callback);
     }
 }

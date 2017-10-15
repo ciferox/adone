@@ -20,7 +20,7 @@ describe("fs", "engine", "AbstactEngine", () => {
                 "a", "memory", "memory2"
             ]);
 
-            abstract.mount(new MemoryEngine(), "a/b/w");
+            abstract.mount(new MemoryEngine(), "/a/b/w");
             expect(await abstract.readdir("/a/b")).to.be.deep.equal(["c", "w"]);
         });
     });

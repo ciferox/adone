@@ -41,9 +41,12 @@ export const defer = () => {
  * @param {T} [value] resolving value
  * @returns {Promise<T>}
  */
-export const delay = (ms, value) => {
+export const delay = (ms, value, { unref = false } = {}) => {
     return new Promise((resolve) => {
-        adone.setTimeout(resolve, ms, value);
+        const timer = adone.setTimeout(resolve, ms, value);
+        if (unref) {
+            timer.unref();
+        }
     });
 };
 

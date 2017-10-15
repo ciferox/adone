@@ -5,8 +5,17 @@ const {
     std,
     util,
     collection,
-    x
+    x,
+    lazify,
+    noop,
+    event,
+    promise
 } = adone;
+
+const lazy = lazify({
+    ReadStream: ["./streams", (mod) => mod.ReadStream],
+    WriteStream: ["./streams", (mod) => mod.WriteStream]
+}, null, require);
 
 const constants = std.fs.constants;
 
@@ -236,7 +245,8 @@ const errors = {
     EEXIST: (path, syscall) => new FSException("EEXIST", "file already exists", path, syscall),
     ENOTEMPTY: (path, syscall) => new FSException("ENOTEMPTY", "directory not empty", path, syscall),
     EACCESS: (path, syscall) => new FSException("EACCESS", "permission denied", path, syscall),
-    EPERM: (path, syscall) => new FSException("EPERM", "operation not permitted", path, syscall)
+    EPERM: (path, syscall) => new FSException("EPERM", "operation not permitted", path, syscall),
+    ENOSYS: (syscall) => new FSException("ENOSYS", "function not implemented", undefined, syscall)
 };
 
 const ENGINE = Symbol("ENGINE");
@@ -261,6 +271,263 @@ const syscallMap = {
     read: "read"
 };
 
+const emptyStats = () => {
+    const s = new std.fs.Stats();
+    s.dev = 0;
+    s.mode = 0;
+    s.nlink = 0;
+    s.uid = 0;
+    s.gid = 0;
+    s.rdev = 0;
+    s.blksize = is.windows ? undefined : 0;
+    s.ino = 0;
+    s.size = 0;
+    s.blocks = is.windows ? undefined : 0;
+    s.atimeMs = 0;
+    s.mtimeMs = 0;
+    s.ctimeMs = 0;
+    s.birthtimeMs = 0;
+    s.atime = new Date(0);
+    s.mtime = new Date(0);
+    s.ctime = new Date(0);
+    s.birthtime = new Date(0);
+    return s;
+};
+
+const writeAll = async (engine, fd, isUserFd, buffer, offset, length, position) => {
+    let closing;
+    try {
+        const written = await engine.write(fd, buffer, offset, length, position);
+        if (written === length) {
+            if (isUserFd) {
+                return;
+            }
+            closing = true;
+            await engine.close(fd);
+        } else {
+            offset += written;
+            length -= written;
+            if (!is.null(position)) {
+                position += written;
+            }
+            return writeAll(engine, fd, isUserFd, buffer, offset, length, position);
+        }
+    } catch (err) {
+        if (isUserFd || closing) {
+            throw err;
+        }
+        await engine.close(fd).catch(noop);
+        throw err;
+    }
+};
+
+const isFd = (path) => (path >>> 0) === path;
+
+const kReadFileBufferLength = 8 * 1024;
+const kMaxLength = adone.std.buffer.kMaxLength;
+
+class ReadFileContext {
+    constructor(engine, path, flags, encoding) {
+        this.engine = engine;
+        if (isFd(path)) {
+            this.path = undefined;
+            this.fd = path;
+            this.isUserFd = true;
+        } else {
+            this.path = path;
+            this.fd = undefined;
+            this.isUserFd = false;
+        }
+        this.flags = flags;
+        this.size = undefined;
+        this.buffers = null;
+        this.buffer = null;
+        this.pos = 0;
+        this.encoding = encoding;
+        this.err = null;
+    }
+
+    process() {
+        return this._open();
+    }
+
+    async _open() {
+        if (!this.isUserFd) {
+            this.fd = await this.engine.open(this.path, this.flags, 0o666);
+        }
+        const stat = await this.engine.fstat(this.fd);
+        let size;
+        if ((stat.mode & constants.S_IFMT) === constants.S_IFREG) {
+            size = this.size = stat.size;
+        } else {
+            size = this.size = 0;
+        }
+
+        if (size === 0) {
+            this.buffers = [];
+            return this._read();
+        }
+
+        if (size > kMaxLength) {
+            this.err = new RangeError(`File size is greater than possible Buffer: 0x${kMaxLength.toString(16)} bytes`);
+            return this._close();
+        }
+
+        this.buffer = Buffer.allocUnsafeSlow(size);
+        return this._read();
+    }
+
+    async _read() {
+        let buffer;
+        let offset;
+        let length;
+
+        if (this.size === 0) {
+            buffer = this.buffer = Buffer.allocUnsafeSlow(kReadFileBufferLength);
+            offset = 0;
+            length = kReadFileBufferLength;
+        } else {
+            buffer = this.buffer;
+            offset = this.pos;
+            length = this.size - this.pos;
+        }
+
+        try {
+            const bytesRead = await this.engine.read(this.fd, buffer, offset, length, null);
+
+            if (bytesRead === 0) {
+                return this._close();
+            }
+
+            this.pos += bytesRead;
+
+            if (this.size !== 0) {
+                if (this.pos === this.size) {
+                    return this._close();
+                }
+                return this._read();
+
+            }
+            // unknown size, just read until we don't get bytes.
+            this.buffers.push(this.buffer.slice(0, bytesRead));
+            return this._read();
+        } catch (err) {
+            this.err = err;
+            return this._close();
+        }
+    }
+
+    async _close() {
+        if (!this.isUserFd) {
+            await this.engine.close(this.fd);
+        }
+
+        if (this.err) {
+            throw this.err;
+        }
+
+        let buffer;
+
+        if (this.size === 0) {
+            buffer = Buffer.concat(this.buffers, this.pos);
+        } else if (this.pos < this.size) {
+            buffer = this.buffer.slice(0, this.pos);
+        } else {
+            buffer = this.buffer;
+        }
+
+        if (this.encoding) {
+            buffer = buffer.toString(this.encoding);
+        }
+
+        return buffer;
+    }
+}
+
+const statEqual = (prev, curr) => {
+    return prev.dev === curr.dev
+        && prev.ino === curr.ino
+        && prev.uid === curr.uid
+        && prev.gid === curr.gid
+        && prev.mode === curr.mode
+        && prev.size === curr.size
+        && prev.birthtimeMs === curr.birthtimeMs
+        && prev.ctimeMs === curr.ctimeMs
+        && prev.mtimeMs === curr.mtimeMs;
+};
+
+class StatWatcher extends event.EventEmitter {
+    constructor() {
+        super();
+        this.stopped = false;
+    }
+
+    async start(engine, filename, options) {
+        const { interval, persistent } = options;
+
+        // cache watchers?
+
+        let prev = emptyStats();
+        let enoent = false;
+
+        for (; ;) {
+            if (this.stopped) {
+                break;
+            }
+            try {
+                const newStats = await engine._stat(filename); // eslint-disable-line
+                if (!statEqual(prev, newStats)) {
+                    enoent = false;
+                    this.emit("change", prev, newStats);
+                    prev = newStats;
+                }
+            } catch (err) {
+                if (err.code === "ENOENT") {
+                    if (!enoent) {
+                        const newStats = emptyStats();
+                        this.emit("change", prev, newStats);
+                        enoent = true;
+                        prev = newStats;
+                    }
+                }
+            }
+            await promise.delay(interval, { unref: !persistent }); // eslint-disable-line
+        }
+    }
+
+    stop() {
+        this.stopped = true;
+    }
+}
+
+class FSWatcher extends event.EventEmitter {
+    constructor() {
+        super();
+        this.engine = false;
+        this.watcher = null;
+        this.mountPath = null;
+        this.closed = false;
+    }
+
+    setWatcher(watcher) {
+        if (this.closed) { // it can be closed before we set the watcher instance
+            watcher.close();
+            return;
+        }
+        this.watcher = watcher;
+        this.watcher.on("change", (event, filename) => {
+            this.emit("change", event, filename);
+        });
+    }
+
+    close() {
+        this.closed = true;
+        if (this.watcher) {
+            this.watcher.close();
+        }
+    }
+}
+
 // nodejs callbacks support
 const callbackify = (target, key, descriptor) => {
     descriptor.value = adone.promise.callbackify(descriptor.value);
@@ -273,13 +540,18 @@ export class AbstractEngine {
     constructor() {
         this.structure = {};
         this._numberOfEngines = 0;
-        this.mount(this, "/");
         this._fd = 100; // generally, no matter which initial value we use, this is a fd counter for internal mappings
         this._fdMap = new collection.MapCache();
+        this._fileWatchers = new collection.MapCache();
+        this.mount(this, "/");
+    }
+
+    createError(code, path, syscall) {
+        return errors[code](path, syscall);
     }
 
     throw(code, path, syscall) {
-        throw errors[code](path, syscall);
+        throw this.createError(code, path, syscall);
     }
 
     @callbackify
@@ -287,14 +559,26 @@ export class AbstractEngine {
         return this._handlePath("open", Path.resolve(path), [flags, mode]);
     }
 
+    _open() {
+        this.throw("ENOSYS", "open");
+    }
+
     @callbackify
     async close(fd) {
         return this._handleFd("close", fd, []);
     }
 
+    _close() {
+        this.throw("ENOSYS", "close");
+    }
+
     @callbackify
     async read(fd, buffer, offset, length, position) {
         return this._handleFd("read", fd, [buffer, offset, length, position]);
+    }
+
+    _read() {
+        this.throw("ENOSYS", "read");
     }
 
     @callbackify
@@ -329,9 +613,17 @@ export class AbstractEngine {
         return this._handleFd("write", fd, [buffer, offset, length]);
     }
 
+    _write() {
+        this.throw("ENOSYS", "write");
+    }
+
     @callbackify
     async ftruncate(fd, length = 0) {
         return this._handleFd("ftruncate", fd, [length]);
+    }
+
+    _ftruncate() {
+        this.throw("ENOSYS", "ftruncate");
     }
 
     @callbackify
@@ -347,6 +639,10 @@ export class AbstractEngine {
         }
     }
 
+    _truncate() {
+        this.throw("ENOSYS", "truncate");
+    }
+
     @callbackify
     async utimes(path, atime, mtime) {
         return this._handlePath("utimes", Path.resolve(path), [
@@ -355,9 +651,26 @@ export class AbstractEngine {
         ]);
     }
 
+    _utimes() {
+        this.throw("ENOSYS", "utimes");
+    }
+
+    @callbackify
+    async futimes(fd, atime, mtime) {
+        return this._handleFd("futimes", fd, [atime, mtime]);
+    }
+
+    _futimes() {
+        this.throw("ENOSYS", "futimes");
+    }
+
     @callbackify
     async unlink(path) {
         return this._handlePath("unlink", Path.resolve(path), []);
+    }
+
+    _unlink() {
+        this.throw("ENOSYS", "unlink");
     }
 
     @callbackify
@@ -365,9 +678,17 @@ export class AbstractEngine {
         return this._handlePath("rmdir", Path.resolve(path), []);
     }
 
+    _rmdir() {
+        this.throw("ENOSYS", "unlink");
+    }
+
     @callbackify
     async mkdir(path, mode = 0o777) {
         return this._handlePath("mkdir", Path.resolve(path), [mode]);
+    }
+
+    _mkdir() {
+        this.throw("ENOSYS", "mkdir");
     }
 
     @callbackify
@@ -375,9 +696,35 @@ export class AbstractEngine {
         return this._handlePath("access", Path.resolve(path), [mode]);
     }
 
+    _access() {
+        this.throw("ENOSYS", "access");
+    }
+
     @callbackify
     async chmod(path, mode) {
         return this._handlePath("chmod", Path.resolve(path), [mode]);
+    }
+
+    _chmod() {
+        this.throw("ENOSYS", "chmod");
+    }
+
+    @callbackify
+    async fchmod(fd, mode) {
+        return this._handleFd("fchmod", fd, [mode]);
+    }
+
+    _fchmod() {
+        this.throw("ENOSYS", "fchmod");
+    }
+
+    @callbackify
+    async lchmod(path, mode) {
+        return this._handlePath("lchmod", Path.resolve(path), [mode]);
+    }
+
+    _lchmod() {
+        this.throw("ENOSYS", "lchmod");
     }
 
     @callbackify
@@ -385,6 +732,113 @@ export class AbstractEngine {
         return this._handlePath("chown", Path.resolve(path), [uid, gid]);
     }
 
+    _chown() {
+        this.throw("ENOSYS", "chown");
+    }
+
+    @callbackify
+    async lchown(path, uid, gid) {
+        return this._handlePath("lchown", Path.resolve(path), [uid, gid]);
+    }
+
+    _lchown() {
+        this.throw("ENOSYS", "lchown");
+    }
+
+    @callbackify
+    async fchown(fd, uid, gid) {
+        return this._handleFd("fchown", fd, [uid, gid]);
+    }
+
+    _fchown() {
+        this.throw("ENOSYS", "fchown");
+    }
+
+    @callbackify
+    async copyFile(rawSrc, rawDest, flags = 0) {
+        const src = Path.resolve(rawSrc);
+        const dest = Path.resolve(rawDest);
+
+        if (this._numberOfEngines === 1) {
+            // only one engine can handle it, itself
+            return this._copyFile(src, dest, flags);
+        }
+
+        const [
+            [engine1, node1, parts1],
+            [engine2, node2, parts2]
+        ] = await Promise.all([
+            this._chooseEngine(src, "copyfile"), // TODO: a special error message
+            this._chooseEngine(dest, "copyfile") // TODO: a specifal error message
+        ]);
+
+        const src2 = new Path(`/${parts1.slice(node1[LEVEL]).join("/")}`);
+        const dest2 = new Path(`/${parts2.slice(node2[LEVEL]).join("/")}`);
+
+        // efficient
+        if (engine1 === engine2) {
+            return engine1.copyFile(src2, dest2);
+        }
+
+        // cross engine copying...
+        // not so efficient...any other way?
+        // stream one file to another
+
+        if (flags === constants.COPYFILE_EXECL) {
+            // have to throw if the dest exists
+            const destStat = await engine2.lstat(dest2).catch((err) => {
+                if (err.code === "ENOENT") { // does not exist
+                    return null;
+                }
+                return err; // does it mean that the file exists?
+            });
+            if (destStat) {
+                this.throw("EEXIST", dest2, "copyfile"); // TODO: a special error message
+            }
+        }
+
+        const srcStream = engine1.createReadStream(src2);
+        const destStream = engine2.createWriteStream(dest2);
+        const err = await new Promise((resolve) => {
+            let err;
+
+            srcStream.once("error", (_err) => {
+                if (err) {
+                    return; // the destroying has started
+                }
+                err = _err;
+                srcStream.destroy();
+                destStream.end();
+            });
+
+            destStream.once("error", (_err) => {
+                if (err) {
+                    return; // the destroying has started
+                }
+                err = _err;
+                srcStream.destroy();
+                destStream.end();
+            });
+
+            destStream.once("close", () => {
+                resolve(err);
+            });
+
+            srcStream.pipe(destStream);
+        });
+
+        if (err) {
+            // try to remove the dest if an error was thrown
+            await engine2.unlink(dest2).catch(noop);
+            throw err;
+        }
+    }
+
+    _copyFile() {
+        this.rename("ENOSYS", "rename"); // fallback to copy via streams?
+    }
+
+    @callbackify
     async rename(rawOldPath, rawNewPath) {
         const oldPath = Path.resolve(rawOldPath);
         const newPath = Path.resolve(rawNewPath);
@@ -406,10 +860,18 @@ export class AbstractEngine {
         throw new x.NotSupported("for now cross engine renamings are not supported");
     }
 
+    _rename() {
+        this.throw("ENOSYS", "rename");
+    }
+
     @callbackify
     async symlink(target, path, type) {
         // omg, here we have to swap them...
         return this._handlePath("symlink", Path.resolve(path), [new Path(target), type]);
+    }
+
+    _symlink() {
+        this.throw("ENOSYS", "symlink");
     }
 
     @callbackify
@@ -433,9 +895,17 @@ export class AbstractEngine {
         throw new x.NotSupported("Cross engine hark links are not supported");
     }
 
+    _link() {
+        this.throw("ENOSYS", "link");
+    }
+
     @callbackify
     async fstat(fd) {
         return this._handleFd("fstat", fd);
+    }
+
+    _fstat() {
+        this.throw("ENOSYS", "fstat");
     }
 
     @callbackify
@@ -443,9 +913,17 @@ export class AbstractEngine {
         return this._handleFd("fsync", fd);
     }
 
+    _fsync() {
+        this.throw("ENOSYS", "fsync");
+    }
+
     @callbackify
     async fdatasync(fd) {
         return this._handleFd("fdatasync", fd);
+    }
+
+    _fdatasync() {
+        this.throw("ENOSYS", "fdatasync");
     }
 
     @callbackify
@@ -453,9 +931,17 @@ export class AbstractEngine {
         return this._handlePath("stat", Path.resolve(path), []);
     }
 
+    _stat() {
+        this.throw("ENOSYS", "stat");
+    }
+
     @callbackify
     async lstat(path) {
         return this._handlePath("lstat", Path.resolve(path), []);
+    }
+
+    _lstat() {
+        this.throw("ENOSYS", "lstat");
     }
 
     @callbackify
@@ -490,6 +976,10 @@ export class AbstractEngine {
         return this._handlePath("realpath", path, [options]);
     }
 
+    async _realpath() {
+        this.throw("ENOSYS", "realpath"); // or a common implementation?
+    }
+
     @callbackify
     async readlink(path, options) {
         if (!is.object(options)) {
@@ -498,6 +988,143 @@ export class AbstractEngine {
         options.encoding = options.encoding || "utf8";
 
         return this._handlePath("readlink", Path.resolve(path), [options]);
+    }
+
+    _readlink() {
+        return this.throw("ENOSYS", "readlink");
+    }
+
+    createReadStream(path, options) {
+        return new lazy.ReadStream(this, path, options);
+    }
+
+    createWriteStream(path, options) {
+        return new lazy.WriteStream(this, path, options);
+    }
+
+    @callbackify
+    async writeFile(path, data, options = {}) {
+        if (!is.object(options)) {
+            options = { encoding: options };
+        } else {
+            options = { ...options };
+        }
+        options.encoding = options.encoding || "utf8";
+        options.mode = options.mode || 0o666;
+        options.flag = options.flag || "w";
+
+        const writeFd = (fd, isUserFd) => {
+            const buffer = is.uint8Array(data)
+                ? data
+                : Buffer.from(String(data), options.encoding);
+
+            const position = /a/.test(options.flag)
+                ? null
+                : 0;
+
+            return writeAll(this, fd, isUserFd, buffer, 0, buffer.length, position);
+        };
+
+        if (isFd(path)) {
+            return writeFd(path, true);
+        }
+
+        const fd = await this.open(path, options.flag, options.mode);
+        return writeFd(fd, false);
+    }
+
+    @callbackify
+    async appendFile(path, data, options = {}) {
+        if (!is.object(options)) {
+            options = { encoding: options };
+        } else {
+            options = { ...options };
+        }
+        options.encoding = options.encoding || "utf8";
+        options.mode = options.mode || 0o666;
+        options.flag = options.flag || "a";
+
+        // force append behavior when using a supplied file descriptor
+        if (!options.flag || isFd(path)) {
+            options.flag = "a";
+        }
+
+        return this.writeFile(path, data, options);
+    }
+
+    @callbackify
+    async readFile(path, options) {
+        if (!is.object(options)) {
+            options = { encoding: options };
+        }
+        options.flag = options.flag || "r";
+        options.encoding = options.encoding || null;
+
+        const context = new ReadFileContext(this, path, options.flag, options.encoding);
+        return context.process();
+    }
+
+    @callbackify
+    async mkdtemp(prefix, options = {}) {
+        if (!is.object(options)) {
+            options = { encoding: options };
+        }
+        options.encoding = options.encoding || "utf8";
+        return this._handlePath("mkdtemp", prefix, [options]);
+    }
+
+    _mkdtemp() {
+        this.throw("ENOSYS", "mkdtemp");
+    }
+
+    watchFile(filename, options = {}, listener) {
+        if (is.function(options)) {
+            [options, listener] = [{}, options];
+        }
+        options.persistent = "persistent" in options ? Boolean(options.persistent) : true;
+        options.interval = options.interval || 5007;
+
+        const watcher = new StatWatcher();
+
+        watcher.on("change", listener);
+
+        // some engines can provide its own implementation of _watchFile (like standard engine)
+        // and what if there no engine that can handle the request?
+        this._handlePath("watchFile", Path.resolve(filename), [options, listener, watcher]);
+
+        return watcher;
+    }
+
+    _watchFile(filename, options, listener, watcher) {
+        watcher.start(this, filename, options).catch(noop); // actually, it should not throw
+    }
+
+    watch(filename, options = {}, listener) {
+        if (is.function(options)) {
+            [options, listener] = [{}, options];
+        }
+        if (is.string(options)) {
+            options = { encoding: options };
+        }
+        options.encoding = options.encoding || "utf8";
+        options.persistent = "persistent" in options ? Boolean(options.persistent) : true;
+        options.recursive = Boolean(options.recursive);
+
+        const watcher = new FSWatcher();
+
+        if (listener) {
+            watcher.on("change", listener);
+        }
+
+        this._handlePath("watch", Path.resolve(filename), [options, listener, watcher]).catch((err) => {
+            watcher.emit("error", err);
+        });
+
+        return watcher;
+    }
+
+    _watch(filename, options, listener, watcher) {
+        watcher.emit("error", this.createError("ENOSYS", filename, "watch"));
     }
 
     async _handleFd(method, mappedFd, args = []) {
@@ -523,6 +1150,10 @@ export class AbstractEngine {
 
     async _chooseEngine(path, method) {
         let parts = path.parts.slice();
+
+        // resolve .. that can refer to different engines,
+        // but we do not handle cases where symlinks can refer to different engines
+        // as i understand if we want to handle it we must stat each part of each path - huge overhead?
 
         chooseEngine: for (; ;) {
             let node = this.structure[path.root];
@@ -659,13 +1290,13 @@ export class AbstractEngine {
         const level = node[LEVEL];
         const newPath = new Path(`/${parts.slice(level).join("/")}`);
         if (engine === this) {
-            p = engine[`_${method}`](newPath, ...args);
+            p = new Promise((resolve) => resolve(engine[`_${method}`](newPath, ...args)));
         } else {
-            p = engine[method](newPath, ...args);
+            p = new Promise((resolve) => resolve(engine[method](newPath, ...args)));
         }
 
         switch (method) {
-            case "readdir": { // TODO: not only level === 0
+            case "readdir": {
                 if (level === 0) {
                     const [options] = args;
                     p = p.then((files) => { // eslint-disable-line
@@ -687,6 +1318,7 @@ export class AbstractEngine {
                  * we must remember which engine returned it to perform reverse substitutions
                  */
                 p = p.then((fd) => this._storeFd(fd, engine));
+                break;
             }
         }
 

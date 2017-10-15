@@ -282,5 +282,47 @@ describe("fs", "engine", "MemoryEngine", () => {
                 }
             });
         });
+
+        describe("readFile", () => {
+            it("should read a buffer by default", async () => {
+                engine.add((ctx) => ({
+                    a: ctx.file("hello")
+                }));
+
+                const buf = await engine.readFile("/a");
+                expect(buf).to.be.a("buffer");
+                expect(buf).to.be.deep.equal(Buffer.from("hello"));
+            });
+
+            it("should read a string if the second argument is an encoding", async () => {
+                engine.add((ctx) => ({
+                    a: ctx.file("hello")
+                }));
+
+                const buf = await engine.readFile("/a", "utf8");
+                expect(buf).to.be.a("string");
+                expect(buf).to.be.equal("hello");
+            });
+
+            it("should support the encoding option", async () => {
+                engine.add((ctx) => ({
+                    a: ctx.file("hello")
+                }));
+
+                const buf = await engine.readFile("/a", { encoding: "utf8" });
+                expect(buf).to.be.a("string");
+                expect(buf).to.be.equal("hello");
+            });
+
+            it("should support null encoding", async () => {
+                engine.add((ctx) => ({
+                    a: ctx.file("hello")
+                }));
+
+                const buf = await engine.readFile("/a", { encoding: null });
+                expect(buf).to.be.a("buffer");
+                expect(buf).to.be.deep.equal(Buffer.from("hello"));
+            });
+        });
     });
 });
