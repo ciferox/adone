@@ -320,7 +320,7 @@ const deepValue = (obj, path, list = []) => {
 
         if (!is.nil(value)) {
             if (!remaining && (is.string(value) || is.number(value))) {
-                list.push(value);
+                list.push(value.toString());
             } else if (is.array(value)) {
                 // Search each item in the array.
                 for (let i = 0, len = value.length; i < len; i += 1) {
@@ -505,7 +505,7 @@ export default class Fuzzy {
         return { weights, results };
     }
 
-    _analyze({ key, value, record, index }, { tokenSearchers = [], fullSearcher = [], resultMap = {}, results = [] } = {}) {
+    _analyze({ key, arrayIndex = -1, value, record, index } = {}, { tokenSearchers = [], fullSearcher = [], resultMap = {}, results = [] } = {}) {
         // Check if the texvaluet can be searched
         if (is.nil(value)) {
             return;
@@ -576,6 +576,8 @@ export default class Fuzzy {
                     // existingResult.score, bitapResult.score
                     existingResult.output.push({
                         key,
+                        arrayIndex,
+                        value,
                         score: finalScore,
                         matchedIndices: mainSearchResult.matchedIndices
                     });
@@ -585,6 +587,8 @@ export default class Fuzzy {
                         item: record,
                         output: [{
                             key,
+                            arrayIndex,
+                            value,
                             score: finalScore,
                             matchedIndices: mainSearchResult.matchedIndices
                         }]
@@ -597,6 +601,7 @@ export default class Fuzzy {
             for (let i = 0, len = value.length; i < len; i += 1) {
                 this._analyze({
                     key,
+                    arrayIndex: i,
                     value: value[i],
                     record,
                     index
@@ -619,8 +624,8 @@ export default class Fuzzy {
             let bestScore = 1;
 
             for (let j = 0; j < scoreLen; j += 1) {
-                const score = output[j].score;
                 const weight = weights ? weights[output[j].key].weight : 1;
+                const score = weight === 1 ? output[j].score : (output[j].score || 0.001);
                 const nScore = score * weight;
 
                 if (weight !== 1) {
@@ -651,11 +656,20 @@ export default class Fuzzy {
 
                 for (let i = 0, len = output.length; i < len; i += 1) {
                     const item = output[i];
+
+                    if (item.matchedIndices.length === 0) {
+                        continue;
+                    }
+
                     const obj = {
-                        indices: item.matchedIndices
+                        indices: item.matchedIndices,
+                        value: item.value
                     };
                     if (item.key) {
                         obj.key = item.key;
+                    }
+                    if (item.hasOwnProperty("arrayIndex") && item.arrayIndex > -1) {
+                        obj.arrayIndex = item.arrayIndex;
                     }
                     data.matches.push(obj);
                 }

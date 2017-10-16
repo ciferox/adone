@@ -89,6 +89,12 @@ describe("text", "Fuzzy", () => {
             }
         }, {
             title: "HTML5"
+        }, {
+            title: "A History of England",
+            author: {
+                firstName: 1066,
+                lastName: "Hastings"
+            }
         }];
         const options = {
             keys: ["title", "author.firstName"]
@@ -104,6 +110,24 @@ describe("text", "Fuzzy", () => {
                     firstName: "Steve",
                     lastName: "Hamilton"
                 }
+            });
+        });
+
+        it("when searching for the term 106", () => {
+            it("we get a list of exactly 1 item", () => {
+                const result = fuzzy.search("106");
+                assert.isTrue(result.length > 0);
+            });
+
+            it("whose first value is found", () => {
+                const result = fuzzy.search("106");
+                assert.deepEqual(result[0], {
+                    title: "A History of England",
+                    author: {
+                        firstName: 1066,
+                        lastName: "Hastings"
+                    }
+                });
             });
         });
     });
@@ -264,18 +288,30 @@ describe("text", "Fuzzy", () => {
             ISBN: "0321784421",
             title: "HTML5",
             author: "Remy Sharp",
-            tags: ["nonfiction"]
+            tags: ["web development", "nonfiction"]
         }];
         const fuzzy = new Fuzzy(books, {
             keys: ["tags"],
             id: "ISBN",
-            threshold: 0
+            threshold: 0,
+            includeMatches: true
         });
 
         it('searching for the tag "nonfiction"', () => {
             const result = fuzzy.search("nonfiction");
             assert.equal(result.length, 1);
-            assert.equal(result[0], "0321784421");
+            assert.equal(result[0].item, "0321784421");
+        });
+
+        it("with matched tag provided", () => {
+            const result = fuzzy.search("nonfiction");
+            const matches = result[0].matches;
+            assert.deepEqual(matches[0], {
+                key: "tags",
+                arrayIndex: 1,
+                value: "nonfiction",
+                indices: [[0, 9]]
+            });
         });
     });
 
@@ -519,6 +555,12 @@ describe("text", "Fuzzy", () => {
             assert.deepEqual(a, [4, 4]);
             assert.deepEqual(b, [6, 8]);
         });
+
+        it("with original text value", () => {
+            const result = fuzzy.search("wor");
+            const matches = result[0].matches;
+            assert.equal(matches[0].value, "Hello World");
+        });
     });
 
     describe('Search with match all tokens: ["AustralianSuper - Corporate Division", "Aon Master Trust - Corporate Super", "Promina Corporate Superannuation Fund", "Workforce Superannuation Corporate", "IGT (Australia) Pty Ltd Superannuation Fund"]', () => {
@@ -627,6 +669,114 @@ describe("text", "Fuzzy", () => {
             assert.equal(result[0].matches[0].indices.length, 3);
             assert.equal(result[0].matches[0].indices[0][0], 2);
             assert.equal(result[0].matches[0].indices[0][1], 3);
+        });
+
+        it("when searching for a string shorter than minMatchCharLength", () => {
+            const result = fuzzy.search("t");
+            assert.equal(result.length, 1);
+            assert.equal(result[0].matches.length, 0);
+        });
+    });
+
+    describe("Weighted search with exact match", () => {
+        const items = [{
+            title: "John Smith",
+            author: "Steve Pearson"
+        }, {
+            title: "The life of Jane",
+            author: "John Smith"
+        }];
+
+        describe('When searching for the term "John Smith" with author weighted higher', () => {
+            const options = {
+                keys: [{
+                    name: "title",
+                    weight: 0.3
+                }, {
+                    name: "author",
+                    weight: 0.7
+                }]
+            };
+
+            const fuzzy = new Fuzzy(items, options);
+
+            it('we get the value { title: "The life of Jane", author: "John Smith" }', () => {
+                const result = fuzzy.search("John Smith");
+                assert.deepEqual(result[0].title, "The life of Jane");
+                assert.deepEqual(result[0].author, "John Smith");
+            });
+        });
+
+        describe('When searching for the term "John Smith" with title weighted higher', () => {
+            const options = {
+                keys: [{
+                    name: "title",
+                    weight: 0.7
+                }, {
+                    name: "author",
+                    weight: 0.3
+                }]
+            };
+
+            const fuzzy = new Fuzzy(items, options);
+
+            it('We get the value { title: "John Smith", author: "Steve Pearson" }', () => {
+                const result = fuzzy.search("John Smith");
+                assert.deepEqual(result[0].title, "John Smith");
+                assert.deepEqual(result[0].author, "Steve Pearson");
+            });
+        });
+    });
+
+    describe("Weighted search with exact match in arrays", () => {
+        const items = [{
+            title: "Jackson",
+            author: "Steve Pearson",
+            tags: ["Kevin Wong", "Victoria Adam", "John Smith"]
+        }, {
+            title: "The life of Jane",
+            author: "John Smith",
+            tags: ["Jane", "Jackson", "Sam"]
+        }];
+
+        describe('When searching for the term "Jackson", with tags weighted higher and string inside tags getting exact match', () => {
+            const options = {
+                keys: [{
+                    name: "tags",
+                    weight: 0.7
+                }, {
+                    name: "title",
+                    weight: 0.3
+                }]
+            };
+
+            const fuzzy = new Fuzzy(items, options);
+
+            it('We get the value { title: "The life of Jane", tags: ["Jane", "Jackson", "Sam"] ... }', () => {
+                const result = fuzzy.search("Jackson");
+                assert.deepEqual(result[0].title, "The life of Jane");
+                assert.deepEqual(result[0].tags, ["Jane", "Jackson", "Sam"]);
+            });
+        });
+
+        describe('When searching for the term "Jackson", with title weighted higher and string inside getting exact match', () => {
+            const options = {
+                keys: [{
+                    name: "tags",
+                    weight: 0.3
+                }, {
+                    name: "title",
+                    weight: 0.7
+                }]
+            };
+
+            const fuzzy = new Fuzzy(items, options);
+
+            it('We get the value { title: "Jackson", tags: "Kevin Wong", ... }', () => {
+                const result = fuzzy.search("Jackson");
+                assert.deepEqual(result[0].title, "Jackson");
+                assert.deepEqual(result[0].tags, ["Kevin Wong", "Victoria Adam", "John Smith"]);
+            });
         });
     });
 });
