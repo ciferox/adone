@@ -15,10 +15,11 @@ const {
             O_EXCL,
             O_APPEND,
             F_OK,
-            // R_OK,
-            // W_OK,
-            // X_OK,
-            COPYFILE_EXECL
+            R_OK,
+            W_OK,
+            X_OK,
+            COPYFILE_EXCL,
+            O_NOFOLLOW
         }
     },
     event,
@@ -94,18 +95,23 @@ class OpenedFile {
         const contents = this.file.contents;
         if (is.nil(position)) {
             const bytes = Math.min(contents.length - this.filePosition, length);
-            contents.copy(buffer, offset, this.filePosition, bytes);
+            contents.copy(buffer, offset, this.filePosition, this.filePosition + bytes);
             this.filePosition += bytes;
+            this.file.updateAccessTime();
             return bytes;
         }
         const bytes = Math.min(position + length, contents.length) - position;
         contents.copy(buffer, offset, position, position + bytes);
+        this.file.updateAccessTime();
         return bytes;
     }
 
     writeString(string, position, encoding) {
+        if (this.flags & O_APPEND) {
+            this.filePosition = this.file.contents.length;
+        }
         const buffer = Buffer.from(string, encoding);
-        if (is.nil(position)) {
+        if (is.nil(position) || this.flags & O_APPEND) { // O_APPEND to imitate the Linux behaviour
             if (this.filePosition === this.file.contents.length) {
                 this.file.contents = Buffer.concat([this.file.contents, buffer]);
             } else {
@@ -115,26 +121,33 @@ class OpenedFile {
                     this.file.contents.slice(this.filePosition + buffer.length)
                 ]);
             }
-            this.filePosition += buffer.length;
+            if (is.nil(position)) {
+                this.filePosition += buffer.length;
+            }
         } else {
-            if (buffer.length + position > this.file.contents.length) {
+            if (position > this.file.contents.length) {
+                this.file.contents = Buffer.concat([
+                    this.file.contents,
+                    Buffer.alloc(position - this.file.contents.length),
+                    buffer
+                ]);
+            } else if (buffer.length + position > this.file.contents.length) {
                 this.file.contents = Buffer.concat([this.file.contents.slice(0, position), buffer]);
             } else {
                 buffer.copy(this.file.contents, position);
             }
         }
+        this.file.updateChangeTime();
+        this.file.updateModifyTime();
         this.file.emit("change");
         return buffer.length; // ? when it can be less
     }
 
-    write(buffer, offset, length, position) {
+    writeBuffer(buffer, offset, length, position) {
         if (this.flags & O_APPEND) {
             this.filePosition = this.file.contents.length;
         }
-        if (is.string(buffer)) {
-            return this.writeString(buffer, offset, length);
-        }
-        if (is.nil(position)) {
+        if (is.nil(position) || this.flags & O_APPEND) {
             if (this.filePosition === this.file.contents.length) {
                 this.file.contents = Buffer.concat([this.file.contents, buffer.slice(offset, offset + length)]);
             } else {
@@ -144,20 +157,41 @@ class OpenedFile {
                     this.file.contents.slice(this.filePosition + length)
                 ]);
             }
-            this.filePosition += length;
+            if (is.nil(position)) {
+                this.filePosition += length;
+            }
         } else {
-            if (length + position > this.file.contents.length) {
+            if (position > this.file.contents.length) {
+                this.file.contents = Buffer.concat([
+                    this.file.contents,
+                    Buffer.alloc(position - this.file.contents.length),
+                    buffer.slice(offset, offset + length)
+                ]);
+            } else if (length + position > this.file.contents.length) {
                 this.file.contents = Buffer.concat([this.file.contents.slice(0, position), buffer.slice(offset, offset + length)]);
             } else {
                 buffer.copy(this.file.contents, position, offset, offset + length);
             }
         }
         this.file.emit("change");
+        this.file.updateChangeTime();
+        this.file.updateModifyTime();
         return length; // ??
     }
 
     truncate(length) {
-        this.file.contents = this.file.contents.slice(0, length);
+        const { file } = this;
+        const clength = file.contents.length;
+        if (length > clength) {
+            file.contents = Buffer.concat([
+                file.contents,
+                Buffer.alloc(length - clength)
+            ]);
+        } else if (clength > length) {
+            file.contents = file.contents.slice(0, length);
+        }
+        this.file.updateChangeTime();
+        this.file.updateModifyTime();
         this.file.emit("change");
     }
 
@@ -166,33 +200,88 @@ class OpenedFile {
     }
 }
 
-class File extends event.EventEmitter {
+let inode = 1;
+
+class AbstractFile extends event.EventEmitter {
     constructor({
-        size = 0,
-        contents = adone.emptyBuffer,
-        mtime,
-        atime,
-        ctime,
-        birthtime,
-        uid = process.getuid(),
+        mtime = new Date(),
+        ctime = new Date(),
+        atime = new Date(),
+        mode,
         gid = process.getgid(),
-        mode = 0o644,
-        beforeHook = noop,
-        afterHook = noop
-    } = {}) {
+        uid = process.getuid()
+    }) {
         super();
-        this.contents = is.buffer(contents) ? contents : Buffer.from(contents);
-        const now = new Date();
-        this.mtime = mtime || now;
-        this.atime = atime || now;
-        this.ctime = ctime || now;
-        this.birthtime = birthtime || now;
+        this.mtime = mtime;
+        this.ctime = ctime;
+        this.atime = atime;
+        this.birthtime = new Date();
+        this.nlink = 1;
+        this.ino = inode++;
         this.mode = mode;
         this.uid = uid;
         this.gid = gid;
+    }
+
+    updateAccessTime(time) {
+        if (is.undefined(time)) {
+            this.atime = new Date();
+        } else {
+            this.atime = new Date(time);
+        }
+    }
+
+    updateChangeTime(time) {
+        if (is.undefined(time)) {
+            this.ctime = new Date();
+        } else {
+            this.ctime = new Date(time);
+        }
+    }
+
+    updateModifyTime(time) {
+        if (is.undefined(time)) {
+            this.mtime = new Date();
+        } else {
+            this.mtime = new Date(time);
+        }
+    }
+
+    link() {
+        ++this.nlink;
+        this.updateChangeTime();
+        this.emit("change");
+    }
+
+    unlink() {
+        --this.nlink;
+        this.updateChangeTime();
+        if (this.nlink === 0) {
+            this.emit("delete");
+        } else {
+            this.emit("change");
+        }
+    }
+}
+
+class File extends AbstractFile {
+    constructor({
+        size = 0,
+        contents = adone.emptyBuffer,
+        beforeHook = noop,
+        afterHook = noop,
+        mtime,
+        atime,
+        ctime,
+        uid,
+        gid,
+        mode = 0o644
+    } = {}) {
+        super({ mtime, atime, ctime, uid, gid, mode });
+
+        this.contents = is.buffer(contents) ? contents : Buffer.from(contents);
         this.beforeHook = beforeHook;
         this.afterHook = afterHook;
-        this.nlink = 1;
         this.size = size; // we use it for stat calls when actually there is no contents
     }
 
@@ -225,7 +314,7 @@ class File extends event.EventEmitter {
     stat() {
         const stat = new std.fs.Stats();
         stat.dev = 0; // ?
-        stat.inode = 0; // ?
+        stat.ino = this.inode;
         stat.nlink = this.nlink;
         stat.uid = this.uid;
         stat.gid = this.gid;
@@ -245,33 +334,22 @@ class File extends event.EventEmitter {
         return stat;
     }
 
-    link() {
-        this.emit("change");
-        ++this.nlink;
-    }
-
-    unlink() {
-        this.emit("change");
-        --this.nlink;
-    }
-
     open(flags, mode) {
         return new OpenedFile(this, flags, mode);
     }
 }
 
-class Symlink extends event.EventEmitter {
+class Symlink extends AbstractFile {
     constructor(vfs, targetPath, {
         mtime,
         atime,
         ctime,
-        birthtime,
-        uid = process.getuid(),
-        gid = process.getgid(),
+        uid,
+        gid,
         beforeHook = noop,
         afterHook = noop
     } = {}) {
-        super();
+        super({ mtime, atime, ctime, uid, gid, mode: 0o777 });
         this.vfs = vfs;
 
         /**
@@ -280,28 +358,8 @@ class Symlink extends event.EventEmitter {
          * For now we support only local(this instance memory engine) targets.
          */
         this.targetPath = targetPath;
-
-        const now = new Date();
-        this.mtime = mtime || now;
-        this.atime = atime || now;
-        this.ctime = ctime || now;
-        this.birthtime = birthtime || now;
-        this.mode = 0o777;
-        this.uid = uid;
-        this.gid = gid;
         this.beforeHook = beforeHook;
         this.afterHook = afterHook;
-        this.nlink = 1;
-    }
-
-    link() {
-        this.emit("change");
-        ++this.nlink;
-    }
-
-    unlink() {
-        this.emit("change");
-        --this.nlink;
     }
 
     clone() {
@@ -318,7 +376,7 @@ class Symlink extends event.EventEmitter {
     stat() {
         const stat = new std.fs.Stats();
         stat.dev = 0; // ?
-        stat.inode = 0; // ?
+        stat.ino = this.inode;
         stat.nlink = this.nlink;
         stat.uid = this.uid;
         stat.gid = this.gid;
@@ -339,42 +397,25 @@ class Symlink extends event.EventEmitter {
     }
 }
 
-class Directory extends event.EventEmitter {
+class Directory extends AbstractFile {
     constructor(vfs, parent = undefined, path, {
         mtime,
         atime,
         ctime,
-        birthtime,
-        uid = process.getuid(),
-        gid = process.getgid(),
+        uid,
+        gid,
         mode = 0o775,
         beforeHook = noop,
         afterHook = noop
     } = {}) {
-        super();
+        super({ mtime, atime, ctime, uid, gid, mode });
         this.vfs = vfs;
         this.parent = parent || this;
         this.path = path;
         this.children = {};
-        const now = new Date();
-        this.mtime = mtime || now;
-        this.atime = atime || now;
-        this.ctime = ctime || now;
-        this.birthtime = birthtime || now;
-        this.mode = mode;
-        this.uid = uid;
-        this.gid = gid;
         this.beforeHook = beforeHook;
         this.afterHook = afterHook;
-        this.nlink = 2; // file itself + ?
-    }
-
-    link() {
-        ++this.nlink;
-    }
-
-    unlink() {
-        --this.nlink;
+        this.link(); // link from the parent?
     }
 
     // shallow clone
@@ -414,10 +455,13 @@ class Directory extends event.EventEmitter {
         if (filename in this.children) {
             const node = this.children[filename];
             if (node instanceof Directory) {
-                this.unlink(); // .. link
+                this.unlink();
             }
-            this.emit("delete", filename, node);
+            node.unlink();
             delete this.children[filename];
+            this.updateChangeTime();
+            this.updateModifyTime();
+            this.emit("delete", filename, node);
         }
     }
 
@@ -429,6 +473,10 @@ class Directory extends event.EventEmitter {
         this.children[filename] = node;
         if (node instanceof Directory) {
             this.link(); // .. link
+            this.updateModifyTime();
+        } else {
+            this.updateModifyTime();
+            this.updateChangeTime();
         }
         this.emit("add", filename, node);
         return node;
@@ -437,13 +485,17 @@ class Directory extends event.EventEmitter {
     addFile(filename, options) {
         const file = new File(options);
         this.children[filename] = file;
-        this.emit("add", filename);
+        this.updateChangeTime();
+        this.updateModifyTime();
+        this.emit("add", filename, file);
         return file;
     }
 
     addSymlink(filename, target, options) {
         const symlink = new Symlink(this.vfs, target, options);
         this.children[filename] = symlink;
+        this.updateChangeTime();
+        this.updateModifyTime();
         this.emit("add", filename, symlink);
         return symlink;
     }
@@ -452,6 +504,7 @@ class Directory extends event.EventEmitter {
         const directory = new Directory(this.vfs, this, this.path.join(filename), options);
         this.children[filename] = directory;
         this.link();
+        this.updateModifyTime();
         this.emit("add", filename, directory);
         return directory;
     }
@@ -459,7 +512,7 @@ class Directory extends event.EventEmitter {
     stat() {
         const stat = new std.fs.Stats();
         stat.dev = 0; // ?
-        stat.inode = 0; // ?
+        stat.ino = this.inode;
         stat.nlink = this.nlink;
         stat.uid = this.uid;
         stat.gid = this.gid;
@@ -489,7 +542,7 @@ class FSWatcher extends event.EventEmitter {
         this.node = node;
         this.callbacks = new Map();
         this.__onChange = () => this.emit("change", "change", this.encode(filename));
-        this.__onParentRename = (changedFilename, changedNode) => {
+        this.__onParentDelete = (changedFilename, changedNode) => {
             if (changedNode === node) {
                 this.emit("change", "rename", this.encode(changedFilename));
             }
@@ -506,6 +559,7 @@ class FSWatcher extends event.EventEmitter {
             this.emit("change", "rename", filename);
             removedNode.removeListener("change", this.callbacks.get(removedNode));
         };
+        this.__onSelfDelete = () => this.emit("change", "rename", filename);
     }
 
     encode(x) {
@@ -521,7 +575,7 @@ class FSWatcher extends event.EventEmitter {
 
         if (node instanceof Directory) {
             node.on("add", this.__onAdd).on("delete", this.__onDelete);
-            parentNode.on("rename", this.__onParentRename);
+            parentNode.on("delete", this.__onParentDelete);
 
             for (const [name, child] of Object.entries(node.children)) {
                 const onChange = () => this.emit("change", "change", this.encode(name));
@@ -530,6 +584,7 @@ class FSWatcher extends event.EventEmitter {
             }
         } else {
             node.on("change", this.__onChange);
+            node.on("delete", this.__onSelfDelete);
         }
     }
 
@@ -537,12 +592,13 @@ class FSWatcher extends event.EventEmitter {
         const { parentNode, node } = this;
         if (node instanceof Directory) {
             node.removeListener("add", this.__onAdd).removeListener("delete", this.__onDelete);
-            parentNode.removeListener("rename", this.__onParentRename);
+            parentNode.removeListener("delete", this.__onParentDelete);
             for (const [child, callback] of this.callbacks.entries()) {
                 child.removeListener("change", callback);
             }
         } else {
             node.removeListener("change", this.__onChange);
+            node.removeListener("delete", this.__onSelfDelete);
         }
     }
 }
@@ -555,8 +611,8 @@ class VFS {
         this.fdMap = new collection.MapCache();
     }
 
-    throw(code, path, syscall) {
-        this.engine.throw(code, path, syscall);
+    throw(code, path, syscall, secondPath) {
+        this.engine.throw(code, path, syscall, secondPath);
     }
 
     addFile(path, options) {
@@ -598,44 +654,60 @@ class VFS {
         unwinds = 0,
         throwOnEloop = true,
         ensureParent = false,
-        mode = 0o775
+        mode = 0o775,
+        secondPath
     }) {
         let parent = root;
         const parts = path.relativeParts;
         let filename = "";
         for (let i = 0; i < parts.length; ++i) {
+            if (root instanceof Directory) {
+                this.assertPermissions(root, X_OK, path, syscall, secondPath);
+            }
             const part = parts[i];
             filename = part;
             if (part === "." || part === "") {
                 if (root instanceof Directory) {
                     continue;
                 }
-                this.throw("ENOTDIR", path, syscall);
+                this.throw("ENOTDIR", path, syscall, secondPath);
             }
             if (part === "..") {
                 if (root instanceof Directory) {
                     root = root.parent;
                     continue;
                 }
-                this.throw("ENOTDIR", path, syscall);
+                this.throw("ENOTDIR", path, syscall, secondPath);
             }
             if (!(root instanceof Directory)) {
-                return [null, parent, null, unwinds];
+                if (i === parts.length - 1) {
+                    return [null, parent, null, unwinds];
+                }
+                this.throw("ENOENT", path, syscall, secondPath);
             }
             parent = root;
             if (!root.exists(part)) {
-                if (!ensureParent || i === parts.length - 1) {
+                if (i === parts.length - 1) {
                     return [null, parent, unwinds];
                 }
-                root = root.addDirectory(part, { mode });
-                continue;
+
+                if (ensureParent) {
+                    // check if we are allowed to create files
+                    this.assertPermissions(root, W_OK, path, syscall, secondPath);
+                    root = root.addDirectory(part, { mode });
+                    continue;
+                }
+                this.throw("ENOENT", path, syscall, secondPath);
             } else {
                 root = root.get(part);
+                if (root instanceof Directory) {
+                    this.assertPermissions(root, X_OK, path, syscall, secondPath);
+                }
             }
             if (root instanceof Symlink && (handleLeafSymlink || i !== parts.length - 1)) {
                 if (unwinds > UNWIND_LIMIT) {
                     if (throwOnEloop) {
-                        this.throw("ELOOP", path, syscall);
+                        this.throw("ELOOP", path, syscall, secondPath);
                     }
                     return [SYMLINK_LOOP, parent, null, unwinds];
                 }
@@ -646,11 +718,12 @@ class VFS {
                     handleLeafSymlink: true,
                     root: parent,
                     unwinds: unwinds + 1,
-                    throwOnEloop: false
+                    throwOnEloop: false,
+                    secondPath
                 });
                 if (root === SYMLINK_LOOP) {
                     if (throwOnEloop) {
-                        this.throw("ELOOP", path, syscall);
+                        this.throw("ELOOP", path, syscall, secondPath);
                     } else {
                         return [SYMLINK_LOOP, parent, null, unwinds];
                     }
@@ -694,6 +767,24 @@ class VFS {
         this.root = new Directory(this, undefined, new Path(sep, { root: sep }));
     }
 
+    assertPermissions(node, mode, path, syscall, secondPath) {
+        let set;
+
+        if (node.uid === process.getuid()) {
+            set = (node.mode >> 6) & 0o777;
+        } else if (process.getgroups().includes(node.gid)) {
+            set = (node.mode >> 3) & 0o777;
+        } else {
+            set = node.mode & 0o777;
+        }
+
+        if (set & mode) {
+            return;
+        }
+
+        this.throw("EACCES", path, syscall, secondPath);
+    }
+
     async stat(path) {
         const [node] = this.getNode({ path, syscall: "stat" });
         if (is.null(node)) {
@@ -712,10 +803,52 @@ class VFS {
         return node.stat();
     }
 
+    async readdir(path, options) {
+        const [node] = this.getNode({ path, syscall: "scandir" });
+        if (is.null(node)) {
+            this.throw("ENOENT", path, "scandir");
+        }
+        if (!(node instanceof Directory)) {
+            this.throw("ENOTDIR", path, "scandir");
+        }
+        this.assertPermissions(node, R_OK, path, "scandir");
+        await node.beforeHook("readdir");
+        let children = node.getChildren();
+        if (options.encoding === "buffer") {
+            children = children.map(Buffer.from);
+        }
+        return (await node.afterHook("readdir", children)) || children;
+    }
+
+    async realpath(path, options) {
+        const [node, parent, filename] = this.getNode({ path });
+        if (is.null(node)) {
+            this.throw("ENOENT", path);
+        }
+
+        let realpath = parent.path.join(filename).fullPath;
+
+        if (options.encoding === "buffer") {
+            realpath = Buffer.from(realpath);
+        }
+
+        return (await node.afterHook("realpath", realpath)) || realpath;
+    }
+
     async open(path, flags, mode) {
         flags = stringToFlags(flags);
 
-        let [node, directory] = this.getNode({ path, syscall: "open" }); // eslint-disable-line prefer-const
+        const noFollow = (flags & O_NOFOLLOW) === O_NOFOLLOW;
+
+        let [node, directory] = this.getNode({ // eslint-disable-line prefer-const
+            path,
+            syscall: "open",
+            handleLeafSymlink: !noFollow
+        });
+
+        if (noFollow && node instanceof Symlink) {
+            this.throw("ELOOP", path, "open");
+        }
 
         const filename = path.filename();
 
@@ -726,6 +859,19 @@ class VFS {
             if (node instanceof Directory && ((flags & O_RDWR) || (flags & O_WRONLY))) {
                 this.throw("EISDIR", path, "open");
             }
+
+            if ((flags & O_WRONLY) || (flags & O_TRUNC)) {
+                this.assertPermissions(node, W_OK, path, "open");
+            }
+
+            if (flags & O_RDONLY) {
+                this.assertPermissions(node, R_OK, path, "open");
+            }
+
+            if (flags & O_RDWR) {
+                this.assertPermissions(node, R_OK | W_OK, path, "open");
+            }
+
             if (flags & O_TRUNC) {
                 if (node instanceof Directory) {
                     this.throw("EISDIR", path, "open");
@@ -737,6 +883,7 @@ class VFS {
             if (!(flags & O_CREAT)) {
                 this.throw("ENOENT", path, "open");
             }
+            this.assertPermissions(directory, W_OK, path, "open");
             node = directory.addFile(filename, { mode });
         }
 
@@ -748,7 +895,7 @@ class VFS {
 
     async close(fd) {
         if (!this.fdMap.has(fd)) {
-            this.throw("EBADF", undefined, "close");
+            this.throw("EBADF", "close");
         }
         const opened = this.fdMap.get(fd);
         await opened.close();
@@ -756,34 +903,63 @@ class VFS {
     }
 
     async read(fd, buffer, offset, length, position) {
+        if (offset >= buffer.length) {
+            throw new RangeError("Offset is out of bounds");
+        }
+        if (length > buffer.length - offset) {
+            throw new Error("Length extends beyond buffer");
+        }
         if (!this.fdMap.has(fd)) {
             return; // throw ?
         }
         const opened = this.fdMap.get(fd);
         if (!opened.isOpenedForReading()) {
-            this.throw("EBADF", undefined, "read");
+            this.throw("EBADF", "read");
         }
         return opened.read(buffer, offset, length, position);
     }
 
-    async write(fd, buffer, offset, length, postition) {
+    async write(fd, buffer, offset, length, position) {
         if (!this.fdMap.has(fd)) {
-            this.throw("EBADF", undefined, "write");
+            this.throw("EBADF", "write");
         }
         const opened = this.fdMap.get(fd);
         if (!opened.isOpenedForWriting()) {
-            this.throw("EBADF", undefined, "write");
+            this.throw("EBADF", "write");
         }
-        return opened.write(buffer, offset, length, postition);
+        if (is.string(buffer)) {
+            if (is.number(length) && length < 0) {
+                length = 0;
+            }
+            return opened.writeString(buffer, offset, length);
+        }
+
+        if (offset > buffer.length) {
+            throw new RangeError("offset out of bounds");
+        }
+
+        if (length > buffer.length) {
+            throw new RangeError("length out of bounds");
+        }
+
+        if (length > buffer.length - offset) {
+            throw new RangeError("off + len > buffer.length");
+        }
+
+        if (is.number(position) && position < 0) {
+            position = 0;
+        }
+
+        return opened.writeBuffer(buffer, offset, length, position);
     }
 
     async ftruncate(fd, length) {
         if (!this.fdMap.has(fd)) {
-            this.throw("EBADF", undefined, "ftruncate");
+            this.throw("EBADF", "ftruncate");
         }
         const opened = this.fdMap.get(fd);
         if (!opened.isOpenedForWriting()) {
-            this.throw("EBADF", undefined, "ftruncate");
+            this.throw("EINVAL", undefined, "ftruncate");
         }
         opened.truncate(length);
     }
@@ -798,9 +974,8 @@ class VFS {
         if (node instanceof Directory) {
             this.throw("EISDIR", path, "unlink");
         }
+        this.assertPermissions(parent, W_OK, path, "unlink");
         // opened descriptors ????? for now they will normally live until they are closed
-        console.log(node instanceof Symlink, node.unlink);
-        node.unlink();
         parent.delete(path.filename());
     }
 
@@ -809,23 +984,28 @@ class VFS {
         if (is.null(node)) {
             this.throw("ENOENT", path, "utime");
         }
-        node.atime = new Date(atime * 1000);
-        node.mtime = new Date(mtime * 1000);
+        node.updateAccessTime(atime * 1000);
+        node.updateModifyTime(mtime * 1000);
+        node.emit("change");
     }
 
     futimes(fd, atime, mtime) {
         if (!this.fdMap.has(fd)) {
-            this.throw("EBADF", undefined, "futimes");
+            this.throw("EBADF", "futimes");
         }
         const node = this.fdMap.get(fd).file;
-        node.atime = new Date(atime * 1000);
-        node.mtime = new Date(mtime * 1000);
+        node.updateAccessTime(atime * 1000);
+        node.updateModifyTime(mtime * 1000);
+        node.emit("change");
     }
 
     async rmdir(path) {
-        const [node] = this.getNode({ path, syscall: "rmdir", handleLeafSymlink: false });
+        const [node, parent, filename] = this.getNode({ path, syscall: "rmdir", handleLeafSymlink: false });
         if (is.null(node)) {
             this.throw("ENOENT", path, "rmdir");
+        }
+        if (filename === ".") {
+            this.throw("EINVAL", path, "rmdir");
         }
         if (!(node instanceof Directory)) {
             this.throw("ENOTDIR", path, "rmdir");
@@ -834,16 +1014,16 @@ class VFS {
             this.throw("ENOTEMPTY", path, "rmdir");
         }
         // root rmdir ?
-        const parent = node.parent;
+        this.assertPermissions(parent, W_OK, path, "rmdir");
         parent.delete(path.filename());
     }
 
     async mkdir(path, mode) {
-        const [node, parent] = this.getNode({ path, syscall: "mkdir" });
-
+        const [node, parent] = this.getNode({ path, syscall: "mkdir", handleLeafSymlink: false });
         if (node) {
             this.throw("EEXIST", path, "mkdir");
         }
+        this.assertPermissions(parent, W_OK, path, "mkdir");
         parent.addDirectory(path.filename(), { mode });
     }
 
@@ -856,22 +1036,8 @@ class VFS {
             return;
         }
         // TODO: windows...
-        let nmode = node.mode;
-        // all
-        if (nmode & mode) {
-            return;
-        }
-        // group
-        nmode >>= 3;
-        if ((nmode & mode) && (process.getgroups().includes(node.gid))) {
-            return;
-        }
-        // user
-        nmode >>= 3;
-        if ((nmode & mode) && (process.getuid() === node.uid)) {
-            return;
-        }
-        this.throw("EACCESS", path, "access");
+
+        this.assertPermissions(node, mode, path, "access");
     }
 
     chmod(path, mode) {
@@ -884,18 +1050,10 @@ class VFS {
 
     fchmod(fd, mode) {
         if (!this.fdMap.has(fd)) {
-            this.throw("EBADF", undefined, "fchmod");
+            this.throw("EBADF", "fchmod");
         }
         const opened = this.fdMap.get(fd);
         const node = opened.file;
-        node.mode = ((node.mode >>> 12) << 12) | mode;
-    }
-
-    lchmod(path, mode) {
-        const [node] = this.getNode({ path, syscall: "lchmod", handleLeafSymlink: false });
-        if (is.null(node)) {
-            this.throw("ENOENT", path, "lchmod");
-        }
         node.mode = ((node.mode >>> 12) << 12) | mode;
     }
 
@@ -910,64 +1068,92 @@ class VFS {
 
     fchown(fd, uid, gid) {
         if (!this.fdMap.has(fd)) {
-            this.throw("EBADF", undefined, "syscall");
+            this.throw("EBADF", "syscall");
         }
         const node = this.fdMap.get(fd).file;
         node.gid = gid;
         node.uid = uid;
     }
 
-    lchown(path, uid, gid) {
-        const [node] = this.getNode({ path, syscall: "chown", handleLeafSymlink: false });
-        if (is.null(node)) {
-            this.throw("ENOENT", path, "chown");
-        }
-        node.gid = gid;
-        node.uid = uid;
-    }
-
     async rename(oldPath, newPath) {
-        const [oldNode] = this.getNode({ path: oldPath, syscall: "rename" });
+        const [oldNode, oldParent] = this.getNode({ path: oldPath, syscall: "rename", handleLeafSymlink: false });
         if (is.null(oldNode)) {
-            this.throw("ENOENT", oldPath, "rename");
+            this.throw("ENOENT", oldPath, "rename", newPath);
         }
-        const [, newDirectory] = this.getNode({ path: newPath, syscall: "rename" });
+        const [newNode, newDirectory] = this.getNode({ path: newPath, syscall: "rename", handleLeafSymlink: false });
         if (is.null(newDirectory)) {
-            this.throw("ENOENT", newPath, "rename");
+            this.throw("ENOENT", newPath, "rename", newPath);
         }
-        oldNode.parent.delete(oldPath.filename());
+        if (oldNode === newNode) { // the same node
+            return; // do nothing
+        }
+        if (newNode && newNode instanceof Directory && !(oldNode instanceof Directory)) {
+            this.throw("EISDIR", oldPath, "rename", newPath);
+        }
+        if (oldNode instanceof Directory && newNode) {
+            if (!(newNode instanceof Directory)) {
+                this.throw("ENOTDIR", oldPath, "rename", newPath);
+            }
+            if (!newNode.isEmpty()) {
+                this.throw("ENOTEMPTY", oldPath, "rename", newPath);
+            }
+        }
+        // TODO: check if it is not a subdirectory of itself
+        this.assertPermissions(oldParent, W_OK, oldPath, "rename", newPath);
+        this.assertPermissions(newDirectory, W_OK, oldParent, "rename", newPath);
+        oldParent.delete(oldPath.filename());
+
+        if (newNode) {
+            newDirectory.delete(newPath.filename());
+        }
         newDirectory.addNode(newPath.filename(), oldNode);
     }
 
     async symlink(path, target) {
-        const [node, parent] = this.getNode({ path }); // TODO: symlink has a special error message
-        if (node) {
-            this.throw("EEXIST", path, "symlink");
+        let node;
+        let parent;
+        try {
+            [node, parent] = this.getNode({ path, syscall: "symlink" });
+        } catch (err) {
+            err.path = target;
+            err.secondPath = path;
+            throw err;
         }
+        if (node) {
+            this.throw("EEXIST", target, "symlink", path);
+        }
+        this.assertPermissions(parent, W_OK, path, "symlink");
         parent.addSymlink(path.filename(), target);
     }
 
     async link(existingPath, newPath) {
-        const [existingNode] = this.getNode({ path: existingPath, syscall: "link", handleLeafSymlink: false }); // do not handle the last symlink
+        const [existingNode] = this.getNode({
+            path: existingPath,
+            syscall: "link",
+            handleLeafSymlink: false
+        });
         if (is.null(existingNode)) {
-            this.throw("ENOENT", existingPath, "link"); // TODO: has a special error message
-        }
-        if (existingNode instanceof Directory) {
-            this.throw("EPERM", existingPath, "link"); // not allowed for directories
+            this.throw("ENOENT", existingPath, "link", newPath);
         }
 
         const [node, parent] = this.getNode({ path: newPath, syscall: "link" });
 
         if (node) {
-            this.throw("EEXIST", newPath, "link");
+            this.throw("EEXIST", existingPath, "link", newPath);
         }
+
+        if (existingNode instanceof Directory) {
+            this.throw("EPERM", existingPath, "link", newPath);
+        }
+
+        this.assertPermissions(parent, W_OK, existingPath, "link", newPath);
         existingNode.link();
         parent.addNode(newPath.filename(), existingNode);
     }
 
     async fstat(fd) {
         if (!this.fdMap.has(fd)) {
-            this.throw("EBADF", undefined, "fstat");
+            this.throw("EBADF", "fstat");
         }
         const opened = this.fdMap.get(fd);
         return opened.file.stat();
@@ -975,35 +1161,47 @@ class VFS {
 
     async fsync(fd) {
         if (!this.fdMap.has(fd)) {
-            this.throw("EBADF", undefined, "fsync");
+            this.throw("EBADF", "fsync");
         }
         // nothing?
     }
 
     async fdatasync(fd) {
         if (!this.fdMap.has(fd)) {
-            this.throw("EBADF", undefined, "fdatasync");
+            this.throw("EBADF", "fdatasync");
         }
         // nothing?
     }
 
     async copyFile(src, dst, flags) {
-        const [srcNode] = this.getNode({ path: src, syscall: "copyfile" }); // TODO: a special error message
+        const [srcNode] = this.getNode({ path: src, syscall: "copyfile", secondPath: dst });
         if (is.null(srcNode)) {
-            this.throw("ENOENT", src, "copyfile");
+            this.throw("ENOENT", src, "copyfile", dst);
         }
         if (srcNode instanceof Directory) {
-            this.throw("EISDIR", src, "copyfile");
+            this.throw("EISDIR", src, "copyfile", dst);
         }
         // must be a file
-        const [destNode, destNodeDirectory] = this.getNode({ path: dst, syscall: "copyfile" });
-
-        if (flags === COPYFILE_EXECL) {
+        const [destNode, destNodeDirectory] = this.getNode({ path: dst, syscall: "copyfile", secondPath: dst });
+        if (flags === COPYFILE_EXCL) {
             if (destNode) {
-                this.throw("EEXIST", dst, "copyfile"); // TODO: a special error message
+                this.throw("EEXIST", src, "copyfile", dst); // TODO: a special error message
             }
         }
-        destNodeDirectory.addNode(dst.filename(), srcNode.copy());
+        if (!destNode) {
+            // a new file will be created
+            this.assertPermissions(destNodeDirectory, W_OK, src, "copyfile", dst);
+            destNodeDirectory.addNode(dst.filename(), srcNode.copy());
+        } else {
+            this.assertPermissions(destNode, W_OK, src, "copyfile", dst);
+            destNode.contents = Buffer.from(srcNode.contents);
+            destNode.mode = srcNode.mode;
+            destNode.gid = srcNode.gid;
+            destNode.uid = srcNode.uid;
+            destNode.atime = new Date();
+            destNode.ctime = new Date();
+            destNode.mtime = new Date();
+        }
     }
 
     watch(path, options) {
@@ -1112,34 +1310,11 @@ export default class MemoryEngine extends AbstractEngine {
     }
 
     async _readdir(path, options) {
-        const [node] = this.vfs.getNode({ path, syscall: "scandir" });
-        if (is.null(node)) {
-            this.throw("ENOENT", path, "scandir");
-        }
-        if (!(node instanceof Directory)) {
-            this.throw("ENOTDIR", path, "scandir");
-        }
-        await node.beforeHook("readdir");
-        let children = node.getChildren();
-        if (options.encoding === "buffer") {
-            children = children.map(Buffer.from);
-        }
-        return (await node.afterHook("readdir", children)) || children;
+        return this.vfs.readdir(path, options);
     }
 
     async _realpath(path, options) {
-        const [node, parent, filename] = this.vfs.getNode({ path });
-        if (is.null(node)) {
-            this.throw("ENOENT", path);
-        }
-
-        let realpath = `${parent.path.fullPath}/${filename}`;
-
-        if (options.encoding === "buffer") {
-            realpath = Buffer.from(realpath);
-        }
-
-        return (await node.afterHook("realpath", realpath)) || realpath;
+        return this.vfs.realpath(path, options);
     }
 
     async _readlink(path, options) {

@@ -157,7 +157,7 @@ export class Path {
 }
 
 class FSException extends Error {
-    constructor(code, description, path, syscall) {
+    constructor(code, description, path, syscall, secondPath) {
         super();
         Object.defineProperties(this, {
             code: {
@@ -181,6 +181,11 @@ class FSException extends Error {
                 value: syscall,
                 enumerable: false,
                 writable: true
+            },
+            _secondPath: {
+                value: secondPath,
+                enumerable: false,
+                writable: true
             }
         });
         this._updateMessage();
@@ -195,6 +200,15 @@ class FSException extends Error {
         this._updateMessage();
     }
 
+    get secondPath() {
+        return this._secondPath;
+    }
+
+    set secondPath(v) {
+        this._secondPath = v;
+        this._updateMessage();
+    }
+
     get syscall() {
         return this._syscall;
     }
@@ -205,7 +219,22 @@ class FSException extends Error {
     }
 
     _updateMessage() {
-        this.message = `${this.code}: ${this.description}${this._syscall ? `, ${this._syscall}` : ""}${this._path ? ` '${this._path.fullPath}'` : ""}`;
+        let message = `${this.code}: ${this.description}`;
+        if (this._syscall) {
+            message += `, ${this._syscall}`;
+        }
+
+        if (this._path) {
+            if (!this._syscall) {
+                message += ",";
+            }
+            message += ` '${this._path.fullPath}'`;
+            if (this._secondPath) {
+                message += ` -> '${this._secondPath.fullPath}'`;
+            }
+        }
+
+        this.message = message;
     }
 
     /**
@@ -236,16 +265,16 @@ const toUnixTimestamp = (time) => {
 };
 
 const errors = {
-    ENOENT: (path, syscall) => new FSException("ENOENT", "no such file or directory", path, syscall),
-    EISDIR: (path, syscall) => new FSException("EISDIR", "illegal operation on a directory", path, syscall),
-    ENOTDIR: (path, syscall) => new FSException("ENOTDIR", "not a directory", path, syscall),
-    ELOOP: (path, syscall) => new FSException("ELOOP", "too many symbolic links encountered", path, syscall),
-    EINVAL: (path, syscall) => new FSException("EINVAL", "invalid argument", path, syscall),
-    EBADF: (path, syscall) => new FSException("EBADF", "bad file descriptor", syscall),
-    EEXIST: (path, syscall) => new FSException("EEXIST", "file already exists", path, syscall),
-    ENOTEMPTY: (path, syscall) => new FSException("ENOTEMPTY", "directory not empty", path, syscall),
-    EACCESS: (path, syscall) => new FSException("EACCESS", "permission denied", path, syscall),
-    EPERM: (path, syscall) => new FSException("EPERM", "operation not permitted", path, syscall),
+    ENOENT: (path, syscall, secondPath) => new FSException("ENOENT", "no such file or directory", path, syscall, secondPath),
+    EISDIR: (path, syscall, secondPath) => new FSException("EISDIR", "illegal operation on a directory", path, syscall, secondPath),
+    ENOTDIR: (path, syscall, secondPath) => new FSException("ENOTDIR", "not a directory", path, syscall, secondPath),
+    ELOOP: (path, syscall, secondPath) => new FSException("ELOOP", "too many symbolic links encountered", path, syscall, secondPath),
+    EINVAL: (path, syscall, secondPath) => new FSException("EINVAL", "invalid argument", path, syscall, secondPath),
+    EBADF: (syscall) => new FSException("EBADF", "bad file descriptor", undefined, syscall),
+    EEXIST: (path, syscall, secondPath) => new FSException("EEXIST", "file already exists", path, syscall, secondPath),
+    ENOTEMPTY: (path, syscall, secondPath) => new FSException("ENOTEMPTY", "directory not empty", path, syscall, secondPath),
+    EACCES: (path, syscall, secondPath) => new FSException("EACCES", "permission denied", path, syscall, secondPath),
+    EPERM: (path, syscall, secondPath) => new FSException("EPERM", "operation not permitted", path, syscall, secondPath),
     ENOSYS: (syscall) => new FSException("ENOSYS", "function not implemented", undefined, syscall)
 };
 
@@ -268,7 +297,14 @@ const syscallMap = {
     readlink: "readlink",
     open: "open",
     close: "close",
-    read: "read"
+    read: "read",
+    fchmod: "fchmod",
+    fchown: "fchown",
+    fdatasync: "fdatasync",
+    fstat: "fstat",
+    fsync: "fsync",
+    ftruncate: "ftruncate",
+    futimes: "futime" // node throws futime
 };
 
 const emptyStats = () => {
@@ -467,7 +503,7 @@ class StatWatcher extends event.EventEmitter {
 
         // cache watchers?
 
-        let prev = emptyStats();
+        let prev = null;
         let enoent = false;
 
         for (; ;) {
@@ -475,8 +511,10 @@ class StatWatcher extends event.EventEmitter {
                 break;
             }
             try {
-                const newStats = await engine._stat(filename); // eslint-disable-line
-                if (!statEqual(prev, newStats)) {
+                const newStats = await engine.stat(filename); // eslint-disable-line
+                if (is.null(prev)) {
+                    prev = newStats;
+                } else if (!statEqual(prev, newStats)) {
                     enoent = false;
                     this.emit("change", prev, newStats);
                     prev = newStats;
@@ -484,6 +522,9 @@ class StatWatcher extends event.EventEmitter {
             } catch (err) {
                 if (err.code === "ENOENT") {
                     if (!enoent) {
+                        if (is.null(prev)) {
+                            prev = emptyStats();
+                        }
                         const newStats = emptyStats();
                         this.emit("change", prev, newStats);
                         enoent = true;
@@ -546,12 +587,12 @@ export class AbstractEngine {
         this.mount(this, "/");
     }
 
-    createError(code, path, syscall) {
-        return errors[code](path, syscall);
+    createError(code, path, syscall, secondPath) {
+        return errors[code](path, syscall, secondPath);
     }
 
-    throw(code, path, syscall) {
-        throw this.createError(code, path, syscall);
+    throw(code, path, syscall, secondPath) {
+        throw this.createError(code, path, syscall, secondPath);
     }
 
     @callbackify
@@ -592,17 +633,13 @@ export class AbstractEngine {
             if (!is.number(length)) {
                 length = buffer.length - offset;
             }
-            if (!is.number(position)) {
+            if (!is.number(position) || position < 0) {
                 position = null;
             }
             return this._handleFd("write", fd, [buffer, offset, length, position]);
         }
         if (!is.string(buffer)) {
             buffer = String(buffer);
-        }
-        if (is.string(offset)) {
-            length = offset;
-            offset = null;
         }
         if (!is.number(offset)) {
             offset = null;
@@ -683,7 +720,7 @@ export class AbstractEngine {
     }
 
     @callbackify
-    async mkdir(path, mode = 0o777) {
+    async mkdir(path, mode = 0o775) {
         return this._handlePath("mkdir", Path.resolve(path), [mode]);
     }
 
@@ -719,30 +756,12 @@ export class AbstractEngine {
     }
 
     @callbackify
-    async lchmod(path, mode) {
-        return this._handlePath("lchmod", Path.resolve(path), [mode]);
-    }
-
-    _lchmod() {
-        this.throw("ENOSYS", "lchmod");
-    }
-
-    @callbackify
     async chown(path, uid, gid) {
         return this._handlePath("chown", Path.resolve(path), [uid, gid]);
     }
 
     _chown() {
         this.throw("ENOSYS", "chown");
-    }
-
-    @callbackify
-    async lchown(path, uid, gid) {
-        return this._handlePath("lchown", Path.resolve(path), [uid, gid]);
-    }
-
-    _lchown() {
-        this.throw("ENOSYS", "lchown");
     }
 
     @callbackify
@@ -761,15 +780,33 @@ export class AbstractEngine {
 
         if (this._numberOfEngines === 1) {
             // only one engine can handle it, itself
-            return this._copyFile(src, dest, flags);
+            return this._copyFile(src, dest, flags).catch((err) => {
+                if (err instanceof FSException) {
+                    err.path = src;
+                    err.secondPath = dest;
+                }
+                return Promise.reject(err);
+            });
         }
 
         const [
             [engine1, node1, parts1],
             [engine2, node2, parts2]
         ] = await Promise.all([
-            this._chooseEngine(src, "copyfile"), // TODO: a special error message
-            this._chooseEngine(dest, "copyfile") // TODO: a specifal error message
+            this._chooseEngine(src, "copyfile").catch((err) => {
+                if (err instanceof FSException) {
+                    err.path = src;
+                    err.secondPath = dest;
+                }
+                return Promise.reject(err);
+            }),
+            this._chooseEngine(dest, "copyfile").catch((err) => {
+                if (err instanceof FSException) {
+                    err.path = src;
+                    err.secondPath = dest;
+                }
+                return Promise.reject(err);
+            })
         ]);
 
         const src2 = new Path(`/${parts1.slice(node1[LEVEL]).join("/")}`);
@@ -777,7 +814,13 @@ export class AbstractEngine {
 
         // efficient
         if (engine1 === engine2) {
-            return engine1.copyFile(src2, dest2);
+            return engine1.copyFile(src2, dest2).catch((err) => {
+                if (err instanceof FSException) {
+                    err.path = src;
+                    err.secondPath = dest;
+                }
+                return Promise.reject(err);
+            });
         }
 
         // cross engine copying...
@@ -793,7 +836,7 @@ export class AbstractEngine {
                 return err; // does it mean that the file exists?
             });
             if (destStat) {
-                this.throw("EEXIST", dest2, "copyfile"); // TODO: a special error message
+                this.throw("EEXIST", src, "copyfile", dest);
             }
         }
 
@@ -830,12 +873,16 @@ export class AbstractEngine {
         if (err) {
             // try to remove the dest if an error was thrown
             await engine2.unlink(dest2).catch(noop);
+            if (err instanceof FSException) {
+                err.path = src;
+                err.secondPath = dest;
+            }
             throw err;
         }
     }
 
-    _copyFile() {
-        this.rename("ENOSYS", "rename"); // fallback to copy via streams?
+    async _copyFile() {
+        this.throw("ENOSYS", "rename"); // fallback to copy via streams?
     }
 
     @callbackify
@@ -845,7 +892,13 @@ export class AbstractEngine {
 
         if (this._numberOfEngines === 1) {
             // only one engine can handle it, itself
-            return this._rename(oldPath, newPath);
+            return this._rename(oldPath, newPath).catch((err) => {
+                if (err instanceof FSException) {
+                    err.path = oldPath;
+                    err.secondPath = newPath;
+                }
+                return Promise.reject(err);
+            });
         }
         const [engine1, node1, parts1] = await this._chooseEngine(oldPath, "rename");
         const [engine2, node2, parts2] = await this._chooseEngine(newPath, "rename");
@@ -854,13 +907,19 @@ export class AbstractEngine {
         const newPath2 = new Path(`/${parts2.slice(node2[LEVEL]).join("/")}`);
 
         if (engine1 === engine2) {
-            return engine1.rename(oldPath2, newPath2);
+            return engine1.rename(oldPath2, newPath2).catch((err) => {
+                if (err instanceof FSException) {
+                    err.path = oldPath;
+                    err.secondPath = newPath;
+                }
+                return Promise.reject(err);
+            });
         }
         // TODO: copy from one location to another and then delete the source?
         throw new x.NotSupported("for now cross engine renamings are not supported");
     }
 
-    _rename() {
+    async _rename() {
         this.throw("ENOSYS", "rename");
     }
 
@@ -881,21 +940,33 @@ export class AbstractEngine {
 
         if (this._numberOfEngines === 1) {
             // only one engine can handle it, itself
-            return this._link(existingPath, newPath);
+            return this._link(existingPath, newPath).catch((err) => {
+                if (err instanceof FSException) {
+                    err.path = existingPath;
+                    err.secondPath = newPath;
+                }
+                return Promise.reject(err);
+            });
         }
-        const [engine1, node1, parts1] = await this._chooseEngine(existingPath, "link");
-        const [engine2, node2, parts2] = await this._chooseEngine(newPath, "link");
+        const [engine1, node1, parts1] = await this._chooseEngine(existingPath, "rename");
+        const [engine2, node2, parts2] = await this._chooseEngine(newPath, "rename");
 
         const existingPath2 = new Path(`/${parts1.slice(node1[LEVEL]).join("/")}`);
         const newPath2 = new Path(`/${parts2.slice(node2[LEVEL]).join("/")}`);
 
         if (engine1 === engine2) {
-            return engine1.rename(existingPath2, newPath2);
+            return engine1.link(existingPath2, newPath2).catch((err) => {
+                if (err instanceof FSException) {
+                    err.path = existingPath;
+                    err.secondPath = newPath;
+                }
+                return Promise.reject(err);
+            });
         }
         throw new x.NotSupported("Cross engine hark links are not supported");
     }
 
-    _link() {
+    async _link() {
         this.throw("ENOSYS", "link");
     }
 
@@ -973,7 +1044,7 @@ export class AbstractEngine {
         }
         options.encoding = options.encoding || "utf8";
 
-        return this._handlePath("realpath", path, [options]);
+        return this._handlePath("realpath", Path.resolve(path), [options]);
     }
 
     async _realpath() {
@@ -1088,15 +1159,24 @@ export class AbstractEngine {
 
         watcher.on("change", listener);
 
-        // some engines can provide its own implementation of _watchFile (like standard engine)
-        // and what if there no engine that can handle the request?
-        this._handlePath("watchFile", Path.resolve(filename), [options, listener, watcher]);
+        this._fileWatchers.set(filename, watcher); // different options?
+
+        watcher.start(this, filename, options).catch(noop); // actually it should not throw
 
         return watcher;
     }
 
-    _watchFile(filename, options, listener, watcher) {
-        watcher.start(this, filename, options).catch(noop); // actually, it should not throw
+    unwatchFile(filename, listener) {
+        if (!this._fileWatchers.has(filename)) {
+            return;
+        }
+        const watcher = this._fileWatchers.get(filename);
+        if (listener) {
+            watcher.removeListener("change", listener);
+        } else {
+            watcher.stop();
+            this._fileWatchers.delete(filename);
+        }
     }
 
     watch(filename, options = {}, listener) {
@@ -1129,7 +1209,7 @@ export class AbstractEngine {
 
     async _handleFd(method, mappedFd, args = []) {
         if (!this._fdMap.has(mappedFd)) {
-            this.throw("EBADF", undefined, syscallMap[method]);
+            this.throw("EBADF", syscallMap[method]);
         }
         const { fd, engine } = this._fdMap.get(mappedFd);
         const res = await engine === this
@@ -1148,7 +1228,7 @@ export class AbstractEngine {
         return mapped;
     }
 
-    async _chooseEngine(path, method) {
+    async _chooseEngine(path, method, secondPath) {
         let parts = path.parts.slice();
 
         // resolve .. that can refer to different engines,
@@ -1199,12 +1279,15 @@ export class AbstractEngine {
                         } catch (err) {
                             if (err instanceof FSException) {
                                 err.path = path;
+                                if (secondPath) {
+                                    err.secondPath = secondPath;
+                                }
                                 err.syscall = syscallMap[method];
                             }
                             throw err;
                         }
                         if (!stat.isDirectory()) {
-                            this.throw("ENOTDIR", path, syscallMap[method]);
+                            this.throw("ENOTDIR", path, syscallMap[method], secondPath);
                         }
                         parts.splice(j, 1);
                         --j;
@@ -1216,7 +1299,7 @@ export class AbstractEngine {
                             const stat = await engine.stat(subPath); // eslint-disable-line
                             if (stat.isFile()) {
                                 // this is a file, but the pattern is "subPath/.." which is applicable only for directories
-                                this.throw("ENOTDIR", path, syscallMap[method]);
+                                this.throw("ENOTDIR", path, syscallMap[method], secondPath);
                             }
                             const target = await engine.readlink(subPath); // eslint-disable-line
 
@@ -1236,11 +1319,11 @@ export class AbstractEngine {
                         } catch (err) {
                             switch (err.code) {
                                 case "ENOENT": {
-                                    this.throw("ENOENT", path, syscallMap[method]);
+                                    this.throw("ENOENT", path, syscallMap[method], secondPath);
                                     break;
                                 }
                                 case "ENOTDIR": {
-                                    this.throw("ENOTDIR", path, syscallMap[method]);
+                                    this.throw("ENOTDIR", path, syscallMap[method], secondPath);
                                     break;
                                 }
                                 case "EINVAL": {
@@ -1268,6 +1351,22 @@ export class AbstractEngine {
         }
     }
 
+    _handleError(err, method, path, args) {
+        if (err instanceof FSException) {
+            switch (method) {
+                case "link": {
+                    err.path = path;
+                    err.secondPath = args[0];
+                    break;
+                }
+                default: {
+                    err.path = path;
+                }
+            }
+        }
+        return Promise.reject(err);
+    }
+
     /**
      * @param {string} method
      * @param {string} rawPath
@@ -1279,7 +1378,7 @@ export class AbstractEngine {
             let p = this[`_${method}`](path, ...args);
             if (method === "open") {
                 // store fd
-                p = p.then((fd) => this._storeFd(fd, this));
+                p = p.then((fd) => this._storeFd(fd, this), (err) => this._handleError(err, method, path, args));
             }
             return p;
         }
@@ -1322,12 +1421,7 @@ export class AbstractEngine {
             }
         }
 
-        return p.catch((err) => {
-            if (err instanceof FSException) {
-                err.path = path;
-            }
-            return Promise.reject(err);
-        });
+        return p.catch((err) => this._handleError(err, method, path, args));
     }
 
     _getSiblingMounts(path) {
@@ -1405,3 +1499,4 @@ export class AbstractEngine {
 }
 
 AbstractEngine.prototype.constants = constants; // provide the same constants
+AbstractEngine.constants = constants;
