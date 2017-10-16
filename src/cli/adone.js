@@ -32,7 +32,7 @@ class AdoneCLI extends application.Application {
         this.exposeCliInterface();
 
         this.defineArguments({
-            commandsGroups: this.config.cli.groups,
+            commandsGroups: this.config.raw.cli.groups,
             blindMode: true,
             arguments: [
                 {
@@ -176,7 +176,7 @@ class AdoneCLI extends application.Application {
             ]
         });
 
-        for (const ss of this.config.cli.commands) {
+        for (const ss of this.config.raw.cli.commands) {
             // eslint-disable-next-line
             await this.addSubsystem(Object.assign({
                 addOnCommand: true

@@ -2,9 +2,7 @@ const {
     x,
     is,
     std,
-    fs,
-    configuration,
-    omnitron: { const: { ENABLED, DISABLED } }
+    configuration
 } = adone;
 
 export default class Configuration extends configuration.FileConfiguration {
@@ -14,7 +12,7 @@ export default class Configuration extends configuration.FileConfiguration {
         });
         this.inMemory = inMemory;
 
-        this.gates = null;
+        this.raw.gates = null;
     }
 
     async loadAll() {
@@ -24,12 +22,12 @@ export default class Configuration extends configuration.FileConfiguration {
     }
 
     async loadGates() {
-        if (is.null(this.gates)) {
+        if (is.null(this.raw.gates)) {
             try {
                 await this.load("gates.json", "gates");
             } catch (err) {
                 if (err instanceof x.NotExists) {
-                    this.gates = [
+                    this.raw.gates = [
                         {
                             port: (is.windows ? "\\\\.\\pipe\\omnitron.sock" : std.path.join(adone.config.runtimePath, "omnitron.sock"))
                         }
@@ -42,7 +40,7 @@ export default class Configuration extends configuration.FileConfiguration {
                 }
             }
         }
-        return this.gates;
+        return this.raw.gates;
     }
 
     async save(confPath, name, options) {

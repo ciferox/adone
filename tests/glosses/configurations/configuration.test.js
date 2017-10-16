@@ -1,4 +1,6 @@
-const { is } = adone;
+const {
+    is
+} = adone;
 
 describe("configuration", "Configuration", () => {
     let conf;
@@ -17,6 +19,8 @@ describe("configuration", "Configuration", () => {
         assert.isTrue(is.propertyOwned(proto, "keys"));
         assert.isTrue(is.propertyOwned(proto, "values"));
         assert.isTrue(is.propertyOwned(proto, "entries"));
+        assert.isTrue(is.propertyOwned(proto, "load"));
+        assert.isTrue(is.propertyOwned(proto, "save"));
     });
 
     it("should get undefined of nonexisting key", () => {
@@ -31,32 +35,35 @@ describe("configuration", "Configuration", () => {
         assert.throws(() => (conf.get([""])), adone.x.InvalidArgument);
     });
 
-    it("should set value be accesisble directly", () => {
+    it("raw access to property", () => {
         conf.set("a", 10);
-        assert.equal(conf.a, 10);
+        assert.equal(conf.raw.a, 10);
     });
 
     it("should set value of complex key", () => {
         conf.set("a.b", 10);
-        assert.equal(conf.a.b, 10);
+        assert.equal(conf.get("a.b"), 10);
+        assert.equal(conf.raw.a.b, 10);
         conf.set("a.c.d", 20);
-        assert.equal(conf.a.c.d, 20);
+        assert.equal(conf.get("a.c.d"), 20);
+        assert.equal(conf.raw.a.c.d, 20);
         conf.set("a.d.e.f.g", 30);
-        assert.equal(conf.a.d.e.f.g, 30);
+        assert.equal(conf.get("a.d.e.f.g"), 30);
+        assert.equal(conf.raw.a.d.e.f.g, 30);
     });
 
     it("should reassign value of non-plain object", () => {
         conf.set("a.b", 10);
-        assert.equal(conf.a.b, 10);
+        assert.equal(conf.raw.a.b, 10);
         conf.set("a.b.d", 20);
-        assert.equal(conf.a.b.d, 20);
+        assert.equal(conf.raw.a.b.d, 20);
     });
 
     it("should reassign value of middle subkey", () => {
         conf.set("a.b.c", 10);
-        assert.equal(conf.a.b.c, 10);
+        assert.equal(conf.raw.a.b.c, 10);
         conf.set("a.b", 20);
-        assert.equal(conf.a.b, 20);
+        assert.equal(conf.raw.a.b, 20);
     });
 
     it("should has() correcly check existence of key", () => {
@@ -118,9 +125,9 @@ describe("configuration", "Configuration", () => {
             b: 2,
             c: 3
         });
-        assert.equal(conf.a, 1);
-        assert.equal(conf.b, 2);
-        assert.equal(conf.c, 3);
+        assert.equal(conf.raw.a, 1);
+        assert.equal(conf.raw.b, 2);
+        assert.equal(conf.raw.c, 3);
     });
 
     it("assign() multi", () => {
@@ -134,11 +141,11 @@ describe("configuration", "Configuration", () => {
         }, {
             e: 6
         });
-        assert.equal(conf.a, 1);
-        assert.equal(conf.b, 2);
-        assert.equal(conf.c, 4);
-        assert.equal(conf.d, 5);
-        assert.equal(conf.e, 6);
+        assert.equal(conf.raw.a, 1);
+        assert.equal(conf.raw.b, 2);
+        assert.equal(conf.raw.c, 4);
+        assert.equal(conf.raw.d, 5);
+        assert.equal(conf.raw.e, 6);
     });
 
     it("assign() other configuration", () => {
@@ -154,11 +161,11 @@ describe("configuration", "Configuration", () => {
             b: 2,
             c: 3
         }, otherConf);
-        assert.equal(conf.a, 1);
-        assert.equal(conf.b, 2);
-        assert.equal(conf.c, 4);
-        assert.equal(conf.d, 5);
-        assert.equal(conf.e, 6);
+        assert.equal(conf.raw.a, 1);
+        assert.equal(conf.raw.b, 2);
+        assert.equal(conf.raw.c, 4);
+        assert.equal(conf.raw.d, 5);
+        assert.equal(conf.raw.e, 6);
     });
 
     it("assign() to non existing key", () => {
@@ -167,9 +174,9 @@ describe("configuration", "Configuration", () => {
             b: 2,
             c: 3
         });
-        assert.equal(conf.adone.a, 1);
-        assert.equal(conf.adone.b, 2);
-        assert.equal(conf.adone.c, 3);
+        assert.equal(conf.raw.adone.a, 1);
+        assert.equal(conf.raw.adone.b, 2);
+        assert.equal(conf.raw.adone.c, 3);
     });
 
     it("keys()", () => {

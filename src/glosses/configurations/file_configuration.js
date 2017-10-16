@@ -82,6 +82,10 @@ export default class FileConfiguration extends adone.configuration.Configuration
         return this[CWD_PATH];
     }
 
+    setCwd(cwd) {
+        this[CWD_PATH] = cwd;
+    }
+
     registerFormat(ext, decode, encode) {
         this[SERIALIZER][ext] = {
             decode,
@@ -135,7 +139,7 @@ export default class FileConfiguration extends adone.configuration.Configuration
 
         let obj;
         if (is.nil(name)) {
-            obj = Object.assign({}, this);
+            obj = Object.assign({}, this.raw);
         } else if (name === true) {
             obj = this.get(std.path.basename(conf.path, conf.ext));
         } else if (is.string(name) || is.array(name)) {

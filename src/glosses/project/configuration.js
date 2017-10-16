@@ -19,12 +19,20 @@ export default class ProjectConfiguration extends adone.configuration.FileConfig
         this[ENTRIES] = null;
     }
 
-    getSubConfigs() {
-        return this[SUB_CONFIGS];
+    getRelativeDir() {
+        return this[RELATIVE_DIR];
     }
 
-    getSubConfig(name) {
-        return this[SUB_CONFIGS].get(name);
+    /**
+     * Returns array of sub configurations by type
+     * @param {*} type configuration type: 'rel', 'orig', 'origFull'.
+     */
+    getSubConfigs(type = "rel") {
+        return [...this[SUB_CONFIGS].values()].map((cfg) => cfg[type]);
+    }
+
+    getSubConfig(name, type = "rel") {
+        return this[SUB_CONFIGS].get(name)[type];
     }
 
     async load() {
@@ -32,7 +40,7 @@ export default class ProjectConfiguration extends adone.configuration.FileConfig
 
         const units = {};
 
-        await this._parseProjectStructure("", this.structure, units);
+        await this._parseProjectStructure("", this.raw.structure, units);
 
         // Convert object to array
         const keys = Object.keys(units);
@@ -54,22 +62,36 @@ export default class ProjectConfiguration extends adone.configuration.FileConfig
         return super.save(CONFIG_NAME, null);
     }
 
-    getProjectEntries(path) {
-        const result = this[ENTRIES].slice();
+    getProjectEntries({ path, type = "rel" } = {}) {
+        let result = this[ENTRIES].slice();
+
+        const isRel = type === "rel";
 
         for (const [key, subConfig] of this[SUB_CONFIGS].entries()) {
-            const subEntries = subConfig.getProjectEntries();
+            const subEntries = subConfig[type].getProjectEntries({
+                type
+            });
             for (const entry of subEntries) {
+                const $fullId = `${key}.${entry.$id}`;
                 result.push(Object.assign({}, entry, {
-                    $id: `${key}.${entry.$id}`
+                    $fullId,
+                    $id: isRel ? `${key}.${entry.$id}` : entry.$id
                 }));
             }
         }
 
         if (is.string(path)) {
-            return result.filter((entry) => entry.$id.startsWith(path));
+            result = result.filter((entry) => {
+                if (is.string(entry.$fullId)) {
+                    return entry.$fullId.startsWith(path);
+                }
+                return entry.$id.startsWith(path);
+            });
         }
-        return result;
+        return result.map((x) => {
+            delete x.$fullId;
+            return x;
+        });
     }
 
     async _parseProjectStructure(prefix, schema, units) {
@@ -100,15 +122,33 @@ export default class ProjectConfiguration extends adone.configuration.FileConfig
                     throw new adone.x.NotExists(`Sub configuration '${fullKey}' not exists`);
                 }
 
+                const rootRaw = adone.vendor.lodash.omit(this.raw, ["structure"]);
+
                 // eslint-disable-next-line
-                const subConfig = await ProjectConfiguration.load({
+                const subConfigRel = await ProjectConfiguration.load({
                     cwd: this.getCwd(),
                     relativeDir: val
                 });
+                adone.vendor.lodash.defaults(subConfigRel.raw, rootRaw);
 
-                adone.vendor.lodash.defaults(subConfig, adone.vendor.lodash.omit(this, ["structure"]));
+                const relCwd = std.path.join(this.getCwd(), val);
 
-                this[SUB_CONFIGS].set(fullKey, subConfig);
+                // eslint-disable-next-line
+                const subConfigOrig = await ProjectConfiguration.load({
+                    cwd: relCwd
+                });
+
+                // eslint-disable-next-line
+                const subConfigOrigFull = await ProjectConfiguration.load({
+                    cwd: relCwd
+                });
+                adone.vendor.lodash.defaults(subConfigOrigFull.raw, rootRaw);
+
+                this[SUB_CONFIGS].set(fullKey, {
+                    orig: subConfigOrig,
+                    origFull: subConfigOrigFull,
+                    rel: subConfigRel
+                });
             }
         }
     }

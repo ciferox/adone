@@ -3,6 +3,10 @@ const {
 } = adone;
 
 export class Configuration {
+    constructor() {
+        this.raw = {};
+    }
+
     load(/*confPath, key*/) {
         throw new adone.x.NotImplemented("Method load() is not implemented");
     }
@@ -13,22 +17,22 @@ export class Configuration {
 
     get(key) {
         this._checkKey(key);
-        return adone.vendor.lodash.get(this, key);
+        return adone.vendor.lodash.get(this.raw, key);
     }
 
     has(key) {
         this._checkKey(key);
-        return adone.vendor.lodash.has(this, key);
+        return adone.vendor.lodash.has(this.raw, key);
     }
 
     set(key, value) {
         this._checkKey(key);
-        return adone.vendor.lodash.set(this, key, value);
+        return adone.vendor.lodash.set(this.raw, key, value);
     }
 
     delete(key) {
         this._checkKey(key);
-        return adone.vendor.lodash.unset(this, key);
+        return adone.vendor.lodash.unset(this.raw, key);
     }
 
     assign(...args) {
@@ -44,6 +48,13 @@ export class Configuration {
         if (!is.object(obj)) {
             return this.set(key, adone.vendor.lodash.assign(...args));
         }
+        
+        for (let i = args.length; --i >= 0; ) {
+            if (is.configuration(args[i])) {
+                args[i] = args[i].raw;
+            }
+        }
+
         return adone.vendor.lodash.assign(obj, ...args);
     }
 
@@ -60,6 +71,13 @@ export class Configuration {
         if (!is.object(obj)) {
             return this.set(key, adone.vendor.lodash.assign(...args));
         }
+        
+        for (let i = args.length; --i >= 0; ) {
+            if (is.configuration(args[i])) {
+                args[i] = args[i].raw;
+            }
+        }
+        
         return adone.vendor.lodash.merge(obj, ...args);
     }
 
@@ -80,7 +98,7 @@ export class Configuration {
         if ((is.string(key) && key !== "") || is.array(key)) {
             obj = this.get(key);
         } else {
-            obj = this;
+            obj = this.raw;
         }
         return obj;
     }
