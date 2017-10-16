@@ -348,7 +348,10 @@ export class AbstractBackend {
     }
 
     _serializeValue(value) {
-        return is.buffer(value) || process.browser || is.nil(value) ? value : String(value);
+        if (is.nil(value)) {
+            return "";
+        }
+        return is.buffer(value) ? value : String(value);
     }
 
     _checkKey(obj, type) {

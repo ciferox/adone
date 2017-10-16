@@ -43,6 +43,31 @@ describe("database", "level", "abstract", () => {
         new Test("foobar");
     });
 
+    it("test key/value serialization", () => {
+        class Test extends AbstractBackend {
+            // constructor(location) {
+            //     super(location);
+            //     assert.equal(this.location, location);
+            // }
+        }
+
+        const buffer = Buffer.alloc(0);
+        const test = new Test("foobar");
+        
+        assert.equal(test._serializeKey(1), "1", "_serializeKey converts to string");
+        assert.equal(test._serializeKey(buffer), buffer, "_serializeKey returns Buffer as is");
+
+        assert.equal(test._serializeValue(null), "", "_serializeValue converts null to empty string");
+        assert.equal(test._serializeValue(undefined), "", "_serializeValue converts undefined to empty string");
+        
+        assert.equal(test._serializeValue(1), "1", "_serializeValue converts to string");
+        assert.equal(test._serializeValue(buffer), buffer, "_serializeValue returns Buffer as is");
+        
+        process.browser = true;
+        assert.equal(test._serializeValue(1), 1, "_serializeValue returns value as is when process.browser");
+        delete process.browser;
+    });
+
     it("test open() extensibility", async () => {
         const expectedOptions = { createIfMissing: true, errorIfExists: false };
 

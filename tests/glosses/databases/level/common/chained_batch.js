@@ -5,7 +5,7 @@ function collectBatchOps(batch) {
     const _del = batch._del;
     const _operations = [];
 
-    if (typeof _put !== "function" || typeof _del !== "function") {
+    if (!is.function(_put) || !is.function(_del)) {
         return batch._operations;
     }
 
@@ -162,17 +162,11 @@ export const args = function () {
                 .put({ foo: "bar" }, { beep: "boop" })
                 .del({ bar: "baz" });
             ops.forEach((op) => {
-                if (Buffer.isBuffer(op.key)) {
-                    op.key = String(op.key);
-                }
-                if (Buffer.isBuffer(op.value)) {
-                    op.value = String(op.value);
+                assert.isOk(op.key, ".key is set for .put and .del operations");
+                if (op.type === "put") {
+                    assert.isOk(op.value, ".value is set for .put operation");
                 }
             });
-            assert.deepEqual(ops, [
-                { type: "put", key: "[object Object]", value: "[object Object]" },
-                { type: "del", key: "[object Object]" }
-            ]);
         });
 
         it("test serialize buffer", () => {

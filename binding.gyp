@@ -445,6 +445,8 @@
               'cflags': [
               ],
               'cflags!': [ '-fno-tree-vrp' ]
+          }], ['target_arch == "arm"', {
+              'cflags': [ '-mfloat-abi=hard' ]
           }]
         ],
         "dependencies": [

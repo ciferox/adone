@@ -53,13 +53,16 @@
 #include <cstring>
 #include <climits>
 #include <cstdlib>
+#include <utility>
 #if defined(_MSC_VER)
 # pragma warning( push )
 # pragma warning( disable : 4530 )
+# include <queue>
 # include <string>
 # include <vector>
 # pragma warning( pop )
 #else
+# include <queue>
 # include <string>
 # include <vector>
 #endif
@@ -1606,20 +1609,90 @@ class Callback {
   char *errmsg_;
 };
 
-
-template<class T>
-/* abstract */ class AsyncProgressWorkerBase : public AsyncWorker {
+/* abstract */ class AsyncBareProgressWorkerBase : public AsyncWorker {
  public:
-  explicit AsyncProgressWorkerBase(Callback *callback_)
-      : AsyncWorker(callback_), asyncdata_(NULL), asyncsize_(0) {
-    async = new uv_async_t;
+  explicit AsyncBareProgressWorkerBase(Callback *callback_)
+      : AsyncWorker(callback_) {
     uv_async_init(
         uv_default_loop()
-      , async
+      , &async
       , AsyncProgress_
     );
-    async->data = this;
+    async.data = this;
+  }
 
+  virtual ~AsyncBareProgressWorkerBase() {
+  }
+
+  virtual void WorkProgress() = 0;
+
+  virtual void Destroy() {
+      uv_close(reinterpret_cast<uv_handle_t*>(&async), AsyncClose_);
+  }
+
+ private:
+  inline static NAUV_WORK_CB(AsyncProgress_) {
+    AsyncBareProgressWorkerBase *worker =
+            static_cast<AsyncBareProgressWorkerBase*>(async->data);
+    worker->WorkProgress();
+  }
+
+  inline static void AsyncClose_(uv_handle_t* handle) {
+    AsyncBareProgressWorkerBase *worker =
+            static_cast<AsyncBareProgressWorkerBase*>(handle->data);
+    delete worker;
+  }
+
+ protected:
+  uv_async_t async;
+};
+
+template<class T>
+/* abstract */
+class AsyncBareProgressWorker : public AsyncBareProgressWorkerBase {
+ public:
+  explicit AsyncBareProgressWorker(Callback *callback_)
+      : AsyncBareProgressWorkerBase(callback_) {
+  }
+
+  virtual ~AsyncBareProgressWorker() {
+  }
+
+  class ExecutionProgress {
+    friend class AsyncBareProgressWorker;
+   public:
+    void Signal() const {
+      uv_async_send(&that_->async);
+    }
+
+    void Send(const T* data, size_t count) const {
+      that_->SendProgress_(data, count);
+    }
+
+   private:
+    explicit ExecutionProgress(AsyncBareProgressWorker *that) : that_(that) {}
+    NAN_DISALLOW_ASSIGN_COPY_MOVE(ExecutionProgress)
+    AsyncBareProgressWorker* const that_;
+  };
+
+  virtual void Execute(const ExecutionProgress& progress) = 0;
+  virtual void HandleProgressCallback(const T *data, size_t size) = 0;
+
+ private:
+  void Execute() /*final override*/ {
+    ExecutionProgress progress(this);
+    Execute(progress);
+  }
+
+  virtual void SendProgress_(const T *data, size_t count) = 0;
+};
+
+template<class T>
+/* abstract */
+class AsyncProgressWorkerBase : public AsyncBareProgressWorker<T> {
+ public:
+  explicit AsyncProgressWorkerBase(Callback *callback_)
+      : AsyncBareProgressWorker<T>(callback_), asyncdata_(NULL), asyncsize_(0) {
     uv_mutex_init(&async_lock);
   }
 
@@ -1637,42 +1710,13 @@ template<class T>
     uv_mutex_unlock(&async_lock);
 
     // Don't send progress events after we've already completed.
-    if (callback) {
-        HandleProgressCallback(data, size);
+    if (this->callback) {
+        this->HandleProgressCallback(data, size);
     }
     delete[] data;
   }
 
-  class ExecutionProgress {
-    friend class AsyncProgressWorkerBase;
-   public:
-    void Signal() const {
-        uv_async_send(that_->async);
-    }
-
-    void Send(const T* data, size_t count) const {
-        that_->SendProgress_(data, count);
-    }
-
-   private:
-    explicit ExecutionProgress(AsyncProgressWorkerBase *that) : that_(that) {}
-    NAN_DISALLOW_ASSIGN_COPY_MOVE(ExecutionProgress)
-    AsyncProgressWorkerBase* const that_;
-  };
-
-  virtual void Execute(const ExecutionProgress& progress) = 0;
-  virtual void HandleProgressCallback(const T *data, size_t size) = 0;
-
-  virtual void Destroy() {
-      uv_close(reinterpret_cast<uv_handle_t*>(async), AsyncClose_);
-  }
-
  private:
-  void Execute() /*final override*/ {
-      ExecutionProgress progress(this);
-      Execute(progress);
-  }
-
   void SendProgress_(const T *data, size_t count) {
     T *new_data = new T[count];
     {
@@ -1687,23 +1731,9 @@ template<class T>
     uv_mutex_unlock(&async_lock);
 
     delete[] old_data;
-    uv_async_send(async);
+    uv_async_send(&this->async);
   }
 
-  inline static NAUV_WORK_CB(AsyncProgress_) {
-    AsyncProgressWorkerBase *worker =
-            static_cast<AsyncProgressWorkerBase*>(async->data);
-    worker->WorkProgress();
-  }
-
-  inline static void AsyncClose_(uv_handle_t* handle) {
-    AsyncProgressWorkerBase *worker =
-            static_cast<AsyncProgressWorkerBase*>(handle->data);
-    delete reinterpret_cast<uv_async_t*>(handle);
-    delete worker;
-  }
-
-  uv_async_t *async;
   uv_mutex_t async_lock;
   T *asyncdata_;
   size_t asyncsize_;
@@ -1712,6 +1742,117 @@ template<class T>
 // This ensures compatibility to the previous un-templated AsyncProgressWorker
 // class definition.
 typedef AsyncProgressWorkerBase<char> AsyncProgressWorker;
+
+template<class T>
+/* abstract */
+class AsyncBareProgressQueueWorker : public AsyncBareProgressWorkerBase {
+ public:
+  explicit AsyncBareProgressQueueWorker(Callback *callback_)
+      : AsyncBareProgressWorkerBase(callback_) {
+  }
+
+  virtual ~AsyncBareProgressQueueWorker() {
+  }
+
+  class ExecutionProgress {
+    friend class AsyncBareProgressQueueWorker;
+   public:
+    void Send(const T* data, size_t count) const {
+      that_->SendProgress_(data, count);
+    }
+
+   private:
+    explicit ExecutionProgress(AsyncBareProgressQueueWorker *that)
+        : that_(that) {}
+    NAN_DISALLOW_ASSIGN_COPY_MOVE(ExecutionProgress)
+    AsyncBareProgressQueueWorker* const that_;
+  };
+
+  virtual void Execute(const ExecutionProgress& progress) = 0;
+  virtual void HandleProgressCallback(const T *data, size_t size) = 0;
+
+ private:
+  void Execute() /*final override*/ {
+    ExecutionProgress progress(this);
+    Execute(progress);
+  }
+
+  virtual void SendProgress_(const T *data, size_t count) = 0;
+};
+
+template<class T>
+/* abstract */
+class AsyncProgressQueueWorker : public AsyncBareProgressQueueWorker<T> {
+ public:
+  explicit AsyncProgressQueueWorker(Callback *callback_)
+      : AsyncBareProgressQueueWorker<T>(callback_) {
+    uv_mutex_init(&async_lock);
+  }
+
+  virtual ~AsyncProgressQueueWorker() {
+    uv_mutex_lock(&async_lock);
+
+    while (!asyncdata_.empty()) {
+      std::pair<T*, size_t> &datapair = asyncdata_.front();
+      T *data = datapair.first;
+
+      asyncdata_.pop();
+
+      delete[] data;
+    }
+
+    uv_mutex_unlock(&async_lock);
+    uv_mutex_destroy(&async_lock);
+  }
+
+  void WorkComplete() {
+    WorkProgress();
+    AsyncWorker::WorkComplete();
+  }
+
+  void WorkProgress() {
+    uv_mutex_lock(&async_lock);
+
+    while (!asyncdata_.empty()) {
+      std::pair<T*, size_t> &datapair = asyncdata_.front();
+
+      T *data = datapair.first;
+      size_t size = datapair.second;
+
+      asyncdata_.pop();
+      uv_mutex_unlock(&async_lock);
+
+      // Don't send progress events after we've already completed.
+      if (this->callback) {
+          this->HandleProgressCallback(data, size);
+      }
+
+      delete[] data;
+
+      uv_mutex_lock(&async_lock);
+    }
+
+    uv_mutex_unlock(&async_lock);
+  }
+
+ private:
+  void SendProgress_(const T *data, size_t count) {
+    T *new_data = new T[count];
+    {
+      T *it = new_data;
+      std::copy(data, data + count, it);
+    }
+
+    uv_mutex_lock(&async_lock);
+    asyncdata_.push(std::pair<T*, size_t>(new_data, count));
+    uv_mutex_unlock(&async_lock);
+
+    uv_async_send(&this->async);
+  }
+
+  uv_mutex_t async_lock;
+  std::queue<std::pair<T*, size_t> > asyncdata_;
+};
 
 inline void AsyncExecute (uv_work_t* req) {
   AsyncWorker *worker = static_cast<AsyncWorker*>(req->data);

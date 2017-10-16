@@ -79,7 +79,7 @@ describe("database", "level", "codec", () => {
                 keys: true,
                 values: true
             });
-            assert.deepEqual(decoder(new Buffer("hey"), '"you"'), {
+            assert.deepEqual(decoder(Buffer.from("hey"), '"you"'), {
                 key: "686579",
                 value: "you"
             });
@@ -89,7 +89,7 @@ describe("database", "level", "codec", () => {
             const decoder = codec.createStreamDecoder({
                 keys: true
             });
-            assert.equal(decoder(new Buffer("hey")), "686579");
+            assert.equal(decoder(Buffer.from("hey")), "686579");
         });
 
         it("values", () => {
@@ -97,7 +97,7 @@ describe("database", "level", "codec", () => {
                 valueEncoding: "hex",
                 values: true
             });
-            assert.equal(decoder(null, new Buffer("hey")), "686579");
+            assert.equal(decoder(null, Buffer.from("hey")), "686579");
         });
     });
 
@@ -110,7 +110,7 @@ describe("database", "level", "codec", () => {
                 keys: true,
                 values: true
             });
-            assert.deepEqual(decoder(new Buffer("hey"), '"you"'), {
+            assert.deepEqual(decoder(Buffer.from("hey"), '"you"'), {
                 key: "686579",
                 value: "you"
             });
@@ -120,7 +120,7 @@ describe("database", "level", "codec", () => {
             const decoder = codec.createStreamDecoder({
                 keys: true
             });
-            assert.equal(decoder(new Buffer("hey")), "686579");
+            assert.equal(decoder(Buffer.from("hey")), "686579");
         });
 
         it("values", () => {
@@ -128,7 +128,7 @@ describe("database", "level", "codec", () => {
                 encoding: "hex",
                 values: true
             });
-            assert.equal(decoder(null, new Buffer("hey")), "686579");
+            assert.equal(decoder(null, Buffer.from("hey")), "686579");
         });
     });
 
@@ -170,13 +170,13 @@ describe("database", "level", "codec", () => {
     it("decode key", () => {
         const codec = new Codec({ keyEncoding: "hex" });
 
-        let buf = codec.decodeKey(new Buffer("hey"), {});
+        let buf = codec.decodeKey(Buffer.from("hey"), {});
         assert.equal(buf, "686579");
 
-        buf = codec.decodeKey(new Buffer("hey"));
+        buf = codec.decodeKey(Buffer.from("hey"));
         assert.equal(buf, "686579");
 
-        buf = codec.decodeKey(new Buffer("hey"), {
+        buf = codec.decodeKey(Buffer.from("hey"), {
             keyEncoding: "binary"
         });
         assert.equal(buf.toString(), "hey");
@@ -185,18 +185,18 @@ describe("database", "level", "codec", () => {
     it("decode value", () => {
         const codec = new Codec({ valueEncoding: "hex" });
 
-        let buf = codec.decodeValue(new Buffer("hey"), {});
+        let buf = codec.decodeValue(Buffer.from("hey"), {});
         assert.equal(buf, "686579");
 
-        buf = codec.decodeValue(new Buffer("hey"));
+        buf = codec.decodeValue(Buffer.from("hey"));
         assert.equal(buf, "686579");
 
-        buf = codec.decodeValue(new Buffer("hey"), {
+        buf = codec.decodeValue(Buffer.from("hey"), {
             valueEncoding: "binary"
         });
         assert.equal(buf.toString(), "hey");
 
-        buf = codec.decodeValue(new Buffer("hey"), {
+        buf = codec.decodeValue(Buffer.from("hey"), {
             valueEncoding: "utf8"
         });
         assert.equal(buf, "hey");
@@ -220,13 +220,13 @@ describe("database", "level", "codec", () => {
     it("decode value - legacy", () => {
         const codec = new Codec({ encoding: "hex" });
 
-        let buf = codec.decodeValue(new Buffer("hey"), {});
+        let buf = codec.decodeValue(Buffer.from("hey"), {});
         assert.equal(buf, "686579");
 
-        buf = codec.decodeValue(new Buffer("hey"));
+        buf = codec.decodeValue(Buffer.from("hey"));
         assert.equal(buf, "686579");
 
-        buf = codec.decodeValue(new Buffer("hey"), {
+        buf = codec.decodeValue(Buffer.from("hey"), {
             encoding: "binary"
         });
         assert.equal(buf.toString(), "hey");
