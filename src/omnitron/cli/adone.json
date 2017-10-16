@@ -3,7 +3,5 @@
     "description": "Cli interface to omnitron",
     "version": "0.6.60",
     "author": "Adone Core Team <info@adone.io>",
-    "project": {
-        "type": "subsystem"
-    }
+    "type": "cli.command"
 }

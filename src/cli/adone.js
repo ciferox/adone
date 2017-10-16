@@ -81,6 +81,19 @@ class AdoneCLI extends application.Application {
                     handler: this.uninstallCommand
                 },
                 {
+                    name: "list",
+                    help: "List installed packages",
+                    arguments: [
+                        {
+                            name: "keyword",
+                            type: String,
+                            default: "",
+                            help: "Name or keywork for searching"
+                        }
+                    ],
+                    handler: this.listCommand
+                },
+                {
                     name: "inspect",
                     help: "Inspect adone namespace/object",
                     arguments: [
@@ -176,11 +189,13 @@ class AdoneCLI extends application.Application {
             ]
         });
 
-        for (const ss of this.config.raw.cli.commands) {
-            // eslint-disable-next-line
-            await this.addSubsystem(Object.assign({
-                addOnCommand: true
-            }, ss));
+        if (is.array(this.config.raw.cli.commands)) {
+            for (const ss of this.config.raw.cli.commands) {
+                // eslint-disable-next-line
+                await this.addSubsystem(Object.assign({
+                    addOnCommand: true
+                }, ss));
+            }
         }
     }
 
@@ -211,6 +226,37 @@ class AdoneCLI extends application.Application {
         } catch (err) {
             adone.log(err);
             // term.print(`{red-fg}${err.message}{/}`);
+            return 1;
+        }
+    }
+
+    async listCommand(args) {
+        try {
+            const realm = await adone.realm.getLocal();
+            const result = await realm.list({
+                keyword: args.get("keyword")
+            });
+
+            adone.log(adone.text.pretty.table(result, {
+                borderless: true,
+                noHeader: true,
+                style: {
+                    head: null,
+                    compact: true
+                },
+                model: [
+                    {
+                        id: "name",
+                        header: "Package",
+                        handle: (item) => `{green-fg}{bold}${item.name}{/bold} ${item.version}{/green-fg} {grey-fg}- ${item.description}{/grey-fg}`
+                    }
+                ]
+            }));
+
+            return 0;
+        } catch (err) {
+            // adone.log(err);
+            term.print(`{red-fg}${err.message}{/}`);
             return 1;
         }
     }

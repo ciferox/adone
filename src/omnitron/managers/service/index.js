@@ -1,6 +1,5 @@
 const {
     application,
-    configuration,
     x,
     is,
     fs,
@@ -34,16 +33,15 @@ class ServiceMaintainer {
         });
 
         serviceProcess.then((result) => {
-            if (result.code !== 0) {
+            if (result.code === 0) {
+                this.process = serviceProcess;
+            } else {
                 this.process = null;
                 if (++this.restarts <= this.maxRestarts) {
                     this.start();
                 }
             }
         });
-
-        this.process = serviceProcess;
-        return serviceProcess;
     }
 
     async stop() {
@@ -105,14 +103,14 @@ export default class ServiceManager extends application.Subsystem {
                 try {
                     const path = std.path.join(servicesPath, file);
                     // eslint-disable-next-line
-                    const adoneConf = await configuration.load(std.path.join(path, "adone.conf.json"), null, {
-                        transpile: true
+                    const adoneConf = await adone.project.Configuration.load({
+                        cwd: path
                     });
-                    existingNames.push(adoneConf.name);
+                    existingNames.push(adoneConf.raw.name);
                     services.push({
-                        name: adoneConf.name,
-                        description: adoneConf.description,
-                        author: adoneConf.author,
+                        name: adoneConf.raw.name,
+                        description: adoneConf.raw.description,
+                        author: adoneConf.raw.author,
                         path
                     });
                 } catch (err) {
@@ -123,7 +121,7 @@ export default class ServiceManager extends application.Subsystem {
 
         const names = this.services.keys();
 
-        // Remove uninstalled services
+        // Remove nonexisting services
         for (const name of names) {
             if (!existingNames.includes(name)) {
                 await this.services.delete(name); // eslint-disable-line
@@ -163,7 +161,7 @@ export default class ServiceManager extends application.Subsystem {
                 }
                 list.push(service);
             } else {
-                groups.set(adone.text.random(10), [service]);
+                groups.set(adone.text.random(16), [service]);
             }
         }
 
@@ -174,7 +172,6 @@ export default class ServiceManager extends application.Subsystem {
         const groups = await this.enumerateGroups();
         const port = this.parent.subsystem("netron").getPort();
 
-        const promises = [];
         for (const [group, services] of groups.entries()) {
             const maintainer = new ServiceMaintainer({
                 group,
@@ -182,10 +179,8 @@ export default class ServiceManager extends application.Subsystem {
                 port
             });
             this.maintainers.set(group, maintainer);
-            promises.push(maintainer.start());
+            maintainer.start();
         }
-
-        return Promise.all(promises);
     }
 
     async stopAll() {
@@ -202,7 +197,6 @@ export default class ServiceManager extends application.Subsystem {
             default:
                 maintainer = new ServiceMaintainer(options);
         }
-
 
         return maintainer;
     }

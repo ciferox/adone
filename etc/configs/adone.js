@@ -40,11 +40,8 @@ if (process.env.ADONE_DIRNAME) {
 const runtimePath = join(home, "runtime");
 const varPath = join(home, "var");
 const configsPath = join(home, "configs");
-const extensionsPath = join(home, "extensions");
-const cliExtsPath = join(extensionsPath, "cli");
-const cliSubsystemsPath = join(cliExtsPath, "subsystems");
-const omnitronExtsPath = join(extensionsPath, "omnitron");
-const omnitronServicesPath = join(omnitronExtsPath, "services");
+const omnitronVarPath = join(varPath, "omnitron");
+const omnitronServicesPath = join(omnitronVarPath, "services");
 const logsPath = join(varPath, "logs");
 const omnitronLogsPath = join(logsPath, "omnitron");
 
@@ -58,17 +55,12 @@ const config = {
     logsPath,
     packagesPath: join(home, "packages"),
 
-    cli: {
-        extsPath: cliExtsPath,
-        subsystemsPath: cliSubsystemsPath
-    },
-
     omnitron: {
         logsPath: omnitronLogsPath,
         logFilePath: join(omnitronLogsPath, "omnitron.log"),
         errorLogFilePath: join(omnitronLogsPath, "omnitron-err.log"),
         pidFilePath: join(runtimePath, "omnitron.pid"),
-        extsPath: omnitronExtsPath,
+        varPath: omnitronVarPath,
         servicesPath: omnitronServicesPath
     }
 };

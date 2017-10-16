@@ -26,7 +26,7 @@ for (const name of handlerNames) {
 const Handler = adone.lazify(handlers, null, require);
 
 export default class Package {
-    constructor(realm, { name, symlink = false } = {}) {
+    constructor(realm, { name = "", symlink = false } = {}) {
         this.realm = realm;
         this.name = name;
         this.symlink = symlink;
@@ -52,7 +52,7 @@ export default class Package {
                     adoneConf = await this._installFromLocal();
                 }
             }
-            this.bar.setSchema(` :spinner {green-fg}${this.name} v${adoneConf.version}{/green-fg} successfully installed`);
+            this.bar.setSchema(` :spinner {green-fg}${this.name} v${adoneConf.raw.version}{/green-fg} successfully installed`);
             this.bar.complete(true);
         } catch (err) {
             if (!is.null(this.bar)) {
@@ -69,20 +69,36 @@ export default class Package {
         });
         this.bar.update(0);
 
-        let adoneConf;
-
         try {
-            if (std.path.isAbsolute(this.name)) {
-                adoneConf = await this._installFromLocal();
+            this.destPath = std.path.join(adone.config.packagesPath, this.name);
+
+            if (!(await fs.exists(this.destPath))) {
+                throw new adone.x.NotExists(`Package ${this.name} is not exists`);
+            }
+
+            const adoneConf = await adone.project.Configuration.load({
+                cwd: this.destPath
+            });
+
+            this.fullName = this.name;
+            this.name = is.string(adoneConf.raw.type) ? `${adoneConf.raw.type}.${adoneConf.raw.name}` : adoneConf.raw.name;
+
+            if (is.string(adoneConf.raw.type)) {
+                await this._unregisterPackage(adoneConf);
             } else {
-                if (this.name.startsWith("adone.")) {
-                    //
-                } else {
-                    this.name = std.path.join(process.cwd(), this.name);
-                    adoneConf = await this._installFromLocal();
+                const subConfigs = adoneConf.getSubConfigs();
+                if (subConfigs.length === 0) {
+                    throw new adone.x.NotValid("Invalid or useless package");
+                }
+
+                for (const cfg of subConfigs) {
+                    await this._unregisterPackage(cfg.origFull); // eslint-disable-line
                 }
             }
-            this.bar.setSchema(` :spinner {green-fg}${this.name} v${adoneConf.version}{/green-fg} successfully installed`);
+
+            await fs.rm(this.destPath);
+
+            this.bar.setSchema(` :spinner {green-fg}${this.fullName}{/green-fg} successfully uninstalled`);
             this.bar.complete(true);
         } catch (err) {
             if (!is.null(this.bar)) {
@@ -93,6 +109,21 @@ export default class Package {
         }
     }
 
+    async list(type) {
+        const result = {};
+        if (is.string(type)) {
+            const types = Object.keys(handlers);
+
+            for (const type of types) {
+                const handler = this._getHandlerClass(type);
+                result[handler.name] = await handler.list(); // eslint-disable-line
+            }
+            return result;
+        }
+        
+        return this._getHandlerClass(type).list();
+    }
+
     async _installFromLocal() {
         this.bar.setSchema(` :spinner installing from: ${this.path}`);
 
@@ -100,7 +131,7 @@ export default class Package {
             cwd: this.path
         });
 
-        this.name = is.string(adoneConf.type) ? `${adoneConf.type}.${adoneConf.name}` : adoneConf.name;
+        this.name = is.string(adoneConf.raw.type) ? `${adoneConf.raw.type}.${adoneConf.raw.name}` : adoneConf.raw.name;
         this.destPath = std.path.join(PACKAGES_PATH, this.name);
 
         if (this.symlink) {
@@ -109,39 +140,56 @@ export default class Package {
             await this._copyFiles(adoneConf);
         }
 
-        if (is.string(adoneConf.type)) {
-            await this._registerPackage(adoneConf);
+        if (is.string(adoneConf.raw.type)) {
+            await this._registerPackage(adoneConf, this.destPath);
         } else {
+            const subConfigs = adoneConf.getSubConfigs();
+            if (subConfigs.length === 0) {
+                throw new adone.x.NotValid("Invalid or useless package");
+            }
 
+            for (const cfg of subConfigs) {
+                const destPath = std.path.join(this.destPath, cfg.rel.getRelativePath());
+                // Update adone.json config with all assigned properties from project's main adone.conf.
+                await cfg.origFull.save(destPath); // eslint-disable-line
+                await this._registerPackage(cfg.origFull, destPath); // eslint-disable-line
+            }
         }
 
         return adoneConf;
     }
 
-    _registerPackage(adoneConf) {
-        const HandlerClass = Handler[adoneConf.type];
+    _registerPackage(adoneConf, destPath) {
+        return this._getHandlerClass(adoneConf.raw.type).register(adoneConf, destPath);
+    }
+
+    _unregisterPackage(adoneConf) {
+        return this._getHandlerClass(adoneConf.raw.type).unregister(adoneConf);
+    }
+
+    _getHandlerClass(type) {
+        const HandlerClass = Handler[type];
 
         if (!is.class(HandlerClass)) {
-            throw new adone.x.NotValid(`Not valid handler for: ${adoneConf.type}`);
+            throw new adone.x.NotValid(`Not valid handler for: ${type}`);
         }
 
-        const handler = new HandlerClass(this, adoneConf);
-        return handler.register();
+        return new HandlerClass(this);
     }
 
     async _createSymlink() {
         if (await fs.exists(this.destPath)) {
             const stat = fs.lstatSync(this.destPath);
             if (!stat.isSymbolicLink()) {
-                throw new x.Exists("Extension already installed, please uninstall it and try again");
+                throw new x.Exists(`Package ${this.name} already installed, please uninstall it and try again`);
             }
             await fs.rm(this.destPath);
         }
 
         if (is.windows) {
-            await fs.symlink(this.name, this.destPath, "junction");
+            await fs.symlink(this.path, this.destPath, "junction");
         } else {
-            await fs.symlink(this.name, this.destPath);
+            await fs.symlink(this.path, this.destPath);
         }
     }
 
@@ -154,7 +202,7 @@ export default class Package {
         for (const info of entries) {
             let srcPath;
             let dstDir;
-            
+
             if (is.string(info.$dst)) {
                 srcPath = util.globize(info.$dst, {
                     recursively: true

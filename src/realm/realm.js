@@ -34,8 +34,7 @@ export default class Realm {
     async install(options) {
         try {
             await this._lock();
-            const pkg = new __.Package(this, options);
-            await pkg.install();
+            await this._package(options).install();
         } finally {
             await this._unlock();
         }
@@ -44,15 +43,45 @@ export default class Realm {
     async uninstall(options) {
         try {
             await this._lock();
-            const pkg = new __.Package(this, options);
-            await pkg.uninstall();
+            await this._package(options).uninstall();
         } finally {
             await this._unlock();
         }
     }
 
+    async list({ keyword = "", threshold = 0.2 } = {}) {
+        const packages = await fs.readdir(adone.config.packagesPath);
+
+        const result = [];
+        for (const name of packages) {
+            // eslint-disable-next-line
+            const adoneConf = await adone.project.Configuration.load({
+                cwd: std.path.join(adone.config.packagesPath, name)
+            });
+
+            result.push({
+                name,
+                version: adoneConf.raw.version,
+                description: adoneConf.raw.description || ""
+            });
+        }
+
+        if (keyword.length === 0) {
+            return result;
+        }
+
+        return (new adone.text.Fuzzy(result, {
+            keys: ["name"],
+            threshold
+        })).search(keyword);
+    }
+
     async snapshot(options) {
 
+    }
+
+    _package(options) {
+        return new __.Package(this, options);
     }
 
     // listFiles({ adone = true, extensions = true, apps = true, configs = true, data = true, logs = true } = {}) {

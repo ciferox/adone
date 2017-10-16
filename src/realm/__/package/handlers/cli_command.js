@@ -6,24 +6,31 @@ const {
 const __ = adone.private(adone.realm);
 
 export default class CliCommandHandler extends __.AbstractHandler {
-    async register() {
+    constructor(pkg) {
+        super(pkg, "Adone cli commands", "cli.command");
+    }
+
+    async register(adoneConf, destPath) {
         let indexPath;
-        if (is.string(this.adoneConf.main)) {
-            indexPath = std.path.join(this.package.destPath, this.adoneConf.main);
+        if (is.string(adoneConf.raw.main)) {
+            indexPath = std.path.join(destPath, adoneConf.raw.main);
         } else {
-            indexPath = this.destPath;
+            indexPath = destPath;
         }
 
         const commandInfo = {
-            name: this.adoneConf.name,
-            description: this.adoneConf.description,
+            name: adoneConf.raw.name,
+            description: adoneConf.raw.description,
             subsystem: indexPath
         };
-        const commands = adone.runtime.app.config.cli.commands;
+        if (!is.array(adone.runtime.app.config.raw.cli.commands)) {
+            adone.runtime.app.config.raw.cli.commands = [];
+        }
+        const commands = adone.runtime.app.config.raw.cli.commands;
 
         let i;
         for (i = 0; i < commands.length; i++) {
-            if (commands[i].name === this.adoneConf.name) {
+            if (commands[i].name === adoneConf.raw.name) {
                 break;
             }
         }
@@ -36,12 +43,28 @@ export default class CliCommandHandler extends __.AbstractHandler {
 
         commands.sort((a, b) => a.name > b.name);
 
-        await adone.runtime.app.config.save(std.path.join(adone.config.configsPath, "cli.json"), "cli", {
+        return adone.runtime.app.config.save(std.path.join(adone.config.configsPath, "cli.json"), "cli", {
             space: "    "
         });
     }
 
-    unregister() {
+    unregister(adoneConf) {
+        const index = adone.runtime.app.config.raw.cli.commands.findIndex((x) => adoneConf.raw.name === x.name);
+        if (index >= 0) {
+            adone.runtime.app.config.raw.cli.commands.splice(index, 1);
+            return adone.runtime.app.config.save(std.path.join(adone.config.configsPath, "cli.json"), "cli", {
+                space: "    "
+            });
+        }
+    }
 
+    list() {
+        const result = [];
+        const commands = adone.runtime.app.config.raw.cli.commands;
+
+        for (const command of commands) {
+            result.push(command.name);
+        }
+        return result;
     }
 }

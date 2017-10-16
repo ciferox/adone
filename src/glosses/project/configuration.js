@@ -6,7 +6,7 @@ const {
 
 const CONFIG_NAME = "adone.json";
 
-const RELATIVE_DIR = Symbol();
+const RELATIVE_PATH = Symbol();
 const SUB_CONFIGS = Symbol();
 const ENTRIES = Symbol();
 
@@ -14,21 +14,24 @@ export default class ProjectConfiguration extends adone.configuration.FileConfig
     constructor({ cwd, relativeDir } = {}) {
         super({ cwd });
 
-        this[RELATIVE_DIR] = is.string(relativeDir) ? relativeDir : "";
+        this[RELATIVE_PATH] = is.string(relativeDir) ? relativeDir : "";
         this[SUB_CONFIGS] = new Map();
         this[ENTRIES] = null;
     }
 
-    getRelativeDir() {
-        return this[RELATIVE_DIR];
+    getRelativePath() {
+        return this[RELATIVE_PATH];
     }
 
     /**
      * Returns array of sub configurations by type
      * @param {*} type configuration type: 'rel', 'orig', 'origFull'.
      */
-    getSubConfigs(type = "rel") {
-        return [...this[SUB_CONFIGS].values()].map((cfg) => cfg[type]);
+    getSubConfigs(type) {
+        if (is.string(type)) {
+            return [...this[SUB_CONFIGS].values()].map((cfg) => cfg[type]);
+        }
+        return [...this[SUB_CONFIGS].values()];
     }
 
     getSubConfig(name, type = "rel") {
@@ -36,35 +39,38 @@ export default class ProjectConfiguration extends adone.configuration.FileConfig
     }
 
     async load() {
-        await super.load(std.path.join(this[RELATIVE_DIR], CONFIG_NAME), null);
+        await super.load(std.path.join(this[RELATIVE_PATH], CONFIG_NAME), null);
 
         const units = {};
 
-        await this._parseProjectStructure("", this.raw.structure, units);
-
-        // Convert object to array
-        const keys = Object.keys(units);
         const entries = [];
+        if (is.plainObject(this.raw.structure)) {
+            await this._parseProjectStructure("", this.raw.structure, units);
 
-        for (const key of keys) {
-            entries.push(Object.assign({
-                $id: key
-            }, units[key]));
+            // Convert object to array
+            const keys = Object.keys(units);
+
+            for (const key of keys) {
+                entries.push(Object.assign({
+                    $id: key
+                }, units[key]));
+            }
         }
 
         this[ENTRIES] = entries;
     }
 
-    async save() {
+    async save(cwd) {
         for (const config of this[SUB_CONFIGS].values()) {
-            await config.save(); // eslint-disable-line
+            await config.save(cwd); // eslint-disable-line
         }
-        return super.save(CONFIG_NAME, null);
+        return super.save(is.string(cwd) ? std.path.join(cwd, CONFIG_NAME) : CONFIG_NAME, null, {
+            space: "    "
+        });
     }
 
     getProjectEntries({ path, type = "rel" } = {}) {
         let result = this[ENTRIES].slice();
-
         const isRel = type === "rel";
 
         for (const [key, subConfig] of this[SUB_CONFIGS].entries()) {
@@ -104,11 +110,11 @@ export default class ProjectConfiguration extends adone.configuration.FileConfig
                 if (["$src", "$dst"].includes(key)) {
                     if (is.array(val)) {
                         for (let i = 0; i < val.length; i++) {
-                            val[i] = val[i].startsWith("!") ? `!${std.path.join(this[RELATIVE_DIR], val[i].substr(1))}` : std.path.join(this[RELATIVE_DIR], val[i]);
+                            val[i] = val[i].startsWith("!") ? `!${std.path.join(this[RELATIVE_PATH], val[i].substr(1))}` : std.path.join(this[RELATIVE_PATH], val[i]);
                         }
                         units[prefix][key] = val;
                     } else {
-                        units[prefix][key] = std.path.join(this[RELATIVE_DIR], val);
+                        units[prefix][key] = std.path.join(this[RELATIVE_PATH], val);
                     }
                 } else {
                     units[prefix][key] = val;

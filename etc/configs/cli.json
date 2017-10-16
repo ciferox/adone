@@ -8,7 +8,5 @@
             "name": "subsystem",
             "description": "Subsystems"
         }
-    ],
-    "subsystems": [
     ]
 }

@@ -169,27 +169,31 @@ export default function prettyTable(data, {
                 const styleType = util.typeOf(style);
                 const formatType = util.typeOf(m.format);
                 let str;
-                switch (formatType) {
-                    case "string": {
-                        str = adone.sprintf(m.format, val);
-                        break;
+                if (is.function(m.handle)) {
+                    str = m.handle(item);
+                } else {
+                    switch (formatType) {
+                        case "string": {
+                            str = adone.sprintf(m.format, val);
+                            break;
+                        }
+                        case "function": {
+                            str = m.format(val, item);
+                            break;
+                        }
+                        default: {
+                            str = val;
+                        }
                     }
-                    case "function": {
-                        str = m.format(val);
-                        break;
-                    }
-                    default: {
-                        str = val;
-                    }
-                }
-                switch (styleType) {
-                    case "string": {
-                        str = `${style}${str}{/}`;
-                        break;
-                    }
-                    case "function": {
-                        str = `${style(val, str)}${str}{/}`;
-                        break;
+                    switch (styleType) {
+                        case "string": {
+                            str = `${style}${str}{/}`;
+                            break;
+                        }
+                        case "function": {
+                            str = `${style(val, str)}${str}{/}`;
+                            break;
+                        }
                     }
                 }
 
