@@ -4,7 +4,7 @@ const {
     is,
     fs,
     std,
-    omnitron: { const: { ENABLED, DISABLED } },
+    omnitron: { STATUS },
     vault,
     system: { process: { exec } }
 } = adone;
@@ -42,6 +42,9 @@ class ServiceMaintainer {
                 }
             }
         });
+
+        this.process = serviceProcess;
+        return serviceProcess;
     }
 
     async stop() {
@@ -132,7 +135,7 @@ export default class ServiceManager extends application.Subsystem {
             let runtimeData;
             if (!this.services.has(service.name)) {
                 runtimeData = {
-                    status: DISABLED
+                    status: STATUS.DISABLED
                 };
                 // eslint-disable-next-line
                 await this.services.set(service.name, runtimeData);

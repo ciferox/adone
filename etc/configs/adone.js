@@ -1,7 +1,7 @@
 const { join, resolve } = require("path");
 
 let home;
-let environment = "development";
+let realm = "development";
 let dirName = ".adone_dev";
 
 if (process.env.ADONE_HOME) {
@@ -23,11 +23,11 @@ if (process.env.ADONE_HOME) {
     process.env.ADONE_HOME = home;
 }
 
-// Set ADONE_ENV
-if (process.env.ADONE_ENV) {
-    environment = process.env.ADONE_ENV;
+// Set ADONE_REALM
+if (process.env.ADONE_REALM) {
+    realm = process.env.ADONE_REALM;
 } else {
-    process.env.ADONE_ENV = environment;
+    process.env.ADONE_REALM = realm;
 }
 
 // Set ADONE_DIRNAME
@@ -46,7 +46,7 @@ const logsPath = join(varPath, "logs");
 const omnitronLogsPath = join(logsPath, "omnitron");
 
 const config = {
-    environment,
+    realm,
     dirName,
     home,
     runtimePath,

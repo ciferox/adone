@@ -1,5 +1,18 @@
+// Service statuses
+export const STATUS = {
+    DISABLED: "disabled",
+    INACTIVE: "inactive",
+    ACTIVE: "active"
+};
+
+// Possible statuses
+export const STATUSES = [
+    STATUS.DISABLED,
+    STATUS.INACTIVE,
+    STATUS.ACTIVE,
+    "all"];
+
 adone.lazify({
-    const: "./consts",
     Configuration: "./configuration",
     Omnitron: "./omnitron",
     Dispatcher: "./dispatcher"

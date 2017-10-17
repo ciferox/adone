@@ -23,7 +23,7 @@ export default class Realm {
 
     async _initialize() {
         // Obtain realm id
-        this.id = adone.math.hash("sha256", `${await util.machineId(true)}${adone.config.environment}`);
+        this.id = adone.math.hash("sha256", `${await util.machineId(true)}${adone.config.realm}`);
 
         await this._loadConfig();
 

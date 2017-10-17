@@ -3,10 +3,7 @@ import "adone";
 const {
     is,
     application,
-    configuration,
-    runtime,
-    std,
-    x
+    runtime
 } = adone;
 
 class ServiceApplication extends application.Application {
@@ -19,26 +16,26 @@ class ServiceApplication extends application.Application {
             port: this.omnitronPort
         });
 
-        for (const path of this.servicePaths) {
-            // eslint-disable-next-line
-            const adoneConf = await configuration.load("adone.conf.json", null, {
-                base: path,
-                transpile: true
-            });
+        // for (const path of this.servicePaths) {
+        //     // eslint-disable-next-line
+        //     const adoneConf = await configuration.load("adone.json", null, {
+        //         base: path,
+        //         transpile: true
+        //     });
 
-            if (adoneConf.project.type !== "service") {
-                throw new x.NotValid(`Invalid type of project: ${adoneConf.project.type}`);
-            }
+        //     if (adoneConf.project.type !== "service") {
+        //         throw new x.NotValid(`Invalid type of project: ${adoneConf.project.type}`);
+        //     }
 
-            // eslint-disable-next-line
-            await this.addSubsystem({
-                name: adoneConf.name,
-                description: adoneConf.description,
-                group: this.group,
-                subsystem: std.path.join(path, is.string(adoneConf.project.main) ? adoneConf.project.main : "index.js"),
-                configureArgs: [this.peer]
-            });
-        }
+        //     // eslint-disable-next-line
+        //     await this.addSubsystem({
+        //         name: adoneConf.name,
+        //         description: adoneConf.description,
+        //         group: this.group,
+        //         subsystem: std.path.join(path, is.string(adoneConf.project.main) ? adoneConf.project.main : "index.js"),
+        //         configureArgs: [this.peer]
+        //     });
+        // }
 
         // Waiting for omnitron context is available.
         return new Promise((resolve) => {

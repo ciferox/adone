@@ -9,7 +9,7 @@ const {
 
 const {
     Configuration,
-    const: { STATUSES }
+    STATUSES
 } = omnitron;
 
 // NOTE: local gate always be first in list of gates in gates.json
@@ -58,8 +58,8 @@ export default class Dispatcher {
     async configuration() {
         if (is.null(this._configuration)) {
             this._configuration = new Configuration();
+            await this._configuration.loadAll();
         }
-        await this._configuration.loadGates();
         return this._configuration;
     }
 
@@ -72,16 +72,13 @@ export default class Dispatcher {
         return this.peer;
     }
 
-    async connectLocal(options, forceStart = true, _counter = 0) {
+    async connectLocal({ forceStart = true } = {}, _counter = 0) {
         let status = 0;
         if (!this.connected) {
             const configuration = await this.configuration();
-            const localGate = configuration.gates[0];
+            const localGate = configuration.raw.gates[0];
             if (is.nil(localGate)) {
                 throw new x.NotExists("Configuration for gate 'local' is not found");
-            }
-            if (localGate.status === omnitron.const.DISABLED) {
-                throw new x.IllegalState("Gate 'local' is disabled");
             }
 
             let peer = null;
@@ -95,7 +92,9 @@ export default class Dispatcher {
 
                 const pid = await this.spawn();
                 if (is.number(pid)) {
-                    return this.connectLocal(options, forceStart, ++_counter);
+                    return this.connectLocal({
+                        forceStart
+                    }, ++_counter);
                 }
             }
             this.peer = peer;
@@ -115,7 +114,6 @@ export default class Dispatcher {
     spawn(spiritualWay = true) {
         if (spiritualWay) {
             return new Promise(async (resolve, reject) => {
-                await this.configuration();
                 const omnitronConfig = adone.config.omnitron;
                 await adone.fs.mkdirp(std.path.dirname(omnitronConfig.logFilePath));
                 this.descriptors.stdout = std.fs.openSync(omnitronConfig.logFilePath, "a");
@@ -144,7 +142,7 @@ export default class Dispatcher {
         return omnitron.run({ ignoreArgs: true });
     }
 
-    async kill({ clean = false, killChildren = true } = {}) {
+    async kill({ killChildren = true } = {}) {
         const isOnline = await this.isOnline();
         if (isOnline) {
             // Can be used in test environment.
@@ -153,6 +151,9 @@ export default class Dispatcher {
                     const pid = parseInt(std.fs.readFileSync(adone.config.omnitron.pidFilePath).toString());
                     if (is.windows) {
                         try {
+                            await this.connectLocal({
+                                forceStart: false
+                            });
                             await this.killSelf();
                             this.noisily && adone.log("Called omnitron's killSelf()");
                             await this._isAlive(pid, 3000); // wait 3 sec
@@ -189,15 +190,14 @@ export default class Dispatcher {
             await adone.fs.fd.close(this.descriptors.stderr);
             this.descriptors.stderr = null;
         }
-        if (clean) {
-            await new adone.fs.Directory(adone.homePath).clean();
-        }
     }
 
-    async respawn({ options, clean = false, spiritualWay = true, killChildren = true } = {}) {
-        await this.kill({ clean, killChildren });
+    async respawn({ spiritualWay = true, killChildren = true } = {}) {
+        await this.kill({ killChildren });
         await this.spawn(spiritualWay);
-        await this.connectLocal(options, false);
+        await this.connectLocal({
+            forceStart: false
+        });
     }
 
     async isOnline(options, checkAttempts = 1) {
@@ -205,7 +205,7 @@ export default class Dispatcher {
         let isOK = false;
         try {
             if (is.nil(options) || !options.port) {
-                const localGate = (await this.configuration()).gates[0];
+                const localGate = (await this.configuration()).raw.gates[0];
                 if (is.nil(localGate)) {
                     throw new x.NotExists("Configuration for gate 'local' is not found");
                 }
@@ -227,93 +227,81 @@ export default class Dispatcher {
         return this.peer.getInterfaceByName(name);
     }
 
-    async getService(name) {
-        await this.connectLocal(undefined, false);
-        return this.getInterface(name);
-    }
-
-    async getVersion() {
-        return (await this.getService("omnitron")).version();
-    }
-
     async ping() {
-        try {
-            await this.connectLocal(undefined, false);
-            return is.null(await runtime.netron.ping());
-        } catch (err) {
-            return false;
-        }
+        return is.null(await this.peer.ping());
     }
 
-    async killSelf() {
-        return (await this.getService("omnitron")).killSelf();
+    // Omnitron interface
+    
+    killSelf() {
+        return this.getInterface("omnitron").killSelf();
     }
 
-    async uptime() {
-        return (await this.getService("omnitron")).uptime();
+    getInfo(options) {
+        return this.getInterface("omnitron").getInfo(options);
     }
 
-    async environment() {
-        return (await this.getService("omnitron")).environment();
+    setEnvs(envs) {
+        return this.getInterface("omnitron").setEnvs(envs);
     }
 
-    async envs() {
-        return (await this.getService("omnitron")).envs();
+    updateEnvs(envs) {
+        return this.getInterface("omnitron").updateEnvs(envs);
     }
 
-    async start(serviceName = "") {
+    start(serviceName = "") {
         if (serviceName === "") {
             return this.connectLocal();
         }
-        return (await this.getService("omnitron")).start(serviceName);
+        return this.getInterface("omnitron").start(serviceName);
 
     }
 
-    async stop(serviceName = "") {
+    stop(serviceName = "") {
         if (serviceName === "") {
-            return this.kill({ clean: false, killChildren: true });
+            return this.kill({ killChildren: false });
         }
-        return (await this.getService("omnitron")).stop(serviceName);
+        return this.getInterface("omnitron").stop(serviceName);
 
     }
 
-    async restart(serviceName = "") {
+    restart(serviceName = "") {
         if (serviceName === "") {
             return this.respawn();
         }
-        return (await this.getService("omnitron")).restart(serviceName);
+        return this.getInterface("omnitron").restart(serviceName);
 
     }
 
-    async status(serviceName) {
-        return (await this.getService("omnitron")).status(serviceName);
+    status(serviceName) {
+        return this.getInterface("omnitron").status(serviceName);
     }
 
-    async enable(serviceName, options) {
-        return (await this.getService("omnitron")).enable(serviceName, true, options);
+    enable(serviceName, options) {
+        return this.getInterface("omnitron").enable(serviceName, true, options);
     }
 
-    async disable(serviceName) {
-        return (await this.getService("omnitron")).enable(serviceName, false);
+    disable(serviceName) {
+        return this.getInterface("omnitron").enable(serviceName, false);
     }
 
-    async list(status) {
+    list(status) {
         if (!STATUSES.includes(status)) {
             throw new x.NotValid(`Not valid status: ${status}`);
         }
 
-        return (await this.getService("omnitron")).list({
+        return this.getInterface("omnitron").list({
             status
         });
     }
 
-    async gates() {
-        return (await this.getService("omnitron")).gates();
-    }
+    // gates() {
+    //     return this.getInterface("omnitron").gates();
+    // }
 
-    async context(name) {
-        return (await this.getService("omnitron")).context(name);
-    }
+    // context(name) {
+    //     return this.getInterface("omnitron").context(name);
+    // }
 
     async _isAlive(pid, timeout = 0) {
         try {

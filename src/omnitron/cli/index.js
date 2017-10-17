@@ -1,9 +1,11 @@
 const {
     is,
     text: { pretty },
-    util
+    util,
+    omnitron
 } = adone;
-const { STATUSES } = adone.omnitron.const;
+
+const { STATUSES } = omnitron;
 
 const runtime = adone.lazify({
     Service: () => {
@@ -21,13 +23,6 @@ const runtime = adone.lazify({
 export default class extends adone.application.Subsystem {
     async configure() {
         await this.getInterface("cli").defineCommand(this, {
-            options: [
-                {
-                    name: "--version",
-                    help: "show version of omnitron",
-                    handler: this.versionOption
-                }
-            ],
             commands: [
                 {
                     name: "ping",
@@ -35,19 +30,9 @@ export default class extends adone.application.Subsystem {
                     handler: this.pingCommand
                 },
                 {
-                    name: "uptime",
-                    help: "the omnitron's uptime",
-                    handler: this.uptimeCommand
-                },
-                {
-                    name: "env",
-                    help: "the omnitron's environment",
-                    handler: this.environmentCommand
-                },
-                {
-                    name: "envs",
-                    help: "the omnitron's environment variables",
-                    handler: this.envsCommand
+                    name: "info",
+                    help: "the omnitron's information",
+                    handler: this.infoCommand
                 },
                 {
                     name: "status",
@@ -174,13 +159,17 @@ export default class extends adone.application.Subsystem {
                     ],
                     handler: this.listCommand
                 },
-                {
-                    name: "gates",
-                    help: "show gates",
-                    handler: this.gatesCommand
-                }
+                // {
+                //     name: "gates",
+                //     help: "show gates",
+                //     handler: this.gatesCommand
+                // }
             ]
         });
+    }
+
+    async initialize() {
+        await this.dispatcher.connectLocal(false);
     }
 
     uninitialize() {
@@ -194,11 +183,6 @@ export default class extends adone.application.Subsystem {
         return this._dispatcher;
     }
 
-    async versionOption() {
-        adone.log(await this.dispatcher.getVersion());
-        return 0;
-    }
-
     async pingCommand() {
         if (await this.dispatcher.ping()) {
             adone.log(adone.ok);
@@ -208,18 +192,10 @@ export default class extends adone.application.Subsystem {
         return 0;
     }
 
-    async uptimeCommand() {
-        adone.log(util.humanizeTime(1000 * await this.dispatcher.uptime()));
-        return 0;
-    }
-
-    async environmentCommand() {
-        adone.log(await this.dispatcher.environment());
-        return 0;
-    }
-
-    async envsCommand() {
-        adone.log(adone.text.pretty.json(await this.dispatcher.envs()));
+    async infoCommand() {
+        const result = await this.dispatcher.getInfo();
+        result.uptime = util.humanizeTime(1000 * result.uptime);
+        adone.log(adone.text.pretty.json(result));
         return 0;
     }
 
@@ -413,47 +389,47 @@ export default class extends adone.application.Subsystem {
         return 0;
     }
 
-    async gatesCommand() {
-        try {
-            adone.log(pretty.table(await this.dispatcher.gates(), {
-                style: {
-                    head: ["gray"],
-                    compact: true
-                },
-                model: [
-                    {
-                        id: "id",
-                        header: "ID",
-                        style: "{green-fg}"
-                    },
-                    {
-                        id: "port",
-                        header: "Address",
-                        style: "{bold}"
-                    },
-                    {
-                        id: "type",
-                        header: "Type"
-                    },
-                    {
-                        id: "status",
-                        header: "Status",
-                        style: (val) => {
-                            switch (val) {
-                                case "disabled": return "{red-bg}{white-bg}";
-                                case "enabled": return "{yellow-bg}{black-fg}";
-                                case "active": return "{green-bg}{black-fg}";
-                                default: return "";
-                            }
-                        },
-                        format: " %s ",
-                        align: "right"
-                    }
-                ]
-            }));
-        } catch (err) {
-            adone.log(err.message);
-        }
-        return 0;
-    }
+    // async gatesCommand() {
+    //     try {
+    //         adone.log(pretty.table(await this.dispatcher.gates(), {
+    //             style: {
+    //                 head: ["gray"],
+    //                 compact: true
+    //             },
+    //             model: [
+    //                 {
+    //                     id: "id",
+    //                     header: "ID",
+    //                     style: "{green-fg}"
+    //                 },
+    //                 {
+    //                     id: "port",
+    //                     header: "Address",
+    //                     style: "{bold}"
+    //                 },
+    //                 {
+    //                     id: "type",
+    //                     header: "Type"
+    //                 },
+    //                 {
+    //                     id: "status",
+    //                     header: "Status",
+    //                     style: (val) => {
+    //                         switch (val) {
+    //                             case "disabled": return "{red-bg}{white-bg}";
+    //                             case "enabled": return "{yellow-bg}{black-fg}";
+    //                             case "active": return "{green-bg}{black-fg}";
+    //                             default: return "";
+    //                         }
+    //                     },
+    //                     format: " %s ",
+    //                     align: "right"
+    //                 }
+    //             ]
+    //         }));
+    //     } catch (err) {
+    //         adone.log(err.message);
+    //     }
+    //     return 0;
+    // }
 }

@@ -1,4 +1,4 @@
-require("../..").default;
+require("../..");
 
 const {
     is

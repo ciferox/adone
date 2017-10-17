@@ -55,7 +55,7 @@ export default class Manager extends task.Manager {
     }
 
     getVersion() {
-        return this.config.version;
+        return this.config.raw.version;
     }
 
     async incVersion({ part = "minor", preid = undefined, loose = false } = {}) {
@@ -63,24 +63,24 @@ export default class Manager extends task.Manager {
         if (!VERSION_PARTS.includes(part)) {
             throw new adone.x.NotValid(`Not valid version part: ${part}`);
         }
-        const version = this.config.version;
+        // adone.log(this.config.raw.version);
+
+        const version = this.config.raw.version;
 
         if (!adone.semver.valid(version, loose)) {
             throw new adone.x.NotValid(`Version is not valid: ${version}`);
         }
 
-        this.config.version = adone.semver.inc(adone.semver.clean(version, loose), part, loose, preid);
+        this.config.raw.version = adone.semver.inc(adone.semver.clean(version, loose), part, loose, preid);
         
-        await this.config.save("adone.conf.json", null, {
-            space: "    "
-        });
+        await this.config.save();
 
         const updateConfig = async (name) => {
             if (await fs.exists(std.path.join(this.path, name))) {
                 const cfg = await adone.configuration.load(name, null, {
                     cwd: this.path
                 });
-                cfg.version = this.config.version;
+                cfg.raw.version = this.config.raw.version;
                 await cfg.save(name, null, {
                     space: "  "
                 });

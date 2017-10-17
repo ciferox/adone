@@ -11,7 +11,7 @@ const {
 } = adone;
 
 const {
-    const: { DISABLED, ENABLED, ACTIVE, STATUSES }
+    STATUSES
 } = omnitron;
 
 @Context({
@@ -107,27 +107,31 @@ export default class Omnitron extends application.Application {
     }
 
     @Public({
-        description: "Uptime of omnitron",
-        type: String
-    })
-    uptime() {
-        return Math.floor(process.uptime());
-    }
-
-    @Public({
-        description: "The environment under which the omnitron is running",
-        type: String
-    })
-    environment() {
-        return adone.config.environment;
-    }
-
-    @Public({
-        description: "Omnitron's environment variables",
+        description: "Returns information about omnitron",
         type: Object
     })
-    envs() {
-        return Object.assign({}, process.env);
+    async getInfo({ version = true, realm = true, uptime = true, envs = true } = {}) {
+        const result = {};
+        if (version) {
+            result.version = adone.package.version;
+        }
+
+        if (realm) {
+            result.realm = {
+                uid: (await adone.realm.getLocal()).id,
+                name: adone.config.realm
+            };
+        }
+
+        if (uptime) {
+            result.uptime = Math.floor(process.uptime());
+        }
+
+        if (envs) {
+            result.envs = Object.assign({}, process.env);
+        }
+
+        return result;
     }
 
     @Public({
@@ -152,14 +156,6 @@ export default class Omnitron extends application.Application {
                 delete process.env[key];
             }
         }
-    }
-
-    @Public({
-        description: "Version of omnitron",
-        type: String
-    })
-    version() {
-        return adone.package.version;
     }
 
     @Public({
