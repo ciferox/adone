@@ -69,12 +69,13 @@ export default class ProjectConfiguration extends adone.configuration.FileConfig
         });
     }
 
-    getProjectEntries({ path, type = "rel" } = {}) {
+    getProjectEntries({ path = null, type = "rel" } = {}) {
         let result = this[ENTRIES].slice();
         const isRel = type === "rel";
 
         for (const [key, subConfig] of this[SUB_CONFIGS].entries()) {
             const subEntries = subConfig[type].getProjectEntries({
+                path,
                 type
             });
             for (const entry of subEntries) {

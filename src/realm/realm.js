@@ -25,9 +25,18 @@ export default class Realm {
         // Obtain realm id
         this.id = adone.math.hash("sha256", `${await util.machineId(true)}${adone.config.realm}`);
 
-        await this._loadConfig();
+        // Load config
+        const configPath = std.path.join(adone.config.configsPath, CONFIG_NAME);
+        if (await fs.exists(configPath)) {
+            this.config = await configuration.load(CONFIG_NAME, null, {
+                cwd: adone.config.configsPath
+            });
+        } else {
+            this.config = new configuration.FileConfiguration();
+        }
 
         // Create lockfile
+        await fs.mkdirp(adone.config.runtimePath);
         await adone.fs.writeFile(LOCK_FILE, "");
     }
 
@@ -94,17 +103,6 @@ export default class Realm {
 
     //     }
     // }
-
-    async _loadConfig() {
-        const configPath = std.path.join(adone.config.configsPath, CONFIG_NAME);
-        if (await fs.exists(configPath)) {
-            this.config = await configuration.load(CONFIG_NAME, null, {
-                cwd: adone.config.configsPath
-            });
-        } else {
-            this.config = new configuration.FileConfiguration();
-        }
-    }
 
     _lock() {
         return locking.create(LOCK_FILE);

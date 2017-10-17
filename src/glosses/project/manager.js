@@ -72,7 +72,7 @@ export default class Manager extends task.Manager {
         }
 
         this.config.raw.version = adone.semver.inc(adone.semver.clean(version, loose), part, loose, preid);
-        
+
         await this.config.save();
 
         const updateConfig = async (name) => {
@@ -119,13 +119,13 @@ export default class Manager extends task.Manager {
         this._loaded = true;
     }
 
-    getProjectEntries(path) {
-        return this.config.getProjectEntries(path);
+    getProjectEntries(options) {
+        return this.config.getProjectEntries(options);
     }
 
     async clean(path) {
         this._checkLoaded();
-        const entries = this.config.getProjectEntries(path);
+        const entries = this.config.getProjectEntries({ path });
 
         const results = [];
         for (const entry of entries) {
@@ -138,7 +138,7 @@ export default class Manager extends task.Manager {
 
     async build(path) {
         this._checkLoaded();
-        const entries = this.config.getProjectEntries(path);
+        const entries = this.config.getProjectEntries({ path });
 
         const promises = [];
         for (const entry of entries) {
@@ -160,7 +160,7 @@ export default class Manager extends task.Manager {
 
     async watch(path) {
         this._checkLoaded();
-        const entries = this.config.getProjectEntries(path);
+        const entries = this.config.getProjectEntries({ path });
 
         const promises = [];
         for (const entry of entries) {

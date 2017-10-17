@@ -565,7 +565,6 @@ export const exec = (cmd, args, opts) => {
         }
 
         if (err || code !== 0 || !is.null(signal)) {
-            adone.log(signal);
             if (!err) {
                 let output = "";
 

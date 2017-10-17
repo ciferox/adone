@@ -52,7 +52,7 @@ export default class Package {
                     adoneConf = await this._installFromLocal();
                 }
             }
-            this.bar.setSchema(` :spinner {green-fg}${this.name} v${adoneConf.raw.version}{/green-fg} successfully installed`);
+            this.bar.setSchema(` :spinner {green-fg}{bold}${this.name}{/bold} v${adoneConf.raw.version}{/green-fg} successfully installed`);
             this.bar.complete(true);
         } catch (err) {
             if (!is.null(this.bar)) {
@@ -98,7 +98,7 @@ export default class Package {
 
             await fs.rm(this.destPath);
 
-            this.bar.setSchema(` :spinner {green-fg}${this.fullName}{/green-fg} successfully uninstalled`);
+            this.bar.setSchema(` :spinner {green-fg}{bold}${this.fullName}{/bold}{/green-fg} successfully uninstalled`);
             this.bar.complete(true);
         } catch (err) {
             if (!is.null(this.bar)) {
