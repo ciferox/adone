@@ -42,6 +42,25 @@ const SYMLINK_LOOP = Symbol();
 //     gid: () => is.windows ? -1 : adone
 // });
 
+/**
+ * Splits complex keys like "a/b/c/d" into nested objects
+ */
+const expandPaths = (obj) => {
+    const result = {};
+    for (const [key, value] of Object.entries(obj)) {
+        let dest = result; // where to add the key
+        const parts = key.split("/");
+        for (let i = 0; i < parts.length - 1; ++i) {
+            if (!(parts[i] in dest)) {
+                dest[parts[i]] = {};
+            }
+            dest = dest[parts[i]];
+        }
+        dest[parts[parts.length - 1]] = value;
+    }
+    return result;
+};
+
 const stringToFlags = (flags) => {
     if (is.number(flags)) {
         return flags;
@@ -1264,6 +1283,7 @@ export default class MemoryEngine extends AbstractEngine {
         const p = new Path(sep, { root: sep });
         const visit = (path, obj, options) => {
             const directory = this.vfs.getDirectory(path, options);
+            obj = expandPaths(obj);
 
             for (const [key, value] of util.entries(obj)) {
                 const parts = util.braces.expand(key);

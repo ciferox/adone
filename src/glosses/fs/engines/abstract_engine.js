@@ -283,12 +283,43 @@ const LEVEL = Symbol("LEVEL");
 const PARENT = Symbol("PARENT");
 
 const methodsToMock = [
-    "readFile",
+    "open",
+    "close",
+    "read",
+    "write",
+    "ftruncate",
+    "truncate",
+    "utimes",
+    "unlink",
+    "rmdir",
+    "mkdir",
+    "access",
+    "chmod",
+    "fchmod",
+    "chown",
+    "fchown",
+    "copyFile",
+    "rename",
+    "symlink",
+    "link",
+    "fstat",
+    "fsync",
+    "fdatasync",
     "stat",
     "lstat",
     "readdir",
-    "realpath"
-];
+    "realpath",
+    "readlink",
+    "createReadStream",
+    "createWriteStream",
+    "writeFile",
+    "appendFile",
+    "readFile",
+    "mkdtemp",
+    "watchFile",
+    "unwatchFile",
+    "watch"
+ ];
 
 const syscallMap = {
     lstat: "lstat",
@@ -584,7 +615,63 @@ export class AbstractEngine {
         this._fd = 100; // generally, no matter which initial value we use, this is a fd counter for internal mappings
         this._fdMap = new collection.MapCache();
         this._fileWatchers = new collection.MapCache();
+        this._initialized = false;
+        this._initializing = false;
+        this._uninitializing = false;
+        this._uninitialized = false;
         this.mount(this, "/");
+    }
+
+    /**
+     * Starts the initialization process of the mounted engines and itself
+     */
+    async initialize() {
+        if (this._initialized || this._initializing) {
+            return;
+        }
+        this._initializing = true;
+
+        const visit = async (obj) => {
+            for (const engine of Object.values(obj)) {
+                await engine.initialize();
+            }
+        };
+        await visit(this.structure);
+
+        await this._initialize();
+
+        this._initializing = false;
+        this._initialized = true;
+    }
+
+    _initialize() {
+        // by default does nothing
+    }
+
+    /**
+     * Starts the uninitialization process of the mounted engines and itself
+     */
+    async uninitialize() {
+        if (this._uninitialized || this._uninitializing) {
+            return;
+        }
+        this._uninitializing = true;
+
+        const visit = async (obj) => {
+            for (const engine of Object.values(obj)) {
+                await engine.uninitialize();
+            }
+        };
+        await visit(this.structure);
+
+        await this._uninitialize();
+
+        this._uninitializing = false;
+        this._uninitialized = true;
+    }
+
+    _uninitialize() {
+        // by default does nothing
     }
 
     createError(code, path, syscall, secondPath) {
