@@ -12,7 +12,7 @@ adone.application.run({
         }
         for ( ; ; ) {
             try {
-                await this.engine.unmountFromFilesystem();
+                await this.engine.uninitialize();
                 break;
             } catch (err) {
                 adone.error("could not unmount");
@@ -25,15 +25,13 @@ adone.application.run({
         this.engine = new engine.FuseEngine("mnt");
 
         this.engine.add((ctx) => ({
-            "{a..z}": {
-                "{1..5}": {
-                    a: ctx.file("hello")
-                }
+            "{a..z}/{1..5}": {
+                a: ctx.file("hello")
             },
             0: ctx.symlink("a")
         }));
 
-        await this.engine.mountToFilesystem((engine) => {
+        await this.engine.decorate((engine) => {
             for (const [key, orig] of Object.entries(engine)) {
                 engine[key] = function (...args) {
                     console.log(key, args.slice(0, -1));
@@ -42,5 +40,7 @@ adone.application.run({
             }
             return engine;
         });
+
+        await this.engine.initialize();
     }
 });

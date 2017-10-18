@@ -674,19 +674,22 @@ class VFS {
         throwOnEloop = true,
         ensureParent = false,
         mode = 0o775,
-        secondPath
+        secondPath,
+        superuser = false
     }) {
         let parent = root;
         const parts = path.relativeParts;
         let filename = "";
         for (let i = 0; i < parts.length; ++i) {
             if (root instanceof Directory) {
-                this.assertPermissions(root, X_OK, path, syscall, secondPath);
+                this.assertPermissions(root, X_OK, path, syscall, secondPath, superuser);
             }
             const part = parts[i];
-            filename = part;
             if (part === "." || part === "") {
                 if (root instanceof Directory) {
+                    if (part) {
+                        filename = part;
+                    }
                     continue;
                 }
                 this.throw("ENOTDIR", path, syscall, secondPath);
@@ -698,21 +701,22 @@ class VFS {
                 }
                 this.throw("ENOTDIR", path, syscall, secondPath);
             }
+            filename = part;
             if (!(root instanceof Directory)) {
                 if (i === parts.length - 1) {
                     return [null, parent, null, unwinds];
                 }
-                this.throw("ENOENT", path, syscall, secondPath);
+                this.throw("ENOTDIR", path, syscall, secondPath);
             }
             parent = root;
             if (!root.exists(part)) {
                 if (i === parts.length - 1) {
-                    return [null, parent, unwinds];
+                    return [null, parent, null, unwinds];
                 }
 
                 if (ensureParent) {
                     // check if we are allowed to create files
-                    this.assertPermissions(root, W_OK, path, syscall, secondPath);
+                    this.assertPermissions(root, W_OK, path, syscall, secondPath, superuser);
                     root = root.addDirectory(part, { mode });
                     continue;
                 }
@@ -720,7 +724,9 @@ class VFS {
             } else {
                 root = root.get(part);
                 if (root instanceof Directory) {
-                    this.assertPermissions(root, X_OK, path, syscall, secondPath);
+                    this.assertPermissions(root, X_OK, path, syscall, secondPath, superuser);
+                } else if (i !== parts.length - 1 && !(root instanceof Symlink)) {
+                    this.throw("ENOTDIR", path, syscall, secondPath);
                 }
             }
             if (root instanceof Symlink && (handleLeafSymlink || i !== parts.length - 1)) {
@@ -731,15 +737,19 @@ class VFS {
                     return [SYMLINK_LOOP, parent, null, unwinds];
                 }
 
-                [root, parent, filename, unwinds] = this.getNode({
-                    path: root.targetPath,
-                    syscall,
-                    handleLeafSymlink: true,
-                    root: parent,
-                    unwinds: unwinds + 1,
-                    throwOnEloop: false,
-                    secondPath
-                });
+                try {
+                    [root, parent, filename, unwinds] = this.getNode({
+                        path: root.targetPath,
+                        syscall,
+                        handleLeafSymlink: true,
+                        root: parent,
+                        unwinds: unwinds + 1,
+                        throwOnEloop: false,
+                        secondPath
+                    });
+                } catch (err) {
+                    this.throw(err.code, path, syscall, secondPath);
+                }
                 if (root === SYMLINK_LOOP) {
                     if (throwOnEloop) {
                         this.throw("ELOOP", path, syscall, secondPath);
@@ -747,8 +757,11 @@ class VFS {
                         return [SYMLINK_LOOP, parent, null, unwinds];
                     }
                 }
-                if (!root) {
-                    return [null, parent, filename, unwinds];
+                if (is.null(root)) {
+                    this.throw("ENOENT", path, syscall, secondPath);
+                }
+                if (i !== parts.length - 1 && !(root instanceof Directory)) {
+                    this.throw("ENOTDIR", path, syscall, secondPath);
                 }
             }
         }
@@ -758,8 +771,8 @@ class VFS {
     /**
      * @returns {Directory}
      */
-    getDirectory(path, options, syscall) {
-        const [node, parent] = this.getNode({ path, syscall, ensureParent: true });
+    getDirectory(path, options, syscall, superuser = false) {
+        const [node, parent] = this.getNode({ path, syscall, ensureParent: true, superuser });
         if (node) {
             if (!(node instanceof Directory)) {
                 this.throw("ENOTDIR", path, syscall);
@@ -786,7 +799,11 @@ class VFS {
         this.root = new Directory(this, undefined, new Path(sep, { root: sep }));
     }
 
-    assertPermissions(node, mode, path, syscall, secondPath) {
+    assertPermissions(node, mode, path, syscall, secondPath, superuser) {
+        if (superuser) {
+            return;
+        }
+
         let set;
 
         if (node.uid === process.getuid()) {
@@ -1282,7 +1299,7 @@ export default class MemoryEngine extends AbstractEngine {
         const structure = callback.call(context, context);
         const p = new Path(sep, { root: sep });
         const visit = (path, obj, options) => {
-            const directory = this.vfs.getDirectory(path, options);
+            const directory = this.vfs.getDirectory(path, options, undefined, true);
             obj = expandPaths(obj);
 
             for (const [key, value] of util.entries(obj)) {

@@ -1746,6 +1746,15 @@ describe("fs", "engine", "MemoryEngine", () => {
                 expect(target).to.be.deep.equal("a/b/c");
             });
 
+            it("should not throw if the symlink is dangling", async () => {
+                engine.add((ctx) => ({
+                    a: ctx.symlink("../a")
+                }));
+
+                const target = await engine.readlink("/a");
+                expect(target).to.be.equal("../a");
+            });
+
             it("should throw EINVAL if the file is not a symbolic link", async () => {
                 engine.add((ctx) => ({
                     a: ctx.file("hello"),
@@ -2657,6 +2666,314 @@ describe("fs", "engine", "MemoryEngine", () => {
                 expect(curr.size).to.be.equal(0);
                 expect(prev.ino).not.to.be.equal(0);
                 expect(curr.ino).to.be.equal(0);
+            });
+        });
+    });
+
+    describe("path resolution", () => {
+        let engine;
+
+        before(() => {
+            engine = new MemoryEngine();
+        });
+
+        afterEach(() => {
+            engine.clean();
+        });
+
+
+        it("should throw ENOENT if some component does not exist", async () => {
+            engine.add(() => ({
+                "a/b/c": {
+
+                }
+            }));
+
+            const err = await assert.throws(async () => {
+                await engine.lstat("/a/b/c/d/e/f");
+            }, "ENOENT: no such file or directory, lstat '/a/b/c/d/e/f'");
+            expect(err.code).to.be.equal("ENOENT");
+        });
+
+        it("should work if all components exist", async () => {
+            engine.add((ctx) => ({
+                "a/b/c": {
+                    d: ctx.file("hello")
+                }
+            }));
+
+            const stat = await engine.lstat("/a/b/c/d");
+            expect(stat.size).to.be.equal(5);
+        });
+
+        it("should throw ENOTDIR if some component if not a directory", async () => {
+            engine.add((ctx) => ({
+                "a/b": {
+                    c: ctx.file("hello")
+                }
+            }));
+
+            const err = await assert.throws(async () => {
+                await engine.lstat("/a/b/c/d");
+            }, "ENOTDIR: not a directory, lstat '/a/b/c/d'");
+            expect(err.code).to.be.equal("ENOTDIR");
+        });
+
+        it("should not throw if all components are directories", async () => {
+            engine.add(() => ({
+                "a/b/c/d": {
+
+                }
+            }));
+
+            const stat = await engine.lstat("/a/b/c/d");
+            expect(stat.isDirectory()).to.be.true;
+        });
+
+        it("should throw EACCES if some component has no search permissions", async () => {
+            engine.add((ctx) => ({
+                a: {
+                    b: {
+                        c: [{
+                            d: ctx.file("hello")
+                        }, { mode: 0o666 }]
+                    }
+                }
+            }));
+
+            const err = await assert.throws(async () => {
+                await engine.lstat("/a/b/c/d");
+            }, "EACCES: permission denied, lstat '/a/b/c/d'");
+            expect(err.code).to.be.equal("EACCES");
+        });
+
+        it("should handle .. as parent directory", async () => {
+            engine.add((ctx) => ({
+                a: {
+                    b: {
+                        c: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const stat = await engine.stat("/a/b/../b/../b/../../a/b/c");
+            expect(stat.size).to.be.equal(5);
+        });
+
+        it("should throw ENOTDIR if the part before .. is not a directory", async () => {
+            engine.add((ctx) => ({
+                a: {
+                    b: {
+                        c: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const err = await assert.throws(async () => {
+                await engine.lstat("/a/b/c/../c");
+            }, "ENOTDIR: not a directory, lstat '/a/b/c/../c'");
+            expect(err.code).to.be.equal("ENOTDIR");
+        });
+
+        it("should handle . as current directory", async () => {
+            engine.add((ctx) => ({
+                a: {
+                    b: {
+                        c: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const stat = await engine.stat("/a/b/./.././b/././././../b/./././c");
+            expect(stat.size).to.be.equal(5);
+        });
+
+        it("should throw ENOTDIR if the part before . is not a directory", async () => {
+            engine.add((ctx) => ({
+                a: {
+                    b: {
+                        c: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const err = await assert.throws(async () => {
+                await engine.lstat("/a/b/c/./c");
+            }, "ENOTDIR: not a directory, lstat '/a/b/c/./c'");
+            expect(err.code).to.be.equal("ENOTDIR");
+        });
+
+        it("should resolve paths with the trailing slash as an existing directory", async () => {
+            engine.add((ctx) => ({
+                a: {
+                    b: {
+                        c: ctx.file("hello")
+                    }
+                }
+            }));
+
+            expect(await engine.realpath("/a/b/")).to.be.equal("/a/b");
+        });
+
+        it("should throw ENOTDIR if the path ends with / and it is not a directory", async () => {
+            engine.add((ctx) => ({
+                a: {
+                    b: {
+                        c: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const err = await assert.throws(async () => {
+                await engine.lstat("/a/b/c/");
+            }, "ENOTDIR: not a directory, lstat '/a/b/c/'");
+            expect(err.code).to.be.equal("ENOTDIR");
+        });
+
+        it("should ignore consequent component slashes", async () => {
+            engine.add((ctx) => ({
+                a: {
+                    b: {
+                        c: ctx.file("hello")
+                    }
+                }
+            }));
+
+            const stat = await engine.lstat("/a/b//////////../////////////b/./././../b/c");
+            expect(stat.size).to.be.equal(5);
+        });
+
+        it("should ignore consequent trailing slashes", async () => {
+            engine.add((ctx) => ({
+                a: {
+                    b: {
+                        c: ctx.file("hello")
+                    }
+                }
+            }));
+
+            expect(await engine.realpath("/a/b//////////////////////////../b/////////")).to.be.equal("/a/b");
+        });
+
+        it("should not walk down past the root", async () => {
+            engine.add((ctx) => ({
+                a: {
+                    b: ctx.file("hello")
+                }
+            }));
+
+            expect(await engine.readFile("/a/../../../../../a/b", "utf8")).to.be.equal("hello");
+        });
+
+        describe("symlinks", () => {
+            it("should follow symlinks", async () => {
+                engine.add((ctx) => ({
+                    a: {
+                        b: {
+                            c: ctx.file("hello")
+                        }
+                    },
+                    b: {
+                        a: ctx.symlink("../a")
+                    }
+                }));
+
+                const stat = await engine.lstat("/b/a/b/c");
+                expect(stat.size).to.be.equal(5);
+            });
+
+            it("should not throw if the final part is a dangling symlink and resolving is not requested", async () => {
+                engine.add((ctx) => ({
+                    a: ctx.symlink("b")
+                }));
+
+                expect(await engine.readlink("/a")).to.be.equal("b");
+            });
+
+            it("should throw ENOENT the symlink is dangling", async () => {
+                engine.add((ctx) => ({
+                    b: {
+                        a: ctx.symlink("../a")
+                    }
+                }));
+
+                const err = await assert.throws(async () => {
+                    await engine.lstat("/b/a/c");
+                }, "ENOENT: no such file or directory, lstat '/b/a/c'");
+                expect(err.code).to.be.equal("ENOENT");
+            });
+
+            it("should throw ENOENT is the part of symlink is not a directory", async () => {
+                engine.add((ctx) => ({
+                    a: {
+                        b: ctx.file("hello")
+                    },
+                    b: {
+                        a: ctx.symlink("../a/b/c")
+                    }
+                }));
+
+                const err = await assert.throws(async () => {
+                    await engine.lstat("/b/a/c");
+                }, "ENOTDIR: not a directory, lstat '/b/a/c'");
+                expect(err.code).to.be.equal("ENOTDIR");
+            });
+
+            it("should throw EACCES if the part of symbolic link has no search permissions", async () => {
+                engine.add((ctx) => ({
+                    a: {
+                        b: [{
+                            c: ctx.file("hello"),
+                            d: {
+                                e: ctx.file("hello")
+                            }
+                        }, { mode: 0o666 }]
+                    },
+                    b: {
+                        a: ctx.symlink("../a/b"),
+                        b: ctx.symlink("../a/b/d")
+                    }
+                }));
+
+                {
+                    const err = await assert.throws(async () => {
+                        await engine.lstat("/b/a/c");
+                    }, "EACCES: permission denied, lstat '/b/a/c'");
+                    expect(err.code).to.be.equal("EACCES");
+                }
+                {
+                    const err = await assert.throws(async () => {
+                        await engine.lstat("/b/b/e");
+                    }, "EACCES: permission denied, lstat '/b/b/e'");
+                    expect(err.code).to.be.equal("EACCES");
+                }
+            });
+
+            it("should throw ENOTDIR if the component symlink resolves as not a directory", async () => {
+                engine.add((ctx) => ({
+                    a: ctx.file("hello"),
+                    b: {
+                        a: ctx.symlink("../a")
+                    }
+                }));
+
+                const err = await assert.throws(async () => {
+                    await engine.lstat("/b/a/a");
+                }, "ENOTDIR: not a directory, lstat '/b/a/a'");
+                expect(err.code).to.be.equal("ENOTDIR");
+            });
+
+            it("should correctly handle .. after symlink resolve", async () => {
+                engine.add((ctx) => ({
+                    a: {
+                        b: ctx.file("hello")
+                    },
+                    b: {
+                        a: ctx.symlink("../a")
+                    }
+                }));
+
+                expect(await engine.realpath("/b/a/../a/b")).to.be.equal("/a/b");
             });
         });
     });

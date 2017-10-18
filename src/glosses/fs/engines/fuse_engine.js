@@ -52,23 +52,19 @@ export default class FuseEngine extends MemoryEngine {
     constructor(mntPath) {
         super();
         this.mntPath = mntPath;
-        this.mounted = false;
+        this._decotrator = identity;
     }
 
-    async mountToFilesystem(decorator = identity) {
-        if (this.mounted) {
-            return;
-        }
+    decorate(decorator) {
+        this._decotrator = decorator;
+    }
+
+    async _initialize() {
         const forwarder = createForwarder(this);
-        await fuse.mount(this.mntPath, decorator(forwarder) || forwarder);
-        this.mounted = true;
+        await fuse.mount(this.mntPath, this._decotrator(forwarder) || forwarder);
     }
 
-    async unmountFromFilesystem() {
-        if (!this.mounted) {
-            return;
-        }
+    async _uninitialize() {
         await fuse.unmount(this.mntPath);
-        this.mounted = false;
     }
 }

@@ -632,8 +632,12 @@ export class AbstractEngine {
         this._initializing = true;
 
         const visit = async (obj) => {
-            for (const engine of Object.values(obj)) {
-                await engine.initialize();
+            for (const v of Object.values(obj)) {
+                if (v instanceof AbstractEngine) {
+                    await v.initialize();
+                } else {
+                    await visit(v);
+                }
             }
         };
         await visit(this.structure);
@@ -658,8 +662,12 @@ export class AbstractEngine {
         this._uninitializing = true;
 
         const visit = async (obj) => {
-            for (const engine of Object.values(obj)) {
-                await engine.uninitialize();
+            for (const v of Object.values(obj)) {
+                if (v instanceof AbstractEngine) {
+                    await v.initialize();
+                } else {
+                    await visit(v);
+                }
             }
         };
         await visit(this.structure);
