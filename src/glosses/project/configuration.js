@@ -69,6 +69,13 @@ export default class ProjectConfiguration extends adone.configuration.FileConfig
         });
     }
 
+    getProjectStartupPath() {
+        if (is.string(this.raw.main)) {
+            return this.raw.main;
+        }
+        return "index.js";
+    }
+
     getProjectEntries({ path = null, type = "rel" } = {}) {
         let result = this[ENTRIES].slice();
         const isRel = type === "rel";

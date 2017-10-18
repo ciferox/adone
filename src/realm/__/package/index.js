@@ -31,6 +31,7 @@ export default class Package {
         this.name = name;
         this.build = build;
         this.symlink = symlink;
+        this.rollbackData = null;
     }
 
     async install() {
@@ -39,6 +40,8 @@ export default class Package {
         });
 
         let adoneConf;
+
+        this.rollbackData = {};
 
         try {
             if (std.path.isAbsolute(this.name)) {
@@ -120,13 +123,33 @@ export default class Package {
             const types = Object.keys(handlers);
 
             for (const type of types) {
-                const handler = this._getHandlerClass(type);
+                const handler = this._createHandlerClass(type);
                 result[handler.name] = await handler.list(); // eslint-disable-line
             }
             return result;
         }
 
-        return this._getHandlerClass(type).list();
+        return this._createHandlerClass(type).list();
+    }
+
+    async rollback(err) {
+        if (is.plainObject(this.rollbackData)) {
+            if (is.array(this.rollbackData.subProjects)) {                
+                const cliConfig = await adone.realm.cli.getConfig();
+                for (const subInfo of this.rollbackData.subProjects) {
+                    cliConfig.deleteCommand(subInfo.adoneConf.raw.name);
+                }
+
+                await cliConfig.save();
+            }
+
+            const adoneConf = this.rollbackData.adoneConf;
+            if (is.configuration(adoneConf)) {    
+                const name = is.string(adoneConf.raw.type) ? `${adoneConf.raw.type}.${adoneConf.raw.name}` : adoneConf.raw.name;
+                const destPath = std.path.join(PACKAGES_PATH, name);
+                return fs.rm(destPath);
+            }
+        }
     }
 
     async _installFromLocal() {
@@ -137,6 +160,12 @@ export default class Package {
         const adoneConf = await adone.project.Configuration.load({
             cwd: this.path
         });
+
+        this.rollbackData.adoneConf = adoneConf;
+
+        if (!is.string(adoneConf.raw.name)) {
+            throw new adone.x.NotValid("Package name is not specified");
+        }
 
         this.name = is.string(adoneConf.raw.type) ? `${adoneConf.raw.type}.${adoneConf.raw.name}` : adoneConf.raw.name;
         this.destPath = std.path.join(PACKAGES_PATH, this.name);
@@ -159,10 +188,18 @@ export default class Package {
                 throw new adone.x.NotValid("Invalid or useless package");
             }
 
+            this.rollbackData.subProjects = [];
+
             for (const cfg of subConfigs) {
                 const destPath = std.path.join(this.destPath, cfg.rel.getRelativePath());
                 // Update adone.json config with all assigned properties from project's main adone.conf.
                 await cfg.origFull.save(destPath); // eslint-disable-line
+
+                this.rollbackData.subProjects.push({
+                    adoneConf: cfg.origFull,
+                    destPath
+                });
+
                 await this._registerPackage(cfg.origFull, destPath); // eslint-disable-line
             }
         }
@@ -171,20 +208,25 @@ export default class Package {
     }
 
     _registerPackage(adoneConf, destPath) {
-        return this._getHandlerClass(adoneConf.raw.type).register(adoneConf, destPath);
+        return this._createHandlerClass(adoneConf.raw.type).register(adoneConf, destPath);
     }
 
     _unregisterPackage(adoneConf) {
-        return this._getHandlerClass(adoneConf.raw.type).unregister(adoneConf);
+        return this._createHandlerClass(adoneConf.raw.type).unregister(adoneConf);
     }
 
-    _getHandlerClass(type) {
+    _getHandler(type) {
         const HandlerClass = Handler[type];
-
+        
         if (!is.class(HandlerClass)) {
-            throw new adone.x.NotValid(`Not valid handler for: ${type}`);
+            throw new adone.x.Unknown(`Unknown package type: ${type}`);
         }
 
+        return HandlerClass;
+    }
+
+    _createHandlerClass(type) {
+        const HandlerClass = this._getHandler(type);
         return new HandlerClass(this);
     }
 

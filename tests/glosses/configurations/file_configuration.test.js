@@ -45,7 +45,7 @@ describe("configuration", "FileConfiguration", () => {
         assert.isOk(is.date(conf.raw.common.nowTm));
     });
 
-    it("should assign config on load several times", async () => {
+    it.skip("should assign config on load several times", async () => {
         await conf.load("a.js", true);
         assert.isOk(is.propertyDefined(conf.raw, "a"));
         assert.equal(conf.raw.a.val, "value1");

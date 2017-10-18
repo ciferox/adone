@@ -1,0 +1,14 @@
+{
+    "name": "sub2",
+    "type": "cli.command",
+    "main": "lib",
+    "structure": {
+        "src": {
+            "$task": "transpile",
+            "$src": "src/**/*.js",
+            "$dst": "lib"
+        }
+    },
+    "description": "multiple commands",
+    "version": "1.0.1"
+}

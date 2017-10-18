@@ -125,9 +125,10 @@ export default class FileConfiguration extends adone.configuration.Configuration
             }
 
             if (correctName !== "") {
-                this.merge(correctName, confObj);
+                this.set(correctName, confObj);
             } else {
-                this.merge(confObj);
+                this.clear();
+                this.assign(confObj);
             }
         } else {
             throw new x.NotExists(`${conf.path} not exists`);

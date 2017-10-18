@@ -12,6 +12,10 @@ export default class CliCommandHandler extends __.AbstractHandler {
 
     async register(adoneConf, destPath) {
         let indexPath;
+
+        // Check startup file
+        await this._checkStartupFile(adoneConf, destPath);
+
         if (is.string(adoneConf.raw.main)) {
             indexPath = std.path.join(destPath, adoneConf.raw.main);
         } else {
@@ -66,5 +70,24 @@ export default class CliCommandHandler extends __.AbstractHandler {
             result.push(command.name);
         }
         return result;
+    }
+
+    _checkStartupFile(adoneConf, destPath) {
+        const modExports = require(std.path.join(destPath, adoneConf.getProjectStartupPath()));
+
+        if (!modExports.__esModule) {
+            throw new adone.x.NotValid("Startup module should be es6-module");
+        }
+
+        const StartupClass = modExports.default;
+
+        if (!is.class(StartupClass)) {
+            throw new adone.x.NotValid("Startup script is not valid");
+        }
+
+        const instance = new StartupClass();
+        if (!is.subsystem(instance)) {
+            throw new adone.x.NotValid("Startup script should export class inherited from the class subsystem");
+        }
     }
 }

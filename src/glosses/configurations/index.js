@@ -35,6 +35,10 @@ export class Configuration {
         return adone.vendor.lodash.unset(this.raw, key);
     }
 
+    clear() {
+        this.raw = {};
+    }
+
     assign(...args) {
         if (args.length < 1) {
             return false;

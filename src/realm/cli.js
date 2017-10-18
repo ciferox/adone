@@ -22,6 +22,21 @@ class CliConfiguration extends adone.configuration.FileConfiguration {
         };
     }
 
+    hasCommand(name) {
+        return is.array(this.raw.commands) && this.raw.commands.findIndex((x) => x.name === name) >= 0;
+    }
+
+    deleteCommand(name) {
+        const index = this.raw.commands.findIndex((x) => x.name === name);
+        if (index >= 0) {
+            this.raw.commands.splice(index, 1);
+        }
+    }
+
+    load() {
+        return super.load(configName);
+    }
+
     save() {
         return super.save(configName, null, {
             space: "    "

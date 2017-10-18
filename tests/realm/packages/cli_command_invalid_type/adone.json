@@ -1,0 +1,15 @@
+{
+    "name": "invalid_type",
+    "version": "1.0.0",
+    "description": "test command",
+    "author": "noname",
+    "main": "lib",
+    "type": "cli.commands",
+    "structure": {
+        "src": {
+            "$task": "transpile",
+            "$src": "src/**/*",
+            "$dst": "lib"
+        }
+    }
+}

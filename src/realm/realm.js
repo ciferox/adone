@@ -43,12 +43,17 @@ export default class Realm {
     }
 
     async install(options) {
+        let pkg = null;
         try {
             if (!is.plainObject(options) || !is.string(options.name)) {
                 throw new adone.x.InvalidArgument("To specify package use object and property 'name'");
             }
             await this.lock();
-            await this._package(options).install();
+            pkg = this._package(options);
+            await pkg.install();
+        } catch (err) {
+            !is.null(pkg) && await pkg.rollback(err);
+            throw err;
         } finally {
             await this.unlock();
         }
