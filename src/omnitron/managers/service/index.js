@@ -23,8 +23,8 @@ class ServiceMaintainer {
 
     async start() {
         const serviceProcess = exec("node", [SERVICE_APP_PATH], {
-            stdout: std.fs.openSync(adone.config.omnitron.logFilePath, "a"),
-            stderr: std.fs.openSync(adone.config.omnitron.errorLogFilePath, "a"),
+            stdout: std.fs.openSync(adone.realm.config.omnitron.logFilePath, "a"),
+            stderr: std.fs.openSync(adone.realm.config.omnitron.errorLogFilePath, "a"),
             env: {
                 OMNITRON_PORT: this.port,
                 OMNITRON_SERVICE_GROUP: this.group,
@@ -66,7 +66,7 @@ export default class ServiceManager extends application.Subsystem {
         this.services = null;
         this.maintainers = new Map();
         this.servicesDb = new vault.Vault({
-            location: std.path.join(adone.config.varPath, "omnitron", "services.db")
+            location: std.path.join(adone.realm.config.varPath, "omnitron", "services.db")
         });
 
         await fs.mkdirp(std.path.dirname(this.servicesDb.options.location));
@@ -97,7 +97,7 @@ export default class ServiceManager extends application.Subsystem {
         const existingNames = [];
         const services = [];
 
-        const servicesPath = adone.config.omnitron.servicesPath;
+        const servicesPath = adone.realm.config.omnitron.servicesPath;
 
         // Normalize statuses
         if (await fs.exists(servicesPath)) {

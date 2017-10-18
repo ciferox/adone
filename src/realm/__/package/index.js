@@ -7,7 +7,7 @@ const {
     util
 } = adone;
 
-const PACKAGES_PATH = adone.config.packagesPath;
+const PACKAGES_PATH = adone.realm.config.packagesPath;
 
 const DEST_OPTIONS = {
     produceFiles: true,
@@ -72,7 +72,7 @@ export default class Package {
         });
 
         try {
-            this.destPath = std.path.join(adone.config.packagesPath, this.name);
+            this.destPath = std.path.join(adone.realm.config.packagesPath, this.name);
 
             if (!(await fs.exists(this.destPath))) {
                 throw new adone.x.NotExists(`Package ${this.name} is not exists`);

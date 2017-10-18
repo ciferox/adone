@@ -20,7 +20,7 @@ const {
 export default class Omnitron extends application.Application {
     async configure() {
         // Force create home and runtime directories
-        await fs.mkdirp(adone.config.runtimePath);
+        await fs.mkdirp(adone.realm.config.runtimePath);
 
         // Load omnitron configuration
         this.config = await omnitron.Configuration.load();
@@ -67,7 +67,7 @@ export default class Omnitron extends application.Application {
 
     async createPidFile() {
         try {
-            await fs.writeFile(adone.config.omnitron.pidFilePath, process.pid);
+            await fs.writeFile(adone.realm.config.omnitron.pidFilePath, process.pid);
         } catch (err) {
             adone.error(err.message);
         }
@@ -75,7 +75,7 @@ export default class Omnitron extends application.Application {
 
     async deletePidFile() {
         try {
-            await fs.rm(adone.config.omnitron.pidFilePath);
+            await fs.rm(adone.realm.config.omnitron.pidFilePath);
         } catch (err) {
             adone.error(err.message);
         }
@@ -119,7 +119,7 @@ export default class Omnitron extends application.Application {
         if (realm) {
             result.realm = {
                 uid: (await adone.realm.getInstance()).id,
-                name: adone.config.realm
+                name: adone.realm.config.realm
             };
         }
 

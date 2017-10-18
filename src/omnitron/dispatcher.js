@@ -114,7 +114,7 @@ export default class Dispatcher {
     spawn(spiritualWay = true) {
         if (spiritualWay) {
             return new Promise(async (resolve, reject) => {
-                const omnitronConfig = adone.config.omnitron;
+                const omnitronConfig = adone.realm.config.omnitron;
                 await adone.fs.mkdirp(std.path.dirname(omnitronConfig.logFilePath));
                 this.descriptors.stdout = std.fs.openSync(omnitronConfig.logFilePath, "a");
                 this.descriptors.stderr = std.fs.openSync(omnitronConfig.errorLogFilePath, "a");
@@ -146,9 +146,9 @@ export default class Dispatcher {
         const isOnline = await this.isOnline();
         if (isOnline) {
             // Can be used in test environment.
-            if (is.string(adone.config.omnitron.pidFilePath)) {
+            if (is.string(adone.realm.config.omnitron.pidFilePath)) {
                 try {
-                    const pid = parseInt(std.fs.readFileSync(adone.config.omnitron.pidFilePath).toString());
+                    const pid = parseInt(std.fs.readFileSync(adone.realm.config.omnitron.pidFilePath).toString());
                     if (is.windows) {
                         try {
                             await this.connectLocal({
@@ -165,7 +165,7 @@ export default class Dispatcher {
                         this.peer = null;
 
                         try {
-                            const pid = parseInt(std.fs.readFileSync(adone.config.omnitron.pidFilePath).toString());
+                            const pid = parseInt(std.fs.readFileSync(adone.realm.config.omnitron.pidFilePath).toString());
                             if (killChildren) {
                                 await this._killProcessChildren(pid);
                             }

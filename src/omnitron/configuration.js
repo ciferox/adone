@@ -8,7 +8,7 @@ const {
 export default class Configuration extends configuration.FileConfiguration {
     constructor({ inMemory = false } = {}) {
         super({
-            cwd: adone.config.configsPath
+            cwd: adone.realm.config.configsPath
         });
         this.inMemory = inMemory;
 
@@ -29,7 +29,7 @@ export default class Configuration extends configuration.FileConfiguration {
                 if (err instanceof x.NotExists) {
                     this.raw.gates = [
                         {
-                            port: (is.windows ? "\\\\.\\pipe\\omnitron.sock" : std.path.join(adone.config.runtimePath, "omnitron.sock"))
+                            port: (is.windows ? "\\\\.\\pipe\\omnitron.sock" : std.path.join(adone.realm.config.runtimePath, "omnitron.sock"))
                         }
                     ];
                     await this.save("gates.json", true, {

@@ -3,6 +3,8 @@ const {
 } = adone;
 
 adone.lazify({
+    config: () => require(adone.std.path.join(adone.rootPath, "realm.js")),
+    homePath: () => adone.realm.config.home,
     Realm: "./realm",
     cli: "./cli"
 }, adone.asNamespace(exports), require);
@@ -13,27 +15,31 @@ adone.lazifyPrivate({
 }, exports, require);
 
 // !!!!!!! This function should be called before 'adone.js' config is loaded. !!!!!!! //
-export const init = (name) => {
-    let home;
+export const init = (name, customPath) => {
+    let homePath;
     const dirName = `.adone_${name}`;
 
-    if (is.windows) {
-        home = adone.std.path.resolve(process.env.USERPROFILE, dirName);
+    if (is.string(customPath)) {
+        homePath = customPath;
     } else {
-        if (process.env.HOME && !process.env.HOMEPATH) {
-            home = adone.std.path.resolve(process.env.HOME, dirName);
-        } else if (process.env.HOME || process.env.HOMEPATH) {
-            home = adone.std.path.resolve(process.env.HOMEDRIVE, process.env.HOME || process.env.HOMEPATH, dirName);
+        if (is.windows) {
+            homePath = adone.std.path.resolve(process.env.USERPROFILE, dirName);
         } else {
-            home = adone.std.path.resolve("/etc", dirName);
+            if (process.env.HOME && !process.env.HOMEPATH) {
+                homePath = adone.std.path.resolve(process.env.HOME, dirName);
+            } else if (process.env.HOME || process.env.HOMEPATH) {
+                homePath = adone.std.path.resolve(process.env.HOMEDRIVE, process.env.HOME || process.env.HOMEPATH, dirName);
+            } else {
+                homePath = adone.std.path.resolve("/etc", dirName);
+            }
         }
     }
     // Update ADONE_HOME
-    process.env.ADONE_HOME = home;
+    process.env.ADONE_HOME = homePath;
     process.env.ADONE_REALM = name;
     process.env.ADONE_DIRNAME = dirName;
 
-    return adone.fs.mkdirp(adone.homePath);
+    return adone.fs.mkdirp(homePath);
 };
 
 let realmInstance = null;

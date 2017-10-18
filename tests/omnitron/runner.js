@@ -83,7 +83,7 @@ const {
 
 export default class OmnitronRunner {
     async cleanHome() {
-        await new adone.fs.Directory(adone.homePath).clean();
+        await new adone.fs.Directory(adone.realm.homePath).clean();
     }
 
     get dispatcher() {

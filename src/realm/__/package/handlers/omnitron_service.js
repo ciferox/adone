@@ -12,9 +12,9 @@ export default class OmnitronServiceHandler extends __.AbstractHandler {
     }
 
     async register(adoneConf, destPath) {
-        await fs.mkdirp(adone.config.omnitron.servicesPath);
+        await fs.mkdirp(adone.realm.config.omnitron.servicesPath);
         
-        const servicePath = std.path.join(adone.config.omnitron.servicesPath, adoneConf.raw.name);
+        const servicePath = std.path.join(adone.realm.config.omnitron.servicesPath, adoneConf.raw.name);
         if (await fs.exists(servicePath)) {
             await fs.rm(servicePath);
         }
@@ -27,10 +27,10 @@ export default class OmnitronServiceHandler extends __.AbstractHandler {
     }
 
     unregister(adoneConf) {
-        return fs.rm(std.path.join(adone.config.omnitron.servicesPath, adoneConf.raw.name));
+        return fs.rm(std.path.join(adone.realm.config.omnitron.servicesPath, adoneConf.raw.name));
     }
 
     list() {
-        return fs.readdir(adone.config.omnitron.servicesPath);
+        return fs.readdir(adone.realm.config.omnitron.servicesPath);
     }
 }

@@ -48,7 +48,7 @@ describe("realm", () => {
                 });
         
                 const packageName = `${config.raw.type}.${config.raw.name}`;
-                const packagePath = std.path.join(adone.config.packagesPath, packageName);
+                const packagePath = std.path.join(adone.realm.config.packagesPath, packageName);
         
                 const dir = new fs.Directory(packagePath);
                 assert.isTrue(await dir.exists());

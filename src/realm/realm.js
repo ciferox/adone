@@ -13,7 +13,7 @@ const {
 const __ = adone.private(adone.realm);
 
 const CONFIG_NAME = "realm.json";
-const LOCK_FILE = std.path.join(adone.config.runtimePath, "realm");
+const LOCK_FILE = std.path.join(adone.realm.config.runtimePath, "realm");
 
 export default class Realm {
     constructor() {
@@ -25,20 +25,20 @@ export default class Realm {
 
     async _initialize() {
         // Obtain realm id
-        this.id = adone.math.hash("sha256", `${await util.machineId(true)}${adone.config.realm}`);
+        this.id = adone.math.hash("sha256", `${await util.machineId(true)}${adone.realm.config.realm}`);
 
         // Load config
-        const configPath = std.path.join(adone.config.configsPath, CONFIG_NAME);
+        const configPath = std.path.join(adone.realm.config.configsPath, CONFIG_NAME);
         if (await fs.exists(configPath)) {
             this.config = await configuration.load(CONFIG_NAME, null, {
-                cwd: adone.config.configsPath
+                cwd: adone.realm.config.configsPath
             });
         } else {
             this.config = new configuration.FileConfiguration();
         }
 
         // Create lockfile
-        await fs.mkdirp(adone.config.runtimePath);
+        await fs.mkdirp(adone.realm.config.runtimePath);
         await adone.fs.writeFile(LOCK_FILE, "");
     }
 
@@ -64,13 +64,13 @@ export default class Realm {
     }
 
     async list({ keyword = "", threshold = 0.2 } = {}) {
-        const packages = await fs.readdir(adone.config.packagesPath);
+        const packages = await fs.readdir(adone.realm.config.packagesPath);
 
         const result = [];
         for (const name of packages) {
             // eslint-disable-next-line
             const adoneConf = await adone.project.Configuration.load({
-                cwd: std.path.join(adone.config.packagesPath, name)
+                cwd: std.path.join(adone.realm.config.packagesPath, name)
             });
 
             result.push({
@@ -101,7 +101,7 @@ export default class Realm {
     // listFiles({ adone = true, extensions = true, apps = true, configs = true, data = true, logs = true } = {}) {
     //     const srcPaths = [];
     //     if (configs) {
-    //         srcPaths.push(std.path.join(adone.config.configsPath, "**/*"));
+    //         srcPaths.push(std.path.join(adone.realm.config.configsPath, "**/*"));
     //     }
 
     //     if (adone) {

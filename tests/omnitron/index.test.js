@@ -35,9 +35,9 @@ describe("omnitron", () => {
 
     describe("first start", () => {
         it("should create pidfile and log files", async () => {
-            assert.isTrue(await fs.exists(adone.config.omnitron.pidFilePath));
-            assert.isTrue(await fs.exists(adone.config.omnitron.logFilePath));
-            assert.isTrue(await fs.exists(adone.config.omnitron.logFilePath));
+            assert.isTrue(await fs.exists(adone.realm.config.omnitron.pidFilePath));
+            assert.isTrue(await fs.exists(adone.realm.config.omnitron.logFilePath));
+            assert.isTrue(await fs.exists(adone.realm.config.omnitron.logFilePath));
         });
     
         it("correct omnitron information", async () => {
@@ -86,7 +86,7 @@ describe("omnitron", () => {
                     description: serviceConfig.raw.description,
                     version: serviceConfig.raw.version,
                     status: STATUS.DISABLED,
-                    path: std.path.join(adone.config.omnitron.servicesPath, "test1")
+                    path: std.path.join(adone.realm.config.omnitron.servicesPath, "test1")
                 }
             ]);
         });
@@ -113,7 +113,7 @@ describe("omnitron", () => {
                     description: service1Config.raw.description,
                     version: service1Config.raw.version,
                     status: STATUS.DISABLED,
-                    path: std.path.join(adone.config.omnitron.servicesPath, "test1")
+                    path: std.path.join(adone.realm.config.omnitron.servicesPath, "test1")
                 },
                 {
                     name: service2Config.raw.name,
@@ -121,7 +121,7 @@ describe("omnitron", () => {
                     description: service2Config.raw.description,
                     version: service2Config.raw.version,
                     status: "disabled",
-                    path: std.path.join(adone.config.omnitron.servicesPath, "test2")
+                    path: std.path.join(adone.realm.config.omnitron.servicesPath, "test2")
                 }
             ]);
 

@@ -1,4 +1,7 @@
-const { join, resolve } = require("path");
+const {
+    join,
+    resolve
+} = require("path");
 
 let home;
 let realm = "development";

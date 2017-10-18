@@ -34,10 +34,10 @@ let cliConfig = null;
 export const getConfig = async () => {
     if (is.null(cliConfig)) {
         cliConfig = new CliConfiguration({
-            cwd: adone.config.configsPath
+            cwd: adone.realm.config.configsPath
         });
 
-        if (await adone.fs.exists(adone.std.path.join(adone.config.configsPath, configName))) {
+        if (await adone.fs.exists(adone.std.path.join(adone.realm.config.configsPath, configName))) {
             // assign config from home
             await cliConfig.load(configName);
         } else {

@@ -98,7 +98,7 @@ export default class Service {
                 } else {
                     pathPrefix = adone.std.path.join("/home", context.user);
                 }
-                const adoneHomePath = adone.std.path.join(pathPrefix, adone.config.dirName);
+                const adoneHomePath = adone.std.path.join(pathPrefix, adone.realm.config.dirName);
                 if (!(await adone.fs.exists(adoneHomePath))) {
                     throw new adone.x.NotExists(`Adone home directory '${adoneHomePath}' not exists`);
                 }

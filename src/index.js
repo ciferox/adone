@@ -245,10 +245,8 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
 
             return runtime;
         },
-        homePath: () => adone.config.home,
         rootPath: () => adone.std.path.join(__dirname, ".."),
         etcPath: () => adone.std.path.join(adone.rootPath, "etc"),
-        config: () => require(adone.std.path.join(adone.etcPath, "configs", "adone.js")),
 
         emptyBuffer: () => Buffer.allocUnsafe(0),
         assert: () => adone.assertion.loadAssertInterface().assert,

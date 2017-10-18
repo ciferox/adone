@@ -352,6 +352,11 @@
                 "index": "glosses/punycode/index",
                 "src": "glosses/punycode/**/*"
             },
+            "realm": {
+                "description": "Realms stuff",
+                "index": "realm/index",
+                "src": "realm/**/*"
+            },
             "regex": {
                 "description": "Regular expression utiliter and common regular expressions",
                 "index": "glosses/regex/index",
