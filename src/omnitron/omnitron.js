@@ -118,7 +118,7 @@ export default class Omnitron extends application.Application {
 
         if (realm) {
             result.realm = {
-                uid: (await adone.realm.getLocal()).id,
+                uid: (await adone.realm.getInstance()).id,
                 name: adone.config.realm
             };
         }

@@ -4,35 +4,20 @@ import "adone";
 
 const {
     is,
-    fs,
     std,
-    configuration,
     application,
     runtime: { term }
 } = adone;
 
 class AdoneCLI extends application.Application {
     async configure() {
-        // load default config
-        this.config = await configuration.load(std.path.join(adone.etcPath, "configs", "cli.json"), true, {
-            base: adone.config.configsPath
-        });
-
-        const destConfigPath = std.path.join(adone.config.configsPath, "cli.json");
-        if (await fs.exists(destConfigPath)) {
-            // assign config from home
-            await this.config.load(destConfigPath, true);
-        } else {
-            await this.config.save(destConfigPath, true, {
-                space: "    "
-            });
-        }
+        this.config = await adone.realm.cli.getConfig();
 
         // expose cli interface for subsystems.
         this.exposeCliInterface();
 
         this.defineArguments({
-            commandsGroups: this.config.raw.cli.groups,
+            commandsGroups: this.config.raw.groups,
             blindMode: true,
             arguments: [
                 {
@@ -63,6 +48,10 @@ class AdoneCLI extends application.Application {
                         {
                             name: "--symlink",
                             help: "Create symlink to project instead of install it (for local projects)"
+                        },
+                        {
+                            name: "--build",
+                            help: "Rebuild project before install"
                         }
                     ],
                     handler: this.installCommand
@@ -155,42 +144,12 @@ class AdoneCLI extends application.Application {
                         }
                     ],
                     handler: this.configCommand
-                },
-                {
-                    name: "build",
-                    help: "Build project",
-                    arguments: [
-                        {
-                            name: "path",
-                            nargs: "?",
-                            help: "Project unit path"
-                        }
-                    ],
-                    options: [
-                        {
-                            name: "--watch",
-                            help: "Watch files after build"
-                        }
-                    ],
-                    handler: this.buildCommand
-                },
-                {
-                    name: "clean",
-                    help: "Clean project",
-                    arguments: [
-                        {
-                            name: "path",
-                            nargs: "?",
-                            help: "Project unit path"
-                        }
-                    ],
-                    handler: this.cleanCommand
                 }
             ]
         });
 
-        if (is.array(this.config.raw.cli.commands)) {
-            for (const ss of this.config.raw.cli.commands) {
+        if (is.array(this.config.raw.commands)) {
+            for (const ss of this.config.raw.commands) {
                 // eslint-disable-next-line
                 await this.addSubsystem(Object.assign({
                     addOnCommand: true
@@ -201,10 +160,11 @@ class AdoneCLI extends application.Application {
 
     async installCommand(args, opts) {
         try {
-            const realm = await adone.realm.getLocal();
-            await realm.install({
+            const realmInstance = await adone.realm.getInstance();
+            await realmInstance.install({
                 name: args.get("name"),
-                symlink: opts.has("symlink")
+                symlink: opts.has("symlink"),
+                build: opts.has("build")
             });
 
             return 0;
@@ -217,8 +177,8 @@ class AdoneCLI extends application.Application {
 
     async uninstallCommand(args) {
         try {
-            const realm = await adone.realm.getLocal();
-            await realm.uninstall({
+            const realmInstance = await adone.realm.getInstance();
+            await realmInstance.uninstall({
                 name: args.get("name")
             });
 
@@ -232,7 +192,7 @@ class AdoneCLI extends application.Application {
 
     async listCommand(args) {
         try {
-            const realm = await adone.realm.getLocal();
+            const realm = await adone.realm.getInstance();
             const result = await realm.list({
                 keyword: args.get("keyword")
             });
@@ -437,35 +397,6 @@ class AdoneCLI extends application.Application {
             return 1;
         }
         return 0;
-    }
-
-    async buildCommand(args, opts) {
-        try {
-            const unitPath = args.has("path") ? args.get("path") : null;
-            const project = new adone.project.Manager();
-            await project.load();
-            await project.build(unitPath);
-            if (opts.has("watch")) {
-                await project.watch(unitPath);
-            }
-        } catch (err) {
-            adone.log(err);
-
-            // term.print(`{red-fg}${err.message}{/}`);
-        }
-    }
-
-    async cleanCommand(args, opts) {
-        try {
-            const unitPath = args.has("path") ? args.get("path") : null;
-            const project = new adone.project.Manager();
-            await project.load();
-            await project.clean(unitPath);
-        } catch (err) {
-            adone.log(err);
-
-            // term.print(`{red-fg}${err.message}{/}`);
-        }
     }
 }
 

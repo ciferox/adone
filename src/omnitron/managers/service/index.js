@@ -112,8 +112,9 @@ export default class ServiceManager extends application.Subsystem {
                     existingNames.push(adoneConf.raw.name);
                     services.push({
                         name: adoneConf.raw.name,
-                        description: adoneConf.raw.description,
-                        author: adoneConf.raw.author,
+                        description: adoneConf.raw.description || "",
+                        version: adoneConf.raw.version || "",
+                        author: adoneConf.raw.author || "",
                         path
                     });
                 } catch (err) {

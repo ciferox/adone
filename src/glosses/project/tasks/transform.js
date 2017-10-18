@@ -24,8 +24,10 @@ export default class TransformTask extends adone.project.task.Base {
         }
 
         this.stream = this.transform(this.stream, params);
-        this.notify(this.stream, params);
-        this.notifyError(this.stream, params);
+        if (!this.manager.silent) {
+            this.notify(this.stream, params);
+            this.notifyError(this.stream, params);
+        }
     }
 
     main(params) {

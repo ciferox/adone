@@ -19,6 +19,8 @@ export default class Realm {
     constructor() {
         this.id = null;
         this.config = null;
+        this.bar = null;
+        this.silent = false;
     }
 
     async _initialize() {
@@ -42,19 +44,22 @@ export default class Realm {
 
     async install(options) {
         try {
-            await this._lock();
+            if (!is.plainObject(options) || !is.string(options.name)) {
+                throw new adone.x.InvalidArgument("To specify package use object and property 'name'");
+            }
+            await this.lock();
             await this._package(options).install();
         } finally {
-            await this._unlock();
+            await this.unlock();
         }
     }
 
     async uninstall(options) {
         try {
-            await this._lock();
+            await this.lock();
             await this._package(options).uninstall();
         } finally {
-            await this._unlock();
+            await this.unlock();
         }
     }
 
@@ -79,7 +84,7 @@ export default class Realm {
             return result;
         }
 
-        return (new adone.text.Fuzzy(result, {
+        return (new text.Fuzzy(result, {
             keys: ["name"],
             threshold
         })).search(keyword);
@@ -104,11 +109,33 @@ export default class Realm {
     //     }
     // }
 
-    _lock() {
+    lock() {
         return locking.create(LOCK_FILE);
     }
 
-    _unlock() {
-        return locking.release(LOCK_FILE);
+    async unlock() {
+        if (await locking.check(LOCK_FILE)) {
+            return locking.release(LOCK_FILE);
+        }
+    }
+
+    setSilent(silent) {
+        this.silent = silent;
+    }
+
+    _createProgress({ schema = " :spinner" } = {}) {
+        if (!this.silent) {
+            this.bar = adone.runtime.term.progress({
+                schema
+            });
+            this.bar.update(0);
+        }
+    }
+
+    _updateProgress({ schema, result = null } = {}) {
+        if (!is.null(this.bar) && !this.silent) {
+            this.bar.setSchema(schema);
+            is.boolean(result) && this.bar.complete(result);
+        }
     }
 }

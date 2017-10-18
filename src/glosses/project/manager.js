@@ -52,6 +52,11 @@ export default class Manager extends task.Manager {
         this.path = path;
         this.config = null;
         this._loaded = false;
+        this.silent = false;
+    }
+
+    setSilent(silent) {
+        this.silent = silent;
     }
 
     getVersion() {

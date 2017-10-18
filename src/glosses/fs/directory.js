@@ -36,6 +36,10 @@ export default class Directory {
         return fs.lstat(this._path);
     }
 
+    async isSymbolicLink() {
+        return (await this.lstat()).isSymbolicLink();
+    }
+
     exists() {
         return fs.exists(this._path);
     }

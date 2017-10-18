@@ -2,25 +2,6 @@ const {
     is
 } = adone;
 
-let home;
-const dirName = ".adone_test";
-
-if (is.windows) {
-    home = adone.std.path.resolve(process.env.USERPROFILE, dirName);
-} else {
-    if (process.env.HOME && !process.env.HOMEPATH) {
-        home = adone.std.path.resolve(process.env.HOME, dirName);
-    } else if (process.env.HOME || process.env.HOMEPATH) {
-        home = adone.std.path.resolve(process.env.HOMEDRIVE, process.env.HOME || process.env.HOMEPATH, dirName);
-    } else {
-        home = adone.std.path.resolve("/etc", dirName);
-    }
-}
-// Update ADONE_HOME
-process.env.ADONE_HOME = home;
-process.env.ADONE_REALM = "test";
-process.env.ADONE_DIRNAME = dirName;
-
 // export class WeakOmnitron extends adone.omnitron.Omnitron {
 //     constructor(options) {
 //         super(options);

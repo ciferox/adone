@@ -1,4 +1,6 @@
-const { is } = adone;
+const {
+    is
+} = adone;
 
 // The Node team wants to deprecate `process.bind(...)`.
 //   https://github.com/nodejs/node/pull/2768
@@ -475,6 +477,47 @@ const hookChildProcess = (cp, parsed) => {
     };
 };
 
+const makeError = (result, options) => {
+    const stdout = result.stdout;
+    const stderr = result.stderr;
+
+    let err = result.error;
+    const code = result.code;
+    const signal = result.signal;
+
+    const parsed = options.parsed;
+    const joinedCmd = options.joinedCmd;
+    const timedOut = options.timedOut || false;
+
+    if (!err) {
+        let output = "";
+
+        if (is.array(parsed.opts.stdio)) {
+            if (parsed.opts.stdio[2] !== "inherit") {
+                output += output.length > 0 ? stderr : `\n${stderr}`;
+            }
+
+            if (parsed.opts.stdio[1] !== "inherit") {
+                output += `\n${stdout}`;
+            }
+        } else if (parsed.opts.stdio !== "inherit") {
+            output = `\n${stderr}${stdout}`;
+        }
+
+        err = new Error(`Command failed: ${joinedCmd}${output}`);
+        err.code = code < 0 ? errname(code) : code;
+    }
+
+    err.stdout = stdout;
+    err.stderr = stderr;
+    err.failed = true;
+    err.signal = signal || null;
+    err.cmd = joinedCmd;
+    err.timedOut = timedOut;
+
+    return err;
+};
+
 export const exec = (cmd, args, opts) => {
     let joinedCmd = cmd;
 
@@ -526,13 +569,13 @@ export const exec = (cmd, args, opts) => {
 
         spawned.on("error", (err) => {
             cleanupTimeout();
-            resolve({ err });
+            resolve({ error: err });
         });
 
         if (spawned.stdin) {
             spawned.stdin.on("error", (err) => {
                 cleanupTimeout();
-                resolve({ err });
+                resolve({ error: err });
             });
         }
     });
@@ -553,48 +596,24 @@ export const exec = (cmd, args, opts) => {
         getStream(spawned, "stderr", encoding, maxBuffer)
     ]).then((arr) => {
         const result = arr[0];
-        const stdout = arr[1];
-        const stderr = arr[2];
-
-        let err = result.err;
-        const code = result.code;
-        const signal = result.signal;
+        result.stdout = arr[1];
+        result.stderr = arr[2];
 
         if (removeExitHandler) {
             removeExitHandler();
         }
 
-        if (err || code !== 0 || !is.null(signal)) {
-            if (!err) {
-                let output = "";
-
-                if (is.array(parsed.opts.stdio)) {
-                    if (parsed.opts.stdio[2] !== "inherit") {
-                        output += output.length > 0 ? stderr : `\n${stderr}`;
-                    }
-
-                    if (parsed.opts.stdio[1] !== "inherit") {
-                        output += `\n${stdout}`;
-                    }
-                } else if (parsed.opts.stdio !== "inherit") {
-                    output = `\n${stderr}${stdout}`;
-                }
-
-                err = new Error(`Command failed: ${joinedCmd}${output}`);
-                err.code = code < 0 ? errname(code) : code;
-            }
+        if (result.error || result.code !== 0 || !is.null(result.signal)) {
+            const err = makeError(result, {
+                joinedCmd,
+                parsed,
+                timedOut
+            });
 
             // TODO: missing some timeout logic for killed
             // https://github.com/nodejs/node/blob/master/lib/child_process.js#L203
             // err.killed = spawned.killed || killed;
             err.killed = err.killed || spawned.killed;
-
-            err.stdout = stdout;
-            err.stderr = stderr;
-            err.failed = true;
-            err.signal = signal || null;
-            err.cmd = joinedCmd;
-            err.timedOut = timedOut;
 
             if (!parsed.opts.reject) {
                 return err;
@@ -604,8 +623,8 @@ export const exec = (cmd, args, opts) => {
         }
 
         return {
-            stdout: handleOutput(parsed.opts, stdout),
-            stderr: handleOutput(parsed.opts, stderr),
+            stdout: handleOutput(parsed.opts, result.stdout),
+            stderr: handleOutput(parsed.opts, result.stderr),
             code: 0,
             failed: false,
             killed: false,

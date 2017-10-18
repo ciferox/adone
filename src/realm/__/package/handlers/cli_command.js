@@ -23,10 +23,12 @@ export default class CliCommandHandler extends __.AbstractHandler {
             description: adoneConf.raw.description,
             subsystem: indexPath
         };
-        if (!is.array(adone.runtime.app.config.raw.cli.commands)) {
-            adone.runtime.app.config.raw.cli.commands = [];
+
+        const cliConfig = await adone.realm.cli.getConfig();
+        if (!is.array(cliConfig.raw.commands)) {
+            cliConfig.raw.commands = [];
         }
-        const commands = adone.runtime.app.config.raw.cli.commands;
+        const commands = cliConfig.raw.commands;
 
         let i;
         for (i = 0; i < commands.length; i++) {
@@ -43,24 +45,22 @@ export default class CliCommandHandler extends __.AbstractHandler {
 
         commands.sort((a, b) => a.name > b.name);
 
-        return adone.runtime.app.config.save(std.path.join(adone.config.configsPath, "cli.json"), "cli", {
-            space: "    "
-        });
+        return cliConfig.save();
     }
 
-    unregister(adoneConf) {
-        const index = adone.runtime.app.config.raw.cli.commands.findIndex((x) => adoneConf.raw.name === x.name);
+    async unregister(adoneConf) {
+        const cliConfig = await adone.realm.cli.getConfig();
+        const index = cliConfig.raw.commands.findIndex((x) => adoneConf.raw.name === x.name);
         if (index >= 0) {
-            adone.runtime.app.config.raw.cli.commands.splice(index, 1);
-            return adone.runtime.app.config.save(std.path.join(adone.config.configsPath, "cli.json"), "cli", {
-                space: "    "
-            });
+            cliConfig.raw.commands.splice(index, 1);
+            return cliConfig.save();
         }
     }
 
-    list() {
+    async list() {
         const result = [];
-        const commands = adone.runtime.app.config.raw.cli.commands;
+        const cliConfig = await adone.realm.cli.getConfig();
+        const commands = cliConfig.raw.commands;
 
         for (const command of commands) {
             result.push(command.name);

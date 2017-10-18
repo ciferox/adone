@@ -26,17 +26,17 @@ for (const name of handlerNames) {
 const Handler = adone.lazify(handlers, null, require);
 
 export default class Package {
-    constructor(realm, { name = "", symlink = false } = {}) {
+    constructor(realm, { name = "", build = false, symlink = false } = {}) {
         this.realm = realm;
         this.name = name;
+        this.build = build;
         this.symlink = symlink;
     }
 
     async install() {
-        this.bar = adone.runtime.term.progress({
+        this.realm._createProgress({
             schema: " :spinner preparing"
         });
-        this.bar.update(0);
 
         let adoneConf;
 
@@ -52,22 +52,24 @@ export default class Package {
                     adoneConf = await this._installFromLocal();
                 }
             }
-            this.bar.setSchema(` :spinner {green-fg}{bold}${this.name}{/bold} v${adoneConf.raw.version}{/green-fg} successfully installed`);
-            this.bar.complete(true);
+            this.realm._updateProgress({
+                schema: ` :spinner {green-fg}{bold}${this.name}{/bold} v${adoneConf.raw.version}{/green-fg} successfully installed`,
+                result: true
+            });
         } catch (err) {
-            if (!is.null(this.bar)) {
-                this.bar.setSchema(" :spinner installation failed");
-                this.bar.complete(false);
-            }
+            this.realm._updateProgress({
+                schema: " :spinner installation failed",
+                result: false
+            });
+            
             throw err;
         }
     }
 
     async uninstall() {
-        this.bar = adone.runtime.term.progress({
+        this.realm._createProgress({
             schema: " :spinner preparing"
         });
-        this.bar.update(0);
 
         try {
             this.destPath = std.path.join(adone.config.packagesPath, this.name);
@@ -98,13 +100,16 @@ export default class Package {
 
             await fs.rm(this.destPath);
 
-            this.bar.setSchema(` :spinner {green-fg}{bold}${this.fullName}{/bold}{/green-fg} successfully uninstalled`);
-            this.bar.complete(true);
+            this.realm._updateProgress({
+                schema: ` :spinner {green-fg}{bold}${this.fullName}{/bold}{/green-fg} successfully uninstalled`,
+                result: true
+            });
         } catch (err) {
-            if (!is.null(this.bar)) {
-                this.bar.setSchema(" :spinner installation failed");
-                this.bar.complete(false);
-            }
+            this.realm._updateProgress({
+                schema: " :spinner installation failed",
+                result: false
+            });
+
             throw err;
         }
     }
@@ -120,12 +125,14 @@ export default class Package {
             }
             return result;
         }
-        
+
         return this._getHandlerClass(type).list();
     }
 
     async _installFromLocal() {
-        this.bar.setSchema(` :spinner installing from: ${this.path}`);
+        this.realm._updateProgress({
+            schema: ` :spinner installing from: ${this.path}`
+        });
 
         const adoneConf = await adone.project.Configuration.load({
             cwd: this.path
@@ -133,6 +140,10 @@ export default class Package {
 
         this.name = is.string(adoneConf.raw.type) ? `${adoneConf.raw.type}.${adoneConf.raw.name}` : adoneConf.raw.name;
         this.destPath = std.path.join(PACKAGES_PATH, this.name);
+
+        if (this.build) {
+            await this._buildProject();
+        }
 
         if (this.symlink) {
             await this._createSymlink();
@@ -199,27 +210,36 @@ export default class Package {
 
         const entries = await adoneConf.getProjectEntries();
 
-        for (const info of entries) {
-            let srcPath;
-            let dstDir;
+        if (entries.length > 0) {
+            for (const info of entries) {
+                let srcPath;
+                let dstDir;
 
-            if (is.string(info.$dst)) {
-                srcPath = util.globize(info.$dst, {
-                    recursively: true
-                });
-                dstDir = info.$dst;
-            } else {
-                srcPath = info.$src;
-                dstDir = adone.util.globParent(info.$src);
+                if (is.string(info.$dst)) {
+                    srcPath = util.globize(info.$dst, {
+                        recursively: true
+                    });
+                    dstDir = info.$dst;
+                } else {
+                    srcPath = info.$src;
+                    dstDir = adone.util.globParent(info.$src);
+                }
+
+                // eslint-disable-next-line
+                await fast.src([
+                    srcPath,
+                    "!**/*.map"
+                ], {
+                    cwd: this.path
+                }).dest(std.path.join(this.destPath, dstDir), DEST_OPTIONS);
+            }
+        } else {
+            const indexPath = std.path.join(this.path, "index.js");
+            if (!(await fs.exists(indexPath))) {
+                throw new adone.x.NotExists(`File ${indexPath} is not exist`);
             }
 
-            // eslint-disable-next-line
-            await fast.src([
-                srcPath,
-                "!**/*.map"
-            ], {
-                cwd: this.path
-            }).dest(std.path.join(this.destPath, dstDir), DEST_OPTIONS);
+            await fs.copy(indexPath, this.destPath);
         }
 
         return fast.src([
@@ -228,5 +248,12 @@ export default class Package {
         ], {
             cwd: this.path
         }).dest(this.destPath, DEST_OPTIONS);
+    }
+
+    async _buildProject() {
+        const manager = new adone.project.Manager(this.path);
+        manager.setSilent(this.realm.silent);
+        await manager.load();
+        await manager.rebuild();
     }
 }

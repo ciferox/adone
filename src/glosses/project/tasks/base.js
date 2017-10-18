@@ -6,7 +6,6 @@ const {
 export default class BaseTask extends task.Task {
     constructor() {
         super();
-        this.initResult = undefined;
         this.result = undefined;
     }
 

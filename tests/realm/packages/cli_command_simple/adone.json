@@ -1,0 +1,7 @@
+{
+    "name": "simple",
+    "version": "1.0.0",
+    "description": "test command",
+    "author": "noname",
+    "type": "cli.command"
+}

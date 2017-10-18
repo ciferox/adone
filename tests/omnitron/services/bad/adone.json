@@ -1,0 +1,6 @@
+{
+    "name": "bad",
+    "version": "1.0.0",
+    "description": "test service #1",
+    "type": "omnitron.service"
+}
