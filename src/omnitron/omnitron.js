@@ -7,7 +7,8 @@ const {
     fs,
     netron: { Context, Public },
     omnitron,
-    runtime
+    runtime,
+    vault
 } = adone;
 
 const {
@@ -24,6 +25,8 @@ export default class Omnitron extends application.Application {
 
         // Load omnitron configuration
         this.config = await omnitron.Configuration.load();
+
+        this.db = new omnitron.SystemDB();
 
         // Add managers as subsystems
         await this.addSubsystemsFrom(std.path.join(__dirname, "managers"), {
@@ -42,6 +45,8 @@ export default class Omnitron extends application.Application {
 
     async initialize() {
         await this.createPidFile();
+
+        await this.db.open();
     }
 
     async main() {
@@ -61,6 +66,8 @@ export default class Omnitron extends application.Application {
         } catch (err) {
             adone.error(err);
         }
+
+        await this.db.close();
 
         return this.deletePidFile();
     }
@@ -167,6 +174,20 @@ export default class Omnitron extends application.Application {
     }
 
     @Public({
+        description: "Register new service"
+    })
+    registerService(name) {
+        return this.db.registerService(name);
+    }
+
+    @Public({
+        description: "Register existing service"
+    })
+    unregisterService(name) {
+        return this.db.unregisterService(name);
+    }
+
+    @Public({
         description: "Return list of all services services",
         type: Array
     })
@@ -212,46 +233,26 @@ export default class Omnitron extends application.Application {
     //     return result;
     // }
 
-    // @Public
-    // @Description("Enable service with specified name")
-    // @Type()
-    // async enable(serviceName, needEnabled, { enableDeps = false } = {}) {
-    //     const service = this.getServiceByName(serviceName);
-    //     if (needEnabled) {
-    //         if (service.config.status === DISABLED) {
-    //             await this._checkDependencies(service, (depName) => this.enable(depName, needEnabled, { enableDeps }), { checkDisabled: !enableDeps });
-    //             service.config.status = ENABLED;
-    //             return this._.configuration.saveServicesConfig();
-    //         }
-    //         throw new adone.x.IllegalState("Service is not disabled");
+    @Public({
+        description: "Enable service"
+    })
+    enable(serviceName, options) {
+        return this.subsystem("service").enable(serviceName, options);
+    }
 
-    //     } else {
-    //         if (service.config.status !== DISABLED) {
-    //             if (service.config.status === ACTIVE) {
-    //                 await this.detachService(service);
-    //             } else if (service.config.status !== ENABLED) {
-    //                 throw new adone.x.IllegalState(`Cannot disable service with '${service.config.status}' status`);
-    //             }
-    //             service.config.status = DISABLED;
-    //             return this._.configuration.saveServicesConfig();
-    //         }
-    //     }
-    // }
+    @Public({
+        description: "Enable service"
+    })
+    disable(serviceName, options) {
+        return this.subsystem("service").disable(serviceName, options);
+    }
 
-    // @Public
-    // @Description("Start service")
-    // @Type()
-    // start(serviceName) {
-    //     const service = this.getServiceByName(serviceName);
-    //     const status = service.config.status;
-    //     if (status === DISABLED) {
-    //         throw new adone.x.IllegalState("Service is disabled");
-    //     } else if (status === ENABLED) {
-    //         return this.attachService(serviceName, service.config);
-    //     } else {
-    //         throw new adone.x.IllegalState(`Illegal status of service: ${status}`);
-    //     }
-    // }
+    @Public({
+        description: "Start service"
+    })
+    start(serviceName) {
+        return this.subsystem("service").start(serviceName);
+    }
 
     // @Public
     // @Description("Stop service")

@@ -49,7 +49,6 @@ export default class Configuration extends configuration.FileConfiguration {
         }
         try {
             await super.save(confPath, name, options);
-            adone.info(`Configuration '${confPath}' saved`);
         } catch (err) {
             adone.error(err);
         }

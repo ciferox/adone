@@ -241,7 +241,10 @@ export default class GenesisNetron extends AsyncEmitter {
             return this.getInterfaceById(def.id);
         }
         return this.getPeer(uid).getInterfaceByName(ctxId);
+    }
 
+    getInterface(ctxId, uid) {
+        return this.getInterfaceByName(ctxId, uid);
     }
 
     async attachContextRemote(uid, instance, ctxId = null) {

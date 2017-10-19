@@ -1,5 +1,6 @@
 // Service statuses
 export const STATUS = {
+    NONEXISTENT: "nonexistent",
     DISABLED: "disabled",
     INACTIVE: "inactive",
     ACTIVE: "active"
@@ -7,13 +8,16 @@ export const STATUS = {
 
 // Possible statuses
 export const STATUSES = [
+    STATUS.NONEXISTENT,
     STATUS.DISABLED,
     STATUS.INACTIVE,
     STATUS.ACTIVE,
     "all"];
 
 adone.lazify({
+    SystemDB: "./systemdb",
     Configuration: "./configuration",
     Omnitron: "./omnitron",
-    Dispatcher: "./dispatcher"
+    Dispatcher: "./dispatcher",
+    dispatcher: () => new adone.omnitron.Dispatcher()
 }, adone.asNamespace(exports), require);

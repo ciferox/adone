@@ -4,7 +4,7 @@ Object.defineProperty(exports, "__esModule", {
 
 exports.default = class TestCommand {
     async configure() {
-        await this.getInterface("cli").defineCommand(this, {
+        await adone.runtime.netron.getInterface("cli").defineCommand(this, {
             handler: this.testCommand            
         });
     }

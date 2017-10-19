@@ -9,6 +9,8 @@ const {
     system: { process: { exec } }
 } = adone;
 
+const SERVICES_PATH = adone.realm.config.omnitron.servicesPath;
+
 const SERVICE_APP_PATH = std.path.join(__dirname, "service_application.js");
 
 class ServiceMaintainer {
@@ -33,9 +35,7 @@ class ServiceMaintainer {
         });
 
         serviceProcess.then((result) => {
-            if (result.code === 0) {
-                this.process = serviceProcess;
-            } else {
+            if (result.code !== 0) {
                 this.process = null;
                 if (++this.restarts <= this.maxRestarts) {
                     this.start();
@@ -64,25 +64,12 @@ export default class ServiceManager extends application.Subsystem {
     async configure() {
         this.meta = null;
         this.services = null;
+        this.serviceMaintainers = new Map();
         this.maintainers = new Map();
-        this.servicesDb = new vault.Vault({
-            location: std.path.join(adone.realm.config.varPath, "omnitron", "services.db")
-        });
-
-        await fs.mkdirp(std.path.dirname(this.servicesDb.options.location));
     }
 
     async initialize() {
-        await this.servicesDb.open();
-        if (!this.servicesDb.has("$meta")) {
-            this.meta = await this.servicesDb.create("$meta");
-
-            // Initialize groups with one main group 'omnitron'.
-            await this.meta.set("groups", ["omnitron"]);
-        } else {
-            this.meta = await this.servicesDb.get("$meta");
-        }
-
+        this.meta = await this.parent.db.getServicesValuable();
         this.services = vault.slice(this.meta, "service");
 
         await this.startAll();
@@ -90,21 +77,18 @@ export default class ServiceManager extends application.Subsystem {
 
     async uninitialize() {
         await this.stopAll();
-        await this.servicesDb.close();
     }
 
     async enumerate() {
         const existingNames = [];
         const services = [];
 
-        const servicesPath = adone.realm.config.omnitron.servicesPath;
-
         // Normalize statuses
-        if (await fs.exists(servicesPath)) {
-            const files = await fs.readdir(servicesPath);
+        if (await fs.exists(SERVICES_PATH)) {
+            const files = await fs.readdir(SERVICES_PATH);
             for (const file of files) {
                 try {
-                    const path = std.path.join(servicesPath, file);
+                    const path = std.path.join(SERVICES_PATH, file);
                     // eslint-disable-next-line
                     const adoneConf = await adone.project.Configuration.load({
                         cwd: path
@@ -133,23 +117,35 @@ export default class ServiceManager extends application.Subsystem {
         }
 
         for (const service of services) {
-            let runtimeData;
-            if (!this.services.has(service.name)) {
-                runtimeData = {
-                    status: STATUS.DISABLED
-                };
-                // eslint-disable-next-line
-                await this.services.set(service.name, runtimeData);
-            } else {
-                runtimeData = await this.services.get(service.name); // eslint-disable-line
-            }
-            service.status = runtimeData.status;
-            if (is.string(runtimeData.group)) {
-                service.group = runtimeData.group;
-            }
+            Object.assign(service, await this.services.get(service.name)); // eslint-disable-line
         }
 
         return services;
+    }
+
+    async getService(name, checkExists = true) {
+        const path = std.path.join(SERVICES_PATH, name);
+        if (checkExists && !(await fs.exists(path))) {
+            throw new x.Unknown(`UNknown service: ${name}`);
+        }
+
+        const adoneConf = await adone.project.Configuration.load({
+            cwd: path
+        });
+
+        const result = {
+            name: adoneConf.raw.name,
+            description: adoneConf.raw.description || "",
+            version: adoneConf.raw.version || "",
+            author: adoneConf.raw.author || "",
+            path
+        };
+
+        Object.assign(result, {
+            group: null
+        }, await this.services.get(name));
+
+        return result;
     }
 
     async enumerateGroups() {
@@ -165,11 +161,41 @@ export default class ServiceManager extends application.Subsystem {
                 }
                 list.push(service);
             } else {
-                groups.set(adone.text.random(16), [service]);
+                const group = adone.text.random(16);
+                await this.setServiceGroup(service.name, group); // eslint-disable-line
+                groups.set(group, [service]);
             }
         }
 
         return groups;
+    }
+
+    async setServiceGroup(name, group) {
+        const runtimeData = await this.services.get(name);
+        runtimeData.group = group;
+        await this.services.set(name, runtimeData);
+    }
+
+    async enable(name) {
+        const runtimeData = await this.services.get(name);
+        if (runtimeData.status === STATUS.DISABLED) {
+            runtimeData.status = STATUS.INACTIVE;
+            return this.services.set(name, runtimeData);
+        }
+        throw new x.IllegalState("Service is not disabled");
+    }
+
+    async disable(name) {
+        const runtimeData = await this.services.get(name);
+        if (runtimeData.status !== STATUS.DISABLED) {
+            if (runtimeData.status === STATUS.ACTIVE) {
+                await this.stop(name);
+            } else if (runtimeData.status !== STATUS.INACTIVE) {
+                throw new x.IllegalState(`Cannot disable service with '${runtimeData.status}' status`);
+            }
+            runtimeData.status = STATUS.DISABLED;
+            return this.services.set(name, runtimeData);
+        }
     }
 
     async startAll() {
@@ -183,6 +209,9 @@ export default class ServiceManager extends application.Subsystem {
                 port
             });
             this.maintainers.set(group, maintainer);
+            for (const svc of services) {
+                this.serviceMaintainers.set(svc.name, maintainer);
+            }
             maintainer.start();
         }
     }
@@ -190,6 +219,17 @@ export default class ServiceManager extends application.Subsystem {
     async stopAll() {
         for (const maintainer of this.maintainers.values()) {
             await maintainer.stop(); // eslint-disable-line
+        }
+    }
+
+    async start(name) {
+        const runtimeData = await this.services.get(name);
+        if (runtimeData.status === STATUS.DISABLED) {
+            throw new x.IllegalState("Service is disabled");
+        } else if (runtimeData.status === STATUS.INACTIVE) {
+            // return this.attachService(serviceName, service.config);
+        } else {
+            throw new x.IllegalState(`Illegal status of service: ${runtimeData.status}`);
         }
     }
 
@@ -205,23 +245,23 @@ export default class ServiceManager extends application.Subsystem {
         return maintainer;
     }
 
-    getGroups() {
-        return this.meta.get("groups");
-    }
+    // getGroups() {
+    //     return this.meta.get("groups");
+    // }
 
-    async addGroup(name) {
-        const groups = await this.getGroups();
-        if (!groups.include(name)) {
-            groups.push(name);
-            await this.meta.set("groups", groups);
-        }
-    }
+    // async addGroup(name) {
+    //     const groups = await this.getGroups();
+    //     if (!groups.include(name)) {
+    //         groups.push(name);
+    //         await this.meta.set("groups", groups);
+    //     }
+    // }
 
-    async deleteGroup(name) {
-        if (name === "omnitron") {
-            throw new x.NotAllowed("You cannot delete this group");
-        }
-    }
+    // async deleteGroup(name) {
+    //     if (name === "omnitron") {
+    //         throw new x.NotAllowed("You cannot delete this group");
+    //     }
+    // }
 
     // async attachServices() {
     //     this._.service = {};
@@ -271,13 +311,13 @@ export default class ServiceManager extends application.Subsystem {
         const parts = name.split(".");
         const service = this._.service[parts[0]];
         if (is.undefined(service)) {
-            throw new adone.x.Unknown(`Unknown service '${name}'`);
+            throw new x.Unknown(`Unknown service '${name}'`);
         }
 
         let defId;
         if (parts.length === 1) {
             if (is.undefined(service.defaultContext)) {
-                throw new adone.x.InvalidArgument(`No default context of '${parts[0]}' service`);
+                throw new x.InvalidArgument(`No default context of '${parts[0]}' service`);
             }
             defId = service.defaultContext.defId;
         } else {
@@ -287,22 +327,11 @@ export default class ServiceManager extends application.Subsystem {
                 }
             }
             if (is.undefined(defId)) {
-                throw new adone.x.NotFound(`Context '${name}' not found`);
+                throw new x.NotFound(`Context '${name}' not found`);
             }
         }
 
         return this._.netron.getInterfaceById(defId);
-    }
-
-    getServiceByName(serviceName) {
-        if (serviceName === "omnitron") {
-            throw new adone.x.NotAllowed("Status of omnitron is inviolable");
-        }
-        const service = this._.service[serviceName];
-        if (is.undefined(service)) {
-            throw new adone.x.Unknown(`Unknown service: ${serviceName}`);
-        }
-        return service;
     }
 
     // async attachService(serviceName, serviceConfig, instance) {
@@ -321,7 +350,7 @@ export default class ServiceManager extends application.Subsystem {
     //         let defaulted = false;
     //         const checkDefault = () => {
     //             if (defaulted) {
-    //                 throw new adone.x.NotAllowed("Only one context of service can be default");
+    //                 throw new x.NotAllowed("Only one context of service can be default");
     //             }
     //             defaulted = true;
     //         };
@@ -419,14 +448,14 @@ export default class ServiceManager extends application.Subsystem {
     //             if (is.undefined(depService)) {
     //                 const depConfig = this.config.omnitron.services[depName];
     //                 if (is.undefined(depConfig)) {
-    //                     throw new adone.x.Unknown(`Unknown service '${depName}' in dependency list of '${service.name}' service`);
+    //                     throw new x.Unknown(`Unknown service '${depName}' in dependency list of '${service.name}' service`);
     //                 }
     //                 config = depConfig;
     //             } else {
     //                 config = depService.config;
     //             }
     //             if (checkDisabled && config.status === DISABLED) {
-    //                 throw new adone.x.IllegalState(`Dependent service '${depName}' is disabled`);
+    //                 throw new x.IllegalState(`Dependent service '${depName}' is disabled`);
     //             }
     //             await handler(depName, config);
     //         }

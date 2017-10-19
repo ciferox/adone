@@ -22,7 +22,7 @@ const runtime = adone.lazify({
 
 export default class extends adone.application.Subsystem {
     async configure() {
-        await this.getInterface("cli").defineCommand(this, {
+        await adone.runtime.netron.getInterface("cli").defineCommand(this, {
             commands: [
                 {
                     name: "ping",

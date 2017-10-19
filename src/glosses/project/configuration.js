@@ -69,7 +69,7 @@ export default class ProjectConfiguration extends adone.configuration.FileConfig
         });
     }
 
-    getProjectStartupPath() {
+    getMainPath() {
         if (is.string(this.raw.main)) {
             return this.raw.main;
         }

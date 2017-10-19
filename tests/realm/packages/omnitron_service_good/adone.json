@@ -1,10 +1,10 @@
 {
-    "name": "invalid_type",
+    "name": "good",
     "version": "1.0.0",
-    "description": "test command",
+    "description": "test service",
     "author": "noname",
     "main": "lib",
-    "type": "some.type",
+    "type": "omnitron.service",
     "structure": {
         "src": {
             "$task": "transpile",

@@ -42,6 +42,9 @@ export const init = (name, customPath) => {
     return adone.fs.mkdirp(homePath);
 };
 
+export const clean = () => new adone.fs.Directory(adone.realm.homePath).clean();
+
+
 let realmInstance = null;
 
 export const getInstance = async () => {

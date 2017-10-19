@@ -1,5 +1,6 @@
 const {
     fs,
+    realm,
     std,
     system: { process: { exec } }
 } = adone;
@@ -11,15 +12,18 @@ describe("realm", () => {
     let cliConfig;
 
     before(async () => {
-        await adone.realm.init("test");
-        realmInstance = await adone.realm.getInstance();
+        await realm.init("test");
+        await realm.clean();
+        realmInstance = await realm.getInstance();
         realmInstance.setSilent(true);
 
-        cliConfig = await adone.realm.cli.getConfig();
+        cliConfig = await realm.cli.getConfig();
     });
 
     after(async () => {
-        await new adone.fs.Directory(adone.realm.homePath).clean(); 
+        // await realm.clean();
+
+        await adone.omnitron.dispatcher.stopOmnitron();
     });
 
     it("check environment", () => {
@@ -27,12 +31,20 @@ describe("realm", () => {
         assert.equal(process.env.ADONE_DIRNAME, ".adone_test");
     });
 
-    describe("cli commands", () => {
-        it("bad install argument", async () => {
-            const err = await assert.throws(async () => realmInstance.install(std.path.join(__dirname, "packages", "cli_command_simple")));
-            assert.instanceOf(err, adone.x.InvalidArgument);
-        });
+    it("bad install argument", async () => {
+        const err = await assert.throws(async () => realmInstance.install(std.path.join(__dirname)));
+        assert.instanceOf(err, adone.x.InvalidArgument);
+    });
 
+    it("lock/unlock", async () => {
+        const lockPath = std.path.join(realm.config.runtimePath, "realm");
+        await realmInstance.lock();
+        assert.isTrue(await adone.application.locking.check(lockPath));
+        await realmInstance.unlock();
+        assert.isFalse(await adone.application.locking.check(lockPath));
+    });
+
+    describe("cli commands", () => {
         for (const name of ["simple", "good", "es6", "complex"]) {
             for (const symlink of [false, true]) {
                 // eslint-disable-next-line
@@ -53,7 +65,7 @@ describe("realm", () => {
                     });
 
                     const packageName = name === "complex" ? config.raw.name : `${config.raw.type}.${config.raw.name}`;
-                    const packagePath = std.path.join(adone.realm.config.packagesPath, packageName);
+                    const packagePath = std.path.join(realm.config.packagesPath, packageName);
 
                     const dir = new fs.Directory(packagePath);
                     assert.isTrue(await dir.exists());
@@ -98,7 +110,7 @@ describe("realm", () => {
                 // eslint-disable-next-line
                 it(`should rollbak installation of invalid cli command${symlink ? " with symlink " : " "}(${name})`, async () => {
                     const cliCommandPath = std.path.join(__dirname, "packages", `cli_command_${name}`);
-                    
+
                     const config = await adone.project.Configuration.load({
                         cwd: cliCommandPath
                     });
@@ -112,7 +124,7 @@ describe("realm", () => {
                     }
 
                     const packageName = name === "invalid_complex" ? config.raw.name : `${config.raw.type}.${config.raw.name}`;
-                    const packagePath = std.path.join(adone.realm.config.packagesPath, packageName);
+                    const packagePath = std.path.join(realm.config.packagesPath, packageName);
 
                     const dir = new fs.Directory(packagePath);
                     assert.isFalse(await dir.exists());
@@ -124,7 +136,7 @@ describe("realm", () => {
 
                     const err = await assert.throws(async () => realmInstance.install(installOptions));
                     assert.instanceOf(err, Error);
-                   
+
                     assert.isFalse(await dir.exists());
 
                     await cliConfig.load();
@@ -140,6 +152,96 @@ describe("realm", () => {
     });
 
     describe("omnitron services", () => {
+        it("install/uninstall with inactive omnitron", async () => {
+            const omnitronServicePath = std.path.join(__dirname, "packages", "omnitron_service_good");
 
+            const config = await adone.project.Configuration.load({
+                cwd: omnitronServicePath
+            });
+
+            const packageName = `${config.raw.type}.${config.raw.name}`;
+            const packagePath = std.path.join(realm.config.packagesPath, packageName);
+
+            const dir = new fs.Directory(packagePath);
+            assert.isFalse(await dir.exists());
+
+            const installOptions = {
+                name: omnitronServicePath
+            };
+
+            await realmInstance.install(installOptions);
+
+            assert.isTrue(await dir.exists());
+
+            await realmInstance.uninstall({
+                name: packageName
+            });
+
+            assert.isFalse(await dir.exists());
+        });
+
+        it("install/uninstall with active omnitron", async () => {
+            await adone.omnitron.dispatcher.startOmnitron();
+            await adone.omnitron.dispatcher.connectLocal();
+            assert.isTrue(await adone.omnitron.dispatcher.ping());
+
+            const omnitronServicePath = std.path.join(__dirname, "packages", "omnitron_service_good");
+
+            const config = await adone.project.Configuration.load({
+                cwd: omnitronServicePath
+            });
+
+            const packageName = `${config.raw.type}.${config.raw.name}`;
+            const packagePath = std.path.join(realm.config.packagesPath, packageName);
+
+            const dir = new fs.Directory(packagePath);
+            assert.isFalse(await dir.exists());
+
+            const installOptions = {
+                name: omnitronServicePath
+            };
+
+            await realmInstance.install(installOptions);
+
+            assert.isTrue(await dir.exists());
+
+            await realmInstance.uninstall({
+                name: packageName
+            });
+
+            assert.isFalse(await dir.exists());
+
+
+            await adone.omnitron.dispatcher.stopOmnitron();
+        });
+
+        it("should not install service in case of omnitron's system db is busy", async () => {
+            const systemDb = new adone.omnitron.SystemDB();
+            await systemDb.open();
+            
+
+            const omnitronServicePath = std.path.join(__dirname, "packages", "omnitron_service_good");
+
+            const config = await adone.project.Configuration.load({
+                cwd: omnitronServicePath
+            });
+
+            const packageName = `${config.raw.type}.${config.raw.name}`;
+            const packagePath = std.path.join(realm.config.packagesPath, packageName);
+
+            const dir = new fs.Directory(packagePath);
+            assert.isFalse(await dir.exists());
+
+            const installOptions = {
+                name: omnitronServicePath
+            };
+
+            const err = await assert.throws(async () => realmInstance.install(installOptions));
+            assert.instanceOf(err, Error);
+
+            assert.isFalse(await dir.exists());
+
+            await systemDb.close();
+        });
     });
 });

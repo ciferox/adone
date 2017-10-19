@@ -14,7 +14,7 @@ export default class CliCommandHandler extends __.AbstractHandler {
         let indexPath;
 
         // Check startup file
-        await this._checkStartupFile(adoneConf, destPath);
+        await this._checkMainFile(adoneConf, destPath);
 
         if (is.string(adoneConf.raw.main)) {
             indexPath = std.path.join(destPath, adoneConf.raw.main);
@@ -72,8 +72,8 @@ export default class CliCommandHandler extends __.AbstractHandler {
         return result;
     }
 
-    _checkStartupFile(adoneConf, destPath) {
-        const modExports = require(std.path.join(destPath, adoneConf.getProjectStartupPath()));
+    _checkMainFile(adoneConf, destPath) {
+        const modExports = require(std.path.join(destPath, adoneConf.getMainPath()));
 
         if (!modExports.__esModule) {
             throw new adone.x.NotValid("Startup module should be es6-module");

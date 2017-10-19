@@ -124,15 +124,6 @@ export default class Subsystem extends adone.event.AsyncEmitter {
     }
 
     /**
-     * Returns interface to context.
-     * 
-     * @param {string} name context name
-     */
-    getInterface(name) {
-        return adone.runtime.netron.getInterfaceByName(name);
-    }
-
-    /**
      * Adds a new subsystem to the application.
      *
      * @param {string|adone.application.Subsystem} subsystem Subsystem instance or absolute path.

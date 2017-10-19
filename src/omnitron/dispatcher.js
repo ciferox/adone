@@ -15,10 +15,9 @@ const {
 // NOTE: local gate always be first in list of gates in gates.json
 
 export default class Dispatcher {
-    constructor({ noisily = false, configuration = null, omnitron = null, netronOptions = {} } = {}) {
+    constructor({ noisily = false, configuration = null, netronOptions = {} } = {}) {
         this.noisily = noisily;
         this._configuration = configuration;
-        this.omnitron = omnitron;
         Object.assign(runtime.netron.options, netronOptions);
 
         runtime.netron.on("peer online", (peer) => {
@@ -51,10 +50,6 @@ export default class Dispatcher {
         }
     }
 
-    get connected() {
-        return !is.null(this.peer);
-    }
-
     async configuration() {
         if (is.null(this._configuration)) {
             this._configuration = new Configuration();
@@ -74,7 +69,7 @@ export default class Dispatcher {
 
     async connectLocal({ forceStart = true } = {}, _counter = 0) {
         let status = 0;
-        if (!this.connected) {
+        if (is.null(this.peer)) {
             const configuration = await this.configuration();
             const localGate = configuration.raw.gates[0];
             if (is.nil(localGate)) {
@@ -90,7 +85,7 @@ export default class Dispatcher {
                     throw err;
                 }
 
-                const pid = await this.spawn();
+                const pid = await this._spawnOmnitron();
                 if (is.number(pid)) {
                     return this.connectLocal({
                         forceStart
@@ -104,47 +99,20 @@ export default class Dispatcher {
     }
 
     async disconnect() {
-        if (this.connected) {
+        if (!is.null(this.peer)) {
             await runtime.netron.disconnect();
             await runtime.netron.unbind();
             this.peer = null;
         }
     }
 
-    spawn(spiritualWay = true) {
-        if (spiritualWay) {
-            return new Promise(async (resolve, reject) => {
-                const omnitronConfig = adone.realm.config.omnitron;
-                await adone.fs.mkdirp(std.path.dirname(omnitronConfig.logFilePath));
-                this.descriptors.stdout = std.fs.openSync(omnitronConfig.logFilePath, "a");
-                this.descriptors.stderr = std.fs.openSync(omnitronConfig.errorLogFilePath, "a");
-                const child = std.child_process.spawn(process.execPath || "node", [std.path.resolve(adone.rootPath, "lib/omnitron/omnitron.js")], {
-                    detached: true,
-                    cwd: process.cwd(),
-                    stdio: ["ipc", this.descriptors.stdout, this.descriptors.stderr]
-                });
-                child.unref();
-                child.once("error", reject);
-                child.once("message", (msg) => {
-                    child.removeListener("error", reject);
-                    child.disconnect();
-                    this.noisily && adone.log(`Omnitron successfully started (pid: ${msg.pid})`);
-                    resolve(msg.pid);
-                });
-            });
-        }
-        let omnitron;
-        if (is.null(this.omnitron)) {
-            omnitron = new omnitron.Omnitron();
-        } else {
-            omnitron = this.omnitron;
-        }
-        return omnitron.run({ ignoreArgs: true });
+    startOmnitron(options) {
+        return this._spawnOmnitron(options);
     }
 
-    async kill({ killChildren = true } = {}) {
-        const isOnline = await this.isOnline();
-        if (isOnline) {
+    async stopOmnitron({ killChildren = true } = {}) {
+        const isActive = await this.isOmnitronActive();
+        if (isActive) {
             // Can be used in test environment.
             if (is.string(adone.realm.config.omnitron.pidFilePath)) {
                 try {
@@ -192,30 +160,22 @@ export default class Dispatcher {
         }
     }
 
-    async respawn({ spiritualWay = true, killChildren = true } = {}) {
+    async restartOmnitron({ spiritualWay = true, killChildren = false } = {}) {
         await this.kill({ killChildren });
-        await this.spawn(spiritualWay);
+        await this._spawnOmnitron({ spiritualWay });
         await this.connectLocal({
             forceStart: false
         });
     }
 
-    async isOnline(options, checkAttempts = 1) {
-        const n = new netron.Netron({ checkAttempts });
+    async isOmnitronActive() {
+        const n = new netron.Netron();
         let isOK = false;
         try {
-            if (is.nil(options) || !options.port) {
-                const localGate = (await this.configuration()).raw.gates[0];
-                if (is.nil(localGate)) {
-                    throw new x.NotExists("Configuration for gate 'local' is not found");
-                }
-                if (localGate.status === omnitron.const.DISABLED) {
-                    throw new x.IllegalState("Gate 'local' is disabled");
-                }
-                await n.connect(localGate);
-                await n.disconnect();
-                isOK = true;
-            }
+            const localGate = (await this.configuration()).raw.gates[0];
+            await n.connect(localGate);
+            await n.disconnect();
+            isOK = true;
         } catch (err) {
             // adone.log(err);
         }
@@ -223,16 +183,48 @@ export default class Dispatcher {
         return isOK;
     }
 
-    getInterface(name) {
-        return this.peer.getInterfaceByName(name);
-    }
-
     async ping() {
         return is.null(await this.peer.ping());
     }
 
+    getInterface(name) {
+        return this.peer.getInterfaceByName(name);
+    }
+
+    async registerService(serviceName) {
+        try {
+            const systemDb = new omnitron.SystemDB();
+            await systemDb.open();
+            await systemDb.registerService(serviceName);
+            await systemDb.close();
+        } catch (err) {
+            const isActive = await this.isOmnitronActive();
+            await this.connectLocal();
+            await this.getInterface("omnitron").registerService(serviceName);
+            if (!isActive) {
+                await this.stopOmnitron();
+            }
+        }
+    }
+
+    async unregisterService(serviceName) {
+        try {
+            const systemDb = new omnitron.SystemDB();
+            await systemDb.open();
+            await systemDb.unregisterService(serviceName);
+            await systemDb.close();
+        } catch (err) {
+            const isActive = await this.isOmnitronActive();
+            await this.connectLocal();
+            await this.getInterface("omnitron").unregisterService(serviceName);
+            if (!isActive) {
+                await this.stopOmnitron();
+            }
+        }
+    }
+
     // Omnitron interface
-    
+
     killSelf() {
         return this.getInterface("omnitron").killSelf();
     }
@@ -266,11 +258,7 @@ export default class Dispatcher {
     }
 
     restart(serviceName = "") {
-        if (serviceName === "") {
-            return this.respawn();
-        }
-        return this.getInterface("omnitron").restart(serviceName);
-
+        return (serviceName === "") ? this.restartOmnitron() : this.getInterface("omnitron").restart(serviceName);
     }
 
     status(serviceName) {
@@ -295,13 +283,30 @@ export default class Dispatcher {
         });
     }
 
-    // gates() {
-    //     return this.getInterface("omnitron").gates();
-    // }
-
-    // context(name) {
-    //     return this.getInterface("omnitron").context(name);
-    // }
+    _spawnOmnitron({ spiritualWay = true } = {}) {
+        if (spiritualWay) {
+            return new Promise(async (resolve, reject) => {
+                const omnitronConfig = adone.realm.config.omnitron;
+                await adone.fs.mkdirp(std.path.dirname(omnitronConfig.logFilePath));
+                this.descriptors.stdout = std.fs.openSync(omnitronConfig.logFilePath, "a");
+                this.descriptors.stderr = std.fs.openSync(omnitronConfig.errorLogFilePath, "a");
+                const child = std.child_process.spawn(process.execPath || "node", [std.path.resolve(adone.rootPath, "lib/omnitron/omnitron.js")], {
+                    detached: true,
+                    cwd: process.cwd(),
+                    stdio: ["ipc", this.descriptors.stdout, this.descriptors.stderr]
+                });
+                child.unref();
+                child.once("error", reject);
+                child.once("message", (msg) => {
+                    child.removeListener("error", reject);
+                    child.disconnect();
+                    this.noisily && adone.log(`Omnitron successfully started (pid: ${msg.pid})`);
+                    resolve(msg.pid);
+                });
+            });
+        }
+        return adone.application.run(omnitron.Omnitron);
+    }
 
     async _isAlive(pid, timeout = 0) {
         try {
