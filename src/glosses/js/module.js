@@ -1,4 +1,28 @@
-const NodeModule = adone.std.module;
+const {
+    is,
+    std: {
+        module: NodeModule,
+        path
+    },
+    fs
+} = adone;
+
+// let's do some magic
+process.binding("natives").native_module = ""; // eslint-disable-line
+const preserveSymlinks = Boolean(process.binding("config").preserveSymlinks);
+const NativeModule = require("native_module");
+const internalFS = NativeModule.require("internal/fs");
+
+// In order to minimize unnecessary lstat() calls,
+// this cache is a list of known-real paths.
+// Set to an empty Map to reset.
+const realpathCache = new Map();
+
+const toRealPath = (requestPath) => {
+    return fs.realpathSync(requestPath, {
+        [internalFS.realpathCacheKey]: realpathCache
+    });
+};
 
 const caller = () => {
     const origPrepareStackTrace = Error.prepareStackTrace;
@@ -8,6 +32,100 @@ const caller = () => {
     const stack = (new Error()).stack;
     Error.prepareStackTrace = origPrepareStackTrace;
     return stack[2].getFileName();
+};
+
+const stat = (filename) => {
+    filename = path._makeLong(filename);
+    const cache = stat.cache;
+    if (!is.null(cache)) {
+        const result = cache.get(filename);
+        if (!is.undefined(result)) {
+            return result;
+        }
+    }
+    let result;
+    try {
+        const stat = fs.statSync(filename);
+        if (stat.isFile()) {
+            result = 0;
+        } else if (stat.isDirectory()) {
+            result = 1;
+        } else {
+            result = -2; // ???
+        }
+    } catch (err) {
+        result = -1;
+    }
+    if (!is.null(cache)) {
+        cache.set(filename, result);
+    }
+    return result;
+};
+stat.cache = null;
+
+// check if the directory is a package.json dir
+const packageMainCache = Object.create(null);
+
+const readPackage = (requestPath) => {
+    const entry = packageMainCache[requestPath];
+    if (entry) {
+        return entry;
+    }
+
+    const jsonPath = path.resolve(requestPath, "package.json");
+    const json = fs.readFileSync(path._makeLong(jsonPath), "utf8");
+
+    if (is.undefined(json)) {
+        return false;
+    }
+
+    let pkg;
+
+    try {
+        pkg = packageMainCache[requestPath] = JSON.parse(json).main;
+    } catch (e) {
+        e.path = jsonPath;
+        e.message = `Error parsing ${jsonPath}: ${e.message}`;
+        throw e;
+    }
+    return pkg;
+};
+
+// check if the file exists and is not a directory
+// if using --preserve-symlinks and isMain is false,
+// keep symlinks intact, otherwise resolve to the
+// absolute realpath.
+const tryFile = (requestPath, isMain) => {
+    const rc = stat(requestPath);
+    if (preserveSymlinks && !isMain) {
+        return rc === 0 && path.resolve(requestPath);
+    }
+    return rc === 0 && toRealPath(requestPath);
+};
+
+// given a path, check if the file exists with any of the set extensions
+const tryExtensions = (p, exts, isMain) => {
+    for (let i = 0; i < exts.length; i++) {
+        const filename = tryFile(p + exts[i], isMain);
+
+        if (filename) {
+            return filename;
+        }
+    }
+    return false;
+};
+
+const tryPackage = (requestPath, exts, isMain) => {
+    const pkg = readPackage(requestPath);
+
+    if (!pkg) {
+        return false;
+    }
+
+    const filename = path.resolve(requestPath, pkg);
+    return tryFile(filename, isMain) ||
+        tryExtensions(filename, exts, isMain) ||
+        tryExtensions(path.resolve(filename, "index"), exts, isMain);
 };
 
 export default class Module extends NodeModule {
@@ -74,7 +192,7 @@ export default class Module extends NodeModule {
     }
 
     static _load(request, parent, cache = true) {
-        const filename = NodeModule._resolveFilename(request, parent, false);
+        const filename = this._resolveFilename(request, parent, false);
 
         const cachedModule = parent.cache.get(filename);
         if (cachedModule) {
@@ -102,6 +220,92 @@ export default class Module extends NodeModule {
         }
 
         return module.exports;
+    }
+
+    static _resolveFilename(request, parent, isMain) {
+        if (NativeModule.nonInternalExists(request)) {
+            return request;
+        }
+
+        const paths = this._resolveLookupPaths(request, parent, true);
+
+        // look up the filename first, since that's the cache key.
+        const filename = this._findPath(request, paths, isMain);
+        if (!filename) {
+            const err = new Error(`Cannot find module '${request}'`);
+            err.code = "MODULE_NOT_FOUND";
+            throw err;
+        }
+        return filename;
+    }
+
+    static _findPath(request, paths, isMain) {
+        if (path.isAbsolute(request)) {
+            paths = [""];
+        } else if (!paths || paths.length === 0) {
+            return false;
+        }
+
+        const cacheKey = `${request}\x00${
+            paths.length === 1 ? paths[0] : paths.join("\x00")}`;
+        const entry = this._pathCache[cacheKey];
+        if (entry) {
+            return entry;
+        }
+
+        let exts;
+        const trailingSlash = request.length > 0 &&
+            request.charCodeAt(request.length - 1) === 47/*/*/;
+
+        // For each path
+        for (let i = 0; i < paths.length; i++) {
+            // Don't search further if path doesn't exist
+            const curPath = paths[i];
+            if (curPath && stat(curPath) < 1) {
+                continue;
+            }
+            const basePath = path.resolve(curPath, request);
+            let filename;
+
+            const rc = stat(basePath);
+            if (!trailingSlash) {
+                if (rc === 0) { // File.
+                    if (preserveSymlinks && !isMain) {
+                        filename = path.resolve(basePath);
+                    } else {
+                        filename = toRealPath(basePath);
+                    }
+                } else if (rc === 1) { // Directory.
+                    if (is.undefined(exts)) {
+                        exts = Object.keys(this._extensions);
+                    }
+                    filename = tryPackage(basePath, exts, isMain);
+                }
+
+                if (!filename) {
+                    // try it with each of the extensions
+                    if (is.undefined(exts)) {
+                        exts = Object.keys(this._extensions);
+                    }
+                    filename = tryExtensions(basePath, exts, isMain);
+                }
+            }
+
+            if (!filename && rc === 1) { // Directory.
+                if (is.undefined(exts)) {
+                    exts = Object.keys(this._extensions);
+                }
+                filename = tryPackage(basePath, exts, isMain) ||
+                    // try it with each of the extensions at "index"
+                    tryExtensions(path.resolve(basePath, "index"), exts, isMain);
+            }
+
+            if (filename) {
+                this._pathCache[cacheKey] = filename;
+                return filename;
+            }
+        }
+        return false;
     }
 }
 

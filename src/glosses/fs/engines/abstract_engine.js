@@ -2331,6 +2331,10 @@ export class AbstractEngine {
                      */
                     return this._storeFd(res, engine);
                 }
+                case "realpath": {
+                    // TODO: omg, we have to do something better
+                    return `/${parts.slice(0, level).concat(new Path(res).parts).join("/")}`;
+                }
             }
             return res;
         } catch (err) {
@@ -2389,6 +2393,10 @@ export class AbstractEngine {
                  */
                 p = p.then((fd) => this._storeFd(fd, engine));
                 break;
+            }
+            case "realpath": {
+                // TODO: omg, we have to do something better
+                p = p.then((path) => `/${parts.slice(0, level).concat(new Path(path).parts).join("/")}`);
             }
         }
 

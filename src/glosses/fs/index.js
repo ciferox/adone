@@ -76,6 +76,7 @@ const fs = adone.lazify({
             err ? reject(err) : resolve(result);
         });
     }),
+    realpathSync: () => (path, options) => std.fs.realpathSync(path, options),
     utimes: () => (path, atime, mtime) => new Promise((resolve, reject) => {
         std.fs.utimes(path, atime, mtime, (err) => {
             err ? reject(err) : resolve();

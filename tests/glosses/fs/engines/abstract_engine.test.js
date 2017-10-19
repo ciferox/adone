@@ -1,7 +1,7 @@
 describe("fs", "engine", "AbstactEngine", () => {
     const { fs } = adone;
     const { engine } = fs;
-    const { MemoryEngine, AbstractEngine } = engine;
+    const { MemoryEngine, AbstractEngine, StandardEngine } = engine;
 
     describe("readdir", () => {
         it("should return the list of mounted engines", async () => {
@@ -241,6 +241,39 @@ describe("fs", "engine", "AbstactEngine", () => {
             obj.readdir();
             expect(lstat).to.have.been.calledOnce;
             expect(readdir).to.have.been.calledOnce;
+        });
+
+        it("should support require from memory with std.fs mock", () => {
+            const memory = new MemoryEngine().add((ctx) => ({
+                "script.js": ctx.file(`
+                    const a = require("./a");
+
+                    export default () => a.process();
+                `),
+                "a.js": ctx.file(`
+                    import Module from "./lib/module";
+
+                    export const process = () => {
+                        return Module() + 21;
+                    };
+                `),
+                lib: {
+                    "module.js": ctx.file(`
+                        export default function f() {
+                            return 21;
+                        }
+                    `)
+                }
+            }));
+            const standard = new StandardEngine();
+            standard.mount(memory, "/memory");
+            standard.mock(adone.std.fs);
+            try {
+                const m = adone.require("/memory/script").default;
+                expect(m()).to.be.equal(42);
+            } finally {
+                adone.std.fs.restore();
+            }
         });
     });
 });
