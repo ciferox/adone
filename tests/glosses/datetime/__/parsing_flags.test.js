@@ -3,9 +3,7 @@ describe("datetime", "parsing flags", () => {
         adone.datetime.locale("en");
     });
 
-    function flags(...args) {
-        return adone.datetime(...args).parsingFlags();
-    }
+    const flags = (...args) => adone.datetime(...args).parsingFlags();
 
     it("overflow with array", () => {
         //months

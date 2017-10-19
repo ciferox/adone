@@ -821,7 +821,7 @@ class VFS {
         this.throw("EACCES", path, syscall, secondPath);
     }
 
-    async stat(path) {
+    stat(path) {
         const [node] = this.getNode({ path, syscall: "stat" });
         if (is.null(node)) {
             this.throw("ENOENT", path, "stat");
@@ -830,7 +830,7 @@ class VFS {
         return node.stat();
     }
 
-    async lstat(path) {
+    lstat(path) {
         const [node] = this.getNode({ path, syscall: "lstat", handleLeafSymlink: false });
         if (is.null(node)) {
             this.throw("ENOENT", path, "lstat");
@@ -839,7 +839,7 @@ class VFS {
         return node.stat();
     }
 
-    async readdir(path, options) {
+    readdir(path, options) {
         const [node] = this.getNode({ path, syscall: "scandir" });
         if (is.null(node)) {
             this.throw("ENOENT", path, "scandir");
@@ -848,15 +848,15 @@ class VFS {
             this.throw("ENOTDIR", path, "scandir");
         }
         this.assertPermissions(node, R_OK, path, "scandir");
-        await node.beforeHook("readdir");
+        node.beforeHook("readdir");
         let children = node.getChildren();
         if (options.encoding === "buffer") {
             children = children.map(Buffer.from);
         }
-        return (await node.afterHook("readdir", children)) || children;
+        return node.afterHook("readdir", children) || children;
     }
 
-    async realpath(path, options) {
+    realpath(path, options) {
         const [node, parent, filename] = this.getNode({ path });
         if (is.null(node)) {
             this.throw("ENOENT", path);
@@ -868,10 +868,10 @@ class VFS {
             realpath = Buffer.from(realpath);
         }
 
-        return (await node.afterHook("realpath", realpath)) || realpath;
+        return node.afterHook("realpath", realpath) || realpath;
     }
 
-    async open(path, flags, mode) {
+    open(path, flags, mode) {
         flags = stringToFlags(flags);
 
         const noFollow = (flags & O_NOFOLLOW) === O_NOFOLLOW;
@@ -923,22 +923,22 @@ class VFS {
             node = directory.addFile(filename, { mode });
         }
 
-        const opened = await node.open(flags, mode);
+        const opened = node.open(flags, mode);
         const fd = this.fd++;
         this.fdMap.set(fd, opened);
         return fd;
     }
 
-    async close(fd) {
+    close(fd) {
         if (!this.fdMap.has(fd)) {
             this.throw("EBADF", "close");
         }
         const opened = this.fdMap.get(fd);
-        await opened.close();
+        opened.close();
         this.fdMap.delete(fd);
     }
 
-    async read(fd, buffer, offset, length, position) {
+    read(fd, buffer, offset, length, position) {
         if (offset >= buffer.length) {
             throw new RangeError("Offset is out of bounds");
         }
@@ -955,7 +955,7 @@ class VFS {
         return opened.read(buffer, offset, length, position);
     }
 
-    async write(fd, buffer, offset, length, position) {
+    write(fd, buffer, offset, length, position) {
         if (!this.fdMap.has(fd)) {
             this.throw("EBADF", "write");
         }
@@ -989,7 +989,7 @@ class VFS {
         return opened.writeBuffer(buffer, offset, length, position);
     }
 
-    async ftruncate(fd, length) {
+    ftruncate(fd, length) {
         if (!this.fdMap.has(fd)) {
             this.throw("EBADF", "ftruncate");
         }
@@ -1000,7 +1000,7 @@ class VFS {
         opened.truncate(length);
     }
 
-    async unlink(path) {
+    unlink(path) {
         const [node, parent] = this.getNode({ path, syscall: "unlink", handleLeafSymlink: false });
 
         if (is.null(node)) {
@@ -1035,7 +1035,7 @@ class VFS {
         node.emit("change");
     }
 
-    async rmdir(path) {
+    rmdir(path) {
         const [node, parent, filename] = this.getNode({ path, syscall: "rmdir", handleLeafSymlink: false });
         if (is.null(node)) {
             this.throw("ENOENT", path, "rmdir");
@@ -1054,7 +1054,7 @@ class VFS {
         parent.delete(path.filename());
     }
 
-    async mkdir(path, mode) {
+    mkdir(path, mode) {
         const [node, parent] = this.getNode({ path, syscall: "mkdir", handleLeafSymlink: false });
         if (node) {
             this.throw("EEXIST", path, "mkdir");
@@ -1063,7 +1063,7 @@ class VFS {
         parent.addDirectory(path.filename(), { mode });
     }
 
-    async access(path, mode) {
+    access(path, mode) {
         const [node] = this.getNode({ path, syscall: "access" });
         if (is.null(node)) {
             this.throw("ENOENT", path, "access");
@@ -1111,7 +1111,7 @@ class VFS {
         node.uid = uid;
     }
 
-    async rename(oldPath, newPath) {
+    rename(oldPath, newPath) {
         const [oldNode, oldParent] = this.getNode({ path: oldPath, syscall: "rename", handleLeafSymlink: false });
         if (is.null(oldNode)) {
             this.throw("ENOENT", oldPath, "rename", newPath);
@@ -1145,7 +1145,7 @@ class VFS {
         newDirectory.addNode(newPath.filename(), oldNode);
     }
 
-    async symlink(path, target) {
+    symlink(path, target) {
         let node;
         let parent;
         try {
@@ -1162,7 +1162,7 @@ class VFS {
         parent.addSymlink(path.filename(), target);
     }
 
-    async link(existingPath, newPath) {
+    link(existingPath, newPath) {
         const [existingNode] = this.getNode({
             path: existingPath,
             syscall: "link",
@@ -1187,7 +1187,7 @@ class VFS {
         parent.addNode(newPath.filename(), existingNode);
     }
 
-    async fstat(fd) {
+    fstat(fd) {
         if (!this.fdMap.has(fd)) {
             this.throw("EBADF", "fstat");
         }
@@ -1195,21 +1195,21 @@ class VFS {
         return opened.file.stat();
     }
 
-    async fsync(fd) {
+    fsync(fd) {
         if (!this.fdMap.has(fd)) {
             this.throw("EBADF", "fsync");
         }
         // nothing?
     }
 
-    async fdatasync(fd) {
+    fdatasync(fd) {
         if (!this.fdMap.has(fd)) {
             this.throw("EBADF", "fdatasync");
         }
         // nothing?
     }
 
-    async copyFile(src, dst, flags) {
+    copyFile(src, dst, flags) {
         const [srcNode] = this.getNode({ path: src, syscall: "copyfile", secondPath: dst });
         if (is.null(srcNode)) {
             this.throw("ENOENT", src, "copyfile", dst);
@@ -1246,6 +1246,22 @@ class VFS {
         const watcher = new FSWatcher(filename, parent, node, options);
         watcher.start();
         return watcher;
+    }
+
+    readlink(path, options) {
+        const [node] = this.getNode({ path, syscall: "readlink", handleLeafSymlink: false });
+        if (is.null(node)) {
+            this.throw("ENOENT", path, "readlink");
+        }
+        if (!(node instanceof Symlink)) {
+            this.throw("EINVAL", path, "readlink");
+        }
+        node.beforeHook("readlink");
+        let target = node.targetPath.fullPath;
+        if (options.encoding === "buffer") {
+            target = Buffer.from(target);
+        }
+        return node.afterHook("readlink", target) || target;
     }
 }
 
@@ -1342,7 +1358,15 @@ export default class MemoryEngine extends AbstractEngine {
         return this.vfs.stat(path);
     }
 
+    _statSync(path) {
+        return this.vfs.stat(path);
+    }
+
     async _lstat(path) {
+        return this.vfs.lstat(path);
+    }
+
+    _lstatSync(path) {
         return this.vfs.lstat(path);
     }
 
@@ -1350,27 +1374,31 @@ export default class MemoryEngine extends AbstractEngine {
         return this.vfs.readdir(path, options);
     }
 
+    _readdirSync(path, options) {
+        return this.vfs.readdir(path, options);
+    }
+
     async _realpath(path, options) {
         return this.vfs.realpath(path, options);
     }
 
+    _realpathSync(path, options) {
+        return this.vfs.realpath(path, options);
+    }
+
     async _readlink(path, options) {
-        const [node] = this.vfs.getNode({ path, syscall: "readlink", handleLeafSymlink: false });
-        if (is.null(node)) {
-            this.throw("ENOENT", path, "readlink");
-        }
-        if (!(node instanceof Symlink)) {
-            this.throw("EINVAL", path, "readlink");
-        }
-        await node.beforeHook("readlink");
-        let target = node.targetPath.fullPath;
-        if (options.encoding === "buffer") {
-            target = Buffer.from(target);
-        }
-        return (await node.afterHook("readlink", target)) || target;
+        return this.vfs.readlink(path, options);
+    }
+
+    _readlinkSync(path, options) {
+        return this.vfs.readlink(path, options);
     }
 
     async _open(path, flags, mode) {
+        return this.vfs.open(path, flags, mode);
+    }
+
+    _openSync(path, flags, mode) {
         return this.vfs.open(path, flags, mode);
     }
 
@@ -1378,7 +1406,15 @@ export default class MemoryEngine extends AbstractEngine {
         return this.vfs.read(fd, buffer, offset, length, position);
     }
 
+    _readSync(fd, buffer, offset, length, position) {
+        return this.vfs.read(fd, buffer, offset, length, position);
+    }
+
     async _write(fd, buffer, offset, length, position) {
+        return this.vfs.write(fd, buffer, offset, length, position);
+    }
+
+    _writeSync(fd, buffer, offset, length, position) {
         return this.vfs.write(fd, buffer, offset, length, position);
     }
 
@@ -1386,7 +1422,15 @@ export default class MemoryEngine extends AbstractEngine {
         return this.vfs.close(fd);
     }
 
+    _closeSync(fd) {
+        return this.vfs.close(fd);
+    }
+
     async _truncate(path, length) {
+        return this.vfs.truncate(path, length);
+    }
+
+    _truncateSync(path, length) {
         return this.vfs.truncate(path, length);
     }
 
@@ -1394,7 +1438,15 @@ export default class MemoryEngine extends AbstractEngine {
         return this.vfs.ftruncate(fd, length);
     }
 
+    _ftruncateSync(fd, length) {
+        return this.vfs.ftruncate(fd, length);
+    }
+
     async _unlink(path) {
+        return this.vfs.unlink(path);
+    }
+
+    _unlinkSync(path) {
         return this.vfs.unlink(path);
     }
 
@@ -1402,7 +1454,15 @@ export default class MemoryEngine extends AbstractEngine {
         return this.vfs.utimes(path, atime, mtime);
     }
 
+    _utimesSync(path, atime, mtime) {
+        return this.vfs.utimes(path, atime, mtime);
+    }
+
     async _futimes(fd, atime, mtime) {
+        return this.vfs.futimes(fd, atime, mtime);
+    }
+
+    _futimesSync(fd, atime, mtime) {
         return this.vfs.futimes(fd, atime, mtime);
     }
 
@@ -1410,7 +1470,15 @@ export default class MemoryEngine extends AbstractEngine {
         return this.vfs.rmdir(path);
     }
 
+    _rmdirSync(path) {
+        return this.vfs.rmdir(path);
+    }
+
     async _mkdir(path, mode) {
+        return this.vfs.mkdir(path, mode);
+    }
+
+    _mkdirSync(path, mode) {
         return this.vfs.mkdir(path, mode);
     }
 
@@ -1418,7 +1486,15 @@ export default class MemoryEngine extends AbstractEngine {
         return this.vfs.access(path, mode);
     }
 
+    _accessSync(path, mode) {
+        return this.vfs.access(path, mode);
+    }
+
     async _chmod(path, mode) {
+        return this.vfs.chmod(path, mode);
+    }
+
+    _chmodSync(path, mode) {
         return this.vfs.chmod(path, mode);
     }
 
@@ -1426,11 +1502,15 @@ export default class MemoryEngine extends AbstractEngine {
         return this.vfs.fchmod(fd, mode);
     }
 
-    async _lchmod(path, mode) {
-        return this.vfs.lchmod(path, mode);
+    _fchmodSync(fd, mode) {
+        return this.vfs.fchmod(fd, mode);
     }
 
     async _chown(path, uid, gid) {
+        return this.vfs.chown(path, uid, gid);
+    }
+
+    _chownSync(path, uid, gid) {
         return this.vfs.chown(path, uid, gid);
     }
 
@@ -1438,11 +1518,15 @@ export default class MemoryEngine extends AbstractEngine {
         return this.vfs.fchown(fd, uid, gid);
     }
 
-    async _lchown(path, uid, gid) {
-        return this.vfs.lchown(path, uid, gid);
+    _fchownSync(fd, uid, gid) {
+        return this.vfs.fchown(fd, uid, gid);
     }
 
     async _rename(oldPath, newPath) {
+        return this.vfs.rename(oldPath, newPath);
+    }
+
+    _renameSync(oldPath, newPath) {
         return this.vfs.rename(oldPath, newPath);
     }
 
@@ -1450,7 +1534,15 @@ export default class MemoryEngine extends AbstractEngine {
         return this.vfs.symlink(path, target);
     }
 
+    _symlinkSync(path, target) {
+        return this.vfs.symlink(path, target);
+    }
+
     async _link(existingPath, newPath) {
+        return this.vfs.link(existingPath, newPath);
+    }
+
+    _linkSync(existingPath, newPath) {
         return this.vfs.link(existingPath, newPath);
     }
 
@@ -1458,7 +1550,15 @@ export default class MemoryEngine extends AbstractEngine {
         return this.vfs.fstat(fd);
     }
 
+    _fstatSync(fd) {
+        return this.vfs.fstat(fd);
+    }
+
     async _fsync(fd) {
+        return this.vfs.fsync(fd);
+    }
+
+    _fsyncSync(fd) {
         return this.vfs.fsync(fd);
     }
 
@@ -1466,7 +1566,15 @@ export default class MemoryEngine extends AbstractEngine {
         return this.vfs.fdatasync(fd);
     }
 
+    _fdatasyncSync(fd) {
+        return this.vfs.fdatasync(fd);
+    }
+
     async _copyFile(src, dst, flags) {
+        return this.vfs.copyFile(src, dst, flags);
+    }
+
+    _copyFileSync(src, dst, flags) {
         return this.vfs.copyFile(src, dst, flags);
     }
 
