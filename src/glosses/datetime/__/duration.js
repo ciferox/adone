@@ -25,6 +25,8 @@ const isDurationValid = (m) => {
     return true;
 };
 
+const sign = (x) => ((x > 0) - (x < 0)) || Number(x);
+
 const mathAbs = Math.abs;
 
 // ASP.NET json date format regex
@@ -443,7 +445,7 @@ export class Duration {
         const D = days;
         const h = hours;
         const m = minutes;
-        const s = seconds;
+        const s = seconds ? seconds.toFixed(3).replace(/\.?0+$/, "") : "";
         const total = this.asSeconds();
 
         if (!total) {
@@ -452,16 +454,20 @@ export class Duration {
             return "P0D";
         }
 
+        const totalSign = total < 0 ? "-" : "";
+        const ymSign = sign(this._months) !== sign(total) ? "-" : "";
+        const daysSign = sign(this._days) !== sign(total) ? "-" : "";
+        const hmsSign = sign(this._milliseconds) !== sign(total) ? "-" : "";
+
         return [
-            total < 0 ? "-" : "",
-            "P",
-            Y ? `${Y}Y` : "",
-            M ? `${M}M` : "",
-            D ? `${D}D` : "",
+            `${totalSign}P`,
+            Y ? `${ymSign + Y}Y` : "",
+            M ? `${ymSign + M}M` : "",
+            D ? `${daysSign + D}D` : "",
             (h || m || s) ? "T" : "",
-            h ? `${h}H` : "",
-            m ? `${m}M` : "",
-            s ? `${s}S` : ""
+            h ? `${hmsSign + h}H` : "",
+            m ? `${hmsSign + m}M` : "",
+            s ? `${hmsSign + s}S` : ""
         ].join("");
     }
 

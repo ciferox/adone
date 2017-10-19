@@ -47,6 +47,7 @@ class Mock {
         }
 
         const e = util.expectation.create(method);
+        Object.assign(e, this.object[method]);
         this.expectations[method].push(e);
 
         return e;

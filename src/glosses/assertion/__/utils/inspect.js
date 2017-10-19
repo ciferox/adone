@@ -148,12 +148,7 @@ const reduceToSingleString = (output, base, braces) => {
     }, 0);
 
     if (length > 60) {
-        return `${braces[0] +
-            (base === "" ? "" : `${base}\n `)
-            } ${
-            output.join(",\n  ")
-            } ${
-            braces[1]}`;
+        return `${braces[0] + (base === "" ? "" : `${base}\n `)} ${output.join(",\n  ")} ${braces[1]}`;
     }
 
     return `${braces[0] + base} ${output.join(", ")} ${braces[1]}`;

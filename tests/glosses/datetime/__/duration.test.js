@@ -331,12 +331,20 @@ describe("datetime", "duration", () => {
         assert.equal(adone.datetime.duration({ m: -1 }).toISOString(), "-PT1M", "one minute ago");
         assert.equal(adone.datetime.duration({ s: -0.5 }).toISOString(), "-PT0.5S", "one half second ago");
         assert.equal(adone.datetime.duration({ y: -1, M: 1 }).toISOString(), "-P11M", "a month after a year ago");
+        assert.equal(adone.datetime.duration({ y: -1, h: 1 }).toISOString(), "-P1YT-1H", "an hour after a year ago");
+        assert.equal(adone.datetime.duration({ y: -1, h: 1, m: -1 }).toISOString(), "-P1YT-59M", "59 minutes after a year ago");
+        assert.equal(adone.datetime.duration({ y: -1, h: 1, s: -1 }).toISOString(), "-P1YT-59M-59S", "59 minutes 59 seconds after a year ago");
+        assert.equal(adone.datetime.duration({ y: -1, h: -1, s: 1 }).toISOString(), "-P1YT59M59S", "59 minutes 59 seconds after a year ago");
+        assert.equal(adone.datetime.duration({ y: -1, d: 2 }).toISOString(), "-P1Y-2D", "1 year less 2 days ago");
         assert.equal(adone.datetime.duration({ M: +1 }).toISOString(), "P1M", "one month ago");
         assert.equal(adone.datetime.duration({ m: +1 }).toISOString(), "PT1M", "one minute ago");
         assert.equal(adone.datetime.duration({ s: +0.5 }).toISOString(), "PT0.5S", "one half second ago");
         assert.equal(adone.datetime.duration({ y: +1, M: 1 }).toISOString(), "P1Y1M", "a month after a year in future");
+        assert.equal(adone.datetime.duration({ y: -1, h: 1 }).toISOString(), "-P1YT-1H", "an hour after a year ago");
         assert.equal(adone.datetime.duration({}).toISOString(), "P0D", "zero duration");
         assert.equal(adone.datetime.duration({ M: 16, d: 40, s: 86465 }).toISOString(), "P1Y4M40DT24H1M5S", "all fields");
+        assert.equal(adone.datetime.duration({ ms: 123456789 }).toISOString(), "PT34H17M36.789S", "check floating-point errors");
+        assert.equal(adone.datetime.duration({ ms: 31952 }).toISOString(), "PT31.952S", "check floating-point errors");
     });
 
     it("toString acts as toISOString", () => {
@@ -691,6 +699,13 @@ describe("datetime", "duration", () => {
         assert.equal(d.days(), 0, "+ 1 year + 1 hour == 1 day (component)");
         assert.equal(d.months(), 0, "+ 1 year + 1 hour == 1 month (component)");
         assert.equal(d.years(), 1, "+ 1 year + 1 hour == 1 year (component)");
+    });
+
+    it("add to moment", () => {
+        const d = adone.datetime.duration({ months: 1, seconds: -1 });
+        const m = adone.datetime("2017-03-01").add(d);
+        assert.equal(m.month(), 2, "Adds months before time");
+        assert.equal(m.date(), 31, "Adds time after months");
     });
 
     it("subtract and bubble", () => {

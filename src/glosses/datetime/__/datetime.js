@@ -11,7 +11,11 @@ const get = (mom, unit) => {
 
 const set = (mom, unit, value) => {
     if (mom.isValid() && !isNaN(value)) {
-        mom._d[`set${mom._isUTC ? "UTC" : ""}${unit}`](value);
+        if (unit === "FullYear" && __.unit.year.isLeapYear(mom.year())) {
+            mom._d[`set${mom._isUTC ? "UTC" : ""}${unit}`](value, mom.month(), __.unit.month.daysInMonth(value, mom.month()));
+        } else {
+            mom._d[`set${mom._isUTC ? "UTC" : ""}${unit}`](value);
+        }
     }
 };
 
@@ -34,14 +38,14 @@ export const addSubtract = (mom, duration, isAdding, updateOffset = true) => {
         return;
     }
 
-    if (milliseconds) {
-        mom._d.setTime(mom._d.valueOf() + milliseconds * isAdding);
+    if (months) {
+        setMonth(mom, get(mom, "Month") + months * isAdding);
     }
     if (days) {
         set(mom, "Date", get(mom, "Date") + days * isAdding);
     }
-    if (months) {
-        setMonth(mom, get(mom, "Month") + months * isAdding);
+    if (milliseconds) {
+        mom._d.setTime(mom._d.valueOf() + milliseconds * isAdding);
     }
     if (updateOffset) {
         hooks.updateOffset(mom, days || months);

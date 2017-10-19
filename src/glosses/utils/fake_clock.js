@@ -149,6 +149,7 @@ const addTimer = (clock, timer) => {
 
     if (timer.hasOwnProperty("delay")) {
         timer.delay = timer.delay > maxTimeout ? 1 : timer.delay;
+        timer.delay = Math.max(0, timer.delay);
     }
 
     if (timer.hasOwnProperty("interval")) {

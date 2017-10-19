@@ -8,7 +8,6 @@ lazify({
     Collection: "./collection",
     color: "./color",
     defaultBehaviors: "./default_behaviors",
-    sandboxStub: "./sandbox_stub",
     spyFormatters: "./spy_formatters",
     stubDescriptor: "./stub_descriptor",
     stubEntireObject: "./stub_entire_object",

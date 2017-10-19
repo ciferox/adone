@@ -166,4 +166,10 @@ describe("datetime", "parsing flags", () => {
         assert.equal(flags("1982 May", ["YYYY MMM"]).invalidFormat, false, "empty format array");
         assert.equal(flags("1982 May", []).invalidFormat, true, "empty format array");
     });
+
+    it("weekday mismatch", () => {
+        // string with format
+        assert.equal(flags("Wed 08-10-2017", "ddd MM-DD-YYYY").weekdayMismatch, true, "day of week does not match date");
+        assert.equal(flags("Thu 08-10-2017", "ddd MM-DD-YYYY").weekdayMismatch, false, "day of week matches date");
+    });
 });

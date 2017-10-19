@@ -1,4 +1,4 @@
-const { is, x, util: { keys }, shani: { util }, lazify } = adone;
+const { is, x, util: { keys }, shani: { util }, lazify, vendor } = adone;
 const { __ } = util;
 
 const lazy = lazify({
@@ -199,6 +199,23 @@ match.has = createPropertyMatcher((actual, property) => {
 }, "has");
 
 match.hasOwn = createPropertyMatcher((actual, property) => actual.hasOwnProperty(property), "hasOwn");
+
+match.hasNested = (...args) => {
+    const [property, value] = args;
+    assertType(property, "string", "property");
+    const onlyProperty = args.length === 1;
+    let message = `hasNested("${property}"`;
+    if (!onlyProperty) {
+        message += `, ${__.util.valueToString(value)}`;
+    }
+    message += ")";
+    return match((actual) => {
+        if (is.nil(actual) || is.undefined(vendor.lodash.get(actual, property))) {
+            return false;
+        }
+        return onlyProperty || lazy.deepEqual(value, vendor.lodash.get(actual, property));
+    }, message);
+};
 
 match.array = match.typeOf("array");
 

@@ -1,7 +1,7 @@
 describe("shani", "util", "match", () => {
-    const { x, shani: { util: { match } } } = adone;
+    const { is, x, shani: { util: { match } } } = adone;
 
-    const propertyMatcherTests = (matcher) => () => {
+    const propertyMatcherTests = (matcher, additionalTests) => () => {
         it("returns matcher", () => {
             const has = matcher("foo");
 
@@ -66,6 +66,10 @@ describe("shani", "util", "match", () => {
 
             assert(has.test({ callback() { } }));
         });
+
+        if (is.function(additionalTests)) {
+            additionalTests();
+        }
     };
 
     it("returns matcher", () => {
@@ -511,6 +515,22 @@ describe("shani", "util", "match", () => {
 
     describe(".has", propertyMatcherTests(match.has));
     describe(".hasOwn", propertyMatcherTests(match.hasOwn));
+
+    describe(".hasNested", propertyMatcherTests(match.hasNested, () => {
+
+        it("compares nested value", () => {
+            const hasNested = match.hasNested("foo.bar", "doo");
+
+            assert(hasNested.test({ foo: { bar: "doo" } }));
+        });
+
+        it("compares nested array value", () => {
+            const hasNested = match.hasNested("foo[0].bar", "doo");
+
+            assert(hasNested.test({ foo: [{ bar: "doo" }] }));
+        });
+
+    }));
 
     describe(".hasSpecial", () => {
         it("returns true if object has inherited property", () => {

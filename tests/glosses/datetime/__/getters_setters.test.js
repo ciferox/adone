@@ -262,6 +262,17 @@ describe("datetime", "getters and setters", () => {
         assert.equal(adone.datetime(a).day(17).date(), 26, "set from wednesday to second next wednesday");
     });
 
+    it("year setter", () => {
+        const a = adone.datetime([2015, 3, 15]);
+        assert.equal(adone.datetime(a).year(2016).format("YYYY-MM-DD"), "2016-04-15", "set from 2015 to 2016");
+        assert.equal(adone.datetime(a).year(2011).format("YYYY-MM-DD"), "2011-04-15", "set from 2015 to 2011");
+
+        const b = adone.datetime([2012, 1, 29]);
+        assert.equal(adone.datetime(b).year(2017).format("YYYY-MM-DD"), "2017-02-28", "set from last day of february on a leap year to a non leap year");
+        assert.equal(adone.datetime(b).year(2004).format("YYYY-MM-DD"), "2004-02-29", "set from last day of february on a leap year to a leap year");
+    });
+
+
     it("object set ordering", () => {
         const a = adone.datetime([2016, 3, 30]);
         assert.equal(a.set({ date: 31, month: 4 }).date(), 31, "setter order automatically arranged by size");

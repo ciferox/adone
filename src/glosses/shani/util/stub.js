@@ -103,6 +103,11 @@ export default function stub(object, property, ...args) {
     }
     __.throwOnFalsyObject(object, property);
 
+    if (object && !is.undefined(property) && !(property in object)) {
+        throw new TypeError(`Cannot stub non-existent own property ${__.util.valueToString(property)}`);
+    }
+
+
     const actualDescriptor = __.util.getPropertyDescriptor(object, property);
     const isStubbingEntireObject = is.undefined(property) && is.object(object) && !is.function(object);
     const isCreatingNewStub = !object && is.undefined(property);

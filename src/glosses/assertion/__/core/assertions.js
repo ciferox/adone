@@ -166,7 +166,7 @@ export default function (lib, util) {
                 if (value !== Object(value)) {
                     throw new AssertionError(
                         `${flagMsg}object tested must be an array, a map, an object,`
-                      + ` a set, a string, or a weakset, but ${objType} given`,
+                        + ` a set, a string, or a weakset, but ${objType} given`,
                         undefined,
                         ssfi
                     );
@@ -771,14 +771,33 @@ export default function (lib, util) {
         let flagMsg = flag(this, "message");
         const object = flag(this, "object");
         const ssfi = flag(this, "ssfi");
+        const nameType = typeof name;
+
+        flagMsg = flagMsg ? `${String(flagMsg)}: ` : "";
+
+        if (isNested) {
+            if (nameType !== "string") {
+                throw new AssertionError(
+                    `${flagMsg}the argument to property must be a string when using nested syntax`,
+                    undefined,
+                    ssfi
+                );
+            }
+        } else {
+            if (nameType !== "string" && nameType !== "number" && nameType !== "symbol") {
+                throw new AssertionError(
+                    `${flagMsg}the argument to property must be a string, number, or symbol`,
+                    undefined,
+                    ssfi
+                );
+            }
+        }
 
         if (isNested && isOwn) {
-            flagMsg = flagMsg ? `${flagMsg}: ` : "";
             throw new AssertionError(`${flagMsg}The "nested" and "own" flags cannot be combined.`, undefined, ssfi);
         }
 
         if (is.nil(object)) {
-            flagMsg = flagMsg ? `${flagMsg}: ` : "";
             throw new AssertionError(
                 `${flagMsg}Target cannot be null or undefined.`,
                 undefined,

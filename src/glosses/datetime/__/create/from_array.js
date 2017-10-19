@@ -137,10 +137,12 @@ export const configFromArray = (config) => {
     }
 
     // Check for 24:00:00.000
-    if (config._a[HOUR] === 24 &&
-            config._a[MINUTE] === 0 &&
-            config._a[SECOND] === 0 &&
-            config._a[MILLISECOND] === 0) {
+    if (
+        config._a[HOUR] === 24
+        && config._a[MINUTE] === 0
+        && config._a[SECOND] === 0
+        && config._a[MILLISECOND] === 0
+    ) {
         config._nextDay = true;
         config._a[HOUR] = 0;
     }
@@ -154,5 +156,10 @@ export const configFromArray = (config) => {
 
     if (config._nextDay) {
         config._a[HOUR] = 24;
+    }
+
+    // check for mismatching day of week
+    if (config._w && !is.undefined(config._w.d) && config._w.d !== config._d.getDay()) {
+        __.create.getParsingFlags(config).weekdayMismatch = true;
     }
 };

@@ -1210,4 +1210,10 @@ describe("datetime", "create", () => {
             }
         }
     });
+
+    it("mismatching day-of-week and date", () => {
+        // string with format
+        assert.ok(!adone.datetime("Wed 08-10-2017", "ddd MM-DD-YYYY").isValid(), "because day of week is incorrect for the date");
+        assert.ok(adone.datetime("Thu 08-10-2017", "ddd MM-DD-YYYY").isValid(), "because day of week is correct for the date");
+    });
 });

@@ -77,6 +77,17 @@ describe("util", "fakeClock", () => {
 
             clock.uninstall();
         });
+
+        it("executes setTimeout with negative duration as if it has zero delay", () => {
+            const clock = fakeClock.install();
+            const stub1 = stub();
+
+            clock.setTimeout(stub1, -10);
+            clock.tick(1);
+            assert(stub1.calledOnce);
+
+            clock.uninstall();
+        });
     });
 
     describe("common cases", () => {

@@ -1355,6 +1355,7 @@ describe("assertion", "assert", () => {
         const obj = { foo: { bar: "baz" } };
         const simpleObj = { foo: "bar" };
         const undefinedKeyObj = { foo: undefined };
+        const dummyObj = { a: "1" };
         assert.property(obj, "foo");
         assert.property(obj, "toString");
         assert.propertyVal(obj, "toString", Object.prototype.toString);
@@ -1414,6 +1415,18 @@ describe("assertion", "assert", () => {
         err(() => {
             assert.property(undefined, "a", "blah");
         }, "blah: Target cannot be null or undefined.");
+
+        err(() => {
+            assert.property({ a: 1 }, { a: "1" }, "blah");
+        }, "blah: the argument to property must be a string, number, or symbol");
+
+        err(() => {
+            assert.propertyVal(dummyObj, "a", "2", "blah");
+        }, "blah: expected { a: '1' } to have property 'a' of '2', but got '1'");
+
+        err(() => {
+            assert.nestedProperty({ a: 1 }, { a: "1" }, "blah");
+        }, "blah: the argument to property must be a string when using nested syntax");
     });
 
     it("deepPropertyVal", () => {
@@ -2279,26 +2292,26 @@ describe("assertion", "assert", () => {
     });
 
     it("change", () => {
-        let obj = { value: 10, str: "foo" },
-            heroes = ["spiderman", "superman"],
-            fn = function () {
-                obj.value += 5;
-            },
-            fnDec = function () {
-                obj.value -= 20;
-            },
-            bangFn = function () {
-                obj.str += "!";
-            },
-            smFn = function () {
-                "foo" + "bar";
-            },
-            batFn = function () {
-                heroes.push("batman");
-            },
-            lenFn = function () {
-                return heroes.length;
-            };
+        const obj = { value: 10, str: "foo" };
+        const heroes = ["spiderman", "superman"];
+        const fn = function () {
+            obj.value += 5;
+        };
+        const fnDec = function () {
+            obj.value -= 20;
+        };
+        const bangFn = function () {
+            obj.str += "!";
+        };
+        const smFn = function () {
+            "foo" + "bar";
+        };
+        const batFn = function () {
+            heroes.push("batman");
+        };
+        const lenFn = function () {
+            return heroes.length;
+        };
         assert.changes(fn, obj, "value");
         assert.changesBy(fn, obj, "value", 5);
         assert.changesBy(fn, obj, "value", -5);

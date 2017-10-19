@@ -244,7 +244,7 @@ describe("shani", "util", "issues", () => {
         });
 
         it("can stub methods on the prototype", () => {
-            const proto = { someFunction() {} };
+            const proto = { someFunction() { } };
             const instance = Object.create(proto);
 
             const stub = s.stub(instance, "someFunction");
@@ -273,5 +273,20 @@ describe("shani", "util", "issues", () => {
             assert(s.calledOnce);
         });
 
+    });
+
+    describe("#1442 - callThrough with a mock expectation", () => {
+        it("should call original method", function () {
+            const foo = {
+                bar() { }
+            };
+
+            const mock = this.sandbox.mock(foo);
+            mock.expects("bar").callThrough();
+
+            foo.bar();
+
+            mock.verify();
+        });
     });
 });

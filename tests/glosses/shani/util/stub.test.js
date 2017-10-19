@@ -1131,6 +1131,16 @@ describe("shani", "util", "stub", () => {
 
             stub.restore();
         });
+
+        it("throws if stubbing non-existent property", () => {
+            const myObj = {};
+
+            assert.throws(() => {
+                createStub(myObj, "ouch");
+            });
+
+            assert.isUndefined(myObj.ouch);
+        });
     });
 
     describe("stubbed function", () => {
@@ -2511,16 +2521,6 @@ describe("shani", "util", "stub", () => {
             assert.equal(myObj.prop, "bar");
         });
 
-        it("can set getters for non-existing properties", () => {
-            const myObj = {};
-
-            createStub(myObj, "prop").get(function getterFn() {
-                return "bar";
-            });
-
-            assert.equal(myObj.prop, "bar");
-        });
-
         it("can restore stubbed setters for functions", () => {
             const propFn = function propFn() {
                 return "bar";
@@ -2557,20 +2557,6 @@ describe("shani", "util", "stub", () => {
             stub.restore();
 
             assert.equal(myObj.prop, "bar");
-        });
-
-        it("can restore stubbed getters for previously undefined properties", () => {
-            const myObj = {};
-
-            const stub = createStub(myObj, "nonExisting");
-
-            stub.get(function getterFn() {
-                return "baz";
-            });
-
-            stub.restore();
-
-            assert.equal(getPropertyDescriptor(myObj, "nonExisting"), undefined);
         });
     });
 
@@ -2621,18 +2607,6 @@ describe("shani", "util", "stub", () => {
             assert.equal(myObj.example, "bar");
         });
 
-        it("can set setters for non-existing properties", () => {
-            const myObj = {};
-
-            createStub(myObj, "prop").set(function setterFn() {
-                myObj.example = "bar";
-            });
-
-            myObj.prop = "foo";
-
-            assert.equal(myObj.example, "bar");
-        });
-
         it("can restore stubbed setters for functions", () => {
             const propFn = function propFn() {
                 return "bar";
@@ -2672,20 +2646,6 @@ describe("shani", "util", "stub", () => {
             myObj.prop = "foo";
             assert.equal(myObj.otherProp, "bar");
         });
-
-        it("can restore stubbed setters for previously undefined properties", () => {
-            const myObj = {};
-
-            const stub = createStub(myObj, "nonExisting");
-
-            stub.set(function setterFn() {
-                myObj.otherProp = "baz";
-            });
-
-            stub.restore();
-
-            assert.equal(getPropertyDescriptor(myObj, "nonExisting"), undefined);
-        });
     });
 
     describe(".value", () => {
@@ -2707,15 +2667,6 @@ describe("shani", "util", "stub", () => {
             stub.restore();
 
             assert.equal(myObj.prop, "rawString");
-        });
-
-        it("allows restoring previously undefined properties", () => {
-            const obj = {};
-            const stub = createStub(obj, "nonExisting").value(2);
-
-            stub.restore();
-
-            assert.equal(getPropertyDescriptor(obj, "nonExisting"), undefined);
         });
 
         it("allows stubbing function static properties", () => {
