@@ -297,8 +297,16 @@ export default class Dispatcher {
                 });
                 child.unref();
                 child.once("error", reject);
+
+                const onExit = (code) => {
+                    if (code !== 0) {
+                        reject(new Error(`Process exited with error code: ${code}`));
+                    }
+                };
+                child.once("exit", onExit);
                 child.once("message", (msg) => {
                     child.removeListener("error", reject);
+                    child.removeListener("exit", onExit);
                     child.disconnect();
                     this.noisily && adone.log(`Omnitron successfully started (pid: ${msg.pid})`);
                     resolve(msg.pid);

@@ -1,5 +1,5 @@
 describe("application", () => {
-    const { application: { Application } } = adone;
+    const { application: { CliApplication } } = adone;
 
     describe("argv handling", () => {
         let app = null;
@@ -7,8 +7,8 @@ describe("application", () => {
         const parse = async (...args) => {
             const { command, errors, rest, match } = await app._parseArgs(args);
             return {
-                args: app[Symbol.for("adone.application.Application#mainCommand")].getArgumentsMap(),
-                opts: app[Symbol.for("adone.application.Application#mainCommand")].getOptionsMap(),
+                args: app[Symbol.for("adone.application.CliApplication#mainCommand")].getArgumentsMap(),
+                opts: app[Symbol.for("adone.application.CliApplication#mainCommand")].getOptionsMap(),
                 command,
                 errors,
                 rest,
@@ -17,7 +17,7 @@ describe("application", () => {
         };
 
         beforeEach(() => {
-            app = new Application();
+            app = new CliApplication();
         });
 
         describe("arguments", () => {

@@ -29,12 +29,6 @@ describe("application", "Application", () => {
         assert.equal(err.code, 7);
     });
 
-    it("should not parse args and use correct argv", async () => {
-        const expectedArgv = ["a", "b", "8", "--cc"];
-        const argv = await execStdout("node", [fixture("argv.js")].concat(expectedArgv));
-        assert.equal(argv, expectedArgv.join(" "));
-    });
-
     it("Correct sequential method call at startup", async () => {
         const stdout = await execStdout("node", [fixture("correct_bootstrap.js")]);
         assert.equal(stdout, "configured\ninitialized\nrun\nuninitialized");
@@ -59,7 +53,7 @@ describe("application", "Application", () => {
     });
 
     it("no public properties instead of application's reserved", async () => {
-        const expected = ["_", "data", "parent", "argv", "name"];
+        const expected = ["_", "data", "parent", "name"];
         const stdout = await execStdout("node", [fixture("public_reserved_props.js")]);
         const props = stdout.split(";");
         assert.sameMembers(props, expected);

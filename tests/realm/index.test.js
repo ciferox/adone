@@ -219,7 +219,6 @@ describe("realm", () => {
             const systemDb = new adone.omnitron.SystemDB();
             await systemDb.open();
             
-
             const omnitronServicePath = std.path.join(__dirname, "packages", "omnitron_service_good");
 
             const config = await adone.project.Configuration.load({

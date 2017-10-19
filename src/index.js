@@ -26,6 +26,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         // Common tags
         SUBSYSTEM: Symbol(),
         APPLICATION: Symbol(),
+        CLI_APPLICATION: Symbol(),
         CONFIGURATION: Symbol(),
         CORE_STREAM: Symbol(),
         BYTE_ARRAY: Symbol(),

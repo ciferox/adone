@@ -774,6 +774,7 @@ export const uint8Array = (value) => value instanceof Uint8Array;
 
 export const subsystem = (obj) => adone.tag.has(obj, "SUBSYSTEM");
 export const application = (obj) => adone.tag.has(obj, "APPLICATION");
+export const cliApplication = (obj) => adone.tag.has(obj, "CLI_APPLICATION");
 export const configuration = (obj) => adone.tag.has(obj, "CONFIGURATION");
 export const datetime = (obj) => adone.tag.has(obj, "DATETIME");
 

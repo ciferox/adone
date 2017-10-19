@@ -9,7 +9,7 @@ const {
     runtime: { term }
 } = adone;
 
-class AdoneCLI extends application.Application {
+class AdoneCLI extends application.CliApplication {
     async configure() {
         this.config = await adone.realm.cli.getConfig();
 
@@ -400,4 +400,4 @@ class AdoneCLI extends application.Application {
     }
 }
 
-application.run(AdoneCLI);
+application.runCli(AdoneCLI);
