@@ -7,13 +7,8 @@ const {
     fs,
     netron: { Context, Public },
     omnitron,
-    runtime,
-    vault
+    runtime
 } = adone;
-
-const {
-    STATUSES
-} = omnitron;
 
 @Context({
     description: "Omnitron"
@@ -188,94 +183,69 @@ export default class Omnitron extends application.Application {
     }
 
     @Public({
-        description: "Return list of all services services",
+        description: "Return list of all services",
         type: Array
     })
-    async list({ status = "all" } = {}) {
-        if (!STATUSES.includes(status)) {
-            throw new adone.x.NotValid(`Not valid status: ${status}`);
-        }
-
-        const services = await this.subsystem("service").enumerate();
-        return services.filter((x) => x.status === status || status === "all");
-    }
-
-    // @Public
-    // @Description("Service status")
-    // @Type(String)
-    // async status(serviceName) {
-    //     let names;
-    //     if (is.string(serviceName)) {
-    //         if (serviceName === "") {
-    //             names = Object.keys(this._.service);
-    //         } else {
-    //             names = [serviceName];
-    //         }
-    //     } else if (is.array(serviceName)) {
-    //         if (serviceName.length === 0) {
-    //             names = Object.keys(this._.service);
-    //         } else {
-    //             names = serviceName;
-    //         }
-    //     } else {
-    //         throw new adone.x.InvalidArgument(`Invalid type of argument: ${typeof (serviceName)}`);
-    //     }
-
-    //     const result = [];
-    //     for (const name of names) {
-    //         if (is.propertyOwned(this._.service, name)) {
-    //             result.push({
-    //                 name,
-    //                 status: this._.service[name].config.status
-    //             });
-    //         }
-    //     }
-    //     return result;
-    // }
-
-    @Public({
-        description: "Enable service"
-    })
-    enable(serviceName, options) {
-        return this.subsystem("service").enable(serviceName, options);
+    enumerate(serviceName) {
+        return this.subsystem("service").enumerate(serviceName);
     }
 
     @Public({
-        description: "Enable service"
+        description: "Return object of grouped services",
+        type: Array
     })
-    disable(serviceName, options) {
-        return this.subsystem("service").disable(serviceName, options);
+    enumerateByGroup(group) {
+        return this.subsystem("service").enumerateByGroup(group);
     }
 
     @Public({
-        description: "Start service"
+        description: "Return list of groups",
+        type: Array
     })
-    start(serviceName) {
-        return this.subsystem("service").start(serviceName);
+    enumerateGroups() {
+        return this.subsystem("service").enumerateGroups();
     }
 
-    // @Public
-    // @Description("Stop service")
-    // @Type()
-    // stop(serviceName) {
-    //     const service = this.getServiceByName(serviceName);
-    //     const status = service.config.status;
-    //     if (status === DISABLED) {
-    //         throw new adone.x.IllegalState("Service is disabled");
-    //     } else if (status === ACTIVE) {
-    //         return this.detachService(service);
-    //     } else {
-    //         throw new adone.x.IllegalState(`Illegal status of service: ${status}`);
-    //     }
-    // }
+    @Public({})
+    getMaintainer(group) {
+        return this.subsystem("service").getMaintainerForGroup(group);
+    }
 
-    // @Public
-    // @Description("Restart service")
-    // @Type()
-    // async restart(serviceName) {
-    //     await this.stop(serviceName);
-    //     return this.start(serviceName);
-    // }
+    @Public({
+        description: "Enables service"
+    })
+    enableService(name, options) {
+        return this.subsystem("service").enable(name, options);
+    }
+
+    @Public({
+        description: "Disables service"
+    })
+    disableService(name, options) {
+        return this.subsystem("service").disable(name, options);
+    }
+
+    @Public({
+        description: "Starts service"
+    })
+    startService(name) {
+        return this.subsystem("service").start(name);
+    }
+
+    @Public({
+        description: "Stops service"
+    })
+    stopService(name) {
+        return this.subsystem("service").stop(name);
+    }
+
+    @Public({
+        description: "Restarts service"
+    })
+    async restart(serviceName) {
+        await this.stop(serviceName);
+        return this.start(serviceName);
+    }
 }
 
 if (require.main === module) {

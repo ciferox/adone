@@ -28,6 +28,7 @@ describe("application", "CliApplication", () => {
     it("no public properties instead of application's reserved", async () => {
         const expected = ["_", "data", "parent", "argv", "name"];
         const stdout = await execStdout("node", [fixture("public_reserved_props_cli.js")]);
+        adone.log(stdout);
         const props = stdout.split(";");
         assert.sameMembers(props, expected);
     });

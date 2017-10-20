@@ -17,7 +17,7 @@ export default class NetronManager extends application.Subsystem {
     }
 
     async initialize() {
-        this._omnitronPort = this.parent.config.raw.gates[0].port;
+        this._servicePort = this.parent.config.raw.gates[0].port;
 
         // Bind all gates.
         for (const gate of this.parent.config.raw.gates) {
@@ -37,7 +37,7 @@ export default class NetronManager extends application.Subsystem {
         }
     }
 
-    getPort() {
-        return this._omnitronPort;
+    getServicePort() {
+        return this._servicePort;
     }
 }

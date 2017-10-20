@@ -5,122 +5,136 @@ const {
     fs,
     std,
     omnitron: { STATUS },
-    vault,
-    system: { process: { exec } }
+    vault
 } = adone;
 
 const SERVICES_PATH = adone.realm.config.omnitron.servicesPath;
 
-const SERVICE_APP_PATH = std.path.join(__dirname, "service_application.js");
-
-class ServiceMaintainer {
-    constructor({ group, services, port } = {}) {
-        this.group = group;
-        this.services = services;
-        this.port = port;
-        this.process = null;
-        this.restarts = 0;
-        this.maxRestarts = 3;
-    }
-
-    async start() {
-        const serviceProcess = exec("node", [SERVICE_APP_PATH], {
-            stdout: std.fs.openSync(adone.realm.config.omnitron.logFilePath, "a"),
-            stderr: std.fs.openSync(adone.realm.config.omnitron.errorLogFilePath, "a"),
-            env: {
-                OMNITRON_PORT: this.port,
-                OMNITRON_SERVICE_GROUP: this.group,
-                OMNITRON_SERVICES: this.services.map((x) => x.path).join(";")
-            }
-        });
-
-        serviceProcess.then((result) => {
-            if (result.code !== 0) {
-                this.process = null;
-                if (++this.restarts <= this.maxRestarts) {
-                    this.start();
-                }
-            }
-        });
-
-        this.process = serviceProcess;
-        return serviceProcess;
-    }
-
-    async stop() {
-        if (!is.null(this.process)) {
-            this.process.kill("SIGTERM");
-            const result = await this.process;
-            return result.code;
-        }
-    }
-
-    isRunning() {
-        return !is.null(this.process);
-    }
-}
+const api = adone.lazify({
+    ServiceMaintainer: "./service_maintainer"
+}, exports, require);
 
 export default class ServiceManager extends application.Subsystem {
     async configure() {
         this.meta = null;
         this.services = null;
         this.serviceMaintainers = new Map();
-        this.maintainers = new Map();
+        this.groupMaintainers = new Map();
     }
 
     async initialize() {
         this.meta = await this.parent.db.getServicesValuable();
         this.services = vault.slice(this.meta, "service");
 
-        await this.startAll();
+        const VALID_STATUSES = [STATUS.DISABLED, STATUS.INACTIVE];
+
+        const serviceGroups = await this.enumerateByGroup();
+        for (const [group, services] of Object.entries(serviceGroups)) {
+            const maintainer = this.getMaintainerForGroup(group); // eslint-disable-line
+            let shouldSpawn = false;
+            for (const serviceData of services) {
+                // Check service status and fix if necessary
+                if (!VALID_STATUSES.includes(serviceData.status)) {
+                    serviceData.status = STATUS.INACTIVE;
+                    await this.services.set(serviceData.name, serviceData); // eslint-disable-line
+                }
+                if (serviceData.status === STATUS.INACTIVE) {
+                    shouldSpawn = true;
+                }
+                maintainer.addService(serviceData.name);
+                this.serviceMaintainers.set(serviceData.name, maintainer);
+            }
+
+            if (shouldSpawn) {
+                await maintainer.spawn(); // eslint-disable-line
+            }
+        }
     }
 
     async uninitialize() {
-        await this.stopAll();
+        // for (const maintainer of this.groupMaintainers.values()) {
+        //     // await maintainer.kill(); // eslint-disable-line
+        // }
+
+        this.groupMaintainers.clear();
+        this.serviceMaintainers.clear();
+        this.services = null;
     }
 
-    async enumerate() {
-        const existingNames = [];
+    async enumerate(name) {
+        if (is.string(name)) {
+            const serviceData = await this.services.get(name);
+            if (!(await fs.exists(std.path.join(SERVICES_PATH, name)))) {
+                serviceData.status = STATUS.INVALID;
+                await this.services.set(name, serviceData);
+            }
+            return serviceData;
+        }
+
         const services = [];
-
-        // Normalize statuses
-        if (await fs.exists(SERVICES_PATH)) {
-            const files = await fs.readdir(SERVICES_PATH);
-            for (const file of files) {
-                try {
-                    const path = std.path.join(SERVICES_PATH, file);
-                    // eslint-disable-next-line
-                    const adoneConf = await adone.project.Configuration.load({
-                        cwd: path
-                    });
-                    existingNames.push(adoneConf.raw.name);
-                    services.push({
-                        name: adoneConf.raw.name,
-                        description: adoneConf.raw.description || "",
-                        version: adoneConf.raw.version || "",
-                        author: adoneConf.raw.author || "",
-                        path
-                    });
-                } catch (err) {
-                    adone.error(err.message);
-                }
-            }
-        }
-
         const names = this.services.keys();
+        let existingNames;
 
-        // Remove nonexisting services
-        for (const name of names) {
-            if (!existingNames.includes(name)) {
-                await this.services.delete(name); // eslint-disable-line
-            }
+        if (await fs.exists(SERVICES_PATH)) {
+            existingNames = await fs.readdir(SERVICES_PATH);
+        } else {
+            existingNames = [];
         }
 
-        for (const service of services) {
-            Object.assign(service, await this.services.get(service.name)); // eslint-disable-line
+        for (const name of names) {
+            const serviceData = await this.services.get(name); // eslint-disable-line
+            // eslint-disable-next-line
+            if (!existingNames.includes(name) || !(await fs.exists(serviceData.mainPath))) {
+                serviceData.status = STATUS.INVALID;
+                await this.services.set(name, serviceData); // eslint-disable-line
+            }
+            services.push(serviceData);
         }
 
         return services;
+    }
+
+    async enumerateByGroup(group) {
+        const services = await this.enumerate();
+
+        if (is.string(group)) {
+            const result = [];
+            for (const serviceData of services) {
+                if (serviceData.group === group) {
+                    result.push(serviceData);
+                }
+            }
+
+            return result;
+        }
+
+        const result = {};
+
+        for (const service of services) {
+            let list;
+            if (is.array(result[service.group])) {
+                list = result[service.group];
+            } else {
+                list = [];
+                result[service.group] = list;
+            }
+            list.push(service);
+        }
+
+        return result;
+    }
+
+    async enumerateGroups() {
+        const services = await this.enumerate();
+        const result = [];
+
+        for (const service of services) {
+            if (!result.includes(service.group)) {
+                result.push(service.group);
+            }
+        }
+
+        return result;
     }
 
     async getService(name, checkExists = true) {
@@ -148,190 +162,63 @@ export default class ServiceManager extends application.Subsystem {
         return result;
     }
 
-    async enumerateGroups() {
-        const services = await this.enumerate();
-        const groups = new Map();
-
-        for (const service of services) {
-            if (is.string(service.group)) {
-                let list = groups.get(service.group);
-                if (is.undefined(list)) {
-                    list = [];
-                    groups.set(service.group, list);
-                }
-                list.push(service);
-            } else {
-                const group = adone.text.random(16);
-                await this.setServiceGroup(service.name, group); // eslint-disable-line
-                groups.set(group, [service]);
-            }
-        }
-
-        return groups;
-    }
-
     async setServiceGroup(name, group) {
-        const runtimeData = await this.services.get(name);
-        runtimeData.group = group;
-        await this.services.set(name, runtimeData);
+        const serviceData = await this.services.get(name);
+        serviceData.group = group;
+        await this.services.set(name, serviceData);
     }
 
     async enable(name) {
-        const runtimeData = await this.services.get(name);
-        if (runtimeData.status === STATUS.DISABLED) {
-            runtimeData.status = STATUS.INACTIVE;
-            return this.services.set(name, runtimeData);
+        const serviceData = await this.services.get(name);
+        if (serviceData.status === STATUS.DISABLED) {
+            serviceData.status = STATUS.INACTIVE;
+            return this.services.set(name, serviceData);
         }
         throw new x.IllegalState("Service is not disabled");
     }
 
     async disable(name) {
-        const runtimeData = await this.services.get(name);
-        if (runtimeData.status !== STATUS.DISABLED) {
-            if (runtimeData.status === STATUS.ACTIVE) {
+        const serviceData = await this.services.get(name);
+        if (serviceData.status !== STATUS.DISABLED) {
+            if (serviceData.status === STATUS.ACTIVE) {
                 await this.stop(name);
-            } else if (runtimeData.status !== STATUS.INACTIVE) {
-                throw new x.IllegalState(`Cannot disable service with '${runtimeData.status}' status`);
+            } else if (serviceData.status !== STATUS.INACTIVE) {
+                throw new x.IllegalState(`Cannot disable service with '${serviceData.status}' status`);
             }
-            runtimeData.status = STATUS.DISABLED;
-            return this.services.set(name, runtimeData);
-        }
-    }
-
-    async startAll() {
-        const groups = await this.enumerateGroups();
-        const port = this.parent.subsystem("netron").getPort();
-
-        for (const [group, services] of groups.entries()) {
-            const maintainer = new ServiceMaintainer({
-                group,
-                services,
-                port
-            });
-            this.maintainers.set(group, maintainer);
-            for (const svc of services) {
-                this.serviceMaintainers.set(svc.name, maintainer);
-            }
-            maintainer.start();
-        }
-    }
-
-    async stopAll() {
-        for (const maintainer of this.maintainers.values()) {
-            await maintainer.stop(); // eslint-disable-line
+            serviceData.status = STATUS.DISABLED;
+            return this.services.set(name, serviceData);
         }
     }
 
     async start(name) {
-        const runtimeData = await this.services.get(name);
-        if (runtimeData.status === STATUS.DISABLED) {
-            throw new x.IllegalState("Service is disabled");
-        } else if (runtimeData.status === STATUS.INACTIVE) {
-            // return this.attachService(serviceName, service.config);
-        } else {
-            throw new x.IllegalState(`Illegal status of service: ${runtimeData.status}`);
-        }
+        const maintainer = await this.getMaintainerForService(name);
+        return maintainer.startService(name);
     }
 
-    static createMaintainer(options) {
-        let maintainer;
+    async stop(name) {
+        const maintainer = await this.getMaintainerForService(name);
+        return maintainer.stopService(name);
+    }
 
-        switch (options.group) {
-            case "omnitron":
-            default:
-                maintainer = new ServiceMaintainer(options);
+    async getMaintainerForService(name) {
+        let maintainer = this.serviceMaintainers.get(name);
+        if (is.undefined(maintainer)) {
+            const serviceData = await this.services.get(name);
+            maintainer = new api.ServiceMaintainer(this, serviceData.group);
+            this.groupMaintainers.set(serviceData.group, maintainer);
+            this.serviceMaintainers.set(serviceData.name, maintainer);
         }
 
         return maintainer;
     }
 
-    // getGroups() {
-    //     return this.meta.get("groups");
-    // }
-
-    // async addGroup(name) {
-    //     const groups = await this.getGroups();
-    //     if (!groups.include(name)) {
-    //         groups.push(name);
-    //         await this.meta.set("groups", groups);
-    //     }
-    // }
-
-    // async deleteGroup(name) {
-    //     if (name === "omnitron") {
-    //         throw new x.NotAllowed("You cannot delete this group");
-    //     }
-    // }
-
-    // async attachServices() {
-    //     this._.service = {};
-    //     this._.uninitOrder = [];
-    //     this._.context = {};
-
-    //     // Attach enabled contexts
-    //     for (const [name, svcConfig] of Object.entries(this.config.omnitron.services)) {
-    //         try {
-    //             if (name !== "omnitron") {
-    //                 await this.attachService(name, svcConfig);
-    //             }
-    //         } catch (err) {
-    //             adone.error(err.message);
-    //         }
-    //     }
-
-    //     // Finally, attach omnitron service
-    //     return this.attachService("omnitron", this.config.omnitron.services.omnitron, this);
-    // }
-
-    // async detachServices() {
-    //     try {
-    //         // First detach omnitron service
-    //         if (!is.null(this._.netron)) {
-    //             this._.netron.detachContext("omnitron");
-    //             this.config.omnitron.services.omnitron.status = ENABLED;
-    //             adone.info("Service 'omnitron' detached");
-
-    //             for (const serviceName of this._.uninitOrder) {
-    //                 const service = this._.service[serviceName];
-    //                 try {
-    //                     if (serviceName !== "omnitron") {
-    //                         await this.detachService(service);
-    //                     }
-    //                 } catch (err) {
-    //                     adone.error(err);
-    //                 }
-    //             }
-    //         }
-    //     } catch (err) {
-    //         adone.error(err);
-    //     }
-    // }
-
-    getInterface(name) {
-        const parts = name.split(".");
-        const service = this._.service[parts[0]];
-        if (is.undefined(service)) {
-            throw new x.Unknown(`Unknown service '${name}'`);
+    getMaintainerForGroup(group) {
+        let maintainer = this.groupMaintainers.get(group);
+        if (is.undefined(maintainer)) {
+            maintainer = new api.ServiceMaintainer(this, group);
+            this.groupMaintainers.set(group, maintainer);
         }
-
-        let defId;
-        if (parts.length === 1) {
-            if (is.undefined(service.defaultContext)) {
-                throw new x.InvalidArgument(`No default context of '${parts[0]}' service`);
-            }
-            defId = service.defaultContext.defId;
-        } else {
-            for (const context of service.contexts) {
-                if (context.id === parts[1]) {
-                    defId = context.defId;
-                }
-            }
-            if (is.undefined(defId)) {
-                throw new x.NotFound(`Context '${name}' not found`);
-            }
-        }
-
-        return this._.netron.getInterfaceById(defId);
+        return maintainer;
     }
 
     // async attachService(serviceName, serviceConfig, instance) {

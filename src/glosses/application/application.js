@@ -16,7 +16,7 @@ const {
 
 // const INTERNAL = Symbol();
 const REPORT = Symbol();
-const ERROR_SCOPE = Symbol.for("adone.application.errorScope");
+const ERROR_SCOPE = Symbol.for("adone.application.Application#errorScope");
 const HANDLERS = Symbol();
 const EXITING = Symbol();
 const IS_MAIN = Symbol();
@@ -125,6 +125,9 @@ export default class Application extends application.Subsystem {
             adone.error(err.stack || err.message || err);
             return this.exit(application.EXIT_ERROR);
         }
+    }
+
+    main() {
     }
 
     exitOnSignal(...names) {
@@ -250,6 +253,3 @@ export default class Application extends application.Subsystem {
     }
 }
 tag.add(Application, "APPLICATION");
-
-// // mark the default main as internal to be able to distinguish internal from user-defined handlers
-// Application.prototype.main[INTERNAL] = true;

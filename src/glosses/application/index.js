@@ -3,9 +3,6 @@ const {
     util
 } = adone;
 
-export const SUBSYSTEMS_SYMBOL = Symbol();
-export const STAGE_SYMBOL = Symbol();
-
 export const STATE = {
     CREATED: 0,
     CONFIGURING: 1,
@@ -14,7 +11,8 @@ export const STATE = {
     INITIALIZED: 4,
     RUNNING: 5,
     UNINITIALIZING: 6,
-    UNINITIALIZED: 7
+    UNINITIALIZED: 7,
+    FAILED: 8
 };
 
 export const EXIT_SUCCESS = 0;

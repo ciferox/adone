@@ -1,6 +1,10 @@
-const { is, util } = adone;
+const {
+    is,
+    util
+} = adone;
 
 const ONCE_MAPPING = Symbol.for("asyncEmitter:onceMapping");
+const MANAGER = Symbol();
 
 export default class AsyncEmitter extends adone.event.EventEmitter {
     constructor(concurrency = null) {
@@ -13,9 +17,9 @@ export default class AsyncEmitter extends adone.event.EventEmitter {
 
     setConcurrency(max = null) {
         if (max >= 1) {
-            this.manager = util.throttle({ max });
+            this[MANAGER] = util.throttle({ max });
         } else {
-            this.manager = null;
+            this[MANAGER] = null;
         }
         return this;
     }
@@ -99,8 +103,8 @@ export default class AsyncEmitter extends adone.event.EventEmitter {
 
     _executeListener(listener, args) {
         try {
-            if (this.manager) {
-                return this.manager(() => listener(...args));
+            if (this[MANAGER]) {
+                return this[MANAGER](() => listener(...args));
             }
             return Promise.resolve(listener(...args));
         } catch (err) {

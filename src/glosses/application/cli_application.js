@@ -12,7 +12,6 @@ const {
 
 const {
     EXIT_SUCCESS,
-    STAGE_SYMBOL,
     STATE
 } = application;
 
@@ -53,11 +52,12 @@ const defaultColors = {
     }
 };
 
+const STATE_SYMBOL = Symbol.for("application.Subsystem#state");
 const INTERNAL = Symbol();
 const UNNAMED = Symbol();
 const EMPTY_VALUE = Symbol();
 const COMMAND = Symbol();
-const ERROR_SCOPE = Symbol.for("adone.application.errorScope");
+const ERROR_SCOPE = Symbol.for("adone.application.Application#errorScope");
 const MAIN_COMMAND = Symbol.for("adone.application.CliApplication#mainCommand");
 const VERSION = Symbol();
 const STATIC_COMMANDS = Symbol.for("adone.application.CliApplication#staticCommands");
@@ -1345,8 +1345,7 @@ export default class CliApplication extends application.Application {
         this.argv = argv;
 
         this[MAIN_COMMAND] = null;
-        this[VERSION] = null;
-        
+        this[VERSION] = null;        
 
         this.defineMainCommand();
     }
@@ -1459,7 +1458,7 @@ export default class CliApplication extends application.Application {
                 await this.exit(code);
                 return;
             }
-            this[STAGE_SYMBOL] = STATE.RUNNING;
+            this[STATE_SYMBOL] = STATE.RUNNING;
         } catch (err) {
             if (this[ERROR_SCOPE]) {
                 return this._fireException(err);

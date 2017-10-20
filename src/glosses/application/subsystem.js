@@ -5,11 +5,12 @@ const {
     tag,
     x,
     application: {
-        STAGE_SYMBOL,
-        SUBSYSTEMS_SYMBOL,
         STATE
     }
 } = adone;
+
+const SUBSYSTEMS_SYMBOL = Symbol.for("application.Subsystem#subsystems");
+const STATE_SYMBOL = Symbol.for("application.Subsystem#state");
 
 export default class Subsystem extends adone.event.AsyncEmitter {
     constructor({ name = null } = {}) {
@@ -19,7 +20,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         this[SUBSYSTEMS_SYMBOL] = [];
         this.parent = null;
         this._ = this.data = {};
-        this[STAGE_SYMBOL] = STATE.CREATED;
+        this[STATE_SYMBOL] = STATE.CREATED;
     }
 
     /**
@@ -83,18 +84,36 @@ export default class Subsystem extends adone.event.AsyncEmitter {
     }
 
     /**
+     * Configure specified subsystem.
+     *
+     * @param {string} name Name of subsystem
+     * @returns {Promise<void>}
+     */
+    async configureSubsystem(name) {
+        const sysInfo = this.getSubsystemInfo(name);
+        await this._configureSubsystem(sysInfo);
+    }
+
+    /**
+     * Initializes specified subsystem.
+     *
+     * @param {string} name Name of subsystem
+     * @returns {Promise<void>}
+     */
+    async initializeSubsystem(name) {
+        const sysInfo = this.getSubsystemInfo(name);
+        await this._initializeSubsystem(sysInfo);
+    }
+
+    /**
      * Uninitializes specified subsystem.
      *
      * @param {string} name Name of subsystem
      * @returns {Promise<void>}
      */
     async uninitializeSubsystem(name) {
-        for (const sysInfo of this[SUBSYSTEMS_SYMBOL]) {
-            if (sysInfo.name === name) {
-                await this._uninitializeSubsystem(sysInfo); // eslint-disable-line
-                break;
-            }
-        }
+        const sysInfo = this.getSubsystemInfo(name);
+        await this._uninitializeSubsystem(sysInfo);
     }
 
     /**
@@ -109,18 +128,11 @@ export default class Subsystem extends adone.event.AsyncEmitter {
     }
 
     /**
-     * Initializes specified subsystem.
-     *
-     * @param {string} name Name of subsystem
-     * @returns {Promise<void>}
+     * Checks whether subsystem exists
+     * @param {*} name name of subsystem
      */
-    async initializeSubsystem(name) {
-        for (const sysInfo of this[SUBSYSTEMS_SYMBOL]) {
-            if (sysInfo.name === name) {
-                await this._initializeSubsystem(sysInfo); // eslint-disable-line
-                break;
-            }
-        }
+    hasSubsystem(name) {
+        return this[SUBSYSTEMS_SYMBOL].findIndex((s) => s.name === name) >= 0;
     }
 
     /**
@@ -134,7 +146,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
      * @param {boolean} addOnCommand If true, the subsystem will be added only if a command 'name' is requested.
      * @returns {null|Promise<object>}
      */
-    async addSubsystem({ subsystem, name = null, description = "", group = "subsystem", configureArgs = [] } = {}) {
+    addSubsystem({ subsystem, name = null, description = "", group = "subsystem", configureArgs = [] } = {}) {
         let instance;
         if (is.string(subsystem)) {
             if (!std.path.isAbsolute(subsystem)) {
@@ -149,7 +161,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         } else {
             instance = subsystem;
         }
-        
+
         if (!is.subsystem(instance)) {
             throw new x.NotValid("'subsystem' should be path or instance of adone.application.Subsystem");
         }
@@ -166,12 +178,28 @@ export default class Subsystem extends adone.event.AsyncEmitter {
             group,
             configureArgs,
             instance,
-            stage: STATE.CREATED
+            state: STATE.CREATED
         };
 
         this[SUBSYSTEMS_SYMBOL].push(sysInfo);
 
         return sysInfo;
+    }
+
+    /**
+     * Deletes subsytem
+     * @param {string} name subsystem name
+     */
+    deleteSubsystem(name) {
+        const index = this[SUBSYSTEMS_SYMBOL].findIndex((s) => s.name === name);
+        if (index < 0) {
+            throw new x.Unknown(`Unknown subsystem: ${name}`);
+        }
+        if (![STATE.CREATED, STATE.UNINITIALIZED, STATE.FAILED].includes(this[SUBSYSTEMS_SYMBOL][index].state)) {
+            throw new x.NotAllowed("The subsystem is used and can not be deleted");
+        }
+
+        this[SUBSYSTEMS_SYMBOL].splice(index, 1);
     }
 
     /**
@@ -182,7 +210,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
      * @returns {Promise<void>}
      */
     async addSubsystemsFrom(path, { useFilename = false, filter, group = "subsystem", configureArgs = [], addOnCommand = false } = {}) {
-        if (this[STAGE_SYMBOL] !== STATE.CONFIGURING) {
+        if (this[STATE_SYMBOL] !== STATE.CONFIGURING) {
             throw new x.NotAllowed("Subsystem can be added only during configuration of the application");
         }
 
@@ -223,57 +251,55 @@ export default class Subsystem extends adone.event.AsyncEmitter {
      * @param {Subsystem} name Name of subsystem
      */
     getSubsystemInfo(name) {
-        for (const sysInfo of this[SUBSYSTEMS_SYMBOL]) {
-            if (sysInfo.name === name) {
-                return sysInfo;
-            }
+        const sysInfo = this[SUBSYSTEMS_SYMBOL].find((s) => s.name === name);
+        if (is.undefined(sysInfo)) {
+            throw new x.Unknown(`Unknown subsystem: ${name}`);
         }
-
-        throw new x.Unknown(`Unknown subsystem: ${name}`);
+        return sysInfo;
     }
 
     async _configureSubsystem(sysInfo) {
-        sysInfo.stage = STATE.CONFIGURING;
+        sysInfo.state = STATE.CONFIGURING;
         await sysInfo.instance._configure(...sysInfo.configureArgs);
-        sysInfo.stage = STATE.CONFIGURED;
+        sysInfo.state = STATE.CONFIGURED;
     }
 
     async _initializeSubsystem(sysInfo) {
-        if (sysInfo.stage === STATE.CONFIGURED) {
-            sysInfo.stage = STATE.INITIALIZING;
+        if (sysInfo.state === STATE.CONFIGURED) {
+            sysInfo.state = STATE.INITIALIZING;
             await sysInfo.instance._initialize();
-            sysInfo.stage = STATE.INITIALIZED;
+            sysInfo.state = STATE.INITIALIZED;
         }
     }
 
     async _uninitializeSubsystem(sysInfo) {
-        if (sysInfo.stage === STATE.INITIALIZED) {
-            sysInfo.stage = STATE.UNINITIALIZING;
+        if (sysInfo.state === STATE.INITIALIZED) {
+            sysInfo.state = STATE.UNINITIALIZING;
             await sysInfo.instance._uninitialize();
-            sysInfo.stage = STATE.UNINITIALIZED;
+            sysInfo.state = STATE.UNINITIALIZED;
         }
     }
 
     async _configure(...args) {
-        this[STAGE_SYMBOL] = STATE.CONFIGURING;
+        this[STATE_SYMBOL] = STATE.CONFIGURING;
         const result = await this.configure(...args);
         await this.configureSubsystems();
-        this[STAGE_SYMBOL] = STATE.CONFIGURED;
+        this[STATE_SYMBOL] = STATE.CONFIGURED;
         return result;
     }
 
     async _initialize() {
-        this[STAGE_SYMBOL] = STATE.INITIALIZING;
+        this[STATE_SYMBOL] = STATE.INITIALIZING;
         await this.initialize();
         await this.initializeSubsystems();
-        this[STAGE_SYMBOL] = STATE.INITIALIZED;
+        this[STATE_SYMBOL] = STATE.INITIALIZED;
     }
 
     async _uninitialize() {
-        this[STAGE_SYMBOL] = STATE.UNINITIALIZING;
+        this[STATE_SYMBOL] = STATE.UNINITIALIZING;
         await this.uninitialize();
         await this.uninitializeSubsystems();
-        this[STAGE_SYMBOL] = STATE.UNINITIALIZED;
+        this[STATE_SYMBOL] = STATE.UNINITIALIZED;
     }
 }
 tag.add(Subsystem, "SUBSYSTEM");

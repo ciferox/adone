@@ -3,5 +3,11 @@
     "version": "1.0.0",
     "author": "Author",
     "description": "test service #1",
-    "type": "omnitron.service"
+    "type": "omnitron.service",
+    "main": "lib",
+    "structure": {
+        "$task": "transpile",
+        "$src": "src/**/*",
+        "$dst": "lib"
+    }
 }

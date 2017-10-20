@@ -41,10 +41,20 @@ export default class SystemDB {
             throw new x.Exists(`Service '${name}' is already registered`);
         }
 
-        return services.set(name, {
-            group: adone.text.random(16),
-            status: STATUS.DISABLED
+        const servicePath = std.path.join(adone.realm.config.omnitron.servicesPath, name);
+        const adoneConf = await adone.project.Configuration.load({
+            cwd: servicePath
         });
+
+        return services.set(name, Object.assign({
+            description: "",
+            version: "",
+            author: ""
+        }, adone.util.pick(adoneConf.raw, ["name", "version", "description", "author"]), {
+            group: `group-${adone.text.random(16)}`,
+            status: STATUS.DISABLED,
+            mainPath: std.path.join(servicePath, adoneConf.getMainPath())
+        }));
     }
 
     async unregisterService(name) {
