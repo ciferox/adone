@@ -247,8 +247,8 @@ describe("omnitron", () => {
         assert.equal(list[0].status, STATUS.INACTIVE);
 
         await iOmnitron.startService("test1");
-        let serviceData = await iOmnitron.enumerate("test1");
-        assert.equal(serviceData.status, STATUS.ACTIVE);
+        list = await iOmnitron.enumerate("test1");
+        assert.equal(list[0].status, STATUS.ACTIVE);
 
         // await dispatcher.peer.waitForContext("test1");
         const iTest1 = await dispatcher.getInterface("test1");
@@ -265,8 +265,8 @@ describe("omnitron", () => {
         assert.equal(info.author, adoneConf.raw.author);
 
         await iOmnitron.stopService("test1");
-        serviceData = await iOmnitron.enumerate("test1");
-        assert.equal(serviceData.status, STATUS.INACTIVE);
+        list = await iOmnitron.enumerate("test1");
+        assert.equal(list[0].status, STATUS.INACTIVE);
 
         await realmInstance.uninstall({
             name: "omnitron.service.test1"

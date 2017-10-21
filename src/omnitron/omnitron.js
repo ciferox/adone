@@ -40,7 +40,6 @@ export default class Omnitron extends application.Application {
 
     async initialize() {
         await this.createPidFile();
-
         await this.db.open();
     }
 
@@ -69,7 +68,7 @@ export default class Omnitron extends application.Application {
 
     async createPidFile() {
         try {
-            await fs.writeFile(adone.realm.config.omnitron.pidFilePath, process.pid);
+            await fs.writeFile(adone.realm.config.omnitron.pidFilePath, process.pid.toString());
         } catch (err) {
             adone.error(err.message);
         }
@@ -160,13 +159,13 @@ export default class Omnitron extends application.Application {
         }
     }
 
-    @Public({
-        description: "Returns list of all gates",
-        type: Array
-    })
-    gates() {
-        return this.config.gates;
-    }
+    // @Public({
+    //     description: "Returns list of all gates",
+    //     type: Array
+    // })
+    // gates() {
+    //     return this.config.gates;
+    // }
 
     @Public({
         description: "Register new service"
@@ -183,11 +182,11 @@ export default class Omnitron extends application.Application {
     }
 
     @Public({
-        description: "Return list of all services",
+        description: "Return list of services",
         type: Array
     })
-    enumerate(serviceName) {
-        return this.subsystem("service").enumerate(serviceName);
+    enumerate(filter) {
+        return this.subsystem("service").enumerate(filter);
     }
 
     @Public({

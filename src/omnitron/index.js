@@ -15,8 +15,8 @@ export const STATUSES = [
     STATUS.INACTIVE,
     STATUS.STARTING,
     STATUS.ACTIVE,
-    STATUS.STOPPING,
-    "all"];
+    STATUS.STOPPING
+];
 
 adone.lazify({
     SystemDB: "./systemdb",

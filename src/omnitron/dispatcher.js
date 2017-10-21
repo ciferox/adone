@@ -241,19 +241,12 @@ export default class Dispatcher {
         return this.getInterface("omnitron").updateEnvs(envs);
     }
 
-    start(serviceName = "") {
-        if (serviceName === "") {
-            return this.connectLocal();
-        }
-        return this.getInterface("omnitron").start(serviceName);
-
+    startService(serviceName) {
+        return this.getInterface("omnitron").startService(serviceName);
     }
 
-    stop(serviceName = "") {
-        if (serviceName === "") {
-            return this.kill({ killChildren: false });
-        }
-        return this.getInterface("omnitron").stop(serviceName);
+    stopService(serviceName) {
+        return this.getInterface("omnitron").stopService(serviceName);
 
     }
 
@@ -265,22 +258,16 @@ export default class Dispatcher {
         return this.getInterface("omnitron").status(serviceName);
     }
 
-    enable(serviceName, options) {
-        return this.getInterface("omnitron").enable(serviceName, true, options);
+    enableService(serviceName, options) {
+        return this.getInterface("omnitron").enableService(serviceName, options);
     }
 
-    disable(serviceName) {
-        return this.getInterface("omnitron").enable(serviceName, false);
+    disableService(serviceName, options) {
+        return this.getInterface("omnitron").disableService(serviceName, options);
     }
 
-    list(status) {
-        if (!STATUSES.includes(status)) {
-            throw new x.NotValid(`Not valid status: ${status}`);
-        }
-
-        return this.getInterface("omnitron").list({
-            status
-        });
+    enumerate(filter) {
+        return this.getInterface("omnitron").enumerate(filter);
     }
 
     _spawnOmnitron({ spiritualWay = true } = {}) {

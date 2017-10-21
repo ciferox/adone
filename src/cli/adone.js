@@ -192,8 +192,8 @@ class AdoneCLI extends application.CliApplication {
 
     async listCommand(args) {
         try {
-            const realm = await adone.realm.getInstance();
-            const result = await realm.list({
+            const realmInstance = await adone.realm.getInstance();
+            const result = await realmInstance.list({
                 keyword: args.get("keyword")
             });
 

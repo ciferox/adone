@@ -7,7 +7,7 @@ const {
 
 const { STATUSES } = omnitron;
 
-const runtime = adone.lazify({
+const __ = adone.lazify({
     Service: () => {
         const os = process.platform;
         let fileName;
@@ -35,98 +35,92 @@ export default class extends adone.application.Subsystem {
                     handler: this.infoCommand
                 },
                 {
-                    name: "status",
-                    help: "show status of service(s)",
-                    arguments: [
+                    name: "startup",
+                    help: "Omnitron startup stuff",
+                    commands: [
                         {
-                            name: "service",
-                            type: String,
-                            nargs: "*",
-                            default: "",
-                            help: "Name of service"
+                            name: "enable",
+                            help: "Enable omnitron startup",
+                            options: [
+                                {
+                                    name: "--user",
+                                    type: String,
+                                    required: true,
+                                    help: "User name (omnitron only)"
+                                },
+                                {
+                                    name: "--mode",
+                                    type: String,
+                                    choices: ["sysd", "sysv"],
+                                    default: "sysv",
+                                    help: "Service mode (omnitron only)"
+                                }
+                            ],
+                            handler: this.startupEnableCommand
+                        },
+                        {
+                            name: "disable",
+                            help: "Disable omnitron startup",
+                            options: [
+                                {
+                                    name: "--mode",
+                                    type: String,
+                                    default: "sysv",
+                                    choices: ["sysd", "sysv"],
+                                    help: "Service mode (omnitron only)"
+                                }
+                            ],
+                            handler: this.startupDisableCommand
                         }
-                    ],
-                    handler: this.statusCommand
+                    ]
                 },
                 {
                     name: "enable",
-                    help: "enable service or omnitron (autostart)",
+                    help: "Enable service",
                     arguments: [
                         {
                             name: "service",
                             type: String,
-                            default: "omnitron",
                             help: "Name of service"
-                        }
-                    ],
-                    options: [
-                        {
-                            name: "--deps",
-                            help: "Enable dependent services"
-                        },
-                        {
-                            name: "--user",
-                            type: String,
-                            required: true,
-                            help: "User name (omnitron only)"
-                        },
-                        {
-                            name: "--mode",
-                            type: String,
-                            choices: ["sysd", "sysv"],
-                            default: "sysd",
-                            help: "Service mode (omnitron only)"
                         }
                     ],
                     handler: this.enableCommand
                 },
                 {
                     name: "disable",
-                    help: "disable service or omnitron (autostart)",
+                    help: "Disable service",
                     arguments: [
                         {
                             name: "service",
                             type: String,
-                            default: "omnitron",
                             help: "Name of service"
-                        }
-                    ],
-                    options: [
-                        {
-                            name: "--mode",
-                            type: String,
-                            default: "sysv",
-                            choices: ["sysd", "sysv"],
-                            help: "Service mode (omnitron only)"
                         }
                     ],
                     handler: this.disableCommand
                 },
                 {
                     name: "start",
-                    help: "start omnitron or service",
+                    help: "Start service",
                     arguments: [
                         {
                             name: "service",
                             type: String,
-                            default: "",
                             help: "Name of service"
                         }
                     ],
-                    handler: this.startCommand
+                    handler: this.startServiceCommand
                 },
                 {
                     name: "stop",
-                    help: "stop omnitron or service",
+                    help: "Stop service",
                     arguments: [
                         {
                             name: "service",
                             type: String,
-                            default: "",
                             help: "Name of service"
                         }
                     ],
-                    handler: this.stopCommand
+                    handler: this.stopServiceCommand
                 },
                 {
                     name: "restart",
@@ -142,22 +136,24 @@ export default class extends adone.application.Subsystem {
                     handler: this.restartCommand
                 },
                 {
-                    name: "list",
-                    help: "show services",
+                    name: "services",
+                    help: "Show services",
                     options: [
                         {
-                            name: "--status",
-                            help: "status of services",
+                            name: "--name",
+                            help: "service name(s)",
                             type: String,
-                            choices: STATUSES,
-                            default: STATUSES[STATUSES.length - 1]
+                            nargs: "*"
                         },
                         {
-                            name: "--full",
-                            help: "show full service data"
+                            name: "--status",
+                            help: "status of service",
+                            type: String,
+                            choices: STATUSES,
+                            default: null
                         }
                     ],
-                    handler: this.listCommand
+                    handler: this.servicesCommand
                 },
                 // {
                 //     name: "gates",
@@ -168,23 +164,52 @@ export default class extends adone.application.Subsystem {
         });
     }
 
-    async initialize() {
-        await this.dispatcher.connectLocal(false);
+    async _connectToLocal() {
+        await omnitron.dispatcher.connectLocal({
+            forceStart: false
+        });
     }
 
     uninitialize() {
-        return this.dispatcher.disconnect();
+        return omnitron.dispatcher.disconnect();
     }
 
-    get dispatcher() {
-        if (is.undefined(this._dispatcher)) {
-            this._dispatcher = new adone.omnitron.Dispatcher();
+    async startupEnableCommand(args, opts) {
+        try {
+            const config = {
+                mode: opts.get("mode")
+            };
+
+            if (opts.has("user")) {
+                config.user = opts.get("user");
+            }
+
+            const service = new __.Service(config);
+            await service.install();
+            return 0;
+        } catch (err) {
+            adone.log(err.message);
+            return 1;
         }
-        return this._dispatcher;
+    }
+
+    async startupDisableCommand(args, opts) {
+        try {
+            const config = {
+                mode: opts.get("mode")
+            };
+
+            const service = new __.Service(config);
+            await service.uninstall();
+            return 0;
+        } catch (err) {
+            adone.log(err.message);
+            return 1;
+        }
     }
 
     async pingCommand() {
-        if (await this.dispatcher.ping()) {
+        if (await omnitron.dispatcher.ping()) {
             adone.log(adone.ok);
         } else {
             adone.log(adone.bad);
@@ -193,96 +218,44 @@ export default class extends adone.application.Subsystem {
     }
 
     async infoCommand() {
-        const result = await this.dispatcher.getInfo();
+        await this._connectToLocal();
+        const result = await omnitron.dispatcher.getInfo();
         result.uptime = util.humanizeTime(1000 * result.uptime);
         adone.log(adone.text.pretty.json(result));
-        return 0;
-    }
-
-    async statusCommand(args) {
-        try {
-            adone.log(pretty.table(await this.dispatcher.status(args.get("service")), {
-                noHeader: true,
-                style: {
-                    compact: true
-                },
-                model: [
-                    {
-                        id: "name",
-                        header: "Name",
-                        style: "{green-fg}"
-                    },
-                    {
-                        id: "status",
-                        header: "Status",
-                        style: (val) => {
-                            switch (val) {
-                                case "disabled": return "{red-bg}{white-fg}";
-                                case "enabled": return "{yellow-bg}{black-fg}";
-                                case "active": return "{green-bg}{black-fg}";
-                                default: return "";
-                            }
-                        },
-                        format: " %s ",
-                        align: "right"
-                    }
-                ]
-            }));
-        } catch (err) {
-            adone.log(err.message);
-        }
         return 0;
     }
 
     async enableCommand(args, opts) {
         try {
             const name = args.get("service");
-            if (name === "omnitron") {
-                const config = {
-                    mode: opts.get("mode")
-                };
-
-                if (opts.has("user")) {
-                    config.user = opts.get("user");
-                }
-
-                const service = new runtime.Service(config);
-                await service.install();
-            } else {
-                await this.dispatcher.enable(name, { enableDeps: opts.has("deps") });
-                adone.log(adone.ok);
-            }
+            await this._connectToLocal();
+            await omnitron.dispatcher.enableService(name);
+            adone.log(adone.ok);
+            return 0;
         } catch (err) {
             adone.log(err.message);
             return 1;
         }
-        return 0;
     }
 
     async disableCommand(args, opts) {
         try {
             const name = args.get("service");
-            if (name === "omnitron") {
-                const config = {
-                    mode: opts.get("mode")
-                };
-
-                const service = new runtime.Service(config);
-                await service.uninstall();
-            } else {
-                await this.dispatcher.disable(name);
-                adone.log(adone.ok);
-            }
+            await this._connectToLocal();
+            await omnitron.dispatcher.disableService(name);
+            adone.log(adone.ok);
+            return 0;
         } catch (err) {
             adone.log(err.message);
+            return 1;
         }
-        return 0;
     }
 
-    async startCommand(args) {
+    async startServiceCommand(args) {
         const serviceName = args.get("service");
         try {
-            await this.dispatcher.start(serviceName);
+            await this._connectToLocal();
+            await omnitron.dispatcher.startService(serviceName);
             (serviceName !== "") && adone.log(adone.ok);
         } catch (err) {
             adone.log(err.message);
@@ -290,10 +263,11 @@ export default class extends adone.application.Subsystem {
         return 0;
     }
 
-    async stopCommand(args) {
+    async stopServiceCommand(args) {
         const serviceName = args.get("service");
         try {
-            await this.dispatcher.stop(serviceName);
+            await this._connectToLocal();
+            await omnitron.dispatcher.stopService(serviceName);
             (serviceName !== "") && adone.log(adone.ok);
         } catch (err) {
             adone.error(err.message);
@@ -304,7 +278,8 @@ export default class extends adone.application.Subsystem {
     async restartCommand(args) {
         const serviceName = args.get("service");
         try {
-            await this.dispatcher.restart(serviceName);
+            await this._connectToLocal();
+            await omnitron.dispatcher.restart(serviceName);
             (serviceName !== "") && adone.log(adone.ok);
         } catch (err) {
             adone.log(err.message);
@@ -312,14 +287,20 @@ export default class extends adone.application.Subsystem {
         return 0;
     }
 
-    async listCommand(args, opts) {
-        const status = opts.get("status");
+    async servicesCommand(args, opts) {
         try {
-            const services = await this.dispatcher.list(status);
+            await this._connectToLocal();
+            const services = await omnitron.dispatcher.enumerate({
+                name: opts.get("name"),
+                status: opts.get("status")
+            });
 
-            let model;
-            if (opts.has("full")) {
-                model = [
+            adone.log(pretty.table(services, {
+                style: {
+                    head: ["gray"],
+                    compact: true
+                },
+                model: [
                     {
                         id: "name",
                         header: "Name",
@@ -339,33 +320,7 @@ export default class extends adone.application.Subsystem {
                         style: (val) => {
                             switch (val) {
                                 case "disabled": return "{red-bg}{white-fg}";
-                                case "enabled": return "{yellow-bg}{black-fg}";
-                                case "active": return "{green-bg}{black-fg}";
-                                default: return "";
-                            }
-                        },
-                        format: " %s ",
-                        align: "right"
-                    },
-                    {
-                        id: "path",
-                        header: "Path"
-                    }
-                ];
-            } else {
-                model = [
-                    {
-                        id: "name",
-                        header: "Name",
-                        style: "{green-fg}"
-                    },
-                    {
-                        id: "status",
-                        header: "Status",
-                        style: (val) => {
-                            switch (val) {
-                                case "disabled": return "{red-bg}{white-fg}";
-                                case "enabled": return "{yellow-bg}{black-fg}";
+                                case "inactive": return "{yellow-bg}{black-fg}";
                                 case "active": return "{green-bg}{black-fg}";
                                 default: return "";
                             }
@@ -373,15 +328,7 @@ export default class extends adone.application.Subsystem {
                         format: " %s ",
                         align: "right"
                     }
-                ];
-            }
-
-            adone.log(pretty.table(services, {
-                style: {
-                    head: ["gray"],
-                    compact: true
-                },
-                model
+                ]
             }));
         } catch (err) {
             adone.error(err.message);
@@ -391,7 +338,7 @@ export default class extends adone.application.Subsystem {
 
     // async gatesCommand() {
     //     try {
-    //         adone.log(pretty.table(await this.dispatcher.gates(), {
+    //         adone.log(pretty.table(await omnitron.dispatcher.gates(), {
     //             style: {
     //                 head: ["gray"],
     //                 compact: true

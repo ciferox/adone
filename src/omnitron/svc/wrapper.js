@@ -1,23 +1,13 @@
 require("../..");
 
 const {
-    is
+    omnitron
 } = adone;
 
-adone.application.run({
+adone.application.runCli({
     configure() {
         this.defineArguments({
             commands: [
-                {
-                    name: "ping",
-                    help: "ping the omnitron",
-                    handler: this.pingCommand
-                },
-                {
-                    name: "uptime",
-                    help: "the omnitron's uptime",
-                    handler: this.uptimeCommand
-                },
                 {
                     name: "start",
                     help: "start omnitron",
@@ -37,45 +27,33 @@ adone.application.run({
         });
     },
     uninitialize() {
-        return this.dispatcher().disconnect();
-    },
-    dispatcher() {
-        if (is.undefined(this._dispatcher)) {
-            this._dispatcher = new adone.omnitron.Dispatcher(this.app);
-        }
-        return this._dispatcher;
-    },
-    async pingCommand() {
-        adone.log(await this.dispatcher().ping());
-        return 0;
-    },
-    async uptimeCommand() {
-        adone.log(await this.dispatcher().uptime());
-        return 0;
+        return omnitron.dispatcher.disconnect();
     },
     async startCommand() {
         try {
-            const status = await this.dispatcher().start();
+            const status = await omnitron.dispatcher.startOmnitron();
             return status;
         } catch (err) {
-            adone.log(err.message);
+            adone.error(err.message);
             return 2;
         }
     },
     async stopCommand() {
         try {
-            await this.dispatcher().stop();
+            await omnitron.dispatcher.stopOmnitron();
+            return 0;
         } catch (err) {
             adone.error(err.message);
+            return 2;
         }
-        return 0;
     },
     async restartCommand() {
         try {
-            await this.dispatcher().restart();
+            await omnitron.dispatcher.restartOmnitron();
+            return 0;
         } catch (err) {
-            adone.log(err.message);
+            adone.error(err.message);
+            return 2;
         }
-        return 0;
     }
 });

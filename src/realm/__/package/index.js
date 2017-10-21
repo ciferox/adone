@@ -55,8 +55,9 @@ export default class Package {
                     adoneConf = await this._installFromLocal();
                 }
             }
+            const version = is.string(adoneConf.raw.version) ? ` ${adoneConf.raw.version}` : "";
             this.realm._updateProgress({
-                schema: ` :spinner {green-fg}{bold}${this.name}{/bold} v${adoneConf.raw.version}{/green-fg} successfully installed`,
+                schema: ` :spinner {green-fg}{bold}${this.name}{/bold}${version}{/green-fg} successfully installed`,
                 result: true
             });
         } catch (err) {
@@ -64,7 +65,7 @@ export default class Package {
                 schema: " :spinner installation failed",
                 result: false
             });
-            
+
             throw err;
         }
     }
@@ -134,7 +135,7 @@ export default class Package {
 
     async rollback(err) {
         if (is.plainObject(this.rollbackData)) {
-            if (is.array(this.rollbackData.subProjects)) {                
+            if (is.array(this.rollbackData.subProjects)) {
                 const cliConfig = await adone.realm.cli.getConfig();
                 for (const subInfo of this.rollbackData.subProjects) {
                     cliConfig.deleteCommand(subInfo.adoneConf.raw.name);
@@ -144,7 +145,7 @@ export default class Package {
             }
 
             const adoneConf = this.rollbackData.adoneConf;
-            if (is.configuration(adoneConf)) {    
+            if (is.configuration(adoneConf)) {
                 const name = is.string(adoneConf.raw.type) ? `${adoneConf.raw.type}.${adoneConf.raw.name}` : adoneConf.raw.name;
                 const destPath = std.path.join(PACKAGES_PATH, name);
                 return fs.rm(destPath);
@@ -217,7 +218,7 @@ export default class Package {
 
     _getHandler(type) {
         const HandlerClass = Handler[type];
-        
+
         if (!is.class(HandlerClass)) {
             throw new adone.x.Unknown(`Unknown package type: ${type}`);
         }
@@ -272,8 +273,8 @@ export default class Package {
                     srcPath,
                     "!**/*.map"
                 ], {
-                    cwd: this.path
-                }).dest(std.path.join(this.destPath, dstDir), DEST_OPTIONS);
+                        cwd: this.path
+                    }).dest(std.path.join(this.destPath, dstDir), DEST_OPTIONS);
             }
         } else {
             const indexPath = std.path.join(this.path, "index.js");
@@ -288,8 +289,8 @@ export default class Package {
             "**/.meta/**/*",
             "**/adone.json"
         ], {
-            cwd: this.path
-        }).dest(this.destPath, DEST_OPTIONS);
+                cwd: this.path
+            }).dest(this.destPath, DEST_OPTIONS);
     }
 
     async _buildProject() {

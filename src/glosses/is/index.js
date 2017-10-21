@@ -127,18 +127,18 @@ export const long = (obj) => adone.tag.has(obj, "LONG");
 export const bigNumber = (obj) => adone.tag.has(obj, "BIGNUMBER");
 
 // Checks whether given value is an infinite number, i.e: +∞ or -∞.
-export const infinite = (number) => (number === +1 / 0 || number === -1 / 0);
+export const infinite = (val) => (val === +1 / 0 || val === -1 / 0);
 
 // Checks whether given value is an odd number.
-export const odd = (number) => (integer(number) && number % 2 === 1);
+export const odd = (val) => (integer(val) && val % 2 === 1);
 
 // Checks whether given value is an even number.
-export const even = (number) => (integer(number) && number % 2 === 0);
+export const even = (val) => (integer(val) && val % 2 === 0);
 
 // Checks whether given value is a float number.
-export const float = (number) => number(number) && number !== Math.floor(number);
+export const float = (val) => number(val) && val !== Math.floor(val);
 
-export const negativeZero = (number) => (number === 0) && (Number.NEGATIVE_INFINITY === 1 / number);
+export const negativeZero = (val) => (val === 0) && (Number.NEGATIVE_INFINITY === 1 / val);
 
 export const substring = (substr, str, offset) => {
     // Checks whether one str may be found within another str.

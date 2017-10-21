@@ -14,7 +14,7 @@ export default class SystemDB {
     }
 
     async open() {
-        await fs.mkdirp(std.path.dirname(this.raw.options.location));
+        await fs.mkdirp(adone.realm.config.omnitron.varPath);
         await this.raw.open();
     }
 

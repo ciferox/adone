@@ -41,7 +41,6 @@ export default class ServiceManager extends application.Subsystem {
                 if (serviceData.status === STATUS.INACTIVE) {
                     shouldSpawn = true;
                 }
-                maintainer.addService(serviceData.name);
                 this.serviceMaintainers.set(serviceData.name, maintainer);
             }
 
@@ -61,18 +60,12 @@ export default class ServiceManager extends application.Subsystem {
         this.services = null;
     }
 
-    async enumerate(name) {
+    async enumerate({ name, status } = {}) {
+        let services = [];
         if (is.string(name)) {
-            const serviceData = await this.services.get(name);
-            if (!(await fs.exists(std.path.join(SERVICES_PATH, name)))) {
-                serviceData.status = STATUS.INVALID;
-                await this.services.set(name, serviceData);
-            }
-            return serviceData;
+            name = [name];
         }
 
-        const services = [];
-        const names = this.services.keys();
         let existingNames;
 
         if (await fs.exists(SERVICES_PATH)) {
@@ -81,14 +74,22 @@ export default class ServiceManager extends application.Subsystem {
             existingNames = [];
         }
 
-        for (const name of names) {
-            const serviceData = await this.services.get(name); // eslint-disable-line
+        const names = this.services.keys().filter((is.array(name) && name.length > 0) ? (name) => name.includes(name) : adone.truly);
+
+        for (const svcName of names) {
+            const serviceData = await this.services.get(svcName); // eslint-disable-line
             // eslint-disable-next-line
-            if (!existingNames.includes(name) || !(await fs.exists(serviceData.mainPath))) {
+            if (!existingNames.includes(svcName) || !(await fs.exists(serviceData.mainPath))) {
                 serviceData.status = STATUS.INVALID;
-                await this.services.set(name, serviceData); // eslint-disable-line
+                await this.services.set(svcName, serviceData); // eslint-disable-line
             }
             services.push(serviceData);
+        }
+
+        if (is.string(status)) {
+            services = services.filter((s) => status === s.status);
+        } else if (is.array(status) && status.length > 0) {
+            services = services.filter((s) => status.includes(s.status));
         }
 
         return services;
