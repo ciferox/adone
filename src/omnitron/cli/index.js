@@ -216,7 +216,7 @@ export default class extends adone.application.Subsystem {
             await service.install();
             return 0;
         } catch (err) {
-            adone.log(err.message);
+            adone.log(err);
             return 1;
         }
     }
@@ -231,7 +231,7 @@ export default class extends adone.application.Subsystem {
             await service.uninstall();
             return 0;
         } catch (err) {
-            adone.log(err.message);
+            adone.log(err);
             return 1;
         }
     }
@@ -261,7 +261,7 @@ export default class extends adone.application.Subsystem {
             adone.log(adone.ok);
             return 0;
         } catch (err) {
-            adone.log(err.message);
+            adone.log(err);
             return 1;
         }
     }
@@ -274,7 +274,7 @@ export default class extends adone.application.Subsystem {
             adone.log(adone.ok);
             return 0;
         } catch (err) {
-            adone.log(err.message);
+            adone.log(err);
             return 1;
         }
     }
@@ -286,7 +286,7 @@ export default class extends adone.application.Subsystem {
             await omnitron.dispatcher.startService(serviceName);
             (serviceName !== "") && adone.log(adone.ok);
         } catch (err) {
-            adone.log(err.message);
+            adone.log(err);
         }
         return 0;
     }
@@ -298,7 +298,7 @@ export default class extends adone.application.Subsystem {
             await omnitron.dispatcher.stopService(serviceName);
             (serviceName !== "") && adone.log(adone.ok);
         } catch (err) {
-            adone.error(err.message);
+            adone.error(err);
         }
         return 0;
     }
@@ -310,7 +310,7 @@ export default class extends adone.application.Subsystem {
             await omnitron.dispatcher.restart(serviceName);
             (serviceName !== "") && adone.log(adone.ok);
         } catch (err) {
-            adone.log(err.message);
+            adone.log(err);
         }
         return 0;
     }
@@ -359,7 +359,7 @@ export default class extends adone.application.Subsystem {
                 ]
             }));
         } catch (err) {
-            adone.error(err.message);
+            adone.error(err);
         }
         return 0;
     }
@@ -403,7 +403,7 @@ export default class extends adone.application.Subsystem {
     //             ]
     //         }));
     //     } catch (err) {
-    //         adone.log(err.message);
+    //         adone.log(err);
     //     }
     //     return 0;
     // }

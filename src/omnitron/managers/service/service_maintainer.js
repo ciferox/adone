@@ -36,6 +36,9 @@ export default class ServiceMaintainer extends AsyncEmitter {
         description: "Notifies maintainer about application status"
     })
     async notifyStatus(data) {
+        if (data.status === application.STATE.FAILED) {
+            this.process = null;
+        }
         this.emitParallel("process", data);
     }
 
@@ -43,6 +46,7 @@ export default class ServiceMaintainer extends AsyncEmitter {
         description: "Notifies maintainer about service status"
     })
     async notifyServiceStatus(data) {
+        adone.log(data);
         switch (data.status) {
             case application.STATE.INITIALIZED:
                 await this.setServiceStatus(data.name, STATUS.ACTIVE);

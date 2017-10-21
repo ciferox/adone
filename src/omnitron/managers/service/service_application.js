@@ -52,11 +52,11 @@ class ServiceApplication extends application.Application {
         });
     }
 
-    exception(err) {
+    exception(error) {
         return this.iMaintainer.notifyStatus({
             pid: process.pid,
             status: adone.application.STATE.FAILED,
-            err
+            error
         });
     }
 
