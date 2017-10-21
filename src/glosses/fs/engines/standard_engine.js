@@ -67,7 +67,8 @@ const {
             fchmodSync,
             mkdtemp,
             mkdtempSync
-        }
+        },
+        path
     },
     promise
 } = adone;
@@ -76,50 +77,56 @@ const promisify = (target, key, descriptor) => {
     descriptor.value = promise.promisify(descriptor.value);
 };
 
+const defaultRoot = path.resolve("/");
+
 export default class StandardEngine extends AbstractEngine {
+    constructor({ root = defaultRoot } = {}) {
+        super({ root, sep: path.sep });
+    }
+
     @promisify
     _stat(path, callback) {
-        stat(path.relativePath, callback);
+        stat(path.fullPath, callback);
     }
 
     _statSync(path) {
-        return statSync(path.relativePath);
+        return statSync(path.fullPath);
     }
 
     @promisify
     _lstat(path, callback) {
-        lstat(path.relativePath, callback);
+        lstat(path.fullPath, callback);
     }
 
     _lstatSync(path) {
-        return lstatSync(path.relativePath);
+        return lstatSync(path.fullPath);
     }
 
     @promisify
     _readdir(path, options, callback) {
-        readdir(path.relativePath, options, callback);
+        readdir(path.fullPath, options, callback);
     }
 
     _readdirSync(path, options) {
-        return readdirSync(path.relativePath, options);
+        return readdirSync(path.fullPath, options);
     }
 
     @promisify
     _readlink(path, options, callback) {
-        readlink(path.relativePath, options, callback);
+        readlink(path.fullPath, options, callback);
     }
 
     _readlinkSync(path, options) {
-        return readlinkSync(path.relativePath, options);
+        return readlinkSync(path.fullPath, options);
     }
 
     @promisify
     _open(path, flags, mode, callback) {
-        open(path.relativePath, flags, mode, callback);
+        open(path.fullPath, flags, mode, callback);
     }
 
     _openSync(path, flags, mode) {
-        return openSync(path.relativePath, flags, mode);
+        return openSync(path.fullPath, flags, mode);
     }
 
     @promisify
@@ -151,11 +158,11 @@ export default class StandardEngine extends AbstractEngine {
 
     @promisify
     _truncate(path, length, callback) {
-        truncate(path.relativePath, length, callback);
+        truncate(path.fullPath, length, callback);
     }
 
     _truncateSync(path, length) {
-        return truncateSync(path.relativePath, length);
+        return truncateSync(path.fullPath, length);
     }
 
     @promisify
@@ -169,61 +176,61 @@ export default class StandardEngine extends AbstractEngine {
 
     @promisify
     _unlink(path, callback) {
-        unlink(path.relativePath, callback);
+        unlink(path.fullPath, callback);
     }
 
     _unlinkSync(path) {
-        return unlinkSync(path.relativePath);
+        return unlinkSync(path.fullPath);
     }
 
     @promisify
     _utimes(path, atime, mtime, callback) {
-        utimes(path.relativePath, atime, mtime, callback);
+        utimes(path.fullPath, atime, mtime, callback);
     }
 
     _utimesSync(path, atime, mtime) {
-        return utimesSync(path.relativePath, atime, mtime);
+        return utimesSync(path.fullPath, atime, mtime);
     }
 
     @promisify
     _rmdir(path, callback) {
-        rmdir(path.relativePath, callback);
+        rmdir(path.fullPath, callback);
     }
 
     _rmdirSync(path) {
-        return rmdirSync(path.relativePath);
+        return rmdirSync(path.fullPath);
     }
 
     @promisify
     _mkdir(path, mode, callback) {
-        mkdir(path.relativePath, mode, callback);
+        mkdir(path.fullPath, mode, callback);
     }
 
     _mkdirSync(path, mode) {
-        return mkdirSync(path.relativePath, mode);
+        return mkdirSync(path.fullPath, mode);
     }
 
     @promisify
     _access(path, mode, callback) {
-        access(path.relativePath, mode, callback);
+        access(path.fullPath, mode, callback);
     }
 
     _accessSync(path, mode) {
-        return accessSync(path.relativePath, mode);
+        return accessSync(path.fullPath, mode);
     }
 
     @promisify
     _chmod(path, mode, callback) {
-        chmod(path.relativePath, mode, callback);
+        chmod(path.fullPath, mode, callback);
     }
 
     _chmodSync(path, mode) {
-        return chmodSync(path.relativePath, mode);
+        return chmodSync(path.fullPath, mode);
     }
 
     @promisify
     _chown(path, uid, gid, callback) {
-        chown(path.relativePath, uid, gid, callback);
+        chown(path.fullPath, uid, gid, callback);
     }
 
     _chownSync(path, uid, gid) {
@@ -250,25 +257,25 @@ export default class StandardEngine extends AbstractEngine {
 
     @promisify
     _rename(oldPath, newPath, callback) {
-        rename(oldPath.relativePath, newPath.relativePath, callback);
+        rename(oldPath.fullPath, newPath.fullPath, callback);
     }
 
     _renameSync(oldPath, newPath) {
-        return renameSync(oldPath.relativePath, newPath.relativePath);
+        return renameSync(oldPath.fullPath, newPath.fullPath);
     }
 
     @promisify
     _symlink(path, target, type, callback) {
-        symlink(target.fullPath, path.relativePath, type, callback);
+        symlink(target.fullPath, path.fullPath, type, callback);
     }
 
     _symlinkSync(path, target, type) {
-        return symlinkSync(target.fullPath, path.relativePath, type);
+        return symlinkSync(target.fullPath, path.fullPath, type);
     }
 
     @promisify
     _link(existingPath, newPath, callback) {
-        link(existingPath.relativePath, newPath.relativePath, callback);
+        link(existingPath.fullPath, newPath.fullPath, callback);
     }
 
     _linkSync(existingPath, newPath) {
@@ -304,30 +311,30 @@ export default class StandardEngine extends AbstractEngine {
 
     @promisify
     _copyFile(src, dest, flags, callback) {
-        copyFile(src.relativePath, dest.relativePath, flags, callback);
+        copyFile(src.fullPath, dest.fullPath, flags, callback);
     }
 
     _copyFileSync(src, dest, flags) {
-        return copyFileSync(src.relativePath, dest.relativePath, flags);
+        return copyFileSync(src.fullPath, dest.fullPath, flags);
     }
 
     @promisify
     _realpath(path, options, callback) {
-        realpath(path.relativePath, options, callback);
+        realpath(path.fullPath, options, callback);
     }
 
     _realpathSync(path, options) {
-        return realpathSync(path.relativePath, options);
+        return realpathSync(path.fullPath, options);
     }
 
     _watchFile(filename, options, listener, watcher) {
-        watchFile(filename.relativePath, options, (prev, curr) => {
+        watchFile(filename.fullPath, options, (prev, curr) => {
             watcher.emit("change", prev, curr);
         });
     }
 
     _watch(filename, options, listener, watcher) {
-        const internalWatcher = watch(filename.relativePath, options);
+        const internalWatcher = watch(filename.fullPath, options);
         watcher.setWatcher(internalWatcher);
     }
 

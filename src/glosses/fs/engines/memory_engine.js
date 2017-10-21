@@ -31,11 +31,12 @@ const {
     emptyBuffer
 } = adone;
 
-const { sep } = std.path;
-
 // limit to detect symlink loops
 const UNWIND_LIMIT = 100;
 const SYMLINK_LOOP = Symbol();
+
+const getgid = is.windows ? () => -1 : process.getgid;
+const getuid = is.windows ? () => -1 : process.getuid;
 
 // const lazy = adone.lazify({
 //     uid: () => is.windows ? -1 : process.getuid(),
@@ -227,8 +228,8 @@ class AbstractFile extends event.EventEmitter {
         ctime = new Date(),
         atime = new Date(),
         mode,
-        gid = process.getgid(),
-        uid = process.getuid()
+        gid = getgid(),
+        uid = getuid()
     }) {
         super();
         this.mtime = mtime;
@@ -625,17 +626,19 @@ class FSWatcher extends event.EventEmitter {
 class VFS {
     constructor(engine) {
         this.engine = engine;
-        this.root = new Directory(this, undefined, new Path(sep, { root: sep }));
-        this.fd = 100;
-        this.fdMap = new collection.MapCache();
+        this.clean();
     }
 
     throw(code, path, syscall, secondPath) {
         this.engine.throw(code, path, syscall, secondPath);
     }
 
+    _wrap(path) {
+        return Path.wrap(path, { root: "/", sep: "/" });
+    }
+
     addFile(path, options) {
-        path = Path.wrap(path);
+        path = this._wrap(path);
         const [node, directory] = this.getNode({ path, ensureParent: true });
         if (!is.object(options)) {
             options = { contents: options };
@@ -647,8 +650,8 @@ class VFS {
     }
 
     addSymlink(target, linkname, options) {
-        target = Path.wrap(target);
-        linkname = Path.wrap(linkname);
+        target = this._wrap(target);
+        linkname = this._wrap(linkname);
         const [node, linknameDirectory] = this.getNode({ path: linkname, ensureParent: true });
         if (node) {
             throw new x.IllegalState("Already exists");
@@ -657,7 +660,7 @@ class VFS {
     }
 
     addDirectory(path, options) {
-        path = Path.wrap(path);
+        path = this._wrap(path);
         const [node, directory] = this.getNode({ path, ensureParent: true });
         if (node) {
             throw new x.IllegalState("Already exists");
@@ -678,7 +681,7 @@ class VFS {
         superuser = false
     }) {
         let parent = root;
-        const parts = path.relativeParts;
+        const parts = path.parts;
         let filename = "";
         for (let i = 0; i < parts.length; ++i) {
             if (root instanceof Directory) {
@@ -796,7 +799,9 @@ class VFS {
     }
 
     clean() {
-        this.root = new Directory(this, undefined, new Path(sep, { root: sep }));
+        this.root = new Directory(this, undefined, new Path("/"));
+        this.fd = 100;
+        this.fdMap = new collection.MapCache();
     }
 
     assertPermissions(node, mode, path, syscall, secondPath, superuser) {
@@ -806,7 +811,7 @@ class VFS {
 
         let set;
 
-        if (node.uid === process.getuid()) {
+        if (node.uid === getuid()) {
             set = (node.mode >> 6) & 0o777;
         } else if (process.getgroups().includes(node.gid)) {
             set = (node.mode >> 3) & 0o777;
@@ -1267,7 +1272,7 @@ class VFS {
 
 export default class MemoryEngine extends AbstractEngine {
     constructor() {
-        super();
+        super({ root: "/", sep: "/" });
         this.vfs = new VFS(this);
     }
 
@@ -1313,7 +1318,7 @@ export default class MemoryEngine extends AbstractEngine {
             })
         };
         const structure = callback.call(context, context);
-        const p = new Path(sep, { root: sep });
+        const p = this._resolve("/");
         const visit = (path, obj, options) => {
             const directory = this.vfs.getDirectory(path, options, undefined, true);
             obj = expandPaths(obj);

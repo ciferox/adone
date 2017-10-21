@@ -17,6 +17,10 @@ const lazy = lazify({
     WriteStream: ["./streams", (mod) => mod.WriteStream]
 }, null, require);
 
+const {
+    Path
+} = adone.fs.engine;
+
 const constants = std.fs.constants;
 
 const sep = std.path.sep;
@@ -25,136 +29,6 @@ const defaultRoot = std.path.resolve("/");
 //     // network resource on windows
 //     defaultRoot = ["\\"].concat(defaultRoot.slice(2));
 // }
-
-export class Path {
-    /**
-     * @param {string} [path]
-     */
-    constructor(path, { root = defaultRoot } = {}) {
-        if (!path) {
-            // custom initialization
-            return;
-        }
-
-        path = path.replace(/[\\/]/g, sep);
-
-        /**
-         * @type {string}
-         */
-        this.path = path;
-
-        this.absolute = false;
-
-        const c = path.charCodeAt(0);
-        if (c === 47/*/*/ || c === 92/*\*/) {
-            // absolute
-            this.absolute = true;
-            if (is.windows && path.charCodeAt(1) === 92) {
-                // network resource
-                this.root = "\\\\";
-                if (path.length > 2) {
-                    this.parts = path.slice(2).split("\\");
-                } else {
-                    this.parts = [];
-                }
-            } else {
-                this.root = root;
-                if (path.length > 1) {
-                    this.parts = path.slice(1).split(sep);
-                } else {
-                    this.parts = [];
-                }
-            }
-        } else if (is.windows && ((c >= 65/*A*/ && c <= 90/*Z*/) || (c >= 98/*a*/ && c <= 122/*z*/))) {
-            const c = path.charCodeAt(1);
-            if (c === 58) {
-                // absolute, [A-Za-z]:[\\/]
-                this.absolute = true;
-                this.root = path.slice(0, 3);
-                if (path.length > 3) {
-                    this.parts = path.slice(3).split("\\");
-                } else {
-                    this.parts = [];
-                }
-            } else {
-                // relative
-                this.root = "";
-                this.parts = path.split("\\");
-            }
-        } else {
-            // relative
-            this.root = "";
-            if (path.length > 0) {
-                this.parts = path.split(sep);
-            } else {
-                this.parts = [];
-            }
-        }
-        this.trailingSlash = path[path.length - 1] === sep;
-
-        /**
-         * @type {string[]}
-         */
-        this.relativeParts = this.parts;
-
-        this.stripLevel = 0;
-    }
-
-    mount(p) {
-        const newPath = this.clone();
-        for (const part of p.parts) {
-            newPath.parts.push(part);
-        }
-        return newPath;
-    }
-
-    get fullPath() {
-        return `${this.root}${this.parts.join(sep)}`;
-    }
-
-    get relativePath() {
-        return `${this.root}${this.relativeParts.join(sep)}`;
-    }
-
-    clone() {
-        const path = new Path();
-        path.absolute = this.absolute;
-        path.parts = this.parts.slice();
-        path.relativeParts = this.relativeParts.slice();
-        path.trailingSlash = this.trailingSlash;
-        path.stripLevel = this.stripLevel;
-        path.root = this.root;
-        return path;
-    }
-
-    join(part) {
-        const p = this.clone();
-        p.parts.push(part);
-        p.relativeParts.push(part);
-        return p;
-    }
-
-    filename() {
-        return this.parts[this.parts.length - 1];
-    }
-
-    static resolve(path) {
-        if (path instanceof Path) {
-            return path;
-        }
-        if (std.path.isAbsolute(path)) {
-            return new Path(path);
-        }
-        return new Path(`${process.cwd()}${sep}${path}`);
-    }
-
-    static wrap(path) {
-        if (path instanceof Path) {
-            return path;
-        }
-        return new Path(path);
-    }
-}
 
 class FSException extends Error {
     constructor(code, description, path, syscall, secondPath) {
@@ -654,9 +528,13 @@ const callbackify = (target, key, descriptor) => {
  * Represents an abstact fs engine, most of the methods must be implemented in derived classes
  */
 export class AbstractEngine {
-    constructor() {
-        this.structure = {};
-        this._numberOfEngines = 0;
+    constructor({ root = "/", sep = "/" } = {}) {
+        this.structure = {
+            [ENGINE]: this,
+            [PARENT]: this,
+            [LEVEL]: 0
+        };
+        this._numberOfMountedEngines = 0;
         this._fd = 100; // generally, no matter which initial value we use, this is a fd counter for internal mappings
         this._fdMap = new collection.MapCache();
         this._fileWatchers = new collection.MapCache();
@@ -664,7 +542,8 @@ export class AbstractEngine {
         this._initializing = false;
         this._uninitializing = false;
         this._uninitialized = false;
-        this.mount(this, "/");
+        this.root = root;
+        this.sep = sep;
     }
 
     /**
@@ -735,9 +614,13 @@ export class AbstractEngine {
         throw this.createError(code, path, syscall, secondPath);
     }
 
+    _resolve(path) {
+        return Path.resolve(path, { root: this.root, sep: this.sep });
+    }
+
     @callbackify
     async open(path, flags, mode = 0o666) {
-        return this._handlePath("open", Path.resolve(path), [flags, mode]);
+        return this._handlePath("open", this._resolve(path), [flags, mode]);
     }
 
     _open() {
@@ -745,7 +628,7 @@ export class AbstractEngine {
     }
 
     openSync(path, flags, mode = 0o666) {
-        return this._handlePathSync("open", Path.resolve(path), [flags, mode]);
+        return this._handlePathSync("open", this._resolve(path), [flags, mode]);
     }
 
     _openSync() {
@@ -891,7 +774,7 @@ export class AbstractEngine {
 
     @callbackify
     async utimes(path, atime, mtime) {
-        return this._handlePath("utimes", Path.resolve(path), [
+        return this._handlePath("utimes", this._resolve(path), [
             toUnixTimestamp(atime),
             toUnixTimestamp(mtime)
         ]);
@@ -902,7 +785,7 @@ export class AbstractEngine {
     }
 
     utimesSync(path, atime, mtime) {
-        return this._handlePathSync("utimes", Path.resolve(path), [
+        return this._handlePathSync("utimes", this._resolve(path), [
             toUnixTimestamp(atime),
             toUnixTimestamp(mtime)
         ]);
@@ -937,7 +820,7 @@ export class AbstractEngine {
 
     @callbackify
     async unlink(path) {
-        return this._handlePath("unlink", Path.resolve(path), []);
+        return this._handlePath("unlink", this._resolve(path), []);
     }
 
     _unlink() {
@@ -945,7 +828,7 @@ export class AbstractEngine {
     }
 
     unlinkSync(path) {
-        return this._handlePathSync("unlink", Path.resolve(path), []);
+        return this._handlePathSync("unlink", this._resolve(path), []);
     }
 
     _unlinkSync() {
@@ -954,7 +837,7 @@ export class AbstractEngine {
 
     @callbackify
     async rmdir(path) {
-        return this._handlePath("rmdir", Path.resolve(path), []);
+        return this._handlePath("rmdir", this._resolve(path), []);
     }
 
     _rmdir() {
@@ -962,7 +845,7 @@ export class AbstractEngine {
     }
 
     rmdirSync(path) {
-        return this._handlePathSync("rmdir", Path.resolve(path), []);
+        return this._handlePathSync("rmdir", this._resolve(path), []);
     }
 
     _rmdirSync() {
@@ -971,7 +854,7 @@ export class AbstractEngine {
 
     @callbackify
     async mkdir(path, mode = 0o775) {
-        return this._handlePath("mkdir", Path.resolve(path), [mode]);
+        return this._handlePath("mkdir", this._resolve(path), [mode]);
     }
 
     _mkdir() {
@@ -979,7 +862,7 @@ export class AbstractEngine {
     }
 
     mkdirSync(path, mode = 0o775) {
-        return this._handlePathSync("mkdir", Path.resolve(path), [mode]);
+        return this._handlePathSync("mkdir", this._resolve(path), [mode]);
     }
 
     _mkdirSync() {
@@ -988,7 +871,7 @@ export class AbstractEngine {
 
     @callbackify
     async access(path, mode = constants.F_OK) {
-        return this._handlePath("access", Path.resolve(path), [mode]);
+        return this._handlePath("access", this._resolve(path), [mode]);
     }
 
     _access() {
@@ -996,7 +879,7 @@ export class AbstractEngine {
     }
 
     accessSync(path, mode = constants.F_OK) {
-        return this._handlePathSync("access", Path.resolve(path), [mode]);
+        return this._handlePathSync("access", this._resolve(path), [mode]);
     }
 
     _accessSync() {
@@ -1005,7 +888,7 @@ export class AbstractEngine {
 
     @callbackify
     async chmod(path, mode) {
-        return this._handlePath("chmod", Path.resolve(path), [mode]);
+        return this._handlePath("chmod", this._resolve(path), [mode]);
     }
 
     _chmod() {
@@ -1013,7 +896,7 @@ export class AbstractEngine {
     }
 
     chmodSync(path, mode) {
-        return this._handlePathSync("chmod", Path.resolve(path), [mode]);
+        return this._handlePathSync("chmod", this._resolve(path), [mode]);
     }
 
     _chmodSync() {
@@ -1039,7 +922,7 @@ export class AbstractEngine {
 
     @callbackify
     async chown(path, uid, gid) {
-        return this._handlePath("chown", Path.resolve(path), [uid, gid]);
+        return this._handlePath("chown", this._resolve(path), [uid, gid]);
     }
 
     _chown() {
@@ -1047,7 +930,7 @@ export class AbstractEngine {
     }
 
     chownSync(path, uid, gid) {
-        return this._handlePathSync("chown", Path.resolve(path), [uid, gid]);
+        return this._handlePathSync("chown", this._resolve(path), [uid, gid]);
     }
 
     _chownSync(path, uid, gid) {
@@ -1073,10 +956,10 @@ export class AbstractEngine {
 
     @callbackify
     async copyFile(rawSrc, rawDest, flags = 0) {
-        const src = Path.resolve(rawSrc);
-        const dest = Path.resolve(rawDest);
+        const src = this._resolve(rawSrc);
+        const dest = this._resolve(rawDest);
 
-        if (this._numberOfEngines === 1) {
+        if (this._numberOfMountedEngines === 0) {
             // only one engine can handle it, itself
             return this._copyFile(src, dest, flags).catch((err) => {
                 if (err instanceof FSException) {
@@ -1107,8 +990,8 @@ export class AbstractEngine {
             })
         ]);
 
-        const src2 = new Path(`/${parts1.slice(node1[LEVEL]).join("/")}`);
-        const dest2 = new Path(`/${parts2.slice(node2[LEVEL]).join("/")}`);
+        const src2 = Path.fromParts(parts1.slice(node1[LEVEL]), { root: engine1.root, sep: engine1.sep });
+        const dest2 = Path.fromParts(parts2.slice(node2[LEVEL]), { root: engine2.root, sep: engine2.sep });
 
         // efficient
         if (engine1 === engine2) {
@@ -1184,10 +1067,10 @@ export class AbstractEngine {
     }
 
     copyFileSync(rawSrc, rawDest, flags = 0) {
-        const src = Path.resolve(rawSrc);
-        const dest = Path.resolve(rawDest);
+        const src = this._resolve(rawSrc);
+        const dest = this._resolve(rawDest);
 
-        if (this._numberOfEngines === 1) {
+        if (this._numberOfMountedEngines === 0) {
             // only one engine can handle it, itself
             try {
                 return this._copyFileSync(src, dest, flags);
@@ -1228,8 +1111,8 @@ export class AbstractEngine {
             throw err;
         }
 
-        const src2 = new Path(`/${parts1.slice(node1[LEVEL]).join("/")}`);
-        const dest2 = new Path(`/${parts2.slice(node2[LEVEL]).join("/")}`);
+        const src2 = Path.fromParts(parts1.slice(node1[LEVEL]), { root: engine1.root, sep: engine1.sep });
+        const dest2 = Path.fromParts(parts2.slice(node2[LEVEL]), { root: engine2.root, sep: engine2.sep });
 
         // efficient
         if (engine1 === engine2) {
@@ -1255,10 +1138,10 @@ export class AbstractEngine {
 
     @callbackify
     async rename(rawOldPath, rawNewPath) {
-        const oldPath = Path.resolve(rawOldPath);
-        const newPath = Path.resolve(rawNewPath);
+        const oldPath = this._resolve(rawOldPath);
+        const newPath = this._resolve(rawNewPath);
 
-        if (this._numberOfEngines === 1) {
+        if (this._numberOfMountedEngines === 0) {
             // only one engine can handle it, itself
             return this._rename(oldPath, newPath).catch((err) => {
                 if (err instanceof FSException) {
@@ -1289,8 +1172,8 @@ export class AbstractEngine {
             })
         ]);
 
-        const oldPath2 = new Path(`/${parts1.slice(node1[LEVEL]).join("/")}`);
-        const newPath2 = new Path(`/${parts2.slice(node2[LEVEL]).join("/")}`);
+        const oldPath2 = Path.fromParts(parts1.slice(node1[LEVEL]), { root: engine1.root, sep: engine1.sep });
+        const newPath2 = Path.fromParts(parts2.slice(node2[LEVEL]), { root: engine2.root, sep: engine2.sep });
 
         if (engine1 === engine2) {
             return engine1.rename(oldPath2, newPath2).catch((err) => {
@@ -1310,10 +1193,10 @@ export class AbstractEngine {
     }
 
     renameSync(rawOldPath, rawNewPath) {
-        const oldPath = Path.resolve(rawOldPath);
-        const newPath = Path.resolve(rawNewPath);
+        const oldPath = this._resolve(rawOldPath);
+        const newPath = this._resolve(rawNewPath);
 
-        if (this._numberOfEngines === 1) {
+        if (this._numberOfMountedEngines === 0) {
             // only one engine can handle it, itself
             try {
                 return this._renameSync(oldPath, newPath);
@@ -1354,8 +1237,8 @@ export class AbstractEngine {
             throw err;
         }
 
-        const oldPath2 = new Path(`/${parts1.slice(node1[LEVEL]).join("/")}`);
-        const newPath2 = new Path(`/${parts2.slice(node2[LEVEL]).join("/")}`);
+        const oldPath2 = Path.fromParts(parts1.slice(node1[LEVEL]), { root: engine1.root, sep: engine1.sep });
+        const newPath2 = Path.fromParts(parts2.slice(node2[LEVEL]), { root: engine2.root, sep: engine2.sep });
 
         if (engine1 === engine2) {
             try {
@@ -1379,7 +1262,8 @@ export class AbstractEngine {
     @callbackify
     async symlink(target, path, type) {
         // omg, here we have to swap them...
-        return this._handlePath("symlink", Path.resolve(path), [new Path(target), type]);
+        // and i think we must resolve the target using the engine that will handle the request
+        return this._handlePath("symlink", this._resolve(path), [new Path(target, { root: this.root, sep: this.sep }), type]);
     }
 
     _symlink() {
@@ -1387,7 +1271,7 @@ export class AbstractEngine {
     }
 
     symlinkSync(target, path, type) {
-        return this._handlePathSync("symlink", Path.resolve(path), [new Path(target), type]);
+        return this._handlePathSync("symlink", this._resolve(path), [new Path(target, { root: this.root, sep: this.sep }), type]);
     }
 
     _symlinkSync() {
@@ -1396,10 +1280,10 @@ export class AbstractEngine {
 
     @callbackify
     async link(rawExistingPath, rawNewPath) {
-        const existingPath = Path.resolve(rawExistingPath);
-        const newPath = Path.resolve(rawNewPath);
+        const existingPath = this._resolve(rawExistingPath);
+        const newPath = this._resolve(rawNewPath);
 
-        if (this._numberOfEngines === 1) {
+        if (this._numberOfMountedEngines === 0) {
             // only one engine can handle it, itself
             return this._link(existingPath, newPath).catch((err) => {
                 if (err instanceof FSException) {
@@ -1430,8 +1314,8 @@ export class AbstractEngine {
             })
         ]);
 
-        const existingPath2 = new Path(`/${parts1.slice(node1[LEVEL]).join("/")}`);
-        const newPath2 = new Path(`/${parts2.slice(node2[LEVEL]).join("/")}`);
+        const existingPath2 = Path.fromParts(parts1.slice(node1[LEVEL]), { root: engine1.root, sep: engine1.sep });
+        const newPath2 = Path.fromParts(parts2.slice(node2[LEVEL]), { root: engine2.root, sep: engine2.sep });
 
         if (engine1 === engine2) {
             return engine1.link(existingPath2, newPath2).catch((err) => {
@@ -1450,10 +1334,10 @@ export class AbstractEngine {
     }
 
     linkSync(rawExistingPath, rawNewPath) {
-        const existingPath = Path.resolve(rawExistingPath);
-        const newPath = Path.resolve(rawNewPath);
+        const existingPath = this._resolve(rawExistingPath);
+        const newPath = this._resolve(rawNewPath);
 
-        if (this._numberOfEngines === 1) {
+        if (this._numberOfMountedEngines === 0) {
             // only one engine can handle it, itself
             try {
                 return this._linkSync(existingPath, newPath);
@@ -1494,8 +1378,8 @@ export class AbstractEngine {
             throw err;
         }
 
-        const existingPath2 = new Path(`/${parts1.slice(node1[LEVEL]).join("/")}`);
-        const newPath2 = new Path(`/${parts2.slice(node2[LEVEL]).join("/")}`);
+        const existingPath2 = Path.fromParts(parts1.slice(node1[LEVEL]), { root: engine1.root, sep: engine1.sep });
+        const newPath2 = Path.fromParts(parts2.slice(node2[LEVEL]), { root: engine2.root, sep: engine2.sep });
 
         if (engine1 === engine2) {
             try {
@@ -1568,7 +1452,7 @@ export class AbstractEngine {
 
     @callbackify
     async stat(path) {
-        return this._handlePath("stat", Path.resolve(path), []);
+        return this._handlePath("stat", this._resolve(path), []);
     }
 
     _stat() {
@@ -1576,7 +1460,7 @@ export class AbstractEngine {
     }
 
     statSync(path) {
-        return this._handlePathSync("stat", Path.resolve(path), []);
+        return this._handlePathSync("stat", this._resolve(path), []);
     }
 
     _statSync() {
@@ -1585,7 +1469,7 @@ export class AbstractEngine {
 
     @callbackify
     async lstat(path) {
-        return this._handlePath("lstat", Path.resolve(path), []);
+        return this._handlePath("lstat", this._resolve(path), []);
     }
 
     _lstat() {
@@ -1593,7 +1477,7 @@ export class AbstractEngine {
     }
 
     lstatSync(path) {
-        return this._handlePathSync("lstat", Path.resolve(path), []);
+        return this._handlePathSync("lstat", this._resolve(path), []);
     }
 
     _lstatSync() {
@@ -1608,9 +1492,7 @@ export class AbstractEngine {
 
         options.encoding = options.encoding || "utf8";
 
-        const path = Path.resolve(rawPath);
-
-        return this._handlePath("readdir", path, [options]);
+        return this._handlePath("readdir", this._resolve(rawPath), [options]);
     }
 
     async _readdir(path) {
@@ -1629,7 +1511,7 @@ export class AbstractEngine {
 
         options.encoding = options.encoding || "utf8";
 
-        const path = Path.resolve(rawPath);
+        const path = this._resolve(rawPath);
 
         return this._handlePathSync("readdir", path, [options]);
     }
@@ -1650,7 +1532,7 @@ export class AbstractEngine {
         }
         options.encoding = options.encoding || "utf8";
 
-        return this._handlePath("realpath", Path.resolve(path), [options]);
+        return this._handlePath("realpath", this._resolve(path), [options]);
     }
 
     _realpath() {
@@ -1663,7 +1545,7 @@ export class AbstractEngine {
         }
         options.encoding = options.encoding || "utf8";
 
-        return this._handlePathSync("realpath", Path.resolve(path), [options]);
+        return this._handlePathSync("realpath", this._resolve(path), [options]);
     }
 
     _realpathSync() {
@@ -1677,7 +1559,7 @@ export class AbstractEngine {
         }
         options.encoding = options.encoding || "utf8";
 
-        return this._handlePath("readlink", Path.resolve(path), [options]);
+        return this._handlePath("readlink", this._resolve(path), [options]);
     }
 
     _readlink() {
@@ -1690,7 +1572,7 @@ export class AbstractEngine {
         }
         options.encoding = options.encoding || "utf8";
 
-        return this._handlePathSync("readlink", Path.resolve(path), [options]);
+        return this._handlePathSync("readlink", this._resolve(path), [options]);
     }
 
     _readlinkSync() {
@@ -1976,7 +1858,7 @@ export class AbstractEngine {
             watcher.on("change", listener);
         }
 
-        this._handlePath("watch", Path.resolve(filename), [options, listener, watcher]).catch((err) => {
+        this._handlePath("watch", this._resolve(filename), [options, listener, watcher]).catch((err) => {
             watcher.emit("error", err);
         });
 
@@ -2024,6 +1906,11 @@ export class AbstractEngine {
     }
 
     _chooseEngineSync(path, method, secondPath) {
+        if (!this.structure[path.root]) {
+            // must be handled by this engine, no other case
+            return [this, this.structure, path.parts];
+        }
+
         let parts = path.parts.slice();
 
         // resolve .. that can refer to different engines,
@@ -2101,7 +1988,7 @@ export class AbstractEngine {
                             // it subPath is not a symlink, readlink will throw EINVAL
                             // so here we have a symlink to a directory
 
-                            const targetPath = new Path(target);
+                            const targetPath = new Path(target, { root: engine.root, sep: engine.sep });
 
                             if (targetPath.absolute) {
                                 // assume all absolute links to be relative to the using engine
@@ -2147,6 +2034,11 @@ export class AbstractEngine {
     }
 
     async _chooseEngine(path, method, secondPath) {
+        if (!this.structure[path.root]) {
+            // must be handled by this engine, no other case
+            return [this, this.structure, path.parts];
+        }
+
         let parts = path.parts.slice();
 
         // resolve .. that can refer to different engines,
@@ -2224,7 +2116,7 @@ export class AbstractEngine {
                             // it subPath is not a symlink, readlink will throw EINVAL
                             // so here we have a symlink to a directory
 
-                            const targetPath = new Path(target);
+                            const targetPath = new Path(target, { root: engine.root, sep: engine.sep });
 
                             if (targetPath.absolute) {
                                 // assume all absolute links to be relative to the using engine
@@ -2286,7 +2178,7 @@ export class AbstractEngine {
     }
 
     _handlePathSync(method, path, args) {
-        if (this._numberOfEngines === 1) {
+        if (this._numberOfMountedEngines === 0) {
             // only one engine can handle it, itself
             try {
                 const res = this[`_${method}Sync`](path, ...args);
@@ -2300,27 +2192,25 @@ export class AbstractEngine {
         }
         const [engine, node, parts] = this._chooseEngineSync(path, method);
 
-        let p;
         const level = node[LEVEL];
-        const newPath = new Path(`/${parts.slice(level).join("/")}`);
 
         try {
             const res = engine === this
-                ? engine[`_${method}Sync`](newPath, ...args)
-                : engine[`${method}Sync`](newPath, ...args);
+                ? engine[`_${method}Sync`](path.replaceParts(parts), ...args)
+                : engine[`${method}Sync`](`/${parts.slice(level).join("/")}`, ...args);
             switch (method) {
                 case "readdir": {
                     if (level === 0) {
                         const [options] = args;
+                        const siblings = this._getSiblingMounts(path.replaceParts(parts));
 
-                        const siblings = this._getSiblingMounts(newPath);
-                        if (!siblings) {
-                            return res;
-                        }
-                        if (options.encoding === "buffer") {
-                            return util.unique(res.concat(siblings.map((x) => Buffer.from(x))), (x) => x.toString());
-                        }
-                        return res.concat(siblings);
+                        const files = siblings
+                            ? util.unique(res.concat(siblings)).sort()
+                            : res;
+
+                        return options.encoding === "buffer"
+                            ? files.map((x) => Buffer.from(x))
+                            : files;
                     }
                     break;
                 }
@@ -2332,8 +2222,20 @@ export class AbstractEngine {
                     return this._storeFd(res, engine);
                 }
                 case "realpath": {
-                    // TODO: omg, we have to do something better
-                    return `/${parts.slice(0, level).concat(new Path(res).parts).join("/")}`;
+                    if (engine === this) {
+                        return res;
+                    }
+
+                    // ...
+                    let p;
+
+                    if (res.startsWith(engine.root)) {
+                        p = new Path(`/${res.slice(engine.root.length)}`);
+                    } else {
+                        p = new Path(res);
+                    }
+
+                    return this._resolve(`/${parts.slice(0, level).concat(p.parts).join("/")}`).fullPath;
                 }
             }
             return res;
@@ -2348,7 +2250,7 @@ export class AbstractEngine {
      * @param {any[]} args
      */
     async _handlePath(method, path, args) {
-        if (this._numberOfEngines === 1) {
+        if (this._numberOfMountedEngines === 0) {
             // only one engine can handle it, itself
             let p = new Promise((resolve) => resolve(this[`_${method}`](path, ...args)));
             if (method === "open") {
@@ -2362,26 +2264,26 @@ export class AbstractEngine {
 
         let p;
         const level = node[LEVEL];
-        const newPath = new Path(`/${parts.slice(level).join("/")}`);
         if (engine === this) {
-            p = new Promise((resolve) => resolve(engine[`_${method}`](newPath, ...args)));
+            p = new Promise((resolve) => resolve(engine[`_${method}`](path.replaceParts(parts), ...args)));
         } else {
-            p = new Promise((resolve) => resolve(engine[method](newPath, ...args)));
+            p = new Promise((resolve) => resolve(engine[method](`/${parts.slice(level).join("/")}`, ...args)));
         }
 
         switch (method) {
             case "readdir": {
                 if (level === 0) {
                     const [options] = args;
-                    p = p.then((files) => { // eslint-disable-line
-                        const siblings = this._getSiblingMounts(newPath);
-                        if (!siblings) {
-                            return files;
-                        }
-                        if (options.encoding === "buffer") {
-                            return util.unique(files.concat(siblings.map((x) => Buffer.from(x))), (x) => x.toString());
-                        }
-                        return files.concat(siblings);
+                    p = p.then((engineFiles) => { // eslint-disable-line
+                        const siblings = this._getSiblingMounts(path.replaceParts(parts));
+
+                        const files = siblings
+                            ? util.unique(engineFiles.concat(siblings)).sort()
+                            : engineFiles;
+
+                        return options.encoding === "buffer"
+                            ? files.map((x) => Buffer.from(x))
+                            : files;
                     });
                 }
                 break;
@@ -2395,8 +2297,16 @@ export class AbstractEngine {
                 break;
             }
             case "realpath": {
-                // TODO: omg, we have to do something better
-                p = p.then((path) => `/${parts.slice(0, level).concat(new Path(path).parts).join("/")}`);
+                if (engine !== this) {
+                    p = p.then((path) => {
+                        if (path.startsWith(engine.root)) {
+                            p = new Path(`/${path.slice(engine.root.length)}`);
+                        } else {
+                            p = new Path(path);
+                        }
+                        return this._resolve(`/${parts.slice(0, level).concat(p.parts).join("/")}`).fullPath;
+                    });
+                }
             }
         }
 
@@ -2404,7 +2314,12 @@ export class AbstractEngine {
     }
 
     _getSiblingMounts(path) {
-        let node = this.structure[path.root];
+        let node = this.structure;
+        if (!node[path.root]) {
+            // no mounts - no siblings
+            return null;
+        }
+        node = node[path.root];
         for (const part of path.parts) {
             switch (part) {
                 case "":
@@ -2433,15 +2348,15 @@ export class AbstractEngine {
      * @param {string} rawPath
      */
     mount(engine, rawPath) {
-        const path = new Path(rawPath);
+        const path = Path.wrap(rawPath, { root: this.root, sep: this.sep });
 
         if (!(path.root in this.structure)) {
             this.structure[path.root] = {
-                [LEVEL]: 0
+                [LEVEL]: 0,
+                [ENGINE]: this // use the current engine by default
             };
             this.structure[path.root][PARENT] = this.structure[path.root];
         }
-
         let root = this.structure[path.root];
         let level = 0;
         for (const part of path.parts) {
@@ -2457,7 +2372,7 @@ export class AbstractEngine {
         }
         root[LEVEL] = level;
         root[ENGINE] = engine;
-        ++this._numberOfEngines;
+        ++this._numberOfMountedEngines;
         return this;
     }
 
