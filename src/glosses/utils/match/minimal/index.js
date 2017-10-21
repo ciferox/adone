@@ -440,7 +440,11 @@ minimalMatch.matcher = (pattern, options) => {
     }
 
     const fn = test(re);
-    fn.result = re.result;
+    Object.defineProperty(fn, "result", {
+        configurable: true,
+        enumerable: false,
+        value: re.result
+    });
     return fn;
 };
 
@@ -493,7 +497,11 @@ minimalMatch.makeRe = (pattern, options) => {
         const res = minimalMatch.create(pattern, options);
         const opts = { wrap: false, ...options };
         const regex = util.toRegex(res.output, opts);
-        regex.result = res;
+        Object.defineProperty(regex, "result", {
+            configurable: true,
+            enumerable: false,
+            value: res
+        });
         return regex;
     };
 

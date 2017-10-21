@@ -58,6 +58,7 @@ export default function (minimal, options) {
             return this.emit(node.val, node);
         })
         .set("slash", function (node) {
+            let val = `\\${node.val}`;
             let parent = node.parent;
             const prev = node.prev;
 
@@ -68,22 +69,22 @@ export default function (minimal, options) {
             }
 
             if (prev.addQmark) {
-                node.val += "?";
+                val += "?";
             }
 
             // word boundary
             if (node.rest.slice(0, 2) === "\\b") {
-                return this.emit(node.val, node);
+                return this.emit(val, node);
             }
 
-            const parsed = node.parsed;
-            const val = `\\${node.val}`;
-
-            if (parsed === "**" || parsed === "./**") {
-                this.output = `(^(?=.)|${this.output}`;
-                return this.emit(`${val})`, node);
+            // globstars
+            if (node.parsed === "**" || node.parsed === "./**") {
+                this.output = `(?:${this.output}`;
+                return this.emit(`${val})?`, node);
             }
-            if (parsed === "!**" && this.options.nonegate !== true) {
+
+            // negation
+            if (node.parsed === "!**" && this.options.nonegate !== true) {
                 return this.emit(`${val}?\\b`, node);
             }
             return this.emit(val, node);
@@ -173,7 +174,8 @@ export default function (minimal, options) {
          */
         .set("globstar", function (node) {
             if (!this.output) {
-                this.output = `(?=.)${this.output}`;
+                this.ast.state.leadingGlobstar = true;
+                // this.output = '(?=.)' + this.output;
             }
             let next;
             let prev;
@@ -291,14 +293,15 @@ export default function (minimal, options) {
          * End-of-string
          */
         .set("eos", function (node) {
-            if (this.output.slice(-2) === "/?" || this.output.slice(-6) === "(\\/|$)") {
-                return this.emit(node.val, node);
-            }
-
             const prev = node.prev;
             let val = node.val;
+
+            if (this.ast.state.leadingGlobstar === true) {
+                this.output = `(?:\\.(?:\\/|\\\\))?(?=.)${this.output}`;
+            }
+
             if (this.state.metachar && prev.type !== "qmark" && prev.type !== "slash") {
-                val += (this.options.contains ? "\\/?" : "(?:\\/|$)");
+                val += (this.options.contains ? "(?:\\/|\\\\)?" : "(?:(?:\\/|\\\\)|$)");
             }
 
             return this.emit(val, node);

@@ -1,6 +1,16 @@
 import mm from "./support/match";
 
 describe("util", "match", "issue-related tests", () => {
+    // https://github.com/micromatch/micromatch/issues/108
+    it("issue micromatch#108", () => {
+        const fixture = "./css/foo{.css,**/*.css}";
+        assert(mm.isMatch("./css/foo/bar.css", fixture));
+        mm(["./css/foo/bar.css"], fixture, ["css/foo/bar.css"]);
+
+        assert(mm.isMatch(".\\css\\foo\\bar.css", fixture, { unixify: true }));
+        mm([".\\css\\foo\\bar.css"], fixture, ["css/foo/bar.css"], { unixify: true });
+    });
+
     // see https://github.com/jonschlinkert/micromatch/issues/15
     it("issue #15", () => {
         assert(mm.isMatch("a/b-c/d/e/z.js", "a/b-*/**/z.js"));

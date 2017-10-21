@@ -183,11 +183,7 @@ export const isSlash = (str) => str === "/" || str === "\\/" || str === "\\" || 
  * @returns {string}
  */
 export const stripPrefix = (str) => {
-    if (str.charAt(0) !== ".") {
-        return str;
-    }
-    const ch = str.charAt(1);
-    if (isSlash(ch)) {
+    if (str.charAt(0) === "." && (str.charAt(1) === "/" || str.charAt(1) === "\\")) {
         return str.slice(2);
     }
     return str;
@@ -216,16 +212,16 @@ export const isEmptyString = (val) => String(val) === "" || String(val) === "./"
  * @returns {Function}
  */
 export const unixify = (options) => {
-    options = options || {};
-    return (filepath) => {
-        if (isWindows() || options.unixify === true) {
-            filepath = toPosixPath(filepath);
-        }
-        if (options.stripPrefix !== false) {
+    const opts = options || {};
+    return function (filepath) {
+        if (opts.stripPrefix !== false) {
             filepath = stripPrefix(filepath);
         }
-        if (options.unescape === true) {
+        if (opts.unescape === true) {
             filepath = unescape(filepath);
+        }
+        if (opts.unixify === true || isWindows()) {
+            filepath = toPosixPath(filepath);
         }
         return filepath;
     };
@@ -317,6 +313,9 @@ export const matchBasename = (re) => (filepath) => re.test(filepath) || re.test(
 export const value = (str, unixify, options) => {
     if (options && options.unixify === false) {
         return str;
+    }
+    if (options && is.function(options.unixify)) {
+        return options.unixify(str);
     }
     return unixify(str);
 };

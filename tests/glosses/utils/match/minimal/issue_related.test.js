@@ -1,6 +1,30 @@
 import nm from "./support/match";
 
 describe("util", "match", "minimal", "issue-related tests", () => {
+    // https://github.com/micromatch/micromatch/issues/110
+    // https://github.com/micromatch/nanomatch/issues/6
+    it("issue micromatch#110", () => {
+        const glob = "./css/foo/**/*.css";
+        assert(nm.isMatch("./css/foo/bar.css", glob));
+        nm(["./css/foo/bar.css"], glob, ["css/foo/bar.css"]);
+
+        assert(nm.isMatch(".\\css\\foo\\bar.css", glob, { unixify: true }));
+        nm([".\\css\\foo\\bar.css"], glob, ["css/foo/bar.css"], { unixify: true });
+
+        nm.match(["./foo/bar.js"], "**/*.js", ["foo/bar.js"]);
+        nm.match(["./foo/bar.js"], "**/*.js", ["./foo/bar.js"], { stripPrefix: false });
+
+        assert(nm.isMatch("./foo/bar.js", "**/*.js"));
+        assert(nm.isMatch("foo/bar.js", "**/*.js"));
+        assert(nm.isMatch(".\\foo\\bar.js", "**/*.js", { unixify: true }));
+        assert(nm.isMatch("foo\\bar.js", "**/*.js", { unixify: true }));
+
+        assert(nm.makeRe("**/*.js").test("./foo/bar.js"));
+        assert(nm.makeRe("**/*.js").test("foo/bar.js"));
+        assert(nm.makeRe("**/*.js").test(".\\foo\\bar.js"));
+        assert(nm.makeRe("**/*.js", { unixify: true }).test("foo\\bar.js"));
+    });
+
     // see https://github.com/jonschlinkert/micromatch/issues/15
     it("issue #15", () => {
         assert(nm.isMatch("a/b-c/d/e/z.js", "a/b-*/**/z.js"));
