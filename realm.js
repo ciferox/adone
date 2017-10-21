@@ -4,7 +4,7 @@ const {
 } = require("path");
 
 let home;
-let realm = "development";
+let realm = "dev";
 let dirName = ".adone_dev";
 
 if (process.env.ADONE_HOME) {

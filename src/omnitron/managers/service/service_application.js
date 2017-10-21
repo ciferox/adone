@@ -91,8 +91,26 @@ class ServiceApplication extends application.Application {
         });
 
         // It is not necessary to wait for the subsystems to be configured and initialized, since it will notify about it.
-        this.configureSubsystem(serviceData.name).then(() => {
-            this.initializeSubsystem(serviceData.name);
+        process.nextTick(async () => {
+            const deleteAndNotify = (error) => {
+                this.deleteSubsystem(serviceData.name);
+                return this.iMaintainer.notifyServiceStatus({
+                    name: this.config.name,
+                    status: application.STATE.FAILED,
+                    error
+                });
+            };
+
+            try {
+                await this.configureSubsystem(serviceData.name);
+            } catch (err) {
+                return deleteAndNotify(err);
+            }
+            try {
+                await this.initializeSubsystem(serviceData.name);
+            } catch (err) {
+                return deleteAndNotify(err);
+            }
         });
     }
 

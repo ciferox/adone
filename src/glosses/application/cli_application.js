@@ -1041,7 +1041,7 @@ class Command {
 
     static normalize(options) {
         options = adone.o(options);
-        if (!is.string(options.name)) {
+        if (!options.name) {
             throw new x.IllegalState("A command should have a name");
         }
         options.name = adone.util.arrify(options.name);

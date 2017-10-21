@@ -31,7 +31,6 @@ export default class ServiceManager extends application.Subsystem {
         const serviceGroups = await this.enumerateByGroup();
         for (const [group, services] of Object.entries(serviceGroups)) {
             const maintainer = this.getMaintainerForGroup(group); // eslint-disable-line
-            let shouldSpawn = false;
             for (const serviceData of services) {
                 // Check service status and fix if necessary
                 if (!VALID_STATUSES.includes(serviceData.status)) {
@@ -39,13 +38,13 @@ export default class ServiceManager extends application.Subsystem {
                     await this.services.set(serviceData.name, serviceData); // eslint-disable-line
                 }
                 if (serviceData.status === STATUS.INACTIVE) {
-                    shouldSpawn = true;
+                    maintainer.startService(serviceData.name).catch((err) => {
+                        adone.error(err);
+                    }).then(() => {
+                        adone.info(`Service '${serviceData.name}' has been started`);
+                    });
                 }
                 this.serviceMaintainers.set(serviceData.name, maintainer);
-            }
-
-            if (shouldSpawn) {
-                await maintainer.spawn(); // eslint-disable-line
             }
         }
     }

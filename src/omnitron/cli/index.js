@@ -35,6 +35,16 @@ export default class extends adone.application.Subsystem {
                     handler: this.infoCommand
                 },
                 {
+                    name: "up",
+                    help: "Up omnitron",
+                    handler: this.upCommand
+                },
+                {
+                    name: "down",
+                    help: "Down omnitron",
+                    handler: this.downCommand
+                },
+                {
                     name: "startup",
                     help: "Omnitron startup stuff",
                     commands: [
@@ -172,6 +182,24 @@ export default class extends adone.application.Subsystem {
 
     uninitialize() {
         return omnitron.dispatcher.disconnect();
+    }
+
+    async upCommand() {
+        try {
+            await omnitron.dispatcher.startOmnitron();
+            adone.log(adone.ok);
+        } catch (err) {
+            adone.error(err);
+        }
+    }
+
+    async downCommand() {
+        try {
+            await omnitron.dispatcher.stopOmnitron();
+            adone.log(adone.ok);
+        } catch (err) {
+            adone.error(err);
+        }
     }
 
     async startupEnableCommand(args, opts) {

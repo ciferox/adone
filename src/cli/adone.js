@@ -34,6 +34,25 @@ class AdoneCLI extends application.CliApplication {
             ],
             commands: [
                 {
+                    name: "realm",
+                    help: "Realm management",
+                    commands: [
+                        {
+                            name: ["init", "initialize"],
+                            help: "Initialize realm",
+                            arguments: [
+                                {
+                                    name: "name",
+                                    type: String,
+                                    default: "dev",
+                                    help: "Name of realm"
+                                }
+                            ],
+                            handler: this.realmInitializeCommand
+                        }
+                    ]
+                },
+                {
                     name: "install",
                     help: "Install adone glosses, extensions, applications, etc.",
                     arguments: [
@@ -156,6 +175,16 @@ class AdoneCLI extends application.CliApplication {
                 }, ss));
             }
         }
+    }
+
+    async realmInitializeCommand(args) {
+        const name = args.get("name");
+        try {
+            const path = await adone.realm.init(name);
+            term.print(`Realm {green-fg}'${path}'{/green-fg} successfully initialized`);
+        } catch (err) {
+            term.print(`{red-fg}${err.message}{/}`);
+        }     
     }
 
     async installCommand(args, opts) {

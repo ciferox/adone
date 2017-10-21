@@ -41,6 +41,8 @@ export default class Omnitron extends application.Application {
     async initialize() {
         await this.createPidFile();
         await this.db.open();
+
+        await runtime.netron.attachContext(this, "omnitron");
     }
 
     async main() {
@@ -49,9 +51,6 @@ export default class Omnitron extends application.Application {
         }
 
         adone.info(`Omnitron v${adone.package.version} started`);
-
-        // Attach common omnitron context
-        runtime.netron.attachContext(this, "omnitron");
     }
 
     async uninitialize() {
@@ -60,6 +59,8 @@ export default class Omnitron extends application.Application {
         } catch (err) {
             adone.error(err);
         }
+
+        await runtime.netron.detachContext("omnitron");
 
         await this.db.close();
 

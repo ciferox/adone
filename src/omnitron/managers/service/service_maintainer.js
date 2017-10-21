@@ -78,7 +78,16 @@ export default class ServiceMaintainer extends AsyncEmitter {
             return new Promise((resolve, reject) => {
                 this._serviceAwaiters.set(name,
                     (result) => {
-                        result.status === application.STATE.INITIALIZED ? resolve() : reject(new x.IllegalState(`Service status: ${result.status}`));
+                        switch (result.status) {
+                            case application.STATE.INITIALIZED:
+                                resolve();
+                                break;
+                            case application.STATE.FAILED:
+                                reject(result.error);
+                                break;
+                            default:
+                                new x.IllegalState(`Service status: ${result.status}`);
+                        }
                     },
                     async () => {
                         await this.setServiceStatus(name, STATUS.INACTIVE);

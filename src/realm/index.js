@@ -15,7 +15,7 @@ adone.lazifyPrivate({
 }, exports, require);
 
 // !!!!!!! This function should be called before 'adone.js' config is loaded. !!!!!!! //
-export const init = (name, customPath) => {
+export const init = async (name = "dev", customPath) => {
     let homePath;
     const dirName = `.adone_${name}`;
 
@@ -39,7 +39,8 @@ export const init = (name, customPath) => {
     process.env.ADONE_REALM = name;
     process.env.ADONE_DIRNAME = dirName;
 
-    return adone.fs.mkdirp(homePath);
+    await adone.fs.mkdirp(adone.realm.config.packagesPath);
+    return homePath;
 };
 
 export const clean = () => new adone.fs.Directory(adone.realm.homePath).clean();
