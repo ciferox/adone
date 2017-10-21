@@ -4,21 +4,20 @@ const {
 } = require("path");
 
 let home;
-let realm = "dev";
-let dirName = ".adone_dev";
+let realm = ".adone_dev";
 
 if (process.env.ADONE_HOME) {
     home = process.env.ADONE_HOME;
 } else {
     if (process.platform === "win32") {
-        home = resolve(process.env.USERPROFILE, dirName);
+        home = resolve(process.env.USERPROFILE, realm);
     } else {
         if (process.env.HOME && !process.env.HOMEPATH) {
-            home = resolve(process.env.HOME, dirName);
+            home = resolve(process.env.HOME, realm);
         } else if (process.env.HOME || process.env.HOMEPATH) {
-            home = resolve(process.env.HOMEDRIVE, process.env.HOME || process.env.HOMEPATH, dirName);
+            home = resolve(process.env.HOMEDRIVE, process.env.HOME || process.env.HOMEPATH, realm);
         } else {
-            home = resolve("/etc", dirName);
+            home = resolve("/etc", realm);
         }
     }
     
@@ -33,12 +32,6 @@ if (process.env.ADONE_REALM) {
     process.env.ADONE_REALM = realm;
 }
 
-// Set ADONE_DIRNAME
-if (process.env.ADONE_DIRNAME) {
-    dirName = process.env.ADONE_DIRNAME;
-} else {
-    process.env.ADONE_DIRNAME = dirName;
-}
 
 const runtimePath = join(home, "runtime");
 const varPath = join(home, "var");
@@ -50,7 +43,6 @@ const omnitronLogsPath = join(logsPath, "omnitron");
 
 const config = {
     realm,
-    dirName,
     home,
     runtimePath,
     configsPath,

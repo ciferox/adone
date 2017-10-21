@@ -19,7 +19,7 @@ export default class Omnitron extends application.Application {
         await fs.mkdirp(adone.realm.config.runtimePath);
 
         // Load omnitron configuration
-        this.config = await omnitron.Configuration.load();
+        this.config = await omnitron.loadConfig();
 
         this.db = new omnitron.SystemDB();
 
@@ -39,10 +39,10 @@ export default class Omnitron extends application.Application {
     }
 
     async initialize() {
-        await this.createPidFile();
         await this.db.open();
-
+        
         await runtime.netron.attachContext(this, "omnitron");
+        await this.createPidFile();
     }
 
     async main() {
@@ -54,15 +54,24 @@ export default class Omnitron extends application.Application {
     }
 
     async uninitialize() {
-        try {
-            await this.uninitializeSubsystems();
-        } catch (err) {
-            adone.error(err);
+        // Unitialize services in omnitron group
+        // ...
+        
+        // Uninitialize managers in right order
+        for (const manager of ["service", "netron"]) {
+            try {
+                await this.uninitializeSubsystem(manager); // eslint-disable-line
+                adone.info(`Manager '${manager}' uninitialized`);
+            } catch (err) {
+                adone.error(err);
+            }
         }
 
         await runtime.netron.detachContext("omnitron");
+        adone.info("Omnitron context detached");
 
         await this.db.close();
+        adone.info("System database closed");
 
         return this.deletePidFile();
     }

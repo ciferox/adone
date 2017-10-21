@@ -40,8 +40,6 @@ export default class ServiceManager extends application.Subsystem {
                 if (serviceData.status === STATUS.INACTIVE) {
                     maintainer.startService(serviceData.name).catch((err) => {
                         adone.error(err);
-                    }).then(() => {
-                        adone.info(`Service '${serviceData.name}' has been started`);
                     });
                 }
                 this.serviceMaintainers.set(serviceData.name, maintainer);
@@ -50,13 +48,15 @@ export default class ServiceManager extends application.Subsystem {
     }
 
     async uninitialize() {
-        // for (const maintainer of this.groupMaintainers.values()) {
-        //     // await maintainer.kill(); // eslint-disable-line
-        // }
+        const promises = [];
+        for (const maintainer of this.groupMaintainers.values()) {
+            promises.push(maintainer.kill());
+        }
+
+        await Promise.all(promises);
 
         this.groupMaintainers.clear();
         this.serviceMaintainers.clear();
-        this.services = null;
     }
 
     async enumerate({ name, status } = {}) {

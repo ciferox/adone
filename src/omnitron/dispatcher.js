@@ -7,17 +7,11 @@ const {
     runtime
 } = adone;
 
-const {
-    Configuration,
-    STATUSES
-} = omnitron;
-
 // NOTE: local gate always be first in list of gates in gates.json
 
 export default class Dispatcher {
-    constructor({ noisily = false, configuration = null, netronOptions = {} } = {}) {
+    constructor({ noisily = false, netronOptions = {} } = {}) {
         this.noisily = noisily;
-        this._configuration = configuration;
         Object.assign(runtime.netron.options, netronOptions);
 
         runtime.netron.on("peer online", (peer) => {
@@ -50,14 +44,6 @@ export default class Dispatcher {
         }
     }
 
-    async configuration() {
-        if (is.null(this._configuration)) {
-            this._configuration = new Configuration();
-            await this._configuration.loadAll();
-        }
-        return this._configuration;
-    }
-
     async connect(gate = null) {
         if (is.nil(gate) || is.nil(gate.port)) {
             return this.connectLocal();
@@ -70,8 +56,7 @@ export default class Dispatcher {
     async connectLocal({ forceStart = true } = {}, _counter = 0) {
         let status = 0;
         if (is.null(this.peer)) {
-            const configuration = await this.configuration();
-            const localGate = configuration.raw.gates[0];
+            const localGate = (await adone.omnitron.loadConfig()).raw.gates[0];
             if (is.nil(localGate)) {
                 throw new x.NotExists("Configuration for gate 'local' is not found");
             }
@@ -110,7 +95,7 @@ export default class Dispatcher {
         return this._spawnOmnitron(options);
     }
 
-    async stopOmnitron({ killChildren = true } = {}) {
+    async stopOmnitron({ killChildren = false } = {}) {
         const isActive = await this.isOmnitronActive();
         if (isActive) {
             // Can be used in test environment.
@@ -133,7 +118,6 @@ export default class Dispatcher {
                         this.peer = null;
 
                         try {
-                            const pid = parseInt(std.fs.readFileSync(adone.realm.config.omnitron.pidFilePath).toString());
                             if (killChildren) {
                                 await this._killProcessChildren(pid);
                             }
@@ -172,7 +156,7 @@ export default class Dispatcher {
         const n = new netron.Netron();
         let isOK = false;
         try {
-            const localGate = (await this.configuration()).raw.gates[0];
+            const localGate = (await adone.omnitron.loadConfig()).raw.gates[0];
             await n.connect(localGate);
             await n.disconnect();
             isOK = true;
@@ -198,12 +182,10 @@ export default class Dispatcher {
             await systemDb.registerService(serviceName);
             await systemDb.close();
         } catch (err) {
-            const isActive = await this.isOmnitronActive();
-            await this.connectLocal();
+            await this.connectLocal({
+                forceStart: false
+            });
             await this.getInterface("omnitron").registerService(serviceName);
-            if (!isActive) {
-                await this.stopOmnitron();
-            }
         }
     }
 
@@ -214,12 +196,10 @@ export default class Dispatcher {
             await systemDb.unregisterService(serviceName);
             await systemDb.close();
         } catch (err) {
-            const isActive = await this.isOmnitronActive();
-            await this.connectLocal();
+            await this.connectLocal({
+                firceStart: false
+            });
             await this.getInterface("omnitron").unregisterService(serviceName);
-            if (!isActive) {
-                await this.stopOmnitron();
-            }
         }
     }
 

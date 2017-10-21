@@ -190,12 +190,12 @@ export default class Subsystem extends adone.event.AsyncEmitter {
      * Deletes subsytem
      * @param {string} name subsystem name
      */
-    deleteSubsystem(name) {
+    deleteSubsystem(name, force = false) {
         const index = this[SUBSYSTEMS_SYMBOL].findIndex((s) => s.name === name);
         if (index < 0) {
             throw new x.Unknown(`Unknown subsystem: ${name}`);
         }
-        if (![STATE.CREATED, STATE.UNINITIALIZED, STATE.FAILED].includes(this[SUBSYSTEMS_SYMBOL][index].state)) {
+        if (!force && ![STATE.CREATED, STATE.UNINITIALIZED, STATE.FAILED].includes(this[SUBSYSTEMS_SYMBOL][index].state)) {
             throw new x.NotAllowed("The subsystem is used and can not be deleted");
         }
 
@@ -256,6 +256,13 @@ export default class Subsystem extends adone.event.AsyncEmitter {
             throw new x.Unknown(`Unknown subsystem: ${name}`);
         }
         return sysInfo;
+    }
+
+    /**
+     * Returns list of all subsystem
+     */
+    getSubsystems() {
+        return this[SUBSYSTEMS_SYMBOL];
     }
 
     async _configureSubsystem(sysInfo) {

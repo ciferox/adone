@@ -63,7 +63,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         lazify: (modules, _obj, _require = require, {
             configurable = false,
             writable = false,
-            mapper = (key, mod) => ((typeof mod === "object" && mod.__esModule === true && "default" in mod) ? mod.default : mod)
+            mapper = (key, mod) => ((mod !== null && typeof mod === "object" && mod.__esModule === true && "default" in mod) ? mod.default : mod)
         } = {}) => {
             const obj = _obj || {};
             Object.keys(modules).forEach((key) => {
@@ -345,6 +345,9 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
 
         // Realm
         realm: "./realm",
+
+        // Cli
+        cli: "./cli",
 
         // Omnitron
         omnitron: "./omnitron",

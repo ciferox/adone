@@ -1,62 +1,28 @@
 const {
-    x,
     is,
-    std,
-    configuration
+    std
 } = adone;
 
-export default class Configuration extends configuration.FileConfiguration {
-    constructor({ inMemory = false } = {}) {
-        super({
-            cwd: adone.realm.config.configsPath
-        });
-        this.inMemory = inMemory;
+export default class Configuration extends adone.configuration.FileConfiguration {
+    constructor(options) {
+        super(options);
 
-        this.raw.gates = null;
-    }
-
-    async loadAll() {
-        await this.loadGates();
-
-        return this;
-    }
-
-    async loadGates() {
-        if (is.null(this.raw.gates)) {
-            try {
-                await this.load("gates.json", "gates");
-            } catch (err) {
-                if (err instanceof x.NotExists) {
-                    this.raw.gates = [
-                        {
-                            port: (is.windows ? "\\\\.\\pipe\\omnitron.sock" : std.path.join(adone.realm.config.runtimePath, "omnitron.sock"))
-                        }
-                    ];
-                    await this.save("gates.json", true, {
-                        space: "    "
-                    });
-                } else {
-                    adone.error(err);
+        this.raw = {
+            gates: [
+                {
+                    port: (is.windows ? "\\\\.\\pipe\\omnitron.sock" : std.path.join(adone.realm.config.runtimePath, "omnitron.sock"))
                 }
-            }
-        }
-        return this.raw.gates;
+            ]
+        };
     }
 
-    async save(confPath, name, options) {
-        if (this.inMemory) {
-            return;
-        }
-        try {
-            await super.save(confPath, name, options);
-        } catch (err) {
-            adone.error(err);
-        }
+    load() {
+        return super.load(adone.omnitron.CONFIG_NAME);
     }
 
-    static async load() {
-        const config = new Configuration();
-        await config.loadAll();
-        return config;
+    save() {
+        return super.save(adone.omnitron.CONFIG_NAME, null, {
+            space: "    "
+        });
     }
 }

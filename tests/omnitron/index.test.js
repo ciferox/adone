@@ -12,7 +12,7 @@ describe("omnitron", () => {
 
     before(async function () {
         this.timeout(25000);
-        await realm.init("test");
+        await realm.init(".adone_test");
         await realm.clean();
 
         realmInstance = await realm.getInstance();
@@ -62,11 +62,10 @@ describe("omnitron", () => {
 
             assert.equal(info.version, adone.package.version);
 
-            assert.equal(info.realm.name, "test");
+            assert.equal(info.realm.name, ".adone_test");
             assert.equal(info.realm.uid, (await realm.getInstance()).id);
 
             assert.equal(info.envs.ADONE_REALM, info.realm.name);
-            assert.equal(info.envs.ADONE_DIRNAME, ".adone_test");
             assert.isOk(info.envs.ADONE_HOME.endsWith(".adone_test"));
         });
 

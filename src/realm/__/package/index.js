@@ -136,7 +136,7 @@ export default class Package {
     async rollback(err) {
         if (is.plainObject(this.rollbackData)) {
             if (is.array(this.rollbackData.subProjects)) {
-                const cliConfig = await adone.realm.cli.getConfig();
+                const cliConfig = await adone.cli.loadConfig();
                 for (const subInfo of this.rollbackData.subProjects) {
                     cliConfig.deleteCommand(subInfo.adoneConf.raw.name);
                 }

@@ -40,6 +40,11 @@
                 "index": "glosses/assertion/index",
                 "src": "glosses/assertion/**/*"
             },
+            "cli": {
+                "description": "Adone CLI",
+                "index": "cli/index",
+                "src": "cli/**/*"
+            },
             "collection": {
                 "description": "Implementations of common collections",
                 "index": "glosses/collections/index",

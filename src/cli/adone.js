@@ -11,7 +11,7 @@ const {
 
 class AdoneCLI extends application.CliApplication {
     async configure() {
-        this.config = await adone.realm.cli.getConfig();
+        this.config = await adone.cli.loadConfig();
 
         // expose cli interface for subsystems.
         this.exposeCliInterface();
@@ -251,6 +251,10 @@ class AdoneCLI extends application.CliApplication {
     }
 
     async main(args, opts, { rest }) {
+        adone.log(adone.omnitron.config);
+        adone.log((await adone.omnitron.loadConfig()).raw);
+        adone.log(adone.omnitron.config.raw);
+        return;
         let scriptPath = args.get("path");
         if (!std.path.isAbsolute(scriptPath)) {
             scriptPath = std.path.resolve(process.cwd(), scriptPath);

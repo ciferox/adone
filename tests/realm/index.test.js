@@ -1,5 +1,6 @@
 const {
     fs,
+    cli,
     realm,
     std,
     system: { process: { exec } }
@@ -12,12 +13,12 @@ describe("realm", () => {
     let cliConfig;
 
     before(async () => {
-        await realm.init("test");
+        await realm.init(".adone_test");
         await realm.clean();
         realmInstance = await realm.getInstance();
         realmInstance.setSilent(true);
 
-        cliConfig = await realm.cli.getConfig();
+        cliConfig = await cli.loadConfig();
     });
 
     after(async () => {
@@ -27,8 +28,7 @@ describe("realm", () => {
     });
 
     it("check environment", () => {
-        assert.equal(process.env.ADONE_REALM, "test");
-        assert.equal(process.env.ADONE_DIRNAME, ".adone_test");
+        assert.equal(process.env.ADONE_REALM, ".adone_test");
     });
 
     it("bad install argument", async () => {
@@ -182,7 +182,9 @@ describe("realm", () => {
 
         it("install/uninstall with active omnitron", async () => {
             await adone.omnitron.dispatcher.startOmnitron();
-            await adone.omnitron.dispatcher.connectLocal();
+            await adone.omnitron.dispatcher.connectLocal({
+                forceStart: false
+            });
             assert.isTrue(await adone.omnitron.dispatcher.ping());
 
             const omnitronServicePath = std.path.join(__dirname, "packages", "omnitron_service_good");
