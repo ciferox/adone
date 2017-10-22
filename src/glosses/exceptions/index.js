@@ -1,3 +1,7 @@
+const {
+    is
+} = adone;
+
 adone.asNamespace(exports);
 
 export const exceptionIdMap = {};
@@ -162,3 +166,63 @@ export const create = (id, message, stack) => {
 };
 
 export const getStdId = (err) => stdIdMap[err.constructor.name];
+
+
+const extractPathRegex = /\s+at.*(?:\(|\s)(.*)\)?/;
+const pathRegex = /^(?:(?:(?:node|(?:internal\/[\w/]*|.*node_modules\/babel-polyfill\/.*)?\w+)\.js:\d+:\d+)|native)/;
+const homeDir = adone.std.os.homedir();
+
+export const cleanStack = (stack, { pretty = false } = {}) => {
+    return stack.replace(/\\/g, "/")
+        .split("\n")
+        .filter((x) => {
+            const pathMatches = x.match(extractPathRegex);
+            if (is.null(pathMatches) || !pathMatches[1]) {
+                return true;
+            }
+
+            const match = pathMatches[1];
+
+            // Electron
+            if (match.includes(".app/Contents/Resources/electron.asar") ||
+                match.includes(".app/Contents/Resources/default_app.asar")) {
+                return false;
+            }
+
+            return !pathRegex.test(match);
+        })
+        .filter((x) => x.trim() !== "")
+        .map((x) => {
+            if (pretty) {
+                return x.replace(extractPathRegex, (m, p1) => m.replace(p1, p1.replace(homeDir, "~")));
+            }
+
+            return x;
+        })
+        .join("\n");
+};
+
+const cleanInternalStack = (stack) => stack.replace(/\s+at .*aggregate-error\/index.js:\d+:\d+\)?/g, "");
+
+export class AggregateException extends Exception {
+    constructor(errors) {
+        // Even though strings are iterable, we don't allow them to prevent subtle user mistakes
+        if (!errors[Symbol.iterator] || is.string(errors)) {
+            throw new TypeError(`Expected input to be iterable, got ${typeof errors}`);
+        }
+
+        errors = Array.from(errors).map((err) => err instanceof Error ? err : new Error(err));
+
+        let message = errors.map((err) => cleanInternalStack(cleanStack(err.stack))).join("\n");
+        message = `\n${adone.text.indent(message, 4)}`;
+
+        super(message);
+        this.name = this.constructor.name;
+        Object.defineProperty(this, "_errors", { value: errors });
+    }
+    *[Symbol.iterator]() {
+        for (const error of this._errors) {
+            yield error;
+        }
+    }
+}

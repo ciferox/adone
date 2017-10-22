@@ -677,10 +677,148 @@ export const execSync = (cmd, args, opts) => {
 
 export const shellSync = (cmd, opts) => handleShell(execSync, cmd, opts);
 
-export const isRunning = function (pid) {
+export const exists = (pid) => {
     try {
         return process.kill(pid, 0);
     } catch (e) {
         return e.code === "EPERM";
     }
+};
+
+export const getChildPids = async (pid) => {
+    let headers = null;
+
+    if (is.number(pid)) {
+        pid = pid.toString();
+    }
+
+    //
+    // The `ps-tree` module behaves differently on *nix vs. Windows
+    // by spawning different programs and parsing their output.
+    //
+    // Linux:
+    // 1. " <defunct> " need to be striped
+    // ```bash
+    // $ ps -A -o comm,ppid,pid,stat
+    // COMMAND          PPID   PID STAT
+    // bbsd             2899 16958 Ss
+    // watch <defunct>  1914 16964 Z
+    // ps              20688 16965 R+
+    // ```
+    //
+    // Win32:
+    // 1. wmic PROCESS WHERE ParentProcessId=4604 GET Name,ParentProcessId,ProcessId,Status)
+    // 2. The order of head columns is fixed
+    // ```shell
+    // > wmic PROCESS GET Name,ProcessId,ParentProcessId,Status
+    // Name                          ParentProcessId  ProcessId   Status
+    // System Idle Process           0                0
+    // System                        0                4
+    // smss.exe                      4                228
+    // ```
+
+    const normalizeHeader = (str) => {
+        if (!is.win32) {
+            return str;
+        }
+
+        switch (str) {
+            case "Name":
+                return "command";
+            case "ParentProcessId":
+                return "ppid";
+            case "ProcessId":
+                return "pid";
+            case "Status":
+                return "stat";
+            default:
+                throw new Error(`Unknown process listing header: ${str}`);
+        }
+    };
+
+    let stdout;
+    if (is.win32) {
+        // See also: https://github.com/nodejs/node-v0.x-archive/issues/2318
+        stdout = await execStdout("wmic.exe", ["PROCESS", "GET", "Name,ProcessId,ParentProcessId,Status"]);
+    } else {
+        stdout = await execStdout("ps", ["-A", "-o", "ppid,pid,stat,comm"]);
+    }
+
+    const lines = stdout.split(/\r?\n/);
+    const childPids = [];
+
+    for (const line of lines) {
+        const columns = line.trim().split(/\s+/);
+        if (!headers) {
+            headers = columns;
+
+            // Rename Win32 header name, to as same as the linux, for compatible.
+            headers = headers.map(normalizeHeader);
+            continue;
+        }
+
+        const proc = {};
+        const h = headers.slice();
+        while (h.length) {
+            proc[h.shift()] = h.length ? columns.shift() : columns.join(" ");
+        }
+
+        const parents = [pid];
+
+        if (parents.includes(proc.PPID)) {
+            parents.push(proc.PID);
+            childPids.push(proc);
+        }
+    }
+
+    return childPids;
+};
+
+export const kill = (input, { force = false, tree = true, windows } = {}) => {
+    const fn = is.win32 ? (input) => {
+        const args = [];
+
+        if (is.plainObject(windows) && windows.system && windows.username && windows.password) {
+            args.push("/s", windows.system, "/u", windows.username, "/p", windows.password);
+        }
+
+        if (windows.filter) {
+            args.push("/fi", windows.filter);
+        }
+
+        if (force) {
+            args.push("/f");
+        }
+
+        if (tree) {
+            args.push("/t");
+        }
+
+        input.forEach((x) => args.push(is.number(x) ? "/pid" : "/im", x));
+
+        return exec("taskkill", args);
+    } : (input) => {
+        const cmd = is.string(input) ? "killall" : "kill";
+        const args = [input];
+
+        if (force) {
+            args.unshift("-9");
+        }
+
+        return exec(cmd, args);
+    };
+    const errors = [];
+
+    // Don't kill ourselves
+    input = adone.util.arrify(input).filter((x) => x !== process.pid);
+
+    return Promise.all(input.map((input) => {
+        return fn(input).catch((err) => {
+            errors.push(`Killing process ${input} failed: ${err.message.replace(/.*\n/, "").replace(/kill: \d+: /, "").trim()}`);
+        });
+    })).then(() => {
+        if (errors.length > 0) {
+            throw new adone.x.AggregateException(errors);
+        }
+    });
 };

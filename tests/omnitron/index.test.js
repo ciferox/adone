@@ -29,6 +29,54 @@ describe("omnitron", () => {
         });
     };
 
+    const enableServices = async (names) => {
+        const awaiters = [];
+        const ops = [];
+        for (const name of names) {
+            ops.push(iOmnitron.enableService(name)); // eslint-disable-line
+            awaiters.push(waitForServiceStatus(name, STATUS.INACTIVE));
+        }
+
+        await Promise.all(ops);
+        return Promise.all(awaiters);
+    };
+
+    const disableServices = async (names) => {
+        const awaiters = [];
+        const ops = [];
+        for (const name of names) {
+            ops.push(iOmnitron.disableService(name)); // eslint-disable-line
+            awaiters.push(waitForServiceStatus(name, STATUS.DISABLED));
+        }
+
+        await Promise.all(ops);
+        return Promise.all(awaiters);
+    };
+
+    const startServices = async (names) => {
+        const awaiters = [];
+        const ops = [];
+        for (const name of names) {
+            ops.push(iOmnitron.startService(name)); // eslint-disable-line
+            awaiters.push(waitForServiceStatus(name, STATUS.ACTIVE));
+        }
+
+        await Promise.all(ops);
+        return Promise.all(awaiters);
+    };
+
+    const stopServices = async (names) => {
+        const awaiters = [];
+        const ops = [];
+        for (const name of names) {
+            ops.push(iOmnitron.stopService(name)); // eslint-disable-line
+            awaiters.push(waitForServiceStatus(name, STATUS.INACTIVE));
+        }
+
+        await Promise.all(ops);
+        return Promise.all(awaiters);
+    };
+
     const runProjectsTask = async (taskName) => {
         const servicePath = std.path.join(__dirname, "services");
         const names = await fs.readdir(servicePath);
@@ -70,10 +118,11 @@ describe("omnitron", () => {
     });
 
     describe("first start", () => {
-        it("should create pidfile and log files", async () => {
+        it("config, pidfile and log files should exist", async () => {
+            assert.isTrue(await fs.exists(std.path.join(adone.realm.config.configsPath, adone.omnitron.CONFIG_NAME)));
             assert.isTrue(await fs.exists(adone.realm.config.omnitron.pidFilePath));
             assert.isTrue(await fs.exists(adone.realm.config.omnitron.logFilePath));
-            assert.isTrue(await fs.exists(adone.realm.config.omnitron.logFilePath));
+            assert.isTrue(await fs.exists(adone.realm.config.omnitron.errorLogFilePath));
         });
 
         it("correct omnitron information", async () => {
@@ -222,28 +271,16 @@ describe("omnitron", () => {
             symlink: false
         });
 
-        let list = await iOmnitron.enumerate();
-        assert.lengthOf(list, 1);
-        assert.equal(list[0].status, STATUS.DISABLED);
+        await waitForServiceStatus("test1", STATUS.DISABLED);
 
-        await iOmnitron.enableService("test1");
-
-        list = await iOmnitron.enumerate();
-        assert.lengthOf(list, 1);
-        assert.equal(list[0].status, STATUS.INACTIVE);
-
-        await iOmnitron.disableService("test1");
-
-        list = await iOmnitron.enumerate();
-        assert.lengthOf(list, 1);
-        assert.equal(list[0].status, STATUS.DISABLED);
+        await enableServices(["test1"]);
+        await disableServices(["test1"]);
 
         await realmInstance.uninstall({
             name: "omnitron.service.test1"
         });
 
-        list = await iOmnitron.enumerate();
-        assert.lengthOf(list, 0);
+        assert.lengthOf(await iOmnitron.enumerate(), 0);
     });
 
     it("start/stop service", async () => {
@@ -254,19 +291,9 @@ describe("omnitron", () => {
             symlink: false
         });
 
-        let list = await iOmnitron.enumerate();
-        assert.lengthOf(list, 1);
-        assert.equal(list[0].status, STATUS.DISABLED);
-
-        await iOmnitron.enableService("test1");
-
-        list = await iOmnitron.enumerate();
-        assert.lengthOf(list, 1);
-        assert.equal(list[0].status, STATUS.INACTIVE);
-
-        await iOmnitron.startService("test1");
-        list = await iOmnitron.enumerate("test1");
-        assert.equal(list[0].status, STATUS.ACTIVE);
+        await waitForServiceStatus("test1", STATUS.DISABLED);
+        await enableServices(["test1"]);
+        await startServices(["test1"]);
 
         // await dispatcher.peer.waitForContext("test1");
         const iTest1 = await dispatcher.getInterface("test1");
@@ -282,16 +309,13 @@ describe("omnitron", () => {
         assert.equal(info.version, adoneConf.raw.version);
         assert.equal(info.author, adoneConf.raw.author);
 
-        await iOmnitron.stopService("test1");
-        list = await iOmnitron.enumerate("test1");
-        assert.equal(list[0].status, STATUS.INACTIVE);
+        await stopServices(["test1"]);
 
         await realmInstance.uninstall({
             name: "omnitron.service.test1"
         });
 
-        list = await iOmnitron.enumerate();
-        assert.lengthOf(list, 0);
+        assert.lengthOf(await iOmnitron.enumerate(), 0);
     });
 
     it("enabled service should be started during omnitron startup", async () => {
@@ -301,7 +325,8 @@ describe("omnitron", () => {
             name: servicePath,
             symlink: false
         });
-        await iOmnitron.enableService("test1");
+
+        await enableServices(["test1"]);
 
         await dispatcher.stopOmnitron();
         await dispatcher.startOmnitron();
@@ -318,7 +343,7 @@ describe("omnitron", () => {
         
         assert.equal(info.name, list[0].name);
 
-        await iOmnitron.stopService("test1");
+        await stopServices(["test1"]);
         
         await realmInstance.uninstall({
             name: "omnitron.service.test1"
@@ -332,22 +357,46 @@ describe("omnitron", () => {
             name: servicePath,
             symlink: false
         });
-        await iOmnitron.enableService("test1");
-        await iOmnitron.startService("test1");
-
-        await waitForServiceStatus("test1", STATUS.ACTIVE);
+        await enableServices(["test1"]);
+        await startServices(["test1"]);
         
         const err = await assert.throws(async () => iOmnitron.startService("test1"));
         assert.instanceOf(err, x.IllegalState);
 
-        await iOmnitron.stopService("test1");
+        await stopServices(["test1"]);
         
         await realmInstance.uninstall({
             name: "omnitron.service.test1"
         });
     });
 
-    it("stop single service in a group should kill process", async () => {
+    it("stop single service in a group should initiate process exit(0)", async () => {
+        const servicePath = std.path.join(__dirname, "services", "test1");
+        
+        await realmInstance.install({
+            name: servicePath,
+            symlink: false
+        });
+        await enableServices(["test1"]);
+        await startServices(["test1"]);
+
+        const list = await iOmnitron.enumerate("test1");
+        const iMaintainer = await iOmnitron.getMaintainer(list[0].group);
+        const pid = await iMaintainer.getPid();
+        assert.isTrue(adone.system.process.exists(pid));
+
+        await stopServices(["test1"]);
+
+        await adone.promise.delay(1000);
+
+        assert.isFalse(adone.system.process.exists(pid));
+
+        await realmInstance.uninstall({
+            name: "omnitron.service.test1"
+        });
+    });
+
+    it.skip("Processes in a group should start in single process", async () => {
         const servicePath = std.path.join(__dirname, "services", "test1");
         
         await realmInstance.install({
@@ -362,7 +411,7 @@ describe("omnitron", () => {
         const list = await iOmnitron.enumerate("test1");
         const iMaintainer = await iOmnitron.getMaintainer(list[0].group);
         const pid = await iMaintainer.getPid();
-        assert.isTrue(adone.system.process.isRunning(pid));
+        assert.isTrue(adone.system.process.exists(pid));
 
         await iOmnitron.stopService("test1");
 
@@ -370,37 +419,7 @@ describe("omnitron", () => {
 
         await adone.promise.delay(1000);
 
-        assert.isFalse(adone.system.process.isRunning(pid));
-
-        await realmInstance.uninstall({
-            name: "omnitron.service.test1"
-        });
-    });
-
-    it.skip("stop single service in a group should kill process", async () => {
-        const servicePath = std.path.join(__dirname, "services", "test1");
-        
-        await realmInstance.install({
-            name: servicePath,
-            symlink: false
-        });
-        await iOmnitron.enableService("test1");
-        await iOmnitron.startService("test1");
-
-        await waitForServiceStatus("test1", STATUS.ACTIVE);
-
-        const list = await iOmnitron.enumerate("test1");
-        const iMaintainer = await iOmnitron.getMaintainer(list[0].group);
-        const pid = await iMaintainer.getPid();
-        assert.isTrue(adone.system.process.isRunning(pid));
-
-        await iOmnitron.stopService("test1");
-
-        await waitForServiceStatus("test1", STATUS.INACTIVE);
-
-        await adone.promise.delay(1000);
-
-        assert.isFalse(adone.system.process.isRunning(pid));
+        assert.isFalse(adone.system.process.exists(pid));
 
         await realmInstance.uninstall({
             name: "omnitron.service.test1"

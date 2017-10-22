@@ -118,10 +118,9 @@ export default class Dispatcher {
                         this.peer = null;
 
                         try {
-                            if (killChildren) {
-                                await this._killProcessChildren(pid);
-                            }
-                            await this._killProcess(pid, 10000); // awaiting 10 sec...
+                            await adone.system.process.kill(pid, {
+                                tree: killChildren
+                            });
                         } catch (err) {
                             this.noisily && adone.log(err.message);
                         }
@@ -281,51 +280,5 @@ export default class Dispatcher {
             });
         }
         return adone.application.run(omnitron.Omnitron);
-    }
-
-    async _isAlive(pid, timeout = 0) {
-        try {
-            let exists = true;
-            const n = timeout / 100;
-            if (timeout > 0) {
-                for (let i = 0; i < n && exists; ++i) {
-                    try {
-                        process.kill(pid, 0); // check the existence
-                        // eslint-disable-next-line
-                        await adone.promise.delay(100);
-                    } catch (err) {
-                        exists = false;
-                    }
-                }
-            } else {
-                process.kill(pid, 0);
-            }
-            return exists;
-        } catch (err) {
-            return false;
-        }
-    }
-
-    async _killProcess(pid, timeout = 0) {
-        process.kill(pid);
-        this.noisily && adone.log(`Sent SIGTERM to omnitron's process (PID: ${pid})`);
-        let exists = await this._isAlive(pid, timeout);
-        if (exists) {
-            process.kill(pid, "SIGKILL");
-            this.noisily && adone.log(`Sent SIGKILL to omnitron's process (PID: ${pid})`);
-            exists = await this._isAlive(pid, 3000); // wait 3 sec
-            if (exists) {
-                this.noisily && adone.error(`Process ${pid} is still running`);
-            }
-        }
-        return exists;
-    }
-
-    async _killProcessChildren(pid) {
-        const children = (await adone.metrics.system.getProcesses()).filter((x) => x.getParentPID() === pid);
-        return Promise.all(children.map(async (child) => {
-            await this._killProcessChildren(child.getPID());
-            return this._killProcess(child.getPID());
-        }));
     }
 }

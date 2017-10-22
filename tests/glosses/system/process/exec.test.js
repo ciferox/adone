@@ -1,5 +1,8 @@
-const { is, std: { stream, path, fs } } = adone;
-const { isRunning, exec, execSync, execStdout, execStderr, shell, shellSync, stdio, errname, errnameFallback } = adone.system.process;
+const {
+    is,
+    std: { stream, path, fs },
+    system: { process: { exists, exec, execSync, execStdout, execStderr, shell, shellSync, stdio, errname, errnameFallback } }
+} = adone;
 
 const macro = (input, expected) => {
     if (expected instanceof Error) {
@@ -116,8 +119,8 @@ describe("system", "process", () => {
         assert.throws(() => {
             execSync("foo");
         }, is.windows
-            ? /^('|")foo('|")/ // ?
-            : "spawnSync foo ENOENT"
+                ? /^('|")foo('|")/ // ?
+                : "spawnSync foo ENOENT"
         );
     });
 
@@ -409,8 +412,8 @@ describe("system", "process", () => {
             // Give everybody some time to breath and kill things
             await adone.promise.delay(200);
 
-            assert.isFalse(isRunning(cp.pid));
-            assert.equal(isRunning(pid), !cleanup);
+            assert.isFalse(exists(cp.pid));
+            assert.equal(exists(pid), !cleanup);
         });
     };
 
