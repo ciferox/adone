@@ -1,13 +1,15 @@
 const {
     promise,
     std: { path, child_process: cp },
-    system: { process: { getChildPids, kill } }
+    system: { process: { getChildPids, kill } },
+    util
 } = adone;
 
 describe("system", "process", () => {
     const scripts = {
         parent: path.join(__dirname, "fixtures", "child_pids", "parent.js"),
-        child: path.join(__dirname, "fixtures", "child_pids", "child.js")
+        child: path.join(__dirname, "fixtures", "child_pids", "child.js"),
+        spawnChildren: path.join(__dirname, "fixtures", "child_pids", "spawn_children.js")
     };
 
     it("Spawn a Parent process which has a Two Child Processes", async () => {
@@ -32,6 +34,24 @@ describe("system", "process", () => {
             await getChildPids(1234);
         } catch (e) {
             assert.equal(e.toString(), errmsg);
+        }
+    });
+
+    it("should return pids of children of children", async () => {
+        const child = cp.spawn("node", [scripts.spawnChildren]);
+        try {
+            let stdout = "";
+            child.stdout.on("data", (buf) => {
+                stdout += buf.toString("utf8");
+            });
+            await promise.delay(200);
+            const children = await getChildPids(child.pid);
+            const expectedPids = util.reFindAll(/child pid: (\d+)/g, stdout).map((x) => Number(x[1])).sort();
+
+            await promise.delay(1000);
+            expect(children.map((x) => Number(x.PID)).sort()).to.be.deep.equal(expectedPids);
+        } finally {
+            child.kill();
         }
     });
 

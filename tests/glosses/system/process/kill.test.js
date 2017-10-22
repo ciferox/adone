@@ -1,7 +1,7 @@
 const {
     is,
     promise,
-    system: { process: { kill, exists } },
+    system: { process: { kill, exists, getChildPids } },
     std: { child_process: childProcess }
 } = adone;
 // import noopProcess from "noop-process";
@@ -108,5 +108,27 @@ describe("system", "process", () => {
         await promise.delay(noopProcessExitDelay);
         assert.isTrue(await exists(pid));
         Object.defineProperty(process, "pid", { value: originalFkillPid });
+    });
+
+    describe("tree", () => {
+        it("should kill the entire process tree", async () => {
+            const child = forkProcess("fixtures/child_pids/spawn_children");
+            const exit = spy();
+            child.on("exit", exit);
+            try {
+                await promise.delay(1000);
+                const children = await getChildPids(child.pid);
+                expect(children).to.have.lengthOf(10);
+                await Promise.all([
+                    kill(child.pid, { tree: true }),
+                    exit.waitForCall()
+                ]);
+                for (const child of children) {
+                    expect(await exists(child)).to.be.false; // eslint-disable-line
+                }
+            } finally {
+                child.kill();
+            }
+        });
     });
 });
