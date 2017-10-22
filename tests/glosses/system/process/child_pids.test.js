@@ -51,7 +51,7 @@ describe("system", "process", () => {
             await promise.delay(1000);
             expect(children.map((x) => Number(x.PID)).sort()).to.be.deep.equal(expectedPids);
         } finally {
-            child.kill();
+            kill(child.pid);
         }
     });
 

@@ -1,5 +1,5 @@
 const {
-    application: { Application }
+    application: { CliApplication }
 } = adone;
 
 const {
@@ -11,7 +11,7 @@ const {
     Option,
     Options,
     OptionsGroup
-} = Application;
+} = CliApplication;
 
 @CommandsGroup({
     name: "math",
@@ -21,7 +21,7 @@ const {
     name: "log",
     description: "Printers"
 })
-class MyApp extends Application {
+class MyApp extends CliApplication {
     @MainCommand()
     @Argument("a")
     @Options(["--hello", "--world"])
