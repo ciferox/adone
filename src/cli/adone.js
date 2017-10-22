@@ -184,7 +184,7 @@ class AdoneCLI extends application.CliApplication {
             term.print(`Realm {green-fg}'${path}'{/green-fg} successfully initialized`);
         } catch (err) {
             term.print(`{red-fg}${err.message}{/}`);
-        }     
+        }
     }
 
     async installCommand(args, opts) {

@@ -73,9 +73,16 @@ const readPackage = (requestPath) => {
     }
 
     const jsonPath = path.resolve(requestPath, "package.json");
-    const json = fs.readFileSync(path._makeLong(jsonPath), "utf8");
 
-    if (is.undefined(json)) {
+    let json;
+
+    try {
+        json = fs.readFileSync(path._makeLong(jsonPath), "utf8");
+    } catch (err) {
+        json = undefined;
+    }
+
+    if (is.nil(json)) {
         return false;
     }
 
