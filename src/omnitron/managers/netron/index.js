@@ -5,7 +5,8 @@ const {
 
 export default class NetronManager extends application.Subsystem {
     configure() {
-        runtime.netron.options.isSuper = true;
+
+        Object.assign(runtime.netron.options, this.parent.config.raw.netron);
 
         runtime.netron.registerAdapter("ws", adone.netron.ws.Adapter);
 

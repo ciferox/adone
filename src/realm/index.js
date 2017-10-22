@@ -41,8 +41,21 @@ export const init = async (name = ".adone_dev", customPath) => {
     return path;
 };
 
-export const clean = () => new adone.fs.Directory(adone.realm.path).clean();
+export const clean = async () => {
+    const paths = [
+        adone.realm.config.packagesPath,
+        adone.realm.config.runtimePath,
+        adone.realm.config.configsPath,
+        adone.realm.config.varPath
+    ];
 
+    for (const path of paths) {
+        // eslint-disable-next-line
+        if (await adone.fs.exists(path)) {
+            await new adone.fs.Directory(path).clean(); // eslint-disable-line
+        }
+    }
+};
 
 let realmInstance = null;
 

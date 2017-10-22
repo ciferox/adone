@@ -18,6 +18,7 @@ export default class ServiceMaintainer extends AsyncEmitter {
         super();
         this.manager = manager;
         this.group = group;
+        this.pid = null;
         this.iServiceApp = null;
         this._serviceAwaiters = new collection.TimedoutMap(10000);
         this.restarts = 0;
@@ -70,6 +71,11 @@ export default class ServiceMaintainer extends AsyncEmitter {
         }
 
         this.emitParallel("service", data);
+    }
+
+    @Public()
+    getPid() {
+        return this.pid;
     }
 
     onProcessStopped() {
@@ -236,13 +242,10 @@ export default class ServiceMaintainer extends AsyncEmitter {
     async kill() {
         if (!is.null(this.iServiceApp)) {
             process.kill(this.pid);
+            this.pid = null;
 
             return this.onProcessStopped();
         }
-    }
-
-    isRunning() {
-        return !is.null(this.iServiceApp);
     }
 
     _removeAwaiter(serviceName) {

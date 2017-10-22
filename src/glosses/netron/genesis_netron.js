@@ -37,11 +37,11 @@ export default class GenesisNetron extends AsyncEmitter {
             }
         }, options);
 
-        this.options.retries = Object.assign({
+        this.options.connect = Object.assign({
             retries: 3,
             minTimeout: 300,
             maxTimeout: 3000
-        }, options ? options.retries : null);
+        }, options ? options.connect : null);
 
         this.piStatuses = [STATUS.HANDSHAKING, STATUS.ONLINE];
 

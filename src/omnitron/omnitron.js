@@ -40,7 +40,6 @@ export default class Omnitron extends application.Application {
 
     async initialize() {
         await this.db.open();
-        
         await runtime.netron.attachContext(this, "omnitron");
         await this.createPidFile();
     }

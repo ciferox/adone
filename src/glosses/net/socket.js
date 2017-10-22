@@ -11,11 +11,11 @@ export default class Socket extends adone.event.EventEmitter {
             defaultPort: 1024
         }, options);
 
-        this.options.retries = Object.assign({
+        this.options.connect = Object.assign({
             retries: 3,
             minTimeout: 100,
             maxTimeout: 10000
-        }, options ? options.retries : null);
+        }, options ? options.connect : null);
 
         this._localAddr = null;
         this._remoteAddr = null;
@@ -120,7 +120,7 @@ export default class Socket extends adone.event.EventEmitter {
     connect(options = {}) {
         return new Promise((resolve, reject) => {
             [options.port, options.host] = adone.net.util.normalizeAddr(options.port, options.host, this.options.defaultPort);
-            const operation = adone.util.retry.operation(this.options.retries);
+            const operation = adone.util.retry.operation(this.options.connect);
 
             if (is.string(options.port)) {
                 options.path = options.port;

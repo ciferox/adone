@@ -136,6 +136,13 @@ export default class Subsystem extends adone.event.AsyncEmitter {
     }
 
     /**
+     * Return true if at least there is one subsystem.
+     */
+    hasSubsystems() {
+        return this[SUBSYSTEMS_SYMBOL].length > 0;
+    }
+
+    /**
      * Adds a new subsystem to the application.
      *
      * @param {string|adone.application.Subsystem} subsystem Subsystem instance or absolute path.

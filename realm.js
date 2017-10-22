@@ -37,7 +37,7 @@ const runtimePath = join(home, "runtime");
 const varPath = join(home, "var");
 const configsPath = join(home, "configs");
 const omnitronVarPath = join(varPath, "omnitron");
-const omnitronServicesPath = join(omnitronVarPath, "services");
+const omnitronDataPath = join(omnitronVarPath, "data");
 const logsPath = join(varPath, "logs");
 const omnitronLogsPath = join(logsPath, "omnitron");
 
@@ -56,7 +56,9 @@ const config = {
         errorLogFilePath: join(omnitronLogsPath, "omnitron-err.log"),
         pidFilePath: join(runtimePath, "omnitron.pid"),
         varPath: omnitronVarPath,
-        servicesPath: omnitronServicesPath
+        dataPath: omnitronDataPath,
+        servicesPath: join(omnitronVarPath, "services"),
+        dbPath: join(omnitronVarPath, "db")
     }
 };
 

@@ -34,25 +34,22 @@ lazify({
     dispatcher: () => new adone.omnitron.Dispatcher()
 }, adone.asNamespace(exports), require);
 
-const __ = lazify({
-    config: () => null
-}, exports, require, {
-    writable: true
-});
+
+export let config = null; // eslint-disable-line
 
 export const loadConfig = async () => {
-    if (is.null(__.config)) {
-        __.config = new adone.omnitron.Configuration({
+    if (is.null(config)) {
+        config = new adone.omnitron.Configuration({
             cwd: adone.realm.config.configsPath
         });
 
         if (await adone.fs.exists(adone.std.path.join(adone.realm.config.configsPath, CONFIG_NAME))) {
             // assign config from home
-            await __.config.load(CONFIG_NAME);
+            await config.load(CONFIG_NAME);
         } else {
-            await __.config.save();
+            await config.save();
         }
     }
 
-    return __.config;
+    return config;
 };

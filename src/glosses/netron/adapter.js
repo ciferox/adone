@@ -1,13 +1,11 @@
 const {
     is,
-    x,
-    configuration
+    x
 } = adone;
 
 export default class Adapter {
     constructor(options) {
-        this.options = new configuration.Configuration();
-        this.options.assign(options);
+        this.options = Object.assign({}, options);
         this.server = null;
     }
 

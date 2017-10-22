@@ -30,7 +30,8 @@ export default class Peer extends GenesisPeer {
                     this.emit("disconnect");
                 };
                 ws.onerror = (errEvent) => {
-                    this.emit("error", new x.Runtime(errEvent.data));
+                    adone.log(errEvent)
+                    this.emit("error", new x.Network(errEvent.data));
                 };
                 ws.onmessage = (msgEvent) => {
                     this._onMessage(msgEvent.data);

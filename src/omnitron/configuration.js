@@ -8,6 +8,17 @@ export default class Configuration extends adone.configuration.FileConfiguration
         super(options);
 
         this.raw = {
+            netron: {
+                responseTimeout: 30000,
+                isSuper: true,
+                connect: {
+                    retries: 3,
+                    minTimeout: 100,
+                    maxTimeout: 10000,
+                    factor: 2,
+                    randomize: false
+                }
+            },
             gates: [
                 {
                     port: (is.windows ? "\\\\.\\pipe\\omnitron.sock" : std.path.join(adone.realm.config.runtimePath, "omnitron.sock"))

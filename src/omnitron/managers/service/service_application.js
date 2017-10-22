@@ -153,6 +153,9 @@ class ServiceApplication extends application.Application {
                     });
                 } finally {
                     this.deleteSubsystem(name, true);
+                    if (!this.hasSubsystems()) {
+                        this.exit(0);
+                    }
                 }
             });
         } else if (sysInfo.state === application.STATE.UNINITIALIZING) {

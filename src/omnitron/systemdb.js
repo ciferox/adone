@@ -9,7 +9,7 @@ const {
 export default class SystemDB {
     constructor() {
         this.raw = new vault.Vault({
-            location: std.path.join(adone.realm.config.omnitron.varPath, "system.db")
+            location: adone.realm.config.omnitron.dbPath
         });
     }
 

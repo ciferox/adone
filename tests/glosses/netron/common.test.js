@@ -44,7 +44,7 @@ describe("netron", "common", function () {
 
         it("reconnect attempts", async () => {
             const customExNetron = new Netron({
-                retries: {
+                connect: {
                     retries: 4
                 }
             });
