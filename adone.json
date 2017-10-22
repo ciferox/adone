@@ -51,6 +51,11 @@
                 "$src": "src/index.js",
                 "$dst": "lib"
             },
+            "fast": {
+                "$task": "transpile",
+                "$src": "src/fast/**/*.js",
+                "$dst": "lib/fast"
+            },
             "realm": {
                 "$task": "transpile",
                 "$src": "src/realm/**/*.js",
@@ -69,6 +74,21 @@
                     ],
                     "$dst": "lib/omnitron"
                 }
+            },
+            "project": {
+                "$task": "transpile",
+                "$src": "src/project/**/*.js",
+                "$dst": "lib/project"
+            },
+            "shani": {
+                "$task": "transpile",
+                "$src": "src/shani/**/*.js",
+                "$dst": "lib/shani"
+            },
+            "specter": {
+                "$task": "transpile",
+                "$src": "src/specter/**/*.js",
+                "$dst": "lib/specter"
             }
         }
     }

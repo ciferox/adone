@@ -175,8 +175,8 @@
             },
             "fast": {
                 "description": "File automation streaming templates/transforms",
-                "index": "glosses/fast/index",
-                "src": "glosses/fast/**/*"
+                "index": "fast/index",
+                "src": "fast/**/*"
             },
             "fs": {
                 "description": "Filesystem utilites",
@@ -337,13 +337,13 @@
             },
             "project": {
                 "description": "Adone project management stuff",
-                "index": "glosses/project/index",
-                "src": "glosses/project/**/*",
+                "index": "project/index",
+                "src": "project/**/*",
                 "namespace": {
                     "task": {
                         "description": "Project tasks",
-                        "index": "glosses/project/tasks/index",
-                        "src": "glosses/project/tasks/**/*"
+                        "index": "project/tasks/index",
+                        "src": "project/tasks/**/*"
                     }
                 }
             },
@@ -379,8 +379,8 @@
             },
             "shani": {
                 "description": "Testing framework",
-                "index": "glosses/shani/index",
-                "src": "glosses/shani/**/*"
+                "index": "shani/index",
+                "src": "shani/**/*"
             },
             "sourcemap": {
                 "description": "Sourcemaps",

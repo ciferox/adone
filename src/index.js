@@ -292,8 +292,9 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             perf_hooks: "perf_hooks"
         })),
 
-        // Adone
         native: () => adone.bind("common.node"),
+
+        // glosses
         assertion: "./glosses/assertion",
         event: "./glosses/events",
         is: "./glosses/is",
@@ -320,8 +321,6 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         terminal: "./glosses/terminal",
         stream: "./glosses/streams",
         templating: "./glosses/templating",
-        fast: "./glosses/fast",
-        shani: "./glosses/shani",
         promise: "./glosses/promise",
         math: "./glosses/math",
         meta: "./glosses/meta",
@@ -333,7 +332,6 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         shell: "./glosses/shell",
         virtualization: "./glosses/virtualization",
         vault: "./glosses/vault",
-        specter: "./glosses/specter",
         netscan: "./glosses/netscan",
         schema: "./glosses/schema",
         geoip: "./glosses/geoip",
@@ -341,21 +339,18 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         vcs: "./glosses/vcs",
         regex: "./glosses/regex",
         task: "./glosses/tasks",
-        project: "./glosses/project",
 
-        // Realm
+        // components
+        project: "./project",
         realm: "./realm",
-
-        // Cli
         cli: "./cli",
-
-        // Omnitron
         omnitron: "./omnitron",
+        fast: "./fast",
+        shani: "./shani",
+        specter: "./specter",
 
-        // Vendor
+        // thrid parties
         vendor: "./vendor",
-
-        // Npm
         npm: "./npm"
     }, adone);
     if (process.env.ADONE_SOURCEMAPS) {
