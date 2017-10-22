@@ -746,6 +746,7 @@ export const getChildPids = async (pid) => {
 
     const lines = stdout.split(/\r?\n/);
     const childPids = [];
+    const parents = [pid];
 
     for (const line of lines) {
         const columns = line.trim().split(/\s+/);
@@ -762,8 +763,6 @@ export const getChildPids = async (pid) => {
         while (h.length) {
             proc[h.shift()] = h.length ? columns.shift() : columns.join(" ");
         }
-
-        const parents = [pid];
 
         if (parents.includes(proc.PPID)) {
             parents.push(proc.PID);
@@ -799,13 +798,22 @@ export const kill = (input, { force = false, tree = true, windows } = {}) => {
         return exec("taskkill", args);
     } : (input) => {
         const cmd = is.string(input) ? "killall" : "kill";
-        const args = [input];
 
-        if (force) {
-            args.unshift("-9");
+        if (tree && is.numeral(input)) {
+            return getChildPids(input).then((children) => {
+                const pids = children.map((child) => child.PID);
+                pids.push(input);
+                if (force) {
+                    pids.unshift("-9");
+                }
+                return exec(cmd, pids);
+            });
         }
 
-        return exec(cmd, args);
+        if (force) {
+            return exec(cmd, ["-9", input]);
+        }
+        return exec(cmd, [input]);
     };
     const errors = [];
 
