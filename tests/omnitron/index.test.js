@@ -29,6 +29,18 @@ describe("omnitron", () => {
         });
     };
 
+    const runProjectsTask = async (taskName) => {
+        const servicePath = std.path.join(__dirname, "services");
+        const names = await fs.readdir(servicePath);
+
+        for (const name of names) {
+            const projectManager = new adone.project.Manager(std.path.join(servicePath, name));
+            projectManager.setSilent(true);
+            await projectManager.load(); // eslint-disable-line
+            await projectManager[taskName](); // eslint-disable-line
+        }
+    };
+
     before(async function () {
         this.timeout(25000);
         await realm.init(".adone_test");
@@ -41,18 +53,6 @@ describe("omnitron", () => {
     after(async () => {
         await realm.clean();
     });
-
-    const runProjectsTask = async (taskName) => {
-        const servicePath = std.path.join(__dirname, "services");
-        const names = await fs.readdir(servicePath);
-
-        for (const name of names) {
-            const projectManager = new adone.project.Manager(std.path.join(servicePath, name));
-            projectManager.setSilent(true);
-            await projectManager.load(); // eslint-disable-line
-            await projectManager[taskName](); // eslint-disable-line
-        }
-    };
 
     beforeEach(async () => {
         await dispatcher.startOmnitron();

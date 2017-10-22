@@ -38,15 +38,24 @@ export const init = async (name = ".adone_dev", customPath) => {
     process.env.ADONE_REALM = name;
 
     await adone.fs.mkdirp(adone.realm.config.packagesPath);
+    
+    if (!(await adone.fs.exists(adone.realm.config.lockFilePath))) {
+        // Create lockfile
+        await adone.fs.mkdirp(adone.realm.config.runtimePath);
+        await adone.fs.writeFile(adone.realm.config.lockFilePath, "");
+    }
+
     return path;
 };
 
-export const clean = async () => {
+export const clean = async ({ skipRealmFiles = true } = {}) => {
     const paths = [
         adone.realm.config.packagesPath,
-        adone.realm.config.runtimePath,
         adone.realm.config.configsPath,
         adone.realm.config.varPath
+    ];
+    const realmFiles = [
+        std.path.basename(adone.realm.config.lockFilePath)
     ];
 
     for (const path of paths) {
@@ -54,6 +63,16 @@ export const clean = async () => {
         if (await adone.fs.exists(path)) {
             await new adone.fs.Directory(path).clean(); // eslint-disable-line
         }
+    }
+
+    let files = await adone.fs.readdir(adone.realm.config.runtimePath);
+
+    if (skipRealmFiles) {
+        files = files.filter((f) => !realmFiles.includes(f));
+    }
+    
+    for (const file of files) {
+        await adone.fs.rm(std.path.join(adone.realm.config.runtimePath, file)); // eslint-disable-line
     }
 };
 

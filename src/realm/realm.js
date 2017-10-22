@@ -13,12 +13,10 @@ const {
 const __ = adone.private(adone.realm);
 
 const CONFIG_NAME = "realm.json";
-const LOCK_FILE = std.path.join(adone.realm.config.runtimePath, "realm");
 
 export default class Realm {
     constructor() {
         this.id = null;
-        this.config = null;
         this.bar = null;
         this.silent = false;
     }
@@ -26,20 +24,6 @@ export default class Realm {
     async _initialize() {
         // Obtain realm id
         this.id = adone.math.hash("sha256", `${await util.machineId(true)}${adone.realm.config.realm}`);
-
-        // Load config
-        const configPath = std.path.join(adone.realm.config.configsPath, CONFIG_NAME);
-        if (await fs.exists(configPath)) {
-            this.config = await configuration.load(CONFIG_NAME, null, {
-                cwd: adone.realm.config.configsPath
-            });
-        } else {
-            this.config = new configuration.FileConfiguration();
-        }
-
-        // Create lockfile
-        await fs.mkdirp(adone.realm.config.runtimePath);
-        await adone.fs.writeFile(LOCK_FILE, "");
     }
 
     async install(options) {
@@ -115,12 +99,12 @@ export default class Realm {
     // }
 
     lock() {
-        return locking.create(LOCK_FILE);
+        return locking.create(adone.realm.config.lockFilePath);
     }
 
     async unlock() {
-        if (await locking.check(LOCK_FILE)) {
-            return locking.release(LOCK_FILE);
+        if (await locking.check(adone.realm.config.lockFilePath)) {
+            return locking.release(adone.realm.config.lockFilePath);
         }
     }
 

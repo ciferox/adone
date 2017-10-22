@@ -49,6 +49,7 @@ const config = {
     varPath,
     logsPath,
     packagesPath: join(home, "packages"),
+    lockFilePath: join(runtimePath, "realm"),
 
     omnitron: {
         logsPath: omnitronLogsPath,
