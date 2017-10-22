@@ -793,11 +793,11 @@ export const kill = (input, { force = false, tree = true, windows } = {}) => {
             args.push("/t");
         }
 
-        input.forEach((x) => args.push(is.number(x) ? "/pid" : "/im", x));
+        input.forEach((x) => args.push(is.numeral(x) ? "/pid" : "/im", x));
 
         return exec("taskkill", args);
     } : (input) => {
-        const cmd = is.string(input) ? "killall" : "kill";
+        const cmd = is.numeral(input) ? "kill" : "killall";
 
         if (tree && is.numeral(input)) {
             return getChildPids(input).then((children) => {
