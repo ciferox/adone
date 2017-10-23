@@ -60,6 +60,8 @@ export default class Package {
                 schema: ` :spinner {green-fg}{bold}${this.name}{/bold}${version}{/green-fg} successfully installed`,
                 result: true
             });
+
+            return adoneConf;
         } catch (err) {
             this.realm._updateProgress({
                 schema: " :spinner installation failed",

@@ -1,3 +1,7 @@
+const {
+    is
+} = adone;
+
 adone.lazify({
     Long: "./long",
     BitSet: "./bitset",
@@ -15,3 +19,47 @@ export const random = (min = 0, max = 0xFFFFFFFF) => {
 };
 
 export const hash = (algo, data, encoding = "hex") => adone.std.crypto.createHash(algo).update(data).digest(encoding);
+
+export const max = (array, func = adone.identity) => {
+    if (!array.length) {
+        return undefined;
+    }
+    let maxScore = null;
+    let maxElem = undefined;
+    for (let i = 0; i < array.length; ++i) {
+        const elem = array[i];
+        if (is.null(maxScore)) {
+            maxScore = func(elem);
+            maxElem = elem;
+            continue;
+        }
+        const score = func(elem);
+        if (score > maxScore) {
+            maxScore = score;
+            maxElem = elem;
+        }
+    }
+    return maxElem;
+};
+
+export const min = (array, func = adone.identity) => {
+    if (!array.length) {
+        return undefined;
+    }
+    let minScore = null;
+    let minElem = undefined;
+    for (let i = 0; i < array.length; ++i) {
+        const elem = array[i];
+        if (is.null(minScore)) {
+            minScore = func(elem);
+            minElem = elem;
+            continue;
+        }
+        const score = func(elem);
+        if (score < minScore) {
+            minScore = score;
+            minElem = elem;
+        }
+    }
+    return minElem;
+};

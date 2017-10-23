@@ -32,14 +32,14 @@ export default class TimedoutMap extends Map {
         this._timeout = timeout;
     }
 
-    set(key, value, callback) {
+    set(key, value, callback, timeout) {
         if (super.has(key)) {
             const oldObj = super.get(key);
             adone.clearTimeout(oldObj.timer);
         }
         const newObj = { value };
         super.set(key, newObj);
-        newObj.timer = adone.setTimeout(is.function(callback) ? callback : this._callback, this._timeout, key);
+        newObj.timer = adone.setTimeout(is.function(callback) ? callback : this._callback, (is.number(timeout) && timeout > 0 ? timeout : this._timeout), key);
         return this;
     }
 

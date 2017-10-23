@@ -6,11 +6,17 @@ const {
     netron: { Context, Public },
     omnitron: { STATUS },
     std,
-    system: { process: { exec } },
     x
 } = adone;
 
 const SERVICE_APP_PATH = std.path.join(__dirname, "service_application.js");
+
+const PROCESS_STATUS = {
+    NULL: 0,
+    SPAWNING: 1,
+    ALIVE: 2,
+    KILLING: 3
+};
 
 @Context()
 export default class ServiceMaintainer extends AsyncEmitter {
@@ -18,11 +24,10 @@ export default class ServiceMaintainer extends AsyncEmitter {
         super();
         this.manager = manager;
         this.group = group;
+        this.procStatus = PROCESS_STATUS.NULL;
         this.pid = null;
         this.iServiceApp = null;
-        this._serviceAwaiters = new collection.TimedoutMap(10000);
-        this.restarts = 0;
-        this.maxRestarts = 3;
+        this._awaiters = new collection.TimedoutMap(adone.math.max([this.manager.options.startTimeout, this.manager.options.stopTimeout]));
     }
 
     @Public({
@@ -39,6 +44,8 @@ export default class ServiceMaintainer extends AsyncEmitter {
         switch (data.status) {
             case application.STATE.UNINITIALIZED:
             case application.STATE.FAILED:
+                this.pid = null;
+                this.procStatus = PROCESS_STATUS.NULL;
                 this.iServiceApp = null;
                 break;
         }
@@ -55,19 +62,21 @@ export default class ServiceMaintainer extends AsyncEmitter {
                 adone.info(`Service '${data.name}' started`);
                 break;
             case application.STATE.UNINITIALIZED:
-                adone.info(`Service '${data.name}' successfully stopped`);
                 await this.setServiceStatus(data.name, STATUS.INACTIVE);
+                adone.info(`Service '${data.name}' successfully stopped`);
                 break;
             case application.STATE.FAILED:
+                await this.setServiceStatus(data.name, STATUS.INACTIVE);
                 adone.error(`Service '${data.name}' stopped unsuccessfully`);
                 adone.error(data.error);
-                await this.setServiceStatus(data.name, STATUS.INACTIVE);
                 break;
         }
 
-        if (this._serviceAwaiters.has(data.name)) {
-            const awaiter = this._removeAwaiter(data.name);
-            is.function(awaiter) && awaiter(data);
+        const awaiter = this._awaiters.get(data.name);
+        if (!is.undefined(awaiter)) {
+            if (awaiter(data)) {
+                this._awaiters.delete(data.name);
+            }
         }
 
         this.emitParallel("service", data);
@@ -78,16 +87,9 @@ export default class ServiceMaintainer extends AsyncEmitter {
         return this.pid;
     }
 
-    onProcessStopped() {
-        return new Promise((resolve) => {
-            const onProcess = (data) => {
-                if ([application.STATE.UNINITIALIZED, application.STATE.FAILED].includes(data.status)) {
-                    this.removeListener("process", onProcess);
-                    resolve(data);
-                }
-            };
-            this.on("process", onProcess);
-        });
+    @Public()
+    getGroup() {
+        return this.group;
     }
 
     onServiceStopped(name) {
@@ -106,43 +108,66 @@ export default class ServiceMaintainer extends AsyncEmitter {
 
     async startService(name) {
         const serviceData = await this.manager.services.get(name);
+
         if (serviceData.group !== this.group) {
             throw new x.NotAllowed(`Service '${name}' is not in group '${this.group}'`);
         }
         if (serviceData.status === STATUS.DISABLED) {
             throw new x.IllegalState("Service is disabled");
         } else if (serviceData.status === STATUS.INACTIVE) {
+            const onError = async (reject) => {
+                await this.setServiceStatus(name, STATUS.INACTIVE);
+                adone.error(`Unsuccessful attempt to start service '${serviceData.name}':`);
+                const err = new x.Timeout("Timeout occured");
+                adone.error(err);
+                reject(err);
+            };
+            
             await this.setServiceStatus(name, STATUS.STARTING);
-            if (is.null(this.iServiceApp)) {
-                await this.spawn();
+            await this.spawn();
+            if (this.procStatus === PROCESS_STATUS.SPAWNING) {
+                await new Promise((resolve, reject) => {
+                    const onProcess = (data) => {
+                        switch (data.status) {
+                            case application.STATE.INITIALIZED:
+                                this.removeListener("process", onProcess);
+                                resolve();
+                                break;
+                            case application.STATE.FAILED:
+                                this.removeListener("process", onProcess);
+                                onError(reject);
+                                break;
+                        }
+                    };
+                    this.on("process", onProcess);
+                });
             }
             await this.iServiceApp.loadService(serviceData);
 
             return new Promise((resolve, reject) => {
-                this._serviceAwaiters.set(name,
-                    (result) => {
+                this._awaiters.set(name,
+                    (data) => {
                         let err;
-                        switch (result.status) {
+                        switch (data.status) {
+                            case application.STATE.CONFIGURED:
+                                return false;
                             case application.STATE.INITIALIZED:
-                                return resolve();
+                                resolve();
+                                return true;
                             case application.STATE.FAILED:
-                                err = result.error;
+                                err = data.error;
                                 break;
                             default:
-                                err = new x.IllegalState(`Service status: ${result.status}`);
+                                err = new x.IllegalState(`Service status: ${data.status}`);
                         }
 
                         adone.error(`Unsuccessful attempt to start service '${serviceData.name}':`);
                         adone.error(err);
                         reject(err);
+                        return true;
                     },
-                    async () => {
-                        await this.setServiceStatus(name, STATUS.INACTIVE);
-                        adone.error(`Unsuccessful attempt to start service '${serviceData.name}':`);
-                        const err = new x.Timeout("Timeout occured");
-                        adone.error(err);
-                        reject(err);
-                    }
+                    () => onError(reject),
+                    this.manager.options.startTimeout
                 );
             });
         } else {
@@ -162,7 +187,7 @@ export default class ServiceMaintainer extends AsyncEmitter {
             await this.iServiceApp.unloadService(serviceData.name);
 
             return new Promise((resolve, reject) => {
-                this._serviceAwaiters.set(name,
+                this._awaiters.set(name,
                     (result) => {
                         let err;
                         switch (result.status) {
@@ -177,6 +202,7 @@ export default class ServiceMaintainer extends AsyncEmitter {
                         adone.error(`Unsuccessful attempt to stop service '${serviceData.name}':`);
                         adone.error(err);
                         reject(err);
+                        return true;
                     },
                     async () => {
                         // Need additional verification
@@ -185,7 +211,8 @@ export default class ServiceMaintainer extends AsyncEmitter {
                         const err = new x.Timeout("Timeout occured");
                         adone.error(err);
                         reject(err);
-                    }
+                    },
+                    this.manager.options.stopTimeout
                 );
             });
         } else {
@@ -199,8 +226,9 @@ export default class ServiceMaintainer extends AsyncEmitter {
         await this.manager.services.set(name, serviceData);
     }
 
-    async spawn() {
-        if (is.null(this.iServiceApp)) {
+    spawn() {
+        if (this.procStatus === PROCESS_STATUS.NULL) {
+            this.procStatus = PROCESS_STATUS.SPAWNING;
             return new Promise((resolve, reject) => {
                 const stdout = std.fs.openSync(adone.realm.config.omnitron.logFilePath, "a");
                 const stderr = std.fs.openSync(adone.realm.config.omnitron.errorLogFilePath, "a");
@@ -215,10 +243,14 @@ export default class ServiceMaintainer extends AsyncEmitter {
                     stdio: ["ipc", stdout, stderr]
                 });
                 child.unref();
-                child.once("error", reject);
+                child.once("error", (err) => {
+                    this.procStatus = PROCESS_STATUS.NULL;
+                    reject(err);
+                });
 
                 const onExit = (code) => {
                     if (code !== 0) {
+                        this.procStatus = PROCESS_STATUS.NULL;
                         reject(new Error(`Process exited with error code: ${code}`));
                     }
                 };
@@ -227,6 +259,7 @@ export default class ServiceMaintainer extends AsyncEmitter {
                 const onInitialized = (data) => {
                     if (data.status === application.STATE.INITIALIZED) {
                         this.pid = child.pid;
+                        this.procStatus = PROCESS_STATUS.ALIVE;
                         child.disconnect();
                         child.removeListener("exit", onExit);
                         child.removeListener("error", reject);
@@ -239,18 +272,22 @@ export default class ServiceMaintainer extends AsyncEmitter {
         }
     }
 
-    async kill() {
-        if (!is.null(this.iServiceApp)) {
+    kill() {
+        if (this.procStatus === PROCESS_STATUS.ALIVE && is.number(this.pid)) {
             process.kill(this.pid);
-            this.pid = null;
+            this.procStatus = PROCESS_STATUS.KILLING;
 
-            return this.onProcessStopped();
+            return new Promise((resolve) => {
+                const onProcess = (data) => {
+                    if ([application.STATE.UNINITIALIZED, application.STATE.FAILED].includes(data.status)) {
+                        this.removeListener("process", onProcess);
+                        this.pid = null;
+                        this.procStatus = PROCESS_STATUS.NULL;
+                        resolve(data);
+                    }
+                };
+                this.on("process", onProcess);
+            });
         }
-    }
-
-    _removeAwaiter(serviceName) {
-        const awaiter = this._serviceAwaiters.get(serviceName);
-        this._serviceAwaiters.delete(serviceName);
-        return awaiter;
     }
 }

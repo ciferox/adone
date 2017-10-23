@@ -226,7 +226,10 @@ export default class Dispatcher {
 
     stopService(serviceName) {
         return this.getInterface("omnitron").stopService(serviceName);
+    }
 
+    configureService(serviceName, options) {
+        return this.getInterface("omnitron").configureService(serviceName, options);
     }
 
     restart(serviceName = "") {

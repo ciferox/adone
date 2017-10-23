@@ -18,8 +18,12 @@ export default class ServiceManager extends application.Subsystem {
     async configure() {
         this.meta = null;
         this.services = null;
-        this.serviceMaintainers = new Map();
         this.groupMaintainers = new Map();
+
+        this.options = Object.assign({
+            startTimeout: 10000,
+            stopTimeout: 10000
+        }, this.parent.config.raw.services);
     }
 
     async initialize() {
@@ -30,7 +34,7 @@ export default class ServiceManager extends application.Subsystem {
 
         const serviceGroups = await this.enumerateByGroup();
         for (const [group, services] of Object.entries(serviceGroups)) {
-            const maintainer = this.getMaintainerForGroup(group); // eslint-disable-line
+            const maintainer = await this.getMaintainer(group); // eslint-disable-line
             for (const serviceData of services) {
                 // Check service status and fix if necessary
                 if (!VALID_STATUSES.includes(serviceData.status)) {
@@ -42,7 +46,6 @@ export default class ServiceManager extends application.Subsystem {
                         adone.error(err);
                     });
                 }
-                this.serviceMaintainers.set(serviceData.name, maintainer);
             }
         }
     }
@@ -56,7 +59,6 @@ export default class ServiceManager extends application.Subsystem {
         await Promise.all(promises);
 
         this.groupMaintainers.clear();
-        this.serviceMaintainers.clear();
     }
 
     async enumerate({ name, status } = {}) {
@@ -162,13 +164,7 @@ export default class ServiceManager extends application.Subsystem {
         return result;
     }
 
-    async setServiceGroup(name, group) {
-        const serviceData = await this.services.get(name);
-        serviceData.group = group;
-        await this.services.set(name, serviceData);
-    }
-
-    async enable(name) {
+    async enableService(name) {
         const serviceData = await this.services.get(name);
         if (serviceData.status === STATUS.DISABLED) {
             serviceData.status = STATUS.INACTIVE;
@@ -177,7 +173,7 @@ export default class ServiceManager extends application.Subsystem {
         throw new x.IllegalState("Service is not disabled");
     }
 
-    async disable(name) {
+    async disableService(name) {
         const serviceData = await this.services.get(name);
         if (serviceData.status !== STATUS.DISABLED) {
             if (serviceData.status === STATUS.ACTIVE) {
@@ -190,31 +186,48 @@ export default class ServiceManager extends application.Subsystem {
         }
     }
 
-    async start(name) {
-        const maintainer = await this.getMaintainerForService(name);
+    async startService(name) {
+        const serviceData = await this.services.get(name);
+        const maintainer = await this.getMaintainer(serviceData.group);
         return maintainer.startService(name);
     }
 
-    async stop(name) {
-        const maintainer = await this.getMaintainerForService(name);
+    async stopService(name) {
+        const serviceData = await this.services.get(name);
+        const maintainer = await this.getMaintainer(serviceData.group);
         return maintainer.stopService(name);
     }
 
-    async getMaintainerForService(name) {
-        let maintainer = this.serviceMaintainers.get(name);
-        if (is.undefined(maintainer)) {
-            const serviceData = await this.services.get(name);
-            maintainer = new api.ServiceMaintainer(this, serviceData.group);
-            this.groupMaintainers.set(serviceData.group, maintainer);
-            this.serviceMaintainers.set(serviceData.name, maintainer);
+    async configureService(name, { group } = {}) {
+        const serviceData = await this.services.get(name);
+
+        if (![STATUS.DISABLED, STATUS.INACTIVE].includes(serviceData.status)) {
+            throw new x.NotAllowed("Cannot configure active service");
         }
 
-        return maintainer;
+        if (is.string(group)) {
+            const inGroupServices = await this.enumerateByGroup(serviceData.group);
+            if (inGroupServices.length === 1) {
+                const maintainer = await this.getMaintainer(serviceData.group);
+                maintainer.group = group;
+                this.groupMaintainers.delete(serviceData.group);
+                this.groupMaintainers.set(group, maintainer);
+            }
+            serviceData.group = group;
+        }
+
+        await this.services.set(name, serviceData);
     }
 
-    getMaintainerForGroup(group) {
+    async getMaintainer(group, onlyExist = false) {
         let maintainer = this.groupMaintainers.get(group);
         if (is.undefined(maintainer)) {
+            if (onlyExist) {
+                const inGroupServices = await this.enumerateByGroup(group);
+                if (inGroupServices.length === 0) {
+                    throw new x.Unknown(`Unknown group: ${group}`);
+                }
+            }
             maintainer = new api.ServiceMaintainer(this, group);
             this.groupMaintainers.set(group, maintainer);
         }

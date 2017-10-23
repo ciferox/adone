@@ -120,8 +120,13 @@ export default class Omnitron extends application.Application {
         description: "Returns information about omnitron",
         type: Object
     })
-    async getInfo({ version = true, realm = true, uptime = true, envs = true } = {}) {
+    async getInfo({ pid = true, version = true, realm = true, uptime = true, envs = true } = {}) {
         const result = {};
+
+        if (pid) {
+            result.pid = process.pid;
+        }
+
         if (version) {
             result.version = adone.package.version;
         }
@@ -216,35 +221,42 @@ export default class Omnitron extends application.Application {
 
     @Public({})
     getMaintainer(group) {
-        return this.subsystem("service").getMaintainerForGroup(group);
+        return this.subsystem("service").getMaintainer(group, true);
     }
 
     @Public({
         description: "Enables service"
     })
     enableService(name, options) {
-        return this.subsystem("service").enable(name, options);
+        return this.subsystem("service").enableService(name, options);
     }
 
     @Public({
         description: "Disables service"
     })
     disableService(name, options) {
-        return this.subsystem("service").disable(name, options);
+        return this.subsystem("service").disableService(name, options);
     }
 
     @Public({
         description: "Starts service"
     })
     startService(name) {
-        return this.subsystem("service").start(name);
+        return this.subsystem("service").startService(name);
     }
 
     @Public({
         description: "Stops service"
     })
     stopService(name) {
-        return this.subsystem("service").stop(name);
+        return this.subsystem("service").stopService(name);
+    }
+
+    @Public({
+        description: "Configures service"
+    })
+    configureService(name, options) {
+        return this.subsystem("service").configureService(name, options);
     }
 
     @Public({

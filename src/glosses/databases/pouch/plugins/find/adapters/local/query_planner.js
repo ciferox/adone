@@ -273,7 +273,7 @@ const findBestMatchingIndex = (selector, userFields, sortOrder, indexes, useInde
         return index;
     }
 
-    return util.max(matchingIndexes, scoreIndex);
+    return adone.math.max(matchingIndexes, scoreIndex);
 };
 
 const getSingleFieldQueryOptsFor = (userOperator, userValue) => {

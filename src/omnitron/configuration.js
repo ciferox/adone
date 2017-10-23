@@ -19,6 +19,10 @@ export default class Configuration extends adone.configuration.FileConfiguration
                     randomize: false
                 }
             },
+            services: {
+                startTimeout: 10000,
+                stopTimeout: 10000
+            },
             gates: [
                 {
                     port: (is.windows ? "\\\\.\\pipe\\omnitron.sock" : std.path.join(adone.realm.config.runtimePath, "omnitron.sock"))
