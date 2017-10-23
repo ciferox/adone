@@ -5,12 +5,7 @@ const {
 const {
     Command,
     MainCommand,
-    CommandsGroup,
-    Argument,
-    Arguments,
-    Option,
-    Options,
-    OptionsGroup
+    CommandsGroup
 } = CliApplication;
 
 @CommandsGroup({
@@ -23,38 +18,8 @@ const {
 })
 class MyApp extends CliApplication {
     @MainCommand()
-    @Argument("a")
-    @Options(["--hello", "--world"])
     main() {
         console.log("hello");
-        return 0;
-    }
-
-    @Command({
-        help: "sum number",
-        group: "math"
-    })
-    @Arguments([{
-        name: "a",
-        type: Number
-    }, {
-        name: "b",
-        type: Number
-    }])
-    @OptionsGroup({
-        name: "fafa",
-        description: "fafa?"
-    })
-    @Option({
-        name: "--negate",
-        group: "fafa"
-    })
-    sum(args, opts) {
-        let res = args.get("a") + args.get("b");
-        if (opts.get("negate")) {
-            res = -res;
-        }
-        adone.log(res);
         return 0;
     }
 
@@ -75,17 +40,6 @@ class MyApp extends CliApplication {
     }
 
     @Command({
-        help: "div numbers",
-        group: "math"
-    })
-    @Argument("a")
-    @Argument("b")
-    div(args) {
-        adone.log(args.get("a") / args.get("b"));
-        return 0;
-    }
-
-    @Command({
         arguments: ["a"],
         help: "print the argument",
         group: "log"
@@ -96,4 +50,4 @@ class MyApp extends CliApplication {
     }
 }
 
-adone.application.run(MyApp);
+adone.application.runCli(MyApp);

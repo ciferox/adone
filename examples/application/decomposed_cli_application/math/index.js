@@ -4,16 +4,16 @@ const {
 } = adone;
 
 const {
-    ExternalSubsystem
+    CliSubsystem
 } = CliApplication;
 
-@ExternalSubsystem({
+@CliSubsystem({
     name: "complex",
     description: "Operations on complex numbers",
     subsystem: path.resolve(__dirname, "complex"),
     transpile: true
 })
-@ExternalSubsystem({
+@CliSubsystem({
     name: "real",
     description: "Operations on real numbers",
     subsystem: path.resolve(__dirname, "real"),

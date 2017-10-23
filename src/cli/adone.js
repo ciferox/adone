@@ -12,7 +12,7 @@ const {
 const {
     Command,
     MainCommand,
-    ExternalSubsystem,
+    CliSubsystem,
     CommandsGroup
 } = application.CliApplication;
 
@@ -44,7 +44,7 @@ class RealmManager extends application.Subsystem {
     name: "subsystem",
     description: "Subsystems"
 })
-@ExternalSubsystem({
+@CliSubsystem({
     name: "realm",
     description: "Realm management",
     subsystem: new RealmManager()

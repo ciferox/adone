@@ -2238,57 +2238,7 @@ const CommandsGroupsDecorator = (descriptions) => (target) => {
     }
 };
 
-const ArgumentDecorator = (description) => (target, key, descriptor) => {
-    decorateConfigure(target);
-    const commandDescription = getCommandDescription(descriptor);
-    if (!commandDescription.arguments) {
-        commandDescription.arguments = [];
-    }
-    commandDescription.arguments.unshift(description);
-};
-
-const ArgumentsDecorator = (args) => (target, key, descriptor) => {
-    decorateConfigure(target);
-    const commandDescription = getCommandDescription(descriptor);
-    commandDescription.arguments = args;
-};
-
-const OptionDecorator = (description) => (target, key, descriptor) => {
-    decorateConfigure(target);
-    const commandDescription = getCommandDescription(descriptor);
-    if (!commandDescription.options) {
-        commandDescription.options = [];
-    }
-    commandDescription.options.unshift(description);
-};
-
-const OptionsDecorator = (options) => (target, key, descriptor) => {
-    decorateConfigure(target);
-    const commandDescription = getCommandDescription(descriptor);
-    commandDescription.options = options;
-};
-
-const OptionsGroupDecorator = (description) => (target, key, descriptor) => {
-    decorateConfigure(target);
-    const commandDescription = getCommandDescription(descriptor);
-    if (!commandDescription.optionsGroups) {
-        commandDescription.optionsGroups = [];
-    }
-    commandDescription.optionsGroups.unshift(description);
-};
-
-const OptionsGroupsDecorator = (descriptions) => (target, key, descriptor) => {
-    decorateConfigure(target);
-    const commandDescription = getCommandDescription(descriptor);
-    if (!commandDescription.optionsGroups) {
-        commandDescription.optionsGroups = [];
-    }
-    for (const descr of descriptions) {
-        commandDescription.optionsGroups.unshift(descr);
-    }
-};
-
-const ExternalSubsystem = (ss) => (target) => {
+const СliSubsystem = (ss) => (target) => {
     decorateConfigure(target.prototype);
     if (!target.prototype[STATIC_COMMANDS]) {
         target.prototype[STATIC_COMMANDS] = [];
@@ -2306,11 +2256,5 @@ const ExternalSubsystem = (ss) => (target) => {
 CliApplication.Command = CommandDecorator;
 CliApplication.CommandsGroup = CommandsGroupDecorator;
 CliApplication.CommandsGroups = CommandsGroupsDecorator;
-CliApplication.Argument = ArgumentDecorator;
-CliApplication.Arguments = ArgumentsDecorator;
-CliApplication.Option = OptionDecorator;
-CliApplication.Options = OptionsDecorator;
-CliApplication.OptionsGroup = OptionsGroupDecorator;
-CliApplication.OptionsGroups = OptionsGroupsDecorator;
 CliApplication.MainCommand = MainCommandDecorator;
-CliApplication.ExternalSubsystem = ExternalSubsystem;
+CliApplication.CliSubsystem = СliSubsystem;

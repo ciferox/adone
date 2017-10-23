@@ -5,16 +5,16 @@ const {
 
 const {
     MainCommand,
-    ExternalSubsystem
+    CliSubsystem
 } = CliApplication;
 
-@ExternalSubsystem({
+@CliSubsystem({
     name: "math",
     description: "Operations on numbers over various fields",
     subsystem: path.resolve(__dirname, "math"),
     transpile: true
 })
-@ExternalSubsystem({
+@CliSubsystem({
     name: "info",
     description: "Some info",
     subsystem: path.resolve(__dirname, "info"),
