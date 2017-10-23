@@ -52,6 +52,14 @@ export default class Application extends application.Subsystem {
         if (process.env.ADONE_REPORT) {
             this.enableReport();
         }
+        
+        
+        // From Node.js docs: SIGTERM and SIGINT have default handlers on non-Windows platforms that resets
+        // the terminal mode before exiting with code 128 + signal number. If one of these signals has a
+        // listener installed, its default behavior will be removed (Node.js will no longer exit).
+        // So, install noop handlers to block this default behaviour.
+        process.on("SIGINT", adone.noop);
+        process.on("SIGTERM", adone.noop);
 
         const uncaughtException = (...args) => this._uncaughtException(...args);
         const unhandledRejection = (...args) => this._unhandledRejection(...args);
@@ -140,6 +148,9 @@ export default class Application extends application.Subsystem {
             }
             this._exitSignals.push(sigName);
             process.on(sigName, () => this[HANDLERS].signalExit(sigName));
+            if (sigName === "SIGINT" || sigName === "SIGTERM") {
+                process.removeListener(sigName, adone.noop);
+            }
         }
         return this;
     }

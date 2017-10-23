@@ -240,7 +240,7 @@ export default class ServiceMaintainer extends AsyncEmitter {
                         OMNITRON_PORT: this.manager.parent.subsystem("netron").getServicePort(),
                         OMNITRON_SERVICE_GROUP: this.group
                     }),
-                    stdio: ["ipc", stdout, stderr]
+                    stdio: ["ignore", stdout, stderr]
                 });
                 child.unref();
                 child.once("error", (err) => {
@@ -260,7 +260,6 @@ export default class ServiceMaintainer extends AsyncEmitter {
                     if (data.status === application.STATE.INITIALIZED) {
                         this.pid = child.pid;
                         this.procStatus = PROCESS_STATUS.ALIVE;
-                        child.disconnect();
                         child.removeListener("exit", onExit);
                         child.removeListener("error", reject);
                         this.removeListener("process", onInitialized);

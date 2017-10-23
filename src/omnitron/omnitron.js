@@ -95,7 +95,7 @@ export default class Omnitron extends application.Application {
         if (is.string(sigName)) {
             adone.info(`Killed by signal '${sigName}'`);
         } else {
-            adone.info("Killed by netron");
+            adone.info("Killed by self");
         }
         return super._signalExit(sigName);
     }

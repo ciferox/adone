@@ -490,7 +490,7 @@ describe("omnitron", () => {
         });
     });
 
-    it.only("in-group services should start in single process", async () => {
+    it("in-group services should start in single process", async () => {
         await installServices([
             std.path.join(__dirname, "services", "test1"),
             std.path.join(__dirname, "services", "test2")

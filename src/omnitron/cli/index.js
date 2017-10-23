@@ -22,6 +22,7 @@ const __ = adone.lazify({
 
 export default class extends adone.application.Subsystem {
     async configure() {
+        this._bar = null;
         await adone.runtime.netron.getInterface("cli").defineCommand(this, {
             commands: [
                 {
@@ -134,7 +135,7 @@ export default class extends adone.application.Subsystem {
                 },
                 {
                     name: "restart",
-                    help: "restart omnitron or service",
+                    help: "Restart service",
                     arguments: [
                         {
                             name: "service",
@@ -144,6 +145,26 @@ export default class extends adone.application.Subsystem {
                         }
                     ],
                     handler: this.restartCommand
+                },
+                {
+                    name: "configure",
+                    help: "Configure service",
+                    arguments: [
+                        {
+                            name: "service",
+                            type: String,
+                            default: "",
+                            help: "Name of service"
+                        }
+                    ],
+                    options: [
+                        {
+                            name: "--group",
+                            type: String,
+                            help: "Group name"
+                        }
+                    ],
+                    handler: this.configureCommand
                 },
                 {
                     name: "services",
@@ -186,24 +207,49 @@ export default class extends adone.application.Subsystem {
 
     async upCommand() {
         try {
-            await omnitron.dispatcher.startOmnitron();
-            adone.log(adone.ok);
+            this._createProgress("starting up omnitron");
+            const pid = await omnitron.dispatcher.startOmnitron();
+            if (is.number(pid)) {
+                this._updateProgress(`done (pid: ${pid})`, true);
+            } else {
+                this._updateProgress({
+                    schema: ` {yellow-fg}!{/yellow-fg} already running (pid: ${pid.pid})`
+                }, true);
+            }
+            return 0;
         } catch (err) {
-            adone.error(err);
+            this._updateProgress(err.message, false);
+            return 1;
         }
     }
 
     async downCommand() {
         try {
-            await omnitron.dispatcher.stopOmnitron();
-            adone.log(adone.ok);
+            this._createProgress("shutting down omnitron");
+            const result = await omnitron.dispatcher.stopOmnitron();
+            switch (result) {
+                case 0:
+                    this._updateProgress("failed", false);
+                    break;
+                case 1:
+                    this._updateProgress("done", true);
+                    break;
+                case 2:
+                    this._updateProgress({
+                        schema: " {yellow-fg}!{/yellow-fg} omnitrone is not started"
+                    }, true);
+                    break;
+            }
+            return 0;
         } catch (err) {
-            adone.error(err);
+            this._updateProgress(err.message, false);
+            return 1;
         }
     }
 
     async startupEnableCommand(args, opts) {
         try {
+            this._createProgress("trying to install omnitron service");
             const config = {
                 mode: opts.get("mode")
             };
@@ -214,114 +260,165 @@ export default class extends adone.application.Subsystem {
 
             const service = new __.Service(config);
             await service.install();
+            this._updateProgress("done", true);
             return 0;
         } catch (err) {
-            adone.log(err);
+            this._updateProgress(err.message, false);
             return 1;
         }
     }
 
     async startupDisableCommand(args, opts) {
         try {
+            this._createProgress("trying to uninstall omnitron service");
             const config = {
                 mode: opts.get("mode")
             };
 
             const service = new __.Service(config);
             await service.uninstall();
+            this._updateProgress("done", true);
             return 0;
         } catch (err) {
-            adone.log(err);
+            this._updateProgress(err.message, false);
             return 1;
         }
     }
 
     async pingCommand() {
-        if (await omnitron.dispatcher.ping()) {
-            adone.log(adone.ok);
-        } else {
-            adone.log(adone.bad);
+        this._createProgress("checking");
+        try {
+            await this._connectToLocal();
+        } catch (err) {
+            //
         }
-        return 0;
+
+        const result = await omnitron.dispatcher.ping();
+        this._updateProgress(result ? "done" : "failed", result);
+        return result;
     }
 
     async infoCommand() {
-        await this._connectToLocal();
-        const result = await omnitron.dispatcher.getInfo();
-        result.uptime = util.humanizeTime(1000 * result.uptime);
-        adone.log(adone.text.pretty.json(result));
-        return 0;
+        try {
+            this._createProgress("obtaining");
+            await this._connectToLocal();
+            const result = await omnitron.dispatcher.getInfo();
+            result.uptime = util.humanizeTime(1000 * result.uptime);
+            this._updateProgress("done", true, true);
+            adone.log(adone.text.pretty.json(result));
+            return 0;
+        } catch (err) {
+            this._updateProgress(err.message, false);
+            return 1;
+        }
     }
 
     async enableCommand(args, opts) {
         try {
+            this._createProgress("enabling");
             const name = args.get("service");
             await this._connectToLocal();
             await omnitron.dispatcher.enableService(name);
-            adone.log(adone.ok);
+            this._updateProgress("done", true);
             return 0;
         } catch (err) {
-            adone.log(err);
+            this._updateProgress(err.message, false);
             return 1;
         }
     }
 
     async disableCommand(args, opts) {
         try {
+            this._createProgress("disabling");
             const name = args.get("service");
             await this._connectToLocal();
             await omnitron.dispatcher.disableService(name);
-            adone.log(adone.ok);
+            this._updateProgress("done", true);
             return 0;
         } catch (err) {
-            adone.log(err);
+            this._updateProgress(err.message, false);
             return 1;
         }
     }
 
     async startServiceCommand(args) {
-        const serviceName = args.get("service");
         try {
+            this._createProgress("starting");
+            const name = args.get("service");
             await this._connectToLocal();
-            await omnitron.dispatcher.startService(serviceName);
-            (serviceName !== "") && adone.log(adone.ok);
+            await omnitron.dispatcher.startService(name);
+            this._updateProgress("done", true);
+            return 0;
         } catch (err) {
-            adone.log(err);
+            this._updateProgress(err.message, false);
+            return 1;
         }
-        return 0;
     }
 
     async stopServiceCommand(args) {
-        const serviceName = args.get("service");
         try {
+            this._createProgress("dtopping");
+            const name = args.get("service");
             await this._connectToLocal();
-            await omnitron.dispatcher.stopService(serviceName);
-            (serviceName !== "") && adone.log(adone.ok);
+            await omnitron.dispatcher.stopService(name);
+            this._updateProgress("done", true);
+            return 0;
         } catch (err) {
-            adone.error(err);
+            this._updateProgress(err.message, false);
+            return 1;
         }
-        return 0;
     }
 
     async restartCommand(args) {
-        const serviceName = args.get("service");
         try {
+            this._createProgress("restarting");
+            const name = args.get("service");
             await this._connectToLocal();
-            await omnitron.dispatcher.restart(serviceName);
-            (serviceName !== "") && adone.log(adone.ok);
+            await omnitron.dispatcher.restart(name);
+            this._updateProgress("done", true);
+            return 0;
         } catch (err) {
-            adone.log(err);
+            this._updateProgress(err.message, false);
+            return 1;
         }
-        return 0;
+    }
+
+    async configureCommand(args, opts) {
+        try {
+            this._createProgress("configuring");
+            const name = args.get("service");
+            await this._connectToLocal();
+            const config = {};
+            if (opts.has("group")) {
+                config.group = opts.get("group");
+            }
+
+            if (Object.keys(config).length > 0) {
+                await omnitron.dispatcher.configureService(name, config);
+                this._updateProgress("done", true);
+            } else {
+                this._updateProgress({
+                    schema: " {yellow-fg}!{/yellow-fg} nothing to configure"
+                }, true);
+            }
+            
+            return 0;
+        } catch (err) {
+            this._updateProgress(err.message, false);
+            return 1;
+        }
     }
 
     async servicesCommand(args, opts) {
         try {
+            this._createProgress("obtaining");
             await this._connectToLocal();
             const services = await omnitron.dispatcher.enumerate({
                 name: opts.get("name"),
                 status: opts.get("status")
             });
+
+            this._updateProgress("done", true, true);
 
             adone.log(pretty.table(services, {
                 style: {
@@ -335,12 +432,12 @@ export default class extends adone.application.Subsystem {
                         style: "{green-fg}"
                     },
                     {
-                        id: "description",
-                        header: "Description"
+                        id: "group",
+                        header: "Group"
                     },
                     {
-                        id: "author",
-                        header: "Author"
+                        id: "description",
+                        header: "Description"
                     },
                     {
                         id: "status",
@@ -358,10 +455,11 @@ export default class extends adone.application.Subsystem {
                     }
                 ]
             }));
+            return 0;
         } catch (err) {
-            adone.error(err);
+            this._updateProgress(err.message, false);
+            return 1;
         }
-        return 0;
     }
 
     // async gatesCommand() {
@@ -407,4 +505,31 @@ export default class extends adone.application.Subsystem {
     //     }
     //     return 0;
     // }
+
+    _createProgress(message) {
+        if (!this.silent) {
+            this.bar = adone.runtime.term.progress({
+                schema: ` :spinner ${message}`
+            });
+            this.bar.update(0);
+        }
+    }
+
+    _updateProgress(message, result = null, clean = false) {
+        if (!is.null(this.bar) && !this.silent) {
+            if (is.plainObject(message)) {
+                this.bar.setSchema(message.schema);
+            } else {
+                this.bar.setSchema(` :spinner ${message}`);
+            }
+
+            if (is.boolean(result)) {
+                if (clean) {
+                    this.bar.clean = true;
+                }
+                this.bar.complete(result);
+            }
+
+        }
+    }
 }
