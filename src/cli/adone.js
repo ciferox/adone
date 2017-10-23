@@ -9,163 +9,52 @@ const {
     runtime: { term }
 } = adone;
 
+const {
+    Command,
+    MainCommand,
+    ExternalSubsystem,
+    CommandsGroup
+} = application.CliApplication;
+
+class RealmManager extends application.Subsystem {
+    @Command({
+        name: ["init", "initialize"],
+        help: "Initialize realm",
+        arguments: [
+            {
+                name: "name",
+                type: String,
+                default: "dev",
+                help: "Name of realm"
+            }
+        ]
+    })
+    async realmInitialize(args) {
+        const name = args.get("name");
+        try {
+            const path = await adone.realm.init(name);
+            term.print(`Realm {green-fg}'${path}'{/green-fg} successfully initialized`);
+        } catch (err) {
+            term.print(`{red-fg}${err.message}{/}`);
+        }
+    }
+}
+
+@CommandsGroup({
+    name: "subsystem",
+    description: "Subsystems"
+})
+@ExternalSubsystem({
+    name: "realm",
+    description: "Realm management",
+    subsystem: new RealmManager()
+})
 class AdoneCLI extends application.CliApplication {
     async configure() {
         this.config = await adone.cli.loadConfig();
 
         // expose cli interface for subsystems.
         this.exposeCliInterface();
-
-        this.defineArguments({
-            commandsGroups: this.config.raw.groups,
-            blindMode: true,
-            arguments: [
-                {
-                    name: "path",
-                    default: "index.js",
-                    help: "Run [es6] script or adone application"
-                }
-            ],
-            options: [
-                {
-                    name: "--sourcemaps",
-                    help: "Force enable sourcemaps support"
-                }
-            ],
-            commands: [
-                {
-                    name: "realm",
-                    help: "Realm management",
-                    commands: [
-                        {
-                            name: ["init", "initialize"],
-                            help: "Initialize realm",
-                            arguments: [
-                                {
-                                    name: "name",
-                                    type: String,
-                                    default: "dev",
-                                    help: "Name of realm"
-                                }
-                            ],
-                            handler: this.realmInitializeCommand
-                        }
-                    ]
-                },
-                {
-                    name: "install",
-                    help: "Install adone glosses, extensions, applications, etc.",
-                    arguments: [
-                        {
-                            name: "name",
-                            type: String,
-                            required: true,
-                            help: "Full name or absolute path to local project"
-                        }
-                    ],
-                    options: [
-                        {
-                            name: "--symlink",
-                            help: "Create symlink to project instead of install it (for local projects)"
-                        },
-                        {
-                            name: "--build",
-                            help: "Rebuild project before install"
-                        }
-                    ],
-                    handler: this.installCommand
-                },
-                {
-                    name: "uninstall",
-                    help: "Uninstall adone glosses, extensions, applications, etc.",
-                    arguments: [
-                        {
-                            name: "name",
-                            type: String,
-                            required: true,
-                            help: "Full name or absolute path to local project"
-                        }
-                    ],
-                    handler: this.uninstallCommand
-                },
-                {
-                    name: "list",
-                    help: "List installed packages",
-                    arguments: [
-                        {
-                            name: "keyword",
-                            type: String,
-                            default: "",
-                            help: "Name or keywork for searching"
-                        }
-                    ],
-                    handler: this.listCommand
-                },
-                {
-                    name: "inspect",
-                    help: "Inspect adone namespace/object",
-                    arguments: [
-                        {
-                            name: "name",
-                            type: String,
-                            default: "",
-                            help: "Name of class/object/function/namespace"
-                        }
-                    ],
-                    options: [
-                        {
-                            name: "--all",
-                            help: "Show all properties"
-                        }
-                    ],
-                    handler: this.inspectCommand
-                },
-                {
-                    name: "config",
-                    help: "Configurations management",
-                    arguments: [
-                        {
-                            name: "path",
-                            help: "path to config file"
-                        }
-                    ],
-                    options: [
-                        {
-                            name: "--convert",
-                            help: "convert config from one format to another"
-                        },
-                        {
-                            name: "--out",
-                            type: String,
-                            help: "output path for config"
-                        },
-                        {
-                            name: "--format",
-                            help: "type of format",
-                            choices: ["json", "bson", "mpak", "json5"],
-                            default: "json"
-                        },
-                        {
-                            name: "--style",
-                            choices: ["none", "color", "html"],
-                            default: "color",
-                            help: "output style"
-                        },
-                        {
-                            name: "--depth",
-                            type: Number,
-                            help: "depth of nested objects",
-                            default: 8
-                        },
-                        {
-                            name: "--types",
-                            help: "do not display types and constructors"
-                        }
-                    ],
-                    handler: this.configCommand
-                }
-            ]
-        });
 
         if (is.array(this.config.raw.commands)) {
             for (const ss of this.config.raw.commands) {
@@ -177,16 +66,59 @@ class AdoneCLI extends application.CliApplication {
         }
     }
 
-    async realmInitializeCommand(args) {
-        const name = args.get("name");
-        try {
-            const path = await adone.realm.init(name);
-            term.print(`Realm {green-fg}'${path}'{/green-fg} successfully initialized`);
-        } catch (err) {
-            term.print(`{red-fg}${err.message}{/}`);
+    @MainCommand({
+        blindMode: true,
+        arguments: [
+            {
+                name: "path",
+                default: "index.js",
+                help: "Run [es6] script or adone application"
+            }
+        ],
+        options: [
+            {
+                name: "--sourcemaps",
+                help: "Force enable sourcemaps support"
+            }
+        ]
+    })
+    async main(args, opts, { rest }) {
+        let scriptPath = args.get("path");
+        if (!std.path.isAbsolute(scriptPath)) {
+            scriptPath = std.path.resolve(process.cwd(), scriptPath);
         }
+
+        adone.__argv__ = [process.argv[0], scriptPath, ...rest];
+
+        if (opts.get("sourcemaps")) {
+            adone.sourcemap.support(Error).install();
+        }
+
+        adone.require(scriptPath);
     }
 
+    @Command({
+        name: "install",
+        help: "Install adone glosses, extensions, applications, etc.",
+        arguments: [
+            {
+                name: "name",
+                type: String,
+                required: true,
+                help: "Full name or absolute path to local project"
+            }
+        ],
+        options: [
+            {
+                name: "--symlink",
+                help: "Create symlink to project instead of install it (for local projects)"
+            },
+            {
+                name: "--build",
+                help: "Rebuild project before install"
+            }
+        ]
+    })
     async installCommand(args, opts) {
         try {
             const realmInstance = await adone.realm.getInstance();
@@ -204,6 +136,18 @@ class AdoneCLI extends application.CliApplication {
         }
     }
 
+    @Command({
+        name: "uninstall",
+        help: "Uninstall adone glosses, extensions, applications, etc.",
+        arguments: [
+            {
+                name: "name",
+                type: String,
+                required: true,
+                help: "Full name or absolute path to local project"
+            }
+        ]
+    })
     async uninstallCommand(args) {
         try {
             const realmInstance = await adone.realm.getInstance();
@@ -219,6 +163,18 @@ class AdoneCLI extends application.CliApplication {
         }
     }
 
+    @Command({
+        name: "list",
+        help: "List installed packages",
+        arguments: [
+            {
+                name: "keyword",
+                type: String,
+                default: "",
+                help: "Name or keywork for searching"
+            }
+        ]
+    })
     async listCommand(args) {
         try {
             const realmInstance = await adone.realm.getInstance();
@@ -250,21 +206,49 @@ class AdoneCLI extends application.CliApplication {
         }
     }
 
-    async main(args, opts, { rest }) {
-        let scriptPath = args.get("path");
-        if (!std.path.isAbsolute(scriptPath)) {
-            scriptPath = std.path.resolve(process.cwd(), scriptPath);
-        }
-
-        adone.__argv__ = [process.argv[0], scriptPath, ...rest];
-
-        if (opts.get("sourcemaps")) {
-            adone.sourcemap.support(Error).install();
-        }
-
-        adone.require(scriptPath);
-    }
-
+    @Command({
+        name: "config",
+        help: "Configurations management",
+        arguments: [
+            {
+                name: "path",
+                help: "path to config file"
+            }
+        ],
+        options: [
+            {
+                name: "--convert",
+                help: "convert config from one format to another"
+            },
+            {
+                name: "--out",
+                type: String,
+                help: "output path for config"
+            },
+            {
+                name: "--format",
+                help: "type of format",
+                choices: ["json", "bson", "mpak", "json5"],
+                default: "json"
+            },
+            {
+                name: "--style",
+                choices: ["none", "color", "html"],
+                default: "color",
+                help: "output style"
+            },
+            {
+                name: "--depth",
+                type: Number,
+                help: "depth of nested objects",
+                default: 8
+            },
+            {
+                name: "--types",
+                help: "do not display types and constructors"
+            }
+        ]
+    })
     async configCommand(args, opts) {
         const config = new adone.configuration.FileConfiguration();
         await config.load(args.get("path"), "__");
@@ -286,6 +270,24 @@ class AdoneCLI extends application.CliApplication {
         return 0;
     }
 
+    @Command({
+        name: "inspect",
+        help: "Inspect adone namespace/object",
+        arguments: [
+            {
+                name: "name",
+                type: String,
+                default: "",
+                help: "Name of class/object/function/namespace"
+            }
+        ],
+        options: [
+            {
+                name: "--all",
+                help: "Show all properties"
+            }
+        ]
+    })
     async inspectCommand(args, opts) {
         try {
             const name = args.get("name");

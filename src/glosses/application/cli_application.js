@@ -7,7 +7,7 @@ const {
     runtime: { term },
     tag,
     terminal: { styler },
-    application 
+    application
 } = adone;
 
 const {
@@ -1345,7 +1345,7 @@ export default class CliApplication extends application.Application {
         this.argv = argv;
 
         this[MAIN_COMMAND] = null;
-        this[VERSION] = null;        
+        this[VERSION] = null;
 
         this.defineMainCommand();
     }
@@ -1374,7 +1374,15 @@ export default class CliApplication extends application.Application {
         adone.runtime.netron.attachContext(new CliContext(this), ctxId);
     }
 
-    async addSubsystem({ subsystem, name = null, description = "", group = "subsystem", configureArgs = [], addOnCommand = false } = {}) {
+    async addSubsystem({
+        subsystem,
+        name = null,
+        description = "",
+        group = "subsystem",
+        configureArgs = [],
+        addOnCommand = false,
+        transpile = false
+    } = {}) {
         if (addOnCommand === true) {
             this.defineCommand({
                 name,
@@ -1385,12 +1393,13 @@ export default class CliApplication extends application.Application {
                     name,
                     description,
                     group,
-                    configureArgs
+                    configureArgs,
+                    transpile
                 })
             });
             return null;
         }
-        return super.addSubsystem({ subsystem, name, description, group, configureArgs });
+        return super.addSubsystem({ subsystem, name, description, group, configureArgs, transpile });
     }
 
     async _configure(ignoreArgs) {
@@ -1408,6 +1417,10 @@ export default class CliApplication extends application.Application {
 
         if (this[STATIC_COMMANDS]) {
             for (const description of this[STATIC_COMMANDS]) {
+                if (description.loader) {
+                    // ??
+                    this.exposeCliInterface();
+                }
                 this.defineCommand(description);
             }
         }
@@ -1467,7 +1480,7 @@ export default class CliApplication extends application.Application {
             return this.exit(application.EXIT_ERROR);
         }
     }
-    
+
     async getVersion() {
         if (!is.null(this[VERSION])) {
             return this[VERSION];
@@ -1570,7 +1583,7 @@ export default class CliApplication extends application.Application {
                 help: "Show this message",
                 handler: (_, cmd) => {
                     adone.log(escape(cmd.getHelpMessage()));
-                    return this.exit();
+                    return 0;
                 },
                 [INTERNAL]: true
             });
@@ -1834,7 +1847,7 @@ export default class CliApplication extends application.Application {
                                 command = commands[j];
                                 if (is.function(command.loader)) {
                                     // We have lazy loaded subsystem, try load it and reinit command
-                                    const sysInfo = await command.loader(); // eslint-disable-line
+                                    const sysInfo = await command.loader.call(command.subsystem); // eslint-disable-line
                                     sysInfo.instance[COMMAND] = command;
                                     await this._configureSubsystem(sysInfo); // eslint-disable-line
                                 }
@@ -2149,6 +2162,26 @@ CliApplication.prototype.main[INTERNAL] = true;
 // CliApplication.Command = Command;
 
 const DESCRIPTION = Symbol();
+const DECORATED = Symbol();
+
+const decorateConfigure = (target) => {
+    if (target instanceof CliApplication) {
+        return;
+    }
+    if (target[DECORATED]) {
+        return;
+    }
+    target[DECORATED] = true;
+    const configure = target.configure;
+    target.configure = async function (...args) {
+        await adone.runtime.netron.getInterface("cli").defineCommand(this, {
+            ...this[STATIC_MAIN_COMMAND],
+            commandsGroups: this[STATIC_COMMAND_GROUPS],
+            commands: this[STATIC_COMMANDS]
+        });
+        return configure.call(this, args);
+    };
+};
 
 const getCommandDescription = (descriptor) => {
     let commandDescription = descriptor.value[DESCRIPTION];
@@ -2160,6 +2193,7 @@ const getCommandDescription = (descriptor) => {
 };
 
 const CommandDecorator = (description = {}) => (target, key, descriptor) => {
+    decorateConfigure(target);
     const commandDescription = getCommandDescription(descriptor);
     description.handler = descriptor.value;
     Object.assign(commandDescription, description);
@@ -2173,6 +2207,7 @@ const CommandDecorator = (description = {}) => (target, key, descriptor) => {
 };
 
 const MainCommandDecorator = (description = {}) => (target, key, descriptor) => {
+    decorateConfigure(target);
     const commandDescription = getCommandDescription(descriptor);
     description.handler = descriptor.value;
     Object.assign(commandDescription, description);
@@ -2186,6 +2221,7 @@ const MainCommandDecorator = (description = {}) => (target, key, descriptor) => 
  */
 
 const CommandsGroupDecorator = (description) => (target) => {
+    decorateConfigure(target);
     if (!target.prototype[STATIC_COMMAND_GROUPS]) {
         target.prototype[STATIC_COMMAND_GROUPS] = [];
     }
@@ -2193,6 +2229,7 @@ const CommandsGroupDecorator = (description) => (target) => {
 };
 
 const CommandsGroupsDecorator = (descriptions) => (target) => {
+    decorateConfigure(target.prototype);
     if (!target.prototype[STATIC_COMMAND_GROUPS]) {
         target.prototype[STATIC_COMMAND_GROUPS] = [];
     }
@@ -2202,6 +2239,7 @@ const CommandsGroupsDecorator = (descriptions) => (target) => {
 };
 
 const ArgumentDecorator = (description) => (target, key, descriptor) => {
+    decorateConfigure(target);
     const commandDescription = getCommandDescription(descriptor);
     if (!commandDescription.arguments) {
         commandDescription.arguments = [];
@@ -2210,11 +2248,13 @@ const ArgumentDecorator = (description) => (target, key, descriptor) => {
 };
 
 const ArgumentsDecorator = (args) => (target, key, descriptor) => {
+    decorateConfigure(target);
     const commandDescription = getCommandDescription(descriptor);
     commandDescription.arguments = args;
 };
 
 const OptionDecorator = (description) => (target, key, descriptor) => {
+    decorateConfigure(target);
     const commandDescription = getCommandDescription(descriptor);
     if (!commandDescription.options) {
         commandDescription.options = [];
@@ -2223,11 +2263,13 @@ const OptionDecorator = (description) => (target, key, descriptor) => {
 };
 
 const OptionsDecorator = (options) => (target, key, descriptor) => {
+    decorateConfigure(target);
     const commandDescription = getCommandDescription(descriptor);
     commandDescription.options = options;
 };
 
 const OptionsGroupDecorator = (description) => (target, key, descriptor) => {
+    decorateConfigure(target);
     const commandDescription = getCommandDescription(descriptor);
     if (!commandDescription.optionsGroups) {
         commandDescription.optionsGroups = [];
@@ -2236,6 +2278,7 @@ const OptionsGroupDecorator = (description) => (target, key, descriptor) => {
 };
 
 const OptionsGroupsDecorator = (descriptions) => (target, key, descriptor) => {
+    decorateConfigure(target);
     const commandDescription = getCommandDescription(descriptor);
     if (!commandDescription.optionsGroups) {
         commandDescription.optionsGroups = [];
@@ -2243,6 +2286,21 @@ const OptionsGroupsDecorator = (descriptions) => (target, key, descriptor) => {
     for (const descr of descriptions) {
         commandDescription.optionsGroups.unshift(descr);
     }
+};
+
+const ExternalSubsystem = (ss) => (target) => {
+    decorateConfigure(target.prototype);
+    if (!target.prototype[STATIC_COMMANDS]) {
+        target.prototype[STATIC_COMMANDS] = [];
+    }
+    target.prototype[STATIC_COMMANDS].unshift({
+        name: ss.name,
+        description: ss.description,
+        group: ss.group,
+        loader() {
+            return this.addSubsystem(ss);
+        }
+    });
 };
 
 CliApplication.Command = CommandDecorator;
@@ -2255,3 +2313,4 @@ CliApplication.Options = OptionsDecorator;
 CliApplication.OptionsGroup = OptionsGroupDecorator;
 CliApplication.OptionsGroups = OptionsGroupsDecorator;
 CliApplication.MainCommand = MainCommandDecorator;
+CliApplication.ExternalSubsystem = ExternalSubsystem;

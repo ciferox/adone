@@ -51,7 +51,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
 
     /**
      * Configures all subsystems
-     * 
+     *
      * @returns {Promise<void>}
      */
     async configureSubsystems() {
@@ -153,14 +153,15 @@ export default class Subsystem extends adone.event.AsyncEmitter {
      * @param {boolean} addOnCommand If true, the subsystem will be added only if a command 'name' is requested.
      * @returns {null|Promise<object>}
      */
-    addSubsystem({ subsystem, name = null, description = "", group = "subsystem", configureArgs = [] } = {}) {
+    addSubsystem({ subsystem, name = null, description = "", group = "subsystem", configureArgs = [], transpile = false } = {}) {
         let instance;
         if (is.string(subsystem)) {
             if (!std.path.isAbsolute(subsystem)) {
                 throw new x.NotValid("Path must be absolute");
             }
-
-            let SomeSubsystem = require(subsystem);
+            let SomeSubsystem = transpile
+                ? adone.require(subsystem)
+                : require(subsystem);
             if (SomeSubsystem.__esModule === true) {
                 SomeSubsystem = SomeSubsystem.default;
             }

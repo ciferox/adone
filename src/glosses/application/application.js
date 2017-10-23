@@ -4,7 +4,7 @@ const {
     std,
     runtime: { term },
     tag,
-    application 
+    application
 } = adone;
 
 const {
@@ -52,8 +52,8 @@ export default class Application extends application.Subsystem {
         if (process.env.ADONE_REPORT) {
             this.enableReport();
         }
-        
-        
+
+
         // From Node.js docs: SIGTERM and SIGINT have default handlers on non-Windows platforms that resets
         // the terminal mode before exiting with code 128 + signal number. If one of these signals has a
         // listener installed, its default behavior will be removed (Node.js will no longer exit).
