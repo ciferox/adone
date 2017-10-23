@@ -2179,7 +2179,7 @@ const decorateConfigure = (target) => {
             commandsGroups: this[STATIC_COMMAND_GROUPS],
             commands: this[STATIC_COMMANDS]
         });
-        return configure.call(this, args);
+        return configure.apply(this, args);
     };
 };
 
