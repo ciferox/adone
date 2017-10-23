@@ -91,7 +91,7 @@ NAN_METHOD(GitTree::CreateUpdated) {
   baton->error_code = GIT_OK;
   baton->error = NULL;
 
-        baton->out = (git_oid *)malloc(sizeof(git_oid ));
+      baton->out = (git_oid *)malloc(sizeof(git_oid ));  
 // start convert_from_v8 block
   git_repository * from_repo = NULL;
 from_repo = Nan::ObjectWrap::Unwrap<GitRepository>(info[0]->ToObject())->GetValue();
@@ -444,7 +444,7 @@ from_id = Nan::ObjectWrap::Unwrap<GitOid>(info[0]->ToObject())->GetValue();
   
   if (result != NULL) {
     // GitTreeEntry result
-       to = GitTreeEntry::New(result, true , info.This() );
+       to = GitTreeEntry::New(result, false , info.This() );
    }
   else {
     to = Nan::Null();
@@ -491,7 +491,7 @@ NAN_METHOD(GitTree::EntryByindex) {
   
   if (result != NULL) {
     // GitTreeEntry result
-       to = GitTreeEntry::New(result, true , info.This() );
+       to = GitTreeEntry::New(result, false , info.This() );
    }
   else {
     to = Nan::Null();
@@ -548,7 +548,7 @@ NAN_METHOD(GitTree::EntryByname) {
   
   if (result != NULL) {
     // GitTreeEntry result
-       to = GitTreeEntry::New(result, true , info.This() );
+       to = GitTreeEntry::New(result, false , info.This() );
    }
   else {
     to = Nan::Null();

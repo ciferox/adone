@@ -1,7 +1,7 @@
 const native = adone.bind("git.node");
 const {
     promise: { promisifyAll },
-    vcs: { git: { SubmoduleUpdateOptions, Utils: { normalizeFetchOptions, normalizeOptions, shallowClone } } }
+    vcs: { git: { CheckoutOptions, SubmoduleUpdateOptions, Utils: { normalizeFetchOptions, normalizeOptions, shallowClone } } }
 } = adone;
 
 const Submodule = native.Submodule;
@@ -80,17 +80,29 @@ Submodule.foreach = function (repo, callback) {
  * @return {Number} 0 on success, any non-zero return value from a callback
  */
 Submodule.prototype.update = function (init, options) {
-    const fetchOpts = normalizeFetchOptions(options && options.fetchOpts);
+    let fetchOpts;
+    let checkoutOpts;
+    //  = normalizeFetchOptions(options && options.fetchOpts);
 
     if (options) {
         options = shallowClone(options);
+        fetchOpts = options.fetchOpts;
+        checkoutOpts = options.checkoutOpts;
         delete options.fetchOpts;
+        delete options.checkoutOpts;
     }
 
     options = normalizeOptions(options, SubmoduleUpdateOptions);
 
-    if (options) {
-        options.fetchOpts = fetchOpts;
+    if (fetchOpts) {
+        options.fetchOpts = normalizeFetchOptions(fetchOpts);
+    }
+
+    if (checkoutOpts) {
+        options.checkoutOpts = normalizeOptions(
+            checkoutOpts,
+            CheckoutOptions
+        );
     }
 
     return _update.call(this, init, options);

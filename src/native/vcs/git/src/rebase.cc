@@ -211,7 +211,7 @@ NAN_METHOD(GitRebase::Commit) {
   baton->error_code = GIT_OK;
   baton->error = NULL;
 
-        baton->id = (git_oid *)malloc(sizeof(git_oid ));
+      baton->id = (git_oid *)malloc(sizeof(git_oid ));  
   baton->rebase = Nan::ObjectWrap::Unwrap<GitRebase>(info.This())->GetValue();
 // start convert_from_v8 block
   const git_signature * from_author = NULL;

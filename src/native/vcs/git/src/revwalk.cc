@@ -320,7 +320,7 @@ NAN_METHOD(GitRevwalk::Next) {
   baton->error_code = GIT_OK;
   baton->error = NULL;
 
-        baton->out = (git_oid *)malloc(sizeof(git_oid ));
+      baton->out = (git_oid *)malloc(sizeof(git_oid ));  
   baton->walk = Nan::ObjectWrap::Unwrap<GitRevwalk>(info.This())->GetValue();
 
   Nan::Callback *callback = new Nan::Callback(v8::Local<Function>::Cast(info[0]));

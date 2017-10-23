@@ -1077,7 +1077,7 @@ NAN_METHOD(GitRemote::DefaultBranch) {
   baton->error_code = GIT_OK;
   baton->error = NULL;
 
-        baton->out = (git_buf *)malloc(sizeof(git_buf ));
+      baton->out = (git_buf *)malloc(sizeof(git_buf ));  
         baton->out->ptr = NULL;
         baton->out->size = baton->out->asize = 0;
   baton->remote = Nan::ObjectWrap::Unwrap<GitRemote>(info.This())->GetValue();
@@ -1114,13 +1114,13 @@ void GitRemote::DefaultBranchWorker::HandleOKCallback() {
   if (baton->error_code == GIT_OK) {
     v8::Local<v8::Value> to;
 // start convert_to_v8 block
-  if (baton->out) {
+   if (baton->out) {
     to = Nan::New<String>(baton->out->ptr, baton->out->size).ToLocalChecked();
   }
   else {
     to = Nan::Null();
   }
- // end convert_to_v8 block
+  // end convert_to_v8 block
     v8::Local<v8::Value> result = to;
     v8::Local<v8::Value> argv[2] = {
       Nan::Null(),
@@ -1993,7 +1993,7 @@ NAN_METHOD(GitRemote::GetFetchRefspecs) {
   baton->error_code = GIT_OK;
   baton->error = NULL;
 
-        baton->array = (git_strarray *)malloc(sizeof(git_strarray ));
+      baton->array = (git_strarray *)malloc(sizeof(git_strarray ));  
   baton->remote = Nan::ObjectWrap::Unwrap<GitRemote>(info.This())->GetValue();
 
   Nan::Callback *callback = new Nan::Callback(v8::Local<Function>::Cast(info[0]));
@@ -2128,7 +2128,7 @@ NAN_METHOD(GitRemote::GetPushRefspecs) {
   baton->error_code = GIT_OK;
   baton->error = NULL;
 
-        baton->array = (git_strarray *)malloc(sizeof(git_strarray ));
+      baton->array = (git_strarray *)malloc(sizeof(git_strarray ));  
   baton->remote = Nan::ObjectWrap::Unwrap<GitRemote>(info.This())->GetValue();
 
   Nan::Callback *callback = new Nan::Callback(v8::Local<Function>::Cast(info[0]));
@@ -2402,7 +2402,7 @@ NAN_METHOD(GitRemote::List) {
   baton->error_code = GIT_OK;
   baton->error = NULL;
 
-        baton->out = (git_strarray *)malloc(sizeof(git_strarray ));
+      baton->out = (git_strarray *)malloc(sizeof(git_strarray ));  
 // start convert_from_v8 block
   git_repository * from_repo = NULL;
 from_repo = Nan::ObjectWrap::Unwrap<GitRepository>(info[0]->ToObject())->GetValue();

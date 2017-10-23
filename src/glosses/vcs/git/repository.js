@@ -209,7 +209,8 @@ const getPathHunks = (repo, index, filePath, isStaged, additionalDiffOptions) =>
         });
     }).then((diff) => {
         return Status.file(repo, filePath).then((status) => {
-            if (!(status & Status.STATUS.WT_MODIFIED) && !(status & Status.STATUS.INDEX_MODIFIED)) {
+            if (!(status & Status.STATUS.WT_MODIFIED) &&
+                !(status & Status.STATUS.INDEX_MODIFIED)) {
                 return Promise.reject("Selected staging is only available on modified files.");
             }
             return diff.patches();
@@ -1601,9 +1602,7 @@ Repository.prototype.stageLines = function (filePath, selectedLines, isSelection
         const newContentBuffer = Buffer.from(newContent);
 
         return repo.createBlobFromBuffer(newContentBuffer);
-    }).then((newOid) => {
-        return repo.getBlob(newOid);
-    }).then((newBlob) => {
+    }).then((newOid) => repo.getBlob(newOid)).then((newBlob) => {
         const entry = index.getByPath(filePath, 0);
         entry.id = newBlob.id();
         entry.path = filePath;

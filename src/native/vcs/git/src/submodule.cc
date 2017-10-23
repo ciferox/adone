@@ -1133,7 +1133,7 @@ NAN_METHOD(GitSubmodule::Location) {
   baton->error_code = GIT_OK;
   baton->error = NULL;
 
-        baton->location_status = (unsigned int *)malloc(sizeof(unsigned int ));
+      baton->location_status = (unsigned int *)malloc(sizeof(unsigned int ));  
   baton->submodule = Nan::ObjectWrap::Unwrap<GitSubmodule>(info.This())->GetValue();
 
   Nan::Callback *callback = new Nan::Callback(v8::Local<Function>::Cast(info[0]));
@@ -1886,7 +1886,7 @@ NAN_METHOD(GitSubmodule::ResolveUrl) {
   baton->error_code = GIT_OK;
   baton->error = NULL;
 
-        baton->out = (git_buf *)malloc(sizeof(git_buf ));
+      baton->out = (git_buf *)malloc(sizeof(git_buf ));  
         baton->out->ptr = NULL;
         baton->out->size = baton->out->asize = 0;
 // start convert_from_v8 block
@@ -1945,13 +1945,13 @@ void GitSubmodule::ResolveUrlWorker::HandleOKCallback() {
   if (baton->error_code == GIT_OK) {
     v8::Local<v8::Value> to;
 // start convert_to_v8 block
-  if (baton->out) {
+   if (baton->out) {
     to = Nan::New<String>(baton->out->ptr, baton->out->size).ToLocalChecked();
   }
   else {
     to = Nan::Null();
   }
- // end convert_to_v8 block
+  // end convert_to_v8 block
     v8::Local<v8::Value> result = to;
     v8::Local<v8::Value> argv[2] = {
       Nan::Null(),
@@ -2738,7 +2738,7 @@ NAN_METHOD(GitSubmodule::Status) {
   baton->error_code = GIT_OK;
   baton->error = NULL;
 
-        baton->status = (unsigned int *)malloc(sizeof(unsigned int ));
+      baton->status = (unsigned int *)malloc(sizeof(unsigned int ));  
 // start convert_from_v8 block
   git_repository * from_repo = NULL;
 from_repo = Nan::ObjectWrap::Unwrap<GitRepository>(info[0]->ToObject())->GetValue();

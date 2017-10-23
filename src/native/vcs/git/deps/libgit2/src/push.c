@@ -5,14 +5,14 @@
  * a Linking Exception. For full terms see the included COPYING file.
  */
 
+#include "push.h"
+
 #include "git2.h"
 
-#include "common.h"
 #include "pack.h"
 #include "pack-objects.h"
 #include "remote.h"
 #include "vector.h"
-#include "push.h"
 #include "tree.h"
 
 static int push_spec_rref_cmp(const void *a, const void *b)
@@ -177,6 +177,9 @@ int git_push_update_tips(git_push *push, const git_remote_callbacks *callbacks)
 		fetch_spec = git_remote__matching_refspec(push->remote, status->ref);
 		if (!fetch_spec)
 			continue;
+
+		/* Clear the buffer which can be dirty from previous iteration */
+		git_buf_clear(&remote_ref_name);
 
 		if ((error = git_refspec_transform(&remote_ref_name, fetch_spec, status->ref)) < 0)
 			goto on_error;

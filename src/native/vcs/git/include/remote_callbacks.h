@@ -114,6 +114,27 @@ struct GitRemoteCallbacksTraits {
             };
            static GitRemoteCallbacks * transfer_progress_getInstanceFromBaton (
             TransferProgressBaton *baton);
+            static int push_update_reference_cppCallback (
+              const char * refname
+                ,
+               const char * status
+                ,
+               void * data
+            );
+
+          static void push_update_reference_async(void *baton);
+          static void push_update_reference_promiseCompleted(bool isFulfilled, AsyncBaton *_baton, v8::Local<v8::Value> result);
+             struct PushUpdateReferenceBaton : public AsyncBatonWithResult<int> {
+                const char * refname;
+                const char * status;
+                void * data;
+ 
+              PushUpdateReferenceBaton(const int &defaultResult)
+                : AsyncBatonWithResult<int>(defaultResult) {
+                }
+            };
+           static GitRemoteCallbacks * push_update_reference_getInstanceFromBaton (
+            PushUpdateReferenceBaton *baton);
      
   private:
     GitRemoteCallbacks();
@@ -139,6 +160,11 @@ struct GitRemoteCallbacksTraits {
   
         static NAN_GETTER(GetTransferProgress);
         static NAN_SETTER(SetTransferProgress);
+
+             CallbackWrapper push_update_reference;
+  
+        static NAN_GETTER(GetPushUpdateReference);
+        static NAN_SETTER(SetPushUpdateReference);
 
              Nan::Persistent<Value> payload;
   

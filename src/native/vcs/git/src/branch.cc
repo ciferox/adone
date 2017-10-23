@@ -1395,7 +1395,7 @@ NAN_METHOD(GitBranch::RemoteName) {
   baton->error_code = GIT_OK;
   baton->error = NULL;
 
-        baton->out = (git_buf *)malloc(sizeof(git_buf ));
+      baton->out = (git_buf *)malloc(sizeof(git_buf ));  
         baton->out->ptr = NULL;
         baton->out->size = baton->out->asize = 0;
 // start convert_from_v8 block
@@ -1454,13 +1454,13 @@ void GitBranch::RemoteNameWorker::HandleOKCallback() {
   if (baton->error_code == GIT_OK) {
     v8::Local<v8::Value> to;
 // start convert_to_v8 block
-  if (baton->out) {
+   if (baton->out) {
     to = Nan::New<String>(baton->out->ptr, baton->out->size).ToLocalChecked();
   }
   else {
     to = Nan::Null();
   }
- // end convert_to_v8 block
+  // end convert_to_v8 block
     v8::Local<v8::Value> result = to;
     v8::Local<v8::Value> argv[2] = {
       Nan::Null(),

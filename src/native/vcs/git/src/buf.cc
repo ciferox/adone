@@ -102,9 +102,8 @@ git_buf_free(
 }
   
 /*
-  * @param Number target_size
-    * @param Buf callback
-   */
+   * @param Number target_size
+     */
 NAN_METHOD(GitBuf::Grow) {
 
   if (info.Length() == 0 || !info[0]->IsNumber()) {
@@ -120,9 +119,7 @@ NAN_METHOD(GitBuf::Grow) {
   baton->error_code = GIT_OK;
   baton->error = NULL;
 
-        baton->buffer = (git_buf *)malloc(sizeof(git_buf ));
-        baton->buffer->ptr = NULL;
-        baton->buffer->size = baton->buffer->asize = 0;
+  baton->buffer = Nan::ObjectWrap::Unwrap<GitBuf>(info.This())->GetValue();
 // start convert_from_v8 block
   size_t from_target_size;
   from_target_size = (size_t)   info[0]->ToNumber()->Value();
@@ -131,6 +128,7 @@ NAN_METHOD(GitBuf::Grow) {
 
   Nan::Callback *callback = new Nan::Callback(v8::Local<Function>::Cast(info[1]));
   GrowWorker *worker = new GrowWorker(baton, callback);
+  worker->SaveToPersistent("buffer", info.This());
   if (!info[0]->IsUndefined() && !info[0]->IsNull())
     worker->SaveToPersistent("target_size", info[0]->ToObject());
 
@@ -159,16 +157,7 @@ baton->buffer,baton->target_size    );
 
 void GitBuf::GrowWorker::HandleOKCallback() {
   if (baton->error_code == GIT_OK) {
-    v8::Local<v8::Value> to;
-// start convert_to_v8 block
-  if (baton->buffer) {
-    to = Nan::New<String>(baton->buffer->ptr, baton->buffer->size).ToLocalChecked();
-  }
-  else {
-    to = Nan::Null();
-  }
- // end convert_to_v8 block
-    v8::Local<v8::Value> result = to;
+    v8::Local<v8::Value> result = Nan::Undefined();
     v8::Local<v8::Value> argv[2] = {
       Nan::Null(),
       result
@@ -280,10 +269,9 @@ NAN_METHOD(GitBuf::IsBinary) {
 }
   
 /*
-  * @param Buffer data
+   * @param Buffer data
    * @param Number datalen
-    * @param Buf callback
-   */
+     */
 NAN_METHOD(GitBuf::Set) {
 
   if (info.Length() == 0 || !info[0]->IsObject()) {
@@ -303,7 +291,7 @@ NAN_METHOD(GitBuf::Set) {
   baton->error_code = GIT_OK;
   baton->error = NULL;
 
-        baton->buffer = Nan::ObjectWrap::Unwrap<GitBuf>(info.This())->GetValue();
+  baton->buffer = Nan::ObjectWrap::Unwrap<GitBuf>(info.This())->GetValue();
 // start convert_from_v8 block
   const void * from_data = NULL;
 
@@ -318,6 +306,7 @@ NAN_METHOD(GitBuf::Set) {
 
   Nan::Callback *callback = new Nan::Callback(v8::Local<Function>::Cast(info[2]));
   SetWorker *worker = new SetWorker(baton, callback);
+  worker->SaveToPersistent("buffer", info.This());
   if (!info[0]->IsUndefined() && !info[0]->IsNull())
     worker->SaveToPersistent("data", info[0]->ToObject());
   if (!info[1]->IsUndefined() && !info[1]->IsNull())
@@ -349,16 +338,7 @@ baton->buffer,baton->data,baton->datalen    );
 
 void GitBuf::SetWorker::HandleOKCallback() {
   if (baton->error_code == GIT_OK) {
-    v8::Local<v8::Value> to;
-// start convert_to_v8 block
-  if (baton->buffer) {
-    to = Nan::New<String>(baton->buffer->ptr, baton->buffer->size).ToLocalChecked();
-  }
-  else {
-    to = Nan::Null();
-  }
- // end convert_to_v8 block
-    v8::Local<v8::Value> result = to;
+    v8::Local<v8::Value> result = Nan::Undefined();
     v8::Local<v8::Value> argv[2] = {
       Nan::Null(),
       result

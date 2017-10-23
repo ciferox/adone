@@ -74,31 +74,6 @@ class GitTreebuilder : public
 
     static NAN_METHOD(Get);
 
-    struct InsertBaton {
-      int error_code;
-      const git_error* error;
-      const git_tree_entry * out;
-      git_treebuilder * bld;
-      const char * filename;
-      const git_oid * id;
-      bool idNeedsFree;
-      git_filemode_t filemode;
-    };
-    class InsertWorker : public Nan::AsyncWorker {
-      public:
-        InsertWorker(
-            InsertBaton *_baton,
-            Nan::Callback *callback
-        ) : Nan::AsyncWorker(callback)
-          , baton(_baton) {};
-        ~InsertWorker() {};
-        void Execute();
-        void HandleOKCallback();
-
-      private:
-        InsertBaton *baton;
-    };
-
     static NAN_METHOD(Insert);
 
     struct CreateBaton {

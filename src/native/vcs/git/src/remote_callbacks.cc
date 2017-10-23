@@ -54,6 +54,9 @@ GitRemoteCallbacks::~GitRemoteCallbacks() {
              if (this->transfer_progress.HasCallback()) {
                this->raw->payload = NULL;
            }
+             if (this->push_update_reference.HasCallback()) {
+               this->raw->payload = NULL;
+           }
        }
 
 void GitRemoteCallbacks::ConstructFields() {
@@ -73,6 +76,11 @@ void GitRemoteCallbacks::ConstructFields() {
           this->raw->transfer_progress = NULL;
              this->raw->payload = (void *)this;
     
+          // Set the static method call and set the payload for this function to be
+          // the current instance
+          this->raw->push_update_reference = NULL;
+             this->raw->payload = (void *)this;
+    
           v8::Local<Value> payload = Nan::Undefined();
           this->payload.Reset(payload);
     }
@@ -89,6 +97,7 @@ void GitRemoteCallbacks::InitializeComponent(v8::Local<v8::Object> target) {
         Nan::SetAccessor(tpl->InstanceTemplate(), Nan::New("credentials").ToLocalChecked(), GetCredentials, SetCredentials);
         Nan::SetAccessor(tpl->InstanceTemplate(), Nan::New("certificateCheck").ToLocalChecked(), GetCertificateCheck, SetCertificateCheck);
         Nan::SetAccessor(tpl->InstanceTemplate(), Nan::New("transferProgress").ToLocalChecked(), GetTransferProgress, SetTransferProgress);
+        Nan::SetAccessor(tpl->InstanceTemplate(), Nan::New("pushUpdateReference").ToLocalChecked(), GetPushUpdateReference, SetPushUpdateReference);
      
   InitializeTemplate(tpl);
 
@@ -601,6 +610,174 @@ void GitRemoteCallbacks::InitializeComponent(v8::Local<v8::Object> target) {
           else {
             // promise was rejected
                GitRemoteCallbacks* instance = static_cast<GitRemoteCallbacks*>(baton-> payload  );
+             v8::Local<v8::Object> parent = instance->handle();
+            SetPrivate(parent, Nan::New("NodeGitPromiseError").ToLocalChecked(), result);
+
+            baton->result = -1;
+          }
+          baton->Done();
+       }
+      NAN_GETTER(GitRemoteCallbacks::GetPushUpdateReference) {
+
+      GitRemoteCallbacks *wrapper = Nan::ObjectWrap::Unwrap<GitRemoteCallbacks>(info.This());
+
+        if (wrapper->push_update_reference.HasCallback()) {
+          info.GetReturnValue().Set(wrapper->push_update_reference.GetCallback()->GetFunction());
+        } else {
+          info.GetReturnValue().SetUndefined();
+        }
+
+     }
+
+    NAN_SETTER(GitRemoteCallbacks::SetPushUpdateReference) {
+      GitRemoteCallbacks *wrapper = Nan::ObjectWrap::Unwrap<GitRemoteCallbacks>(info.This());
+
+        Nan::Callback *callback = NULL;
+        int throttle = 0;
+        bool waitForResult = true;
+
+        if (value->IsFunction()) {
+          callback = new Nan::Callback(value.As<Function>());
+        } else if (value->IsObject()) {
+          v8::Local<Object> object = value.As<Object>();
+          v8::Local<String> callbackKey;
+          Nan::MaybeLocal<Value> maybeObjectCallback = Nan::Get(object, Nan::New("callback").ToLocalChecked());
+          if (!maybeObjectCallback.IsEmpty()) {
+            v8::Local<Value> objectCallback = maybeObjectCallback.ToLocalChecked();
+            if (objectCallback->IsFunction()) {
+              callback = new Nan::Callback(objectCallback.As<Function>());
+
+              Nan::MaybeLocal<Value> maybeObjectThrottle = Nan::Get(object, Nan::New("throttle").ToLocalChecked());
+              if(!maybeObjectThrottle.IsEmpty()) {
+                v8::Local<Value> objectThrottle = maybeObjectThrottle.ToLocalChecked();
+                if (objectThrottle->IsNumber()) {
+                  throttle = (int)objectThrottle.As<Number>()->Value();
+                }
+              }
+
+              Nan::MaybeLocal<Value> maybeObjectWaitForResult = Nan::Get(object, Nan::New("waitForResult").ToLocalChecked());
+              if(!maybeObjectWaitForResult.IsEmpty()) {
+                Local<Value> objectWaitForResult = maybeObjectWaitForResult.ToLocalChecked();
+                waitForResult = (bool)objectWaitForResult->BooleanValue();
+              }
+            }
+          }
+        }
+        if (callback) {
+          if (!wrapper->raw->push_update_reference) {
+            wrapper->raw->push_update_reference = (git_push_update_reference_cb)push_update_reference_cppCallback;
+          }
+
+          wrapper->push_update_reference.SetCallback(callback, throttle, waitForResult);
+        }
+
+     }
+
+      GitRemoteCallbacks* GitRemoteCallbacks::push_update_reference_getInstanceFromBaton(PushUpdateReferenceBaton* baton) {
+           return static_cast<GitRemoteCallbacks*>(baton->
+                data
+  );
+       }
+      
+      int GitRemoteCallbacks::push_update_reference_cppCallback (
+          const char * refname,           const char * status,           void * data        ) {
+        PushUpdateReferenceBaton *baton =
+          new PushUpdateReferenceBaton(1);
+
+          baton->refname = refname;
+          baton->status = status;
+          baton->data = data;
+ 
+        GitRemoteCallbacks* instance = push_update_reference_getInstanceFromBaton(baton);
+        
+           int result;
+
+          if (instance->push_update_reference.WillBeThrottled()) {
+            result = baton->defaultResult;
+            delete baton;
+          } else if (instance->push_update_reference.ShouldWaitForResult()) {
+            result = baton->ExecuteAsync(push_update_reference_async);
+            delete baton;
+          } else {
+            result = baton->defaultResult;
+            baton->ExecuteAsync(push_update_reference_async, deleteBaton);
+          }
+          return result;
+       }
+      
+
+      void GitRemoteCallbacks::push_update_reference_async(void *untypedBaton) {
+        Nan::HandleScope scope;
+
+        PushUpdateReferenceBaton* baton = static_cast<PushUpdateReferenceBaton*>(untypedBaton);
+        GitRemoteCallbacks* instance = push_update_reference_getInstanceFromBaton(baton);
+
+        if (instance->push_update_reference.GetCallback()->IsEmpty()) {
+            baton->result = baton->defaultResult; // no results acquired
+           baton->Done();
+          return;
+        }
+
+              if (baton->refname == NULL) {
+                  baton->refname = "";
+              }
+                if (baton->status == NULL) {
+                  baton->status = "";
+              }
+                v8::Local<Value> argv[3] = {
+                  Nan::New(baton->refname).ToLocalChecked(),
+                    Nan::New(baton->status).ToLocalChecked(),
+                     Nan::New(baton->data),
+              };
+ 
+        Nan::TryCatch tryCatch;
+
+            v8::Local<v8::Value> result = instance->push_update_reference.GetCallback()->Call(3, argv);
+ 
+        if(PromiseCompletion::ForwardIfPromise(result, baton, GitRemoteCallbacks::push_update_reference_promiseCompleted)) {
+          return;
+        }
+        
+             if (result.IsEmpty() || result->IsNativeError()) {
+              baton->result = -1;
+            }
+            else if (!result->IsNull() && !result->IsUndefined()) {
+               if (result->IsNumber()) {
+                baton->result = (int)result->ToNumber()->Value();
+              }
+              else {
+                baton->result = baton->defaultResult;
+              }
+             }
+            else {
+              baton->result = baton->defaultResult;
+            }
+           baton->Done();
+       }
+
+      void GitRemoteCallbacks::push_update_reference_promiseCompleted(bool isFulfilled, AsyncBaton *_baton, v8::Local<v8::Value> result) {
+        Nan::HandleScope scope;
+
+        PushUpdateReferenceBaton* baton = static_cast<PushUpdateReferenceBaton*>(_baton);
+           if (isFulfilled) {
+              if (result.IsEmpty() || result->IsNativeError()) {
+                baton->result = -1;
+              }
+              else if (!result->IsNull() && !result->IsUndefined()) {
+                 if (result->IsNumber()) {
+                  baton->result = (int)result->ToNumber()->Value();
+                }
+                else{
+                  baton->result = baton->defaultResult;
+                }
+               }
+              else {
+                baton->result = baton->defaultResult;
+              }
+           }
+          else {
+            // promise was rejected
+               GitRemoteCallbacks* instance = static_cast<GitRemoteCallbacks*>(baton->  data  );
              v8::Local<v8::Object> parent = instance->handle();
             SetPrivate(parent, Nan::New("NodeGitPromiseError").ToLocalChecked(), result);
 

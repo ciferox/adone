@@ -840,7 +840,7 @@ NAN_METHOD(GitStash::Save) {
   baton->error_code = GIT_OK;
   baton->error = NULL;
 
-        baton->out = (git_oid *)malloc(sizeof(git_oid ));
+      baton->out = (git_oid *)malloc(sizeof(git_oid ));  
 // start convert_from_v8 block
   git_repository * from_repo = NULL;
 from_repo = Nan::ObjectWrap::Unwrap<GitRepository>(info[0]->ToObject())->GetValue();

@@ -3,7 +3,14 @@ v0.26 + 1
 
 ### Changes or improvements
 
+* Improved `p_unlink` in `posix_w32.c` to try and make a file writable
+  before sleeping in the retry loop to prevent unnecessary calls to sleep.
+
 ### API additions
+
+* `git_remote_create_detached()` creates a remote that is not associated
+  to any repository (and does not apply configuration like 'insteadof' rules).
+  This is mostly useful for e.g. emulating `git ls-remote` behavior.
 
 ### API removals
 

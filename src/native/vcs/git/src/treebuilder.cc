@@ -170,7 +170,7 @@ NAN_METHOD(GitTreebuilder::Get) {
   
   if (result != NULL) {
     // GitTreeEntry result
-       to = GitTreeEntry::New(result, true  );
+       to = GitTreeEntry::New(result, false , info.This() );
    }
   else {
     to = Nan::Null();
@@ -180,14 +180,14 @@ NAN_METHOD(GitTreebuilder::Get) {
     return info.GetReturnValue().Set(scope.Escape(to));
   }
 }
-  
+   
 /*
     * @param String filename
    * @param Oid id
    * @param Number filemode
-    * @param TreeEntry callback
-   */
+     * @return TreeEntry out    */
 NAN_METHOD(GitTreebuilder::Insert) {
+  Nan::EscapableHandleScope scope;
 
   if (info.Length() == 0 || !info[0]->IsString()) {
     return Nan::ThrowError("String filename is required.");
@@ -201,16 +201,7 @@ NAN_METHOD(GitTreebuilder::Insert) {
     return Nan::ThrowError("Number filemode is required.");
   }
 
-  if (info.Length() == 3 || !info[3]->IsFunction()) {
-    return Nan::ThrowError("Callback is required and must be a Function.");
-  }
-
-  InsertBaton* baton = new InsertBaton;
-
-  baton->error_code = GIT_OK;
-  baton->error = NULL;
-
-  baton->bld = Nan::ObjectWrap::Unwrap<GitTreebuilder>(info.This())->GetValue();
+  const git_tree_entry * out = 0;
 // start convert_from_v8 block
   const char * from_filename = NULL;
 
@@ -224,7 +215,6 @@ NAN_METHOD(GitTreebuilder::Insert) {
   // used in the nodejs binding generation:
   memset((void *)(((char *)from_filename) + filename.length()), 0, 1);
 // end convert_from_v8 block
-  baton->filename = from_filename;
 // start convert_from_v8 block
   const git_oid * from_id = NULL;
   if (info[1]->IsString()) {
@@ -248,152 +238,46 @@ NAN_METHOD(GitTreebuilder::Insert) {
 from_id = Nan::ObjectWrap::Unwrap<GitOid>(info[1]->ToObject())->GetValue();
   }
 // end convert_from_v8 block
-  baton->id = from_id;
-  baton->idNeedsFree = info[1]->IsString();
 // start convert_from_v8 block
   git_filemode_t from_filemode;
   from_filemode = (git_filemode_t)  (int) info[2]->ToNumber()->Value();
 // end convert_from_v8 block
-  baton->filemode = from_filemode;
-
-  Nan::Callback *callback = new Nan::Callback(v8::Local<Function>::Cast(info[3]));
-  InsertWorker *worker = new InsertWorker(baton, callback);
-  worker->SaveToPersistent("bld", info.This());
-  if (!info[0]->IsUndefined() && !info[0]->IsNull())
-    worker->SaveToPersistent("filename", info[0]->ToObject());
-  if (!info[1]->IsUndefined() && !info[1]->IsNull())
-    worker->SaveToPersistent("id", info[1]->ToObject());
-  if (!info[2]->IsUndefined() && !info[2]->IsNull())
-    worker->SaveToPersistent("filemode", info[2]->ToObject());
-
-  AsyncLibgit2QueueWorker(worker);
-  return;
-}
-
-void GitTreebuilder::InsertWorker::Execute() {
+ 
   giterr_clear();
 
   {
-    LockMaster lockMaster(/*asyncAction: */true        ,baton->bld
-        ,baton->filename
-        ,baton->id
+    LockMaster lockMaster(/*asyncAction: */false        ,    Nan::ObjectWrap::Unwrap<GitTreebuilder>(info.This())->GetValue()
+        ,    from_filename
+        ,    from_id
 );
 
-  int result = git_treebuilder_insert(
-&baton->out,baton->bld,baton->filename,baton->id,baton->filemode    );
+git_treebuilder_insert(
+&  out
+,  Nan::ObjectWrap::Unwrap<GitTreebuilder>(info.This())->GetValue()
+,  from_filename
+,  from_id
+,  from_filemode
+    );
 
-    baton->error_code = result;
-
-    if (result != GIT_OK && giterr_last() != NULL) {
-      baton->error = git_error_dup(giterr_last());
+     if (info[1]->IsString()) {
+      free((void *)from_id);
     }
 
-  }
-}
-
-void GitTreebuilder::InsertWorker::HandleOKCallback() {
-  if (baton->error_code == GIT_OK) {
     v8::Local<v8::Value> to;
 // start convert_to_v8 block
   
-  if (baton->out != NULL) {
-    // GitTreeEntry baton->out
-       to = GitTreeEntry::New(baton->out, true  );
+  if (out != NULL) {
+    // GitTreeEntry out
+       to = GitTreeEntry::New(out, false , info.This() );
    }
   else {
     to = Nan::Null();
   }
 
  // end convert_to_v8 block
-    v8::Local<v8::Value> result = to;
-    v8::Local<v8::Value> argv[2] = {
-      Nan::Null(),
-      result
-    };
-    callback->Call(2, argv);
-  } else {
-    if (baton->error) {
-      v8::Local<v8::Object> err;
-      if (baton->error->message) {
-        err = Nan::Error(baton->error->message)->ToObject();
-      } else {
-        err = Nan::Error("Method insert has thrown an error.")->ToObject();
-      }
-      err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
-      v8::Local<v8::Value> argv[1] = {
-        err
-      };
-      callback->Call(1, argv);
-      if (baton->error->message)
-        free((void *)baton->error->message);
-      free((void *)baton->error);
-    } else if (baton->error_code < 0) {
-      std::queue< v8::Local<v8::Value> > workerArguments;
-      workerArguments.push(GetFromPersistent("filename"));
-      workerArguments.push(GetFromPersistent("id"));
-      workerArguments.push(GetFromPersistent("filemode"));
-      bool callbackFired = false;
-      while(!workerArguments.empty()) {
-        v8::Local<v8::Value> node = workerArguments.front();
-        workerArguments.pop();
-
-        if (
-          !node->IsObject()
-          || node->IsArray()
-          || node->IsBooleanObject()
-          || node->IsDate()
-          || node->IsFunction()
-          || node->IsNumberObject()
-          || node->IsRegExp()
-          || node->IsStringObject()
-        ) {
-          continue;
-        }
-
-        v8::Local<v8::Object> nodeObj = node->ToObject();
-        v8::Local<v8::Value> checkValue = GetPrivate(nodeObj, Nan::New("NodeGitPromiseError").ToLocalChecked());
-
-        if (!checkValue.IsEmpty() && !checkValue->IsNull() && !checkValue->IsUndefined()) {
-          v8::Local<v8::Value> argv[1] = {
-            checkValue->ToObject()
-          };
-          callback->Call(1, argv);
-          callbackFired = true;
-          break;
-        }
-
-        v8::Local<v8::Array> properties = nodeObj->GetPropertyNames();
-        for (unsigned int propIndex = 0; propIndex < properties->Length(); ++propIndex) {
-          v8::Local<v8::String> propName = properties->Get(propIndex)->ToString();
-          v8::Local<v8::Value> nodeToQueue = nodeObj->Get(propName);
-          if (!nodeToQueue->IsUndefined()) {
-            workerArguments.push(nodeToQueue);
-          }
-        }
-      }
-
-      if (!callbackFired) {
-        v8::Local<v8::Object> err = Nan::Error("Method insert has thrown an error.")->ToObject();
-        err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
-        v8::Local<v8::Value> argv[1] = {
-          err
-        };
-        callback->Call(1, argv);
-      }
-    } else {
-      callback->Call(0, NULL);
-    }
-
+    return info.GetReturnValue().Set(scope.Escape(to));
   }
-
-  if (baton->idNeedsFree) {
-    baton->idNeedsFree = false;
-    free((void *)baton->id);
-  }
-
-  delete baton;
 }
-
   
 /*
   * @param Repository repo

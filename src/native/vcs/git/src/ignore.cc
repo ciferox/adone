@@ -148,7 +148,7 @@ NAN_METHOD(GitIgnore::PathIsIgnored) {
   baton->error_code = GIT_OK;
   baton->error = NULL;
 
-        baton->ignored = (int *)malloc(sizeof(int ));
+      baton->ignored = (int *)malloc(sizeof(int ));  
 // start convert_from_v8 block
   git_repository * from_repo = NULL;
 from_repo = Nan::ObjectWrap::Unwrap<GitRepository>(info[0]->ToObject())->GetValue();

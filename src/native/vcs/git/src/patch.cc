@@ -755,7 +755,7 @@ NAN_METHOD(GitPatch::GetHunk) {
   baton->error_code = GIT_OK;
   baton->error = NULL;
 
-        baton->lines_in_hunk = (size_t *)malloc(sizeof(size_t ));
+      baton->lines_in_hunk = (size_t *)malloc(sizeof(size_t ));  
   baton->patch = Nan::ObjectWrap::Unwrap<GitPatch>(info.This())->GetValue();
 // start convert_from_v8 block
   size_t from_hunk_idx;

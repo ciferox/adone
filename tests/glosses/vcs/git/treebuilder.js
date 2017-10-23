@@ -4,10 +4,14 @@ const {
     vcs: { git: { Repository, Treebuilder, TreeEntry, Tree } }
 } = adone;
 
+import { leakTest } from "./utils/leak_test";
+
 const local = path.join.bind(path, __dirname, "fixtures");
 
 describe("TreeBuilder", () => {
     const reposPath = local("repos/workdir");
+    const oid = "111dd657329797f6165f52f5085f61ac976dcf04";
+    
     //setup test repo each test
     beforeEach(function () {
         const test = this;
@@ -76,5 +80,20 @@ describe("TreeBuilder", () => {
                 assert(newTreeEntry.isTree(), "Created a tree (new folder) that is a tree");
                 return Tree.lookup(test.repo, newTreeEntry.oid());
             });
+    });
+
+    it("does not leak inserts", function () {
+        const test = this;
+
+        // The underlying C++ git_tree_entry is owned by the treebuilder that
+        // creates it. But since git_tree_entry is duplicable the generator will
+        // duplicate it and mark it as self freeing.
+        // Validate this with the leakTest.
+        return leakTest(TreeEntry, () => {
+            return Treebuilder.create(test.repo, null)
+                .then((builder) => {
+                    return builder.insert("test", oid, TreeEntry.FILEMODE.BLOB);
+                });
+        });
     });
 });

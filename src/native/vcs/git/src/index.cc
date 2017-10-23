@@ -31,7 +31,7 @@ using namespace node;
     // this will cause an error if you have a non-self-freeing object that also needs
     // to save values. Since the object that will eventually free the object has no
     // way of knowing to free these values.
-                                                                                                                                            }
+                                                                                                                                                 }
 
   void GitIndex::InitializeComponent(v8::Local<v8::Object> target) {
     Nan::HandleScope scope;
@@ -54,6 +54,7 @@ using namespace node;
              Nan::SetMethod(tpl, "entryIsConflict", EntryIsConflict);
              Nan::SetMethod(tpl, "entryStage", EntryStage);
             Nan::SetPrototypeMethod(tpl, "entryCount", Entrycount);
+            Nan::SetPrototypeMethod(tpl, "find", Find);
             Nan::SetPrototypeMethod(tpl, "findPrefix", FindPrefix);
             Nan::SetPrototypeMethod(tpl, "getByIndex", GetByindex);
             Nan::SetPrototypeMethod(tpl, "getByPath", GetBypath);
@@ -1545,30 +1546,189 @@ NAN_METHOD(GitIndex::Entrycount) {
     return info.GetReturnValue().Set(scope.Escape(to));
   }
 }
-   
+  
 /*
- * @param Number at_pos
-     * @param String prefix
-     * @return Number  result    */
-NAN_METHOD(GitIndex::FindPrefix) {
-  Nan::EscapableHandleScope scope;
+    * @param String path
+    * @param Number callback
+   */
+NAN_METHOD(GitIndex::Find) {
 
-  if (info.Length() == 0 || !info[0]->IsNumber()) {
-    return Nan::ThrowError("Number at_pos is required.");
+  if (info.Length() == 0 || !info[0]->IsString()) {
+    return Nan::ThrowError("String path is required.");
   }
 
-  if (info.Length() == 1 || !info[1]->IsString()) {
+  if (info.Length() == 1 || !info[1]->IsFunction()) {
+    return Nan::ThrowError("Callback is required and must be a Function.");
+  }
+
+  FindBaton* baton = new FindBaton;
+
+  baton->error_code = GIT_OK;
+  baton->error = NULL;
+
+      baton->at_pos = (size_t *)malloc(sizeof(size_t ));  
+  baton->index = Nan::ObjectWrap::Unwrap<GitIndex>(info.This())->GetValue();
+// start convert_from_v8 block
+  const char * from_path = NULL;
+
+  String::Utf8Value path(info[0]->ToString());
+  // malloc with one extra byte so we can add the terminating null character C-strings expect:
+  from_path = (const char *) malloc(path.length() + 1);
+  // copy the characters from the nodejs string into our C-string (used instead of strdup or strcpy because nulls in
+  // the middle of strings are valid coming from nodejs):
+  memcpy((void *)from_path, *path, path.length());
+  // ensure the final byte of our new string is null, extra casts added to ensure compatibility with various C types
+  // used in the nodejs binding generation:
+  memset((void *)(((char *)from_path) + path.length()), 0, 1);
+// end convert_from_v8 block
+  baton->path = from_path;
+
+  Nan::Callback *callback = new Nan::Callback(v8::Local<Function>::Cast(info[1]));
+  FindWorker *worker = new FindWorker(baton, callback);
+  worker->SaveToPersistent("index", info.This());
+  if (!info[0]->IsUndefined() && !info[0]->IsNull())
+    worker->SaveToPersistent("path", info[0]->ToObject());
+
+  AsyncLibgit2QueueWorker(worker);
+  return;
+}
+
+void GitIndex::FindWorker::Execute() {
+  giterr_clear();
+
+  {
+    LockMaster lockMaster(/*asyncAction: */true        ,baton->at_pos
+        ,baton->index
+        ,baton->path
+);
+
+  int result = git_index_find(
+baton->at_pos,baton->index,baton->path    );
+
+    baton->error_code = result;
+
+    if (result != GIT_OK && giterr_last() != NULL) {
+      baton->error = git_error_dup(giterr_last());
+    }
+
+  }
+}
+
+void GitIndex::FindWorker::HandleOKCallback() {
+  if (baton->error_code == GIT_OK) {
+    v8::Local<v8::Value> to;
+// start convert_to_v8 block
+     to = Nan::New<Number>(* baton->at_pos);
+  // end convert_to_v8 block
+    v8::Local<v8::Value> result = to;
+    v8::Local<v8::Value> argv[2] = {
+      Nan::Null(),
+      result
+    };
+    callback->Call(2, argv);
+  } else {
+    if (baton->error) {
+      v8::Local<v8::Object> err;
+      if (baton->error->message) {
+        err = Nan::Error(baton->error->message)->ToObject();
+      } else {
+        err = Nan::Error("Method find has thrown an error.")->ToObject();
+      }
+      err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      v8::Local<v8::Value> argv[1] = {
+        err
+      };
+      callback->Call(1, argv);
+      if (baton->error->message)
+        free((void *)baton->error->message);
+      free((void *)baton->error);
+    } else if (baton->error_code < 0) {
+      std::queue< v8::Local<v8::Value> > workerArguments;
+      workerArguments.push(GetFromPersistent("path"));
+      bool callbackFired = false;
+      while(!workerArguments.empty()) {
+        v8::Local<v8::Value> node = workerArguments.front();
+        workerArguments.pop();
+
+        if (
+          !node->IsObject()
+          || node->IsArray()
+          || node->IsBooleanObject()
+          || node->IsDate()
+          || node->IsFunction()
+          || node->IsNumberObject()
+          || node->IsRegExp()
+          || node->IsStringObject()
+        ) {
+          continue;
+        }
+
+        v8::Local<v8::Object> nodeObj = node->ToObject();
+        v8::Local<v8::Value> checkValue = GetPrivate(nodeObj, Nan::New("NodeGitPromiseError").ToLocalChecked());
+
+        if (!checkValue.IsEmpty() && !checkValue->IsNull() && !checkValue->IsUndefined()) {
+          v8::Local<v8::Value> argv[1] = {
+            checkValue->ToObject()
+          };
+          callback->Call(1, argv);
+          callbackFired = true;
+          break;
+        }
+
+        v8::Local<v8::Array> properties = nodeObj->GetPropertyNames();
+        for (unsigned int propIndex = 0; propIndex < properties->Length(); ++propIndex) {
+          v8::Local<v8::String> propName = properties->Get(propIndex)->ToString();
+          v8::Local<v8::Value> nodeToQueue = nodeObj->Get(propName);
+          if (!nodeToQueue->IsUndefined()) {
+            workerArguments.push(nodeToQueue);
+          }
+        }
+      }
+
+      if (!callbackFired) {
+        v8::Local<v8::Object> err = Nan::Error("Method find has thrown an error.")->ToObject();
+        err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        v8::Local<v8::Value> argv[1] = {
+          err
+        };
+        callback->Call(1, argv);
+      }
+    } else {
+      callback->Call(0, NULL);
+    }
+
+  }
+
+
+  delete baton;
+}
+
+  
+/*
+    * @param String prefix
+    * @param Number callback
+   */
+NAN_METHOD(GitIndex::FindPrefix) {
+
+  if (info.Length() == 0 || !info[0]->IsString()) {
     return Nan::ThrowError("String prefix is required.");
   }
 
-// start convert_from_v8 block
-  size_t * from_at_pos = NULL;
-  *from_at_pos = (size_t)   info[0]->ToNumber()->Value();
-// end convert_from_v8 block
+  if (info.Length() == 1 || !info[1]->IsFunction()) {
+    return Nan::ThrowError("Callback is required and must be a Function.");
+  }
+
+  FindPrefixBaton* baton = new FindPrefixBaton;
+
+  baton->error_code = GIT_OK;
+  baton->error = NULL;
+
+      baton->at_pos = (size_t *)malloc(sizeof(size_t ));  
+  baton->index = Nan::ObjectWrap::Unwrap<GitIndex>(info.This())->GetValue();
 // start convert_from_v8 block
   const char * from_prefix = NULL;
 
-  String::Utf8Value prefix(info[1]->ToString());
+  String::Utf8Value prefix(info[0]->ToString());
   // malloc with one extra byte so we can add the terminating null character C-strings expect:
   from_prefix = (const char *) malloc(prefix.length() + 1);
   // copy the characters from the nodejs string into our C-string (used instead of strdup or strcpy because nulls in
@@ -1578,29 +1738,128 @@ NAN_METHOD(GitIndex::FindPrefix) {
   // used in the nodejs binding generation:
   memset((void *)(((char *)from_prefix) + prefix.length()), 0, 1);
 // end convert_from_v8 block
- 
+  baton->prefix = from_prefix;
+
+  Nan::Callback *callback = new Nan::Callback(v8::Local<Function>::Cast(info[1]));
+  FindPrefixWorker *worker = new FindPrefixWorker(baton, callback);
+  worker->SaveToPersistent("index", info.This());
+  if (!info[0]->IsUndefined() && !info[0]->IsNull())
+    worker->SaveToPersistent("prefix", info[0]->ToObject());
+
+  AsyncLibgit2QueueWorker(worker);
+  return;
+}
+
+void GitIndex::FindPrefixWorker::Execute() {
   giterr_clear();
 
   {
-    LockMaster lockMaster(/*asyncAction: */false        ,    from_at_pos
-        ,    Nan::ObjectWrap::Unwrap<GitIndex>(info.This())->GetValue()
-        ,    from_prefix
+    LockMaster lockMaster(/*asyncAction: */true        ,baton->at_pos
+        ,baton->index
+        ,baton->prefix
 );
 
-    int result = git_index_find_prefix(
-  from_at_pos
-,  Nan::ObjectWrap::Unwrap<GitIndex>(info.This())->GetValue()
-,  from_prefix
-    );
+  int result = git_index_find_prefix(
+baton->at_pos,baton->index,baton->prefix    );
 
- 
-    v8::Local<v8::Value> to;
-// start convert_to_v8 block
-     to = Nan::New<Number>( result);
-  // end convert_to_v8 block
-    return info.GetReturnValue().Set(scope.Escape(to));
+    baton->error_code = result;
+
+    if (result != GIT_OK && giterr_last() != NULL) {
+      baton->error = git_error_dup(giterr_last());
+    }
+
   }
 }
+
+void GitIndex::FindPrefixWorker::HandleOKCallback() {
+  if (baton->error_code == GIT_OK) {
+    v8::Local<v8::Value> to;
+// start convert_to_v8 block
+     to = Nan::New<Number>(* baton->at_pos);
+  // end convert_to_v8 block
+    v8::Local<v8::Value> result = to;
+    v8::Local<v8::Value> argv[2] = {
+      Nan::Null(),
+      result
+    };
+    callback->Call(2, argv);
+  } else {
+    if (baton->error) {
+      v8::Local<v8::Object> err;
+      if (baton->error->message) {
+        err = Nan::Error(baton->error->message)->ToObject();
+      } else {
+        err = Nan::Error("Method findPrefix has thrown an error.")->ToObject();
+      }
+      err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      v8::Local<v8::Value> argv[1] = {
+        err
+      };
+      callback->Call(1, argv);
+      if (baton->error->message)
+        free((void *)baton->error->message);
+      free((void *)baton->error);
+    } else if (baton->error_code < 0) {
+      std::queue< v8::Local<v8::Value> > workerArguments;
+      workerArguments.push(GetFromPersistent("prefix"));
+      bool callbackFired = false;
+      while(!workerArguments.empty()) {
+        v8::Local<v8::Value> node = workerArguments.front();
+        workerArguments.pop();
+
+        if (
+          !node->IsObject()
+          || node->IsArray()
+          || node->IsBooleanObject()
+          || node->IsDate()
+          || node->IsFunction()
+          || node->IsNumberObject()
+          || node->IsRegExp()
+          || node->IsStringObject()
+        ) {
+          continue;
+        }
+
+        v8::Local<v8::Object> nodeObj = node->ToObject();
+        v8::Local<v8::Value> checkValue = GetPrivate(nodeObj, Nan::New("NodeGitPromiseError").ToLocalChecked());
+
+        if (!checkValue.IsEmpty() && !checkValue->IsNull() && !checkValue->IsUndefined()) {
+          v8::Local<v8::Value> argv[1] = {
+            checkValue->ToObject()
+          };
+          callback->Call(1, argv);
+          callbackFired = true;
+          break;
+        }
+
+        v8::Local<v8::Array> properties = nodeObj->GetPropertyNames();
+        for (unsigned int propIndex = 0; propIndex < properties->Length(); ++propIndex) {
+          v8::Local<v8::String> propName = properties->Get(propIndex)->ToString();
+          v8::Local<v8::Value> nodeToQueue = nodeObj->Get(propName);
+          if (!nodeToQueue->IsUndefined()) {
+            workerArguments.push(nodeToQueue);
+          }
+        }
+      }
+
+      if (!callbackFired) {
+        v8::Local<v8::Object> err = Nan::Error("Method findPrefix has thrown an error.")->ToObject();
+        err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        v8::Local<v8::Value> argv[1] = {
+          err
+        };
+        callback->Call(1, argv);
+      }
+    } else {
+      callback->Call(0, NULL);
+    }
+
+  }
+
+
+  delete baton;
+}
+
    
 /*
    * @param Number n
@@ -3442,7 +3701,7 @@ NAN_METHOD(GitIndex::WriteTree) {
   baton->error_code = GIT_OK;
   baton->error = NULL;
 
-        baton->out = (git_oid *)malloc(sizeof(git_oid ));
+      baton->out = (git_oid *)malloc(sizeof(git_oid ));  
   baton->index = Nan::ObjectWrap::Unwrap<GitIndex>(info.This())->GetValue();
 
   Nan::Callback *callback = new Nan::Callback(v8::Local<Function>::Cast(info[0]));
@@ -3589,7 +3848,7 @@ NAN_METHOD(GitIndex::WriteTreeTo) {
   baton->error_code = GIT_OK;
   baton->error = NULL;
 
-        baton->out = (git_oid *)malloc(sizeof(git_oid ));
+      baton->out = (git_oid *)malloc(sizeof(git_oid ));  
   baton->index = Nan::ObjectWrap::Unwrap<GitIndex>(info.This())->GetValue();
 // start convert_from_v8 block
   git_repository * from_repo = NULL;

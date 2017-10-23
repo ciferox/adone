@@ -74,7 +74,7 @@ class GitIndex : public
         : AsyncBatonWithResult<int>(defaultResult) {
         }
     };
-                                                                                            static int RemoveAll_callback_cppCallback (
+                                                                                                 static int RemoveAll_callback_cppCallback (
       const char * path
       ,
        const char * matched_pathspec
@@ -124,7 +124,7 @@ class GitIndex : public
       : NodeGitWrapper<GitIndexTraits>(raw, selfFreeing, owner)
     {}
     ~GitIndex();
-                                                                                                                                          
+                                                                                                                                               
     struct AddBaton {
       int error_code;
       const git_error* error;
@@ -324,6 +324,52 @@ class GitIndex : public
     static NAN_METHOD(EntryStage);
 
     static NAN_METHOD(Entrycount);
+
+    struct FindBaton {
+      int error_code;
+      const git_error* error;
+      size_t * at_pos;
+      git_index * index;
+      const char * path;
+    };
+    class FindWorker : public Nan::AsyncWorker {
+      public:
+        FindWorker(
+            FindBaton *_baton,
+            Nan::Callback *callback
+        ) : Nan::AsyncWorker(callback)
+          , baton(_baton) {};
+        ~FindWorker() {};
+        void Execute();
+        void HandleOKCallback();
+
+      private:
+        FindBaton *baton;
+    };
+
+    static NAN_METHOD(Find);
+
+    struct FindPrefixBaton {
+      int error_code;
+      const git_error* error;
+      size_t * at_pos;
+      git_index * index;
+      const char * prefix;
+    };
+    class FindPrefixWorker : public Nan::AsyncWorker {
+      public:
+        FindPrefixWorker(
+            FindPrefixBaton *_baton,
+            Nan::Callback *callback
+        ) : Nan::AsyncWorker(callback)
+          , baton(_baton) {};
+        ~FindPrefixWorker() {};
+        void Execute();
+        void HandleOKCallback();
+
+      private:
+        FindPrefixBaton *baton;
+    };
 
     static NAN_METHOD(FindPrefix);
 

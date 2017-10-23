@@ -1,7 +1,7 @@
 const {
     fs,
     std: { path },
-    vcs: { git: { Reference, FilterRegistry, Error, Signature, Checkout, Repository } }
+    vcs: { git: { Reference, FilterRegistry, Error: GitError, Signature, Checkout, Repository } }
 } = adone;
 
 const local = path.join.bind(path, __dirname, "fixtures");
@@ -67,7 +67,7 @@ describe("Filter", () => {
 
     afterEach(() => {
         return FilterRegistry.unregister(filterName).catch((error) => {
-            if (error === adone.vcs.git.Error.CODE.ERROR) {
+            if (error === GitError.CODE.ERROR) {
                 throw new Error("Cannot unregister filter");
             }
         });
@@ -85,29 +85,29 @@ describe("Filter", () => {
         it("can register a filter", () => {
             return FilterRegistry.register(filterName, mockFilter, 0)
                 .then((result) => {
-                    assert.strictEqual(result, adone.vcs.git.Error.CODE.OK);
+                    assert.strictEqual(result, GitError.CODE.OK);
                 });
         });
 
         it("can register multiple filters", () => {
             return FilterRegistry.register(filterName, mockFilter, 0)
                 .then((result) => {
-                    assert.strictEqual(result, adone.vcs.git.Error.CODE.OK);
+                    assert.strictEqual(result, GitError.CODE.OK);
                     return FilterRegistry.register(secondFilter, mockFilter, 1);
                 })
                 .then((result) => {
-                    assert.strictEqual(result, adone.vcs.git.Error.CODE.OK);
+                    assert.strictEqual(result, GitError.CODE.OK);
                 });
         });
 
         it("cannot register the same filter twice", () => {
             return FilterRegistry.register(filterName, mockFilter, 0)
                 .then((result) => {
-                    assert.strictEqual(result, adone.vcs.git.Error.CODE.OK);
+                    assert.strictEqual(result, GitError.CODE.OK);
                     return FilterRegistry.register(filterName, mockFilter, 0);
                 })
                 .catch((error) => {
-                    assert.strictEqual(error.errno, adone.vcs.git.Error.CODE.EEXISTS);
+                    assert.strictEqual(error.errno, GitError.CODE.EEXISTS);
                 });
         });
     });
@@ -120,18 +120,18 @@ describe("Filter", () => {
         it("can unregister the filter", () => {
             return FilterRegistry.unregister(filterName)
                 .then((result) => {
-                    assert.strictEqual(result, adone.vcs.git.Error.CODE.OK);
+                    assert.strictEqual(result, GitError.CODE.OK);
                 });
         });
 
         it("cannot unregister the filter twice", () => {
             return FilterRegistry.unregister(filterName).then((result) => {
-                assert.strictEqual(result, adone.vcs.git.Error.CODE.OK);
+                assert.strictEqual(result, GitError.CODE.OK);
                 return FilterRegistry.unregister(filterName);
             }).then((result) => {
                 assert.fail("Should not have unregistered successfully");
             }).catch((error) => {
-                assert.strictEqual(error.errno, adone.vcs.git.Error.CODE.ENOTFOUND);
+                assert.strictEqual(error.errno, GitError.CODE.ENOTFOUND);
             });
         });
     });
@@ -143,14 +143,14 @@ describe("Filter", () => {
             return FilterRegistry.register(filterName, {
                 initialize() {
                     initialized = true;
-                    return adone.vcs.git.Error.CODE.OK;
+                    return GitError.CODE.OK;
                 },
                 apply() { },
                 check() {
-                    return adone.vcs.git.Error.CODE.PASSTHROUGH;
+                    return GitError.CODE.PASSTHROUGH;
                 }
             }, 0).then((result) => {
-                assert.strictEqual(result, adone.vcs.git.Error.CODE.OK);
+                assert.strictEqual(result, GitError.CODE.OK);
             }).then(() => {
                 return fs.writeFile(packageJsonPath, "Changing content to trigger checkout");
             }).then(() => {
@@ -170,14 +170,14 @@ describe("Filter", () => {
             return FilterRegistry.register(filterName, {
                 initialize() {
                     initialized = true;
-                    return adone.vcs.git.Error.CODE.OK;
+                    return GitError.CODE.OK;
                 },
                 apply() { },
                 check() {
-                    return adone.vcs.git.Error.CODE.PASSTHROUGH;
+                    return GitError.CODE.PASSTHROUGH;
                 }
             }, 0).then((result) => {
-                assert.strictEqual(result, adone.vcs.git.Error.CODE.OK);
+                assert.strictEqual(result, GitError.CODE.OK);
                 global.gc && global.gc();
 
                 return fs.writeFile(packageJsonPath, "Changing content to trigger checkout");
@@ -198,14 +198,14 @@ describe("Filter", () => {
             return FilterRegistry.register(filterName, {
                 initialize() {
                     initialized = true;
-                    return adone.vcs.git.Error.CODE.ERROR;
+                    return GitError.CODE.ERROR;
                 },
                 apply() { },
                 check() {
-                    return adone.vcs.git.Error.CODE.PASSTHROUGH;
+                    return GitError.CODE.PASSTHROUGH;
                 }
             }, 0).then((result) => {
-                assert.strictEqual(result, adone.vcs.git.Error.CODE.OK);
+                assert.strictEqual(result, GitError.CODE.OK);
             }).then(() => {
                 return fs.writeFile(packageJsonPath, "Changing content to trigger checkout");
             }).then(() => {
@@ -229,13 +229,13 @@ describe("Filter", () => {
             return FilterRegistry.register(filterName, {
                 apply() { },
                 check() {
-                    return adone.vcs.git.Error.CODE.PASSTHROUGH;
+                    return GitError.CODE.PASSTHROUGH;
                 },
                 shutdown() {
                     shutdown = true;
                 }
             }, 0).then((result) => {
-                assert.strictEqual(result, adone.vcs.git.Error.CODE.OK);
+                assert.strictEqual(result, GitError.CODE.OK);
                 return fs.writeFile(packageJsonPath, "Changing content to trigger checkout", { encoding: "utf-8" });
             }).then(() => {
                 const opts = {
@@ -246,7 +246,7 @@ describe("Filter", () => {
             }).then(() => {
                 return FilterRegistry.unregister(filterName);
             }).then((result) => {
-                assert.strictEqual(result, adone.vcs.git.Error.CODE.OK);
+                assert.strictEqual(result, GitError.CODE.OK);
                 assert.strictEqual(shutdown, true);
             });
         });
@@ -257,13 +257,13 @@ describe("Filter", () => {
             return FilterRegistry.register(filterName, {
                 apply() { },
                 check() {
-                    return adone.vcs.git.Error.CODE.PASSTHROUGH;
+                    return GitError.CODE.PASSTHROUGH;
                 },
                 shutdown() {
                     shutdown = true;
                 }
             }, 0).then((result) => {
-                assert.strictEqual(result, adone.vcs.git.Error.CODE.OK);
+                assert.strictEqual(result, GitError.CODE.OK);
                 return fs.writeFile(packageJsonPath, "Changing content to trigger checkout", { encoding: "utf-8" });
             }).then(() => {
                 const opts = {
@@ -275,7 +275,7 @@ describe("Filter", () => {
                 global.gc && global.gc();
                 return FilterRegistry.unregister(filterName);
             }).then((result) => {
-                assert.strictEqual(result, adone.vcs.git.Error.CODE.OK);
+                assert.strictEqual(result, GitError.CODE.OK);
                 assert.strictEqual(shutdown, true);
             });
         });
@@ -286,14 +286,14 @@ describe("Filter", () => {
             return FilterRegistry.register(filterName, {
                 apply() { },
                 check() {
-                    return adone.vcs.git.Error.CODE.PASSTHROUGH;
+                    return GitError.CODE.PASSTHROUGH;
                 },
                 shutdown() {
                     shutdown = true;
                     throw new Error("I failed");
                 }
             }, 0).then((result) => {
-                assert.strictEqual(result, adone.vcs.git.Error.CODE.OK);
+                assert.strictEqual(result, GitError.CODE.OK);
                 return fs.writeFile(packageJsonPath, "Changing content to trigger checkout", { encoding: "utf-8" });
             }).then(() => {
                 const opts = {
@@ -304,7 +304,7 @@ describe("Filter", () => {
             }).then(() => {
                 return FilterRegistry.unregister(filterName);
             }).then((result) => {
-                assert.strictEqual(result, adone.vcs.git.Error.CODE.OK);
+                assert.strictEqual(result, GitError.CODE.OK);
                 assert.strictEqual(shutdown, true);
             }).catch((error) => {
                 assert.fail(error, null, "The operation should not have failed");
@@ -316,6 +316,19 @@ describe("Filter", () => {
         const message = "some new fancy filter";
         const length = message.length;
         const tempBuffer = Buffer.from(message, "utf8");
+        const largeBufferSize = 500000000;
+
+        before(function () {
+            const test = this;
+            return fs.readFile(readmePath, "utf8").then(((content) => {
+                test.originalReadmeContent = content;
+            }));
+        });
+
+        afterEach(function () {
+            this.timeout(15000);
+            return fs.writeFile(readmePath, this.originalReadmeContent);
+        });
 
         it("should not apply when check returns GIT_PASSTHROUGH", function () {
             const test = this;
@@ -326,10 +339,10 @@ describe("Filter", () => {
                     applied = true;
                 },
                 check() {
-                    return adone.vcs.git.Error.CODE.PASSTHROUGH;
+                    return GitError.CODE.PASSTHROUGH;
                 }
             }, 0).then((result) => {
-                assert.strictEqual(result, adone.vcs.git.Error.CODE.OK);
+                assert.strictEqual(result, GitError.CODE.OK);
                 return fs.writeFile(packageJsonPath, "Changing content to trigger checkout", { encoding: "utf-8" });
             }).then(() => {
                 const opts = {
@@ -351,10 +364,10 @@ describe("Filter", () => {
                     applied = true;
                 },
                 check() {
-                    return adone.vcs.git.Error.CODE.OK;
+                    return GitError.CODE.OK;
                 }
             }, 0).then((result) => {
-                assert.strictEqual(result, adone.vcs.git.Error.CODE.OK);
+                assert.strictEqual(result, GitError.CODE.OK);
                 return fs.writeFile(packageJsonPath, "Changing content to trigger checkout", { encoding: "utf-8" }
                 );
             }).then(() => {
@@ -376,14 +389,14 @@ describe("Filter", () => {
                 apply(to, from, source) {
                     return to.set(tempBuffer, length)
                         .then(() => {
-                            return adone.vcs.git.Error.CODE.PASSTHROUGH;
+                            return GitError.CODE.PASSTHROUGH;
                         });
                 },
                 check() {
-                    return adone.vcs.git.Error.CODE.OK;
+                    return GitError.CODE.OK;
                 }
             }, 0).then((result) => {
-                assert.strictEqual(result, adone.vcs.git.Error.CODE.OK);
+                assert.strictEqual(result, GitError.CODE.OK);
             }).then(() => {
                 const readmeContent = fs.readFileSync(packageJsonPath, { encoding: "utf8" });
                 assert.notStrictEqual(readmeContent, message);
@@ -407,12 +420,12 @@ describe("Filter", () => {
 
             return FilterRegistry.register(filterName, {
                 apply(to, from, source) {
-                    return to.set(tempBuffer, length).then((buf) => {
-                        return adone.vcs.git.Error.CODE.OK;
+                    return to.set(tempBuffer, length).then(() => {
+                        return GitError.CODE.OK;
                     });
                 },
                 check(src, attr) {
-                    return adone.vcs.git.Error.CODE.OK;
+                    return GitError.CODE.OK;
                 }
             }, 0).then((result) => {
                 assert.strictEqual(result, 0);
@@ -433,20 +446,64 @@ describe("Filter", () => {
             });
         });
 
+        // this test is useless on 32 bit CI, because we cannot construct
+        // a buffer big enough to test anything of significance :)...
+        if (process.arch === "x64") {
+            it("applies the massive filter data on checkout", function () {
+                this.timeout(350000);
+                const test = this;
+                const largeBuffer = Buffer.alloc(largeBufferSize, "a");
+
+                return FilterRegistry.register(filterName, {
+                    apply(to, from, source) {
+                        return to.set(largeBuffer, largeBufferSize).then(() => {
+                            return GitError.CODE.OK;
+                        });
+                    },
+                    check(src, attr) {
+                        return GitError.CODE.OK;
+                    }
+                }, 0).then((result) => {
+                    assert.strictEqual(result, 0);
+                }).then(() => {
+                    const fd = fs.fd.openSync(readmePath, "r");
+                    const readBuf = Buffer.allocUnsafe(largeBufferSize);
+                    const readLength = fs.fd.readSync(fd, readBuf, 0, largeBufferSize, 0);
+                    fs.fd.closeSync(fd);
+
+                    assert.notStrictEqual(readLength, largeBufferSize);
+                    fs.writeFileSync(readmePath, "whoa", "utf8");
+
+                    const opts = {
+                        checkoutStrategy: Checkout.STRATEGY.FORCE,
+                        paths: ["README.md"]
+                    };
+                    return Checkout.head(test.repository, opts);
+                }).then(() => {
+                    const fd = fs.fd.openSync(readmePath, "r");
+                    const readBuf = Buffer.allocUnsafe(largeBufferSize);
+                    const readLength = fs.fd.readSync(fd, readBuf, 0, largeBufferSize, 0);
+                    fs.fd.closeSync(fd);
+
+                    assert.strictEqual(readLength, largeBufferSize);
+                });
+            });
+        }
+
         it.skip("applies the filter data on checkout with gc", function () {
             const test = this;
 
             return FilterRegistry.register(filterName, {
                 apply(to, from, source) {
-                    return to.set(tempBuffer, length).then((buf) => {
-                        return adone.vcs.git.Error.CODE.OK;
+                    return to.set(tempBuffer, length).then(() => {
+                        return GitError.CODE.OK;
                     });
                 },
                 check(src, attr) {
-                    return adone.vcs.git.Error.CODE.OK;
+                    return GitError.CODE.OK;
                 }
             }, 0).then((result) => {
-                assert.strictEqual(result, adone.vcs.git.Error.CODE.OK);
+                assert.strictEqual(result, GitError.CODE.OK);
             }).then(() => {
                 const readmeContent = fs.readFileSync(readmePath, { encoding: "utf8" });
                 assert.notStrictEqual(readmeContent, message);
@@ -470,16 +527,16 @@ describe("Filter", () => {
 
             return FilterRegistry.register(filterName, {
                 apply(to, from, source) {
-                    return to.set(tempBuffer, length).then((buf) => {
-                        return adone.vcs.git.Error.CODE.OK;
+                    return to.set(tempBuffer, length).then(() => {
+                        return GitError.CODE.OK;
                     });
                 },
                 check(src, attr) {
-                    return src.path() === "README.md" ? 0 : adone.vcs.git.Error.CODE.PASSTHROUGH;
+                    return src.path() === "README.md" ? 0 : GitError.CODE.PASSTHROUGH;
                 },
                 cleanup() { }
             }, 0).then((result) => {
-                assert.strictEqual(result, adone.vcs.git.Error.CODE.OK);
+                assert.strictEqual(result, GitError.CODE.OK);
             }).then(() => {
                 const readmeContent = fs.readFileSync(readmePath, { encoding: "utf8" });
                 assert.notStrictEqual(readmeContent, "testing commit contents");
@@ -512,17 +569,17 @@ describe("Filter", () => {
 
             return FilterRegistry.register(filterName, {
                 apply(to, from, source) {
-                    return to.set(tempBuffer, length).then((buf) => {
-                        return adone.vcs.git.Error.CODE.OK;
+                    return to.set(tempBuffer, length).then(() => {
+                        return GitError.CODE.OK;
                     });
                 },
                 check(src, attr) {
-                    return src.path() === "README.md" ? 0 : adone.vcs.git.Error.CODE.PASSTHROUGH;
+                    return src.path() === "README.md" ? 0 : GitError.CODE.PASSTHROUGH;
                 },
                 cleanup() { }
             }, 0).then((result) => {
                 global.gc && global.gc();
-                assert.strictEqual(result, adone.vcs.git.Error.CODE.OK);
+                assert.strictEqual(result, GitError.CODE.OK);
             }).then(() => {
                 const readmeContent = fs.readFileSync(readmePath, { encoding: "utf8" });
                 assert.notStrictEqual(readmeContent, "testing commit contents");
@@ -559,19 +616,19 @@ describe("Filter", () => {
             let cleaned = false;
             return FilterRegistry.register(filterName, {
                 initialize() {
-                    return adone.vcs.git.Error.CODE.OK;
+                    return GitError.CODE.OK;
                 },
                 apply() {
-                    return adone.vcs.git.Error.CODE.OK;
+                    return GitError.CODE.OK;
                 },
                 check() {
-                    return adone.vcs.git.Error.CODE.OK;
+                    return GitError.CODE.OK;
                 },
                 cleanup() {
                     cleaned = true;
                 }
             }, 0).then((result) => {
-                assert.strictEqual(result, adone.vcs.git.Error.CODE.OK);
+                assert.strictEqual(result, GitError.CODE.OK);
             }).then(() => {
                 const packageContent = fs.readFileSync(packageJsonPath, { encoding: "utf8" });
                 assert.notEqual(packageContent, "");
@@ -593,19 +650,19 @@ describe("Filter", () => {
             let cleaned = false;
             return FilterRegistry.register(filterName, {
                 initialize() {
-                    return adone.vcs.git.Error.CODE.OK;
+                    return GitError.CODE.OK;
                 },
                 apply() {
-                    return adone.vcs.git.Error.CODE.OK;
+                    return GitError.CODE.OK;
                 },
                 check() {
-                    return adone.vcs.git.Error.CODE.OK;
+                    return GitError.CODE.OK;
                 },
                 cleanup() {
                     cleaned = true;
                 }
             }, 0).then((result) => {
-                assert.strictEqual(result, adone.vcs.git.Error.CODE.OK);
+                assert.strictEqual(result, GitError.CODE.OK);
             }).then(() => {
                 const packageContent = fs.readFileSync(packageJsonPath, { encoding: "utf8" });
                 assert.notEqual(packageContent, "");
@@ -629,19 +686,19 @@ describe("Filter", () => {
 
             return FilterRegistry.register(filterName, {
                 initialize() {
-                    return adone.vcs.git.Error.CODE.OK;
+                    return GitError.CODE.OK;
                 },
                 apply() {
-                    return adone.vcs.git.Error.CODE.OK;
+                    return GitError.CODE.OK;
                 },
                 check() {
-                    return adone.vcs.git.Error.CODE.PASSTHROUGH;
+                    return GitError.CODE.PASSTHROUGH;
                 },
                 cleanup() {
                     cleaned = true;
                 }
             }, 0).then((result) => {
-                assert.strictEqual(result, adone.vcs.git.Error.CODE.OK);
+                assert.strictEqual(result, GitError.CODE.OK);
             }).then(() => {
                 const packageContent = fs.readFileSync(packageJsonPath, { encoding: "utf8" });
                 const readmeContent = fs.readFileSync(readmePath, { encoding: "utf8" });

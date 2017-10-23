@@ -107,7 +107,7 @@ NAN_METHOD(GitTag::AnnotationCreate) {
   baton->error_code = GIT_OK;
   baton->error = NULL;
 
-        baton->oid = (git_oid *)malloc(sizeof(git_oid ));
+      baton->oid = (git_oid *)malloc(sizeof(git_oid ));  
 // start convert_from_v8 block
   git_repository * from_repo = NULL;
 from_repo = Nan::ObjectWrap::Unwrap<GitRepository>(info[0]->ToObject())->GetValue();
@@ -339,7 +339,7 @@ NAN_METHOD(GitTag::Create) {
   baton->error_code = GIT_OK;
   baton->error = NULL;
 
-        baton->oid = (git_oid *)malloc(sizeof(git_oid ));
+      baton->oid = (git_oid *)malloc(sizeof(git_oid ));  
 // start convert_from_v8 block
   git_repository * from_repo = NULL;
 from_repo = Nan::ObjectWrap::Unwrap<GitRepository>(info[0]->ToObject())->GetValue();
@@ -569,7 +569,7 @@ NAN_METHOD(GitTag::CreateLightweight) {
   baton->error_code = GIT_OK;
   baton->error = NULL;
 
-        baton->oid = (git_oid *)malloc(sizeof(git_oid ));
+      baton->oid = (git_oid *)malloc(sizeof(git_oid ));  
 // start convert_from_v8 block
   git_repository * from_repo = NULL;
 from_repo = Nan::ObjectWrap::Unwrap<GitRepository>(info[0]->ToObject())->GetValue();
@@ -1118,7 +1118,7 @@ NAN_METHOD(GitTag::List) {
   baton->error_code = GIT_OK;
   baton->error = NULL;
 
-        baton->tag_names = (git_strarray *)malloc(sizeof(git_strarray ));
+      baton->tag_names = (git_strarray *)malloc(sizeof(git_strarray ));  
 // start convert_from_v8 block
   git_repository * from_repo = NULL;
 from_repo = Nan::ObjectWrap::Unwrap<GitRepository>(info[0]->ToObject())->GetValue();

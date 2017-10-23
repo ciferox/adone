@@ -534,7 +534,7 @@ NAN_METHOD(GitOdb::Write) {
   baton->error_code = GIT_OK;
   baton->error = NULL;
 
-        baton->out = (git_oid *)malloc(sizeof(git_oid ));
+      baton->out = (git_oid *)malloc(sizeof(git_oid ));  
   baton->odb = Nan::ObjectWrap::Unwrap<GitOdb>(info.This())->GetValue();
 // start convert_from_v8 block
   const void * from_data = NULL;

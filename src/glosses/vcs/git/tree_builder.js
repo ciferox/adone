@@ -6,7 +6,6 @@ const {
 
 const TreeBuilder = native.Treebuilder;
 
-TreeBuilder.prototype.insert = promisifyAll(TreeBuilder.prototype.insert);
 TreeBuilder.create = promisifyAll(TreeBuilder.create);
 
 export default TreeBuilder;

@@ -66,8 +66,8 @@ NAN_METHOD(GitGraph::AheadBehind) {
   baton->error_code = GIT_OK;
   baton->error = NULL;
 
-        baton->ahead = (size_t *)malloc(sizeof(size_t ));
-        baton->behind = (size_t *)malloc(sizeof(size_t ));
+      baton->ahead = (size_t *)malloc(sizeof(size_t ));  
+      baton->behind = (size_t *)malloc(sizeof(size_t ));  
 // start convert_from_v8 block
   git_repository * from_repo = NULL;
 from_repo = Nan::ObjectWrap::Unwrap<GitRepository>(info[0]->ToObject())->GetValue();

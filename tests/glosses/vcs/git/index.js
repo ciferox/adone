@@ -4,13 +4,14 @@ import IndexUtils from "./utils/index_setup";
 const {
     fs,
     std: { path },
-    vcs: { git: { Checkout, Repository, Signature } }
+    vcs: { git: { Error: GitError, Checkout, Repository, Signature } }
 } = adone;
 
 const local = path.join.bind(path, __dirname, "fixtures");
 
 describe("Index", () => {
     const reposPath = local("repos/workdir");
+    const ErrorCodes = GitError.CODE;
 
     beforeEach(function () {
         const test = this;
@@ -295,6 +296,61 @@ describe("Index", () => {
             return repo.index();
         }).then((index) => {
             assert(index.hasConflicts());
+        });
+    });
+
+    it("can find the specified file in the index", function () {
+        const test = this;
+
+        return test.index.find("src/wrapper.cc")
+            .then((position) => {
+                assert.notEqual(position, null);
+            });
+    });
+
+    it("cannot find the specified file in the index", function () {
+        const test = this;
+
+        return test.index.find("src/thisisfake.cc").then((position) => {
+            assert.fail("the item should not be found");
+        }).catch((error) => {
+            assert.strictEqual(error.errno, ErrorCodes.ENOTFOUND);
+        });
+    });
+
+    it("cannot find the directory in the index", function () {
+        const test = this;
+
+        return test.index.find("src").then((position) => {
+            assert.fail("the item should not be found");
+        }).catch((error) => {
+            assert.strictEqual(error.errno, ErrorCodes.ENOTFOUND);
+        });
+    });
+
+    it("can find the specified prefix in the index", function () {
+        const test = this;
+
+        return test.index.findPrefix("src/").then((position) => {
+            assert.notEqual(position, null);
+        });
+    });
+
+    it("cannot find the specified prefix in the index", function () {
+        const test = this;
+
+        return test.index.find("testing123/").then((position) => {
+            assert.fail("the item should not be found");
+        }).catch((error) => {
+            assert.strictEqual(error.errno, ErrorCodes.ENOTFOUND);
+        });
+    });
+
+    it("can find the prefix when a file shares the name", function () {
+        const test = this;
+
+        return test.index.find("LICENSE").then((position) => {
+            assert.notEqual(position, null);
         });
     });
 });

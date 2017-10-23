@@ -122,7 +122,7 @@ NAN_METHOD(GitStatus::File) {
   baton->error_code = GIT_OK;
   baton->error = NULL;
 
-        baton->status_flags = (unsigned int *)malloc(sizeof(unsigned int ));
+      baton->status_flags = (unsigned int *)malloc(sizeof(unsigned int ));  
 // start convert_from_v8 block
   git_repository * from_repo = NULL;
 from_repo = Nan::ObjectWrap::Unwrap<GitRepository>(info[0]->ToObject())->GetValue();
