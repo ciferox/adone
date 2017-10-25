@@ -1,15 +1,15 @@
 import defineType, { assertNodeType } from "./index";
 
 defineType("Noop", {
-    visitor: []
+  visitor: [],
 });
 
 defineType("ParenthesizedExpression", {
-    visitor: ["expression"],
-    aliases: ["Expression", "ExpressionWrapper"],
-    fields: {
-        expression: {
-            validate: assertNodeType("Expression")
-        }
-    }
+  visitor: ["expression"],
+  aliases: ["Expression", "ExpressionWrapper"],
+  fields: {
+    expression: {
+      validate: assertNodeType("Expression"),
+    },
+  },
 });

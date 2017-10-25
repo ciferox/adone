@@ -1,96 +1,82 @@
-/* global BabelFileResult */
-import File from "./file";
-import loadConfig from "../config";
+// @flow
+// import traverse from "@babel/traverse";
+// import type { SourceMap } from "convert-source-map";
+
+import type { ResolvedConfig, PluginPasses } from "../config";
+
+import PluginPass from "./plugin-pass";
+import loadBlockHoistPlugin from "./block-hoist-plugin";
+import normalizeOptions from "./normalize-opts";
+import normalizeFile from "./normalize-file";
+
+import generateCode from "./file/generate";
+import File from "./file/file";
 
 const {
-    is,
-    std: { fs },
-    js: { compiler: { types: t } }
+  js: { compiler: { traverse } }
 } = adone;
 
-export const transform = (code: string, opts?: Object): BabelFileResult => {
-    const config = loadConfig(opts);
-    if (is.null(config)) {
-        return null;
-    }
-
-    const file = new File(config);
-    return file.wrap(code, () => {
-        file.addCode(code);
-        file.parseCode(code);
-        return file.transform();
-    });
+export type FileResult = {
+  metadata: {},
+  options: {},
+  ast: {} | null,
+  code: string | null,
+  map: SourceMap | null,
 };
 
-export const transformFromAst = (ast: Object, code: string, opts: Object): BabelFileResult => {
-    const config = loadConfig(opts);
-    if (is.null(config)) {
-        return null;
+export default function runTransform(
+  config: ResolvedConfig,
+  code: string,
+  ast?: {},
+): FileResult {
+  const options = normalizeOptions(config);
+  const input = normalizeFile(options, code, ast);
+
+  const file = new File(options, input);
+
+  transformFile(file, config.passes);
+
+  const { outputCode, outputMap } = options.code ? generateCode(file) : {};
+
+  return {
+    metadata: file.metadata,
+    options: options,
+    ast: options.ast ? file.ast : null,
+    code: outputCode === undefined ? null : outputCode,
+    map: outputMap === undefined ? null : outputMap,
+  };
+}
+
+function transformFile(file: File, pluginPasses: PluginPasses): void {
+  for (const pluginPairs of pluginPasses) {
+    const passPairs = [];
+    const passes = [];
+    const visitors = [];
+
+    for (const plugin of pluginPairs.concat([loadBlockHoistPlugin()])) {
+      const pass = new PluginPass(file, plugin.key, plugin.options);
+
+      passPairs.push([plugin, pass]);
+      passes.push(pass);
+      visitors.push(plugin.visitor);
     }
 
-    if (ast && ast.type === "Program") {
-        ast = t.file(ast, [], []);
-    } else if (!ast || ast.type !== "File") {
-        throw new Error("Not a valid ast?");
+    for (const [plugin, pass] of passPairs) {
+      const fn = plugin.pre;
+      if (fn) fn.call(pass, file);
     }
 
-    const file = new File(config);
-    return file.wrap(code, () => {
-        file.addCode(code);
-        file.addAst(ast);
-        return file.transform();
-    });
-};
+    // merge all plugin visitors into a single visitor
+    const visitor = traverse.visitors.merge(
+      visitors,
+      passes,
+      file.opts.wrapPluginVisitorMethod,
+    );
+    traverse(file.ast, visitor, file.scope);
 
-export const transformFile = (filename: string, opts?: Object, callback: Function) => {
-    if (is.function(opts)) {
-        callback = opts;
-        opts = {};
+    for (const [plugin, pass] of passPairs) {
+      const fn = plugin.post;
+      if (fn) fn.call(pass, file);
     }
-
-    opts.filename = filename;
-    const config = loadConfig(opts);
-    if (is.null(config)) {
-        return callback(null, null);
-    }
-
-    fs.readFile(filename, (err, code) => {
-        let result;
-
-        if (!err) {
-            try {
-                const file = new File(config);
-                result = file.wrap(code, () => {
-                    file.addCode(code);
-                    file.parseCode(code);
-                    return file.transform();
-                });
-            } catch (_err) {
-                err = _err;
-            }
-        }
-
-        if (err) {
-            callback(err);
-        } else {
-            callback(null, result);
-        }
-    });
-};
-
-export const transformFileSync = (filename: string, opts?: Object = {}): string => {
-    opts.filename = filename;
-    const config = loadConfig(opts);
-    if (is.null(config)) {
-        return null;
-    }
-
-    const code = fs.readFileSync(filename, "utf8");
-    const file = new File(config);
-
-    return file.wrap(code, () => {
-        file.addCode(code);
-        file.parseCode(code);
-        return file.transform();
-    });
-};
+  }
+}

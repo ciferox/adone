@@ -1,7 +1,9 @@
-export default function () {
+export default function (c, options) {
+    const { spec } = options;
+
     return {
         visitor: {
-            ArrowFunctionExpression(path, state: Object) {
+            ArrowFunctionExpression(path) {
                 // In some conversion cases, it may have already been converted to a function while this callback
                 // was queued up.
                 if (!path.isArrowFunctionExpression()) {
@@ -12,7 +14,7 @@ export default function () {
                     // While other utils may be fine inserting other arrows to make more transforms possible,
                     // the arrow transform itself absolutely cannot insert new arrow functions.
                     allowInsertArrow: false,
-                    specCompliant: Boolean(state.opts.spec)
+                    specCompliant: Boolean(spec)
                 });
             }
         }

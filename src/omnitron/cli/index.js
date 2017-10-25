@@ -5,6 +5,13 @@ const {
     omnitron
 } = adone;
 
+const {
+    Command,
+    MainCommand,
+    CliSubsystem,
+    CommandsGroup
+} = application.CliApplication;
+
 const { STATUSES } = omnitron;
 
 const __ = adone.lazify({

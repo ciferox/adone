@@ -16,8 +16,7 @@ const getTDZStatus = (refPath, bindingPath) => {
 const buildTDZAssert = (node, file) => {
     return t.callExpression(file.addHelper("temporalRef"), [
         node,
-        t.stringLiteral(node.name),
-        file.addHelper("temporalUndefined")
+        t.stringLiteral(node.name)
     ]);
 };
 

@@ -3,853 +3,853 @@
 import * as t from "../index";
 
 import {
-    BINARY_OPERATORS,
-    LOGICAL_OPERATORS,
-    UNARY_OPERATORS,
-    UPDATE_OPERATORS
+  BINARY_OPERATORS,
+  LOGICAL_OPERATORS,
+  UNARY_OPERATORS,
+  UPDATE_OPERATORS,
 } from "../constants";
 
 import defineType, {
-    assertValueType,
-    assertNodeType,
-    assertNodeOrValueType,
-    assertEach,
-    chain,
-    assertOneOf
+  assertValueType,
+  assertNodeType,
+  assertNodeOrValueType,
+  assertEach,
+  chain,
+  assertOneOf,
 } from "./index";
 
 defineType("ArrayExpression", {
-    fields: {
-        elements: {
-            validate: chain(
-                assertValueType("array"),
-                assertEach(
-                    assertNodeOrValueType("null", "Expression", "SpreadElement"),
-                ),
-            ),
-            default: []
-        }
+  fields: {
+    elements: {
+      validate: chain(
+        assertValueType("array"),
+        assertEach(
+          assertNodeOrValueType("null", "Expression", "SpreadElement"),
+        ),
+      ),
+      default: [],
     },
-    visitor: ["elements"],
-    aliases: ["Expression"]
+  },
+  visitor: ["elements"],
+  aliases: ["Expression"],
 });
 
 defineType("AssignmentExpression", {
-    fields: {
-        operator: {
-            validate: assertValueType("string")
-        },
-        left: {
-            validate: assertNodeType("LVal")
-        },
-        right: {
-            validate: assertNodeType("Expression")
-        }
+  fields: {
+    operator: {
+      validate: assertValueType("string"),
     },
-    builder: ["operator", "left", "right"],
-    visitor: ["left", "right"],
-    aliases: ["Expression"]
+    left: {
+      validate: assertNodeType("LVal"),
+    },
+    right: {
+      validate: assertNodeType("Expression"),
+    },
+  },
+  builder: ["operator", "left", "right"],
+  visitor: ["left", "right"],
+  aliases: ["Expression"],
 });
 
 defineType("BinaryExpression", {
-    builder: ["operator", "left", "right"],
-    fields: {
-        operator: {
-            validate: assertOneOf(...BINARY_OPERATORS)
-        },
-        left: {
-            validate: assertNodeType("Expression")
-        },
-        right: {
-            validate: assertNodeType("Expression")
-        }
+  builder: ["operator", "left", "right"],
+  fields: {
+    operator: {
+      validate: assertOneOf(...BINARY_OPERATORS),
     },
-    visitor: ["left", "right"],
-    aliases: ["Binary", "Expression"]
+    left: {
+      validate: assertNodeType("Expression"),
+    },
+    right: {
+      validate: assertNodeType("Expression"),
+    },
+  },
+  visitor: ["left", "right"],
+  aliases: ["Binary", "Expression"],
 });
 
 defineType("Directive", {
-    visitor: ["value"],
-    fields: {
-        value: {
-            validate: assertNodeType("DirectiveLiteral")
-        }
-    }
+  visitor: ["value"],
+  fields: {
+    value: {
+      validate: assertNodeType("DirectiveLiteral"),
+    },
+  },
 });
 
 defineType("DirectiveLiteral", {
-    builder: ["value"],
-    fields: {
-        value: {
-            validate: assertValueType("string")
-        }
-    }
+  builder: ["value"],
+  fields: {
+    value: {
+      validate: assertValueType("string"),
+    },
+  },
 });
 
 defineType("BlockStatement", {
-    builder: ["body", "directives"],
-    visitor: ["directives", "body"],
-    fields: {
-        directives: {
-            validate: chain(
-                assertValueType("array"),
-                assertEach(assertNodeType("Directive")),
-            ),
-            default: []
-        },
-        body: {
-            validate: chain(
-                assertValueType("array"),
-                assertEach(assertNodeType("Statement")),
-            )
-        }
+  builder: ["body", "directives"],
+  visitor: ["directives", "body"],
+  fields: {
+    directives: {
+      validate: chain(
+        assertValueType("array"),
+        assertEach(assertNodeType("Directive")),
+      ),
+      default: [],
     },
-    aliases: ["Scopable", "BlockParent", "Block", "Statement"]
+    body: {
+      validate: chain(
+        assertValueType("array"),
+        assertEach(assertNodeType("Statement")),
+      ),
+    },
+  },
+  aliases: ["Scopable", "BlockParent", "Block", "Statement"],
 });
 
 defineType("BreakStatement", {
-    visitor: ["label"],
-    fields: {
-        label: {
-            validate: assertNodeType("Identifier"),
-            optional: true
-        }
+  visitor: ["label"],
+  fields: {
+    label: {
+      validate: assertNodeType("Identifier"),
+      optional: true,
     },
-    aliases: ["Statement", "Terminatorless", "CompletionStatement"]
+  },
+  aliases: ["Statement", "Terminatorless", "CompletionStatement"],
 });
 
 defineType("CallExpression", {
-    visitor: ["callee", "arguments", "typeParameters"],
-    builder: ["callee", "arguments"],
-    aliases: ["Expression"],
-    fields: {
-        callee: {
-            validate: assertNodeType("Expression")
-        },
-        arguments: {
-            validate: chain(
-                assertValueType("array"),
-                assertEach(assertNodeType("Expression", "SpreadElement")),
-            )
-        },
-        optional: {
-            validate: assertOneOf(true, false),
-            optional: true
-        },
-        typeParameters: {
-            validate: assertNodeType("TypeParameterInstantiation"),
-            optional: true
-        }
-    }
+  visitor: ["callee", "arguments", "typeParameters"],
+  builder: ["callee", "arguments"],
+  aliases: ["Expression"],
+  fields: {
+    callee: {
+      validate: assertNodeType("Expression"),
+    },
+    arguments: {
+      validate: chain(
+        assertValueType("array"),
+        assertEach(assertNodeType("Expression", "SpreadElement")),
+      ),
+    },
+    optional: {
+      validate: assertOneOf(true, false),
+      optional: true,
+    },
+    typeParameters: {
+      validate: assertNodeType("TypeParameterInstantiation"),
+      optional: true,
+    },
+  },
 });
 
 defineType("CatchClause", {
-    visitor: ["param", "body"],
-    fields: {
-        param: {
-            validate: assertNodeType("Identifier"),
-            optional: true
-        },
-        body: {
-            validate: assertNodeType("BlockStatement")
-        }
+  visitor: ["param", "body"],
+  fields: {
+    param: {
+      validate: assertNodeType("Identifier"),
+      optional: true,
     },
-    aliases: ["Scopable", "BlockParent"]
+    body: {
+      validate: assertNodeType("BlockStatement"),
+    },
+  },
+  aliases: ["Scopable", "BlockParent"],
 });
 
 defineType("ConditionalExpression", {
-    visitor: ["test", "consequent", "alternate"],
-    fields: {
-        test: {
-            validate: assertNodeType("Expression")
-        },
-        consequent: {
-            validate: assertNodeType("Expression")
-        },
-        alternate: {
-            validate: assertNodeType("Expression")
-        }
+  visitor: ["test", "consequent", "alternate"],
+  fields: {
+    test: {
+      validate: assertNodeType("Expression"),
     },
-    aliases: ["Expression", "Conditional"]
+    consequent: {
+      validate: assertNodeType("Expression"),
+    },
+    alternate: {
+      validate: assertNodeType("Expression"),
+    },
+  },
+  aliases: ["Expression", "Conditional"],
 });
 
 defineType("ContinueStatement", {
-    visitor: ["label"],
-    fields: {
-        label: {
-            validate: assertNodeType("Identifier"),
-            optional: true
-        }
+  visitor: ["label"],
+  fields: {
+    label: {
+      validate: assertNodeType("Identifier"),
+      optional: true,
     },
-    aliases: ["Statement", "Terminatorless", "CompletionStatement"]
+  },
+  aliases: ["Statement", "Terminatorless", "CompletionStatement"],
 });
 
 defineType("DebuggerStatement", {
-    aliases: ["Statement"]
+  aliases: ["Statement"],
 });
 
 defineType("DoWhileStatement", {
-    visitor: ["test", "body"],
-    fields: {
-        test: {
-            validate: assertNodeType("Expression")
-        },
-        body: {
-            validate: assertNodeType("Statement")
-        }
+  visitor: ["test", "body"],
+  fields: {
+    test: {
+      validate: assertNodeType("Expression"),
     },
-    aliases: ["Statement", "BlockParent", "Loop", "While", "Scopable"]
+    body: {
+      validate: assertNodeType("Statement"),
+    },
+  },
+  aliases: ["Statement", "BlockParent", "Loop", "While", "Scopable"],
 });
 
 defineType("EmptyStatement", {
-    aliases: ["Statement"]
+  aliases: ["Statement"],
 });
 
 defineType("ExpressionStatement", {
-    visitor: ["expression"],
-    fields: {
-        expression: {
-            validate: assertNodeType("Expression")
-        }
+  visitor: ["expression"],
+  fields: {
+    expression: {
+      validate: assertNodeType("Expression"),
     },
-    aliases: ["Statement", "ExpressionWrapper"]
+  },
+  aliases: ["Statement", "ExpressionWrapper"],
 });
 
 defineType("File", {
-    builder: ["program", "comments", "tokens"],
-    visitor: ["program"],
-    fields: {
-        program: {
-            validate: assertNodeType("Program")
-        }
-    }
+  builder: ["program", "comments", "tokens"],
+  visitor: ["program"],
+  fields: {
+    program: {
+      validate: assertNodeType("Program"),
+    },
+  },
 });
 
 defineType("ForInStatement", {
-    visitor: ["left", "right", "body"],
-    aliases: [
-        "Scopable",
-        "Statement",
-        "For",
-        "BlockParent",
-        "Loop",
-        "ForXStatement"
-    ],
-    fields: {
-        left: {
-            validate: assertNodeType("VariableDeclaration", "LVal")
-        },
-        right: {
-            validate: assertNodeType("Expression")
-        },
-        body: {
-            validate: assertNodeType("Statement")
-        }
-    }
+  visitor: ["left", "right", "body"],
+  aliases: [
+    "Scopable",
+    "Statement",
+    "For",
+    "BlockParent",
+    "Loop",
+    "ForXStatement",
+  ],
+  fields: {
+    left: {
+      validate: assertNodeType("VariableDeclaration", "LVal"),
+    },
+    right: {
+      validate: assertNodeType("Expression"),
+    },
+    body: {
+      validate: assertNodeType("Statement"),
+    },
+  },
 });
 
 defineType("ForStatement", {
-    visitor: ["init", "test", "update", "body"],
-    aliases: ["Scopable", "Statement", "For", "BlockParent", "Loop"],
-    fields: {
-        init: {
-            validate: assertNodeType("VariableDeclaration", "Expression"),
-            optional: true
-        },
-        test: {
-            validate: assertNodeType("Expression"),
-            optional: true
-        },
-        update: {
-            validate: assertNodeType("Expression"),
-            optional: true
-        },
-        body: {
-            validate: assertNodeType("Statement")
-        }
-    }
+  visitor: ["init", "test", "update", "body"],
+  aliases: ["Scopable", "Statement", "For", "BlockParent", "Loop"],
+  fields: {
+    init: {
+      validate: assertNodeType("VariableDeclaration", "Expression"),
+      optional: true,
+    },
+    test: {
+      validate: assertNodeType("Expression"),
+      optional: true,
+    },
+    update: {
+      validate: assertNodeType("Expression"),
+      optional: true,
+    },
+    body: {
+      validate: assertNodeType("Statement"),
+    },
+  },
 });
 
 export const functionCommon = {
-    params: {
-        validate: chain(
-            assertValueType("array"),
-            assertEach(assertNodeType("LVal")),
-        )
-    },
-    generator: {
-        default: false,
-        validate: assertValueType("boolean")
-    },
-    async: {
-        validate: assertValueType("boolean"),
-        default: false
-    },
-    returnType: {
-        validate: assertNodeType("TypeAnnotation", "Noop"),
-        optional: true
-    },
-    typeParameters: {
-        validate: assertNodeType("TypeParameterDeclaration", "Noop"),
-        optional: true
-    }
+  params: {
+    validate: chain(
+      assertValueType("array"),
+      assertEach(assertNodeType("LVal")),
+    ),
+  },
+  generator: {
+    default: false,
+    validate: assertValueType("boolean"),
+  },
+  async: {
+    validate: assertValueType("boolean"),
+    default: false,
+  },
+  returnType: {
+    validate: assertNodeType("TypeAnnotation", "TSTypeAnnotation", "Noop"),
+    optional: true,
+  },
+  typeParameters: {
+    validate: assertNodeType("TypeParameterDeclaration", "Noop"),
+    optional: true,
+  },
 };
 
 export const functionDeclarationCommon = {
-    ...functionCommon,
-    declare: {
-        validate: assertValueType("boolean"),
-        optional: true
-    },
-    id: {
-        validate: assertNodeType("Identifier"),
-        optional: true // May be null for `export default function`
-    }
+  ...functionCommon,
+  declare: {
+    validate: assertValueType("boolean"),
+    optional: true,
+  },
+  id: {
+    validate: assertNodeType("Identifier"),
+    optional: true, // May be null for `export default function`
+  },
 };
 
 defineType("FunctionDeclaration", {
-    builder: ["id", "params", "body", "generator", "async"],
-    visitor: ["id", "params", "body", "returnType", "typeParameters"],
-    fields: {
-        ...functionDeclarationCommon,
-        body: {
-            validate: assertNodeType("BlockStatement")
-        }
+  builder: ["id", "params", "body", "generator", "async"],
+  visitor: ["id", "params", "body", "returnType", "typeParameters"],
+  fields: {
+    ...functionDeclarationCommon,
+    body: {
+      validate: assertNodeType("BlockStatement"),
     },
-    aliases: [
-        "Scopable",
-        "Function",
-        "BlockParent",
-        "FunctionParent",
-        "Statement",
-        "Pureish",
-        "Declaration"
-    ]
+  },
+  aliases: [
+    "Scopable",
+    "Function",
+    "BlockParent",
+    "FunctionParent",
+    "Statement",
+    "Pureish",
+    "Declaration",
+  ],
 });
 
 defineType("FunctionExpression", {
-    inherits: "FunctionDeclaration",
-    aliases: [
-        "Scopable",
-        "Function",
-        "BlockParent",
-        "FunctionParent",
-        "Expression",
-        "Pureish"
-    ],
-    fields: {
-        ...functionCommon,
-        id: {
-            validate: assertNodeType("Identifier"),
-            optional: true
-        },
-        body: {
-            validate: assertNodeType("BlockStatement")
-        }
-    }
+  inherits: "FunctionDeclaration",
+  aliases: [
+    "Scopable",
+    "Function",
+    "BlockParent",
+    "FunctionParent",
+    "Expression",
+    "Pureish",
+  ],
+  fields: {
+    ...functionCommon,
+    id: {
+      validate: assertNodeType("Identifier"),
+      optional: true,
+    },
+    body: {
+      validate: assertNodeType("BlockStatement"),
+    },
+  },
 });
 
 export const patternLikeCommon = {
-    typeAnnotation: {
-        // TODO: babel-plugin-transform-flow-comments puts a Noop here, is there a better way?
-        validate: assertNodeType("TypeAnnotation", "Noop"),
-        optional: true
-    },
-    decorators: {
-        validate: chain(
-            assertValueType("array"),
-            assertEach(assertNodeType("Decorator")),
-        )
-    }
+  typeAnnotation: {
+    // TODO: @babel/plugin-transform-flow-comments puts a Noop here, is there a better way?
+    validate: assertNodeType("TypeAnnotation", "TSTypeAnnotation", "Noop"),
+    optional: true,
+  },
+  decorators: {
+    validate: chain(
+      assertValueType("array"),
+      assertEach(assertNodeType("Decorator")),
+    ),
+  },
 };
 
 defineType("Identifier", {
-    builder: ["name"],
-    visitor: ["typeAnnotation"],
-    aliases: ["Expression", "PatternLike", "LVal", "TSEntityName"],
-    fields: {
-        ...patternLikeCommon,
-        name: {
-            validate(node, key, val) {
-                if (!t.isValidIdentifier(val)) {
-                    // throw new TypeError(`"${val}" is not a valid identifer name`);
-                }
-            }
-        },
-        optional: {
-            validate: assertValueType("boolean"),
-            optional: true
+  builder: ["name"],
+  visitor: ["typeAnnotation"],
+  aliases: ["Expression", "PatternLike", "LVal", "TSEntityName"],
+  fields: {
+    ...patternLikeCommon,
+    name: {
+      validate(node, key, val) {
+        if (!t.isValidIdentifier(val)) {
+          // throw new TypeError(`"${val}" is not a valid identifer name`);
         }
-    }
+      },
+    },
+    optional: {
+      validate: assertValueType("boolean"),
+      optional: true,
+    },
+  },
 });
 
 defineType("IfStatement", {
-    visitor: ["test", "consequent", "alternate"],
-    aliases: ["Statement", "Conditional"],
-    fields: {
-        test: {
-            validate: assertNodeType("Expression")
-        },
-        consequent: {
-            validate: assertNodeType("Statement")
-        },
-        alternate: {
-            optional: true,
-            validate: assertNodeType("Statement")
-        }
-    }
+  visitor: ["test", "consequent", "alternate"],
+  aliases: ["Statement", "Conditional"],
+  fields: {
+    test: {
+      validate: assertNodeType("Expression"),
+    },
+    consequent: {
+      validate: assertNodeType("Statement"),
+    },
+    alternate: {
+      optional: true,
+      validate: assertNodeType("Statement"),
+    },
+  },
 });
 
 defineType("LabeledStatement", {
-    visitor: ["label", "body"],
-    aliases: ["Statement"],
-    fields: {
-        label: {
-            validate: assertNodeType("Identifier")
-        },
-        body: {
-            validate: assertNodeType("Statement")
-        }
-    }
+  visitor: ["label", "body"],
+  aliases: ["Statement"],
+  fields: {
+    label: {
+      validate: assertNodeType("Identifier"),
+    },
+    body: {
+      validate: assertNodeType("Statement"),
+    },
+  },
 });
 
 defineType("StringLiteral", {
-    builder: ["value"],
-    fields: {
-        value: {
-            validate: assertValueType("string")
-        }
+  builder: ["value"],
+  fields: {
+    value: {
+      validate: assertValueType("string"),
     },
-    aliases: ["Expression", "Pureish", "Literal", "Immutable"]
+  },
+  aliases: ["Expression", "Pureish", "Literal", "Immutable"],
 });
 
 defineType("NumericLiteral", {
-    builder: ["value"],
-    deprecatedAlias: "NumberLiteral",
-    fields: {
-        value: {
-            validate: assertValueType("number")
-        }
+  builder: ["value"],
+  deprecatedAlias: "NumberLiteral",
+  fields: {
+    value: {
+      validate: assertValueType("number"),
     },
-    aliases: ["Expression", "Pureish", "Literal", "Immutable"]
+  },
+  aliases: ["Expression", "Pureish", "Literal", "Immutable"],
 });
 
 defineType("NullLiteral", {
-    aliases: ["Expression", "Pureish", "Literal", "Immutable"]
+  aliases: ["Expression", "Pureish", "Literal", "Immutable"],
 });
 
 defineType("BooleanLiteral", {
-    builder: ["value"],
-    fields: {
-        value: {
-            validate: assertValueType("boolean")
-        }
+  builder: ["value"],
+  fields: {
+    value: {
+      validate: assertValueType("boolean"),
     },
-    aliases: ["Expression", "Pureish", "Literal", "Immutable"]
+  },
+  aliases: ["Expression", "Pureish", "Literal", "Immutable"],
 });
 
 defineType("RegExpLiteral", {
-    builder: ["pattern", "flags"],
-    deprecatedAlias: "RegexLiteral",
-    aliases: ["Expression", "Literal"],
-    fields: {
-        pattern: {
-            validate: assertValueType("string")
-        },
-        flags: {
-            validate: assertValueType("string"),
-            default: ""
-        }
-    }
+  builder: ["pattern", "flags"],
+  deprecatedAlias: "RegexLiteral",
+  aliases: ["Expression", "Literal"],
+  fields: {
+    pattern: {
+      validate: assertValueType("string"),
+    },
+    flags: {
+      validate: assertValueType("string"),
+      default: "",
+    },
+  },
 });
 
 defineType("LogicalExpression", {
-    builder: ["operator", "left", "right"],
-    visitor: ["left", "right"],
-    aliases: ["Binary", "Expression"],
-    fields: {
-        operator: {
-            validate: assertOneOf(...LOGICAL_OPERATORS)
-        },
-        left: {
-            validate: assertNodeType("Expression")
-        },
-        right: {
-            validate: assertNodeType("Expression")
-        }
-    }
+  builder: ["operator", "left", "right"],
+  visitor: ["left", "right"],
+  aliases: ["Binary", "Expression"],
+  fields: {
+    operator: {
+      validate: assertOneOf(...LOGICAL_OPERATORS),
+    },
+    left: {
+      validate: assertNodeType("Expression"),
+    },
+    right: {
+      validate: assertNodeType("Expression"),
+    },
+  },
 });
 
 defineType("MemberExpression", {
-    builder: ["object", "property", "computed", "optional"],
-    visitor: ["object", "property"],
-    aliases: ["Expression", "LVal"],
-    fields: {
-        object: {
-            validate: assertNodeType("Expression")
-        },
-        property: {
-            validate: (function () {
-                const normal = assertNodeType("Identifier");
-                const computed = assertNodeType("Expression");
+  builder: ["object", "property", "computed", "optional"],
+  visitor: ["object", "property"],
+  aliases: ["Expression", "LVal"],
+  fields: {
+    object: {
+      validate: assertNodeType("Expression"),
+    },
+    property: {
+      validate: (function() {
+        const normal = assertNodeType("Identifier");
+        const computed = assertNodeType("Expression");
 
-                return function (node, key, val) {
-                    const validator = node.computed ? computed : normal;
-                    validator(node, key, val);
-                };
-            })()
-        },
-        computed: {
-            default: false
-        },
-        optional: {
-            validate: assertOneOf(true, false),
-            optional: true
-        }
-    }
+        return function(node, key, val) {
+          const validator = node.computed ? computed : normal;
+          validator(node, key, val);
+        };
+      })(),
+    },
+    computed: {
+      default: false,
+    },
+    optional: {
+      validate: assertOneOf(true, false),
+      optional: true,
+    },
+  },
 });
 
 defineType("NewExpression", { inherits: "CallExpression" });
 
 defineType("Program", {
-    visitor: ["directives", "body"],
-    builder: ["body", "directives", "sourceType"],
-    fields: {
-        sourceFile: {
-            validate: assertValueType("string")
-        },
-        sourceType: {
-            validate: assertOneOf("script", "module"),
-            default: "script"
-        },
-        directives: {
-            validate: chain(
-                assertValueType("array"),
-                assertEach(assertNodeType("Directive")),
-            ),
-            default: []
-        },
-        body: {
-            validate: chain(
-                assertValueType("array"),
-                assertEach(assertNodeType("Statement")),
-            )
-        }
+  visitor: ["directives", "body"],
+  builder: ["body", "directives", "sourceType"],
+  fields: {
+    sourceFile: {
+      validate: assertValueType("string"),
     },
-    aliases: ["Scopable", "BlockParent", "Block"]
+    sourceType: {
+      validate: assertOneOf("script", "module"),
+      default: "script",
+    },
+    directives: {
+      validate: chain(
+        assertValueType("array"),
+        assertEach(assertNodeType("Directive")),
+      ),
+      default: [],
+    },
+    body: {
+      validate: chain(
+        assertValueType("array"),
+        assertEach(assertNodeType("Statement")),
+      ),
+    },
+  },
+  aliases: ["Scopable", "BlockParent", "Block"],
 });
 
 defineType("ObjectExpression", {
-    visitor: ["properties"],
-    aliases: ["Expression"],
-    fields: {
-        properties: {
-            validate: chain(
-                assertValueType("array"),
-                assertEach(
-                    assertNodeType("ObjectMethod", "ObjectProperty", "SpreadElement"),
-                ),
-            )
-        }
-    }
+  visitor: ["properties"],
+  aliases: ["Expression"],
+  fields: {
+    properties: {
+      validate: chain(
+        assertValueType("array"),
+        assertEach(
+          assertNodeType("ObjectMethod", "ObjectProperty", "SpreadElement"),
+        ),
+      ),
+    },
+  },
 });
 
 defineType("ObjectMethod", {
-    builder: ["kind", "key", "params", "body", "computed"],
-    fields: {
-        ...functionCommon,
-        kind: {
-            validate: chain(
-                assertValueType("string"),
-                assertOneOf("method", "get", "set"),
-            ),
-            default: "method"
-        },
-        computed: {
-            validate: assertValueType("boolean"),
-            default: false
-        },
-        key: {
-            validate: (function () {
-                const normal = assertNodeType(
-                    "Identifier",
-                    "StringLiteral",
-                    "NumericLiteral",
-                );
-                const computed = assertNodeType("Expression");
-
-                return function (node, key, val) {
-                    const validator = node.computed ? computed : normal;
-                    validator(node, key, val);
-                };
-            })()
-        },
-        decorators: {
-            validate: chain(
-                assertValueType("array"),
-                assertEach(assertNodeType("Decorator")),
-            )
-        },
-        body: {
-            validate: assertNodeType("BlockStatement")
-        }
+  builder: ["kind", "key", "params", "body", "computed"],
+  fields: {
+    ...functionCommon,
+    kind: {
+      validate: chain(
+        assertValueType("string"),
+        assertOneOf("method", "get", "set"),
+      ),
+      default: "method",
     },
-    visitor: [
-        "key",
-        "params",
-        "body",
-        "decorators",
-        "returnType",
-        "typeParameters"
-    ],
-    aliases: [
-        "UserWhitespacable",
-        "Function",
-        "Scopable",
-        "BlockParent",
-        "FunctionParent",
-        "Method",
-        "ObjectMember"
-    ]
+    computed: {
+      validate: assertValueType("boolean"),
+      default: false,
+    },
+    key: {
+      validate: (function() {
+        const normal = assertNodeType(
+          "Identifier",
+          "StringLiteral",
+          "NumericLiteral",
+        );
+        const computed = assertNodeType("Expression");
+
+        return function(node, key, val) {
+          const validator = node.computed ? computed : normal;
+          validator(node, key, val);
+        };
+      })(),
+    },
+    decorators: {
+      validate: chain(
+        assertValueType("array"),
+        assertEach(assertNodeType("Decorator")),
+      ),
+    },
+    body: {
+      validate: assertNodeType("BlockStatement"),
+    },
+  },
+  visitor: [
+    "key",
+    "params",
+    "body",
+    "decorators",
+    "returnType",
+    "typeParameters",
+  ],
+  aliases: [
+    "UserWhitespacable",
+    "Function",
+    "Scopable",
+    "BlockParent",
+    "FunctionParent",
+    "Method",
+    "ObjectMember",
+  ],
 });
 
 defineType("ObjectProperty", {
-    builder: ["key", "value", "computed", "shorthand", "decorators"],
-    fields: {
-        computed: {
-            validate: assertValueType("boolean"),
-            default: false
-        },
-        key: {
-            validate: (function () {
-                const normal = assertNodeType(
-                    "Identifier",
-                    "StringLiteral",
-                    "NumericLiteral",
-                );
-                const computed = assertNodeType("Expression");
-
-                return function (node, key, val) {
-                    const validator = node.computed ? computed : normal;
-                    validator(node, key, val);
-                };
-            })()
-        },
-        value: {
-            // Value may be PatternLike if this is an AssignmentProperty
-            // https://github.com/babel/babylon/issues/434
-            validate: assertNodeType("Expression", "PatternLike")
-        },
-        shorthand: {
-            validate: assertValueType("boolean"),
-            default: false
-        },
-        decorators: {
-            validate: chain(
-                assertValueType("array"),
-                assertEach(assertNodeType("Decorator")),
-            ),
-            optional: true
-        }
+  builder: ["key", "value", "computed", "shorthand", "decorators"],
+  fields: {
+    computed: {
+      validate: assertValueType("boolean"),
+      default: false,
     },
-    visitor: ["key", "value", "decorators"],
-    aliases: ["UserWhitespacable", "Property", "ObjectMember"]
+    key: {
+      validate: (function() {
+        const normal = assertNodeType(
+          "Identifier",
+          "StringLiteral",
+          "NumericLiteral",
+        );
+        const computed = assertNodeType("Expression");
+
+        return function(node, key, val) {
+          const validator = node.computed ? computed : normal;
+          validator(node, key, val);
+        };
+      })(),
+    },
+    value: {
+      // Value may be PatternLike if this is an AssignmentProperty
+      // https://github.com/babel/babylon/issues/434
+      validate: assertNodeType("Expression", "PatternLike"),
+    },
+    shorthand: {
+      validate: assertValueType("boolean"),
+      default: false,
+    },
+    decorators: {
+      validate: chain(
+        assertValueType("array"),
+        assertEach(assertNodeType("Decorator")),
+      ),
+      optional: true,
+    },
+  },
+  visitor: ["key", "value", "decorators"],
+  aliases: ["UserWhitespacable", "Property", "ObjectMember"],
 });
 
 defineType("RestElement", {
-    visitor: ["argument", "typeAnnotation"],
-    builder: ["argument"],
-    aliases: ["LVal", "PatternLike"],
-    fields: {
-        ...patternLikeCommon,
-        argument: {
-            validate: assertNodeType("LVal")
-        }
-    }
+  visitor: ["argument", "typeAnnotation"],
+  builder: ["argument"],
+  aliases: ["LVal", "PatternLike"],
+  fields: {
+    ...patternLikeCommon,
+    argument: {
+      validate: assertNodeType("LVal"),
+    },
+  },
 });
 
 defineType("ReturnStatement", {
-    visitor: ["argument"],
-    aliases: ["Statement", "Terminatorless", "CompletionStatement"],
-    fields: {
-        argument: {
-            validate: assertNodeType("Expression"),
-            optional: true
-        }
-    }
+  visitor: ["argument"],
+  aliases: ["Statement", "Terminatorless", "CompletionStatement"],
+  fields: {
+    argument: {
+      validate: assertNodeType("Expression"),
+      optional: true,
+    },
+  },
 });
 
 defineType("SequenceExpression", {
-    visitor: ["expressions"],
-    fields: {
-        expressions: {
-            validate: chain(
-                assertValueType("array"),
-                assertEach(assertNodeType("Expression")),
-            )
-        }
+  visitor: ["expressions"],
+  fields: {
+    expressions: {
+      validate: chain(
+        assertValueType("array"),
+        assertEach(assertNodeType("Expression")),
+      ),
     },
-    aliases: ["Expression"]
+  },
+  aliases: ["Expression"],
 });
 
 defineType("SwitchCase", {
-    visitor: ["test", "consequent"],
-    fields: {
-        test: {
-            validate: assertNodeType("Expression"),
-            optional: true
-        },
-        consequent: {
-            validate: chain(
-                assertValueType("array"),
-                assertEach(assertNodeType("Statement")),
-            )
-        }
-    }
+  visitor: ["test", "consequent"],
+  fields: {
+    test: {
+      validate: assertNodeType("Expression"),
+      optional: true,
+    },
+    consequent: {
+      validate: chain(
+        assertValueType("array"),
+        assertEach(assertNodeType("Statement")),
+      ),
+    },
+  },
 });
 
 defineType("SwitchStatement", {
-    visitor: ["discriminant", "cases"],
-    aliases: ["Statement", "BlockParent", "Scopable"],
-    fields: {
-        discriminant: {
-            validate: assertNodeType("Expression")
-        },
-        cases: {
-            validate: chain(
-                assertValueType("array"),
-                assertEach(assertNodeType("SwitchCase")),
-            )
-        }
-    }
+  visitor: ["discriminant", "cases"],
+  aliases: ["Statement", "BlockParent", "Scopable"],
+  fields: {
+    discriminant: {
+      validate: assertNodeType("Expression"),
+    },
+    cases: {
+      validate: chain(
+        assertValueType("array"),
+        assertEach(assertNodeType("SwitchCase")),
+      ),
+    },
+  },
 });
 
 defineType("ThisExpression", {
-    aliases: ["Expression"]
+  aliases: ["Expression"],
 });
 
 defineType("ThrowStatement", {
-    visitor: ["argument"],
-    aliases: ["Statement", "Terminatorless", "CompletionStatement"],
-    fields: {
-        argument: {
-            validate: assertNodeType("Expression")
-        }
-    }
+  visitor: ["argument"],
+  aliases: ["Statement", "Terminatorless", "CompletionStatement"],
+  fields: {
+    argument: {
+      validate: assertNodeType("Expression"),
+    },
+  },
 });
 
 // todo: at least handler or finalizer should be set to be valid
 defineType("TryStatement", {
-    visitor: ["block", "handler", "finalizer"],
-    aliases: ["Statement"],
-    fields: {
-        block: {
-            validate: assertNodeType("BlockStatement")
-        },
-        handler: {
-            optional: true,
-            validate: assertNodeType("CatchClause")
-        },
-        finalizer: {
-            optional: true,
-            validate: assertNodeType("BlockStatement")
-        }
-    }
+  visitor: ["block", "handler", "finalizer"],
+  aliases: ["Statement"],
+  fields: {
+    block: {
+      validate: assertNodeType("BlockStatement"),
+    },
+    handler: {
+      optional: true,
+      validate: assertNodeType("CatchClause"),
+    },
+    finalizer: {
+      optional: true,
+      validate: assertNodeType("BlockStatement"),
+    },
+  },
 });
 
 defineType("UnaryExpression", {
-    builder: ["operator", "argument", "prefix"],
-    fields: {
-        prefix: {
-            default: true
-        },
-        argument: {
-            validate: assertNodeType("Expression")
-        },
-        operator: {
-            validate: assertOneOf(...UNARY_OPERATORS)
-        }
+  builder: ["operator", "argument", "prefix"],
+  fields: {
+    prefix: {
+      default: true,
     },
-    visitor: ["argument"],
-    aliases: ["UnaryLike", "Expression"]
+    argument: {
+      validate: assertNodeType("Expression"),
+    },
+    operator: {
+      validate: assertOneOf(...UNARY_OPERATORS),
+    },
+  },
+  visitor: ["argument"],
+  aliases: ["UnaryLike", "Expression"],
 });
 
 defineType("UpdateExpression", {
-    builder: ["operator", "argument", "prefix"],
-    fields: {
-        prefix: {
-            default: false
-        },
-        argument: {
-            validate: assertNodeType("Expression")
-        },
-        operator: {
-            validate: assertOneOf(...UPDATE_OPERATORS)
-        }
+  builder: ["operator", "argument", "prefix"],
+  fields: {
+    prefix: {
+      default: false,
     },
-    visitor: ["argument"],
-    aliases: ["Expression"]
+    argument: {
+      validate: assertNodeType("Expression"),
+    },
+    operator: {
+      validate: assertOneOf(...UPDATE_OPERATORS),
+    },
+  },
+  visitor: ["argument"],
+  aliases: ["Expression"],
 });
 
 defineType("VariableDeclaration", {
-    builder: ["kind", "declarations"],
-    visitor: ["declarations"],
-    aliases: ["Statement", "Declaration"],
-    fields: {
-        declare: {
-            validate: assertValueType("boolean"),
-            optional: true
-        },
-        kind: {
-            validate: chain(
-                assertValueType("string"),
-                assertOneOf("var", "let", "const"),
-            )
-        },
-        declarations: {
-            validate: chain(
-                assertValueType("array"),
-                assertEach(assertNodeType("VariableDeclarator")),
-            )
-        }
-    }
+  builder: ["kind", "declarations"],
+  visitor: ["declarations"],
+  aliases: ["Statement", "Declaration"],
+  fields: {
+    declare: {
+      validate: assertValueType("boolean"),
+      optional: true,
+    },
+    kind: {
+      validate: chain(
+        assertValueType("string"),
+        assertOneOf("var", "let", "const"),
+      ),
+    },
+    declarations: {
+      validate: chain(
+        assertValueType("array"),
+        assertEach(assertNodeType("VariableDeclarator")),
+      ),
+    },
+  },
 });
 
 defineType("VariableDeclarator", {
-    visitor: ["id", "init"],
-    fields: {
-        id: {
-            validate: assertNodeType("LVal")
-        },
-        init: {
-            optional: true,
-            validate: assertNodeType("Expression")
-        }
-    }
+  visitor: ["id", "init"],
+  fields: {
+    id: {
+      validate: assertNodeType("LVal"),
+    },
+    init: {
+      optional: true,
+      validate: assertNodeType("Expression"),
+    },
+  },
 });
 
 defineType("WhileStatement", {
-    visitor: ["test", "body"],
-    aliases: ["Statement", "BlockParent", "Loop", "While", "Scopable"],
-    fields: {
-        test: {
-            validate: assertNodeType("Expression")
-        },
-        body: {
-            validate: assertNodeType("BlockStatement", "Statement")
-        }
-    }
+  visitor: ["test", "body"],
+  aliases: ["Statement", "BlockParent", "Loop", "While", "Scopable"],
+  fields: {
+    test: {
+      validate: assertNodeType("Expression"),
+    },
+    body: {
+      validate: assertNodeType("BlockStatement", "Statement"),
+    },
+  },
 });
 
 defineType("WithStatement", {
-    visitor: ["object", "body"],
-    aliases: ["Statement"],
-    fields: {
-        object: {
-            object: assertNodeType("Expression")
-        },
-        body: {
-            validate: assertNodeType("BlockStatement", "Statement")
-        }
-    }
+  visitor: ["object", "body"],
+  aliases: ["Statement"],
+  fields: {
+    object: {
+      object: assertNodeType("Expression"),
+    },
+    body: {
+      validate: assertNodeType("BlockStatement", "Statement"),
+    },
+  },
 });

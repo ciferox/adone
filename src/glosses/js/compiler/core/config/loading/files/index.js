@@ -1,6 +1,6 @@
 // @flow
 
-import typeof * as indexBrowserType from "./index_browser";
+import typeof * as indexBrowserType from "./index-browser";
 import typeof * as indexType from "./index";
 
 // Kind of gross, but essentially asserting that the exports of this module are the same as the

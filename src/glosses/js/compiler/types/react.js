@@ -2,75 +2,74 @@ import * as t from "./index";
 
 export const isReactComponent = t.buildMatchMemberExpression("React.Component");
 
-export const isCompatTag = (tagName?: string): boolean => Boolean(tagName) && /^[a-z]|\-/.test(tagName);
+export function isCompatTag(tagName?: string): boolean {
+  return !!tagName && /^[a-z]|-/.test(tagName);
+}
 
-const cleanJSXElementLiteralChild = (child: { value: string }, args: Array<Object>) => {
-    const lines = child.value.split(/\r\n|\n|\r/);
+function cleanJSXElementLiteralChild(
+  child: { value: string },
+  args: Array<Object>,
+) {
+  const lines = child.value.split(/\r\n|\n|\r/);
 
-    let lastNonEmptyLine = 0;
+  let lastNonEmptyLine = 0;
 
-    for (let i = 0; i < lines.length; i++) {
-        if (lines[i].match(/[^ \t]/)) {
-            lastNonEmptyLine = i;
-        }
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].match(/[^ \t]/)) {
+      lastNonEmptyLine = i;
+    }
+  }
+
+  let str = "";
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    const isFirstLine = i === 0;
+    const isLastLine = i === lines.length - 1;
+    const isLastNonEmptyLine = i === lastNonEmptyLine;
+
+    // replace rendered whitespace tabs with spaces
+    let trimmedLine = line.replace(/\t/g, " ");
+
+    // trim whitespace touching a newline
+    if (!isFirstLine) {
+      trimmedLine = trimmedLine.replace(/^[ ]+/, "");
     }
 
-    let str = "";
-
-    for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-
-        const isFirstLine = i === 0;
-        const isLastLine = i === lines.length - 1;
-        const isLastNonEmptyLine = i === lastNonEmptyLine;
-
-        // replace rendered whitespace tabs with spaces
-        let trimmedLine = line.replace(/\t/g, " ");
-
-        // trim whitespace touching a newline
-        if (!isFirstLine) {
-            trimmedLine = trimmedLine.replace(/^[ ]+/, "");
-        }
-
-        // trim whitespace touching an endline
-        if (!isLastLine) {
-            trimmedLine = trimmedLine.replace(/[ ]+$/, "");
-        }
-
-        if (trimmedLine) {
-            if (!isLastNonEmptyLine) {
-                trimmedLine += " ";
-            }
-
-            str += trimmedLine;
-        }
+    // trim whitespace touching an endline
+    if (!isLastLine) {
+      trimmedLine = trimmedLine.replace(/[ ]+$/, "");
     }
 
-    if (str) {
-        args.push(t.stringLiteral(str));
+    if (trimmedLine) {
+      if (!isLastNonEmptyLine) {
+        trimmedLine += " ";
+      }
+
+      str += trimmedLine;
     }
-};
+  }
 
-export const buildChildren = (node: Object): Array<Object> => {
-    const elems = [];
+  if (str) args.push(t.stringLiteral(str));
+}
 
-    for (let i = 0; i < node.children.length; i++) {
-        let child = node.children[i];
+export function buildChildren(node: Object): Array<Object> {
+  const elems = [];
 
-        if (t.isJSXText(child)) {
-            cleanJSXElementLiteralChild(child, elems);
-            continue;
-        }
+  for (let i = 0; i < node.children.length; i++) {
+    let child = node.children[i];
 
-        if (t.isJSXExpressionContainer(child)) {
-            child = child.expression;
-        }
-        if (t.isJSXEmptyExpression(child)) {
-            continue;
-        }
-
-        elems.push(child);
+    if (t.isJSXText(child)) {
+      cleanJSXElementLiteralChild(child, elems);
+      continue;
     }
 
-    return elems;
-};
+    if (t.isJSXExpressionContainer(child)) child = child.expression;
+    if (t.isJSXEmptyExpression(child)) continue;
+
+    elems.push(child);
+  }
+
+  return elems;
+}

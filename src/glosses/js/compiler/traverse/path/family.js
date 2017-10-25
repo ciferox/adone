@@ -17,7 +17,7 @@ export function getOpposite(): ?NodePath {
 }
 
 function addCompletionRecords(path, paths) {
-    if (path) {return paths.concat(path.getCompletionRecords());}
+    if (path) { return paths.concat(path.getCompletionRecords()); }
     return paths;
 }
 
@@ -37,6 +37,8 @@ export function getCompletionRecords(): Array {
         paths = addCompletionRecords(this.get("block"), paths);
         paths = addCompletionRecords(this.get("handler"), paths);
         paths = addCompletionRecords(this.get("finalizer"), paths);
+    } else if (this.isCatchClause()) {
+        paths = addCompletionRecords(this.get("body"), paths);
     } else {
         paths.push(this);
     }
@@ -85,43 +87,43 @@ export function getAllPrevSiblings(): Array<NodePath> {
 }
 
 export function get(
-  key: string,
-  context?: boolean | TraversalContext,
+    key: string,
+    context?: boolean | TraversalContext,
 ): NodePath {
-  if (context === true) context = this.context;
-  const parts = key.split(".");
-  if (parts.length === 1) {
-    // "foo"
-    return this._getKey(key, context);
-  } 
+    if (context === true) context = this.context;
+    const parts = key.split(".");
+    if (parts.length === 1) {
+        // "foo"
+        return this._getKey(key, context);
+    }
     // "foo.bar"
     return this._getPattern(parts, context);
-  
+
 }
 
 export function _getKey(key, context?) {
-  const node = this.node;
-  const container = node[key];
+    const node = this.node;
+    const container = node[key];
 
-  if (Array.isArray(container)) {
-    // requested a container so give them all the paths
-    return container.map((_, i) => {
-      return NodePath.get({
-        listKey: key,
+    if (Array.isArray(container)) {
+        // requested a container so give them all the paths
+        return container.map((_, i) => {
+            return NodePath.get({
+                listKey: key,
+                parentPath: this,
+                parent: node,
+                container: container,
+                key: i,
+            }).setContext(context);
+        });
+    }
+    return NodePath.get({
         parentPath: this,
         parent: node,
-        container: container,
-        key: i,
-      }).setContext(context);
-    });
-  } 
-    return NodePath.get({
-      parentPath: this,
-      parent: node,
-      container: node,
-      key: key,
+        container: node,
+        key: key,
     }).setContext(context);
-  
+
 }
 
 export function _getPattern(parts, context) {
@@ -161,8 +163,8 @@ export function getBindingIdentifierPaths(
 
     while (search.length) {
         const id = search.shift();
-        if (!id) {continue;}
-        if (!id.node) {continue;}
+        if (!id) { continue; }
+        if (!id.node) { continue; }
 
         const keys = t.getBindingIdentifiers.keys[id.node.type];
 

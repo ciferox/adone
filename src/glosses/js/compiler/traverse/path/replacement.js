@@ -14,8 +14,8 @@ const hoistVariablesVisitor = {
     },
 
     VariableDeclaration(path) {
-        if (path.node.kind !== "var") { 
-            return; 
+        if (path.node.kind !== "var") {
+            return;
         }
 
         const bindings = path.getBindingIdentifiers();
@@ -87,8 +87,18 @@ export function replaceWithSourceString(replacement) {
                     column: loc.column + 1
                 }
             };
-            err.message += " - make sure this is an expression.";
-            err.message += `\n${codeFrameColumns(replacement, location)}`;
+            // Set the location to null or else the re-thrown exception could
+            // incorrectly interpret the location as referencing the file being
+            // transformed.
+            err.loc = null;
+            err.message +=
+                " - make sure this is an expression.\n" +
+                codeFrameColumns(replacement, {
+                    start: {
+                        line: loc.line,
+                        column: loc.column + 1,
+                    },
+                });
         }
         throw err;
     }
@@ -146,8 +156,8 @@ export function replaceWith(replacement) {
     if (this.isNodeType("Statement") && t.isExpression(replacement)) {
         if (
             !this.canHaveVariableDeclarationOrExpression() &&
-      !this.canSwapBetweenExpressionAndStatement(replacement) &&
-      !this.parentPath.isExportDefaultDeclaration()
+            !this.canSwapBetweenExpressionAndStatement(replacement) &&
+            !this.parentPath.isExportDefaultDeclaration()
         ) {
             // replacing a statement with an expression so wrap it in an expression statement
             replacement = t.expressionStatement(replacement);
@@ -158,7 +168,7 @@ export function replaceWith(replacement) {
     if (this.isNodeType("Expression") && t.isStatement(replacement)) {
         if (
             !this.canHaveVariableDeclarationOrExpression() &&
-      !this.canSwapBetweenExpressionAndStatement(replacement)
+            !this.canSwapBetweenExpressionAndStatement(replacement)
         ) {
             // replacing an expression with a statement so let's explode it
             return this.replaceExpressionWithStatements([replacement]);
@@ -266,10 +276,10 @@ export function replaceInline(nodes: Object | Array<Object>) {
             const paths = this._containerInsertAfter(nodes);
             this.remove();
             return paths;
-        } 
+        }
         return this.replaceWithMultiple(nodes);
-    
-    } 
+
+    }
     return this.replaceWith(nodes);
-  
+
 }

@@ -1,4 +1,6 @@
-export default function ({ template, types: t }) {
+export default function ({ template, types: t }, options) {
+    const { loose } = options;
+
     const buildForOfArray = template(`
     for (var KEY = 0; KEY < ARR.length; KEY++) BODY;
   `);
@@ -100,7 +102,7 @@ export default function ({ template, types: t }) {
         }
     };
 
-    const loose = function (path, file) {
+    const pushComputedPropsLoose = function (path, file) {
         const { node, scope, parent } = path;
         const { left } = node;
         let declar;
@@ -157,7 +159,7 @@ export default function ({ template, types: t }) {
         };
     };
 
-    const spec = function (path, file) {
+    const pushComputedPropsSpec = function (path, file) {
         const { node, scope, parent } = path;
         const left = node.left;
         let declar;
@@ -221,6 +223,10 @@ export default function ({ template, types: t }) {
         };
     };
 
+    const pushComputedProps = loose
+        ? pushComputedPropsLoose
+        : pushComputedPropsSpec;
+
     return {
         visitor: {
             ForOfStatement(path, state) {
@@ -234,13 +240,8 @@ export default function ({ template, types: t }) {
                     return;
                 }
 
-                let callback = spec;
-                if (state.opts.loose) { 
-                    callback = loose; 
-                }
-
                 const { node } = path;
-                const build = callback(path, state);
+                const build = pushComputedProps(path, state);
                 const declar = build.declar;
                 const loop = build.loop;
                 const block = loop.body;

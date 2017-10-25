@@ -24,35 +24,50 @@ adone.lazify({
     simpleAccess: "./simple_access"
 }, exports, require);
 
-
-const makePath = function (path) {
+function makePath(path) {
     const parts = [];
 
     for (; path.parentPath; path = path.parentPath) {
         parts.push(path.key);
-        if (path.inList) {
-            parts.push(path.listKey);
-        }
+        if (path.inList) parts.push(path.listKey);
     }
 
     return parts.reverse().join(".");
-};
+}
 
 /**
  * Given a file AST for a given helper, get a bunch of metadata about it so that Babel can quickly render
  * the helper is whatever context it is needed in.
  */
-const getHelperMetadata = function (file) {
+function getHelperMetadata(file) {
     const globals = new Set();
     const localBindingNames = new Set();
+    // Maps imported identifier -> helper name
+    const dependencies = new Map();
 
     let exportName;
     let exportPath;
     const exportBindingAssignments = [];
+    const importPaths = [];
+    const importBindingsReferences = [];
 
     traverse(file, {
         ImportDeclaration(child) {
-            throw child.buildCodeFrameError("Helpers may not import anything.");
+            const name = child.node.source.value;
+            if (!helpers[name]) {
+                throw child.buildCodeFrameError(`Unknown helper ${name}`);
+            }
+            if (
+                child.get("specifiers").length !== 1 ||
+                !child.get("specifiers.0").isImportDefaultSpecifier()
+            ) {
+                throw child.buildCodeFrameError(
+                    "Helpers can only import a default value",
+                );
+            }
+            const bindingIdentifier = child.node.specifiers[0].local;
+            dependencies.set(bindingIdentifier, name);
+            importPaths.push(makePath(child));
         },
         ExportDefaultDeclaration(child) {
             const decl = child.get("declaration");
@@ -75,40 +90,36 @@ const getHelperMetadata = function (file) {
             throw child.buildCodeFrameError("Helpers can only export default");
         },
         Statement(child) {
-            if (child.isModuleDeclaration()) {
-                return;
-            }
+            if (child.isModuleDeclaration()) return;
 
             child.skip();
-        }
+        },
     });
 
     traverse(file, {
         Program(path) {
             const bindings = path.scope.getAllBindings();
 
-            Object.keys(bindings).forEach((name) => {
-                if (name === exportName) {
-                    return;
-                }
+            Object.keys(bindings).forEach(name => {
+                if (name === exportName) return;
+                if (dependencies.has(bindings[name].identifier)) return;
 
                 localBindingNames.add(name);
             });
         },
         ReferencedIdentifier(child) {
             const name = child.node.name;
-            const binding = child.scope.getBinding(name);
-
+            const binding = child.scope.getBinding(name, /* noGlobal */ true);
             if (!binding) {
                 globals.add(name);
+            } else if (dependencies.has(binding.identifier)) {
+                importBindingsReferences.push(makePath(child));
             }
         },
         AssignmentExpression(child) {
             const left = child.get("left");
 
-            if (!(exportName in left.getBindingIdentifiers())) {
-                return;
-            }
+            if (!(exportName in left.getBindingIdentifiers())) return;
 
             if (!left.isIdentifier()) {
                 throw left.buildCodeFrameError(
@@ -121,12 +132,10 @@ const getHelperMetadata = function (file) {
             if (binding && binding.scope.path.isProgram()) {
                 exportBindingAssignments.push(makePath(child));
             }
-        }
+        },
     });
 
-    if (!exportPath) {
-        throw new Error("Helpers must default-export something.");
-    }
+    if (!exportPath) throw new Error("Helpers must default-export something.");
 
     // Process these in reverse so that mutating the references does not invalidate any later paths in
     // the list.
@@ -135,42 +144,48 @@ const getHelperMetadata = function (file) {
     return {
         globals: Array.from(globals),
         localBindingNames: Array.from(localBindingNames),
+        dependencies,
         exportBindingAssignments,
         exportPath,
-        exportName
+        exportName,
+        importBindingsReferences,
+        importPaths,
     };
-};
+}
 
 /**
  * Given a helper AST and information about how it will be used, update the AST to match the usage.
  */
-const permuteHelperAST = function (file, metadata, id, localBindings) {
+function permuteHelperAST(file, metadata, id, localBindings, getDependency) {
     if (localBindings && !id) {
         throw new Error("Unexpected local bindings for module-based helpers.");
     }
 
-    if (!id) {
-        return;
-    }
+    if (!id) return;
 
     const {
-        localBindingNames,
+    localBindingNames,
+        dependencies,
         exportBindingAssignments,
         exportPath,
-        exportName
-    } = metadata;
+        exportName,
+        importBindingsReferences,
+        importPaths,
+  } = metadata;
+
+    const dependenciesRefs = {};
+    dependencies.forEach((name, id) => {
+        dependenciesRefs[id.name] =
+            (typeof getDependency === "function" && getDependency(name)) || id;
+    });
 
     const toRename = {};
     const bindings = new Set(localBindings || []);
-    localBindingNames.forEach((name) => {
+    localBindingNames.forEach(name => {
         let newName = name;
-        while (bindings.has(newName)) {
-            newName = `_${newName}`;
-        }
+        while (bindings.has(newName)) newName = "_" + newName;
 
-        if (newName !== name) {
-            toRename[name] = newName;
-        }
+        if (newName !== name) toRename[name] = newName;
     });
 
     if (id.type === "Identifier" && exportName !== id.name) {
@@ -179,7 +194,12 @@ const permuteHelperAST = function (file, metadata, id, localBindings) {
 
     traverse(file, {
         Program(path) {
+            // We need to compute these in advance because removing nodes would
+            // invalidate the paths.
             const exp = path.get(exportPath);
+            const imps = importPaths.map(p => path.get(p));
+            const impsBindingRefs = importBindingsReferences.map(p => path.get(p));
+
             const decl = exp.get("declaration");
             if (id.type === "Identifier") {
                 if (decl.isFunctionDeclaration()) {
@@ -191,7 +211,7 @@ const permuteHelperAST = function (file, metadata, id, localBindings) {
                 }
             } else if (id.type === "MemberExpression") {
                 if (decl.isFunctionDeclaration()) {
-                    exportBindingAssignments.forEach((assignPath) => {
+                    exportBindingAssignments.forEach(assignPath => {
                         const assign = path.get(assignPath);
                         assign.replaceWith(t.assignmentExpression("=", id, assign.node));
                     });
@@ -211,48 +231,64 @@ const permuteHelperAST = function (file, metadata, id, localBindings) {
                 throw new Error("Unexpected helper format.");
             }
 
-            Object.keys(toRename).forEach((name) => {
+            Object.keys(toRename).forEach(name => {
                 path.scope.rename(name, toRename[name]);
             });
+
+            for (const path of imps) path.remove();
+            for (const path of impsBindingRefs) {
+                const node = t.cloneDeep(dependenciesRefs[path.node.name]);
+                path.replaceWith(node);
+            }
 
             // We only use "traverse" for all the handy scoping helpers, so we can stop immediately without
             // actually doing the traversal.
             path.stop();
-        }
+        },
     });
-};
+}
 
 const helperData = {};
-const loadHelper = function (name) {
+function loadHelper(name) {
     if (!helperData[name]) {
-        if (!helpers[name]) {
-            throw new ReferenceError(`Unknown helper ${name}`);
-        }
+        if (!helpers[name]) throw new ReferenceError(`Unknown helper ${name}`);
 
         const fn = () => {
-            const ast = helpers[name]();
-            return t.file(t.program(is.array(ast) ? ast : [ast]));
+            return t.file(helpers[name]());
         };
 
         const metadata = getHelperMetadata(fn());
 
-        helperData[name] = function (id, localBindings) {
-            const file = fn();
-            permuteHelperAST(file, metadata, id, localBindings);
+        helperData[name] = {
+            build(getDependency, id, localBindings) {
+                const file = fn();
+                permuteHelperAST(file, metadata, id, localBindings, getDependency);
 
-            return {
-                nodes: file.program.body,
-                globals: metadata.globals
-            };
+                return {
+                    nodes: file.program.body,
+                    globals: metadata.globals,
+                };
+            },
+            dependencies: metadata.dependencies,
         };
     }
 
     return helperData[name];
-};
+}
 
-export const get = function (name, id?, localBindings?: Array) {
-    const helper = loadHelper(name);
-    return helper(id, localBindings);
-};
+export function get(
+    name,
+    getDependency?: string => ?t.Expression,
+    id?,
+    localBindings?: string[],
+) {
+    return loadHelper(name).build(getDependency, id, localBindings);
+}
 
-export const list = Object.keys(helpers).map((name) => name.replace(/^_/, "")).filter((name) => name !== "__esModule");
+export function getDependencies(name: string): $ReadOnlyArray<string> {
+    return Array.from(loadHelper(name).dependencies.values());
+}
+
+export const list = Object.keys(helpers)
+    .map(name => name.replace(/^_/, ""))
+    .filter(name => name !== "__esModule");

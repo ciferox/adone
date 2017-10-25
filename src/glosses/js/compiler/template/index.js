@@ -1,116 +1,31 @@
-const {
-    is,
-    js: { compiler: { parse, traverse } },
-    vendor: { lodash: { cloneDeep, has } }
-} = adone;
+// @flow
 
-const FROM_TEMPLATE = new Set();
+import * as formatters from "./formatters";
+import createTemplateBuilder from "./builder";
 
-const templateVisitor = {
-    // 360
-    noScope: true,
+export const smart = createTemplateBuilder(formatters.smart);
+export const statement = createTemplateBuilder(formatters.statement);
+export const statements = createTemplateBuilder(formatters.statements);
+export const expression = createTemplateBuilder(formatters.expression);
+export const program = createTemplateBuilder(formatters.program);
 
-    Identifier(path, args) {
-        const { node, parentPath } = path;
-        if (!FROM_TEMPLATE.has(node)) {
-            return path.skip();
-        }
-
-        let replacement;
-        if (has(args[0], node.name)) {
-            replacement = args[0][node.name];
-        } else if (node.name[0] === "$") {
-            const i = Number(node.name.slice(1));
-            if (args[i]) {
-                replacement = args[i];
-            }
-        }
-
-        if (parentPath.isExpressionStatement()) {
-            path = parentPath;
-        }
-
-        if (is.null(replacement)) {
-            path.remove();
-        } else if (replacement) {
-            path.replaceInline(replacement);
-            path.skip();
-        }
-    },
-
-    exit({ node }) {
-        if (!node.loc) {
-            traverse.clearNode(node);
-        }
-    }
+type DefaultTemplateBuilder = typeof smart & {
+  smart: typeof smart,
+  statement: typeof statement,
+  statements: typeof statements,
+  expression: typeof expression,
+  program: typeof program,
+  ast: typeof smart.ast,
 };
 
-const useTemplate = (ast, nodes?: Array<Object>) => {
-    ast = cloneDeep(ast);
-    const { program } = ast;
-
-    if (nodes.length) {
-        traverse.cheap(ast, (node) => {
-            FROM_TEMPLATE.add(node);
-        });
-
-        traverse(ast, templateVisitor, null, nodes);
-
-        FROM_TEMPLATE.clear();
-    }
-
-    if (program.body.length > 1) {
-        return program.body;
-    }
-    return program.body[0];
-};
-
-export default function (code: string, opts?: Object): Function {
-    // since we lazy parse the template, we get the current stack so we have the
-    // original stack to append if it errors when parsing
-    let stack;
-    try {
-        // error stack gets populated in IE only on throw
-        // (https://msdn.microsoft.com/en-us/library/hh699850(v=vs.94).aspx)
-        throw new Error();
-    } catch (error) {
-        if (error.stack) {
-            // error.stack does not exists in IE <= 9
-            stack = error.stack.split("\n").slice(1).join("\n");
-        }
-    }
-
-    opts = Object.assign(
-        {
-            allowReturnOutsideFunction: true,
-            allowSuperOutsideMethod: true,
-            preserveComments: false
-        },
-        opts,
-    );
-
-    let getAst = function () {
-        let ast;
-
-        try {
-            ast = parse(code, opts);
-
-            ast = traverse.removeProperties(ast, {
-                preserveComments: opts.preserveComments
-            });
-        } catch (err) {
-            err.stack = `${err.stack}from\n${stack}`;
-            throw err;
-        }
-
-        getAst = function () {
-            return ast;
-        };
-
-        return ast;
-    };
-
-    return function (...args) {
-        return useTemplate(getAst(), args);
-    };
-}
+export default Object.assign(
+  ((smart.bind(undefined): any): DefaultTemplateBuilder),
+  {
+    smart,
+    statement,
+    statements,
+    expression,
+    program,
+    ast: smart.ast,
+  },
+);

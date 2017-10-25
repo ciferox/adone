@@ -30,7 +30,7 @@ export default class Realm {
         let pkg = null;
         try {
             if (!is.plainObject(options) || !is.string(options.name)) {
-                throw new adone.x.InvalidArgument("To specify package use object and property 'name'");
+                throw new adone.x.InvalidArgument("Install options is not valid");
             }
             await this.lock();
             pkg = this._package(options);

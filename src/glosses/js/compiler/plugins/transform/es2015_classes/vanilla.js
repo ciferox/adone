@@ -2,12 +2,6 @@ const {
     js: { compiler: { types: t, template, traverse: { visitors } } }
 } = adone;
 
-const buildDerivedConstructor = template(`
-  (function () {
-    super(...arguments);
-  })
-`);
-
 const noMethodVisitor = {
     "FunctionExpression|FunctionDeclaration"(path) {
         path.skip();
@@ -216,7 +210,11 @@ export default class ClassTransformer {
         let body;
 
         if (this.isDerived) {
-            const constructor = buildDerivedConstructor().expression;
+            const constructor = template.expression.ast`
+                (function () {
+                    super(...arguments);
+                })
+                `;
             params = constructor.params;
             body = constructor.body;
         } else {

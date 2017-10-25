@@ -11,17 +11,27 @@ const awaitVisitor = {
         path.skip();
     },
 
-    AwaitExpression({ node }, { wrapAwait }) {
-        node.type = "YieldExpression";
-        if (wrapAwait) {
-            node.argument = t.callExpression(wrapAwait, [node.argument]);
+    AwaitExpression(path, { wrapAwait }) {
+        const argument = path.get("argument");
+
+        if (path.parentPath.isYieldExpression()) {
+            path.replaceWith(argument.node);
+            return;
         }
+
+        path.replaceWith(
+            t.yieldExpression(
+                wrapAwait
+                    ? t.callExpression(wrapAwait, [argument.node])
+                    : argument.node,
+            ),
+        );
     },
 
     ForOfStatement(path, { file, wrapAwait }) {
         const { node } = path;
-        if (!node.await) { 
-            return; 
+        if (!node.await) {
+            return;
         }
 
         const build = rewriteForAwait(path, {
@@ -55,11 +65,6 @@ const awaitVisitor = {
 };
 
 export default function (path, file: Object, helpers: Object) {
-    if (!helpers) {
-        // bc for 6.15 and earlier
-        helpers = { wrapAsync: file };
-        file = null;
-    }
     path.traverse(awaitVisitor, {
         file,
         wrapAwait: helpers.wrapAwait

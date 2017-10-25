@@ -5,7 +5,10 @@ const {
     js: { compiler: { helper: { annotateAsPure, functionName } } }
 } = adone;
 
-export default function ({ types: t }) {
+export default function ({ types: t }, options) {
+    const { loose } = options;
+    const Constructor = loose ? LooseTransformer : VanillaTransformer;
+
     // todo: investigate traversal requeueing
     const VISITED = Symbol();
 
@@ -55,11 +58,6 @@ export default function ({ types: t }) {
                 }
 
                 node[VISITED] = true;
-
-                let Constructor = VanillaTransformer;
-                if (state.opts.loose) {
-                    Constructor = LooseTransformer;
-                }
 
                 path.replaceWith(new Constructor(path, state.file).run());
 

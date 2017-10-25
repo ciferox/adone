@@ -84,6 +84,13 @@ const getTokenType = (match) => {
         return "bracket";
     }
 
+    if (
+        token.type === "invalid" &&
+        (token.value === "@" || token.value === "#")
+    ) {
+        return "punctuator";
+    }
+
     return token.type;
 };
 
