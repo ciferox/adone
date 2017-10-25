@@ -1355,20 +1355,30 @@ export default class CliApplication extends application.Application {
             return;
         }
 
-        @adone.netron.Context()
+        const {
+            Context,
+            Public
+        } = adone.netron;
+
+        @Context()
         class CliContext {
             constructor(app) {
                 this.app = app;
             }
 
-            @adone.netron.Public()
+            @Public()
             defineArguments(options) {
                 return this.app.defineArguments(options);
             }
 
-            @adone.netron.Public()
+            @Public()
             defineCommand(subsystem, ...args) {
                 return this.app.defineCommand(subsystem, ...args);
+            }
+
+            @Public()
+            exitOnSignal(signame) {
+                return this.app.exitOnSignal(signame);
             }
         }
         adone.runtime.netron.attachContext(new CliContext(this), ctxId);
@@ -1458,6 +1468,7 @@ export default class CliApplication extends application.Application {
         try {
             if (is.null(adone.runtime.app)) {
                 await this._setupMain();
+                this.exitOnSignal("SIGINT");
             }
 
             const [command, match, rest] = await this._configure(ignoreArgs);

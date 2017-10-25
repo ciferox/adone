@@ -868,3 +868,103 @@ export const repeat = (item, n) => {
     }
     return arr;
 };
+
+export const signalNameToCode = (sigName) => {
+    switch (sigName) {
+        case "SIGHUP": {
+            return 1;
+        }
+        case "SIGINT": {
+            return 2;
+        }
+        case "SIGQUIT": {
+            return 3;
+        }
+        case "SIGILL": {
+            return 4;
+        }
+        case "SIGTRAP": {
+            return 5;
+        }
+        case "SIGIOT":
+        case "SIGABRT": {
+            return 6;
+        }
+        case "SIGBUS": {
+            return 7;
+        }
+        case "SIGFPE": {
+            return 8;
+        }
+        case "SIGKILL": {
+            return 9;
+        }
+        case "SIGUSR1": {
+            return 10;
+        }
+        case "SIGSEGV": {
+            return 11;
+        }
+        case "SIGUSR2": {
+            return 12;
+        }
+        case "SIGPIPE": {
+            return 13;
+        }
+        case "SIGALRM": {
+            return 14;
+        }
+        case "SIGTERM": {
+            return 15;
+        }
+        case "SISTKFLT": {
+            return 16;
+        }
+        case "SIGCHLD": {
+            return 17;
+        }
+        case "SIGCONT": {
+            return 18;
+        }
+        case "SIGSTOP": {
+            return 19;
+        }
+        case "SIGTSTP": {
+            return 20;
+        }
+        case "SIGTTIN": {
+            return 21;
+        }
+        case "SIGTTOU": {
+            return 22;
+        }
+        case "SIGURG": {
+            return 23;
+        }
+        case "SIGXCPU": {
+            return 24;
+        }
+        case "SIGXFSZ": {
+            return 25;
+        }
+        case "SIGVTALRM": {
+            return 26;
+        }
+        case "SIGPROF": {
+            return 27;
+        }
+        case "SIGWINCH": {
+            return 28;
+        }
+        case "SIGPOLL":
+        case "SIGIO": {
+            return 29;
+        }
+        case "SIGPWR": {
+            return 30;
+        }
+        case "SIGSYS": {
+            return 31;
+        }
+    }
+};

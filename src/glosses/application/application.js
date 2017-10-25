@@ -4,7 +4,8 @@ const {
     std,
     runtime: { term },
     tag,
-    application
+    application,
+    util
 } = adone;
 
 const {
@@ -259,8 +260,8 @@ export default class Application extends application.Subsystem {
         return this._fireException(...args);
     }
 
-    _signalExit(/*sigName*/) {
-        return this.exit(EXIT_SUCCESS);
+    _signalExit(sigName) {
+        return this.exit(128 + util.signalNameToCode(sigName));
     }
 }
 tag.add(Application, "APPLICATION");
