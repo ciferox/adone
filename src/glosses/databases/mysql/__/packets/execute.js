@@ -40,7 +40,7 @@ export default class Execute {
                         // TODO: move to asMysqlDateTime()
                         this.parameters[i] = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`;
                     }
-                    if (is.exdate(this.parameters[i])) {
+                    if (is.datetime(this.parameters[i])) {
                         // TODO: move to asMysqlDateTime()
                         this.parameters[i] = this.parameters[i].format("YYYY-M-D H:m:s");
                     }

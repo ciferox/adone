@@ -18,7 +18,7 @@ export default class Command {
         this.name = name;
         this.replyEncoding = options.replyEncoding;
         this.errorStack = options.errorStack;
-        this.args = args ? util.flatten(args) : [];
+        this.args = args ? util.flatten(args, { depth: 1 }) : [];
         this.callback = callback || noop;
         this.initPromise();
 
@@ -53,10 +53,10 @@ export default class Command {
     getSlot() {
         if (is.undefined(this._slot)) {
             const key = this.getKeys()[0];
-            if (key) {
-                this.slot = __.calculateSlot(key);
-            } else {
+            if (is.nil(key)) {
                 this.slot = null;
+            } else {
+                this.slot = __.calculateSlot(key);
             }
         }
         return this.slot;

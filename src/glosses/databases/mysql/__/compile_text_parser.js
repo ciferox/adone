@@ -38,7 +38,7 @@ const readCodeFor = (type, charset, encodingExpr, config, options) => {
             return "packet.parseLengthCodedFloat()";
         }
         case c.type.NULL: {
-            return "null; packet.skip(1)";
+            return "packet.readLengthCodedNumber()";
         }
         case c.type.DECIMAL:
         case c.type.NEWDECIMAL: {

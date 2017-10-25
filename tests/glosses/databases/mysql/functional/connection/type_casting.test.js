@@ -2,7 +2,7 @@ import { createConnection } from "../../common";
 import typeCastringTests from "./type_casting_tests";
 
 describe("database", "mysql", "functional", "connection", "type casting", () => {
-    const { util } = adone;
+    const { util, is } = adone;
     let connection = null;
     let tests = null;
 
@@ -46,8 +46,8 @@ describe("database", "mysql", "functional", "connection", "type casting", () => 
 
                 expected = String(expected);
                 got = String(got);
-            } else if (Buffer.isBuffer(expected)) {
-                assert.equal(Buffer.isBuffer(got), true, test.type);
+            } else if (is.buffer(expected)) {
+                assert.equal(is.buffer(got), true, test.type);
 
                 expected = String(Array.prototype.slice.call(expected));
                 got = String(Array.prototype.slice.call(got));

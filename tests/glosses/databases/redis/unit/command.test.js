@@ -80,12 +80,18 @@ describe("database", "redis", "unit", "Command", () => {
             };
 
             expectSlot("123", 5970);
+            expectSlot(123, 5970);
             expectSlot("ab{c", 4619);
             expectSlot("ab{c}2", 7365);
             expectSlot("ab{{c}2", 2150);
             expectSlot("ab{qq}{c}2", 5598);
             expectSlot("ab}", 11817);
             expectSlot("encoding", 3060);
+            expectSlot(true, 13635);
+            expectSlot("true", 13635);
+            expectSlot("", 0);
+            expectSlot(null, 0);
+            expectSlot(undefined, 0);
 
         });
     });
