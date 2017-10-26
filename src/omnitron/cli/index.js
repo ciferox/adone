@@ -1,217 +1,31 @@
+import Subsystem from "./subsystem";
+
 const {
+    application,
     is,
     text: { pretty },
     util,
-    omnitron
+    omnitron,
+    std
 } = adone;
 
 const {
     Command,
-    MainCommand,
-    CliSubsystem,
-    CommandsGroup
+    CliSubsystem
 } = application.CliApplication;
 
 const { STATUSES } = omnitron;
 
-const __ = adone.lazify({
-    Service: () => {
-        const os = process.platform;
-        let fileName;
-        switch (os) {
-            case "win32": fileName = "windows"; break;
-            case "linux": fileName = "linux"; break;
-            case "darwin": fileName = "macos"; break;
-        }
-        return require(`../svc/${fileName}`);
-    }
-});
-
-export default class extends adone.application.Subsystem {
-    async configure() {
-        this._bar = null;
-        await adone.runtime.netron.getInterface("cli").defineCommand(this, {
-            commands: [
-                {
-                    name: "ping",
-                    help: "ping the omnitron",
-                    handler: this.pingCommand
-                },
-                {
-                    name: "info",
-                    help: "the omnitron's information",
-                    handler: this.infoCommand
-                },
-                {
-                    name: "up",
-                    help: "Up omnitron",
-                    handler: this.upCommand
-                },
-                {
-                    name: "down",
-                    help: "Down omnitron",
-                    handler: this.downCommand
-                },
-                {
-                    name: "startup",
-                    help: "Omnitron startup stuff",
-                    commands: [
-                        {
-                            name: "enable",
-                            help: "Enable omnitron startup",
-                            options: [
-                                {
-                                    name: "--user",
-                                    type: String,
-                                    required: true,
-                                    help: "User name (omnitron only)"
-                                },
-                                {
-                                    name: "--mode",
-                                    type: String,
-                                    choices: ["sysd", "sysv"],
-                                    default: "sysv",
-                                    help: "Service mode (omnitron only)"
-                                }
-                            ],
-                            handler: this.startupEnableCommand
-                        },
-                        {
-                            name: "disable",
-                            help: "Disable omnitron startup",
-                            options: [
-                                {
-                                    name: "--mode",
-                                    type: String,
-                                    default: "sysv",
-                                    choices: ["sysd", "sysv"],
-                                    help: "Service mode (omnitron only)"
-                                }
-                            ],
-                            handler: this.startupDisableCommand
-                        }
-                    ]
-                },
-                {
-                    name: "enable",
-                    help: "Enable service",
-                    arguments: [
-                        {
-                            name: "service",
-                            type: String,
-                            help: "Name of service"
-                        }
-                    ],
-                    handler: this.enableCommand
-                },
-                {
-                    name: "disable",
-                    help: "Disable service",
-                    arguments: [
-                        {
-                            name: "service",
-                            type: String,
-                            help: "Name of service"
-                        }
-                    ],
-                    handler: this.disableCommand
-                },
-                {
-                    name: "start",
-                    help: "Start service",
-                    arguments: [
-                        {
-                            name: "service",
-                            type: String,
-                            help: "Name of service"
-                        }
-                    ],
-                    handler: this.startServiceCommand
-                },
-                {
-                    name: "stop",
-                    help: "Stop service",
-                    arguments: [
-                        {
-                            name: "service",
-                            type: String,
-                            help: "Name of service"
-                        }
-                    ],
-                    handler: this.stopServiceCommand
-                },
-                {
-                    name: "restart",
-                    help: "Restart service",
-                    arguments: [
-                        {
-                            name: "service",
-                            type: String,
-                            default: "",
-                            help: "Name of service"
-                        }
-                    ],
-                    handler: this.restartCommand
-                },
-                {
-                    name: "configure",
-                    help: "Configure service",
-                    arguments: [
-                        {
-                            name: "service",
-                            type: String,
-                            default: "",
-                            help: "Name of service"
-                        }
-                    ],
-                    options: [
-                        {
-                            name: "--group",
-                            type: String,
-                            help: "Group name"
-                        }
-                    ],
-                    handler: this.configureCommand
-                },
-                {
-                    name: "services",
-                    help: "Show services",
-                    options: [
-                        {
-                            name: "--name",
-                            help: "service name(s)",
-                            type: String,
-                            nargs: "*"
-                        },
-                        {
-                            name: "--status",
-                            help: "status of service",
-                            type: String,
-                            choices: STATUSES,
-                            default: null
-                        }
-                    ],
-                    handler: this.servicesCommand
-                },
-                // {
-                //     name: "gates",
-                //     help: "show gates",
-                //     handler: this.gatesCommand
-                // }
-            ]
-        });
-    }
-
-    async _connectToLocal() {
-        await omnitron.dispatcher.connectLocal({
-            forceStart: false
-        });
-    }
-
-    uninitialize() {
-        return omnitron.dispatcher.disconnect();
-    }
-
+@CliSubsystem({
+    name: "startup",
+    description: "Omnitron startup stuff",
+    subsystem: std.path.resolve(__dirname, "startup")
+})
+export default class Omnitron extends Subsystem {
+    @Command({
+        name: "up",
+        help: "Up omnitron"
+    })
     async upCommand() {
         try {
             this._createProgress("starting up omnitron");
@@ -230,6 +44,10 @@ export default class extends adone.application.Subsystem {
         }
     }
 
+    @Command({
+        name: "down",
+        help: "Down omnitron"
+    })
     async downCommand() {
         try {
             this._createProgress("shutting down omnitron");
@@ -254,44 +72,10 @@ export default class extends adone.application.Subsystem {
         }
     }
 
-    async startupEnableCommand(args, opts) {
-        try {
-            this._createProgress("trying to install omnitron service");
-            const config = {
-                mode: opts.get("mode")
-            };
-
-            if (opts.has("user")) {
-                config.user = opts.get("user");
-            }
-
-            const service = new __.Service(config);
-            await service.install();
-            this._updateProgress("done", true);
-            return 0;
-        } catch (err) {
-            this._updateProgress(err.message, false);
-            return 1;
-        }
-    }
-
-    async startupDisableCommand(args, opts) {
-        try {
-            this._createProgress("trying to uninstall omnitron service");
-            const config = {
-                mode: opts.get("mode")
-            };
-
-            const service = new __.Service(config);
-            await service.uninstall();
-            this._updateProgress("done", true);
-            return 0;
-        } catch (err) {
-            this._updateProgress(err.message, false);
-            return 1;
-        }
-    }
-
+    @Command({
+        name: "ping",
+        help: "ping the omnitron"
+    })
     async pingCommand() {
         this._createProgress("checking");
         try {
@@ -302,9 +86,13 @@ export default class extends adone.application.Subsystem {
 
         const result = await omnitron.dispatcher.ping();
         this._updateProgress(result ? "done" : "failed", result);
-        return result;
+        return 0;
     }
 
+    @Command({
+        name: "info",
+        help: "the omnitron's information"
+    })
     async infoCommand() {
         try {
             this._createProgress("obtaining");
@@ -320,6 +108,17 @@ export default class extends adone.application.Subsystem {
         }
     }
 
+    @Command({
+        name: "enable",
+        help: "Enable service",
+        arguments: [
+            {
+                name: "service",
+                type: String,
+                help: "Name of service"
+            }
+        ]
+    })
     async enableCommand(args, opts) {
         try {
             this._createProgress("enabling");
@@ -334,6 +133,17 @@ export default class extends adone.application.Subsystem {
         }
     }
 
+    @Command({
+        name: "disable",
+        help: "Disable service",
+        arguments: [
+            {
+                name: "service",
+                type: String,
+                help: "Name of service"
+            }
+        ]
+    })
     async disableCommand(args, opts) {
         try {
             this._createProgress("disabling");
@@ -348,6 +158,17 @@ export default class extends adone.application.Subsystem {
         }
     }
 
+    @Command({
+        name: "start",
+        help: "Start service",
+        arguments: [
+            {
+                name: "service",
+                type: String,
+                help: "Name of service"
+            }
+        ]
+    })
     async startServiceCommand(args) {
         try {
             this._createProgress("starting");
@@ -362,6 +183,17 @@ export default class extends adone.application.Subsystem {
         }
     }
 
+    @Command({
+        name: "stop",
+        help: "Stop service",
+        arguments: [
+            {
+                name: "service",
+                type: String,
+                help: "Name of service"
+            }
+        ]
+    })
     async stopServiceCommand(args) {
         try {
             this._createProgress("dtopping");
@@ -376,6 +208,18 @@ export default class extends adone.application.Subsystem {
         }
     }
 
+    @Command({
+        name: "restart",
+        help: "Restart service",
+        arguments: [
+            {
+                name: "service",
+                type: String,
+                default: "",
+                help: "Name of service"
+            }
+        ]
+    })
     async restartCommand(args) {
         try {
             this._createProgress("restarting");
@@ -390,6 +234,25 @@ export default class extends adone.application.Subsystem {
         }
     }
 
+    @Command({
+        name: "configure",
+        help: "Configure service",
+        arguments: [
+            {
+                name: "service",
+                type: String,
+                default: "",
+                help: "Name of service"
+            }
+        ],
+        options: [
+            {
+                name: "--group",
+                type: String,
+                help: "Group name"
+            }
+        ]
+    })
     async configureCommand(args, opts) {
         try {
             this._createProgress("configuring");
@@ -408,7 +271,7 @@ export default class extends adone.application.Subsystem {
                     schema: " {yellow-fg}!{/yellow-fg} nothing to configure"
                 }, true);
             }
-            
+
             return 0;
         } catch (err) {
             this._updateProgress(err.message, false);
@@ -416,6 +279,25 @@ export default class extends adone.application.Subsystem {
         }
     }
 
+    @Command({
+        name: "services",
+        help: "Show services",
+        options: [
+            {
+                name: "--name",
+                help: "service name(s)",
+                type: String,
+                nargs: "*"
+            },
+            {
+                name: "--status",
+                help: "status of service",
+                type: String,
+                choices: STATUSES,
+                default: null
+            }
+        ]
+    })
     async servicesCommand(args, opts) {
         try {
             this._createProgress("obtaining");
@@ -512,31 +394,4 @@ export default class extends adone.application.Subsystem {
     //     }
     //     return 0;
     // }
-
-    _createProgress(message) {
-        if (!this.silent) {
-            this.bar = adone.runtime.term.progress({
-                schema: ` :spinner ${message}`
-            });
-            this.bar.update(0);
-        }
-    }
-
-    _updateProgress(message, result = null, clean = false) {
-        if (!is.null(this.bar) && !this.silent) {
-            if (is.plainObject(message)) {
-                this.bar.setSchema(message.schema);
-            } else {
-                this.bar.setSchema(` :spinner ${message}`);
-            }
-
-            if (is.boolean(result)) {
-                if (clean) {
-                    this.bar.clean = true;
-                }
-                this.bar.complete(result);
-            }
-
-        }
-    }
 }
