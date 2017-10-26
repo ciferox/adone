@@ -1,11 +1,13 @@
 const {
+    is,
+    promise,
     task,
     x
 } = adone;
 
 describe("", () => {
     let manager;
-    
+
     beforeEach(() => {
         manager = new task.Manager();
     });
@@ -39,7 +41,7 @@ describe("", () => {
         const invalidTasks = [
             InvalidTask1,
             InvalidTask2,
-            InvalidTask3  
+            InvalidTask3
         ];
 
         for (const InvalidTask of invalidTasks) {
@@ -68,7 +70,7 @@ describe("", () => {
     it("run async task", async () => {
         class TaskA extends task.Task {
             async run(version) {
-                await adone.promise.delay(10);
+                await promise.delay(10);
                 return `adone ${version}`;
             }
         }
@@ -115,7 +117,7 @@ describe("", () => {
     it("run async task once", async () => {
         class TaskA extends task.Task {
             async run(version) {
-                await adone.promise.delay(10);
+                await promise.delay(10);
                 return `adone ${version}`;
             }
         }
@@ -126,5 +128,109 @@ describe("", () => {
         assert.equal(await observer.result, `adone ${adone.package.version}`);
         assert.isTrue(observer.isCompleted());
         assert.lengthOf(manager.getTaskNames(), 0);
+    });
+
+    describe("suspend/resume/cancel", () => {
+        class TaskA extends task.Task {
+            constructor() {
+                super();
+                this._runDefer = null;
+                this._suspendDefer = null;
+                this._cancelDefer = null;
+            }
+
+            async run(suspendable = false, cancelable = false) {
+                this._suspendable = suspendable;
+                this._cancelable = cancelable;
+                this.data = 0;
+                this._runDefer = promise.defer();
+                this._run();
+                return this._runDefer.promise;
+            }
+
+            async _run() {
+                for (; ;) {
+                    await promise.delay(10); // eslint-disable-line
+                    this.data++;
+                    if (this.data >= 100) {
+                        this._runDefer.resolve(this.data);
+                        return;
+                    }
+
+                    if (!is.null(this._suspendDefer)) {
+                        this._suspendDefer.resolve();
+                        return;
+                    }
+                    if (!is.null(this._cancelDefer)) {
+                        this._runDefer.resolve();
+                        this._cancelDefer.resolve();
+                        return;
+                    }
+                }
+            }
+
+            isSuspendable() {
+                return this._suspendable;
+            }
+
+            isCancelable() {
+                return this._cancelable;
+            }
+
+            suspend(defer) {
+                this._suspendDefer = defer;
+            }
+
+            resume(defer) {
+                this._suspendDefer = null;
+                this._run();
+                defer.resolve();
+            }
+
+            cancel(defer) {
+                this._cancelDefer = defer;
+            }
+        }
+
+        it("suspend/resume non suspendable task", async () => {
+            manager.addTask("a", TaskA);
+            const observer = await manager.run("a", false);
+            await promise.delay(200);
+            await observer.suspend();
+            assert.isFalse(observer.isSuspended());
+            assert.equal(await observer.result, 100);
+        });
+
+        it("cancel non cancelable task", async () => {
+            manager.addTask("a", TaskA);
+            const observer = await manager.run("a", false, false);
+            await promise.delay(200);
+            await observer.cancel();
+            assert.equal(await observer.result, 100);
+            assert.isTrue(observer.isCompleted());
+            assert.isFalse(observer.isCancelled());            
+        });
+
+        it("suspend/resume suspendable task", async () => {
+            manager.addTask("a", TaskA);
+            const observer = await manager.run("a", true);
+            await promise.delay(200);
+            await observer.suspend();
+            assert.isTrue(observer.isSuspended());
+            await promise.delay(100);
+            await observer.resume();
+            assert.isTrue(observer.isRunning());
+            assert.equal(await observer.result, 100);
+        });
+
+        it("cancel cancelable task", async () => {
+            manager.addTask("a", TaskA);
+            const observer = await manager.run("a", false, true);
+            await promise.delay(200);
+            await observer.cancel();
+            assert.notEqual(await observer.result, 100);
+            assert.isFalse(observer.isCompleted());
+            assert.isTrue(observer.isCancelled());            
+        });
     });
 });

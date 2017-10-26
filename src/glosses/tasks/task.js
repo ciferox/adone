@@ -5,7 +5,7 @@ const {
 
 export class Task {
     constructor() {
-        this.data = this._ = {};
+        this.data = this._ = null;
         this.manager = null;
     }
 
@@ -19,19 +19,19 @@ export class Task {
     }
 
     /**
-     * Suspends task. Should be implemented in derived class and should be synchronous.
+     * Suspends task. Should be implemented in derived class.
      */
     suspend() {
     }
 
     /**
-     * Resumes task. Should be implemented in derived class and should be synchronous.
+     * Resumes task. Should be implemented in derived class.
      */
     resume() {
     }
 
     /**
-     * Cancels task. Should be implemented in derived class and should be synchronous.
+     * Cancels task. Should be implemented in derived class.
      */
     cancel() {
     }
@@ -63,10 +63,12 @@ export class TaskObserver {
     /**
      * Cancels task.
      */
-    cancel() {
+    async cancel() {
         if (this.task.isCancelable() && this.state === state.RUNNING) {
-            this.task.cancel();
             this.state = state.CANCELLING;
+            const defer = adone.promise.defer();            
+            await this.task.cancel(defer);
+            await defer;
         }
     }
 
@@ -76,12 +78,14 @@ export class TaskObserver {
      * @param {number} ms If provided, the task will be resumed after the specified timeout.
      * @param {function} callback Is used only in conjunction with the 'ms' parameter, otherwise will be ignored.
      */
-    suspend(ms, callback) {
+    async suspend(ms, callback) {
         if (this.task.isSuspendable()) {
             if (this.state in [state.CANCELED, state.FINISHED]) {
                 return is.number(ms) && is.function(callback) && callback();
             }
-            this.task.suspend();
+            const defer = adone.promise.defer();
+            await this.task.suspend(defer);
+            await defer.promise;
             this.state = state.SUSPENDED;
             if (is.number(ms)) {
                 setTimeout(() => {
@@ -97,9 +101,11 @@ export class TaskObserver {
     /**
      * Resumes task.
      */
-    resume() {
+    async resume() {
         if (this.state === state.SUSPENDED) {
-            this.task.resume();
+            const defer = adone.promise.defer();
+            await this.task.resume(defer);
+            await defer;
             this.state = state.RUNNING;
         }
     }
