@@ -15,6 +15,38 @@ export const STATE = {
     FAILED: 8
 };
 
+export const humanizeState = (state) => {
+    switch (state) {
+        case STATE.INITIAL: {
+            return "initial";
+        }
+        case STATE.CONFIGURING: {
+            return "configuring";
+        }
+        case STATE.CONFIGURED: {
+            return "configured";
+        }
+        case STATE.INITIALIZING: {
+            return "initializing";
+        }
+        case STATE.INITIALIZED: {
+            return "initialized";
+        }
+        case STATE.RUNNING: {
+            return "running";
+        }
+        case STATE.UNINITIALIZING: {
+            return "uninitializing";
+        }
+        case STATE.UNINITIALIZED: {
+            return "uninitialized";
+        }
+        case STATE.FAILED: {
+            return "failed";
+        }
+    }
+};
+
 export const EXIT_SUCCESS = 0;
 export const EXIT_ERROR = 1;
 

@@ -1614,6 +1614,12 @@ export default class CliApplication extends application.Application {
                 this._createCommand(subCmdParams, command);
             }
         }
+
+        if (is.string(schema.help)) {
+            command.description = schema.help;
+        } else if (is.string(schema.description)) {
+            command.description = schema.description;
+        }
     }
 
     _getCommand(chain, create = false) {

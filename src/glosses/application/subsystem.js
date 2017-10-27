@@ -5,6 +5,7 @@ const {
     tag,
     x,
     application: {
+        humanizeState,
         STATE
     }
 } = adone;
@@ -119,7 +120,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
 
     /**
      * Reinitializa specified subsystem.
-     * 
+     *
      * @param {string} name Name of subsystem
      * @returns {Promise<void>}
      */
@@ -291,17 +292,17 @@ export default class Subsystem extends adone.event.AsyncEmitter {
             await sysInfo.instance._configure(...sysInfo.configureArgs);
             sysInfo.state = STATE.CONFIGURED;
         } else if (sysInfo.state !== STATE.CONFIGURED) {
-            throw new adone.x.IllegalState(`Illegal subsystem state for configure: ${sysInfo.state}`);
+            throw new adone.x.IllegalState(`Illegal subsystem state for configure: ${humanizeState(sysInfo.state)}`);
         }
     }
 
     async _initializeSubsystem(sysInfo) {
-        if (sysInfo.state === STATE.CONFIGURED) {
+        if (sysInfo.state === STATE.CONFIGURED || sysInfo.state === STATE.UNINITIALIZED) {
             sysInfo.state = STATE.INITIALIZING;
             await sysInfo.instance._initialize();
             sysInfo.state = STATE.INITIALIZED;
         } else if (sysInfo.state !== STATE.INITIALIZED) {
-            throw new adone.x.IllegalState(`Illegal subsystem state for initialize: ${sysInfo.state}`);
+            throw new adone.x.IllegalState(`Illegal subsystem state for initialize: ${humanizeState(sysInfo.state)}`);
         }
     }
 
@@ -311,7 +312,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
             await sysInfo.instance._uninitialize();
             sysInfo.state = STATE.UNINITIALIZED;
         } else if (sysInfo.state !== STATE.UNINITIALIZED) {
-            throw new adone.x.IllegalState(`Illegal subsystem state for uninitialize: ${sysInfo.state}`);
+            throw new adone.x.IllegalState(`Illegal subsystem state for uninitialize: ${humanizeState(sysInfo.state)}`);
         }
     }
 
@@ -319,7 +320,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         if (sysInfo.state === STATE.INITIALIZED) {
             await sysInfo.instance._reinitialize();
         } else {
-            throw new adone.x.IllegalState(`Illegal subsystem state for reinitialize: ${sysInfo.state}`);
+            throw new adone.x.IllegalState(`Illegal subsystem state for reinitialize: ${humanizeState(sysInfo.state)}`);
         }
     }
 
