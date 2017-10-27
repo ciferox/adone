@@ -11,8 +11,8 @@ const {
 const {
     EXIT_SUCCESS,
     EXIT_ERROR,
-    STAGE_SYMBOL,
-    STATE
+    STATE,
+    STATE_SYMBOL
 } = application;
 
 // const INTERNAL = Symbol();
@@ -126,7 +126,7 @@ export default class Application extends application.Subsystem {
                 await this.exit(code);
                 return;
             }
-            this[STAGE_SYMBOL] = STATE.RUNNING;
+            this[STATE_SYMBOL] = STATE.RUNNING;
         } catch (err) {
             if (this[ERROR_SCOPE]) {
                 return this._fireException(err);
@@ -163,7 +163,12 @@ export default class Application extends application.Subsystem {
         this[EXITING] = true;
 
         try {
-            await this._uninitialize();
+            switch (this[STATE_SYMBOL]) {
+                // initializing?
+                case STATE.INITIALIZED:
+                case STATE.RUNNING:
+                    await this._uninitialize();
+            }
             this.removeProcessHandlers();
             await this.emitParallel("exit", code);
         } catch (err) {

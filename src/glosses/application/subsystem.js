@@ -6,12 +6,12 @@ const {
     x,
     application: {
         humanizeState,
-        STATE
+        STATE,
+        STATE_SYMBOL
     }
 } = adone;
 
 const SUBSYSTEMS_SYMBOL = Symbol.for("application.Subsystem#subsystems");
-const STATE_SYMBOL = Symbol.for("application.Subsystem#state");
 
 export default class Subsystem extends adone.event.AsyncEmitter {
     constructor({ name = null } = {}) {
