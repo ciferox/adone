@@ -21,15 +21,14 @@ describe("application", "CliApplication", () => {
 
     it("should not parse args and use correct argv", async () => {
         const expectedArgv = ["a", "b", "8", "--cc"];
-        const argv = await execStdout("node", [fixture("argv.js")].concat(expectedArgv));
-        assert.equal(argv, expectedArgv.join(" "));
+        const result = await forkProcess(fixture("argv.js"), expectedArgv);
+        assert.equal(result.stdout, expectedArgv.join(" "));
     });
 
     it("no public properties instead of application's reserved", async () => {
-        const expected = ["_", "data", "parent", "argv", "name"];
-        const stdout = await execStdout("node", [fixture("public_reserved_props_cli.js")]);
-        adone.log(stdout);
-        const props = stdout.split(";");
+        const expected = ["parent", "argv", "name"];
+        const result = await forkProcess(fixture("public_reserved_props_cli.js"));
+        const props = result.stdout.split(";");
         assert.sameMembers(props, expected);
     });
 });

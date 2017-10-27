@@ -1,5 +1,3 @@
-const adone = require(process.env.ADONE_ROOT_PATH).adone;
-
 const {
     is
 } = adone;

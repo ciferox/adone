@@ -19,6 +19,14 @@ export default class ProjectConfiguration extends adone.configuration.FileConfig
         this[ENTRIES] = null;
     }
 
+    getName() {
+        return CONFIG_NAME;
+    }
+
+    getPath() {
+        return std.path.join(this.cwd, CONFIG_NAME);
+    }
+
     getRelativePath() {
         return this[RELATIVE_PATH];
     }

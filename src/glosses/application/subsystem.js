@@ -17,40 +17,31 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         super();
 
         this.name = name;
-        this[SUBSYSTEMS_SYMBOL] = [];
         this.parent = null;
-        this._ = this.data = {};
-        this[STATE_SYMBOL] = STATE.CREATED;
+        this[SUBSYSTEMS_SYMBOL] = [];
+        this[STATE_SYMBOL] = STATE.INITIAL;
     }
 
     /**
-     * Configures subsystem. This method should be redefined in derived class
+     * Configures subsystem. This method should be redefined in derived class.
      */
     configure() {
     }
 
     /**
-     * Initializes subsystem. This method should be redefine in derived class
+     * Initializes subsystem. This method should be redefined in derived class.
      */
     initialize() {
     }
 
     /**
-     * Uninitializes subsystem. This method should be redefine in derived class
+     * Uninitializes subsystem. This method should be redefined in derived class.
      */
     uninitialize() {
     }
 
     /**
-     * Reinitializes subsystem.
-     */
-    async reinitialize() {
-        await this.uninitialize();
-        await this.initialize();
-    }
-
-    /**
-     * Configures all subsystems
+     * Configures all subsystems.
      *
      * @returns {Promise<void>}
      */
@@ -117,7 +108,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
     }
 
     /**
-     * Returns subsystem instance by name
+     * Returns subsystem instance by name.
      *
      * @param {string} name Name of subsystem
      * @returns {adone.application.Subsystem}
@@ -128,7 +119,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
     }
 
     /**
-     * Checks whether subsystem exists
+     * Checks whether subsystem exists.
      * @param {*} name name of subsystem
      */
     hasSubsystem(name) {
@@ -186,7 +177,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
             group,
             configureArgs,
             instance,
-            state: STATE.CREATED
+            state: STATE.INITIAL
         };
 
         this[SUBSYSTEMS_SYMBOL].push(sysInfo);
@@ -196,14 +187,14 @@ export default class Subsystem extends adone.event.AsyncEmitter {
 
     /**
      * Deletes subsytem
-     * @param {string} name subsystem name
+     * @param {string} name subsystem name.
      */
     deleteSubsystem(name, force = false) {
         const index = this[SUBSYSTEMS_SYMBOL].findIndex((s) => s.name === name);
         if (index < 0) {
             throw new x.Unknown(`Unknown subsystem: ${name}`);
         }
-        if (!force && ![STATE.CREATED, STATE.UNINITIALIZED, STATE.FAILED].includes(this[SUBSYSTEMS_SYMBOL][index].state)) {
+        if (!force && ![STATE.INITIAL, STATE.UNINITIALIZED, STATE.FAILED].includes(this[SUBSYSTEMS_SYMBOL][index].state)) {
             throw new x.NotAllowed("The subsystem is used and can not be deleted");
         }
 
@@ -254,7 +245,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
     }
 
     /**
-     * Returns subsystem info by name
+     * Returns subsystem info by name.
      *
      * @param {Subsystem} name Name of subsystem
      */
@@ -267,7 +258,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
     }
 
     /**
-     * Returns list of all subsystem
+     * Returns list of all subsystem.
      */
     getSubsystems() {
         return this[SUBSYSTEMS_SYMBOL];
@@ -315,6 +306,17 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         await this.uninitialize();
         await this.uninitializeSubsystems();
         this[STATE_SYMBOL] = STATE.UNINITIALIZED;
+    }
+
+    async _reinitialize(reconfigure = false) {
+        await this._uninitialize();
+        if (reconfigure) {
+            this[STATE_SYMBOL] = STATE.INITIAL;
+            await this._configure();
+        } else {
+            this[STATE_SYMBOL] = STATE.CONFIGURED;
+        }
+        await this.initialize();
     }
 }
 tag.add(Subsystem, "SUBSYSTEM");

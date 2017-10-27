@@ -4,7 +4,7 @@ const {
 } = adone;
 
 export const STATE = {
-    CREATED: 0,
+    INITIAL: 0,
     CONFIGURING: 1,
     CONFIGURED: 2,
     INITIALIZING: 3,
