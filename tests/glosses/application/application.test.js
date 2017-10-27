@@ -112,29 +112,27 @@ describe("application", "Application", () => {
 
         it("subsystem custom initialization", async () => {
             const result = await forkProcess(fixture("subsystem_custom_initialize.js"));
-            assert.equal(result.stdout, "app_configure\nconfigure1\nconfigure2\napp_initialize\ninitialize2\ninitialize1\napp_uninitialize\nuninitialize2\nuninitialize1");
+            assert.equal(result.stdout, "c\nc1\nc2\ni2\ni\ni1\nu\nu2\nu1");
         });
 
         it("subsystem custom deinitialization", async () => {
             const result = await forkProcess(fixture("subsystem_custom_uninitialize.js"));
-            assert.equal(result.stdout, "app_configure\nconfigure1\nconfigure2\napp_initialize\ninitialize1\ninitialize2\nuninitialize1\napp_uninitialize\nuninitialize2");
+            assert.equal(result.stdout, "c\nc1\nc2\ni\ni1\ni2\nu1\nu\nu2");
         });
 
-        for (const reconfigure of ["no", "yes"]) {
-            it(`reinitialization (reconfigure: ${reconfigure})`, async () => {
-                const result = await forkProcess(fixture("reinitialization.js"), [], {
-                    env: {
-                        reconfigure,
-                        ...process.env
-                    }
-                });
+        it("simple reinitialization", async () => {
+            const result = await forkProcess(fixture("simple_reinitialization.js"));
+            assert.equal(result.stdout, "non configured\nconfigured\ninitialized\nmain\nuninitialized\ninitialized\nuninitialized");
+        });
 
-                if (reconfigure === "yes") {
-                    assert.equal(result.stdout, "non configured\nconfigured\ninitialized\nmain\nuninitialized\nconfigured\ninitialized\nuninitialized");
-                } else {
-                    assert.equal(result.stdout, "non configured\nconfigured\ninitialized\nmain\nuninitialized\ninitialized\nuninitialized");
-                }
-            });
-        }
+        it("complex reinitialization", async () => {
+            const result = await forkProcess(fixture("complex_reinitialization.js"));
+            assert.equal(result.stdout, "nc\nc\nc1\nc11\nc111\nc112\nc2\ni\ni1\ni11\ni111\ni112\ni2\nm\nr\nu\nu2\nu1\nu11\nu112\nu111\ni\ni1\ni11\ni111\ni112\ni2\nu\nu2\nu1\nu11\nu112\nu111");
+        });
+
+        it("complex custom reinitialization", async () => {
+            const result = await forkProcess(fixture("complex_custom_reinitialization.js"));
+            assert.equal(result.stdout, "nc\nc\nc1\nc11\nc111\nc112\nc2\ni2\ni\ni1\ni11\ni111\ni112\nm\nr\nu\nu2\nu1\nu111\nu11\nu112\ni2\ni\ni1\ni11\ni111\ni112\nu\nu2\nu1\nu111\nu11\nu112");
+        });
     });
 });

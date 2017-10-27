@@ -57,8 +57,8 @@ export default class Subsystem extends adone.event.AsyncEmitter {
      * @returns {Promise<void>}
      */
     async initializeSubsystems() {
-        for (const sys of this[SUBSYSTEMS_SYMBOL]) {
-            await this._initializeSubsystem(sys); // eslint-disable-line
+        for (const sysInfo of this[SUBSYSTEMS_SYMBOL]) {
+            await this._initializeSubsystem(sysInfo); // eslint-disable-line
         }
     }
 
@@ -71,7 +71,17 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         for (let i = this[SUBSYSTEMS_SYMBOL].length; --i >= 0;) {
             await this._uninitializeSubsystem(this[SUBSYSTEMS_SYMBOL][i]); // eslint-disable-line
         }
-        this[SUBSYSTEMS_SYMBOL].length = 0;
+    }
+
+    /**
+     * Reinitializes all subsystems.
+     *
+     * @returns {Promise<void>}
+     */
+    async reinitializeSubsystems() {
+        for (let i = this[SUBSYSTEMS_SYMBOL].length; --i >= 0;) {
+            await this._reinitializeSubsystem(this[SUBSYSTEMS_SYMBOL][i]); // eslint-disable-line
+        }
     }
 
     /**
@@ -105,6 +115,17 @@ export default class Subsystem extends adone.event.AsyncEmitter {
     async uninitializeSubsystem(name) {
         const sysInfo = this.getSubsystemInfo(name);
         await this._uninitializeSubsystem(sysInfo);
+    }
+
+    /**
+     * Reinitializa specified subsystem.
+     * 
+     * @param {string} name Name of subsystem
+     * @returns {Promise<void>}
+     */
+    async reinitializeSubsystem(name) {
+        const sysInfo = this.getSubsystemInfo(name);
+        await this._reinitializeSubsystem(sysInfo);
     }
 
     /**
@@ -265,9 +286,13 @@ export default class Subsystem extends adone.event.AsyncEmitter {
     }
 
     async _configureSubsystem(sysInfo) {
-        sysInfo.state = STATE.CONFIGURING;
-        await sysInfo.instance._configure(...sysInfo.configureArgs);
-        sysInfo.state = STATE.CONFIGURED;
+        if (sysInfo.state === STATE.INITIAL) {
+            sysInfo.state = STATE.CONFIGURING;
+            await sysInfo.instance._configure(...sysInfo.configureArgs);
+            sysInfo.state = STATE.CONFIGURED;
+        } else if (sysInfo.state !== STATE.CONFIGURED) {
+            throw new adone.x.IllegalState(`Illegal subsystem state for configure: ${sysInfo.state}`);
+        }
     }
 
     async _initializeSubsystem(sysInfo) {
@@ -275,6 +300,8 @@ export default class Subsystem extends adone.event.AsyncEmitter {
             sysInfo.state = STATE.INITIALIZING;
             await sysInfo.instance._initialize();
             sysInfo.state = STATE.INITIALIZED;
+        } else if (sysInfo.state !== STATE.INITIALIZED) {
+            throw new adone.x.IllegalState(`Illegal subsystem state for initialize: ${sysInfo.state}`);
         }
     }
 
@@ -283,21 +310,32 @@ export default class Subsystem extends adone.event.AsyncEmitter {
             sysInfo.state = STATE.UNINITIALIZING;
             await sysInfo.instance._uninitialize();
             sysInfo.state = STATE.UNINITIALIZED;
+        } else if (sysInfo.state !== STATE.UNINITIALIZED) {
+            throw new adone.x.IllegalState(`Illegal subsystem state for uninitialize: ${sysInfo.state}`);
+        }
+    }
+
+    async _reinitializeSubsystem(sysInfo) {
+        if (sysInfo.state === STATE.INITIALIZED) {
+            await sysInfo.instance._reinitialize();
+        } else {
+            throw new adone.x.IllegalState(`Illegal subsystem state for reinitialize: ${sysInfo.state}`);
         }
     }
 
     async _configure(...args) {
         this[STATE_SYMBOL] = STATE.CONFIGURING;
-        const result = await this.configure(...args);
+        await this.configure(...args);
         await this.configureSubsystems();
         this[STATE_SYMBOL] = STATE.CONFIGURED;
-        return result;
     }
 
     async _initialize() {
         this[STATE_SYMBOL] = STATE.INITIALIZING;
         await this.initialize();
-        await this.initializeSubsystems();
+        for (const sysInfo of this[SUBSYSTEMS_SYMBOL]) {
+            await this._initializeSubsystem(sysInfo); // eslint-disable-line
+        }
         this[STATE_SYMBOL] = STATE.INITIALIZED;
     }
 
@@ -308,15 +346,18 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         this[STATE_SYMBOL] = STATE.UNINITIALIZED;
     }
 
-    async _reinitialize(reconfigure = false) {
-        await this._uninitialize();
-        if (reconfigure) {
-            this[STATE_SYMBOL] = STATE.INITIAL;
-            await this._configure();
-        } else {
-            this[STATE_SYMBOL] = STATE.CONFIGURED;
+    _forceInitialize() {
+        this[STATE_SYMBOL] = STATE.CONFIGURED;
+        for (const sysInfo of this[SUBSYSTEMS_SYMBOL]) {
+            sysInfo.state = STATE.CONFIGURED;
+            sysInfo.instance._forceInitialize();
         }
-        await this.initialize();
+    }
+
+    async _reinitialize() {
+        await this._uninitialize();
+        this._forceInitialize();
+        await this._initialize();
     }
 }
 tag.add(Subsystem, "SUBSYSTEM");

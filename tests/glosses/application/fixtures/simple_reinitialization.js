@@ -15,7 +15,7 @@ class TestApp extends adone.application.Application {
     main() {
         adone.log("main");
         setTimeout(() => {
-            this._reinitialize(process.env.reconfigure === "yes");
+            this._reinitialize();
         }, 300);
     }
 

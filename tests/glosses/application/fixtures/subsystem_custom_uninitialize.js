@@ -4,29 +4,29 @@ const {
 
 class AppSubsystem1 extends application.Subsystem {
     configure() {
-        adone.log("configure1");
+        adone.log("c1");
     }
 
     initialize() {
-        adone.log("initialize1");
+        adone.log("i1");
     }
 
     uninitialize() {
-        adone.log("uninitialize1");
+        adone.log("u1");
     }
 }
 
 class AppSubsystem2 extends application.Subsystem {
     configure() {
-        adone.log("configure2");
+        adone.log("c2");
     }
 
     initialize() {
-        adone.log("initialize2");
+        adone.log("i2");
     }
 
     uninitialize() {
-        adone.log("uninitialize2");
+        adone.log("u2");
     }
 }
 
@@ -40,17 +40,17 @@ class TestApp extends adone.application.Application {
             subsystem: new AppSubsystem2()
         });
 
-        adone.log("app_configure");
+        adone.log("c");
     }
 
     async initialize() {
-        adone.log("app_initialize");
+        adone.log("i");
     }
 
     async uninitialize() {
         await this.uninitializeSubsystem("AppSubsystem1");
 
-        adone.log("app_uninitialize");
+        adone.log("u");
     }
 
     main() {
