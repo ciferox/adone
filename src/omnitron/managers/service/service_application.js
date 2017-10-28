@@ -25,7 +25,7 @@ class ServiceApplication extends application.Application {
         this.iMaintainer = await this.iOmnitron.getMaintainer(this.group);
         await this.iMaintainer.link(this);
 
-        return this.iMaintainer.notifyStatus({
+        await this.iMaintainer.notifyStatus({
             pid: process.pid,
             status: adone.application.STATE.CONFIGURED
         });
@@ -82,6 +82,10 @@ class ServiceApplication extends application.Application {
 
     @Public()
     async loadService(serviceData) {
+        // It's important that application should be fully initialized before any service can be loaded.
+        if (this.getState() <= application.STATE.INITIALIZED) {
+            await this.waitForState(application.STATE.INITIALIZED);
+        }
         if (this.hasSubsystem(serviceData.name)) {
             throw new adone.x.Exists(`Service ${serviceData.name} already loaded`);
         }
@@ -140,8 +144,8 @@ class ServiceApplication extends application.Application {
             throw new adone.x.NotExists(`Service ${name} not loaded`);
         }
 
-        const sysInfo = this.getSubsystemInfo(name);
-        if (sysInfo.state === application.STATE.INITIALIZED) {
+        const service = this.subsystem(name);
+        if (service.getState() === application.STATE.INITIALIZED) {
             process.nextTick(async () => {
                 try {
                     await this.uninitializeSubsystem(name);
@@ -158,10 +162,10 @@ class ServiceApplication extends application.Application {
                     }
                 }
             });
-        } else if (sysInfo.state === application.STATE.UNINITIALIZING) {
+        } else if (service.getState() === application.STATE.UNINITIALIZING) {
             throw new adone.x.IllegalState(`Serivce '${name}' is being uninitialized`);
         } else {
-            throw new adone.x.NotAllowed(`Service '${name}' is not possible to stop now`);
+            throw new adone.x.IllegalState(`Service '${name}' is in non stopable state: ${application.humanizeState(service.getState())}`);
         }
     }
 }

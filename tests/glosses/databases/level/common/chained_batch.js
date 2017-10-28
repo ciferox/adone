@@ -1,6 +1,10 @@
+const {
+    is
+} = adone;
+
 let db;
 
-function collectBatchOps(batch) {
+const collectBatchOps = (batch) => {
     const _put = batch._put;
     const _del = batch._del;
     const _operations = [];
@@ -20,7 +24,7 @@ function collectBatchOps(batch) {
     };
 
     return _operations;
-}
+};
 
 export const setUp = function (leveldown, testCommon) {
     describe("chained batch", () => {
