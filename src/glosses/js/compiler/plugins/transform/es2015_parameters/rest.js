@@ -159,7 +159,10 @@ const memberExpressionOptimisationVisitor = {
         }
     }
 };
-const hasRest = (node) => t.isRestElement(node.params[node.params.length - 1]);
+const hasRest = (node) => {
+    const length = node.params.length;
+    return length > 0 && t.isRestElement(node.params[length - 1]);
+};
 
 const optimiseIndexGetter = (path, argsId, offset) => {
     const offsetLiteral = t.numericLiteral(offset);
