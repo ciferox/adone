@@ -372,6 +372,7 @@ const _execute = (self) => {
                     }
 
                     if (writeSuccessful && workItem.immediateRelease && self.authenticating) {
+                        removeConnection(self, connection);
                         self.nonAuthenticatedConnections.push(connection);
                     } else if (writeSuccessful === false) {
                         // If write not successful put back on queue
@@ -984,6 +985,8 @@ export default class Pool extends EventEmitter {
             const connections = self.allConnections();
             // Allow nothing else to use the connections while we authenticate them
             self.availableConnections = [];
+            self.inUseConnections = [];
+            self.connectingConnections = [];
 
             let connectionsCount = connections.length;
             let error = null;
@@ -1103,11 +1106,10 @@ export default class Pool extends EventEmitter {
         if (force) {
             // Flush any remaining work items with
             // an error
-            const err = new Error("destoyed");
             while (this.queue.length > 0) {
                 const workItem = this.queue.shift();
                 if (is.function(workItem.cb)) {
-                    workItem.cb(null, err);
+                    workItem.cb(new MongoError("Pool was force destroyed"));
                 }
             }
 

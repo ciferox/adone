@@ -60,7 +60,7 @@ describe("net", "ssh", "streams", "SSH", () => {
                 const algoList = algos.join(",");
                 const re = new RegExp(`\x00\x00\x00${
                     hexByte(algoList.length)
-                    }${algoList}`);
+                }${algoList}`);
                 assert(re.test(traffic), "Unexpected client algorithms");
 
                 traffic = serverBufStream.buffer;
@@ -78,5 +78,24 @@ describe("net", "ssh", "streams", "SSH", () => {
             .pipe(server)
             .pipe(serverBufStream)
             .pipe(client);
+    });
+
+    specify("Remote ident is not trimmed", (done) => {
+        const serverIdent = "testing  \t";
+        const expectedFullIdent = `SSH-2.0-${serverIdent}`;
+
+        const client = new SSH2Stream({});
+        client.on("header", (header) => {
+            assert(header.identRaw === expectedFullIdent);
+            done();
+        });
+
+        const server = new SSH2Stream({
+            server: true,
+            hostKeys: HOST_KEYS,
+            ident: serverIdent
+        });
+
+        client.pipe(server).pipe(client);
     });
 });

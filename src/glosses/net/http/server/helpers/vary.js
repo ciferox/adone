@@ -1,7 +1,5 @@
 const { is, x } = adone;
 
-const ARRAY_SPLIT_REGEXP = / *, */;
-
 /**
  * RegExp to match field-name in RFC 7230 sec 3.2
  *
@@ -14,7 +12,34 @@ const ARRAY_SPLIT_REGEXP = / *, */;
  */
 const FIELD_NAME_REGEXP = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
 
-const parse = (header) => header.trim().split(ARRAY_SPLIT_REGEXP);
+const parse = (header) => {
+    let end = 0;
+    const list = [];
+    let start = 0;
+
+    // gather tokens
+    for (let i = 0, len = header.length; i < len; i++) {
+        switch (header.charCodeAt(i)) {
+            case 0x20: /*   */
+                if (start === end) {
+                    start = end = i + 1;
+                }
+                break;
+            case 0x2c: /* , */
+                list.push(header.substring(start, end));
+                start = end = i + 1;
+                break;
+            default:
+                end = i + 1;
+                break;
+        }
+    }
+
+    // final token
+    list.push(header.substring(start, end));
+
+    return list;
+};
 
 // Append a field to a vary header.
 const append = (header, field) => {

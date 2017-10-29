@@ -89,9 +89,9 @@ const KEXDH_GEX_REQ_PACKET = Buffer.from([
     // Minimal size in bits of an acceptable group
     0, 0, 4, 0, // 1024, modp2
     // Preferred size in bits of the group the server will send
-    0, 0, 10, 0, // 4096, modp16
+    0, 0, 16, 0, // 4096, modp16
     // Maximal size in bits of an acceptable group
-    0, 0, 20, 0 // 8192, modp18
+    0, 0, 32, 0 // 8192, modp18
 ]);
 
 const send_ = (self, payload, cb) => {
@@ -3636,7 +3636,9 @@ export default class SSH2Stream extends TransformStream {
                 expectData(this, EXP_TYPE_LF);
                 instate.status = IN_HEADER;
             } else if (instate.status === IN_HEADER) {
-                buffer = buffer.trim();
+                if (buffer.charCodeAt(buffer.length - 1) === 13) {
+                    buffer = buffer.slice(0, -1);
+                }
                 const idxDash = buffer.indexOf("-");
                 const idxSpace = buffer.indexOf(" ");
                 const header = {

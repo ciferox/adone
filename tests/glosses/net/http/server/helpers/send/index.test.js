@@ -752,7 +752,7 @@ describe("net", "http", "helpers", "send", () => {
         });
     });
 
-    it.skip("should cleanup on socket error", async () => {  // blocks the event loop
+    it.skip("should cleanup on socket error", async () => { // blocks the event loop
         const server = new Server();
         let stream;
 

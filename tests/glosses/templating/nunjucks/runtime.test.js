@@ -54,12 +54,29 @@ describe("templating", "nunjucks", "runtime", () => {
         render("{% macro foo(bar, baz) %}" +
             "{{ bar }} {{ baz }}{% endmacro %}" +
             '{{ foo("hello", nosuchvar) }}',
-            {},
-            { noThrow: true },
-            (err, res) => {
-                expect(err).to.equal(null);
-                expect(typeof res).to.be.equal("string");
-            });
+        {},
+        { noThrow: true },
+        (err, res) => {
+            expect(err).to.equal(null);
+            expect(typeof res).to.be.equal("string");
+        });
+
+        finish(done);
+    });
+
+    it("should allow for objects without a prototype macro arguments in the last position", (done) => {
+        const noProto = Object.create(null);
+        noProto.qux = "world";
+
+        render("{% macro foo(bar, baz) %}" +
+            "{{ bar }} {{ baz.qux }}{% endmacro %}" +
+            '{{ foo("hello", noProto) }}',
+        { noProto },
+        { noThrow: true },
+        (err, res) => {
+            expect(err).to.equal(null);
+            expect(res).to.equal("hello world");
+        });
 
         finish(done);
     });

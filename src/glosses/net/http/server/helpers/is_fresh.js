@@ -1,5 +1,46 @@
+const {
+    is
+} = adone;
+
 const CACHE_CONTROL_NO_CACHE_REGEXP = /(?:^|,)\s*?no-cache\s*?(?:,|$)/;
-const TOKEN_LIST_REGEXP = / *, */;
+
+const parseTokenList = (str) => {
+    let end = 0;
+    const list = [];
+    let start = 0;
+
+    // gather tokens
+    for (let i = 0, len = str.length; i < len; i++) {
+        switch (str.charCodeAt(i)) {
+            case 0x20: /*   */
+                if (start === end) {
+                    start = end = i + 1;
+                }
+                break;
+            case 0x2c: /* , */
+                list.push(str.substring(start, end));
+                start = end = i + 1;
+                break;
+            default:
+                end = i + 1;
+                break;
+        }
+    }
+
+    // final token
+    list.push(str.substring(start, end));
+
+    return list;
+};
+
+const parseHttpDate = (date) => {
+    const timestamp = date && Date.parse(date);
+
+    // istanbul ignore next: guard against date.js Date.parse patching
+    return is.number(timestamp)
+        ? timestamp
+        : NaN;
+};
 
 const isFresh = (reqHeaders, resHeaders) => {
     // fields
@@ -22,10 +63,19 @@ const isFresh = (reqHeaders, resHeaders) => {
     // if-none-match
     if (noneMatch && noneMatch !== "*") {
         const etag = resHeaders.etag;
-        const etagStale = !etag || noneMatch.split(TOKEN_LIST_REGEXP).every((match) => {
-            return match !== etag && match !== `W/${etag}` && `W/${match}` !== etag;
-        });
+        if (!etag) {
+            return false;
+        }
 
+        let etagStale = true;
+        const matches = parseTokenList(noneMatch);
+        for (let i = 0; i < matches.length; i++) {
+            const match = matches[i];
+            if (match === etag || match === `W/${etag}` || `W/${match}` === etag) {
+                etagStale = false;
+                break;
+            }
+        }
         if (etagStale) {
             return false;
         }
@@ -34,7 +84,7 @@ const isFresh = (reqHeaders, resHeaders) => {
     // if-modified-since
     if (modifiedSince) {
         const lastModified = resHeaders["last-modified"];
-        const modifiedStale = !lastModified || Date.parse(lastModified) > Date.parse(modifiedSince);
+        const modifiedStale = !lastModified || !(parseHttpDate(lastModified) <= parseHttpDate(modifiedSince));
 
         if (modifiedStale) {
             return false;

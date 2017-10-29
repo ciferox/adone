@@ -235,5 +235,68 @@ describe("archive", "tar", () => {
 
         tar.packStream(a.path(), { map: checkHeaderType });
     });
-});
 
+    specify("finish callbacks", (done) => {
+        const a = fixtures.getDirectory("a");
+        const b = fixtures.getDirectory("copy", "a");
+
+        let packEntries = 0;
+        let extractEntries = 0;
+
+        const countPackEntry = function (header) {
+            packEntries++;
+        };
+        const countExtractEntry = function (header) {
+            extractEntries++;
+        };
+
+        let pack;
+
+        const onPackFinish = function (passedPack) {
+            assert.equal(packEntries, 2, "All entries have been packed"); // 2 entries - the file and base directory
+            assert.equal(passedPack, pack, "The finish hook passes the pack");
+        };
+
+        const onExtractFinish = function () {
+            assert.equal(extractEntries, 2);
+        };
+
+        pack = tar.packStream(a.path(), { map: countPackEntry, finish: onPackFinish });
+
+        pack.pipe(tar.unpackStream(b.path(), { map: countExtractEntry, finish: onExtractFinish })).on("finish", () => {
+            done();
+        });
+    });
+
+    specify("not finalizing the pack", async () => {
+
+        const a = fixtures.getDirectory("a");
+        const b = fixtures.getDirectory("b");
+
+        const out = fixtures.getDirectory("copy", "merged-packs");
+
+        const prefixer = function (prefix) {
+            return function (header) {
+                header.name = std.path.join(prefix, header.name);
+                return header;
+            };
+        };
+
+        await new Promise((resolve) => {
+            tar.packStream(a.path(), {
+                map: prefixer("a-files"),
+                finalize: false,
+                finish: (pack) => {
+                    tar.packStream(b.path(), { pack, map: prefixer("b-files") })
+                        .pipe(tar.unpackStream(out.path()))
+                        .on("finish", resolve);
+                }
+            });
+        });
+
+        const containers = await out.files();
+        assert.deepEqual(containers.map((x) => x.filename()), ["a-files", "b-files"]);
+        const aFiles = await out.getDirectory("a-files").files();
+        assert.deepEqual(aFiles.map((x) => x.filename()), ["hello.txt"]);
+    });
+});

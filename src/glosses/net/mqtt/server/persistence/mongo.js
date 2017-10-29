@@ -335,7 +335,7 @@ MongoPersistence.prototype._storePacket = function(client, packet, cb) {
 };
 
 MongoPersistence.prototype.streamOfflinePackets = function(client, cb, done) {
- 
+
   var stream = this._packets.find({ client: client.id }).stream();
   var that = this;
 
@@ -351,7 +351,8 @@ MongoPersistence.prototype.streamOfflinePackets = function(client, cb, done) {
     // mongodb TTL is not precise
     // mongodb automaticly remove the packet
     if (data.added.getTime() + that.options.ttl.packets > now) {
-      data.packet.payload = data.packet.payload.buffer;
+      data.packet.payload =  data.packet.payload.hasOwnProperty('buffer') ?
+        data.packet.payload.buffer : data.packet.payload;
       cb(null, data.packet);
     }
   });

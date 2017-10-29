@@ -268,6 +268,7 @@ export default class Db extends EventEmitter {
         topology.once("fullsetup", createListener(this, "fullsetup", this));
         topology.once("all", createListener(this, "all", this));
         topology.on("reconnect", createListener(this, "reconnect", this));
+        topology.on("reconnectFailed", createListener(this, "reconnectFailed", this));
     }
 
     get topology() {

@@ -28,6 +28,14 @@ describe("net", "mqtt", "connection", () => {
         };
     });
 
+    it("should start piping in the next tick", function (done) {
+        expect(this.stream._readableState.flowing).to.be.null;
+        process.nextTick(() => {
+            expect(this.stream._readableState.flowing).to.be.true;
+            done();
+        });
+    });
+
     describe("parsing", () => {
         describe("connect", () => {
             it("should fire a connect event (minimal)", function (done) {

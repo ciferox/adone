@@ -1,7 +1,7 @@
 import * as util from "./util";
 
 describe("templating", "nunjucks", "filter", () => {
-    const { templating: { nunjucks: { runtime: r } } } = adone;
+    const { is, templating: { nunjucks: { runtime: r } } } = adone;
     const { render, equal, finish } = util;
 
     it("abs", (done) => {
@@ -301,16 +301,12 @@ describe("templating", "nunjucks", "filter", () => {
         const arr = new Array(0, 1);
         arr.key = "value";
         equal("{{ arr | length }}", { arr }, "2");
-        if (typeof Map === "function") {
-            const map = new Map([["key1", "value1"], ["key2", "value2"]]);
-            map.set("key3", "value3");
-            equal("{{ map | length }}", { map }, "3");
-        }
-        if (typeof Set === "function") {
-            const set = new Set(["value1"]);
-            set.add("value2");
-            equal("{{ set | length }}", { set }, "2");
-        }
+        const map = new Map([["key1", "value1"], ["key2", "value2"]]);
+        map.set("key3", "value3");
+        equal("{{ map | length }}", { map }, "3");
+        const set = new Set(["value1"]);
+        set.add("value2");
+        equal("{{ set | length }}", { set }, "2");
         finish(done);
     });
 
@@ -589,6 +585,15 @@ describe("templating", "nunjucks", "filter", () => {
         equal('{{ "&" | urlencode }}', "%26");
         equal("{{ arr | urlencode | safe }}", { arr: [[1, 2], ["&1", "&2"]] }, "1=2&%261=%262");
         equal("{{ obj | urlencode | safe }}", { obj: { 1: 2, "&1": "&2" } }, "1=2&%261=%262");
+        finish(done);
+    });
+
+    it("urlencode - object without prototype", (done) => {
+        const obj = Object.create(null);
+        obj["1"] = 2;
+        obj["&1"] = "&2";
+
+        equal("{{ obj | urlencode | safe }}", { obj }, "1=2&%261=%262");
         finish(done);
     });
 

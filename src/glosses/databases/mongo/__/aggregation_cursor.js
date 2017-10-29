@@ -30,7 +30,7 @@ export default class AggregationCursor extends Cursor {
             throw MongoError.create({ message: "Cursor is closed", driver: true });
         }
         if (!is.number(value)) {
-            throw MongoError.create({ message: "batchSize requires an integer", drvier: true });
+            throw MongoError.create({ message: "batchSize requires an integer", driver: true });
         }
         if (this.s.cmd.cursor) {
             this.s.cmd.cursor.batchSize = value;

@@ -9,11 +9,13 @@ export const makeKeywordArgs = (obj) => {
     return obj;
 };
 
+const isKeywordArgs = (obj) => obj && is.propertyOwned(obj, keywords);
+
 const getKeywordArgs = (args) => {
     const { length } = args;
     if (length) {
         const lastArg = args[length - 1];
-        if (lastArg && is.propertyOwned(lastArg, keywords)) {
+        if (isKeywordArgs(lastArg)) {
             return lastArg;
         }
     }
@@ -27,11 +29,11 @@ export const numArgs = (args) => {
     }
 
     const lastArg = args[length - 1];
-    if (lastArg && is.propertyOwned(lastArg, keywords)) {
+    if (isKeywordArgs(lastArg)) {
         return length - 1;
-    } 
+    }
     return length;
-    
+
 };
 
 export class Frame {

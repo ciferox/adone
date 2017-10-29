@@ -356,6 +356,55 @@ describe("database", "mongo", "core", function () {
                             _server.destroy();
                         }
                     });
+
+                    it("Should not hang if autoReconnect=false and pools sockets all timed out", async () => {
+                        // Attempt to connect
+                        const _server = new Server({
+                            host: configuration.host,
+                            port: configuration.port,
+                            bson: new BSON(),
+                            // Nasty edge case: small timeout, small pool, no auto reconnect
+                            socketTimeout: 100,
+                            size: 1,
+                            reconnect: false
+                        });
+
+                        const ns = `${configuration.db}.cursor7`;
+
+                        const server = await new Promise((resolve) => {
+                            _server.once("connect", resolve);
+                            _server.connect();
+                        });
+
+                        try {
+                            const results = await promisify(server.insert).call(server, ns, [{ a: 1 }], {
+                                writeConcern: { w: 1 }, ordered: true
+                            });
+
+                            assert.equal(1, results.result.n);
+
+                            // Execute slow find
+                            let cursor = server.cursor(ns, {
+                                find: ns,
+                                query: { $where: "sleep(250) || true" },
+                                batchSize: 1
+                            });
+
+                            const doc = await promisify(cursor.next).call(cursor);
+
+                            cursor = server.cursor(ns, {
+                                find: ns,
+                                query: {},
+                                batchSize: 1
+                            });
+
+                            await assert.throws(async () => {
+                                await promisify(cursor.next).call(cursor);
+                            });
+                        } finally {
+                            _server.destroy();
+                        }
+                    });
                 }
 
                 it("Should not leak connnection workItem elements when using killCursor", async () => {
@@ -417,7 +466,7 @@ describe("database", "mongo", "core", function () {
                                 const next = promisify(this.next).bind(this);
                                 for (; ;) {
                                     const d = await next();
-                                    if (d === null) {
+                                    if (is.null(d)) {
                                         return b;
                                     }
                                     b.push(d);

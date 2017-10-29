@@ -1,4 +1,4 @@
-const { is, std: { path, fs }, x } = adone;
+const { is, std: { path, fs }, x, noop } = adone;
 
 const normalize = !is.windows ? adone.identity : (name) => name.replace(/\\/g, "/").replace(/[:?<>|]/g, "_");
 
@@ -67,6 +67,7 @@ export const packStream = (cwd = process.cwd(), opts = {}) => {
     let dmode = is.number(opts.dmode) ? opts.dmode : 0;
     let fmode = is.number(opts.fmode) ? opts.fmode : 0;
     const pack = opts.pack || new adone.archive.tar.RawPackStream();
+    const finish = opts.finish || noop;
 
     if (opts.strip) {
         map = strip(map, opts.strip);
@@ -104,7 +105,10 @@ export const packStream = (cwd = process.cwd(), opts = {}) => {
         }
 
         if (!filename) {
-            return pack.finalize();
+            if (opts.finalize !== false) {
+                pack.finalize();
+            }
+            return finish(pack);
         }
 
         if (stat.isSocket()) {
@@ -324,7 +328,7 @@ export const unpackStream = (cwd = process.cwd(), opts = {}) => {
 
         if (header.type === "directory") {
             stack.push([name, header.mtime]);
-            return adone.fs.mkdirp(name).then(stat, stat);
+            return adone.fs.mkdirp(name).then(() => stat(), stat);
         }
 
         mkdirfix(path.dirname(name), { own, uid: header.uid, gid: header.gid }).then(() => {
@@ -344,6 +348,10 @@ export const unpackStream = (cwd = process.cwd(), opts = {}) => {
             return next(err);
         });
     });
+
+    if (opts.finish) {
+        unpack.on("finish", opts.finish);
+    }
 
     return unpack;
 };

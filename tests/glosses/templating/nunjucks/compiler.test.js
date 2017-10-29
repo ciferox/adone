@@ -37,6 +37,22 @@ describe("templating", "nunjucks", "compiler", () => {
         finish(done);
     });
 
+    it("should compile references - object without prototype", (done) => {
+        const context = Object.create(null);
+        context.foo = Object.create(null);
+        context.foo.bar = "baz";
+
+        equal("{{ foo.bar }}",
+            context,
+            "baz");
+
+        equal('{{ foo["bar"] }}',
+            context,
+            "baz");
+
+        finish(done);
+    });
+
     it("should fail silently on undefined values", (done) => {
         equal("{{ foo }}", "");
         equal("{{ foo.bar }}", "");
@@ -114,8 +130,8 @@ describe("templating", "nunjucks", "compiler", () => {
 
         equal('{% if food == "pizza" %}pizza{% endif %}' +
             '{% if food =="beer" %}beer{% endif %}',
-            { food: "beer" },
-            "beer");
+        { food: "beer" },
+        "beer");
 
         equal('{% if "pizza" in food %}yum{% endif %}',
             { food: { pizza: true } },
@@ -139,8 +155,8 @@ describe("templating", "nunjucks", "compiler", () => {
 
         equal('{% if topping == "pepperoni" %}yum{% elseif topping == "anchovies" %}' +
             "yuck{% else %}hmmm{% endif %}",
-            { topping: "sausage" },
-            "hmmm");
+        { topping: "sausage" },
+        "hmmm");
 
         finish(done);
     });
@@ -167,7 +183,7 @@ describe("templating", "nunjucks", "compiler", () => {
             { hungry: false, like_pizza: true, anchovies: true }, "good");
         equal('{{ "pizza" if food == "pizza" }}' +
             '{{ "beer" if food == "beer" }}',
-            { food: "beer" }, "beer");
+        { food: "beer" }, "beer");
 
         finish(done);
     });
@@ -184,7 +200,7 @@ describe("templating", "nunjucks", "compiler", () => {
 
         equal(`{% ${block} a, b, c in arr %}` +
             `{{ a }},{{ b }},{{ c }}.{% ${end} %}`,
-            { arr: [["x", "y", "z"], ["1", "2", "3"]] }, "x,y,z.1,2,3.");
+        { arr: [["x", "y", "z"], ["1", "2", "3"]] }, "x,y,z.1,2,3.");
 
         equal(`{% ${block} item in arr | batch(2) %}{{ item[0] }}{% ${end} %}`,
             { arr: ["a", "b", "c", "d"] }, "ac");
@@ -260,7 +276,7 @@ describe("templating", "nunjucks", "compiler", () => {
     it("should allow overriding var with none inside nested scope", (done) => {
         equal('{% set var = "foo" %}' +
             "{% for i in [1] %}{% set var = none %}{{ var }}{% endfor %}",
-            "");
+        "");
 
         finish(done);
     });
@@ -336,11 +352,11 @@ describe("templating", "nunjucks", "compiler", () => {
             render("{% if tmpl %}" +
                 "{% for i in [0, 1] %}{{ tmpl | getContents }}*{% endfor %}" +
                 "{% endif %}",
-                { tmpl: path.resolve(__dirname, "templates", "for-async-content.njk") },
-                opts,
-                (err, res) => {
-                    expect(res).to.be.equal("somecontenthere*somecontenthere*");
-                });
+            { tmpl: path.resolve(__dirname, "templates", "for-async-content.njk") },
+            opts,
+            (err, res) => {
+                expect(res).to.be.equal("somecontenthere*somecontenthere*");
+            });
 
             render("{% block content %}{{ tmpl | getContents }}{% endblock %}",
                 { tmpl: path.resolve(__dirname, "templates", "for-async-content.njk") },
@@ -474,45 +490,45 @@ describe("templating", "nunjucks", "compiler", () => {
     it("should compile macros", (done) => {
         equal("{% macro foo() %}This is a macro{% endmacro %}" +
             "{{ foo() }}",
-            "This is a macro");
+        "This is a macro");
         finish(done);
     });
 
     it("should compile macros with optional args", (done) => {
         equal("{% macro foo(x, y) %}{{ y }}{% endmacro %}" +
             "{{ foo(1) }}",
-            "");
+        "");
         finish(done);
     });
 
     it("should compile macros with args that can be passed to filters", (done) => {
         equal("{% macro foo(x) %}{{ x|title }}{% endmacro %}" +
             '{{ foo("foo") }}',
-            "Foo");
+        "Foo");
         finish(done);
     });
 
     it("should compile macros with positional args", (done) => {
         equal("{% macro foo(x, y) %}{{ y }}{% endmacro %}" +
             "{{ foo(1, 2) }}",
-            "2");
+        "2");
         finish(done);
     });
 
     it("should compile macros with arg defaults", (done) => {
         equal("{% macro foo(x, y, z=5) %}{{ y }}{% endmacro %}" +
             "{{ foo(1, 2) }}",
-            "2");
+        "2");
         equal("{% macro foo(x, y, z=5) %}{{ z }}{% endmacro %}" +
             "{{ foo(1, 2) }}",
-            "5");
+        "5");
         finish(done);
     });
 
     it("should compile macros with keyword args", (done) => {
         equal("{% macro foo(x, y, z=5) %}{{ y }}{% endmacro %}" +
             "{{ foo(1, y=2) }}",
-            "2");
+        "2");
         finish(done);
     });
 
@@ -520,7 +536,7 @@ describe("templating", "nunjucks", "compiler", () => {
         equal("{% macro foo(x, y, z=5) %}{{ x }}{{ y }}{{ z }}" +
             "{% endmacro %}" +
             "{{ foo(x=1, y=2) }}",
-            "125");
+        "125");
         finish(done);
     });
 
@@ -528,7 +544,7 @@ describe("templating", "nunjucks", "compiler", () => {
         equal("{% macro foo(x, y, z=5) %}{{ x }}{{ y }}{{ z }}" +
             "{% endmacro %}" +
             "{{ foo(x=1, y=2, z=3) }}",
-            "123");
+        "123");
         finish(done);
     });
 
@@ -536,7 +552,7 @@ describe("templating", "nunjucks", "compiler", () => {
         equal("{% macro foo(x, y=2, z=5) %}{{ x }}{{ y }}{{ z }}" +
             "{% endmacro %}" +
             "{{ foo(1, z=3) }}",
-            "123");
+        "123");
         finish(done);
     });
 
@@ -544,7 +560,7 @@ describe("templating", "nunjucks", "compiler", () => {
         equal("{% macro foo(x, y=2, z=5) %}{{ x }}{{ y }}{{ z }}" +
             "{% endmacro %}" +
             "{{ foo(1) }}",
-            "125");
+        "125");
         finish(done);
     });
 
@@ -552,7 +568,7 @@ describe("templating", "nunjucks", "compiler", () => {
         equal("{% macro foo(x, y=2, z=5) %}{{ x }}{{ y }}{{ z }}" +
             "{% endmacro %}" +
             "{{ foo(1, 10, 20) }}",
-            "11020");
+        "11020");
         finish(done);
     });
 
@@ -563,7 +579,7 @@ describe("templating", "nunjucks", "compiler", () => {
             "{% block block1 %}" +
             "{{ foo(1) }}" +
             "{% endblock %}",
-            "Foo125BazFizzle");
+        "Foo125BazFizzle");
         finish(done);
     });
 
@@ -575,15 +591,15 @@ describe("templating", "nunjucks", "compiler", () => {
             "{% block baz %}" +
             "{{ foo(1) }}" +
             "{% endblock %}",
-            "125");
+        "125");
         finish(done);
     });
 
     it("should compile macros that include other templates", (done) => {
         equal('{% macro foo() %}{% include "include.njk" %}{% endmacro %}' +
             "{{ foo() }}",
-            { name: "james" },
-            "FooInclude james");
+        { name: "james" },
+        "FooInclude james");
         finish(done);
     });
 
@@ -593,7 +609,7 @@ describe("templating", "nunjucks", "compiler", () => {
             "{{ x }}" +
             "{{ foo() }}" +
             "{{ x }}",
-            "barfoobar");
+        "barfoobar");
 
         finish(done);
     });
@@ -609,7 +625,7 @@ describe("templating", "nunjucks", "compiler", () => {
             "{{ x }}" +
             "{% endmacro %}" +
             "{{ display() }}",
-            "foobar");
+        "foobar");
 
         finish(done);
     });
@@ -624,7 +640,7 @@ describe("templating", "nunjucks", "compiler", () => {
             "{{ x }}" +
             "{% endmacro %}" +
             "{{ display() }}",
-            "foobar");
+        "foobar");
 
         finish(done);
     });
@@ -647,7 +663,7 @@ describe("templating", "nunjucks", "compiler", () => {
             "{% endif %}" +
             "{% endmacro %}" +
             "{{ foo(true) }}",
-            "foofoo");
+        "foofoo");
 
         finish(done);
     });
@@ -656,7 +672,7 @@ describe("templating", "nunjucks", "compiler", () => {
         equal("{% macro one(var) %}{{ two() }}{% endmacro %}" +
             "{% macro two() %}{{ var }}{% endmacro %}" +
             '{{ one("foo") }}',
-            "");
+        "");
         finish(done);
     });
 
@@ -665,7 +681,7 @@ describe("templating", "nunjucks", "compiler", () => {
             "<{{ el }}>{{ caller() }}</{{ el }}>" +
             "{% endmacro %}" +
             '{% call wrap("div") %}Hello{% endcall %}',
-            "<div>Hello</div>");
+        "<div>Hello</div>");
 
         finish(done);
     });
@@ -677,7 +693,7 @@ describe("templating", "nunjucks", "compiler", () => {
             "{% endfor %}</ul>" +
             "{% endmacro %}" +
             '{% call(item) list(["a", "b"]) %}{{ item }}{% endcall %}',
-            "<ul><li>a</li><li>b</li></ul>");
+        "<ul><li>a</li><li>b</li></ul>");
 
         finish(done);
     });
@@ -685,18 +701,18 @@ describe("templating", "nunjucks", "compiler", () => {
     it("should compile call blocks using imported macros", (done) => {
         equal('{% import "import.njk" as imp %}' +
             '{% call imp.wrap("span") %}Hey{% endcall %}',
-            "<span>Hey</span>");
+        "<span>Hey</span>");
         finish(done);
     });
 
     it("should import templates", (done) => {
         equal('{% import "import.njk" as imp %}' +
             "{{ imp.foo() }} {{ imp.bar }}",
-            "Here's a macro baz");
+        "Here's a macro baz");
 
         equal('{% from "import.njk" import foo as baz, bar %}' +
             "{{ bar }} {{ baz() }}",
-            "baz Here's a macro");
+        "baz Here's a macro");
 
         // TODO: Should the for loop create a new frame for each
         // iteration? As it is, `num` is set on all iterations after
@@ -707,7 +723,7 @@ describe("templating", "nunjucks", "compiler", () => {
             "end: {{ num }}" +
             "{% endfor %}" +
             "final: {{ num }}",
-            "start: end: bazstart: bazend: bazfinal: ");
+        "start: end: bazstart: bazend: bazfinal: ");
 
         finish(done);
     });
@@ -718,13 +734,13 @@ describe("templating", "nunjucks", "compiler", () => {
 
         equal("{% import tmpl as imp %}" +
             "{{ imp.foo() }} {{ imp.bar }}",
-            { tmpl },
-            "Inside a macro BAZ");
+        { tmpl },
+        "Inside a macro BAZ");
 
         equal("{% from tmpl import foo as baz, bar %}" +
             "{{ bar }} {{ baz() }}",
-            { tmpl },
-            "BAZ Inside a macro");
+        { tmpl },
+        "BAZ Inside a macro");
 
         finish(done);
     });
@@ -733,32 +749,32 @@ describe("templating", "nunjucks", "compiler", () => {
         equal('{% set bar = "BAR" %}' +
             '{% import "import-context.njk" as imp with context %}' +
             "{{ imp.foo() }}",
-            "Here's BAR");
+        "Here's BAR");
 
         equal('{% set bar = "BAR" %}' +
             '{% from "import-context.njk" import foo with context %}' +
             "{{ foo() }}",
-            "Here's BAR");
+        "Here's BAR");
 
         equal('{% set bar = "BAR" %}' +
             '{% import "import-context-set.njk" as imp %}' +
             "{{ bar }}",
-            "BAR");
+        "BAR");
 
         equal('{% set bar = "BAR" %}' +
             '{% import "import-context-set.njk" as imp %}' +
             "{{ imp.bar }}",
-            "FOO");
+        "FOO");
 
         equal('{% set bar = "BAR" %}' +
             '{% import "import-context-set.njk" as imp with context %}' +
             "{{ bar }}{{ buzz }}",
-            "FOO");
+        "FOO");
 
         equal('{% set bar = "BAR" %}' +
             '{% import "import-context-set.njk" as imp with context %}' +
             "{{ imp.bar }}{{ buzz }}",
-            "FOO");
+        "FOO");
 
         finish(done);
     });
@@ -767,12 +783,12 @@ describe("templating", "nunjucks", "compiler", () => {
         equal('{% set bar = "BAR" %}' +
             '{% import "import-context.njk" as imp without context %}' +
             "{{ imp.foo() }}",
-            "Here's ");
+        "Here's ");
 
         equal('{% set bar = "BAR" %}' +
             '{% from "import-context.njk" import foo without context %}' +
             "{{ foo() }}",
-            "Here's ");
+        "Here's ");
 
         finish(done);
     });
@@ -781,12 +797,12 @@ describe("templating", "nunjucks", "compiler", () => {
         equal('{% set bar = "BAR" %}' +
             '{% import "import-context.njk" as imp %}' +
             "{{ imp.foo() }}",
-            "Here's ");
+        "Here's ");
 
         equal('{% set bar = "BAR" %}' +
             '{% from "import-context.njk" import foo %}' +
             "{{ foo() }}",
-            "Here's ");
+        "Here's ");
 
         finish(done);
     });
@@ -801,7 +817,7 @@ describe("templating", "nunjucks", "compiler", () => {
         equal('{% extends "base.njk" %}' +
             "{% block block1 %}BAR{% endblock %}" +
             "{% block block2 %}BAZ{% endblock %}",
-            "FooBARBAZFizzle");
+        "FooBARBAZFizzle");
 
         equal("hola {% extends tmpl %} hizzle mumble",
             { tmpl: "base.njk" },
@@ -810,14 +826,14 @@ describe("templating", "nunjucks", "compiler", () => {
         let count = 0;
         render('{% extends "base.njk" %}' +
             "{% block notReal %}{{ foo() }}{% endblock %}",
-            {
-                foo() {
-                    count++;
-                }
-            },
-            () => {
-                expect(count).to.be.equal(0);
-            });
+        {
+            foo() {
+                count++;
+            }
+        },
+        () => {
+            expect(count).to.be.equal(0);
+        });
 
         finish(done);
     });
@@ -833,8 +849,8 @@ describe("templating", "nunjucks", "compiler", () => {
         equal("{% extends tmpl %}" +
             "{% block block1 %}BAR{% endblock %}" +
             "{% block block2 %}BAZ{% endblock %}",
-            { tmpl },
-            "FooBARBAZWhizzle");
+        { tmpl },
+        "FooBARBAZWhizzle");
 
         finish(done);
     });
@@ -842,11 +858,11 @@ describe("templating", "nunjucks", "compiler", () => {
     it("should conditionally inherit templates", (done) => {
         equal('{% if false %}{% extends "base.njk" %}{% endif %}' +
             "{% block block1 %}BAR{% endblock %}",
-            "BAR");
+        "BAR");
 
         equal('{% if true %}{% extends "base.njk" %}{% endif %}' +
             "{% block block1 %}BAR{% endblock %}",
-            "FooBARBazFizzle");
+        "FooBARBazFizzle");
 
         equal("{% if true %}" +
             '{% extends "base.njk" %}' +
@@ -854,7 +870,7 @@ describe("templating", "nunjucks", "compiler", () => {
             '{% extends "base2.njk" %}' +
             "{% endif %}" +
             "{% block block1 %}HELLO{% endblock %}",
-            "FooHELLOBazFizzle");
+        "FooHELLOBazFizzle");
 
         equal("{% if false %}" +
             '{% extends "base.njk" %}' +
@@ -862,7 +878,7 @@ describe("templating", "nunjucks", "compiler", () => {
             '{% extends "base2.njk" %}' +
             "{% endif %}" +
             "{% block item %}hello{{ item }}{% endblock %}",
-            "hello1hello2");
+        "hello1hello2");
 
         finish(done);
     });
@@ -882,7 +898,7 @@ describe("templating", "nunjucks", "compiler", () => {
     it("should render nested blocks in child template", (done) => {
         equal('{% extends "base.njk" %}' +
             "{% block block1 %}{% block nested %}BAR{% endblock %}{% endblock %}",
-            "FooBARBazFizzle");
+        "FooBARBazFizzle");
 
         finish(done);
     });
@@ -890,12 +906,12 @@ describe("templating", "nunjucks", "compiler", () => {
     it("should render parent blocks with super()", (done) => {
         equal('{% extends "base.njk" %}' +
             "{% block block1 %}{{ super() }}BAR{% endblock %}",
-            "FooBarBARBazFizzle");
+        "FooBarBARBazFizzle");
 
         // two levels of `super` should work
         equal('{% extends "base-inherit.njk" %}' +
             "{% block block1 %}*{{ super() }}*{% endblock %}",
-            "Foo**Bar**BazFizzle");
+        "Foo**Bar**BazFizzle");
 
         finish(done);
     });
@@ -903,7 +919,7 @@ describe("templating", "nunjucks", "compiler", () => {
     it("should let super() see global vars from child template", (done) => {
         equal('{% extends "base-show.njk" %}{% set var = "child" %}' +
             "{% block main %}{{ super() }}{% endblock %}",
-            "child");
+        "child");
 
         finish(done);
     });
@@ -911,7 +927,7 @@ describe("templating", "nunjucks", "compiler", () => {
     it("should not let super() see vars from child block", (done) => {
         equal('{% extends "base-show.njk" %}' +
             '{% block main %}{% set var = "child" %}{{ super() }}{% endblock %}',
-            "");
+        "");
 
         finish(done);
     });
@@ -919,7 +935,7 @@ describe("templating", "nunjucks", "compiler", () => {
     it("should let child templates access parent global scope", (done) => {
         equal('{% extends "base-set.njk" %}' +
             "{% block main %}{{ var }}{% endblock %}",
-            "parent");
+        "parent");
 
         finish(done);
     });
@@ -927,7 +943,7 @@ describe("templating", "nunjucks", "compiler", () => {
     it("should not let super() modify calling scope", (done) => {
         equal('{% extends "base-set-inside-block.njk" %}' +
             "{% block main %}{{ super() }}{{ var }}{% endblock %}",
-            "");
+        "");
 
         finish(done);
     });
@@ -935,7 +951,7 @@ describe("templating", "nunjucks", "compiler", () => {
     it("should not let child templates set vars in parent scope", (done) => {
         equal('{% extends "base-set-and-show.njk" %}' +
             '{% block main %}{% set var = "child" %}{% endblock %}',
-            "parent");
+        "parent");
 
         finish(done);
     });
@@ -944,7 +960,7 @@ describe("templating", "nunjucks", "compiler", () => {
         equal('{% set var = "parent" %}' +
             '{% block main %}{% set var = "inner" %}{% endblock %}' +
             "{{ var }}",
-            "parent");
+        "parent");
 
         finish(done);
     });
@@ -1048,7 +1064,7 @@ describe("templating", "nunjucks", "compiler", () => {
         equal("{% for i in [1,2] %}" +
             "{% for i in [3,4] %}{{ i }}{% endfor %}" +
             "{{ i }}{% endfor %}",
-            "341342");
+        "341342");
 
         finish(done);
     });
@@ -1056,7 +1072,7 @@ describe("templating", "nunjucks", "compiler", () => {
     it("should allow blocks in for loops", (done) => {
         equal('{% extends "base2.njk" %}' +
             "{% block item %}hello{{ item }}{% endblock %}",
-            "hello1hello2");
+        "hello1hello2");
 
         finish(done);
     });
@@ -1065,7 +1081,7 @@ describe("templating", "nunjucks", "compiler", () => {
         equal("{% for item in [1,2] %}" +
             '{% include "item.njk" %}' +
             "{% endfor %}",
-            "showing 1showing 2");
+        "showing 1showing 2");
 
         finish(done);
     });
@@ -1096,14 +1112,14 @@ describe("templating", "nunjucks", "compiler", () => {
         // `set` should only set within its current scope
         equal("{% for i in [1] %}{% set val=5 %}{% endfor %}" +
             "{{ val }}",
-            "");
+        "");
 
         equal("{% for i in [1,2,3] %}" +
             "{% if not val %}{% set val=5 %}{% endif %}" +
             "{% set val=val+1 %}{{ val }}" +
             "{% endfor %}" +
             "afterwards: {{ val }}",
-            "678afterwards: ");
+        "678afterwards: ");
 
         // however, like Python, if a variable has been set in an
         // above scope, any other set should correctly resolve to
@@ -1111,14 +1127,14 @@ describe("templating", "nunjucks", "compiler", () => {
         equal("{% set val=1 %}" +
             "{% for i in [1] %}{% set val=5 %}{% endfor %}" +
             "{{ val }}",
-            "5");
+        "5");
 
         equal("{% set val=5 %}" +
             "{% for i in [1,2,3] %}" +
             "{% set val=val+1 %}{{ val }}" +
             "{% endfor %}" +
             "afterwards: {{ val }}",
-            "678afterwards: 8");
+        "678afterwards: 8");
 
         finish(done);
     });
@@ -1135,12 +1151,12 @@ describe("templating", "nunjucks", "compiler", () => {
         equal('{% set x = "hello" %}' +
             '{% if false %}{% set x = "world" %}{% endif %}' +
             "{{ x }}",
-            "hello");
+        "hello");
 
         equal('{% set x = "blue" %}' +
             '{% if true %}{% set x = "green" %}{% endif %}' +
             "{{ x }}",
-            "green");
+        "green");
 
         finish(done);
     });
@@ -1148,7 +1164,7 @@ describe("templating", "nunjucks", "compiler", () => {
     it("should compile block-set", (done) => {
         equal("{% set block_content %}{% endset %}" +
             "{{ block_content }}",
-            ""
+        ""
         );
 
         /**
@@ -1160,12 +1176,12 @@ describe("templating", "nunjucks", "compiler", () => {
             "{{ bar }}{{ test }}" +
             "{%- endmacro -%}" +
             '{{ foo("bar") }}',
-            "barfoo"
+        "barfoo"
         );
 
         equal("{% set block_content %}test string{% endset %}" +
             "{{ block_content }}",
-            "test string"
+        "test string"
         );
 
         equal("{% set block_content %}" +
@@ -1174,7 +1190,7 @@ describe("templating", "nunjucks", "compiler", () => {
             "{% endfor %}" +
             "{% endset %}" +
             "{{ block_content }}",
-            "showing 1 showing 2 showing 3 "
+        "showing 1 showing 2 showing 3 "
         );
 
         equal("{% set block_content %}" +
@@ -1188,7 +1204,7 @@ describe("templating", "nunjucks", "compiler", () => {
             "{% endfor %}" +
             "{% endset %}" +
             "{{ block_content | safe }}",
-            'inner 1: "item 1 item 2 item 3 " ' +
+        'inner 1: "item 1 item 2 item 3 " ' +
             'inner 2: "item 1 item 2 item 3 " ' +
             'inner 3: "item 1 item 2 item 3 " '
         );
@@ -1197,7 +1213,7 @@ describe("templating", "nunjucks", "compiler", () => {
             "cool" +
             "{% endset %}" +
             "{{ x }} {{ y }} {{ z }}",
-            "cool cool cool"
+        "cool cool cool"
         );
 
         finish(done);
@@ -1206,7 +1222,7 @@ describe("templating", "nunjucks", "compiler", () => {
     it("should compile block-set wrapping an inherited block", (done) => {
         equal('{% extends "base-set-wraps-block.njk" %}' +
             "{% block somevar %}foo{% endblock %}",
-            "foo\n"
+        "foo\n"
         );
         finish(done);
     });
@@ -1329,7 +1345,7 @@ describe("templating", "nunjucks", "compiler", () => {
     });
 
     it("should allow custom tag with args compilation", (done) => {
-        function testExtension() {
+        const testExtension = function () {
             // jshint validthis: true
             this.tags = ["test"];
 
@@ -1350,6 +1366,7 @@ describe("templating", "nunjucks", "compiler", () => {
                 return new nodes.CallExtension(this, "run", args, [body]);
             };
 
+            /* eslint-disable */
             this.run = function (context, prefix, kwargs, body) {
                 if (typeof prefix === "function") {
                     body = prefix;
@@ -1367,7 +1384,8 @@ describe("templating", "nunjucks", "compiler", () => {
 
                 return output;
             };
-        }
+            /* eslint-enable */
+        };
 
         const opts = { extensions: { testExtension: new testExtension() } };
 
@@ -1583,7 +1601,7 @@ describe("templating", "nunjucks", "compiler", () => {
         it("should work with blocks in the body", (done) => {
             equal('{% extends "filter-block.html" %}' +
                 "{% block block1 %}force{% endblock %}",
-                "may the forth be with you\n");
+            "may the forth be with you\n");
             finish(done);
         });
     });
@@ -1683,7 +1701,7 @@ describe("templating", "nunjucks", "compiler", () => {
             `${String(`${String("{# macro1 and macro2 definition #}" +
                 "{% macro macro1() %}" +
                 "{% endmacro %}")
-                }{% macro macro2(macro1="default") %}` +
+            }{% macro macro2(macro1="default") %}` +
                 "{{macro1}}" +
                 "{% endmacro %}")
             }{# calling macro2 #}` +
@@ -1699,7 +1717,7 @@ describe("templating", "nunjucks", "compiler", () => {
             `${String(`${String("{# macro1 and macro2 definition #}" +
                 "{% macro macro1() %} foo" +
                 "{% endmacro %}")
-                }{% macro macro2(text="default") %}` +
+            }{% macro macro2(text="default") %}` +
                 "{{macro1()}}" +
                 "{% endmacro %}")
             }{# calling macro2 #}` +

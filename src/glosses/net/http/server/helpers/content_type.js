@@ -75,15 +75,19 @@ class ContentType {
 
 // Get content-type from req/res objects.
 const getContentType = (obj) => {
+    let header;
+
     if (is.function(obj.getHeader)) {
         // res-like
-        return obj.getHeader("content-type");
-    }
-
-    if (is.object(obj.headers)) {
+        header = obj.getHeader("content-type");
+    } else if (is.object(obj.headers)) {
         // req-like
-        return obj.headers["content-type"];
+        header = obj.headers["content-type"];
     }
+    if (!is.string(header)) {
+        throw new x.IllegalState("content-type header is missing from object");
+    }
+    return header;
 };
 
 export const parse = (string) => {
@@ -91,21 +95,16 @@ export const parse = (string) => {
         throw new x.InvalidArgument("argument string is required");
     }
 
-    if (is.object(string)) {
-        // support req/res-like objects as argument
-        string = getContentType(string);
+    const header = is.object(string)
+        ? getContentType(string)
+        : string;
 
-        if (!is.string(string)) {
-            throw new x.IllegalState("content-type header is missing from object");
-        }
+    if (!is.string(header)) {
+        throw new TypeError("argument string is required to be a string");
     }
 
-    if (!is.string(string)) {
-        throw new x.InvalidArgument("argument string is required to be a string");
-    }
-
-    let index = string.indexOf(";");
-    const type = index !== -1 ? string.substr(0, index).trim() : string.trim();
+    let index = header.indexOf(";");
+    const type = index !== -1 ? header.substr(0, index).trim() : header.trim();
 
     if (!TYPE_REGEXP.test(type)) {
         throw new x.IllegalState("invalid media type");
@@ -113,30 +112,32 @@ export const parse = (string) => {
 
     const obj = new ContentType(type.toLowerCase());
 
-    PARAM_REGEXP.lastIndex = index;
+    if (index !== -1) {
+        PARAM_REGEXP.lastIndex = index;
 
-    let key;
-    let value;
-    let match;
-    while ((match = PARAM_REGEXP.exec(string))) {
-        if (match.index !== index) {
+        let key;
+        let value;
+        let match;
+        while ((match = PARAM_REGEXP.exec(header))) {
+            if (match.index !== index) {
+                throw new x.IllegalState("invalid parameter format");
+            }
+
+            index += match[0].length;
+            key = match[1].toLowerCase();
+            value = match[2];
+
+            if (value[0] === '"') {
+                // remove quotes and escapes
+                value = value.substr(1, value.length - 2).replace(QESC_REGEXP, "$1");
+            }
+
+            obj.parameters[key] = value;
+        }
+
+        if (index !== header.length) {
             throw new x.IllegalState("invalid parameter format");
         }
-
-        index += match[0].length;
-        key = match[1].toLowerCase();
-        value = match[2];
-
-        if (value[0] === '"') {
-            // remove quotes and escapes
-            value = value.substr(1, value.length - 2).replace(QESC_REGEXP, "$1");
-        }
-
-        obj.parameters[key] = value;
-    }
-
-    if (index !== -1 && index !== string.length) {
-        throw new x.IllegalState("invalid parameter format");
     }
 
     return obj;

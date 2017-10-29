@@ -436,12 +436,20 @@ export default class Cursor extends EventEmitter {
         if (!this.cursorState.init) {
             // Topology is not connected, save the call in the provided store to be
             // Executed at some point when the handler deems it's reconnected
-            if (!this.topology.isConnected(this.options) && !is.nil(this.disconnectHandler)) {
-                if (this.topology.isDestroyed()) {
-                    // Topology was destroyed, so don't try to wait for it to reconnect
-                    return callback(new MongoError("Topology was destroyed"));
+            if (!this.topology.isConnected(this.options)) {
+                if (!this.topology.s.options.reconnect) {
+                    // Reconnect is disabled, so we'll never reconnect
+                    return callback(new MongoError("no connection available"));
                 }
-                return this.disconnectHandler.addObjectAndMethod("cursor", this, "next", [callback], callback);
+
+                if (!is.nil(this.disconnectHandler)) {
+                    if (this.topology.isDestroyed()) {
+                        // Topology was destroyed, so don't try to wait for it to reconnect
+                        return callback(new MongoError("Topology was destroyed"));
+                    }
+
+                    return this.disconnectHandler.addObjectAndMethod("cursor", this, "next", [callback], callback);
+                }
             }
 
             try {

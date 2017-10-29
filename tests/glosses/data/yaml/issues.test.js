@@ -470,11 +470,23 @@ describe("data", "yaml", "issues", () => {
 
     context("346", () => {
         it("should not emit spaces in arrays in flow mode between entries using condenseFlow: true", () => {
-            expect(yaml.dump(["a", "b"], { flowLevel: 0, indent: 0, condenseFlow: true })).to.be.equal("[a,b]\n");
+            const array = ["a", "b"];
+            const dumpedArray = yaml.dump(array, { flowLevel: 0, indent: 0, condenseFlow: true });
+            assert.equal(
+                dumpedArray,
+                "[a,b]\n"
+            );
+            assert.deepEqual(yaml.load(dumpedArray), array);
         });
 
         it("should not emit spaces between key: value in objects in flow sequence using condenseFlow: true", () => {
-            expect(yaml.dump({ a: { b: "c" } }, { flowLevel: 0, indent: 0, condenseFlow: true })).to.be.equal("{a:{b:c}}\n");
+            const object = { a: { b: "c" } };
+            const objectDump = yaml.dump(object, { flowLevel: 0, indent: 0, condenseFlow: true });
+            assert.equal(
+                objectDump,
+                '{"a":{"b":c}}\n'
+            );
+            assert.deepEqual(yaml.load(objectDump), object);
         });
     });
 
@@ -592,6 +604,13 @@ describe("data", "yaml", "issues", () => {
                 yaml.safeLoad(await src.contents(), "utf8");
             });
             expect(err.stack).to.match(/^YAMLException: end of the stream or a document separator is expected/);
+        });
+    });
+
+    context("0369", () => {
+        it("should dump astrals as codepoint", () => {
+            assert.deepEqual(yaml.safeDump("😀"), '"\\U0001F600"\n');
+            assert.deepEqual(yaml.safeLoad('"\\U0001F600"'), "😀");
         });
     });
 });

@@ -27,6 +27,14 @@ describe("net", "http", "helpers", "isFresh", () => {
             });
         });
 
+        describe("when at least one matches", () => {
+            it("should be fresh", () => {
+                const reqHeaders = { "if-none-match": ' "bar" , "foo"' };
+                const resHeaders = { etag: '"foo"' };
+                assert.ok(isFresh(reqHeaders, resHeaders));
+            });
+        });
+
         describe("when etag is missing", () => {
             it("should be stale", () => {
                 const reqHeaders = { "if-none-match": '"foo"' };
@@ -106,7 +114,7 @@ describe("net", "http", "helpers", "isFresh", () => {
         describe("with invalid If-Modified-Since date", () => {
             it("should be stale", () => {
                 const reqHeaders = { "if-modified-since": "foo" };
-                const resHeaders = { "modified-since": "Sat, 01 Jan 2000 00:00:00 GMT" };
+                const resHeaders = { "last-modified": "Sat, 01 Jan 2000 00:00:00 GMT" };
                 assert.ok(!isFresh(reqHeaders, resHeaders));
             });
         });
@@ -114,7 +122,7 @@ describe("net", "http", "helpers", "isFresh", () => {
         describe("with invalid Modified-Since date", () => {
             it("should be stale", () => {
                 const reqHeaders = { "if-modified-since": "Sat, 01 Jan 2000 00:00:00 GMT" };
-                const resHeaders = { "modified-since": "foo" };
+                const resHeaders = { "last-since": "foo" };
                 assert.ok(!isFresh(reqHeaders, resHeaders));
             });
         });

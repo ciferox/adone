@@ -181,7 +181,9 @@ describe("diff", "patch", "mergePatches", () => {
                     hunks: [{
                         conflict: true,
                         oldStart: 1,
+                        oldLines: 6,
                         newStart: 1,
+                        newLines: 3,
                         lines: [" line2", " line3", {
                             conflict: true,
                             mine: ["-line4", "-line4", "-line4"],
@@ -205,6 +207,7 @@ describe("diff", "patch", "mergePatches", () => {
                         conflict: true,
                         oldStart: 1,
                         newStart: 1,
+                        newLines: 4,
                         lines: [" line2", " line3", {
                             conflict: true,
                             mine: ["-line4", "-line4", "-line4"],
@@ -227,6 +230,7 @@ describe("diff", "patch", "mergePatches", () => {
                     hunks: [{
                         conflict: true,
                         oldStart: 1,
+                        oldLines: 3,
                         newStart: 1,
                         lines: [" line2", " line3", {
                             conflict: true,
@@ -248,6 +252,7 @@ describe("diff", "patch", "mergePatches", () => {
                     hunks: [{
                         conflict: true,
                         oldStart: 1,
+                        oldLines: 3,
                         newStart: 1,
                         lines: [" line2", " line3", {
                             conflict: true,
@@ -269,6 +274,7 @@ describe("diff", "patch", "mergePatches", () => {
                     hunks: [{
                         conflict: true,
                         oldStart: 1,
+                        oldLines: 2,
                         newStart: 1,
                         lines: [" line2", {
                             conflict: true,
@@ -398,7 +404,7 @@ describe("diff", "patch", "mergePatches", () => {
                             mine: ["-line3"],
                             theirs: ["-line3", "-line3", "+line4", "+line4"]
                         }, " line3", // TODO: Fix
-                            " line5"]
+                        " line5"]
                     }]
                 };
 
@@ -415,6 +421,7 @@ describe("diff", "patch", "mergePatches", () => {
                     hunks: [{
                         conflict: true,
                         oldStart: 1,
+                        oldLines: 4,
                         newStart: 1,
                         lines: ["-line2", {
                             conflict: true,
@@ -472,6 +479,7 @@ describe("diff", "patch", "mergePatches", () => {
                     hunks: [{
                         conflict: true,
                         oldStart: 1,
+                        oldLines: 6,
                         newStart: 1,
                         lines: ["-line2", {
                             conflict: true,
@@ -507,14 +515,159 @@ describe("diff", "patch", "mergePatches", () => {
                 swapConflicts(expected);
                 expect(mergePatches(theirs, mine)).to.eql(expected);
             });
-            it("should conflict context mismatch", () => {
+
+            it("should handle multiple conflicts in one hunk", () => {
+                const mine =
+                      "@@ -1,10 +1,10 @@\n"
+                      + " line1\n"
+                      + "-line2\n"
+                      + "+line2-1\n"
+                      + " line3\n"
+                      + " line4\n"
+                      + " line5\n"
+                      + "-line6\n"
+                      + "+line6-1\n"
+                      + " line7\n";
+                const theirs =
+                      "@@ -1,10 +1,10 @@\n"
+                      + " line1\n"
+                      + "-line2\n"
+                      + "+line2-2\n"
+                      + " line3\n"
+                      + " line4\n"
+                      + " line5\n"
+                      + "-line6\n"
+                      + "+line6-2\n"
+                      + " line7\n";
+                const expected = {
+                    hunks: [
+                        {
+                            conflict: true,
+                            oldStart: 1,
+                            oldLines: 7,
+                            newStart: 1,
+                            newLines: 7,
+                            lines: [
+                                " line1",
+                                {
+                                    conflict: true,
+                                    mine: [
+                                        "-line2",
+                                        "+line2-1"
+                                    ],
+                                    theirs: [
+                                        "-line2",
+                                        "+line2-2"
+                                    ]
+                                },
+                                " line3",
+                                " line4",
+                                " line5",
+                                {
+                                    conflict: true,
+                                    mine: [
+                                        "-line6",
+                                        "+line6-1"
+                                    ],
+                                    theirs: [
+                                        "-line6",
+                                        "+line6-2"
+                                    ]
+                                },
+                                " line7"
+                            ]
+                        }
+                    ]
+                };
+
+                expect(mergePatches(mine, theirs)).to.eql(expected);
+
+                swapConflicts(expected);
+                expect(mergePatches(theirs, mine)).to.eql(expected);
+            });
+
+            it("should remove oldLines if base differs", () => {
+                const mine =
+                      "@@ -1,10 +1,10 @@\n"
+                      + " line1\n"
+                      + "-line2\n"
+                      + "-line2-0\n"
+                      + "+line2-1\n"
+                      + " line3\n"
+                      + " line4\n"
+                      + " line5\n"
+                      + "-line6\n"
+                      + "+line6-1\n"
+                      + " line7\n";
+                const theirs =
+                      "@@ -1,10 +1,10 @@\n"
+                      + " line1\n"
+                      + "-line2\n"
+                      + "+line2-2\n"
+                      + "+line2-3\n"
+                      + " line3\n"
+                      + " line4\n"
+                      + " line5\n"
+                      + "-line6\n"
+                      + "+line6-2\n"
+                      + " line7\n";
+                const expected = {
+                    hunks: [
+                        {
+                            conflict: true,
+                            oldStart: 1,
+                            newStart: 1,
+                            lines: [
+                                " line1",
+                                {
+                                    conflict: true,
+                                    mine: [
+                                        "-line2",
+                                        "-line2-0",
+                                        "+line2-1"
+                                    ],
+                                    theirs: [
+                                        "-line2",
+                                        "+line2-2",
+                                        "+line2-3"
+                                    ]
+                                },
+                                " line3",
+                                " line4",
+                                " line5",
+                                {
+                                    conflict: true,
+                                    mine: [
+                                        "-line6",
+                                        "+line6-1"
+                                    ],
+                                    theirs: [
+                                        "-line6",
+                                        "+line6-2"
+                                    ]
+                                },
+                                " line7"
+                            ]
+                        }
+                    ]
+                };
+
+                expect(mergePatches(mine, theirs)).to.eql(expected);
+
+                swapConflicts(expected);
+                expect(mergePatches(theirs, mine)).to.eql(expected);
+            });
+
+            it("should handle multiple conflict sections", () => {
                 const mine = "@@ -1,3 +1,4 @@\n" + " line2\n" + " line3\n";
                 const theirs = "@@ -1 +1,2 @@\n" + " line3\n" + " line4\n";
                 const expected = {
                     hunks: [{
                         conflict: true,
                         oldStart: 1,
+                        oldLines: 2,
                         newStart: 1,
+                        newLines: 2,
                         lines: [{
                             conflict: true,
                             mine: [" line2", " line3"],

@@ -16,7 +16,7 @@ const isHidden = (root, path) => {
     return false;
 };
 
-const type = (file) => extname(basename(file, ".gz"));
+const type = (file, ext) => ext !== "" ? extname(basename(file, ext)) : extname(file);
 
 const decode = (path) => {
     try {
@@ -64,15 +64,18 @@ export default async function send(ctx, path, opts = {}) {
     if (!hidden && isHidden(root, path)) {
         return { sent: false, hidden: true };
     }
+    let encodingExt = "";
     // serve brotli file when possible otherwise gzipped file when possible
     if (brotli && ctx.acceptsEncodings("br", "deflate", "identity") === "br" && (await fs.exists(`${path}.br`))) {
         path = `${path}.br`;
         ctx.set("Content-Encoding", "br");
         ctx.res.removeHeader("Content-Length");
+        encodingExt = ".br";
     } else if (gzip && ctx.acceptsEncodings("gzip", "deflate", "identity") === "gzip" && (await fs.exists(`${path}.gz`))) {
         path = `${path}.gz`;
         ctx.set("Content-Encoding", "gzip");
         ctx.res.removeHeader("Content-Length");
+        encodingExt = ".gz";
     }
 
     if (extensions && !/\..*$/.exec(path)) {
@@ -83,7 +86,7 @@ export default async function send(ctx, path, opts = {}) {
             if (!/^\./.exec(ext)) {
                 ext = `.${ext}`;
             }
-            if (await fs.exists(path + ext)) {  // eslint-disable-line no-await-in-loop
+            if (await fs.exists(path + ext)) { // eslint-disable-line no-await-in-loop
                 path = `${path}${ext}`;
                 break;
             }
@@ -126,7 +129,7 @@ export default async function send(ctx, path, opts = {}) {
         }
         ctx.set("Cache-Control", directives.join(","));
     }
-    ctx.type = type(path);
+    ctx.type = type(path, encodingExt);
     ctx.body = fs.createReadStream(path);
 
     return { path, sent: true };

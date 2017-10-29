@@ -374,6 +374,16 @@ const escapeString = (string) => {
 
     for (let i = 0; i < string.length; i++) {
         char = string.charCodeAt(i);
+        // Check for surrogate pairs (reference Unicode 3.0 section "3.7 Surrogates").
+        if (char >= 0xD800 && char <= 0xDBFF/* high surrogate */) {
+            const nextChar = string.charCodeAt(i + 1);
+            if (nextChar >= 0xDC00 && nextChar <= 0xDFFF/* low surrogate */) {
+                // Combine the surrogate pair and store it escaped.
+                result += encodeHex((char - 0xD800) * 0x400 + nextChar - 0xDC00 + 0x10000);
+                // Advance index one extra since we already used that char here.
+                i++; continue;
+            }
+        }
         escapeSeq = ESCAPE_SEQUENCES.get(char);
         result += !escapeSeq && isPrintable(char)
             ? string[i]
@@ -501,7 +511,12 @@ const writeFlowMapping = (state, level, object) => {
     for (let i = 0; i < keys.length; ++i) {
         const key = keys[i];
         const value = object[key];
-        let pairBuffer = i === 0 ? "" : ", ";
+        let pairBuffer = state.condenseFlow
+            ? '"'
+            : "";
+        if (i !== 0) {
+            pairBuffer += ", ";
+        }
         // eslint-disable-next-line no-use-before-define
         if (!writeNode(state, level, key, false, false)) {
             continue; // Skip this pair because of invalid key;
@@ -511,7 +526,7 @@ const writeFlowMapping = (state, level, object) => {
             pairBuffer += "? ";
         }
 
-        pairBuffer += `${state.dump}:${state.condenseFlow ? "" : " "}`;
+        pairBuffer += `${state.dump}${state.condenseFlow ? '"' : ""}:${state.condenseFlow ? "" : " "}`;
         // eslint-disable-next-line no-use-before-define
         if (!writeNode(state, level, value, false, false)) {
             continue; // Skip this pair because of invalid value.

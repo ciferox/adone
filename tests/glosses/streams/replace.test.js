@@ -818,4 +818,26 @@ describe("stream", "replace", () => {
         ].join("\n"));
         expect(await data).to.include(script);
     });
+
+    it("should push chunks immediately except tail", (done) => {
+        const replace = replaceStream(/REPLACE/, "");
+        const replaced = new adone.std.stream.PassThrough();
+
+        const recievedChunks = [];
+        replace.pipe(replaced);
+        replaced.on("data", (data) => {
+            recievedChunks.push(data);
+        });
+        replaced.on("end", () => {
+            expect(recievedChunks.length).to.equal(3);
+            expect(recievedChunks[0]).to.have.length(99);
+            expect(recievedChunks[1]).to.have.length(50);
+            expect(recievedChunks[2]).to.have.length(100);
+            done();
+        });
+        replace.write((Buffer.alloc(50)));
+        replace.write((Buffer.alloc(49)));
+        replace.write((Buffer.alloc(100)));
+        replace.end((Buffer.alloc(50)));
+    });
 });

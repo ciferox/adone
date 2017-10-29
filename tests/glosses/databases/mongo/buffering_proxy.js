@@ -212,7 +212,7 @@ describe("buffering proxy", function () {
 
         await promise.delay(1000);
 
-        expect(results.sort()).to.be.deep.equal(["aggregate", "insertOne"]);
+        expect(results.sort()).to.be.deep.equal(["aggregate", "find", "insertOne"]);
         running = false;
         await db.close();
         await primaryServer.destroy();
@@ -426,7 +426,7 @@ describe("buffering proxy", function () {
 
         await promise.delay(1500);
 
-        expect(results.sort()).to.be.deep.equal(["count", "find"]);
+        expect(results.sort()).to.be.deep.equal(["aggregate", "find", "count"]);
 
         running = false;
         await db.close();

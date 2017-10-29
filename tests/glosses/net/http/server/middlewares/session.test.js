@@ -14,7 +14,11 @@ describe("net", "http", "server", "middlewares", "session", function session() {
             return this.store[sid];
         }
 
-        async set(session, opts) {
+        async set(session, opts, ctx = {}) {
+            // for test the ctx param
+            if (ctx.testId) {
+                return ctx.testId;
+            }
             if (!opts.sid) {
                 opts.sid = this.getID(24);
             }
@@ -201,6 +205,28 @@ describe("net", "http", "server", "middlewares", "session", function session() {
             const sid = cookie[0].split(";")[0].split("=")[1];
             expect(util.keys(store.store)).to.have.lengthOf(1);
             expect(store.store[sid].user.name).to.be.equal("tom");
+        });
+    });
+
+    describe("when pass the context to the session store", () => {
+        it("should work", async () => {
+            const server = new Server();
+            const store = new CustomStore();
+
+            server.use(session({
+                store
+            })).use((ctx) => {
+                ctx.testId = "the_id_in_ctx";
+                ctx.session.user = { name: "tom" };
+                ctx.body = "done";
+            });
+
+            await request(server)
+                .get("/")
+                .expectStatus(200)
+                .expect((response) => {
+                    expect(response.headers["set-cookie"][0]).to.include("the_id_in_ctx");
+                });
         });
     });
 });

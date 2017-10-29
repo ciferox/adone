@@ -41,10 +41,16 @@ const buildValues = (diff, components, newString, oldString, useLongestToken) =>
         }
     }
 
-    // Special case handle for when one terminal is ignored. For this case we merge the
-    // terminal into the prior string and drop the change.
+    // Special case handle for when one terminal is ignored (i.e. whitespace).
+    // For this case we merge the terminal into the prior string and drop the change.
+    // This is only available for string mode.
     const lastComponent = components[componentLen - 1];
-    if (componentLen > 1 && (lastComponent.added || lastComponent.removed) && diff.equals("", lastComponent.value)) {
+    if (
+        componentLen > 1
+        && is.string(lastComponent.value)
+        && (lastComponent.added || lastComponent.removed)
+        && diff.equals("", lastComponent.value)
+    ) {
         components[componentLen - 2].value += lastComponent.value;
         components.pop();
     }
@@ -208,6 +214,9 @@ export default class Diff {
     }
 
     equals(left, right) {
+        if (this.options.comparator) {
+            return this.options.comparator(left, right);
+        }
         return left === right || (this.options.ignoreCase && left.toLowerCase() === right.toLowerCase());
     }
 

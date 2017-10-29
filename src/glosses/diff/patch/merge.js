@@ -216,28 +216,55 @@ const mutualChange = (hunk, mine, their) => {
     conflict(hunk, myChanges, theirChanges);
 };
 
-const calcLineCount = (hunk) => {
-    let conflicted = false;
+const calcOldNewLineCount = (lines) => {
+    let oldLines = 0;
+    let newLines = 0;
 
-    hunk.oldLines = 0;
-    hunk.newLines = 0;
-
-    hunk.lines.forEach((line) => {
+    lines.forEach((line) => {
         if (!is.string(line)) {
-            conflicted = true;
-            return;
-        }
+            const myCount = calcOldNewLineCount(line.mine);
+            const theirCount = calcOldNewLineCount(line.theirs);
 
-        if (line[0] === "+" || line[0] === " ") {
-            hunk.newLines++;
-        }
-        if (line[0] === "-" || line[0] === " ") {
-            hunk.oldLines++;
+            if (!is.undefined(oldLines)) {
+                if (myCount.oldLines === theirCount.oldLines) {
+                    oldLines += myCount.oldLines;
+                } else {
+                    oldLines = undefined;
+                }
+            }
+
+            if (!is.undefined(newLines)) {
+                if (myCount.newLines === theirCount.newLines) {
+                    newLines += myCount.newLines;
+                } else {
+                    newLines = undefined;
+                }
+            }
+        } else {
+            if (!is.undefined(newLines) && (line[0] === "+" || line[0] === " ")) {
+                newLines++;
+            }
+            if (!is.undefined(oldLines) && (line[0] === "-" || line[0] === " ")) {
+                oldLines++;
+            }
         }
     });
 
-    if (conflicted) {
+    return { oldLines, newLines };
+};
+
+const calcLineCount = (hunk) => {
+    const { oldLines, newLines } = calcOldNewLineCount(hunk.lines);
+
+    if (!is.undefined(oldLines)) {
+        hunk.oldLines = oldLines;
+    } else {
         delete hunk.oldLines;
+    }
+
+    if (!is.undefined(newLines)) {
+        hunk.newLines = newLines;
+    } else {
         delete hunk.newLines;
     }
 };

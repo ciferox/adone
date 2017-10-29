@@ -37,7 +37,7 @@ export default function createInstance(ErrorConstructor = Error) {
         try {
             contents = fs.readFileSync(path, "utf8");
         } catch (e) {
-            contents = null;
+            contents = "";
         }
 
         fileContentsCache.set(path, contents);
@@ -297,7 +297,11 @@ export default function createInstance(ErrorConstructor = Error) {
 
             // Support files on disk
             if (!contents && fs.existsSync(source)) {
-                contents = fs.readFileSync(source, "utf8");
+                try {
+                    contents = fs.readFileSync(source, "utf8");
+                } catch (err) {
+                    contents = "";
+                }
             }
             // Format the line from the original source code like node does
             if (contents) {

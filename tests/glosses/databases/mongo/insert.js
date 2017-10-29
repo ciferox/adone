@@ -771,7 +771,7 @@ describe("insert", function () {
 
     it("should correctly insert > 1000 docs using insert and insertMany", async () => {
         const { db } = this;
-        const collection = db.collection("shouldCorreclyAllowforMoreThanAThousandDocsInsert", {
+        const collection = db.collection("shouldCorrectlyAllowforMoreThanAThousandDocsInsert", {
             serializeFunctions: true
         });
         {

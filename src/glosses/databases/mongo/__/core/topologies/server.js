@@ -91,7 +91,7 @@ const configureWireProtocolHandler = (self, ismaster) => {
 const disconnectHandler = (self, type, ns, cmd, options, callback) => {
     // Topology is not connected, save the call in the provided store to be
     // Executed at some point when the handler deems it's reconnected
-    if (!self.s.pool.isConnected() && !is.nil(self.s.disconnectHandler) && !options.monitoring) {
+    if (!self.s.pool.isConnected() && self.s.options.reconnect && !is.nil(self.s.disconnectHandler) && !options.monitoring) {
         self.s.disconnectHandler.add(type, ns, cmd, options, callback);
         return true;
     }

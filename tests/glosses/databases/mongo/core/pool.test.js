@@ -4,9 +4,11 @@ import {
 } from "./shared";
 import mongodbVersionManager from "mongodb-version-manager";
 import configuration from "./configuration";
+import mockupdb from "./mock";
 
 const {
-    data: { bson: { BSON } }
+    data: { bson: { BSON } },
+    promise: { delay }
 } = adone;
 const promisify = adone.promise.promisify;
 const waitFor = (emitter, event) => new Promise((resolve) => emitter.once(event, (...args) => {
@@ -32,7 +34,8 @@ describe("database", "mongo", "core", function () {
         return configuration.setup();
     });
 
-    after(() => {
+    after(function () {
+        this.timeout(30000);
         return configuration.teardown();
     });
 
@@ -70,6 +73,31 @@ describe("database", "mongo", "core", function () {
                 pool.connect();
             });
 
+            it("Should properly emit errors on forced destroy", (done) => {
+                const pool = new Pool({
+                    host: configuration.host,
+                    port: configuration.port,
+                    bson: new BSON()
+                });
+
+                pool.on("connect", (_pool) => {
+                    const query = new Query(new BSON(), "system.$cmd", { ismaster: true }, { numberToSkip: 0, numberToReturn: 1 });
+                    _pool.write(query, (err, result) => {
+                        assert(err);
+                        assert.ok(err.message.match(/Pool was force destroyed/));
+                        assert.isUndefined(result);
+
+                        assert.equal(0, Object.keys(Connection.connections()).length);
+                        Connection.disableConnectionAccounting();
+                        done();
+                    });
+
+                    _pool.destroy({ force: true });
+                });
+
+                pool.connect();
+            });
+
             it("Should correctly write ismaster operation to the server", async () => {
                 Connection.enableConnectionAccounting();
 
@@ -88,9 +116,9 @@ describe("database", "mongo", "core", function () {
                     const query = new Query(new BSON(), "system.$cmd", {
                         ismaster: true
                     }, {
-                        numberToSkip: 0,
-                        numberToReturn: 1
-                    });
+                            numberToSkip: 0,
+                            numberToReturn: 1
+                        });
                     const result = await promisify(_pool.write).call(_pool, query);
                     expect(result.result.ismaster).to.be.true;
 
@@ -119,9 +147,9 @@ describe("database", "mongo", "core", function () {
                         const query = new Query(new BSON(), "system.$cmd", {
                             ismaster: true
                         }, {
-                            numberToSkip: 0,
-                            numberToReturn: 1
-                        });
+                                numberToSkip: 0,
+                                numberToReturn: 1
+                            });
                         promises.push(new Promise((resolve, reject) => {
                             _pool.write(query, (err, result) => {
                                 if (err || result.result.ismaster !== true) {
@@ -155,9 +183,9 @@ describe("database", "mongo", "core", function () {
                     const query = new Query(new BSON(), "system.$cmd", {
                         ismaster: true
                     }, {
-                        numberToSkip: 0,
-                        numberToReturn: 1
-                    });
+                            numberToSkip: 0,
+                            numberToReturn: 1
+                        });
                     _pool.write(query, adone.noop);
                 });
 
@@ -191,9 +219,9 @@ describe("database", "mongo", "core", function () {
                             const query = new Query(new BSON(), "system.$cmd", {
                                 ismaster: true
                             }, {
-                                numberToSkip: 0,
-                                numberToReturn: 1
-                            });
+                                    numberToSkip: 0,
+                                    numberToReturn: 1
+                                });
                             return new Promise((resolve) => {
                                 pool.write(query, (err) => {
                                     if (err) {
@@ -239,9 +267,9 @@ describe("database", "mongo", "core", function () {
                             const query = new Query(new BSON(), "system.$cmd", {
                                 ismaster: true
                             }, {
-                                numberToSkip: 0,
-                                numberToReturn: 1
-                            });
+                                    numberToSkip: 0,
+                                    numberToReturn: 1
+                                });
                             return new Promise((resolve) => {
                                 pool.write(query, resolve);
                             });
@@ -276,9 +304,9 @@ describe("database", "mongo", "core", function () {
                     const query = new Query(new BSON(), "system.$cmd", {
                         ismaster: true
                     }, {
-                        numberToSkip: 0,
-                        numberToReturn: 1
-                    });
+                            numberToSkip: 0,
+                            numberToReturn: 1
+                        });
                     _pool.write(query, {
                         immediateRelease: true
                     }, () => {
@@ -294,6 +322,68 @@ describe("database", "mongo", "core", function () {
                 pool.destroy();
                 expect(Connection.connections()).to.be.empty;
                 Connection.disableConnectionAccounting();
+            });
+
+            it("Should remove all connections from further use during reauthentication of a pool", async () => {
+                let running = true;
+
+                const server = await mockupdb.createServer(17017, "localhost");
+
+                (async () => {
+                    while (running) {
+                        const request = await server.receive();
+                        const doc = request.document;
+
+                        if (doc.getnonce) {
+                            request.reply({ ok: 1, result: { nonce: "testing" } });
+                        } else if (doc.authenticate) {
+                            request.reply({ ok: 1 });
+                        } else if (doc.ismaster) {
+                            setTimeout(() => {
+                                request.reply({ ok: 1 });
+                            }, 10000);
+                        }
+                    }
+                })();
+
+                const pool = new Pool({
+                    host: "localhost",
+                    port: 17017,
+                    bson: new BSON(),
+                    size: 10
+                });
+
+                const query = new Query(new BSON(), "system.$cmd", { ismaster: true }, { numberToSkip: 0, numberToReturn: 1 });
+
+                await new Promise((resolve) => {
+                    pool.once("connect", resolve);
+                    pool.connect();
+                });
+
+                pool.write(query, { monitoring: true }, () => { });
+
+                await delay(500);
+
+                await promisify(pool.auth).call(pool, "mongocr", "test", "admin", "admin");
+
+                try {
+                    // ensure that there are no duplicates in the available connection queue
+                    const availableIds = pool.availableConnections.map((conn) => {
+                        return conn.id;
+                    });
+                    availableIds.forEach((id, pos, arr) => {
+                        assert.equal(arr.indexOf(id), pos);
+                    });
+
+                    assert.equal(pool.availableConnections.length, 1);
+                    assert.equal(pool.inUseConnections.length, 0);
+
+                    running = false;
+                } finally {
+                    pool.destroy(true);
+                    assert.equal(0, Object.keys(Connection.connections()).length);
+                    Connection.disableConnectionAccounting();
+                }
             });
 
             it("Should correctly exit _execute loop when single avialable connection is destroyed", async () => {
@@ -317,9 +407,9 @@ describe("database", "mongo", "core", function () {
                     let query = new Query(new BSON(), "system.$cmd", {
                         ismaster: true
                     }, {
-                        numberToSkip: 0,
-                        numberToReturn: 1
-                    });
+                            numberToSkip: 0,
+                            numberToReturn: 1
+                        });
                     await write(query);
 
                     // Mark available connection as broken
@@ -329,9 +419,9 @@ describe("database", "mongo", "core", function () {
                         query = new Query(new BSON(), "system.$cmd", {
                             ismaster: true
                         }, {
-                            numberToSkip: 0,
-                            numberToReturn: 1
-                        });
+                                numberToSkip: 0,
+                                numberToReturn: 1
+                            });
                         await write(query);
                     } finally {
                         con.destroy(true);
@@ -374,8 +464,8 @@ describe("database", "mongo", "core", function () {
                     await executeCommand(configuration, "admin", {
                         dropUser: "root"
                     }, {
-                        auth: [method, "admin", "root", "root"]
-                    });
+                            auth: [method, "admin", "root", "root"]
+                        });
                 } finally {
                     _pool.destroy(true);
                     expect(Connection.connections()).to.be.empty;
@@ -394,8 +484,8 @@ describe("database", "mongo", "core", function () {
                     roles: ["readWrite", "dbAdmin"],
                     digestPassword: true
                 }, {
-                    auth: [method, "admin", "root", "root"]
-                });
+                        auth: [method, "admin", "root", "root"]
+                    });
 
                 const pool = new Pool({
                     host: configuration.host,
@@ -418,9 +508,9 @@ describe("database", "mongo", "core", function () {
                                     a: 1
                                 }]
                             }, {
-                                numberToSkip: 0,
-                                numberToReturn: 1
-                            });
+                                    numberToSkip: 0,
+                                    numberToReturn: 1
+                                });
 
                             promises.push(new Promise((resolve, reject) => {
                                 _pool.write(query, {
@@ -455,8 +545,8 @@ describe("database", "mongo", "core", function () {
                     roles: ["readWrite", "dbAdmin"],
                     digestPassword: true
                 }, {
-                    auth: [method, "admin", "root", "root"]
-                });
+                        auth: [method, "admin", "root", "root"]
+                    });
 
                 const pool = new Pool({
                     host: configuration.host,
@@ -476,9 +566,9 @@ describe("database", "mongo", "core", function () {
                             const query = new Query(new BSON(), "system.$cmd", {
                                 ismaster: true
                             }, {
-                                numberToSkip: 0,
-                                numberToReturn: 1
-                            });
+                                    numberToSkip: 0,
+                                    numberToReturn: 1
+                                });
                             _pool.write(query, {
                                 command: true,
                                 requestId: query.requestId
@@ -500,9 +590,9 @@ describe("database", "mongo", "core", function () {
                                     a: 1
                                 }]
                             }, {
-                                numberToSkip: 0,
-                                numberToReturn: 1
-                            });
+                                    numberToSkip: 0,
+                                    numberToReturn: 1
+                                });
                             _pool.write(query, {
                                 command: true,
                                 requestId: query.requestId
@@ -534,8 +624,8 @@ describe("database", "mongo", "core", function () {
                     roles: ["readWrite", "dbAdmin"],
                     digestPassword: true
                 }, {
-                    auth: [method, "admin", "root", "root"]
-                });
+                        auth: [method, "admin", "root", "root"]
+                    });
 
                 const pool = new Pool({
                     host: configuration.host,
@@ -556,9 +646,9 @@ describe("database", "mongo", "core", function () {
                             a: 1
                         }]
                     }, {
-                        numberToSkip: 0,
-                        numberToReturn: 1
-                    });
+                            numberToSkip: 0,
+                            numberToReturn: 1
+                        });
                     await write(query, {
                         command: true,
                         requestId: query.requestId
@@ -587,8 +677,8 @@ describe("database", "mongo", "core", function () {
                     roles: ["readWrite", "dbAdmin"],
                     digestPassword: true
                 }, {
-                    auth: [method, "admin", "root", "root"]
-                });
+                        auth: [method, "admin", "root", "root"]
+                    });
 
                 const pool = new Pool({
                     host: configuration.host,
@@ -608,9 +698,9 @@ describe("database", "mongo", "core", function () {
                             a: 1
                         }]
                     }, {
-                        numberToSkip: 0,
-                        numberToReturn: 1
-                    });
+                            numberToSkip: 0,
+                            numberToReturn: 1
+                        });
                     await write(query, {
                         requestId: query.requestId
                     });

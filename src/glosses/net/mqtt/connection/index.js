@@ -11,7 +11,11 @@ export class Connection extends adone.stream.Duplexify {
 
         super(inStream, outStream, { objectMode: true });
 
-        stream.pipe(outStream);
+        // defer piping, so consumer can attach event listeners
+        // otherwise we might lose events
+        process.nextTick(() => {
+            stream.pipe(outStream);
+        });
 
         inStream.on("error", this.emit.bind(this, "error"));
         outStream.on("error", this.emit.bind(this, "error"));

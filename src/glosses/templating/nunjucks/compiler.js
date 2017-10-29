@@ -482,7 +482,7 @@ export class Compiler {
             const { value: name } = targets[i];
             let id = frame.lookup(name);
 
-            if (is.null(id) || is.undefined(id)) {
+            if (is.nil(id)) {
                 id = this.tmpid();
 
                 // Note: This relies on js allowing scope across blocks,
@@ -805,7 +805,7 @@ export class Compiler {
             "var callerFrame = frame;",
             `frame = ${(keepFrame) ? "frame.push(true);" : "new runtime.Frame();"}`,
             "kwargs = kwargs || {};",
-            'if (kwargs.hasOwnProperty("caller")) {',
+            'if (Object.prototype.hasOwnProperty.call(kwargs, "caller")) {',
             'frame.set("caller", kwargs.caller); }'
         );
 
@@ -820,7 +820,7 @@ export class Compiler {
             const { children } = kwargs;
             for (let i = 0; i < children.length; ++i) {
                 const { key: { value: name }, value } = children[i];
-                this.emit(`frame.set("${name}", kwargs.hasOwnProperty("${name}") ? kwargs["${name}"] : `);
+                this.emit(`frame.set("${name}", Object.prototype.hasOwnProperty.call(kwargs, "${name}") ? kwargs["${name}"] : `);
                 this._compileExpression(value, frame);
                 this.emitLine(");");
             }
@@ -910,7 +910,7 @@ export class Compiler {
                 alias = name;
             }
 
-            this.emitLine(`if(${importedId}.hasOwnProperty("${name}")) {`);
+            this.emitLine(`if(Object.prototype.hasOwnProperty.call(${importedId}, "${name}")) {`);
             this.emitLine(`var ${id} = ${importedId}.${name};`);
             this.emitLine("} else {");
             this.emitLine(`cb(new Error("cannot import '${name}'")); return;`);

@@ -19,7 +19,6 @@ export const utf16le = "ucs2";
 export const binary = { type: "_internal" };
 export const base64 = { type: "_internal" };
 export const hex = { type: "_internal" };
-export const iso88591 = "binary";
 
 const data = lazify({
     dbcs: "./data/dbcs",

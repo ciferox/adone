@@ -54,7 +54,7 @@ export default function session(opts = {}) {
         if (!id) {
             ctx.session = {};
         } else {
-            ctx.session = await store.get(id);
+            ctx.session = await store.get(id, ctx);
             if (!is.object(ctx.session) || is.null(ctx.session)) {
                 ctx.session = {};
             }
@@ -75,12 +75,12 @@ export default function session(opts = {}) {
         }
 
         if (id && !ctx.session) {
-            await store.destroy(id);
+            await store.destroy(id, ctx);
             return;
         }
 
         if (!is.emptyObject(ctx.session)) {
-            const sid = await store.set(ctx.session, Object.assign({}, opts, { sid: id }));
+            const sid = await store.set(ctx.session, Object.assign({}, opts, { sid: id }), ctx);
             ctx.cookies.set(key, sid, opts);
         }
     };

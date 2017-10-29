@@ -3,7 +3,7 @@ const steed = require("steed")();
 const ascoltatori = require("ascoltatori");
 const pino = require("pino");
 const extend = require("extend");
-const shortid = require("shortid");
+var nanoid = require("nanoid");
 import Client from "./client";
 import Stats from "./stats";
 const persistence = require("./persistence");
@@ -68,7 +68,7 @@ export default class Server extends adone.event.EventEmitter {
         this.onQoS2publish = this.modernOpts.onQoS2publish;
 
         // each Server has a dummy id for logging purposes
-        this.id = this.modernOpts.id || shortid.generate();
+        this.id = this.modernOpts.id || nanoid(7);
 
         // initialize servers list
         this.servers = [];
@@ -390,6 +390,6 @@ export default class Server extends adone.event.EventEmitter {
     }
 
     generateUniqueId() {
-        return shortid.generate();
+        return nanoid(7);
     }
 }
