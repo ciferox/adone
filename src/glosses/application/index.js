@@ -3,8 +3,6 @@ const {
     util
 } = adone;
 
-export const STATE_SYMBOL = Symbol.for("application.Subsystem#state");
-
 export const STATE = {
     INITIAL: 0,
     CONFIGURING: 1,

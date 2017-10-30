@@ -11,8 +11,7 @@ const {
 const {
     EXIT_SUCCESS,
     EXIT_ERROR,
-    STATE,
-    STATE_SYMBOL
+    STATE
 } = application;
 
 // const INTERNAL = Symbol();
@@ -126,7 +125,7 @@ export default class Application extends application.Subsystem {
                 await this.exit(code);
                 return;
             }
-            this[STATE_SYMBOL] = STATE.RUNNING;
+            await this.setState(STATE.RUNNING);
         } catch (err) {
             if (this[ERROR_SCOPE]) {
                 return this._fireException(err);
@@ -163,7 +162,7 @@ export default class Application extends application.Subsystem {
         this[EXITING] = true;
 
         try {
-            switch (this[STATE_SYMBOL]) {
+            switch (this.getState()) {
                 // initializing?
                 case STATE.INITIALIZED:
                 case STATE.RUNNING:

@@ -52,7 +52,6 @@ const defaultColors = {
     }
 };
 
-const STATE_SYMBOL = Symbol.for("application.Subsystem#state");
 const INTERNAL = Symbol();
 const UNNAMED = Symbol();
 const EMPTY_VALUE = Symbol();
@@ -1482,7 +1481,7 @@ export default class CliApplication extends application.Application {
                 await this.exit(code);
                 return;
             }
-            this[STATE_SYMBOL] = STATE.RUNNING;
+            await this.setState(STATE.RUNNING);
         } catch (err) {
             if (this[ERROR_SCOPE]) {
                 return this._fireException(err);

@@ -45,7 +45,7 @@ const {
 
 const VERSION_PARTS = ["major", "minor", "patch", "premajor", "preminor", "prepatch", "prerelease"];
 
-export default class Manager extends task.Manager {
+export default class ProjectManager extends task.Manager {
     constructor(path = process.cwd()) {
         super();
         this.name = null;

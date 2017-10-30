@@ -11,9 +11,14 @@ export const state = {
 
 adone.lazify({
     Task: ["./task", (mod) => mod.Task],
+    Flow: "./flow",
     TaskObserver: ["./task", (mod) => mod.TaskObserver],
-    Manager: "./manager"
+    Manager: "./manager",
+    flow: "./flows"
 }, adone.asNamespace(exports), require);
 
 // predicates
-adone.definePredicate("task", "TASK");
+adone.definePredicates({
+    task: "TASK",
+    flowTask: "FLOW_TASK"
+});

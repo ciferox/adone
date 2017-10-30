@@ -6,11 +6,11 @@ const {
     x,
     application: {
         humanizeState,
-        STATE,
-        STATE_SYMBOL
+        STATE
     }
 } = adone;
 
+const STATE_SYMBOL = Symbol.for("application.Subsystem#state");
 const SUBSYSTEMS_SYMBOL = Symbol.for("application.Subsystem#subsystems");
 
 export default class Subsystem extends adone.event.AsyncEmitter {
@@ -323,8 +323,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
     async _configureSubsystem(sysInfo) {
         if (sysInfo.instance[STATE_SYMBOL] === STATE.INITIAL) {
             await sysInfo.instance._configure(...sysInfo.configureArgs);
-            sysInfo.state = STATE.CONFIGURED;
-        } else if (sysInfo.state !== STATE.CONFIGURED) {
+        } else if (sysInfo.instance[STATE_SYMBOL] !== STATE.CONFIGURED) {
             throw new adone.x.IllegalState(`Illegal state of '${sysInfo.name}' subsystem for configure: ${humanizeState(sysInfo.instance[STATE_SYMBOL])}`);
         }
     }

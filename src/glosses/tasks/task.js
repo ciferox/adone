@@ -15,7 +15,7 @@ export class Task {
      * @return {any}
      */
     run() {
-        throw new adone.x.NotImplemented("Method run() not implemented");
+        throw new adone.x.NotImplemented("Method run() is not implemented");
     }
 
     /**
@@ -129,6 +129,13 @@ export class TaskObserver {
      */
     isCompleted() {
         return this.state === state.COMPLETED;
+    }
+
+    /**
+     * Returns true if the task was finished.
+     */
+    isFailed() {
+        return this.state === state.FAILED;
     }
 
     /**

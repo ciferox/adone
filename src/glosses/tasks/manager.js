@@ -113,6 +113,33 @@ export default class TaskManager extends adone.event.AsyncEmitter {
     }
 
     /**
+     * Runs task in series.
+     * 
+     * @param {array} tasks array of task names
+     */
+    async runInSeries(tasks, options, ...args) {
+        return this.runOnce(adone.task.flow.Series, tasks, options, ...args);
+    }
+
+    /**
+     * Runs task in parallel.
+     * 
+     * @param {array} tasks array of task names
+     */
+    runInParallel(tasks, options, ...args) {
+        return this.runOnce(adone.task.flow.Parallel, tasks, options, ...args);
+    }
+
+    /**
+     * Runs tasks in series, but result of each will be passed to next one as arguments.
+     * 
+     * @param {array} tasks array of task names
+     */
+    runWaterfall(tasks, options, ...args) {
+        return this.runOnce(adone.task.flow.Waterfall, tasks, options, ...args);
+    }
+
+    /**
      * Runs task once.
      * 
      * @param {class} TaskClass 
@@ -146,7 +173,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
         };
         
         if (is.promise(taskObserver.result)) {
-            adone.promise.finally(taskObserver.result, releaseRunner);
+            adone.promise.finally(taskObserver.result, releaseRunner).catch(adone.noop);
         } else {
             releaseRunner();
         }
@@ -159,8 +186,12 @@ export default class TaskManager extends adone.event.AsyncEmitter {
             const instance = this._createTaskInstance(taskInfo);
             
             const taskObserver = new task.TaskObserver(instance);
-            taskObserver.result = instance.run(...args);
             taskObserver.state = task.state.RUNNING;
+            try {
+                taskObserver.result = instance.run(...args);
+            } catch (err) {
+                taskObserver.result = Promise.reject(err);
+            }
 
             if (is.promise(taskObserver.result)) {
                 taskObserver.result.then(() => {
@@ -168,7 +199,6 @@ export default class TaskManager extends adone.event.AsyncEmitter {
                 }).catch((err) => {
                     taskObserver.state = task.state.FAILED;
                     taskObserver.error = err;
-                    throw err;
                 });
             } else {
                 taskObserver.state = task.state.COMPLETED;
