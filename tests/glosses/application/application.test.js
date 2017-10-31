@@ -7,18 +7,6 @@ const {
 const fixture = std.path.join.bind(std.path, __dirname, "fixtures");
 
 describe("application", "Application", () => {
-    let prevRoot = null;
-
-    before(() => {
-        // define env var to require correct adone inside fixture apps
-        prevRoot = process.env.ADONE_ROOT_PATH; // ?
-        process.env.ADONE_ROOT_PATH = adone.rootPath;
-    });
-
-    after(() => {
-        process.env.ADONE_ROOT_PATH = prevRoot;
-    });
-
     it("by default should use script name as application name", async () => {
         const result = await forkProcess(fixture("test_name.js"));
         assert.equal(result.stdout, "test_name");
@@ -133,6 +121,175 @@ describe("application", "Application", () => {
         it("complex custom reinitialization", async () => {
             const result = await forkProcess(fixture("complex_custom_reinitialization.js"));
             assert.equal(result.stdout, "nc\nc\nc1\nc11\nc111\nc112\nc2\ni2\ni\ni1\ni11\ni111\ni112\nm\nr\nu\nu2\nu1\nu111\nu11\nu112\ni2\ni\ni1\ni11\ni111\ni112\nu\nu2\nu1\nu111\nu11\nu112");
+        });
+
+        describe("deleteSubsystem", () => {
+            it("delete an uninitialized subsystem", async () => {
+                const result = await forkProcess(fixture("delete_uninitialized_subsystem.js"));
+                assert.equal(result.stdout, "configure\ninitialize\nmain\nuninitialize\nfalse");
+            });
+
+            it("should throw on delete of initialized subsystem", async () => {
+                const result = await forkProcess(fixture("delete_initialized_subsystem.js"));
+                assert.equal(result.stdout, "configure\ninitialize\nmain\nThe subsystem is used and can not be deleted\ntrue\nuninitialize");
+            });
+        });
+
+        describe("unloadSubsystem", () => {
+            it("should unload and delete subsystem", async () => {
+                const result = await forkProcess(fixture("unload_initialized_subsystem.js"));
+                assert.equal(result.stdout, [
+                    "hello configure",
+                    "hello init",
+                    "main",
+                    "hello uninit",
+                    "has false"
+                ].join("\n"));
+            });
+
+            it("should wait for uninitialized if the subsystem is unitializing", async () => {
+                const result = await forkProcess(fixture("unload_slow_uninitialize.js"));
+                assert.equal(result.stdout, [
+                    "hello configure",
+                    "hello init",
+                    "main",
+                    "hello uninit",
+                    "has false",
+                ].join("\n"));
+            });
+
+            it("should wait for initialized and then uninit and delete the subsystem if it is initializing", async () => {
+                const result = await forkProcess(fixture("unload_slow_initialize.js"));
+                assert.equal(result.stdout, [
+                    "main",
+                    "hello configure",
+                    "hello init",
+                    "hello uninit",
+                    "has false"
+                ].join("\n"));
+            });
+
+            it("should wait for initialized and then uninit and delete the subsystem if it is configuring", async () => {
+                const result = await forkProcess(fixture("unload_slow_configure.js"));
+                assert.equal(result.stdout, [
+                    "main",
+                    "hello configure",
+                    "hello init",
+                    "hello uninit",
+                    "has false"
+                ].join("\n"));
+            });
+
+            it("should throw if the subsystem is unknown", async () => {
+                await assert.throws(async () => {
+                    await forkProcess(fixture("unload_unknown_subsystem.js"));
+                }, /Unknown subsystem: hello/);
+            });
+        });
+
+        describe("loadSubsystem", () => {
+            it("should add, configure and initialize a new subsystem using an absolute path", async () => {
+                const result = await forkProcess(fixture("load_external_subsystem.js"), [
+                    fixture("subsystem", "hello.js")
+                ]);
+                assert.equal(result.stdout, [
+                    "main",
+                    "hello configure",
+                    "hello init",
+                    "hello uninit"
+                ].join("\n"));
+            });
+
+            it("should add and initialize a new subsystem using a Subsystem instance", async () => {
+                const result = await forkProcess(fixture("load_local_subsystem.js"));
+                assert.equal(result.stdout, [
+                    "main",
+                    "hello configure",
+                    "hello init",
+                    "hello uninit"
+                ].join("\n"));
+            });
+
+            it("should not transpile by default", async () => {
+                const err = await assert.throws(async () => {
+                    await forkProcess(fixture("load_external_subsystem.js"), [
+                        fixture("subsystem", "hello_need_transpile.js")
+                    ]);
+                });
+                assert.match(err.stderr, /Unexpected token/);
+            });
+
+            it("should transpile if transpile = true", async () => {
+                const result = await forkProcess(fixture("load_external_subsystem.js"), [
+                    fixture("subsystem", "hello_need_transpile.js"),
+                    "--transpile"
+                ]);
+                assert.equal(result.stdout, [
+                    "main",
+                    "hello configure",
+                    "hello init",
+                    "hello uninit"
+                ].join("\n"));
+            });
+
+            it("should set name to the subsystem class name by default", async () => {
+                const result = await forkProcess(fixture("load_external_subsystem.js"), [
+                    fixture("subsystem", "hello.js"),
+                    "--print-meta"
+                ]);
+                assert.equal(result.stdout, [
+                    "main",
+                    "hello configure",
+                    "hello init",
+                    "name Hello",
+                    "description ",
+                    "hello uninit"
+                ].join("\n"));
+            });
+
+            it("should set a custom name if defined", async () => {
+                const result = await forkProcess(fixture("load_external_subsystem.js"), [
+                    fixture("subsystem", "hello.js"),
+                    "--name", "hellosubsystem",
+                    "--print-meta"
+                ]);
+                assert.equal(result.stdout, [
+                    "main",
+                    "hello configure",
+                    "hello init",
+                    "name hellosubsystem",
+                    "description ",
+                    "hello uninit"
+                ].join("\n"));
+            });
+
+            it("should set a custom description if defined", async () => {
+                const result = await forkProcess(fixture("load_external_subsystem.js"), [
+                    fixture("subsystem", "hello.js"),
+                    "--description", "Description",
+                    "--print-meta"
+                ]);
+                assert.equal(result.stdout, [
+                    "main",
+                    "hello configure",
+                    "hello init",
+                    "name Hello",
+                    "description Description",
+                    "hello uninit"
+                ].join("\n"));
+            });
+
+            it("should throw if not an absolute path is provided", async () => {
+                await assert.throws(async () => {
+                    await forkProcess(fixture("load_not_abs_argument.js"));
+                }, /must be absolute/);
+            });
+
+            it("should throw if neither a subsystem nor an absolute path is provided", async () => {
+                await assert.throws(async () => {
+                    await forkProcess(fixture("load_invalid_argument.js"));
+                }, "'subsystem' should be path or instance of adone.application.Subsystem");
+            });
         });
     });
 });

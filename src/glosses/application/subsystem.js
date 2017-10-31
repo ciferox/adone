@@ -42,7 +42,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
     /**
      * Returns promise that will be resolved when state become as expected.
      * @param {*} expectedState state for wating
-     * @param {*} timeout waiting timeout 
+     * @param {*} timeout waiting timeout
      */
     waitForState(expectedState, timeout) {
         return new Promise((resolve, reject) => {
@@ -158,7 +158,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
     }
 
     /**
-     * Reinitializa specified subsystem.
+     * Reinitializes specified subsystem.
      *
      * @param {string} name Name of subsystem
      * @returns {Promise<void>}
@@ -203,6 +203,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
      * @param {string} group Group of subsystem.
      * @param {array} configureArgs Arguments sending to configure() method of subsystem.
      * @param {boolean} addOnCommand If true, the subsystem will be added only if a command 'name' is requested.
+     * @param {boolean} transpile Whether the code must be transpiled
      * @returns {null|Promise<object>}
      */
     addSubsystem({ subsystem, name = null, description = "", group = "subsystem", configureArgs = [], transpile = false } = {}) {
@@ -254,7 +255,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         if (index < 0) {
             throw new x.Unknown(`Unknown subsystem: ${name}`);
         }
-        if (!force && ![STATE.INITIAL, STATE.UNINITIALIZED, STATE.FAILED].includes(this[SUBSYSTEMS_SYMBOL][index][STATE_SYMBOL])) {
+        if (!force && ![STATE.INITIAL, STATE.UNINITIALIZED, STATE.FAILED].includes(this[SUBSYSTEMS_SYMBOL][index].instance[STATE_SYMBOL])) {
             throw new x.NotAllowed("The subsystem is used and can not be deleted");
         }
 
@@ -373,17 +374,44 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         await this.setState(STATE.UNINITIALIZED);
     }
 
-    async _forceInitialize() {
+    async _forceConfigured() {
         await this.setState(STATE.CONFIGURED);
         for (const sysInfo of this[SUBSYSTEMS_SYMBOL]) {
-            sysInfo.instance._forceInitialize();
+            sysInfo.instance._forceConfigured();
         }
     }
 
     async _reinitialize() {
         await this._uninitialize();
-        await this._forceInitialize();
+        await this._forceConfigured();
         await this._initialize();
+    }
+
+    async loadSubsystem(subsystem, { name = null, description = "", transpile = false } = {}) {
+        const sysInfo = await this.addSubsystem({ subsystem, name, description, transpile });
+        name = name || sysInfo.name;
+        await this.configureSubsystem(name);
+        await this.initializeSubsystem(name);
+        return this.getSubsystemInfo(name);
+    }
+
+    async unloadSubsystem(name) {
+        const { instance } = await this.getSubsystemInfo(name);
+        switch (instance[STATE_SYMBOL]) {
+            case STATE.INITIALIZED:
+                await this.uninitializeSubsystem(name);
+                break;
+            case STATE.INITIALIZING:
+            case STATE.CONFIGURED: // ?
+            case STATE.CONFIGURING: // ?
+                await instance.waitForState(STATE.INITIALIZED);
+                await this.uninitializeSubsystem(name);
+                break;
+            case STATE.UNINITIALIZING:
+                await instance.waitForState(STATE.UNINITIALIZED);
+                break;
+        }
+        await this.deleteSubsystem(name);
     }
 }
 tag.add(Subsystem, "SUBSYSTEM");
