@@ -154,7 +154,7 @@ describe("application", "Application", () => {
                     "hello init",
                     "main",
                     "hello uninit",
-                    "has false",
+                    "has false"
                 ].join("\n"));
             });
 

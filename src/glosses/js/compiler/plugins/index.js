@@ -6,7 +6,7 @@ const plugins = {
     }, null, require),
     syntax: lazify({
         asyncFunctions: "./syntax/async_functions",
-        // asyncGenerators: "./syntax/async_generators",
+        asyncGenerators: "./syntax/async_generators",
         classProperties: "./syntax/class_properties",
         decorators: "./syntax/decorators",
         flow: "./syntax/flow",

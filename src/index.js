@@ -186,6 +186,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         // es2015 require
         require: () => {
             const plugins = [
+                "syntax.asyncGenerators",
                 "transform.flowStripTypes",
                 "transform.decorators",
                 ["transform.classProperties", { loose: true }],
