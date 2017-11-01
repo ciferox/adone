@@ -53,6 +53,11 @@ export default class ProjectManager extends task.Manager {
         this.config = null;
         this._loaded = false;
         this.silent = false;
+        this.Generator = project.Generator;
+    }
+
+    useGenerator(Generator) {
+        this.Generator = Generator;
     }
 
     setSilent(silent) {
@@ -122,6 +127,23 @@ export default class ProjectManager extends task.Manager {
         }
 
         this._loaded = true;
+    }
+
+    async create(options) {
+        const generator = new this.Generator();
+        await generator.useDefaultTasks();
+        await generator.loadCustomTasks();
+        return generator.initializeProject({
+            cwd: this.path,
+            ...options
+        });
+    }
+
+    async generateFile(options) {
+        const generator = new this.Generator();
+        await generator.useDefaultTasks();
+        await generator.loadCustomTasks();
+        return generator.generateFile(options);
     }
 
     getProjectEntries(options) {

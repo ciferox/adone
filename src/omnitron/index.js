@@ -25,6 +25,10 @@ export const STATUSES = [
 
 export const CONFIG_NAME = "omnitron.json";
 
+adone.definePredicates({
+    omnitronService: "OMNITRON_SERVICE"
+});
+
 lazify({
     SystemDB: "./systemdb",
     Configuration: "./configuration",
@@ -33,7 +37,6 @@ lazify({
     Dispatcher: "./dispatcher",
     dispatcher: () => new adone.omnitron.Dispatcher()
 }, adone.asNamespace(exports), require);
-
 
 export let config = null; // eslint-disable-line
 

@@ -10,7 +10,7 @@ const CWD_PATH = Symbol();
 const SERIALIZER = Symbol();
 const PATHS = Symbol();
 
-export default class FileConfiguration extends adone.configuration.Configuration {
+export default class Generic extends adone.configuration.Base {
     constructor({ cwd = process.cwd() } = {}) {
         super();
         this[CWD_PATH] = cwd;

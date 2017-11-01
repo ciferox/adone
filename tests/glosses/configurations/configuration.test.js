@@ -2,12 +2,12 @@ const {
     is
 } = adone;
 
-describe("configuration", "Configuration", () => {
+describe("configuration", "Base", () => {
     let conf;
     let proto;
 
     beforeEach(() => {
-        conf = new adone.configuration.Configuration();
+        conf = new adone.configuration.Base();
         proto = conf.__proto__;
     });
 
@@ -149,7 +149,7 @@ describe("configuration", "Configuration", () => {
     });
 
     it("assign() other configuration", () => {
-        const otherConf = new adone.configuration.Configuration();
+        const otherConf = new adone.configuration.Base();
         otherConf.assign({
             c: 4,
             d: 5

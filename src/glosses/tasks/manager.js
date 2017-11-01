@@ -13,6 +13,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
     constructor() {
         super();
         this._tasks = new Map();
+        this._sharedData = null;
     }
 
     /**
@@ -117,7 +118,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
      * 
      * @param {array} tasks array of task names
      */
-    async runInSeries(tasks, options, ...args) {
+    runInSeries(tasks, options, ...args) {
         return this.runOnce(adone.task.flow.Series, tasks, options, ...args);
     }
 
@@ -154,6 +155,14 @@ export default class TaskManager extends adone.event.AsyncEmitter {
         return observer;
     }
 
+    setSharedData(sharedData) {
+        if (!is.plainObject(sharedData)) {
+            throw new x.InvalidArgument("Shared data should be provided through an object");
+        }
+
+        this._sharedData = sharedData;
+    }
+
     async _run(context, name, ...args) {
         const taskInfo = this._getTaskInfo(name);
 
@@ -184,6 +193,12 @@ export default class TaskManager extends adone.event.AsyncEmitter {
     async _createTaskRunner(context, taskInfo) {
         return (args) => {
             const instance = this._createTaskInstance(taskInfo);
+
+            if (!is.null(this._sharedData)) {
+                for (const [name, val] of Object.entries(this._sharedData)) {
+                    instance[name] = val;
+                }
+            }
             
             const taskObserver = new task.TaskObserver(instance);
             taskObserver.state = task.state.RUNNING;

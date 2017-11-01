@@ -45,11 +45,11 @@ describe("", () => {
         ];
 
         for (const InvalidTask of invalidTasks) {
-            const err = assert.throws(() => manager.addTask("task", InvalidTask)); // eslint-disable-line
+            const err = await assert.throws(async () => manager.addTask("task", InvalidTask)); // eslint-disable-line
             assert.instanceOf(err, x.NotValid);
         }
 
-        manager.addTask("task", ValidTask);
+        await manager.addTask("task", ValidTask);
         assert.sameMembers(manager.getTaskNames(), ["task"]);
     });
 
@@ -67,7 +67,7 @@ describe("", () => {
         assert.isTrue(observer.isCompleted());
     });
 
-    it("observer should containe correct error info for sync task", async () => {
+    it("observer should contain correct error info for sync task", async () => {
         class TaskA extends task.Task {
             run() {
                 throw new adone.x.Runtime("sad");
@@ -82,7 +82,7 @@ describe("", () => {
         assert.instanceOf(err, adone.x.Runtime);
     });
 
-    it("observer should containe correct error info for async task", async () => {
+    it("observer should contain correct error info for async task", async () => {
         class TaskA extends task.Task {
             async run() {
                 await promise.delay(10);
@@ -224,7 +224,7 @@ describe("", () => {
         }
 
         it("suspend/resume non suspendable task", async () => {
-            manager.addTask("a", TaskA);
+            await manager.addTask("a", TaskA);
             const observer = await manager.run("a", false);
             await promise.delay(200);
             await observer.suspend();
@@ -233,7 +233,7 @@ describe("", () => {
         });
 
         it("cancel non cancelable task", async () => {
-            manager.addTask("a", TaskA);
+            await manager.addTask("a", TaskA);
             const observer = await manager.run("a", false, false);
             await promise.delay(200);
             await observer.cancel();
@@ -243,7 +243,7 @@ describe("", () => {
         });
 
         it("suspend/resume suspendable task", async () => {
-            manager.addTask("a", TaskA);
+            await manager.addTask("a", TaskA);
             const observer = await manager.run("a", true);
             await promise.delay(200);
             await observer.suspend();
@@ -255,7 +255,7 @@ describe("", () => {
         });
 
         it("cancel cancelable task", async () => {
-            manager.addTask("a", TaskA);
+            await manager.addTask("a", TaskA);
             const observer = await manager.run("a", false, true);
             await promise.delay(200);
             await observer.cancel();
@@ -265,7 +265,7 @@ describe("", () => {
         });
     });
 
-    describe.only("flows", () => {
+    describe("flows", () => {
         class TaskA extends task.Task {
             async run() {
                 await promise.delay(10);
@@ -295,18 +295,18 @@ describe("", () => {
 
         describe("series", () => {
             it("managed tasks", async () => {
-                manager.addTask("a", TaskA);
-                manager.addTask("b", TaskB);
-                manager.addTask("series", task.flow.Series);
+                await manager.addTask("a", TaskA);
+                await manager.addTask("b", TaskB);
+                await manager.addTask("series", task.flow.Series);
 
                 const observer = await manager.run("series", ["a", "b"], null, "adone");
                 assert.deepEqual(await observer.result, [1, "suffix-adone"]);
             });
 
             it("managed+unmanaged tasks", async () => {
-                manager.addTask("a", TaskA);
-                manager.addTask("b", TaskB);
-                manager.addTask("series", task.flow.Series);
+                await manager.addTask("a", TaskA);
+                await manager.addTask("b", TaskB);
+                await manager.addTask("series", task.flow.Series);
 
                 const observer = await manager.run("series", ["a", "b", TaskC], null, "adone");
                 assert.deepEqual(await observer.result, [1, "suffix-adone", "adone"]);
@@ -315,9 +315,9 @@ describe("", () => {
 
         describe("parallel", () => {
             it("managed tasks", async () => {
-                manager.addTask("a", TaskA);
-                manager.addTask("b", TaskB);
-                manager.addTask("parallel", task.flow.Parallel);
+                await manager.addTask("a", TaskA);
+                await manager.addTask("b", TaskB);
+                await manager.addTask("parallel", task.flow.Parallel);
 
                 const observer = await manager.run("parallel", ["a", "b"], null, "adone");
                 assert.deepEqual(await observer.result, {
@@ -327,9 +327,9 @@ describe("", () => {
             });
 
             it("managed+unmanaged tasks", async () => {
-                manager.addTask("a", TaskA);
-                manager.addTask("b", TaskB);
-                manager.addTask("parallel", task.flow.Parallel);
+                await manager.addTask("a", TaskA);
+                await manager.addTask("b", TaskB);
+                await manager.addTask("parallel", task.flow.Parallel);
 
                 const observer = await manager.run("parallel", ["a", "b", TaskC], null, "adone");
                 assert.deepEqual(await observer.result, {
@@ -342,17 +342,17 @@ describe("", () => {
 
         describe("try", () => {
             it("managed tasks", async () => {
-                manager.addTask("badA", TaskBadA);
-                manager.addTask("b", TaskB);
-                manager.addTask("try", task.flow.Try);
+                await manager.addTask("badA", TaskBadA);
+                await manager.addTask("b", TaskB);
+                await manager.addTask("try", task.flow.Try);
 
                 const observer = await manager.run("try", ["badA", "b"], null, "adone");
                 assert.equal(await observer.result, "suffix-adone");
             });
 
             it("managed+unmanaged tasks", async () => {
-                manager.addTask("badA", TaskBadA);
-                manager.addTask("try", task.flow.Try);
+                await manager.addTask("badA", TaskBadA);
+                await manager.addTask("try", task.flow.Try);
 
                 const observer = await manager.run("try", ["badA", TaskC], null, "adone");
                 assert.equal(await observer.result, "adone");
@@ -374,9 +374,9 @@ describe("", () => {
             }
 
             it("managed tasks", async () => {
-                manager.addTask("d", TaskD);
-                manager.addTask("e", TaskE);
-                manager.addTask("waterfall", task.flow.Waterfall);
+                await manager.addTask("d", TaskD);
+                await manager.addTask("e", TaskE);
+                await manager.addTask("waterfall", task.flow.Waterfall);
 
                 const observer = await manager.run("waterfall", ["d", "e"], null, 3);
                 assert.equal(await observer.result, 21);
@@ -389,9 +389,9 @@ describe("", () => {
                         return `sum = ${sum}`;
                     }
                 }
-                manager.addTask("d", TaskD);
-                manager.addTask("e", TaskE);
-                manager.addTask("waterfall", task.flow.Waterfall);
+                await manager.addTask("d", TaskD);
+                await manager.addTask("e", TaskE);
+                await manager.addTask("waterfall", task.flow.Waterfall);
 
                 const observer = await manager.run("waterfall", ["d", "e", TaskF], null, 3);
                 const result = await observer.result;
@@ -416,9 +416,9 @@ describe("", () => {
             }
 
             it("managed tasks", async () => {
-                manager.addTask("d", TaskD);
-                manager.addTask("e", TaskE);
-                manager.addTask("race", task.flow.Race);
+                await manager.addTask("d", TaskD);
+                await manager.addTask("e", TaskE);
+                await manager.addTask("race", task.flow.Race);
 
                 const observer = await manager.run("race", ["d", "e"], null);
                 assert.equal(await observer.result, 5);
@@ -431,13 +431,56 @@ describe("", () => {
                         return 7;
                     }
                 }
-                manager.addTask("d", TaskD);
-                manager.addTask("e", TaskE);
-                manager.addTask("race", task.flow.Race);
+                await manager.addTask("d", TaskD);
+                await manager.addTask("e", TaskE);
+                await manager.addTask("race", task.flow.Race);
 
                 const observer = await manager.run("race", ["d", "e", TaskF], null, 3);
                 assert.equal(await observer.result, 7);
             });
+        });
+
+        it("shared data", async () => {
+            const id = "778899";
+            class TaskA extends task.Task {
+                async run() {
+                    assert.equal(this.id, id);
+                    this.ctx.name = "adone";
+                    this.ctx.dt = new Date();
+                }
+            }
+            
+            class TaskB extends task.Task {
+                async run() {
+                    assert.equal(this.id, id);
+                    assert.equal(this.ctx.name, "adone");
+                    assert.isTrue(is.date(this.ctx.dt));
+                    this.ctx.version = "1.0.0";
+                    return 7;
+                }
+            }
+
+            class TaskC extends task.Task {
+                async run() {
+                    assert.equal(this.id, id);
+                    assert.equal(this.ctx.name, "adone");
+                    assert.equal(this.ctx.version, "1.0.0");
+                    assert.isTrue(is.date(this.ctx.dt));
+                    return 7;
+                }
+            }
+
+            manager.setSharedData({
+                id,
+                ctx: {
+                }
+            });
+
+            await manager.addTask("a", TaskA);
+            await manager.addTask("b", TaskB);
+
+            const observer = await manager.runInSeries(["a", "b", TaskC]);
+            await observer.result;
         });
     });
 });

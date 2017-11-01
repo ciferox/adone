@@ -2,7 +2,7 @@ const {
     is
 } = adone;
 
-export default class Configuration extends adone.configuration.FileConfiguration {
+export default class Configuration extends adone.configuration.Generic {
     constructor(options) {
         super(options);
 

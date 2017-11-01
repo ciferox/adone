@@ -6,7 +6,7 @@ const {
 
 const fixture = std.path.join.bind(std.path.join, __dirname, "fixtures");
 
-describe("configuration", "FileConfiguration", () => {
+describe("configuration", "Generic", () => {
     let conf;
 
     const options = {
@@ -14,7 +14,7 @@ describe("configuration", "FileConfiguration", () => {
     };
 
     beforeEach(() => {
-        conf = new configuration.FileConfiguration(options);
+        conf = new configuration.Generic(options);
     });
 
     it("by default load config at root", async () => {
@@ -63,7 +63,7 @@ describe("configuration", "FileConfiguration", () => {
     });
 
     it("should throw exceptions on load es6-config without 'transpile' flag", async () => {
-        const conf = new configuration.FileConfiguration();
+        const conf = new configuration.Generic();
         const err = await assert.throws(async () => conf.load(fixture("b.js"), true));
         assert.instanceOf(err, adone.x.NotValid);
     });
@@ -123,7 +123,7 @@ describe("configuration", "FileConfiguration", () => {
 
     for (const format of formats) {
         it(`${format} read`, async () => {
-            const conf = new configuration.FileConfiguration(options);
+            const conf = new configuration.Generic(options);
             await conf.load(`a${format}`);
             assert.equal(conf.raw.a, 1);
             assert.equal(conf.raw.b, "adone");
@@ -131,7 +131,7 @@ describe("configuration", "FileConfiguration", () => {
         });
 
         it(`${format} write`, async () => {
-            const conf = new configuration.FileConfiguration(options);
+            const conf = new configuration.Generic(options);
             conf.assign({
                 a: 1,
                 b: "adone",
@@ -140,7 +140,7 @@ describe("configuration", "FileConfiguration", () => {
             const filename = `tmpconf${format}`;
             await conf.save(filename);
 
-            const savedConf = new configuration.FileConfiguration(options);
+            const savedConf = new configuration.Generic(options);
             await savedConf.load(filename);
             assert.deepEqual(savedConf, conf);
             await adone.fs.unlink(adone.std.path.resolve(options.cwd, filename));
@@ -149,7 +149,7 @@ describe("configuration", "FileConfiguration", () => {
 
     it("should throw on read unknown format", async () => {
         try {
-            const conf = new configuration.FileConfiguration(options);
+            const conf = new configuration.Generic(options);
             await conf.load("unsupport.dat");
         } catch (err) {
             assert.instanceOf(err, adone.x.NotSupported);
@@ -159,10 +159,10 @@ describe("configuration", "FileConfiguration", () => {
     });
 
     it("save nested object (string)", async () => {
-        const conf = new configuration.FileConfiguration(options);
+        const conf = new configuration.Generic(options);
         await conf.load("b.json5", true);
         await conf.save("nested.json", "b.nested");
-        const savedConf = new configuration.FileConfiguration(options);
+        const savedConf = new configuration.Generic(options);
         await savedConf.load("nested.json");
         await adone.fs.unlink(adone.std.path.resolve(options.cwd, "nested.json"));
         assert.equal(savedConf.raw.str2, "val2");
@@ -170,10 +170,10 @@ describe("configuration", "FileConfiguration", () => {
     });
 
     it("save nested object (array)", async () => {
-        const conf = new configuration.FileConfiguration(options);
+        const conf = new configuration.Generic(options);
         await conf.load("b.json5", true);
         await conf.save("nested.json", ["b", "nested"]);
-        const savedConf = new configuration.FileConfiguration(options);
+        const savedConf = new configuration.Generic(options);
         await savedConf.load("nested.json");
         await adone.fs.unlink(adone.std.path.resolve(options.cwd, "nested.json"));
         assert.equal(savedConf.raw.str2, "val2");
@@ -181,7 +181,7 @@ describe("configuration", "FileConfiguration", () => {
     });
 
     it("should load all es6-configs in directory", async () => {
-        const conf = new configuration.FileConfiguration();
+        const conf = new configuration.Generic();
         await conf.load(fixture("es6_configs"), true, {
             transpile: true
         });
@@ -191,7 +191,7 @@ describe("configuration", "FileConfiguration", () => {
     });
 
     it("should create destination directory while save", async () => {
-        const conf = new configuration.FileConfiguration(options);
+        const conf = new configuration.Generic(options);
         await conf.load("a.json", true);
         await conf.save(std.path.join(options.cwd, "1", "2", "3", "a.json"), true);
         await adone.fs.rm(adone.std.path.join(options.cwd, "1"));

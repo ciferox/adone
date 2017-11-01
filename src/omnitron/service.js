@@ -32,3 +32,4 @@ export default class Service extends adone.application.Subsystem {
         });
     }
 }
+adone.tag.add(Service, "OMNITRON_SERVICE");

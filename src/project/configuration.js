@@ -10,7 +10,7 @@ const RELATIVE_PATH = Symbol();
 const SUB_CONFIGS = Symbol();
 const ENTRIES = Symbol();
 
-export default class ProjectConfiguration extends adone.configuration.FileConfiguration {
+export default class ProjectConfiguration extends adone.configuration.Generic {
     constructor({ cwd, relativeDir } = {}) {
         super({ cwd });
 

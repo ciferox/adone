@@ -250,7 +250,7 @@ class AdoneCLI extends application.CliApplication {
         ]
     })
     async configCommand(args, opts) {
-        const config = new adone.configuration.FileConfiguration();
+        const config = new adone.configuration.Generic();
         await config.load(args.get("path"), "__");
         adone.log(adone.meta.inspect(config.__, { style: opts.get("style"), depth: opts.get("depth"), noType: !opts.get("types"), noDescriptor: true, enumOnly: true, proto: false, funcDetails: false }));
 

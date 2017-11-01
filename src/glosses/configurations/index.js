@@ -2,7 +2,7 @@ const {
     is
 } = adone;
 
-export class Configuration {
+export class Base {
     constructor() {
         this.raw = {};
     }
@@ -123,15 +123,16 @@ export class Configuration {
         return parts;
     }
 }
-adone.tag.add(Configuration, "CONFIGURATION");
+adone.tag.add(Base, "CONFIGURATION");
 
 const lazy = adone.lazify({
-    FileConfiguration: "./file_configuration",
-    AdoneConfiguration: "./adone_configuration"
+    Generic: "./generic",
+    Npm: "./npm",
+    Jsconfig: "./jsconfig"
 }, adone.asNamespace(exports), require);
 
 export const load = async (path, name, options) => {
-    const config = new lazy.FileConfiguration(options);
+    const config = new lazy.Generic(options);
     await config.load(path, name, options);
     return config;
 };
