@@ -32,7 +32,7 @@ class {{ name }} extends application.Application {
 application.run({{ name }});
 `;
 
-export default class ApplicationTask extends project.GeneratorTask {
+export default class ApplicationTask extends project.generator.task.Base {
     async run(input) {
         if (!is.string(input.name)) {
             throw new adone.x.NotValid("Name should be a valid string");

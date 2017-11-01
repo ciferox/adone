@@ -7,7 +7,7 @@ const {
     util
 } = adone;
 
-export default class JsconfigConfigTask extends project.GeneratorTask {
+export default class JsconfigConfigTask extends project.generator.task.Base {
     async run(input) {        
         const configPath = std.path.join(input.cwd, "jsconfig.json");
         if (await fs.exists(configPath)) {

@@ -4,7 +4,7 @@ const {
     std
 } = adone;
 
-export default class CliApplicationProjectTask extends project.GeneratorTask {
+export default class CliApplicationProjectTask extends project.generator.task.Base {
     async run(input) {
         await this._runTask("defaultProject", {
             ...input,

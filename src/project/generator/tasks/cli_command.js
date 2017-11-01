@@ -29,7 +29,7 @@ export default class {{ name }} extends application.Subsystem {
 }
 `;
 
-export default class CliCommandTask extends project.GeneratorTask {
+export default class CliCommandTask extends project.generator.task.Base {
     async run(input) {
         return this.context.helper.generateFile(TEMPLATE, input);
     }

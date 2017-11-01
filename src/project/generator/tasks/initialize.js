@@ -4,7 +4,7 @@ const {
     project
 } = adone;
 
-export default class InitializeTask extends project.GeneratorTask {
+export default class InitializeTask extends project.generator.task.Base {
     async run(input) {
         if (!is.string(input.name)) {
             throw new adone.x.InvalidArgument("Invalid name of project");

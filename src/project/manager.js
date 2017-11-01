@@ -1,47 +1,10 @@
 const {
-    // configuration,
     is,
-    // fast,
     fs,
     std,
-    // regex,
-    // templating: { nunjucks },
-    // management: { c: { DEST_OPTIONS } },
     task,
     project
 } = adone;
-
-// // Constants 
-
-// export const NETRON_PACKAGES = {
-//     "adone": "^0.6.54-3", // eslint-disable-line
-//     "lodash": "^4.17.4", // eslint-disable-line
-//     "ng-netron": "^0.1.7"
-// };
-
-// export const NG_ADDITIONAL_NPM_PACKAGES = {
-//     "@angular/flex-layout": "^2.0.0-beta.8"
-// };
-
-// export const DEFAULT_BACKEND_NAME = "backend";
-// export const DEFAULT_FRONTEND_NAME = "frontend";
-
-// export const DEST_OPTIONS = {
-//     produceFiles: true,
-//     originTimes: false,
-//     originMode: true,
-//     originOwner: false
-// };
-
-
-// const generatorsPath = std.path.join(__dirname, "..", "lib", "generators");
-// const names = fs.readdirSync(generatorsPath);
-// const generators = {};
-// for (const name of names) {
-//     generators[name] = std.path.join("..", "lib", "generators", name);
-// }
-
-// const generator = adone.lazify(generators, null, require);
 
 const VERSION_PARTS = ["major", "minor", "patch", "premajor", "preminor", "prepatch", "prerelease"];
 
@@ -53,7 +16,7 @@ export default class ProjectManager extends task.Manager {
         this.config = null;
         this._loaded = false;
         this.silent = false;
-        this.Generator = project.Generator;
+        this.Generator = project.generator.Manager;
     }
 
     useGenerator(Generator) {
@@ -213,132 +176,6 @@ export default class ProjectManager extends task.Manager {
 
         return true;
     }
-
-    // async create({ name = "app", type = "application", subDir = "./", sourceDir = "src", skipGit = false, skipNpm = false, skipTests = false } = {}) {
-    //     this.name = name;
-    //     if (!regex.filename.test(name)) {
-    //         throw new adone.x.Incorrect(`Incorrect name of project: ${name}`);
-    //     }
-    //     this.type = type;
-
-    //     this._generatedFiles = [];
-
-    //     this._configureNunjucks();
-    //     this._createAdoneConfig();
-
-    //     const adoneConfig = new configuration.AdoneConfiguration({
-    //         base: this.path
-    //     });
-    //     adoneConfig.project = {
-    //         name: this.name,
-    //         description: "",
-    //         author: "",
-    //         type: this.type,
-    //         structure: {}
-    //     };
-
-    //     const subPath = std.path.join(this.path, std.path.normalize(subDir));
-    //     if (subPath !== this.path) {
-    //         const dirName = std.path.dirname(subPath);
-    //         adoneConfig.project.structure[dirName] = `./${dirName}`;
-    //         await this._generate({
-    //             name: `${this.name}.${dirName}`,
-    //             path: subPath,
-    //             config: adoneConfig.subConfig(subDir),
-    //             sourceDir,
-    //             skipGit,
-    //             skipNpm,
-    //             skipTests
-    //         });
-    //     }
-
-    //     await adoneConfig.save();
-    // }
-
-    // _createAdoneConfig(subDir) {
-    //     let config;
-    //     if (is.null(this.adoneConfig)) {
-    //         config = new configuration.AdoneConfiguration({
-    //             base: this.path
-    //         });
-
-    //         this._addFile("adone.conf.json");
-    //     } else {
-    //         config = this.config.subConfig(subDir);
-    //         this._addFile(std.path.join(subDir, "adone.conf.json"));
-    //     }
-
-    //     return config;
-    // }
-
-    // async _generate({ name, path, config, sourceDir, skipGit, skipNpm, skipTests } = {}) {
-    //     await fs.mkdir(path);
-
-    //     const gen = generator[this.type];
-
-    //     if (!is.function(gen)) {
-    //         throw new adone.x.Unknown(`Unknown generator: ${this.type}`);
-    //     }
-
-    //     // .mapIf((x) => x.basename === "adone.conf.js", async (x) => {
-    //     //     const bin = await nunjucks.renderString(await fs.readFile(std.path.join(this.adoneConfPath, "bin.nunjucks"), { encoding: "utf8" }), {
-    //     //         fromBin: appRelPath
-    //     //     });
-    //     //     const lib = await nunjucks.renderString(await fs.readFile(std.path.join(this.adoneConfPath, "lib.nunjucks"), { encoding: "utf8" }), {
-    //     //         fromBin: appRelPath,
-    //     //         fromLib: std.path.join(sourceDir, "**", "*")
-    //     //     });
-
-    //     //     x.contents = Buffer.from(await nunjucks.renderString(x.contents.toString(), {
-    //     //         bin,
-    //     //         lib,
-    //     //         name,
-    //     //         type,
-    //     //         from: appRelPath
-    //     //     }));
-    //     //     return x;
-    //     // })
-
-    //     // const appRelPath = std.path.join(sourceDir, "app.js");
-
-    //     // common files
-    //     await fast.src("common/**/*", {
-    //         cwd: std.path.join(__dirname, "..", "assets")
-    //     }).filter((x) => {
-    //         if (x.basename === ".gitignore" && skipGit) {
-    //             return false;
-    //         }
-    //         return true;
-    //     }).mapIf((x) => x.basename === "package.json", (x) => {
-    //         const packageJson = JSON.parse(x.contents.toString());
-    //         packageJson.name = name;
-    //         packageJson.main = `./bin/${name}.js`;
-    //         x.contents = Buffer.from(JSON.stringify(packageJson, null, "  "));
-    //         return x;
-    //     }).dest(path, DEST_OPTIONS).through((x) => {
-    //         adone.log(std.path.relative(this.path, std.path.join(path, x.relative)));
-    //         this._addFileToGit(std.path.relative(this.path, std.path.join(path, x.relative)));
-    //     });
-
-    //     // return gen({
-    //     //     project: this,
-    //     //     name,
-    //     //     path,
-    //     //     config
-    //     // });
-    // }
-
-    // _addFile(relPath) {
-    //     if (!this._generatedFiles.includes(relPath)) {
-    //         this._generatedFiles.push(relPath);
-    //     }
-    // }
-
-    // _configureNunjucks() {
-    //     nunjucks.configure("/", {
-    //         autoescape: false
-    //     });
-    // }
 
     _checkLoaded() {
         if (!this._loaded) {

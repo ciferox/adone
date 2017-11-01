@@ -8,7 +8,7 @@ const {
     system: { process: { exec } }
 } = adone;
 
-export default class NpmConfigTask extends project.GeneratorTask {
+export default class NpmConfigTask extends project.generator.task.Base {
     async run(input) {
         const npmPackagePath = std.path.join(input.cwd, "package.json");
         if (await fs.exists(npmPackagePath)) {

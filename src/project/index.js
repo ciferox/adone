@@ -1,7 +1,6 @@
 adone.lazify({
-    task: "./tasks",
     Configuration: "./configuration",
     Manager: "./manager",
-    Generator: "./generator",
-    GeneratorTask: "./generator/task"
+    task: "./tasks",
+    generator: "./generator"
 }, adone.asNamespace(exports), require);

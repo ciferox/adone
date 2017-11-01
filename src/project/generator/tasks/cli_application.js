@@ -58,7 +58,7 @@ class {{ name }} extends application.CliApplication {
 application.runCli({{ name }});
 `;
 
-export default class CliApplicationTask extends project.GeneratorTask {
+export default class CliApplicationTask extends project.generator.task.Base {
     async run(input) {
         if (!is.string(input.name)) {
             throw new adone.x.NotValid("Name should be a valid string");

@@ -6,7 +6,7 @@ const {
     util
 } = adone;
 
-export default class AdoneConfigTask extends project.GeneratorTask {
+export default class AdoneConfigTask extends project.generator.task.Base {
     async run(input) {
         const configPath = std.path.join(input.cwd, "adone.json");
         if (await fs.exists(configPath)) {

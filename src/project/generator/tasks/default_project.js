@@ -2,7 +2,7 @@ const {
     project
 } = adone;
 
-export default class DefaultProjectTask extends project.GeneratorTask {
+export default class DefaultProjectTask extends project.generator.task.Base {
     async run({ skipGit = false, skipEslint = false, skipJsconfig = false, ...input } = {}) {
         const tasks = ["initialize", "adoneConfig"];
         

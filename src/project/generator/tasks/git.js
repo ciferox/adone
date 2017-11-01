@@ -50,7 +50,7 @@ Thumbs.db
 /lib
 `;
 
-export default class GitTask extends project.GeneratorTask {
+export default class GitTask extends project.generator.task.Base {
     async run(input) {
         const time = adone.datetime.now() / 1000;
         const zoneOffset = adone.datetime().utcOffset();

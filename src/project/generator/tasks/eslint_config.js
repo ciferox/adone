@@ -4,7 +4,7 @@ const {
     project
 } = adone;
 
-export default class EslintConfigTask extends project.GeneratorTask {
+export default class EslintConfigTask extends project.generator.task.Base {
     async run(input) {
         const eslintrcPath = std.path.join(adone.etcPath, "project", ".eslintrc.js");
         

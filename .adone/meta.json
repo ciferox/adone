@@ -344,6 +344,18 @@
                         "description": "Project tasks",
                         "index": "project/tasks/index",
                         "src": "project/tasks/**/*"
+                    },
+                    "generator": {
+                        "description": "Project generator stuff",
+                        "index": "project/generator/index",
+                        "src": "project/generator/**/*",
+                        "namespace": {
+                            "task": {
+                                "description": "Project generator tasks",
+                                "index": "project/generator/tasks/index",
+                                "src": "project/generator/tasks/**/*"
+                            }
+                        }
                     }
                 }
             },
