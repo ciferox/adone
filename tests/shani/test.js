@@ -1,4 +1,4 @@
-require("../../..");
+require("../..");
 const EventEmitter = require("events");
 const assert = require("assert");
 const path = require("path");
@@ -500,6 +500,32 @@ describe("Engine", () => {
             await waitFor(start(), "done");
 
             assert.deepEqual(calls, ["hello", "test3"]);
+        });
+
+        it("should prioritize blocks on the same level", async () => {
+            const engine = new Engine();
+            const { describe, it, start } = engine.context();
+
+            const calls = [];
+
+            describe("/1", () => {
+                describe.only("/1.5", () => {
+                    describe("", () => {
+                        it.only("hello", () => calls.push("hello"));
+                    });
+                });
+
+                describe("/2", () => {
+                    it("test1", () => calls.push("test1"));
+                    describe("/3", () => {
+                        it("test2", () => calls.push("test2"));
+                        it.only("test3", () => calls.push("test3"));
+                    });
+                });
+            });
+            await waitFor(start(), "done");
+
+            assert.deepEqual(calls, ["hello"]);
         });
     });
 

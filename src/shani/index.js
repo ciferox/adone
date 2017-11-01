@@ -714,30 +714,37 @@ export class Engine {
                         return true;
                     }
                     let hasInclusive = false;
+
+                    // mark all inclusive nodes
                     for (const node of block.children) {
-                        if (node.isExclusive()) {
-                            // exclusive nodes dont have to be marked
+                        if (node.isExclusive() || !node.isInclusive()) {
                             continue;
                         }
-                        const isBlock = node instanceof Block;
+                        hasInclusive = true;
+                        // inclusive node
+                        // mark the parent
+                        block.only();
+                        if (node instanceof Block) {
+                            // go further
+                            checkInclusive(node);
+                        }
+                    }
 
-                        if (node.isInclusive()) {
-                            hasInclusive = true;
-                            // the node is an inclusive node, mark the parent
-                            block.only();
-                            if (isBlock) {
-                                // is a block, should check the nested nodes,
-                                checkInclusive(node);
+                    if (!hasInclusive) {
+                        // no inclusive children, check all the nested nodes
+                        for (const node of block.children) {
+                            if (node.isExclusive()) {
+                                // sorry
+                                continue;
                             }
-                        } else if (isBlock) {
-                            // is a block, but a non-inclusive, maybe it has some nested inclusive nodes
-                            if (checkInclusive(node)) {
+                            if (node instanceof Block && checkInclusive(node)) {
                                 hasInclusive = true;
-                                // it has, mark the parent
+                                // mark the parent
                                 block.only();
                             }
                         }
                     }
+
                     return hasInclusive;
                 })(root);
 
