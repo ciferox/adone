@@ -9,10 +9,10 @@ const {
 const VERSION_PARTS = ["major", "minor", "patch", "premajor", "preminor", "prepatch", "prerelease"];
 
 export default class ProjectManager extends task.Manager {
-    constructor(path = process.cwd()) {
+    constructor({ cwd = process.cwd() } = {}) {
         super();
         this.name = null;
-        this.path = path;
+        this.cwd = cwd;
         this.config = null;
         this._loaded = false;
         this.silent = false;
@@ -49,9 +49,9 @@ export default class ProjectManager extends task.Manager {
         await this.config.save();
 
         const updateConfig = async (name) => {
-            if (await fs.exists(std.path.join(this.path, name))) {
+            if (await fs.exists(std.path.join(this.cwd, name))) {
                 const cfg = await adone.configuration.load(name, null, {
-                    cwd: this.path
+                    cwd: this.cwd
                 });
                 cfg.raw.version = this.config.raw.version;
                 await cfg.save(name, null, {
@@ -70,7 +70,7 @@ export default class ProjectManager extends task.Manager {
         }
 
         this.config = await project.Configuration.load({
-            cwd: this.path
+            cwd: this.cwd
         });
 
         // Add default tasks
@@ -80,7 +80,7 @@ export default class ProjectManager extends task.Manager {
         await this.addTask("transpileExe", project.task.TranspileExe);
 
         // Load custom tasks
-        const tasksPath = std.path.join(this.path, ".adone", "tasks.js");
+        const tasksPath = std.path.join(this.cwd, ".adone", "tasks.js");
         if (await fs.exists(tasksPath)) {
             const customTasks = adone.require(tasksPath).default;
 
@@ -97,7 +97,7 @@ export default class ProjectManager extends task.Manager {
         await generator.useDefaultTasks();
         await generator.loadCustomTasks();
         return generator.initializeProject({
-            cwd: this.path,
+            cwd: this.cwd,
             ...options
         });
     }

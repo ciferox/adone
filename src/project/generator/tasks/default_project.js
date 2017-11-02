@@ -3,7 +3,11 @@ const {
 } = adone;
 
 export default class DefaultProjectTask extends project.generator.task.Base {
-    async run({ skipGit = false, skipEslint = false, skipJsconfig = false, ...input } = {}) {
+    async run({
+        skipGit = this.context.flag.skipGit,
+        skipEslint = this.context.flag.skipEslint,
+        skipJsconfig = this.context.flag.skipJsconfig
+    } = {}) {
         const tasks = ["initialize", "adoneConfig"];
         
         if (!skipJsconfig) {
@@ -18,7 +22,7 @@ export default class DefaultProjectTask extends project.generator.task.Base {
             tasks.push("git");
         }
         
-        const observer = await this.manager.runInSeries(tasks, null, input);
+        const observer = await this.manager.runInSeries(tasks);
         return observer.result;
     }
 }

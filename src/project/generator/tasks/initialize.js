@@ -5,18 +5,18 @@ const {
 } = adone;
 
 export default class InitializeTask extends project.generator.task.Base {
-    async run(input) {
-        if (!is.string(input.name)) {
+    async run() {
+        if (!is.string(this.context.project.name)) {
             throw new adone.x.InvalidArgument("Invalid name of project");
         }
 
-        if (await fs.exists(input.cwd)) {
-            const files = await fs.readdir(input.cwd);
+        if (await fs.exists(this.context.project.cwd)) {
+            const files = await fs.readdir(this.context.project.cwd);
             if (files.length > 0) {
-                throw new adone.x.Exists(`Path '${input.cwd}' exists and is not empty`);
+                throw new adone.x.Exists(`Path '${this.context.project.cwd}' exists and is not empty`);
             }
         } else {
-            await fs.mkdirp(input.cwd);
+            await fs.mkdirp(this.context.project.cwd);
         }
     }
 }

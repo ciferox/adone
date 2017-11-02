@@ -5,24 +5,17 @@ const {
 } = adone;
 
 export default class EslintConfigTask extends project.generator.task.Base {
-    async run(input) {
+    async run() {
         const eslintrcPath = std.path.join(adone.etcPath, "project", ".eslintrc.js");
         
-        await fs.copy(eslintrcPath, input.cwd);
+        await fs.copy(eslintrcPath, this.context.project.cwd);
         const eslintConfig = adone.require(eslintrcPath);
-        const npmInput = {
-            devDependencies: []
-        };
-        for (const name of eslintConfig.plugins) {
-            npmInput.devDependencies.push(`eslint-plugin-${name}`);
-        }
 
-        const observer = await this.manager.run("npmConfig", {
-            cwd: input.cwd,
-            ...npmInput
+        await this._runTask("npm", {
+            cwd: this.context.project.cwd,
+            devDependencies: eslintConfig.plugins.map((name) => `eslint-plugin-${name}`)
         });
-        await observer.result;
 
-        this.context.eslintConfig = eslintConfig;
+        this.context.config.eslint = eslintConfig;
     }
 }

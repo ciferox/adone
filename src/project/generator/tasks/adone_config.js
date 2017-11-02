@@ -8,20 +8,24 @@ const {
 
 export default class AdoneConfigTask extends project.generator.task.Base {
     async run(input) {
-        const configPath = std.path.join(input.cwd, "adone.json");
+        const configPath = std.path.join(this.context.project.cwd, "adone.json");
         if (await fs.exists(configPath)) {
-            this.context.adoneConfig = new project.Configuration({
-                cwd: input.cwd
+            this.context.config.adone = new project.Configuration({
+                cwd: this.context.project.cwd
             });
-            await this.context.adoneConfig.load();
-        } else if (!is.configuration(this.context.adoneConfig)) {
-            this.context.adoneConfig = new project.Configuration({
-                cwd: input.cwd
+            await this.context.config.adone.load();
+        } else if (!is.configuration(this.context.config.adone)) {
+            this.context.config.adone = new project.Configuration({
+                cwd: this.context.project.cwd
             });
+            // Update config
+            this.context.config.adone.merge(util.pick(this.context.project, ["name", "description", "version", "author", "type"]));
         }
 
-        this.context.adoneConfig.merge(util.pick(input, ["name", "description", "version", "author", "type", "structure", "bin", "main"]));
-
-        return this.context.adoneConfig.save();
+        if (is.plainObject(input)) {
+            // Update config
+            this.context.config.adone.merge(util.pick(input, ["name", "description", "version", "author", "type", "structure", "bin", "main"]));
+        }
+        return this.context.config.adone.save();
     }
 }

@@ -8,19 +8,19 @@ const {
 } = adone;
 
 export default class JsconfigConfigTask extends project.generator.task.Base {
-    async run(input) {        
-        const configPath = std.path.join(input.cwd, "jsconfig.json");
+    async run(input) {
+        const configPath = std.path.join(this.context.project.cwd, "jsconfig.json");
         if (await fs.exists(configPath)) {
-            this.context.jsconfig = new configuration.Jsconfig({
-                cwd: input.cwd
+            this.context.config.jsconfig = new configuration.Jsconfig({
+                cwd: this.context.project.cwd
             });
-            await this.context.jsconfig.load();
-        } else if (!is.configuration(this.context.jsconfig)) {
-            this.context.jsconfig = new configuration.Jsconfig({
-                cwd: input.cwd
+            await this.context.config.jsconfig.load();
+        } else if (!is.configuration(this.context.config.jsconfig)) {
+            this.context.config.jsconfig = new configuration.Jsconfig({
+                cwd: this.context.project.cwd
             });
 
-            this.context.jsconfig.raw = {
+            this.context.config.jsconfig.raw = {
                 compilerOptions: {
                     target: "es6",
                     experimentalDecorators: true
@@ -34,8 +34,10 @@ export default class JsconfigConfigTask extends project.generator.task.Base {
             };
         }
 
-        this.context.jsconfig.merge(util.pick(input, ["exclude", "include", "compilerOptions"]));
+        if (is.plainObject(input)) {
+            this.context.config.jsconfig.merge(util.pick(input, ["exclude", "include", "compilerOptions"]));
+        }
 
-        return this.context.jsconfig.save();
+        return this.context.config.jsconfig.save();
     }
 }

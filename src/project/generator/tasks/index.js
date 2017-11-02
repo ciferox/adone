@@ -4,7 +4,7 @@ adone.lazify({
     AdoneConfig: "./adone_config",
     EslintConfig: "./eslint_config",
     JsconfigConfig: "./jsconfig_config",
-    NpmConfig: "./npm_config",
+    Npm: "./npm",
     DefaultProject: "./default_project",
     Application: "./application",
     ApplicationProject: "./application_project",

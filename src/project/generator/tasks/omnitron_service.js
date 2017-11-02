@@ -27,6 +27,6 @@ export default class {{ name }} extends Service {
 
 export default class OmnitronServiceTask extends project.generator.task.Base {
     async run(input) {
-        return this.context.helper.generateFile(TEMPLATE, input);
+        return project.generator.helper.generateFile(TEMPLATE, input);
     }
 }
