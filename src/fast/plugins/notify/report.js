@@ -1,4 +1,11 @@
-const { x, vendor, std: { path }, is } = adone;
+const {
+    x,
+    std: { path },
+    is,
+    templating: { dot },
+    util,
+    text
+} = adone;
 
 const defaults = {
     error: {
@@ -18,14 +25,42 @@ const log = (options, isError) => {
     }
 };
 
+const createRenderFunction = (template) => {
+    const fn = dot.template(template, { ...dot.templateSettings, strip: false });
+    return (obj) => {
+        try {
+            return fn(obj);
+        } catch (err) {
+            adone.warn(`Notify string rendering failed due to: ${err.message}`);
+            return template;
+        }
+    };
+};
+
+const stripAnsi = (obj) => {
+    for (const [k, v] of util.entries(obj)) {
+        switch (k) {
+            case "message":
+            case "open":
+            case "subtitle":
+            case "title":
+                obj[k] = text.ansi.stripEscapeCodes(v);
+                break;
+        }
+    }
+    return obj;
+};
+
 const generate = (outputData, object, title, message, subtitle, open, templateOptions) => {
     if (object instanceof Error) {
-        const titleTemplate = vendor.lodash.template(title);
-        const messageTemplate = vendor.lodash.template(message);
-        const openTemplate = vendor.lodash.template(open);
-        const subtitleTemplate = vendor.lodash.template(subtitle);
+        const titleTemplate = createRenderFunction(title);
+        const messageTemplate = createRenderFunction(message);
+        const openTemplate = createRenderFunction(open);
+        const subtitleTemplate = createRenderFunction(subtitle);
 
-        return vendor.lodash.extend(defaults.error, outputData, {
+        return {
+            ...defaults.error,
+            ...outputData,
             title: titleTemplate({
                 error: object,
                 options: templateOptions
@@ -42,19 +77,21 @@ const generate = (outputData, object, title, message, subtitle, open, templateOp
                 error: object,
                 options: templateOptions
             })
-        });
+        };
     }
 
-    return vendor.lodash.extend(defaults.regular, outputData, {
-        title: vendor.lodash.template(title)({
+    return {
+        ...defaults.regular,
+        ...outputData,
+        title: createRenderFunction(title)({
             file: object,
             options: templateOptions
         }),
-        message: vendor.lodash.template(message)({
+        message: createRenderFunction(message)({
             file: object,
             options: templateOptions
         })
-    });
+    };
 };
 
 const constructOptions = (options, object, templateOptions) => {
@@ -65,7 +102,6 @@ const constructOptions = (options, object, templateOptions) => {
     let outputData = {};
 
     if (is.function(options)) {
-        // $FlowIgnore: is a function
         message = options(object);
         if (is.object(message)) {
             options = message;
@@ -80,7 +116,8 @@ const constructOptions = (options, object, templateOptions) => {
     }
 
     if (is.object(options)) {
-        outputData = vendor.lodash.extend(true, { console: true, gui: true }, options);
+        outputData = { console: true, gui: true, ...options };
+
         if (is.function(outputData.title)) {
             title = outputData.title(object);
         } else {
@@ -117,13 +154,15 @@ export default async function report(reporter, message, options, templateOptions
     }
 
     options = constructOptions(options, message, templateOptions);
+
     if (!options) {
         return;
     }
+
     if (!options.notifier && options.console) {
         await log(options, message instanceof Error);
     }
     if (options.notifier || options.gui) {
-        await reporter(options);
+        await reporter(stripAnsi(options));
     }
 }

@@ -3,7 +3,7 @@ describe("fast", "transform", "notify", () => {
     const { Stream, File } = fast;
 
     const plugin = fast.plugin.notify;
-    
+
     const mockGenerator = (tester) => {
         tester = tester || function () { };
         return async (opts) => {
@@ -215,10 +215,10 @@ describe("fast", "transform", "notify", () => {
         expect(onNotify).to.have.been.calledOnce;
     });
 
-    it("should support lodash template for titles and messages", async () => {
+    it("should support dot templates for titles and messages", async () => {
         const expectedFile = getFile("1.txt");
 
-        const testString = "Template: <%= file.relative %>";
+        const testString = "Template: {{= it.file.relative }}";
         const expectedString = "Template: 1.txt";
 
         const onNotify = stub().callsFake((opts) => {
@@ -261,7 +261,7 @@ describe("fast", "transform", "notify", () => {
             expect(onNotify).to.have.been.calledOnce;
         });
 
-        it("should support lodash template for titles and messages when onLast", async () => {
+        it("should support dot templates for titles and messages when onLast", async () => {
             const onNotify = stub().callsFake((opts) => {
                 expect(opts).to.be.ok;
                 expect(opts.title).to.be.ok;
@@ -271,7 +271,7 @@ describe("fast", "transform", "notify", () => {
             });
             const files = await fast.src(srcPath).notify({
                 onLast: true,
-                message: "Template: <%= file.relative %>",
+                message: "Template: {{= it.file.relative }}",
                 notifier: mockGenerator(onNotify)
             });
             expect(files).to.have.length(3);
@@ -327,8 +327,8 @@ describe("fast", "transform", "notify", () => {
             }).on("error", onError).resume();
         });
 
-        it("should support lodash template for titles and messages on onError", (done) => {
-            const testString = "Template: <%= error.message %>";
+        it("should support dot templates for titles and messages on onError", (done) => {
+            const testString = "Template: {{= it.error.message }}";
             const expectedString = "Template: test";
             const onError = plugin.onError({
                 message: testString,
@@ -344,7 +344,7 @@ describe("fast", "transform", "notify", () => {
                 })
             });
 
-            fast.src(srcPath).through(() => {
+            new Stream([getFile("1.txt")]).through(() => {
                 throw new adone.x.Exception("test");
             }).on("error", onError).resume();
         });
