@@ -4,6 +4,7 @@ const {
         module: NodeModule,
         path
     },
+    collection,
     fs
 } = adone;
 
@@ -141,7 +142,7 @@ export default class Module extends NodeModule {
         this.filename = id;
         this.transform = transform;
         this.loaders = loaders;
-        this.cache = parent ? parent.cache : new Map();
+        this.cache = parent ? parent.cache : new collection.RefcountedCache();
         this.paths = id ? NodeModule._nodeModulePaths(adone.std.path.dirname(id)) : [];
     }
 
@@ -177,40 +178,64 @@ export default class Module extends NodeModule {
         return this.exports;
     }
 
-    require(path, { cache = true } = {}) {
+    require(path, { cache = true, transform = this.transform } = {}) {
         if (!adone.is.string(path)) {
             throw new adone.x.InvalidArgument("`path` should be a string");
         }
-        return this.constructor._load(path, this, cache);
+        return this.constructor._load(path, this, transform, cache);
     }
 
+    /**
+     * Dereferences self and all the children modules from the cache
+     */
+    unrefSelf() {
+        for (const child of this.children) {
+            child.unrefSelf();
+        }
+        this.cache.unref(this.filename);
+    }
+
+    /**
+     * Dereferences the entire module tree for the given path
+     */
+    unref(path) {
+        const m = this.cache.get(path);
+        if (!m) {
+            return;
+        }
+        m.unrefSelf();
+    }
 
     static resolve(request, { basedir = caller() } = {}) {
         const m = new this(adone.std.path.join(basedir, "index.js"));
         return NodeModule._resolveFilename(request, m, false);
     }
 
-    static _createNewModule(filename, parent) {
+    static _createNewModule(filename, parent, transform) {
         return new this(filename, {
             parent,
-            transform: parent.transform,
+            transform,
             loaders: parent.loaders
         });
     }
 
-    static _load(request, parent, cache = true) {
+    static _load(request, parent, transform, cache = true) {
         const filename = this._resolveFilename(request, parent, false);
 
-        const cachedModule = parent.cache.get(filename);
-        if (cachedModule) {
-            return cachedModule.exports;
+        if (parent.cache.has(filename)) {
+            const m = parent.cache.get(filename);
+            if (!parent.children.includes(m)) {
+                parent.cache.ref(filename);
+                parent.children.push(m);
+            }
+            return m.exports;
         }
 
         if (filename in adone.std) {
             return adone.std[filename];
         }
 
-        const module = this._createNewModule(filename, parent);
+        const module = this._createNewModule(filename, parent, transform);
 
         if (cache) {
             parent.cache.set(filename, module);

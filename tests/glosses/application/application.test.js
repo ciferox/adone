@@ -59,24 +59,40 @@ describe("application", "Application", () => {
     });
 
     describe("Subsystems", () => {
-        it("add valid subsystem", async () => {
-            const result = await forkProcess(fixture("add_valid_subsystem.js"));
-            assert.equal(result.stdout, "configure\ninitialize\nuninitialize");
-        });
+        describe("add", () => {
+            it("valid subsystem", async () => {
+                const result = await forkProcess(fixture("add_valid_subsystem.js"));
+                assert.equal(result.stdout, "configure\ninitialize\nuninitialize");
+            });
 
-        it("add valid subsystem from path", async () => {
-            const result = await forkProcess(fixture("add_valid_subsystem_from_path.js"));
-            assert.equal(result.stdout, "configure\ninitialize\nuninitialize");
-        });
+            it("valid subsystem from path", async () => {
+                const result = await forkProcess(fixture("add_valid_subsystem_from_path.js"));
+                assert.equal(result.stdout, "configure\ninitialize\nuninitialize");
+            });
 
-        it("add not valid subsystem", async () => {
-            const result = await forkProcess(fixture("add_not_valid_subsystem.js"));
-            assert.equal(result.stdout, "incorrect subsystem");
-        });
+            it("not valid subsystem", async () => {
+                const result = await forkProcess(fixture("add_not_valid_subsystem.js"));
+                assert.equal(result.stdout, "incorrect subsystem");
+            });
 
-        it("add not valid subsystem from", async () => {
-            const result = await forkProcess(fixture("add_not_valid_subsystem_from_path.js"));
-            assert.equal(result.stdout, "incorrect subsystem");
+            it("not valid subsystem from", async () => {
+                const result = await forkProcess(fixture("add_not_valid_subsystem_from_path.js"));
+                assert.equal(result.stdout, "incorrect subsystem");
+            });
+
+            describe("name collisions", () => {
+                it("should throw if a subsystem with the same name already exists", async () => {
+                    await assert.throws(async () => {
+                        await forkProcess(fixture("add_existing_name.js"));
+                    }, "Subsystem with name 'hello' already exists");
+                });
+
+                it("should throw if a subsystem with the same name already exists when the subsytem name is set implicitly", async () => {
+                    await assert.throws(async () => {
+                        await forkProcess(fixture("add_existing_implicit_name.js"));
+                    }, "Subsystem with name 'Hello' already exists");
+                });
+            });
         });
 
         it("initialization and deinitialization of subsystems in accordance with the order of their addition", async () => {
@@ -184,6 +200,24 @@ describe("application", "Application", () => {
                 await assert.throws(async () => {
                     await forkProcess(fixture("unload_unknown_subsystem.js"));
                 }, /Unknown subsystem: hello/);
+            });
+
+            it("should clear the require cache and then load the new code", async () => {
+                const result = await forkProcess(fixture("unload_and_load.js"));
+                assert.equal(result.stdout, [
+                    "hello1 configure",
+                    "hello1 init",
+                    "main",
+                    "hello1 uninit",
+                    "has false",
+                    "cached false",
+                    "hello2 configure",
+                    "hello2 init",
+                    "hello2 uninit",
+                    "hello3 configure",
+                    "hello3 init",
+                    "hello3 uninit"
+                ].join("\n"));
             });
         });
 

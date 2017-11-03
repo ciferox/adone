@@ -15,5 +15,6 @@ adone.lazify({
     AsyncQueue: "./async_queue",
     PriorityQueue: "./priority_queue",
     MapCache: "./map_cache",
-    NSCache: "./ns_cache"
+    NSCache: "./ns_cache",
+    RefcountedCache: "./refcounted_cache"
 }, adone.asNamespace(exports), require);

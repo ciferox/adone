@@ -208,13 +208,16 @@ export default class Subsystem extends adone.event.AsyncEmitter {
      */
     addSubsystem({ subsystem, name = null, description = "", group = "subsystem", configureArgs = [], transpile = false } = {}) {
         let instance;
+
+        if (is.string(name) && this.hasSubsystem(name)) {
+            throw new x.Exists(`Subsystem with name '${name}' already exists`);
+        }
+
         if (is.string(subsystem)) {
             if (!std.path.isAbsolute(subsystem)) {
                 throw new x.NotValid("Path must be absolute");
             }
-            let SomeSubsystem = transpile
-                ? adone.require(subsystem)
-                : require(subsystem);
+            let SomeSubsystem = adone.require(subsystem, { transpile });
             if (SomeSubsystem.__esModule === true) {
                 SomeSubsystem = SomeSubsystem.default;
             }
@@ -229,6 +232,9 @@ export default class Subsystem extends adone.event.AsyncEmitter {
 
         if (!is.string(name)) {
             name = instance.constructor.name;
+            if (this.hasSubsystem(name)) {
+                throw new x.Exists(`Subsystem with name '${name}' already exists`);
+            }
         }
 
         instance.parent = this;
@@ -238,7 +244,8 @@ export default class Subsystem extends adone.event.AsyncEmitter {
             description,
             group,
             configureArgs,
-            instance
+            instance,
+            path: is.string(subsystem) ? subsystem : null
         };
 
         this[SUBSYSTEMS_SYMBOL].push(sysInfo);
@@ -396,7 +403,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
     }
 
     async unloadSubsystem(name) {
-        const { instance } = await this.getSubsystemInfo(name);
+        const { instance, path } = await this.getSubsystemInfo(name);
         switch (instance[STATE_SYMBOL]) {
             case STATE.INITIALIZED:
                 await this.uninitializeSubsystem(name);
@@ -412,6 +419,9 @@ export default class Subsystem extends adone.event.AsyncEmitter {
                 break;
         }
         await this.deleteSubsystem(name);
+        if (path) {
+            adone.require.cache.unref(path);
+        }
     }
 }
 tag.add(Subsystem, "SUBSYSTEM");
