@@ -31,6 +31,6 @@ export default class {{ name }} extends application.Subsystem {
 
 export default class CliCommandTask extends project.generator.task.Base {
     async run(input) {
-        return project.generator.helper.generateFile(TEMPLATE, input);
+        return project.generator.helper.createFile(TEMPLATE, input);
     }
 }

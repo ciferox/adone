@@ -1,4 +1,5 @@
 const {
+    configuration,
     fs,
     is,
     project,
@@ -10,12 +11,11 @@ export default class AdoneConfigTask extends project.generator.task.Base {
     async run(input) {
         const configPath = std.path.join(this.context.project.cwd, "adone.json");
         if (await fs.exists(configPath)) {
-            this.context.config.adone = new project.Configuration({
+            this.context.config.adone = await configuration.Adone.load({
                 cwd: this.context.project.cwd
             });
-            await this.context.config.adone.load();
         } else if (!is.configuration(this.context.config.adone)) {
-            this.context.config.adone = new project.Configuration({
+            this.context.config.adone = new configuration.Adone({
                 cwd: this.context.project.cwd
             });
             // Update config

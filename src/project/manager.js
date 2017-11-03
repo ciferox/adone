@@ -1,4 +1,5 @@
 const {
+    configuration,
     is,
     fs,
     std,
@@ -29,6 +30,127 @@ export default class ProjectManager extends task.Manager {
 
     getVersion() {
         return this.config.raw.version;
+    }
+
+    async load() {
+        if (this._loaded) {
+            throw new adone.x.IllegalState("Project already loaded");
+        }
+
+        this.config = await configuration.Adone.load({
+            cwd: this.cwd
+        });
+
+        // Add default tasks
+        await this.addTask("delete", project.task.Delete);
+        await this.addTask("copy", project.task.Copy);
+        await this.addTask("transpile", project.task.Transpile);
+        await this.addTask("transpileExe", project.task.TranspileExe);
+
+        // Load custom tasks
+        const tasksPath = std.path.join(this.cwd, ".adone", "tasks.js");
+        if (await fs.exists(tasksPath)) {
+            const customTasks = adone.require(tasksPath).default;
+
+            for (const [name, CustomTask] of Object.entries(customTasks)) {
+                await this.addTask(name, CustomTask); // eslint-disable-line
+            }
+        }
+
+        this._loaded = true;
+    }
+
+    async createProject(options) {
+        const generator = await this._createGenerator();
+        const result = await generator.createProject({
+            ...options,
+            cwd: this.cwd
+        });
+
+        await this.load();
+        return result;
+    }
+
+    async createSubProject(options) {
+        this._checkLoaded();
+        const generator = await this._createGenerator();
+        const cwd = std.path.join(this.cwd, is.string(options.dirName) ? options.dirName : options.name);
+        await generator.createProject({
+            name: this.config.raw.name,
+            description: this.config.raw.description,
+            version: this.config.raw.version,
+            author: this.config.raw.author,
+            ...options,
+            skipGit: true,
+            skipEslint: true,
+            skipJsconfig: true,
+            cwd
+        });
+
+        const subName = is.string(options.dirName) ? options.dirName : options.name;
+        this.config.set(["structure", options.name], std.path.relative(this.cwd, cwd));
+        await this.config.save();
+    }
+
+    async createFile(options) {
+        const generator = await this._createGenerator();
+        return generator.createFile(options);
+    }
+
+    getProjectEntries(path) {
+        return this.config.getEntries(path);
+    }
+
+    async clean(path) {
+        this._checkLoaded();
+        const entries = this.config.getEntries(path);
+
+        const results = [];
+        for (const entry of entries) {
+            const observer = await this.run("delete", entry); // eslint-disable-line
+            results.push(observer.result);
+        }
+
+        return Promise.all(results);
+    }
+
+    async build(path) {
+        this._checkLoaded();
+        const entries = this.config.getEntries(path);
+
+        const promises = [];
+        for (const entry of entries) {
+            if (!this._checkEntry(entry)) {
+                continue;
+            }
+
+            const observer = await this.run(entry.$task, entry); // eslint-disable-line
+            promises.push(observer.result);
+        }
+
+        return Promise.all(promises);
+    }
+
+    async rebuild(path) {
+        await this.clean(path);
+        await this.build(path);
+    }
+
+    async watch(path) {
+        this._checkLoaded();
+        const entries = this.config.getEntries(path);
+
+        const promises = [];
+        for (const entry of entries) {
+            if (!this._checkEntry(entry)) {
+                continue;
+            }
+
+            const observer = await this.runOnce(project.task.Watch, entry); // eslint-disable-line
+            promises.push(observer.result);
+        }
+
+        return Promise.all(promises);
     }
 
     async incVersion({ part = "minor", preid = undefined, loose = false } = {}) {
@@ -64,107 +186,6 @@ export default class ProjectManager extends task.Manager {
         await updateConfig("package-lock.json");
     }
 
-    async load() {
-        if (this._loaded) {
-            throw new adone.x.IllegalState("Project already loaded");
-        }
-
-        this.config = await project.Configuration.load({
-            cwd: this.cwd
-        });
-
-        // Add default tasks
-        await this.addTask("delete", project.task.Delete);
-        await this.addTask("copy", project.task.Copy);
-        await this.addTask("transpile", project.task.Transpile);
-        await this.addTask("transpileExe", project.task.TranspileExe);
-
-        // Load custom tasks
-        const tasksPath = std.path.join(this.cwd, ".adone", "tasks.js");
-        if (await fs.exists(tasksPath)) {
-            const customTasks = adone.require(tasksPath).default;
-
-            for (const [name, CustomTask] of Object.entries(customTasks)) {
-                await this.addTask(name, CustomTask); // eslint-disable-line
-            }
-        }
-
-        this._loaded = true;
-    }
-
-    async create(options) {
-        const generator = new this.Generator();
-        await generator.useDefaultTasks();
-        await generator.loadCustomTasks();
-        return generator.initializeProject({
-            cwd: this.cwd,
-            ...options
-        });
-    }
-
-    async generateFile(options) {
-        const generator = new this.Generator();
-        await generator.useDefaultTasks();
-        await generator.loadCustomTasks();
-        return generator.generateFile(options);
-    }
-
-    getProjectEntries(options) {
-        return this.config.getProjectEntries(options);
-    }
-
-    async clean(path) {
-        this._checkLoaded();
-        const entries = this.config.getProjectEntries({ path });
-
-        const results = [];
-        for (const entry of entries) {
-            const observer = await this.run("delete", entry); // eslint-disable-line
-            results.push(observer.result);
-        }
-
-        return Promise.all(results);
-    }
-
-    async build(path) {
-        this._checkLoaded();
-        const entries = this.config.getProjectEntries({ path });
-
-        const promises = [];
-        for (const entry of entries) {
-            if (!this._checkEntry(entry)) {
-                continue;
-            }
-
-            const observer = await this.run(entry.$task, entry); // eslint-disable-line
-            promises.push(observer.result);
-        }
-
-        return Promise.all(promises);
-    }
-
-    async rebuild(path) {
-        await this.clean(path);
-        await this.build(path);
-    }
-
-    async watch(path) {
-        this._checkLoaded();
-        const entries = this.config.getProjectEntries({ path });
-
-        const promises = [];
-        for (const entry of entries) {
-            if (!this._checkEntry(entry)) {
-                continue;
-            }
-
-            const observer = await this.runOnce(project.task.Watch, entry); // eslint-disable-line
-            promises.push(observer.result);
-        }
-
-        return Promise.all(promises);
-    }
-
     _checkEntry(entry) {
         if (is.nil(entry.$dst)) {
             return false;
@@ -181,5 +202,12 @@ export default class ProjectManager extends task.Manager {
         if (!this._loaded) {
             throw new adone.x.IllegalState("Project is not loaded");
         }
+    }
+
+    async _createGenerator() {
+        const generator = new this.Generator();
+        await generator.useDefaultTasks();
+        await generator.loadCustomTasks();
+        return generator;
     }
 }

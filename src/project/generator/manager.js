@@ -15,7 +15,7 @@ export default class ProjectGenerator extends task.Manager {
     async loadCustomTasks() {
     }
 
-    async initializeProject(input) {
+    async createProject(input) {
         const context = adone.o({
             flag: {
                 skipGit: false,
@@ -32,16 +32,13 @@ export default class ProjectGenerator extends task.Manager {
             context
         });
 
-        const taskName = is.string(input.type) ? `${text.toCamelCase(input.type)}Project` : "defaultProject";
-        await this._runTask(taskName);
+        await this._runTask(`${is.string(input.type) ? text.toCamelCase(input.type) : "default"}Project`);
         return context;
     }
 
-    async generateFile(input) {
+    async createFile(input) {
         return this._runTask(text.toCamelCase(input.type), input);
     }
-
-
 
     async _runTask(taskName, input) {
         const observer = await this.run(taskName, input);

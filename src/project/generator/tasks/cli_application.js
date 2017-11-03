@@ -63,6 +63,6 @@ export default class CliApplicationTask extends project.generator.task.Base {
         if (!is.string(input.name)) {
             throw new adone.x.NotValid("Name should be a valid string");
         }
-        return project.generator.helper.generateFile(TEMPLATE, input);
+        return project.generator.helper.createFile(TEMPLATE, input);
     }
 }

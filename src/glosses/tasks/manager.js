@@ -201,7 +201,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
             }
             
             const taskObserver = new task.TaskObserver(instance);
-            taskObserver.state = task.state.RUNNING;
+            taskObserver.state = task.STATE.RUNNING;
             try {
                 taskObserver.result = instance.run(...args);
             } catch (err) {
@@ -210,13 +210,13 @@ export default class TaskManager extends adone.event.AsyncEmitter {
 
             if (is.promise(taskObserver.result)) {
                 taskObserver.result.then(() => {
-                    taskObserver.state = (taskObserver.state === task.state.CANCELLING) ? task.state.CANCELLED : task.state.COMPLETED;
+                    taskObserver.state = (taskObserver.state === task.STATE.CANCELLING) ? task.STATE.CANCELLED : task.STATE.COMPLETED;
                 }).catch((err) => {
-                    taskObserver.state = task.state.FAILED;
+                    taskObserver.state = task.STATE.FAILED;
                     taskObserver.error = err;
                 });
             } else {
-                taskObserver.state = task.state.COMPLETED;
+                taskObserver.state = task.STATE.COMPLETED;
             }
             return taskObserver;
         };

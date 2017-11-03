@@ -1,6 +1,6 @@
 const {
     is,
-    task: { state }
+    task: { STATE }
 } = adone;
 
 export class Task {
@@ -55,7 +55,7 @@ adone.tag.add(Task, "TASK");
 export class TaskObserver {
     constructor(task) {
         this.task = task;
-        this.state = state.IDLE;
+        this.state = STATE.IDLE;
         this.result = undefined;
         this.error = undefined;
     }
@@ -64,8 +64,8 @@ export class TaskObserver {
      * Cancels task.
      */
     async cancel() {
-        if (this.task.isCancelable() && this.state === state.RUNNING) {
-            this.state = state.CANCELLING;
+        if (this.task.isCancelable() && this.state === STATE.RUNNING) {
+            this.state = STATE.CANCELLING;
             const defer = adone.promise.defer();            
             await this.task.cancel(defer);
             await defer;
@@ -80,13 +80,15 @@ export class TaskObserver {
      */
     async suspend(ms, callback) {
         if (this.task.isSuspendable()) {
-            if (this.state in [state.CANCELED, state.FINISHED]) {
-                return is.number(ms) && is.function(callback) && callback();
+            switch (this.state) {
+                case STATE.CANCELED:
+                case STATE.FINISHED:
+                    return is.number(ms) && is.function(callback) && callback();
             }
             const defer = adone.promise.defer();
             await this.task.suspend(defer);
             await defer.promise;
-            this.state = state.SUSPENDED;
+            this.state = STATE.SUSPENDED;
             if (is.number(ms)) {
                 setTimeout(() => {
                     if (is.function(callback)) {
@@ -102,11 +104,11 @@ export class TaskObserver {
      * Resumes task.
      */
     async resume() {
-        if (this.state === state.SUSPENDED) {
+        if (this.state === STATE.SUSPENDED) {
             const defer = adone.promise.defer();
             await this.task.resume(defer);
             await defer;
-            this.state = state.RUNNING;
+            this.state = STATE.RUNNING;
         }
     }
 
@@ -114,41 +116,41 @@ export class TaskObserver {
      * Returns true if the task was running.
      */
     isRunning() {
-        return this.state === state.RUNNING;
+        return this.state === STATE.RUNNING;
     }
 
     /**
      * Returns true if the task was canceled.
      */
     isCancelled() {
-        return this.state === state.CANCELLED;
+        return this.state === STATE.CANCELLED;
     }
 
     /**
      * Returns true if the task was completed.
      */
     isCompleted() {
-        return this.state === state.COMPLETED;
+        return this.state === STATE.COMPLETED;
     }
 
     /**
      * Returns true if the task was finished.
      */
     isFailed() {
-        return this.state === state.FAILED;
+        return this.state === STATE.FAILED;
     }
 
     /**
      * Returns true if the task was finished.
      */
     isFinished() {
-        return this.state === state.CANCELLED || this.state === state.COMPLETED;
+        return this.state === STATE.CANCELLED || this.state === STATE.COMPLETED;
     }
 
     /**
      * Returns true if the task is suspended.
      */
     isSuspended() {
-        return this.state === state.SUSPENDED;
+        return this.state === STATE.SUSPENDED;
     }
 }

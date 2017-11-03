@@ -127,6 +127,7 @@ adone.tag.add(Base, "CONFIGURATION");
 
 const lazy = adone.lazify({
     Generic: "./generic",
+    Adone: "./adone",
     Npm: "./npm",
     Jsconfig: "./jsconfig"
 }, adone.asNamespace(exports), require);

@@ -1,7 +1,8 @@
 const {
+    configuration,
     is,
     fs,
-    project: { Manager, Configuration },
+    project: { Manager },
     std,
     text,
     x,
@@ -11,8 +12,8 @@ const {
 const FIXTURES_PATH = std.path.join(__dirname, "fixtures");
 const fixture = (...args) => std.path.join(FIXTURES_PATH, ...args);
 
-describe("project", "manager", () => {
-    describe("initialization", () => {
+describe("project", () => {
+    describe("generator", () => {
         const paths = [];
 
         const getPathFor = (...args) => {
@@ -36,7 +37,7 @@ describe("project", "manager", () => {
             await fs.writeFile(std.path.join(cwd, "some_file"), "abc");
 
             const manager = new Manager({ cwd });
-            const err = await assert.throws(async () => manager.create({
+            const err = await assert.throws(async () => manager.createProject({
                 name: "test1"
             }));
             assert.instanceOf(err, x.Exists);
@@ -46,7 +47,7 @@ describe("project", "manager", () => {
             const name = randomName();
             const cwd = getPathFor(name);
             const manager = new Manager({ cwd });
-            const err = await assert.throws(async () => manager.create({
+            const err = await assert.throws(async () => manager.createProject({
                 description: "test1"
             }));
             assert.instanceOf(err, x.InvalidArgument);
@@ -97,7 +98,7 @@ describe("project", "manager", () => {
                     const manager = new Manager({
                         cwd: FIXTURES_PATH
                     });
-                    await manager.generateFile({
+                    await manager.createFile({
                         type: type.name,
                         name,
                         cwd: FIXTURES_PATH
@@ -121,13 +122,13 @@ describe("project", "manager", () => {
                         cwd: projectPath
                     });
                     if (["application", "cli.application"].includes(type.name)) {
-                        const err = await assert.throws(async () => manager.generateFile({
+                        const err = await assert.throws(async () => manager.createFile({
                             type: type.name,
                             cwd: projectPath
                         }));
                         assert.instanceOf(err, adone.x.NotValid);
                     } else {
-                        await manager.generateFile({
+                        await manager.createFile({
                             type: type.name,
                             cwd: projectPath
                         });
@@ -149,7 +150,7 @@ describe("project", "manager", () => {
                     const manager = new Manager({
                         cwd: FIXTURES_PATH
                     });
-                    const err = await assert.throws(async () => manager.generateFile({
+                    const err = await assert.throws(async () => manager.createFile({
                         type: type.name,
                         name,
                         cwd: FIXTURES_PATH
@@ -166,7 +167,7 @@ describe("project", "manager", () => {
                     const manager = new Manager({
                         cwd: FIXTURES_PATH
                     });
-                    await manager.generateFile({
+                    await manager.createFile({
                         type: type.name,
                         name,
                         cwd: FIXTURES_PATH,
@@ -240,7 +241,7 @@ describe("project", "manager", () => {
                         skipGit,
                         skipNpm
                     };
-                    const context = await manager.create(projectConfig);
+                    const context = await manager.createProject(projectConfig);
 
                     assert.deepEqual(util.pick(context.config.adone.raw, ["name", "description", "version", "author"]), util.pick(projectConfig, ["name", "description", "version", "author"]))
                     assert.sameMembers(await fs.readdir(cwd), files);
@@ -276,7 +277,7 @@ describe("project", "manager", () => {
                         author: "Adone Core Team",
                         type
                     };
-                    const context = await manager.create(projectConfig);
+                    const context = await manager.createProject(projectConfig);
 
                     if (["cli.command", "omnitron.service"].includes(type)) {
                         assert.deepEqual(util.pick(context.config.adone.raw, ["name", "description", "version", "author", "type", "main"]), {
@@ -310,6 +311,33 @@ describe("project", "manager", () => {
                     assert.isTrue(is.configuration(context.config.jsconfig));
                 });
             }
+
+            it(`sub project`, async () => {
+                const name = `project_${text.random(8)}`;
+                const cwd = getPathFor(name);
+                await fs.mkdir(cwd);
+
+                const manager = new Manager({ cwd });
+                const projectConfig = {
+                    name,
+                    description: "project description",
+                    version: "3.0.0",
+                    author: "Adone Core Team" 
+                };
+                const context = await manager.createProject(projectConfig);
+                const subContext = await manager.createSubProject({
+                    name: "jit",
+                    dirName: "service",
+                    type: "omnitron.service"
+                });
+
+                const subCwd = std.path.join(cwd, "service");
+                assert.sameMembers(await fs.readdir(subCwd), ["adone.json", "src"]);
+                assert.isTrue(await fs.is.directory(std.path.join(subCwd, "src")));
+                assert.isTrue(await fs.exists(std.path.join(subCwd, "src", "index.js")));
+
+                assert.equal(manager.config.raw.structure.jit, "service");
+            });
         });
     });
 });

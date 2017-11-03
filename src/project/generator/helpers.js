@@ -6,7 +6,7 @@ const {
     text
 } = adone;
 
-export const generateFile = async (template, { name, fileName, cwd, skipName = false, rewriteFile = false, ...templateContext } = {}) => {
+export const createFile = async (template, { name, fileName, cwd, skipName = false, rewriteFile = false, ...templateContext } = {}) => {
     if (is.string(name) && !skipName) {
         fileName = is.string(fileName) ? fileName : `${name}.js`;
         name = text.capitalize(text.toCamelCase(name));
