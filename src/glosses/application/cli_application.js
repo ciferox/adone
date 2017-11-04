@@ -839,6 +839,10 @@ class Command {
 
     setParentCommand(command) {
         this.parent = command;
+        this._updateColors();
+    }
+
+    _updateColors() {
         if (hasColorsSupport && !this._frozenColors) {
             if (!this.parent.colors) {
                 this.colors = this.parent.colors;
@@ -1038,24 +1042,34 @@ class Command {
         });
     }
 
-    static normalize(options) {
-        options = adone.o(options);
-        if (!options.name) {
-            throw new x.IllegalState("A command should have a name");
+    initializeWith(schema) {
+        const options = this.constructor._postNormalize(this.names[0], schema, { postInit: true });
+        if (options.handler !== adone.null) {
+            this.handler = options.handler;
         }
-        options.name = adone.util.arrify(options.name);
-        for (const name of options.name) {
-            if (!is.string(name) || !name) {
-                throw new x.IllegalState("A command name must be a non-empty string");
-            }
+        if (options.description !== adone.null) {
+            this.description = options.description;
         }
-        const [name] = options.name;
+        if (options.colors !== adone.null) {
+            this.colors = options.colors;
+            this._updateColors();
+        }
+        if (options.blindMode !== adone.null) {
+            this.blindMode = options.blindMode;
+        }
+    }
+
+    static _postNormalize(name, options, { postInit = false } = {}) {
         if (!("handler" in options)) {
-            options.handler = (args, opts, { command }) => {
-                adone.log(escape(command.getHelpMessage()));
-                return 1;
-            };
-            options.handler[INTERNAL] = true;
+            if (postInit) {
+                options.handler = adone.null;
+            } else {
+                options.handler = (args, opts, { command }) => {
+                    adone.log(escape(command.getHelpMessage()));
+                    return 1;
+                };
+                options.handler[INTERNAL] = true;
+            }
         } else if (!is.function(options.handler)) {
             throw new x.IllegalState(`${name}: A command handler must be a function`);
         }
@@ -1064,7 +1078,7 @@ class Command {
             if (is.string(options.help)) {
                 options.description = options.help;
             } else {
-                options.description = "";
+                options.description = postInit ? adone.null : "";
             }
         }
 
@@ -1094,11 +1108,35 @@ class Command {
         } else if (options.colors === "inherit") {
             options.colors = {};
         } else {
-            options.colors = util.clone(defaultColors);
-            options._frozenColors = true;
+            if (postInit) {
+                options.colors = adone.null;
+            } else {
+                options.colors = util.clone(defaultColors);
+                options._frozenColors = true;
+            }
         }
-        options.blindMode = Boolean(options.blindMode);
+        if (postInit) {
+            options.blindMode = "blindMode" in options
+                ? Boolean(options.blindMode)
+                : adone.null;
+        } else {
+            options.blindMode = Boolean(options.blindMode);
+        }
         return options;
+    }
+
+    static normalize(options) {
+        options = adone.o(options);
+        if (!options.name) {
+            throw new x.IllegalState("A command should have a name");
+        }
+        options.name = adone.util.arrify(options.name);
+        for (const name of options.name) {
+            if (!is.string(name) || !name) {
+                throw new x.IllegalState("A command name must be a non-empty string");
+            }
+        }
+        return this._postNormalize(options.name[0], options);
     }
 
     getCommandChain() {
@@ -1565,13 +1603,13 @@ export default class CliApplication extends application.Application {
             parent.addCommand(command);
         }
 
-        this._initCommand(command, schema, true);
+        this._initCommand(command, schema, { addHelp: true, initialized: true });
         return command;
     }
 
-    _initCommand(command, schema, addHelp) {
-        if (schema.handler) {
-            command.handler = schema.handler;
+    _initCommand(command, schema, { addHelp, initialized }) {
+        if (!initialized) {
+            command.initializeWith(schema);
         }
 
         if (schema.arguments) {
@@ -1612,12 +1650,6 @@ export default class CliApplication extends application.Application {
             for (const subCmdParams of schema.commands) {
                 this._createCommand(subCmdParams, command);
             }
-        }
-
-        if (is.string(schema.help)) {
-            command.description = schema.help;
-        } else if (is.string(schema.description)) {
-            command.description = schema.description;
         }
     }
 
@@ -1679,7 +1711,7 @@ export default class CliApplication extends application.Application {
             subsystem = commandsChain.shift();
             const command = subsystem[COMMAND];
             if (command instanceof Command) {
-                this._initCommand(command, cmdParams, false);
+                this._initCommand(command, cmdParams, { addHelp: false, initialized: false });
                 command._subsystem = subsystem; // Set correct subsystem
                 return;
             }
