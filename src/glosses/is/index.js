@@ -651,11 +651,11 @@ export const shallowEqual = (a, b) => {
 // streams
 
 export const stream = (value) => (value !== null && typeof value === "object" && function_(value.pipe)); // eslint-disable-line
-export const writableStream = (stream) => stream(stream) && typeof stream._writableState === "object"; // eslint-disable-line
-export const readableStream = (stream) => stream(stream) && typeof stream._readableState === "object"; // eslint-disable-line
-export const duplexStream = (stream) => writableStream(stream) && readableStream(stream);
-export const transformStream = (stream) => stream(stream) && typeof stream._transformState === "object"; // eslint-disable-line
-export const coreStream = (obj) => adone.tag.has(obj, "CORE_STREAM");
+export const writableStream = (value) => stream(value) && typeof value._writableState === "object"; // eslint-disable-line
+export const readableStream = (value) => stream(value) && typeof value._readableState === "object"; // eslint-disable-line
+export const duplexStream = (value) => writableStream(value) && readableStream(value);
+export const transformStream = (value) => stream(value) && typeof value._transformState === "object"; // eslint-disable-line
+export const coreStream = (value) => adone.tag.has(value, "CORE_STREAM");
 
 export const utf8 = (bytes) => {
     let i = 0;
