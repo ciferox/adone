@@ -1164,6 +1164,15 @@ export class Engine {
     }
 }
 
+const filterShaniFrames = (frames) => {
+    for (let i = 0; i < frames.length; ++i) {
+        if (/adone.(?:lib|src).shani.index\.js/.test(frames[i])) {
+            return frames.slice(0, i);
+        }
+    }
+    return frames;
+};
+
 export const consoleReporter = ({
     allTimings = false,
     timers = false,
@@ -1296,6 +1305,8 @@ export const consoleReporter = ({
             }
         };
 
+        Error.stackTraceLimit = 100;
+
         emitter
             .on("enter block", reportOnThrow(({ block }) => {
                 if (firstBlock) {
@@ -1422,7 +1433,7 @@ export const consoleReporter = ({
                         }
                         log();
                         if (adone.is.string(err.stack)) {
-                            const stackMsg = err.stack.split("\n").slice(1).map((x) => `    ${x.trim()}`).join("\n");
+                            const stackMsg = filterShaniFrames(err.stack.split("\n")).slice(1).map((x) => `    ${x.trim()}`).join("\n");
                             log(`{grey-fg}{escape}${stackMsg}{/escape}{/}`);
                         }
                         log();
@@ -1525,10 +1536,6 @@ export const minimalReporter = () => {
             }
         };
 
-        // const currentBar = adone.runtime.term.progress({
-        //     schema: ":path"
-        // });
-
         const path = [];
 
         const updatePath = (escape) => {
@@ -1572,6 +1579,8 @@ export const minimalReporter = () => {
             .on("end after hook", endHookHandler("after"))
             .on("end after each hook", endHookHandler("after each"))
             .on("end after test hook", endHookHandler("after test"));
+
+        Error.stackTraceLimit = 100;
 
         emitter
             .on("enter block", reportOnThrow(({ block }) => {
@@ -1681,7 +1690,7 @@ export const minimalReporter = () => {
                         }
                         log();
                         if (adone.is.string(err.stack)) {
-                            const stackMsg = err.stack.split("\n").slice(1).map((x) => `    ${x.trim()}`).join("\n");
+                            const stackMsg = filterShaniFrames(err.stack.split("\n")).slice(1).map((x) => `    ${x.trim()}`).join("\n");
                             log(`{grey-fg}{escape}${stackMsg}{/escape}{/}`);
                         }
                         log();
@@ -1804,6 +1813,8 @@ export const simpleReporter = ({
         let blockLevel = 0;
         let firstBlock = true;
 
+        Error.stackTraceLimit = 100;
+
         emitter
             .on("enter block", ({ block }) => {
                 if (firstBlock) {
@@ -1924,7 +1935,7 @@ export const simpleReporter = ({
                             }
                         }
                         if (adone.is.string(err.stack)) {
-                            const stackMsg = err.stack.split("\n").slice(1).map((x) => `    ${x.trim()}`).join("\n");
+                            const stackMsg = filterShaniFrames(err.stack.split("\n")).slice(1).map((x) => `    ${x.trim()}`).join("\n");
                             log(`{grey-fg}{escape}${stackMsg}{/escape}{/}`);
                         }
                         log();
