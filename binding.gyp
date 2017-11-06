@@ -231,9 +231,7 @@
     {
       'target_name': 'bignumber',
       'sources': [ 'src/native/bignumber.cc' ],
-      'include_dirs': [
-        "nan"
-      ],
+      'include_dirs': [ "nan" ],
       'conditions': [
         # For Windows, require either a 32-bit or 64-bit
         # separately-compiled OpenSSL library.
@@ -475,9 +473,7 @@
         "src/native/compressors/lzma/mt-options.cpp",
         "src/native/compressors/lzma/index-parser.cpp"
       ],
-      "include_dirs" : [
-        "nan"
-      ],
+      "include_dirs" : [ "nan" ],
       "dependencies" : [ "liblzma" ],
       "conditions" : [
         [ 'OS!="win"' , {
@@ -1018,9 +1014,7 @@
       "cflags": [
         '-std=c++11',
       ],
-      'include_dirs' : [
-        "nan"
-      ],
+      'include_dirs' : [ "nan" ],
       'conditions': [
         ['OS!="win"', {
           'link_settings': {
@@ -1045,9 +1039,7 @@
         {
       "target_name": "fuse",
         "sources": ["src/native/fuse/bindings.cc", "src/native/fuse/abstractions.cc"],
-        "include_dirs": [
-            "<!(node -e \"require('nan')\")"
-        ],
+        "include_dirs": [ "nan" ],
         "conditions": [
             ['OS!="win"', {
                 'variables':

@@ -70,7 +70,7 @@ describe("omnitron", () => {
         });
     });
 
-    describe.only("common", () => {
+    describe("common", () => {
         const installedServices = [];
 
         const waitForServiceStatus = (name, status, timeout = 5000) => {
