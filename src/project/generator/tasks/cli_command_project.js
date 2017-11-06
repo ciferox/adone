@@ -6,7 +6,7 @@ const {
 
 export default class CliCommandProjectTask extends project.generator.task.Base {
     async run() {
-        await this._runTask("defaultProject", {
+        await this.runTask("defaultProject", {
             skipGit: true
         });
 
@@ -14,14 +14,14 @@ export default class CliCommandProjectTask extends project.generator.task.Base {
         
         await fs.mkdirp(srcPath);
 
-        await this._runTask("cliCommand", {
+        await this.runTask("cliCommand", {
             name: this.context.project.name,
             fileName: "index.js",
             cwd: srcPath
         });
 
         // Update adone config
-        await this._runTask("adoneConfig", {
+        await this.runTask("adoneConfig", {
             structure: {
                 src: {
                     $task: "transpile",
@@ -32,8 +32,14 @@ export default class CliCommandProjectTask extends project.generator.task.Base {
             main: "lib"
         });
 
+        if (!this.context.flag.skipJsconfig) {
+            await this.runTask("jsconfig", {
+                include: ["src"]
+            });
+        }
+
         if (!this.context.flag.skipGit) {
-            await this._runTask("git");
+            await this.runTask("git");
         }
     }
 }

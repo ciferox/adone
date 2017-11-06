@@ -18,7 +18,7 @@ const {
     MainCommand
 } = application.CliApplication;
 
-class {{ name }} extends application.CliApplication {
+class {{ name }}Application extends application.CliApplication {
     async configure() {
     
     }
@@ -55,7 +55,7 @@ class {{ name }} extends application.CliApplication {
 
 }
 
-application.runCli({{ name }});
+application.runCli({{ name }}Application);
 `;
 
 export default class CliApplicationTask extends project.generator.task.Base {

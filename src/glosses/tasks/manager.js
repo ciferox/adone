@@ -13,7 +13,8 @@ export default class TaskManager extends adone.event.AsyncEmitter {
     constructor() {
         super();
         this._tasks = new Map();
-        this._sharedData = null;
+        this._contexts = new Map();
+        this._activeContext = null;
     }
 
     /**
@@ -114,6 +115,17 @@ export default class TaskManager extends adone.event.AsyncEmitter {
     }
 
     /**
+     * Runs tasks and wait for result.
+     * 
+     * @param {*} name task name
+     * @param {*} args task arguments
+     */
+    async runAndWait(name, ...args) {
+        const observer = await this.run(name, ...args);
+        return observer.result;
+    }
+
+    /**
      * Runs task in series.
      * 
      * @param {array} tasks array of task names
@@ -155,12 +167,17 @@ export default class TaskManager extends adone.event.AsyncEmitter {
         return observer;
     }
 
-    setSharedData(sharedData) {
-        if (!is.plainObject(sharedData)) {
-            throw new x.InvalidArgument("Shared data should be provided through an object");
+    useContext(name, newContext = {}) {
+        const context = this._contexts.get(name);
+        if (is.undefined(context)) {
+            if (!is.plainObject(newContext)) {
+                throw new x.InvalidArgument("Сontext can only be an object");
+            }
+            this._contexts.set(name, newContext);
+            this._activeContext = newContext;
+        } else {   
+            this._activeContext = context;
         }
-
-        this._sharedData = sharedData;
     }
 
     async _run(context, name, ...args) {
@@ -194,10 +211,8 @@ export default class TaskManager extends adone.event.AsyncEmitter {
         return (args) => {
             const instance = this._createTaskInstance(taskInfo);
 
-            if (!is.null(this._sharedData)) {
-                for (const [name, val] of Object.entries(this._sharedData)) {
-                    instance[name] = val;
-                }
+            if (!is.null(this._activeContext)) {
+                instance.context = this._activeContext;
             }
             
             const taskObserver = new task.TaskObserver(instance);

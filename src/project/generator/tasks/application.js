@@ -6,11 +6,13 @@ const {
 const TEMPLATE =
 `#!/usr/bin/env node
 
+import "adone";
+
 const {
     application
 } = adone;
 
-class {{ name }} extends application.Application {
+class {{ name }}Application extends application.Application {
     async configure() {
 
     }
@@ -29,7 +31,7 @@ class {{ name }} extends application.Application {
     }
 }
 
-application.run({{ name }});
+application.run({{ name }}Application);
 `;
 
 export default class ApplicationTask extends project.generator.task.Base {

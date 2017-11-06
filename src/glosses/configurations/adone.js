@@ -17,13 +17,6 @@ export default class AdoneConfiguration extends adone.configuration.Generic {
     }
 
     /**
-     * Returns name of configuration file.
-     */
-    getName() {
-        return CONFIG_NAME;
-    }
-
-    /**
      * Returns absolute path of configuration.
      */
     getPath() {
@@ -141,15 +134,16 @@ export default class AdoneConfiguration extends adone.configuration.Generic {
                 const fullKey = (prefix.length > 0 ? `${prefix}.${key}` : key);
                 if (is.string(val) && !key.startsWith("$")) {
                     const subCwd = std.path.join(this.getCwd(), val);
-                    // eslint-disable-next-line
+
                     const subConfigPath = std.path.join(subCwd, CONFIG_NAME);
+                    // eslint-disable-next-line
                     if (!(await fs.exists(subConfigPath))) {
                         throw new adone.x.NotExists(`Configuration '${subConfigPath}' not exists`);
                     }
 
-                    // eslint-disable-next-line
                     this[SUB_CONFIGS].set(fullKey, {
                         dirName: val,
+                        // eslint-disable-next-line
                         config: await AdoneConfiguration.load({
                             cwd: subCwd
                         })
@@ -167,5 +161,12 @@ export default class AdoneConfiguration extends adone.configuration.Generic {
         });
         await config.load();
         return config;
+    }
+
+    /**
+     * Returns name of configuration file.
+     */
+    static get name() {
+        return CONFIG_NAME;
     }
 }

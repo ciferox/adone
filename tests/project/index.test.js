@@ -185,7 +185,7 @@ describe("project", () => {
             });
         }
 
-        describe("projects", () => {
+        describe.only("projects", () => {
             const defaultProjects = [
                 {
                     skipNpm: false,
@@ -243,14 +243,14 @@ describe("project", () => {
                     };
                     const context = await manager.createProject(projectConfig);
 
-                    assert.deepEqual(util.pick(context.config.adone.raw, ["name", "description", "version", "author"]), util.pick(projectConfig, ["name", "description", "version", "author"]))
+                    assert.deepEqual(util.pick(context.config.adone.raw, ["name", "description", "version", "author"]), util.pick(projectConfig, ["name", "description", "version", "author"]));
                     assert.sameMembers(await fs.readdir(cwd), files);
                     if (!skipGit) {
                         assert.isTrue(await fs.is.directory(std.path.join(cwd, ".git")));
                     }
 
                     if (is.configuration(context.config.npm)) {
-                        assert.deepEqual(util.pick(context.config.npm.raw, ["name", "description", "version", "author"]), util.pick(projectConfig, ["name", "description", "version", "author"]))
+                        assert.deepEqual(util.pick(context.config.npm.raw, ["name", "description", "version", "author"]), util.pick(projectConfig, ["name", "description", "version", "author"]));
                     }
 
                     // if (!skipEslint) {
@@ -259,6 +259,7 @@ describe("project", () => {
 
                     if (!skipJsconfig) {
                         assert.isTrue(is.configuration(context.config.jsconfig));
+                        assert.isFalse(is.propertyOwned(context.config.jsconfig.raw, "include"));
                     }
                 });
             }
@@ -303,16 +304,17 @@ describe("project", () => {
                     }
 
                     if (is.configuration(context.config.npm)) {
-                        assert.deepEqual(util.pick(context.config.npm.raw, ["name", "description", "version", "author"]), util.pick(projectConfig, ["name", "description", "version", "author"]))
+                        assert.deepEqual(util.pick(context.config.npm.raw, ["name", "description", "version", "author"]), util.pick(projectConfig, ["name", "description", "version", "author"]));
                     }
 
                     // assert.isTrue(is.configuration(context.config.eslint));
 
                     assert.isTrue(is.configuration(context.config.jsconfig));
+                    assert.isTrue(is.array(context.config.jsconfig.raw.include));
                 });
             }
 
-            it(`sub project`, async () => {
+            it.only("sub project", async () => {
                 const name = `project_${text.random(8)}`;
                 const cwd = getPathFor(name);
                 await fs.mkdir(cwd);
@@ -336,7 +338,11 @@ describe("project", () => {
                 assert.isTrue(await fs.is.directory(std.path.join(subCwd, "src")));
                 assert.isTrue(await fs.exists(std.path.join(subCwd, "src", "index.js")));
 
-                assert.equal(manager.config.raw.structure.jit, "service");
+                assert.equal(manager.config.raw.structure.service, "service");
+                
+                const relativeDir = std.path.relative(context.project.cwd, std.path.join(subContext.project.cwd, "src"));                
+                await context.config.jsconfig.load();
+                assert.isTrue(context.config.jsconfig.raw.include.includes(relativeDir));
             });
         });
     });

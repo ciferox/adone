@@ -5,8 +5,8 @@ const {
 } = adone;
 
 export default class CliApplicationProjectTask extends project.generator.task.Base {
-    async run(input) {
-        await this._runTask("defaultProject", {
+    async run() {
+        await this.runTask("defaultProject", {
             skipGit: true
         });
 
@@ -14,14 +14,14 @@ export default class CliApplicationProjectTask extends project.generator.task.Ba
         
         await fs.mkdirp(srcPath);
 
-        await this._runTask("cliApplication", {
+        await this.runTask("cliApplication", {
             name: this.context.project.name,
             fileName: "app.js",
             cwd: srcPath
         });
 
         // Update adone config
-        await this._runTask("adoneConfig", {
+        await this.runTask("adoneConfig", {
             structure: {
                 src: {
                     bin: {
@@ -43,8 +43,14 @@ export default class CliApplicationProjectTask extends project.generator.task.Ba
             main: "lib"
         });
 
+        if (!this.context.flag.skipJsconfig) {
+            await this.runTask("jsconfig", {
+                include: ["src"]
+            });
+        }
+
         if (!this.context.flag.skipGit) {
-            await this._runTask("git");
+            await this.runTask("git");
         }
     }
 }

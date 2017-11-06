@@ -17,11 +17,12 @@ export default class ProjectManager extends task.Manager {
         this.config = null;
         this._loaded = false;
         this.silent = false;
-        this.Generator = project.generator.Manager;
+        this.GeneratorClass = project.generator.Manager;
+        this.generator = null;
     }
 
-    useGenerator(Generator) {
-        this.Generator = Generator;
+    useGenerator(GeneratorClass) {
+        this.GeneratorClass = GeneratorClass;
     }
 
     setSilent(silent) {
@@ -61,39 +62,24 @@ export default class ProjectManager extends task.Manager {
     }
 
     async createProject(options) {
-        const generator = await this._createGenerator();
-        const result = await generator.createProject({
+        const generator = await this.getGenerator();
+        const context = await generator.createProject({
             ...options,
             cwd: this.cwd
         });
 
         await this.load();
-        return result;
+        return context;
     }
 
-    async createSubProject(options) {
+    async createSubProject(input) {
         this._checkLoaded();
-        const generator = await this._createGenerator();
-        const cwd = std.path.join(this.cwd, is.string(options.dirName) ? options.dirName : options.name);
-        await generator.createProject({
-            name: this.config.raw.name,
-            description: this.config.raw.description,
-            version: this.config.raw.version,
-            author: this.config.raw.author,
-            ...options,
-            skipGit: true,
-            skipEslint: true,
-            skipJsconfig: true,
-            cwd
-        });
-
-        const subName = is.string(options.dirName) ? options.dirName : options.name;
-        this.config.set(["structure", options.name], std.path.relative(this.cwd, cwd));
-        await this.config.save();
+        const generator = await this.getGenerator();
+        return generator.createSubProject(input);
     }
 
     async createFile(options) {
-        const generator = await this._createGenerator();
+        const generator = await this.getGenerator();
         return generator.createFile(options);
     }
 
@@ -103,7 +89,7 @@ export default class ProjectManager extends task.Manager {
 
     async clean(path) {
         this._checkLoaded();
-        const entries = this.config.getEntries(path);
+        const entries = this._getEntries(path);
 
         const results = [];
         for (const entry of entries) {
@@ -116,7 +102,7 @@ export default class ProjectManager extends task.Manager {
 
     async build(path) {
         this._checkLoaded();
-        const entries = this.config.getEntries(path);
+        const entries = this._getEntries(path);
 
         const promises = [];
         for (const entry of entries) {
@@ -138,7 +124,7 @@ export default class ProjectManager extends task.Manager {
 
     async watch(path) {
         this._checkLoaded();
-        const entries = this.config.getEntries(path);
+        const entries = this._getEntries(path);
 
         const promises = [];
         for (const entry of entries) {
@@ -186,6 +172,15 @@ export default class ProjectManager extends task.Manager {
         await updateConfig("package-lock.json");
     }
 
+    _getEntries(path) {
+        const entries = this.config.getEntries(path);
+        if (entries.length === 0) {
+            adone.info(`No entries for '${path}'`);
+        }
+
+        return entries;
+    }
+
     _checkEntry(entry) {
         if (is.nil(entry.$dst)) {
             return false;
@@ -204,10 +199,12 @@ export default class ProjectManager extends task.Manager {
         }
     }
 
-    async _createGenerator() {
-        const generator = new this.Generator();
-        await generator.useDefaultTasks();
-        await generator.loadCustomTasks();
-        return generator;
+    async getGenerator() {
+        if (is.null(this.generator)) {
+            this.generator = new this.GeneratorClass(this);
+            await this.generator.useDefaultTasks();
+            await this.generator.loadCustomTasks();
+        }
+        return this.generator;
     }
 }

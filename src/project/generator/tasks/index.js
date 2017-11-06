@@ -1,9 +1,8 @@
 adone.lazify({
     Base: "./base",
-    Initialize: "./initialize",
     AdoneConfig: "./adone_config",
-    EslintConfig: "./eslint_config",
-    JsconfigConfig: "./jsconfig_config",
+    Eslint: "./eslint",
+    Jsconfig: "./jsconfig",
     Npm: "./npm",
     DefaultProject: "./default_project",
     Application: "./application",

@@ -8,14 +8,14 @@ export default class DefaultProjectTask extends project.generator.task.Base {
         skipEslint = this.context.flag.skipEslint,
         skipJsconfig = this.context.flag.skipJsconfig
     } = {}) {
-        const tasks = ["initialize", "adoneConfig"];
+        const tasks = ["adoneConfig"];
         
         if (!skipJsconfig) {
-            tasks.push("jsconfigConfig");
+            tasks.push("jsconfig");
         }
 
         if (!skipEslint) {
-            tasks.push("eslintConfig");
+            tasks.push("eslint");
         }
         
         if (!skipGit) {
