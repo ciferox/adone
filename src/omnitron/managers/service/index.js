@@ -142,10 +142,10 @@ export default class ServiceManager extends application.Subsystem {
     async getService(name, checkExists = true) {
         const path = std.path.join(SERVICES_PATH, name);
         if (checkExists && !(await fs.exists(path))) {
-            throw new x.Unknown(`UNknown service: ${name}`);
+            throw new x.Unknown(`Unknown service: ${name}`);
         }
 
-        const adoneConf = await adone.project.Configuration.load({
+        const adoneConf = await adone.configuration.Adone.load({
             cwd: path
         });
 

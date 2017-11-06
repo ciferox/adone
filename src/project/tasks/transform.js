@@ -14,7 +14,7 @@ export default class TransformTask extends adone.project.task.Base {
      */
     streamOptions() {
         return {
-            cwd: this.manager.path
+            cwd: this.manager.cwd
         };
     }
 

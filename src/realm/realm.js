@@ -58,7 +58,7 @@ export default class Realm {
         const result = [];
         for (const name of packages) {
             // eslint-disable-next-line
-            const adoneConf = await adone.project.Configuration.load({
+            const adoneConf = await adone.configuration.Adone.load({
                 cwd: std.path.join(adone.realm.config.packagesPath, name)
             });
 

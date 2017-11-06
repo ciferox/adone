@@ -1,5 +1,4 @@
 const {
-    configuration,
     is,
     fs,
     project: { Manager },
@@ -185,7 +184,7 @@ describe("project", () => {
             });
         }
 
-        describe.only("projects", () => {
+        describe("projects", () => {
             const defaultProjects = [
                 {
                     skipNpm: false,
@@ -314,7 +313,7 @@ describe("project", () => {
                 });
             }
 
-            it.only("sub project", async () => {
+            it("sub project", async () => {
                 const name = `project_${text.random(8)}`;
                 const cwd = getPathFor(name);
                 await fs.mkdir(cwd);

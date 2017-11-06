@@ -144,7 +144,6 @@ export default class ProjectManager extends task.Manager {
         if (!VERSION_PARTS.includes(part)) {
             throw new adone.x.NotValid(`Not valid version part: ${part}`);
         }
-        // adone.log(this.config.raw.version);
 
         const version = this.config.raw.version;
 
@@ -174,8 +173,8 @@ export default class ProjectManager extends task.Manager {
 
     _getEntries(path) {
         const entries = this.config.getEntries(path);
-        if (entries.length === 0) {
-            adone.info(`No entries for '${path}'`);
+        if (entries.length === 0 && !this.silent) {
+            adone.info(`No entries'${is.string(path) ? ` for ${path}` : ""}'`);
         }
 
         return entries;

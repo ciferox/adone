@@ -20,7 +20,7 @@ export default class DeleteTask extends adone.project.task.Base {
             srcGlob = params.$src;
         }
         return fs.rm(std.path.join(params.$dst, std.path.relative(util.globParent(srcGlob), srcGlob)), {
-            cwd: this.manager.path
+            cwd: this.manager.cwd
         });
     }
 }

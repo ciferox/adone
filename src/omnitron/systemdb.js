@@ -42,7 +42,7 @@ export default class SystemDB {
         }
 
         const servicePath = std.path.join(adone.realm.config.omnitron.servicesPath, name);
-        const adoneConf = await adone.project.Configuration.load({
+        const adoneConf = await adone.configuration.Adone.load({
             cwd: servicePath
         });
 

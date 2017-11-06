@@ -440,39 +440,39 @@ describe("", () => {
             });
         });
 
-        it("shared data", async () => {
+        it("tasks shared context", async () => {
             const id = "778899";
             class TaskA extends task.Task {
                 async run() {
-                    assert.equal(this.id, id);
-                    this.ctx.name = "adone";
-                    this.ctx.dt = new Date();
+                    assert.equal(this.context.id, id);
+                    this.context.data.name = "adone";
+                    this.context.data.dt = new Date();
                 }
             }
             
             class TaskB extends task.Task {
                 async run() {
-                    assert.equal(this.id, id);
-                    assert.equal(this.ctx.name, "adone");
-                    assert.isTrue(is.date(this.ctx.dt));
-                    this.ctx.version = "1.0.0";
+                    assert.equal(this.context.id, id);
+                    assert.equal(this.context.data.name, "adone");
+                    assert.isTrue(is.date(this.context.data.dt));
+                    this.context.data.version = "1.0.0";
                     return 7;
                 }
             }
 
             class TaskC extends task.Task {
                 async run() {
-                    assert.equal(this.id, id);
-                    assert.equal(this.ctx.name, "adone");
-                    assert.equal(this.ctx.version, "1.0.0");
-                    assert.isTrue(is.date(this.ctx.dt));
+                    assert.equal(this.context.id, id);
+                    assert.equal(this.context.data.name, "adone");
+                    assert.equal(this.context.data.version, "1.0.0");
+                    assert.isTrue(is.date(this.context.data.dt));
                     return 7;
                 }
             }
 
-            manager.setSharedData({
+            manager.useContext("default", {
                 id,
-                ctx: {
+                data: {
                 }
             });
 

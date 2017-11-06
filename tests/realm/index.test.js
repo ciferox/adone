@@ -60,7 +60,7 @@ describe("realm", () => {
 
                     await realmInstance.install(installOptions);
 
-                    const config = await adone.project.Configuration.load({
+                    const config = await adone.configuration.Adone.load({
                         cwd: cliCommandPath
                     });
 
@@ -111,7 +111,7 @@ describe("realm", () => {
                 it(`should rollbak installation of invalid cli command${symlink ? " with symlink " : " "}(${name})`, async () => {
                     const cliCommandPath = std.path.join(__dirname, "packages", `cli_command_${name}`);
 
-                    const config = await adone.project.Configuration.load({
+                    const config = await adone.configuration.Adone.load({
                         cwd: cliCommandPath
                     });
 
@@ -155,7 +155,7 @@ describe("realm", () => {
         it("install/uninstall with inactive omnitron", async () => {
             const omnitronServicePath = std.path.join(__dirname, "packages", "omnitron_service_good");
 
-            const config = await adone.project.Configuration.load({
+            const config = await adone.configuration.Adone.load({
                 cwd: omnitronServicePath
             });
 
@@ -189,7 +189,7 @@ describe("realm", () => {
 
             const omnitronServicePath = std.path.join(__dirname, "packages", "omnitron_service_good");
 
-            const config = await adone.project.Configuration.load({
+            const config = await adone.configuration.Adone.load({
                 cwd: omnitronServicePath
             });
 
@@ -223,7 +223,7 @@ describe("realm", () => {
             
             const omnitronServicePath = std.path.join(__dirname, "packages", "omnitron_service_good");
 
-            const config = await adone.project.Configuration.load({
+            const config = await adone.configuration.Adone.load({
                 cwd: omnitronServicePath
             });
 

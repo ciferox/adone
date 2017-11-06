@@ -5,8 +5,10 @@
     "type": "omnitron.service",
     "main": "lib",
     "structure": {
-        "$task": "transpile",
-        "$src": "src/**/*",
-        "$dst": "lib"
+        "src": {
+            "$task": "transpile",
+            "$src": "src/**/*",
+            "$dst": "lib"
+        }
     }
 }

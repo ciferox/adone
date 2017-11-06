@@ -84,7 +84,7 @@ export default class Package {
                 throw new adone.x.NotExists(`Package ${this.name} is not exists`);
             }
 
-            const adoneConf = await adone.project.Configuration.load({
+            const adoneConf = await adone.configuration.Adone.load({
                 cwd: this.destPath
             });
 
@@ -160,7 +160,7 @@ export default class Package {
             schema: ` :spinner installing from: ${this.path}`
         });
 
-        const adoneConf = await adone.project.Configuration.load({
+        const adoneConf = await adone.configuration.Adone.load({
             cwd: this.path
         });
 
@@ -253,7 +253,7 @@ export default class Package {
         // Remove old files
         await fs.rm(this.destPath);
 
-        const entries = await adoneConf.getProjectEntries();
+        const entries = await adoneConf.getEntries();
 
         if (entries.length > 0) {
             for (const info of entries) {
