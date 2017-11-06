@@ -5,7 +5,6 @@
 import * as N from "../types";
 import { types as tt, type TokenType } from "../tokenizer/types";
 import ExpressionParser from "./expression";
-import type { Position } from "../util/location";
 import { lineBreak } from "../util/whitespace";
 
 // Reused empty array added for node fields that are always empty.
@@ -779,7 +778,10 @@ export default class StatementParser extends ExpressionParser {
     isAsync?: boolean,
     optionalId?: boolean,
   ): T {
+    const oldInFunc = this.state.inFunction;
     const oldInMethod = this.state.inMethod;
+    const oldInGenerator = this.state.inGenerator;
+    this.state.inFunction = true;
     this.state.inMethod = false;
 
     this.initFunction(node, isAsync);
@@ -801,9 +803,19 @@ export default class StatementParser extends ExpressionParser {
       this.unexpected();
     }
 
+    // When parsing function expression, the binding identifier is parsed
+    // according to the rules inside the function.
+    // e.g. (function* yield() {}) is invalid because "yield" is disallowed in
+    // generators.
+    // This isn't the case with function declarations: function* yield() {} is
+    // valid because yield is parsed as if it was outside the generator.
+    // Therefore, this.state.inGenerator is set before or after parsing the
+    // function id according to the "isStatement" parameter.
+    if (!isStatement) this.state.inGenerator = node.generator;
     if (this.match(tt.name) || this.match(tt._yield)) {
       node.id = this.parseBindingIdentifier();
     }
+    if (isStatement) this.state.inGenerator = node.generator;
 
     this.parseFunctionParams(node);
     this.parseFunctionBodyAndFinish(
@@ -811,13 +823,26 @@ export default class StatementParser extends ExpressionParser {
       isStatement ? "FunctionDeclaration" : "FunctionExpression",
       allowExpressionBody,
     );
+
+    this.state.inFunction = oldInFunc;
     this.state.inMethod = oldInMethod;
+    this.state.inGenerator = oldInGenerator;
+
     return node;
   }
 
-  parseFunctionParams(node: N.Function): void {
+  parseFunctionParams(node: N.Function, allowModifiers?: boolean): void {
+    const oldInParameters = this.state.inParameters;
+    this.state.inParameters = true;
+
     this.expect(tt.parenL);
-    node.params = this.parseBindingList(tt.parenR);
+    node.params = this.parseBindingList(
+      tt.parenR,
+      /* allowEmpty */ false,
+      allowModifiers,
+    );
+
+    this.state.inParameters = oldInParameters;
   }
 
   // Parse a class declaration or literal (depending on the
@@ -899,7 +924,7 @@ export default class StatementParser extends ExpressionParser {
 
       if (
         this.hasPlugin("decorators2") &&
-        member.kind != "method" &&
+        ["method", "get", "set"].indexOf(member.kind) === -1 &&
         member.decorators &&
         member.decorators.length > 0
       ) {
@@ -1576,21 +1601,34 @@ export default class StatementParser extends ExpressionParser {
     return this.finishNode(node, "ImportDeclaration");
   }
 
-  // Parses a comma-separated list of module imports.
+  // eslint-disable-next-line no-unused-vars
+  shouldParseDefaultImport(node: N.ImportDeclaration): boolean {
+    return this.match(tt.name);
+  }
 
+  parseImportSpecifierLocal(
+    node: N.ImportDeclaration,
+    specifier: N.Node,
+    type: string,
+    contextDescription: string,
+  ): void {
+    specifier.local = this.parseIdentifier();
+    this.checkLVal(specifier.local, true, undefined, contextDescription);
+    node.specifiers.push(this.finishNode(specifier, type));
+  }
+
+  // Parses a comma-separated list of module imports.
   parseImportSpecifiers(node: N.ImportDeclaration): void {
     let first = true;
-    if (this.match(tt.name)) {
+    if (this.shouldParseDefaultImport(node)) {
       // import defaultObj, { x, y as z } from '...'
-      const startPos = this.state.start;
-      const startLoc = this.state.startLoc;
-      node.specifiers.push(
-        this.parseImportSpecifierDefault(
-          this.parseIdentifier(),
-          startPos,
-          startLoc,
-        ),
+      this.parseImportSpecifierLocal(
+        node,
+        this.startNode(),
+        "ImportDefaultSpecifier",
+        "default import specifier",
       );
+
       if (!this.eat(tt.comma)) return;
     }
 
@@ -1598,16 +1636,14 @@ export default class StatementParser extends ExpressionParser {
       const specifier = this.startNode();
       this.next();
       this.expectContextual("as");
-      specifier.local = this.parseIdentifier();
-      this.checkLVal(
-        specifier.local,
-        true,
-        undefined,
+
+      this.parseImportSpecifierLocal(
+        node,
+        specifier,
+        "ImportNamespaceSpecifier",
         "import namespace specifier",
       );
-      node.specifiers.push(
-        this.finishNode(specifier, "ImportNamespaceSpecifier"),
-      );
+
       return;
     }
 
@@ -1648,16 +1684,5 @@ export default class StatementParser extends ExpressionParser {
     }
     this.checkLVal(specifier.local, true, undefined, "import specifier");
     node.specifiers.push(this.finishNode(specifier, "ImportSpecifier"));
-  }
-
-  parseImportSpecifierDefault(
-    id: N.Identifier,
-    startPos: number,
-    startLoc: Position,
-  ): N.ImportDefaultSpecifier {
-    const node = this.startNodeAt(startPos, startLoc);
-    node.local = id;
-    this.checkLVal(node.local, true, undefined, "default import specifier");
-    return this.finishNode(node, "ImportDefaultSpecifier");
   }
 }
