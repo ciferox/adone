@@ -158,7 +158,7 @@ export default function ({ types: t, template }, options) {
                         header.loc = metadata.loc;
 
                         headers.push(header);
-                        headers.push(...buildNamespaceInitStatements(meta, metadata));
+                        headers.push(...buildNamespaceInitStatements(meta, metadata, loose));
                     }
 
                     ensureStatementsHoisted(headers);

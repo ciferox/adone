@@ -190,7 +190,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
                 "transform.flowStripTypes",
                 "transform.decorators",
                 ["transform.classProperties", { loose: true }],
-                "transform.es2015ModulesCommonjs",
+                "transform.modulesCommonjs",
                 "transform.functionBind",
                 "transform.objectRestSpread",
                 "transform.numericSeparator",
