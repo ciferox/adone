@@ -181,6 +181,46 @@ const unwrapListeners = (arr) => {
     return ret;
 };
 
+const explicitPropagate = (events, source, dest) => {
+    let eventsIn;
+    let eventsOut;
+    if (is.array(events)) {
+        eventsIn = events;
+        eventsOut = events;
+    } else {
+        eventsIn = Object.keys(events);
+        eventsOut = eventsIn.map((key) => {
+            return events[key];
+        });
+    }
+
+    const listeners = eventsOut.map((event) => {
+        return function (...args) {
+            args.unshift(event);
+            dest.emit.apply(dest, args);
+        };
+    });
+
+    const register = (listener, i) => {
+        source.on(eventsIn[i], listener);
+    };
+
+    const unregister = (listener, i) => {
+        source.removeListener(eventsIn[i], listener);
+    };
+
+    const end = () => {
+        listeners.forEach(unregister);
+    };
+
+    listeners.forEach(register);
+
+    return {
+        end
+    };
+};
+
+
 export default class EventEmitter {
     constructor() {
         this[$events] = Object.create(null);
@@ -425,6 +465,42 @@ export default class EventEmitter {
             throw new TypeError('"defaultMaxListeners" must be a positive number');
         }
         defaultMaxListeners = arg;
+    }
+
+    propagateEvents(dest, events) {
+        return this.constructor.propagateEvents(this, dest, events);
+    }
+
+    /**
+     * @param {object | string[]} events
+     */
+    static propagateEvents(source, dest, events) {
+        const eventsIsObject = is.object(events);
+
+        if (events && !eventsIsObject) {
+            events = [events];
+        }
+
+        if (events) {
+            return explicitPropagate(events, source, dest);
+        }
+
+        // patch listener count?
+
+        const oldEmit = source.emit;
+
+        source.emit = function (...args) {
+            oldEmit.apply(this, args);
+            dest.emit(...args);
+        };
+
+        const end = () => {
+            source.emit = oldEmit;
+        };
+
+        return {
+            end
+        };
     }
 }
 

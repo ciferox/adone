@@ -15,7 +15,7 @@ const imports = adone.lazify({
  * @param {object} [params] The params to be appended
  * @returns {string} The formatted url
  */
-function buildURL(url, params, paramsSerializer) {
+const buildURL = (url, params, paramsSerializer) => {
     if (!params) {
         return url;
     }
@@ -28,11 +28,11 @@ function buildURL(url, params, paramsSerializer) {
     }
 
     if (serializedParams) {
-        url += (url.indexOf("?") === -1 ? "?" : "&") + serializedParams;
+        url += (!url.includes("?") ? "?" : "&") + serializedParams;
     }
 
     return url;
-}
+};
 
 
 export default function adapter(options) {
@@ -48,16 +48,16 @@ export default function adapter(options) {
 
         if (data && !is.stream(data)) {
             if (is.arrayBuffer(data)) {
-                data = new Buffer(new Uint8Array(data));
+                data = Buffer.from(new Uint8Array(data));
             } else if (is.string(data)) {
-                data = new Buffer(data, "utf-8");
+                data = Buffer.from(data, "utf-8");
             } else {
                 return reject(imports.createError("Data after transformation must be a string, an ArrayBuffer, or a Stream", options));
             }
 
             // Add Content-Length header if data exists
             headers["Content-Length"] = data.length;
-        } else if (data === null || data === undefined) {
+        } else if (is.nil(data)) {
             delete headers["Content-Type"];
         }
 
@@ -87,7 +87,7 @@ export default function adapter(options) {
             hostname: parsedUrl.hostname,
             port: parsedUrl.port,
             path: buildURL(parsedUrl.path, options.params, options.paramsSerializer).replace(/^\?/, ""),
-            method: options.method,
+            method: options.method.toUpperCase(),
             headers,
             agent,
             auth
@@ -127,7 +127,7 @@ export default function adapter(options) {
 
             // Basic proxy authorization
             if (proxy.auth) {
-                const base64 = new Buffer(`${proxy.auth.username}:${proxy.auth.password}`, "utf8").toString("base64");
+                const base64 = Buffer.from(`${proxy.auth.username}:${proxy.auth.password}`, "utf8").toString("base64");
                 nodeOptions.headers["Proxy-Authorization"] = `Basic ${base64}`;
             }
         }
@@ -139,7 +139,7 @@ export default function adapter(options) {
             nodeOptions.maxRedirects = options.maxRedirects;
             transport = isHttps ? imports.followRedirects.https : imports.followRedirects.http;
         }
-
+        debugger;
         const req = transport.request(nodeOptions, (res) => {
             if (aborted) {
                 return;

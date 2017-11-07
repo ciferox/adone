@@ -1,6 +1,17 @@
 const { request } = adone.net.http.client;
 
 describe("net", "http", "client", "interceptors", () => {
+    beforeEach(() => {
+        nock.cleanAll();
+        nock.restore();
+        nock.activate();
+    });
+
+    after(() => {
+        nock.cleanAll();
+        nock.restore();
+    });
+
     afterEach(() => {
         request.interceptors.request.handlers = [];
         request.interceptors.response.handlers = [];

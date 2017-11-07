@@ -32,6 +32,10 @@ export default class Directory {
         return fs.stat(this._path);
     }
 
+    statSync() {
+        return fs.statSync(this._path);
+    }
+
     lstat() {
         return fs.lstat(this._path);
     }

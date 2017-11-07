@@ -760,4 +760,171 @@ describe("event", "EventEmitter", () => {
             expect(EE.eventNames()).to.be.deep.equal(["foo"]);
         });
     });
+
+    describe("propagateEvents", () => {
+        const test = (propagator) => {
+            it("propagates events", () => {
+                const ee1 = new EventEmitter();
+                const ee2 = new EventEmitter();
+
+                propagator(ee1, ee2);
+
+                const e1 = stub().callsFake((a, b, c) => {
+                    assert.equal(a, "a");
+                    assert.equal(b, "b");
+                    assert.equal(c, undefined);
+                });
+
+                ee2.on("event-1", e1);
+
+                const e2 = stub().callsFake((a, b, c) => {
+                    assert.equal(a, "c");
+                    assert.equal(b, "d");
+                    assert.equal(c, undefined);
+                });
+
+                ee2.on("event-2", e2);
+
+                ee1.emit("event-1", "a", "b");
+                ee1.emit("event-1", "a", "b");
+                ee1.emit("event-2", "c", "d");
+                ee1.emit("event-2", "c", "d");
+
+                expect(e1).to.have.callCount(2);
+                expect(e2).to.have.callCount(2);
+            });
+
+            it("propagates can end", () => {
+                const ee1 = new EventEmitter();
+                const ee2 = new EventEmitter();
+
+                const prop = propagator(ee1, ee2);
+
+                const e = stub().callsFake(() => {
+                    assert.ok("true", "propagated");
+                });
+
+                ee2.on("event", e);
+
+                ee1.emit("event");
+                prop.end();
+                ee1.emit("event");
+                expect(e).to.have.been.calledOnce;
+            });
+
+            it("after propagation old one still emits", () => {
+                const ee1 = new EventEmitter();
+                const ee2 = new EventEmitter();
+                const prop = propagator(ee1, ee2);
+
+                const e = stub().callsFake(() => {
+                    assert.ok("true", "propagated");
+                });
+
+                ee1.on("event", e);
+
+                ee1.emit("event");
+                prop.end();
+                ee1.emit("event");
+                expect(e).to.have.been.calledTwice;
+            });
+
+            it("emit on source before destination", () => {
+                const source = new EventEmitter();
+                const dest = new EventEmitter();
+
+                propagator(source, dest);
+                const sevent = spy();
+                source.on("event", sevent);
+                const devent = spy();
+                dest.on("event", devent);
+
+                // Emit the events for assertion
+                source.emit("event");
+                expect(sevent).to.have.been.calledBefore(devent);
+            });
+
+            it("is able to propagate only certain events", () => {
+                const ee1 = new EventEmitter();
+                const ee2 = new EventEmitter();
+                // propagate only event-1 and event-2, leaving out
+                const p = propagator(ee1, ee2, ["event-1", "event-2"]);
+
+                const e1 = spy();
+
+                ee2.on("event-1", e1);
+
+                const e2 = spy();
+
+                ee2.on("event-2", e2);
+
+                const e3 = spy();
+
+                ee2.on("event-3", e3);
+
+                ee1.emit("event-1");
+                ee1.emit("event-2");
+                ee1.emit("event-3");
+
+                p.end();
+
+                expect(e1).to.have.been.calledOnce;
+                expect(e2).to.have.been.calledOnce;
+                expect(e3).to.have.not.been.called;
+
+                ee1.emit("event-1");
+
+                expect(e1).to.have.been.calledOnce;
+                expect(e2).to.have.been.calledOnce;
+                expect(e3).to.have.not.been.called;
+
+            });
+
+            it("is able to propagate and map certain events", () => {
+                const ee1 = new EventEmitter();
+                const ee2 = new EventEmitter();
+                // propagate only event-1 and event-2, leaving out
+                const p = propagator(ee1, ee2, {
+                    "event-1": "other-event-1",
+                    "event-2": "other-event-2"
+                }, ee1, ee2);
+
+                const e1 = spy();
+
+                ee2.on("other-event-1", e1);
+
+                const e2 = spy();
+
+                ee2.on("other-event-2", e2);
+
+                const e3 = spy();
+
+                ee2.on("event-3", e3);
+
+                ee1.emit("event-1");
+                ee1.emit("event-2");
+                ee1.emit("event-3");
+
+                p.end();
+
+                expect(e1).to.have.been.calledOnce;
+                expect(e2).to.have.been.calledOnce;
+                expect(e3).to.have.not.been.called;
+
+                ee1.emit("event-1");
+
+                expect(e1).to.have.been.calledOnce;
+                expect(e2).to.have.been.calledOnce;
+                expect(e3).to.have.not.been.called;
+            });
+        };
+
+        // test proto method
+        test((src, dst, events) => src.propagateEvents(dst, events));
+
+        // test static method
+        describe("static", () => {
+            test((src, dst, events) => EventEmitter.propagateEvents(src, dst, events));
+        });
+    });
 });

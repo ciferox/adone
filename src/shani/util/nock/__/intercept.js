@@ -1,22 +1,24 @@
+const {
+    is,
+    shani: {
+        util: { nock }
+    },
+    std: {
+        http,
+        util: { inherits },
+        url: { parse }
+    },
+    util
+} = adone;
 
+const __ = adone.private(nock);
 
-/**
- * @module nock/intercepts
- */
-
-let RequestOverrider = require("./request_overrider"),
-    common = require("./common"),
-    url = require("url"),
-    inherits = require("util").inherits,
-    Interceptor = require("./interceptor"),
-    http = require("http"),
-    parse = require("url").parse,
-    _ = require("lodash"),
-    debug = require("debug")("nock.intercept"),
-    timers = require("timers"),
-    EventEmitter = require("events").EventEmitter,
-    globalEmitter = require("./global_emitter");
-
+const {
+    util: _util,
+    globalEmitter,
+    ClientRequest,
+    OutgoingMessage
+} = __;
 
 /**
  * @name NetConnectNotAllowedError
@@ -28,19 +30,17 @@ let RequestOverrider = require("./request_overrider"),
  * http.get('http://zombo.com');
  * // throw NetConnectNotAllowedError
  */
-function NetConnectNotAllowedError(host, path) {
-    Error.call(this);
-
-    this.name = "NetConnectNotAllowedError";
-    this.message = `Nock: Not allow net connect for "${host}${path}"`;
-
-    Error.captureStackTrace(this, this.constructor);
+class NetConnectNotAllowedError extends Error {
+    constructor(host, path) {
+        super(`Not allow net connect for "${host}${path}"`);
+        this.name = "NetConnectNotAllowedError";
+        this.code = "ENETUNREACH";
+        Error.captureStackTrace(this, this.constructor);
+    }
 }
 
-inherits(NetConnectNotAllowedError, Error);
-
-let allInterceptors = {},
-    allowNetConnect;
+let allInterceptors = {};
+let allowNetConnect;
 
 /**
  * Enabled real request.
@@ -56,23 +56,22 @@ let allInterceptors = {},
  * // Enables real requests for url that matches google and amazon
  * nock.enableNetConnect(/(google|amazon)/);
  */
-function enableNetConnect(matcher) {
-    if (_.isString(matcher)) {
+add.enableNetConnect = (matcher) => {
+    if (is.string(matcher)) {
         allowNetConnect = new RegExp(matcher);
-    } else if (_.isObject(matcher) && _.isFunction(matcher.test)) {
+    } else if (is.object(matcher) && is.function(matcher.test)) {
         allowNetConnect = matcher;
     } else {
         allowNetConnect = /.*/;
     }
-}
+};
 
-function isEnabledForNetConnect(options) {
-    common.normalizeRequestOptions(options);
+const isEnabledForNetConnect = (options) => {
+    _util.normalizeRequestOptions(options);
 
     const enabled = allowNetConnect && allowNetConnect.test(options.host);
-    debug("Net connect", enabled ? "" : "not", "enabled for", options.host);
     return enabled;
-}
+};
 
 /**
  * Disable all real requests.
@@ -81,36 +80,38 @@ function isEnabledForNetConnect(options) {
  * @example
  * nock.disableNetConnect();
 */
-function disableNetConnect() {
+add.disableNetConnect = () => {
     allowNetConnect = undefined;
-}
+};
 
-function isOn() {
-    return !isOff();
-}
+const nockScope = Symbol.for("adone.shani.util.nock.nockScope");
+const nockScopeKey = Symbol.for("adone.shani.util.nock.nockScopeKey");
+const nockScopeOptions = Symbol.for("adone.shani.util.nock.nockScopeOptions");
+const nockScopeHost = Symbol.for("adone.shani.util.nock.nockScopeHost");
+const nockFilteredScope = Symbol.for("adone.shani.util.nock.nockFilterScope");
 
-function isOff() {
-    return process.env.NOCK_OFF === "true";
-}
-
-function add(key, interceptor, scope, scopeOptions, host) {
+export default function add(key, interceptor, scope, scopeOptions, host) {
     if (!allInterceptors.hasOwnProperty(key)) {
         allInterceptors[key] = { key, scopes: [] };
     }
-    interceptor.__nock_scope = scope;
+    interceptor[nockScope] = scope;
 
     //  We need scope's key and scope options for scope filtering function (if defined)
-    interceptor.__nock_scopeKey = key;
-    interceptor.__nock_scopeOptions = scopeOptions;
+    interceptor[nockScopeKey] = key;
+    interceptor[nockScopeOptions] = scopeOptions;
     //  We need scope's host for setting correct request headers for filtered scopes.
-    interceptor.__nock_scopeHost = host;
+    interceptor[nockScopeHost] = host;
     interceptor.interceptionCounter = 0;
+
+    if (scopeOptions.allowUnmocked) {
+        allInterceptors[key].allowUnmocked = true;
+    }
 
     allInterceptors[key].scopes.push(interceptor);
 }
 
-function remove(interceptor) {
-    if (interceptor.__nock_scope.shouldPersist() || --interceptor.counter > 0) {
+const remove = (interceptor) => {
+    if (interceptor[nockScope].shouldPersist() || --interceptor.counter > 0) {
         return;
     }
 
@@ -120,66 +121,76 @@ function remove(interceptor) {
     interceptors.some((thisInterceptor, i) => {
         return (thisInterceptor === interceptor) ? interceptors.splice(i, 1) : false;
     });
-}
+};
 
-function removeAll() {
+add.removeAll = () => {
+    Object.keys(allInterceptors).forEach((key) => {
+        allInterceptors[key].scopes.forEach((interceptor) => {
+            interceptor.scope.keyedInterceptors = {};
+        });
+    });
     allInterceptors = {};
-}
+};
 
-function interceptorsFor(options) {
-    let basePath,
-        matchingInterceptor;
+const interceptorsFor = (options) => {
+    let matchingInterceptor;
 
-    common.normalizeRequestOptions(options);
+    _util.normalizeRequestOptions(options);
 
-    debug("interceptors for %j", options.host);
-
-    basePath = `${options.proto}://${options.host}`;
-
-    debug("filtering interceptors for basepath", basePath);
+    const basePath = `${options.proto}://${options.host}`;
 
     //  First try to use filteringScope if any of the interceptors has it defined.
-    _.each(allInterceptors, (interceptor, k) => {
-        _.each(interceptor.scopes, (scope) => {
-            const filteringScope = scope.__nock_scopeOptions.filteringScope;
+
+    for (const interceptor of Object.values(allInterceptors)) {
+        for (const scope of interceptor.scopes) {
+            const filteringScope = scope[nockScopeOptions].filteringScope;
 
             //  If scope filtering function is defined and returns a truthy value
             //  then we have to treat this as a match.
             if (filteringScope && filteringScope(basePath)) {
-                debug("found matching scope interceptor");
-
                 //  Keep the filtered scope (its key) to signal the rest of the module
                 //  that this wasn't an exact but filtered match.
-                scope.__nock_filteredScope = scope.__nock_scopeKey;
+                scope[nockFilteredScope] = scope[nockScopeKey];
                 matchingInterceptor = interceptor.scopes;
-                //  Break out of _.each for scopes.
-                return false;
+                break;
             }
-        });
-
-        if (!matchingInterceptor && common.matchStringOrRegexp(basePath, interceptor.key)) {
-            matchingInterceptor = interceptor.scopes;
-            // false to short circuit the .each
-            return false;
+        }
+        if (!matchingInterceptor && _util.matchStringOrRegexp(basePath, interceptor.key)) {
+            if (interceptor.scopes.length === 0 && interceptor.allowUnmocked) {
+                matchingInterceptor = [
+                    {
+                        options: { allowUnmocked: true },
+                        matchIndependentOfBody() {
+                            return false;
+                        }
+                    }
+                ];
+            } else {
+                matchingInterceptor = interceptor.scopes;
+            }
+            break;
         }
 
-        //  Returning falsy value here (which will happen if we have found our matching interceptor)
-        //  will break out of _.each for all interceptors.
-        return !matchingInterceptor;
-    });
+        if (matchingInterceptor) {
+            break;
+        }
+    }
 
     return matchingInterceptor;
-}
+};
 
-function removeInterceptor(options) {
-    let baseUrl, key, method, proto;
-    if (options instanceof Interceptor) {
+add.removeInterceptor = (options) => {
+    let baseUrl;
+    let key;
+    let method;
+    let proto;
+    if (options instanceof __.Interceptor) {
         baseUrl = options.basePath;
         key = options._key;
     } else {
         proto = options.proto ? options.proto : "http";
 
-        common.normalizeRequestOptions(options);
+        _util.normalizeRequestOptions(options);
         baseUrl = `${proto}://${options.host}`;
         method = options.method && options.method.toUpperCase() || "GET";
         key = `${method} ${baseUrl}${options.path || "/"}`;
@@ -203,161 +214,135 @@ function removeInterceptor(options) {
     }
 
     return false;
-}
+};
 //  Variable where we keep the ClientRequest we have overridden
 //  (which might or might not be node's original http.ClientRequest)
 let originalClientRequest;
 
-function ErroringClientRequest(error) {
-    if (http.OutgoingMessage) {
-        http.OutgoingMessage.call(this);
+class ErroringClientRequest extends ClientRequest {
+    constructor(error) {
+        super();
+        process.nextTick(() => {
+            this.emit("error", error);
+        });
     }
-    process.nextTick(() => {
-        this.emit("error", error);
-    });
 }
 
-if (http.ClientRequest) {
-    inherits(ErroringClientRequest, http.ClientRequest);
-}
-
-function overrideClientRequest() {
-    debug("Overriding ClientRequest");
-
+add.overrideClientRequest = () => {
     if (originalClientRequest) {
         throw new Error("Nock already overrode http.ClientRequest");
     }
 
     // ----- Extending http.ClientRequest
 
-    //  Define the overriding client request that nock uses internally.
-    function OverriddenClientRequest(options, cb) {
-        if (http.OutgoingMessage) {
-            http.OutgoingMessage.call(this);
-        }
+    const OverriddenClientRequest = function (options, cb) {
+        OutgoingMessage.call(this);
 
         //  Filter the interceptors per request options.
         const interceptors = interceptorsFor(options);
 
-        if (isOn() && interceptors) {
-            debug("using", interceptors.length, "interceptors");
-
+        if (interceptors) {
             //  Use filtered interceptors to intercept requests.
-            const overrider = RequestOverrider(this, options, interceptors, remove, cb);
+            const overrider = __.requestOverrider(this, options, interceptors, remove, cb);
             for (const propName in overrider) {
                 if (overrider.hasOwnProperty(propName)) {
                     this[propName] = overrider[propName];
                 }
             }
         } else {
-            debug("falling back to original ClientRequest");
-
             //  Fallback to original ClientRequest if nock is off or the net connection is enabled.
-            if (isOff() || isEnabledForNetConnect(options)) {
-                originalClientRequest.apply(this, arguments);
+            if (isEnabledForNetConnect(options)) {
+                originalClientRequest.call(this, options, cb);
             } else {
-                timers.setImmediate(() => {
+                setImmediate(() => {
                     const error = new NetConnectNotAllowedError(options.host, options.path);
                     this.emit("error", error);
                 });
             }
         }
-    }
-    if (http.ClientRequest) {
-        inherits(OverriddenClientRequest, http.ClientRequest);
-    } else {
-        inherits(OverriddenClientRequest, EventEmitter);
-    }
+    };
+    inherits(OverriddenClientRequest, ClientRequest);
 
     //  Override the http module's request but keep the original so that we can use it and later restore it.
     //  NOTE: We only override http.ClientRequest as https module also uses it.
-    originalClientRequest = http.ClientRequest;
+    originalClientRequest = ClientRequest;
     http.ClientRequest = OverriddenClientRequest;
+};
 
-    debug("ClientRequest overridden");
-}
-
-function restoreOverriddenClientRequest() {
-    debug("restoring overriden ClientRequest");
-
+add.restoreOverriddenClientRequest = () => {
     //  Restore the ClientRequest we have overridden.
-    if (!originalClientRequest) {
-        debug("- ClientRequest was not overridden");
-    } else {
+    if (originalClientRequest) {
         http.ClientRequest = originalClientRequest;
         originalClientRequest = undefined;
-
-        debug("- ClientRequest restored");
     }
-}
+};
 
-function isActive() {
+add.isActive = () => {
 
     //  If ClientRequest has been overwritten by Nock then originalClientRequest is not undefined.
     //  This means that Nock has been activated.
-    return !_.isUndefined(originalClientRequest);
+    return !is.undefined(originalClientRequest);
 
-}
+};
 
-function interceptorScopes() {
-    return _.reduce(allInterceptors, (result, interceptors) => {
+const interceptorScopes = () => {
+    return Object.values(allInterceptors).reduce((result, interceptors) => {
         for (const interceptor in interceptors.scopes) {
-            result = result.concat(interceptors.scopes[interceptor].__nock_scope);
+            result = result.concat(interceptors.scopes[interceptor][nockScope]);
         }
 
         return result;
     }, []);
-}
+};
 
-function isDone() {
-    return _.every(interceptorScopes(), (scope) => {
+add.isDone = () => {
+    return interceptorScopes().every((scope) => {
         return scope.isDone();
     });
-}
+};
 
-function pendingMocks() {
-    return _.flatten(_.map(interceptorScopes(), (scope) => {
+add.pendingMocks = () => {
+    return util.flatten(interceptorScopes().map((scope) => {
         return scope.pendingMocks();
     }));
-}
+};
 
-function activeMocks() {
-    return _.flatten(_.map(interceptorScopes(), (scope) => {
+add.activeMocks = () => {
+    return util.flatten(interceptorScopes().map((scope) => {
         return scope.activeMocks();
     }));
-}
+};
 
-function activate() {
-
+add.activate = () => {
     if (originalClientRequest) {
         throw new Error("Nock already active");
     }
 
-    overrideClientRequest();
+    add.overrideClientRequest();
 
     // ----- Overriding http.request and https.request:
 
-    common.overrideRequests((proto, overriddenRequest, options, callback) => {
+    _util.overrideRequests((proto, overriddenRequest, options, callback) => {
         //  NOTE: overriddenRequest is already bound to its module.
-        let req,
-            res;
+        let req;
+        let res;
 
-        if (typeof options === "string") {
+        if (is.string(options)) {
             options = parse(options);
         }
         options.proto = proto;
 
         const interceptors = interceptorsFor(options);
 
-        if (isOn() && interceptors) {
-            let matches = false,
-                allowUnmocked = false;
+        if (interceptors) {
+            let matches = false;
+            let allowUnmocked = false;
 
-            matches = Boolean(_.find(interceptors, (interceptor) => {
+            matches = Boolean(interceptors.find((interceptor) => {
                 return interceptor.matchIndependentOfBody(options);
             }));
 
-            allowUnmocked = Boolean(_.find(interceptors, (interceptor) => {
+            allowUnmocked = Boolean(interceptors.find((interceptor) => {
                 return interceptor.options.allowUnmocked;
             }));
 
@@ -378,36 +363,20 @@ function activate() {
             //    our own OverriddenClientRequest.
             req = new http.ClientRequest(options);
 
-            res = RequestOverrider(req, options, interceptors, remove);
+            res = __.requestOverrider(req, options, interceptors, remove);
             if (callback) {
                 res.on("response", callback);
             }
             return req;
         }
         globalEmitter.emit("no match", options);
-        if (isOff() || isEnabledForNetConnect(options)) {
+        if (isEnabledForNetConnect(options)) {
             return overriddenRequest(options, callback);
         }
         const error = new NetConnectNotAllowedError(options.host, options.path);
         return new ErroringClientRequest(error);
-
-
     });
 
-}
+};
 
-activate();
-
-module.exports = add;
-module.exports.removeAll = removeAll;
-module.exports.removeInterceptor = removeInterceptor;
-module.exports.isOn = isOn;
-module.exports.activate = activate;
-module.exports.isActive = isActive;
-module.exports.isDone = isDone;
-module.exports.pendingMocks = pendingMocks;
-module.exports.activeMocks = activeMocks;
-module.exports.enableNetConnect = enableNetConnect;
-module.exports.disableNetConnect = disableNetConnect;
-module.exports.overrideClientRequest = overrideClientRequest;
-module.exports.restoreOverriddenClientRequest = restoreOverriddenClientRequest;
+add.activate();

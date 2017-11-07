@@ -1,6 +1,17 @@
 const { request } = adone.net.http.client;
 
 describe("net", "http", "client", "requests", () => {
+    beforeEach(() => {
+        nock.cleanAll();
+        nock.restore();
+        nock.activate();
+    });
+
+    after(() => {
+        nock.cleanAll();
+        nock.restore();
+    });
+
     it("should treat single string arg as url", (done) => {
         nock("http://example.org")
             .get("/foo")
@@ -22,6 +33,8 @@ describe("net", "http", "client", "requests", () => {
     });
 
     it("should reject on network errors", function (done) {
+        nock.restore();
+
         this.timeout(30000);
         const resolveSpy = spy();
         const rejectSpy = spy();

@@ -203,7 +203,9 @@ const fs = adone.lazify({
             err ? reject(err) : resolve();
         });
     }),
-    mkdirp: "./mkdirp",
+    mkdirSync: () => (path, mode) => std.fs.mkdirSync(path, mode),
+    mkdirp: ["./mkdirp", (x) => x.mkdirp],
+    mkdirpSync: ["./mkdirp", (x) => x.mkdirpSync],
     rm: "./rm",
     File: "./file",
     Directory: "./directory",

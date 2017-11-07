@@ -1,6 +1,21 @@
 const { request } = adone.net.http.client;
 
 describe("net", "http", "client", "headers", () => {
+    const {
+        is
+    } = adone;
+
+    beforeEach(() => {
+        nock.cleanAll();
+        nock.restore();
+        nock.activate();
+    });
+
+    after(() => {
+        nock.cleanAll();
+        nock.restore();
+    });
+
     it("should default common headers", (done) => {
         const headers = request.options.headers.common;
 
@@ -47,9 +62,8 @@ describe("net", "http", "client", "headers", () => {
     });
 
     it("should remove content-type if data is empty", (done) => {
-
         nock("http://example.org")
-            .matchHeader("Content-Type", undefined)
+            .matchHeader("Content-Type", (x) => is.undefined(x))
             .post("/foo")
             .reply(200, () => {
                 done();

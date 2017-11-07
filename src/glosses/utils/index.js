@@ -48,7 +48,9 @@ const util = adone.lazify({
     match: "./match",
     arrayDiff: "./array_diff",
     retry: "./retry",
-    machineId: "./machine_id"
+    machineId: "./machine_id",
+    querystring: "./querystring",
+    merge: "./merge"
 }, adone.asNamespace(exports), require);
 
 const irregularPlurals = {

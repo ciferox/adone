@@ -1,6 +1,17 @@
 const { request, create } = adone.net.http.client;
 
 describe("net", "http", "client", "options", () => {
+    beforeEach(() => {
+        nock.cleanAll();
+        nock.restore();
+        nock.activate();
+    });
+
+    after(() => {
+        nock.cleanAll();
+        nock.restore();
+    });
+
     it("should default method to get", (done) => {
         nock("http://example.org")
             .get("/foo")

@@ -24,6 +24,7 @@ module.exports = {
         "request": true,
         "specter": true,
         "include": true,
-        "forkProcess": true
+        "forkProcess": true,
+        "nock": true
     }
 };

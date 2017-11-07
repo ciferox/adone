@@ -1,6 +1,17 @@
 const { request } = adone.net.http.client;
 
 describe("net", "http", "client", "transform", () => {
+    beforeEach(() => {
+        nock.cleanAll();
+        nock.restore();
+        nock.activate();
+    });
+
+    after(() => {
+        nock.cleanAll();
+        nock.restore();
+    });
+
     it("should transform JSON to string", (done) => {
         nock("http://example.org")
             .post("/foo", { foo: "bar" })

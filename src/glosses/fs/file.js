@@ -84,7 +84,11 @@ export default class File {
     }
 
     exists() {
-        return fs.access(this._path, stdFs.constants.F_OK).then(() => true, () => false);
+        return fs.exists(this._path);
+    }
+
+    existsSync() {
+        return fs.existsSync(this._path);
     }
 
     create({ mode = 0o755 } = {}) {
@@ -108,6 +112,17 @@ export default class File {
             }
             return Promise.reject(err);
         });
+    }
+
+    unlinkSync() {
+        try {
+            fs.unlinkSync(this._path);
+        } catch (err) {
+            if (err.code === "ENOENT") {
+                return;
+            }
+            throw err;
+        }
     }
 
     contents(encoding = this._encoding) {

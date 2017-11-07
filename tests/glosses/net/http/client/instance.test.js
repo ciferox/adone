@@ -1,6 +1,17 @@
 const { request, create } = adone.net.http.client;
 
 describe("net", "http", "client", "instance", () => {
+    beforeEach(() => {
+        nock.cleanAll();
+        nock.restore();
+        nock.activate();
+    });
+
+    after(() => {
+        nock.cleanAll();
+        nock.restore();
+    });
+
     it("should have the same methods as default instance", () => {
         const instance = create();
 

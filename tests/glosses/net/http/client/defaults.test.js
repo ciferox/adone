@@ -1,6 +1,17 @@
 const { request, create, defaults } = adone.net.http.client;
 
 describe("net", "http", "client", "defaults", () => {
+    beforeEach(() => {
+        nock.cleanAll();
+        nock.restore();
+        nock.activate();
+    });
+
+    after(() => {
+        nock.cleanAll();
+        nock.restore();
+    });
+
     afterEach(() => {
         delete request.options.baseURL;
         delete request.options.headers.get["X-CUSTOM-HEADER"];

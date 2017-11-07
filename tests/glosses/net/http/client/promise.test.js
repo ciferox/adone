@@ -1,6 +1,17 @@
 const { request } = adone.net.http.client;
 
 describe("net", "http", "client", "promise", () => {
+    beforeEach(() => {
+        nock.cleanAll();
+        nock.restore();
+        nock.activate();
+    });
+
+    after(() => {
+        nock.cleanAll();
+        nock.restore();
+    });
+
     it("should provide succinct object to then", (done) => {
         nock("http://example.org")
             .get("/foo")

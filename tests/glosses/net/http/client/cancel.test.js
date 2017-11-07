@@ -1,6 +1,17 @@
 const { request, CancelToken } = adone.net.http.client;
 
 describe("net", "http", "client", "cancel", () => {
+    beforeEach(() => {
+        nock.cleanAll();
+        nock.restore();
+        nock.activate();
+    });
+
+    after(() => {
+        nock.cleanAll();
+        nock.restore();
+    });
+
     describe("when called before sending request", () => {
         it("rejects Promise with a Cancel object", (done) => {
             const source = CancelToken.source();
