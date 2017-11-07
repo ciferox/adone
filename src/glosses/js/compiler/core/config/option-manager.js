@@ -8,7 +8,6 @@ import { getEnv } from "./helpers/environment";
 import { validate, type ValidatedOptions, type PluginItem } from "./options";
 
 const {
-  is,
   std: { path },
   js: { compiler: { traverse } },
   vendor: { lodash: { defaults, merge, clone } }

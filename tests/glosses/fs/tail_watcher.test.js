@@ -42,12 +42,12 @@ describe("fs", "TailWatcher", () => {
             tailedFile.on("line", s);
             const p = s.waitForNCalls(100);
 
-            const fd = await fs.fd.open(tmpfile.path(), "w+");
+            const fd = await fs.open(tmpfile.path(), "w+");
             for (let i = 0; i < 100; ++i) {
                 // eslint-disable-next-line no-await-in-loop
                 await fs.appendFile(fd, text);
             }
-            await fs.fd.close(fd);
+            await fs.close(fd);
             await p;
             tailedFile.unwatch();
             for (let i = 0; i < 100; ++i) {

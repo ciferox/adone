@@ -81,7 +81,7 @@ export class FastLocalStream extends adone.fast.Stream {
 
             await adone.fs.mkdirp(dirname);
 
-            const fd = await adone.fs.fd.open(destPath, flag, mode);
+            const fd = await adone.fs.open(destPath, flag, mode);
             try {
                 if (file.isStream()) {
                     await new Promise((resolve, reject) => {
@@ -90,7 +90,7 @@ export class FastLocalStream extends adone.fast.Stream {
                         file.contents.pipe(writeStream, { end: false });
                     });
                 } else {
-                    await adone.fs.fd.write(fd, file.contents);
+                    await adone.fs.write(fd, file.contents);
                 }
                 file.flag = flag;
                 file.cwd = cwd;
@@ -98,7 +98,7 @@ export class FastLocalStream extends adone.fast.Stream {
                 file.path = destPath;
                 await helper.updateMetadata(fd, file, { originMode, originTimes, originOwner });
             } finally {
-                await adone.fs.fd.close(fd);
+                await adone.fs.close(fd);
             }
             if (produceFiles) {
                 this.push(file);

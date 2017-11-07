@@ -201,7 +201,7 @@ export const fromFd = async (fd, options) => {
     if (is.nil(options.validateEntrySizes)) {
         options.validateEntrySizes = true;
     }
-    const stats = await fs.fd.stat(fd);
+    const stats = await fs.fstat(fd);
     const reader = new fs.RandomAccessFdReader(fd);
     return fromRandomAccessReader(reader, stats.size, options);
 };
@@ -222,11 +222,11 @@ export const open = async (path, options) => {
     if (is.nil(options.validateEntrySizes)) {
         options.validateEntrySizes = true;
     }
-    const fd = await fs.fd.open(path, "r");
+    const fd = await fs.open(path, "r");
     try {
         return fromFd(fd, options);
     } catch (err) {
-        await fs.fd.close(fd);
+        await fs.close(fd);
         throw err;
     }
 };

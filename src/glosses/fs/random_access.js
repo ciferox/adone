@@ -43,7 +43,7 @@ export class RandomAccessFile extends adone.event.EventEmitter {
                 throw new x.IllegalState("File is closed");
             }
             // eslint-disable-next-line
-            bytes = await fs.fd.read(this.fd, buf, buf.length - length, length, offset);
+            bytes = await fs.read(this.fd, buf, buf.length - length, length, offset);
             if (bytes === 0) {
                 throw new x.IllegalState("Could not satisfy length");
             }
@@ -67,7 +67,7 @@ export class RandomAccessFile extends adone.event.EventEmitter {
                 throw new x.IllegalState("File is closed");
             }
             // eslint-disable-next-line
-            bytes = await fs.fd.write(this.fd, buf, buf.length - length, length, offset);
+            bytes = await fs.write(this.fd, buf, buf.length - length, length, offset);
             length -= bytes;
             if (is.number(offset)) {
                 offset += bytes;
@@ -75,7 +75,7 @@ export class RandomAccessFile extends adone.event.EventEmitter {
         }
 
         if (!is.number(offset)) {
-            offset = await fs.fd.seek(this.fd, 0, 1);
+            offset = await fs.seek(this.fd, 0, 1);
         }
         if (offset > this.length) {
             this.length = offset;
@@ -87,7 +87,7 @@ export class RandomAccessFile extends adone.event.EventEmitter {
         if (!this.fd) {
             return;
         }
-        await fs.fd.close(this.fd);
+        await fs.close(this.fd);
         this.fd = 0;
         this.emit("close");
     }
@@ -99,15 +99,15 @@ export class RandomAccessFile extends adone.event.EventEmitter {
         if (!atime && !mtime) {
             //
         } else if (atime && mtime) {
-            await fs.fd.utimes(this.fd, atime, mtime);
+            await fs.futimes(this.fd, atime, mtime);
         } else {
-            const stats = await fs.fd.stat(this.fd);
-            await fs.fd.utimes(this.fd, atime || stats.atime, mtime || stats.mtime);
+            const stats = await fs.fstat(this.fd);
+            await fs.futimes(this.fd, atime || stats.atime, mtime || stats.mtime);
         }
     }
 
     async truncate(size) {
-        await fs.fd.truncate(this.fd, size);
+        await fs.ftruncate(this.fd, size);
         this.length = size;
     }
 
@@ -145,11 +145,11 @@ export class RandomAccessFile extends adone.event.EventEmitter {
 
         let fd;
         try {
-            fd = await fs.fd.open(filename, raf._mode());
+            fd = await fs.open(filename, raf._mode());
         } catch (err) {
             if (err && err.code === "EACCES" && raf.writable) {
                 raf.writable = false;
-                fd = await fs.fd.open(filename, raf._mode());
+                fd = await fs.open(filename, raf._mode());
             }
         }
 
@@ -159,7 +159,7 @@ export class RandomAccessFile extends adone.event.EventEmitter {
         if (is.number(options.truncate) && options.truncate >= 0) {
             await raf.truncate(options.truncate);
         } else {
-            const stats = await fs.fd.stat(fd);
+            const stats = await fs.fstat(fd);
             raf.length = stats.size;
         }
 

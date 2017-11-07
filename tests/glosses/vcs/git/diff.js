@@ -63,7 +63,7 @@ describe("Diff", () => {
 
             return fs.writeFile(diffFilepath, "1 line\n2 line\n3 line\n\n4");
         }).then(async () => {
-            await fs.copy(moveFromPath, moveToPath);
+            await fs.copyTo(moveFromPath, moveToPath);
             await fs.rm(moveFromPath);
             // return fs.move(moveFromPath, moveToPath);
         }).then(() => {
@@ -86,7 +86,7 @@ describe("Diff", () => {
         }).then(() => {
             return fs.rm(diffFilepath);
         }).then(async () => {
-            await fs.copy(moveToPath, moveFromPath);
+            await fs.copyTo(moveToPath, moveFromPath);
             await fs.rm(moveToPath);
             // return fs.move(moveToPath, moveFromPath);
         }).catch((e) => {

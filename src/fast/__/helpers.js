@@ -130,7 +130,7 @@ export const updateMetadata = async (fd, file, { originMode, originTimes, origin
         return;
     }
 
-    const stat = await adone.fs.fd.stat(fd);
+    const stat = await adone.fs.fstat(fd);
     const modeDiff = getModeDiff(stat.mode, file.stat.mode);
     const timesDiff = getTimesDiff(stat, file.stat);
     const ownerDiff = getOwnerDiff(stat, file.stat);
@@ -143,17 +143,17 @@ export const updateMetadata = async (fd, file, { originMode, originTimes, origin
     }
     if (originMode && modeDiff) {
         const mode = stat.mode ^ modeDiff;
-        await adone.fs.fd.chmod(fd, mode);
+        await adone.fs.fchmod(fd, mode);
         file.stat.mode = mode;
 
     }
     if (originTimes && timesDiff) {
-        await adone.fs.fd.utimes(fd, timesDiff.atime, timesDiff.mtime);
+        await adone.fs.futimes(fd, timesDiff.atime, timesDiff.mtime);
         file.stat.atime = timesDiff.atime;
         file.stat.mtime = timesDiff.mtime;
     }
     if (originOwner && ownerDiff) {
-        await adone.fs.fd.chown(fd, ownerDiff.uid, ownerDiff.gid);
+        await adone.fs.fchown(fd, ownerDiff.uid, ownerDiff.gid);
         file.stat.uid = ownerDiff.uid;
         file.stat.gid = ownerDiff.gid;
     }

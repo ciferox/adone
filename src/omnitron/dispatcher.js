@@ -196,11 +196,11 @@ export default class Dispatcher {
         }
 
         if (!is.nil(this.descriptors.stdout)) {
-            await adone.fs.fd.close(this.descriptors.stdout);
+            await adone.fs.close(this.descriptors.stdout);
             this.descriptors.stdout = null;
         }
         if (!is.nil(this.descriptors.stderr)) {
-            await adone.fs.fd.close(this.descriptors.stderr);
+            await adone.fs.close(this.descriptors.stderr);
             this.descriptors.stderr = null;
         }
     }

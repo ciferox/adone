@@ -4,7 +4,123 @@ const {
     std
 } = adone;
 
+const lazy = adone.lazify({
+    System: () => adone.bind("metrics.node").System,
+    seek: () => lazy.System.seek,
+    flock: () => lazy.System.flock,
+    statVFS: () => lazy.System.statVFS
+});
+
+const stringToFlockFlags = (flag) => {
+    // Only mess with strings
+    if (!is.string(flag)) {
+        return flag;
+    }
+    const b = lazy.System;
+
+    switch (flag) {
+        case "sh":
+            return b.LOCK_SH;
+
+        case "ex":
+            return b.LOCK_EX;
+
+        case "shnb":
+            return b.LOCK_SH | b.LOCK_NB;
+
+        case "exnb":
+            return b.LOCK_EX | b.LOCK_NB;
+
+        case "un":
+            return b.LOCK_UN;
+
+        default:
+            throw new x.Unknown(`Unknown flock flag: ${flag}`);
+    }
+};
+
 const fs = adone.lazify({
+    open: () => (path, flags, mode) => new Promise((resolve, reject) => {
+        std.fs.open(path, flags, mode, (err, fd) => {
+            err ? reject(err) : resolve(fd);
+        });
+    }),
+    openSync: () => (path, flags, mode) => std.fs.openSync(path, flags, mode), // wrapper to make it mockable
+    close: () => (fd) => new Promise((resolve, reject) => {
+        std.fs.close(fd, (err) => {
+            err ? reject(err) : resolve();
+        });
+    }),
+    closeSync: () => (fd) => std.fs.closeSync(fd),
+    futimes: () => (fd, atime, mtime) => new Promise((resolve, reject) => {
+        std.fs.futimes(fd, atime, mtime, (err) => {
+            err ? reject(err) : resolve();
+        });
+    }),
+    futimesSync: () => (fd, atime, mtime) => std.fs.futimesSync(fd, atime, mtime),
+    fstat: () => (fd) => new Promise((resolve, reject) => {
+        std.fs.fstat(fd, (err, stats) => {
+            err ? reject(err) : resolve(stats);
+        });
+    }),
+    fstatSync: () => (fd) => std.fs.fstatSync(fd),
+    ftruncate: () => (fd, len) => new Promise((resolve, reject) => {
+        std.fs.ftruncate(fd, len, (err) => {
+            err ? reject(err) : resolve();
+        });
+    }),
+    ftruncateSync: () => (fd, len) => std.fs.ftruncateSync(fd, len),
+    read: () => (fd, buffer, offset, length, position) => new Promise((resolve, reject) => {
+        std.fs.read(fd, buffer, offset, length, position, (err, bytesRead) => {
+            err ? reject(err) : resolve(bytesRead);
+        });
+    }),
+    readSync: () => (fd, buffer, offset, length, position) => std.fs.readSync(fd, buffer, offset, length, position),
+    write: () => (fd, buffer, offset, length, position) => new Promise((resolve, reject) => {
+        std.fs.write(fd, buffer, offset, length, position, (err, bytesWritten) => {
+            err ? reject(err) : resolve(bytesWritten);
+        });
+    }),
+    writeSync: () => (fd, buffer, offset, length, position) => std.fs.writeSync(fd, buffer, offset, length, position),
+    fsync: () => (fd) => new Promise((resolve, reject) => {
+        std.fs.fsync(fd, (err) => {
+            err ? reject(err) : resolve();
+        });
+    }),
+    fsyncSync: () => (fd) => std.fs.fsyncSync(fd),
+    fchown: () => (fd, uid, gid) => new Promise((resolve, reject) => {
+        std.fs.fchown(fd, uid, gid, (err) => {
+            err ? reject(err) : resolve();
+        });
+    }),
+    fchownSYnc: () => (fd, uid, gid) => std.fs.fchownSync(fd, uid, gid),
+    fchmod: () => (fd, mode) => new Promise((resolve, reject) => {
+        std.fs.fchmod(fd, mode, (err) => {
+            err ? reject(err) : resolve();
+        });
+    }),
+    fchmodSync: () => (fd, mode) => std.fs.fchmodSync(fd, mode),
+    seek: () => (fd, offset, whence) => {
+        return new Promise((resolve, reject) => {
+            lazy.seek(fd, offset, whence, (err, filePos) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(filePos);
+            });
+        });
+    },
+    flock: () => (fd, flags) => {
+        const oper = stringToFlockFlags(flags);
+        return new Promise((resolve, reject) => {
+            lazy.flock(fd, oper, (err) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve();
+            });
+        });
+    },
     readlink: () => (path, options) => new Promise((resolve, reject) => {
         std.fs.readlink(path, options, (err, result) => {
             err ? reject(err) : resolve(result);
@@ -125,125 +241,6 @@ const fs = adone.lazify({
     fuse: "./fuse"
 }, adone.asNamespace(exports), require);
 
-const lazy = adone.lazify({
-    System: () => adone.bind("metrics.node").System,
-    seek: () => lazy.System.seek,
-    flock: () => lazy.System.flock,
-    statVFS: () => lazy.System.statVFS
-});
-
-const stringToFlockFlags = (flag) => {
-    // Only mess with strings
-    if (!is.string(flag)) {
-        return flag;
-    }
-    const b = lazy.System;
-
-    switch (flag) {
-        case "sh":
-            return b.LOCK_SH;
-
-        case "ex":
-            return b.LOCK_EX;
-
-        case "shnb":
-            return b.LOCK_SH | b.LOCK_NB;
-
-        case "exnb":
-            return b.LOCK_EX | b.LOCK_NB;
-
-        case "un":
-            return b.LOCK_UN;
-
-        default:
-            throw new x.Unknown(`Unknown flock flag: ${flag}`);
-    }
-};
-
-export const fd = adone.lazify({
-    open: () => (path, flags, mode) => new Promise((resolve, reject) => {
-        std.fs.open(path, flags, mode, (err, fd) => {
-            err ? reject(err) : resolve(fd);
-        });
-    }),
-    openSync: () => (path, flags, mode) => std.fs.openSync(path, flags, mode), // wrapper to make it mockable
-    close: () => (fd) => new Promise((resolve, reject) => {
-        std.fs.close(fd, (err) => {
-            err ? reject(err) : resolve();
-        });
-    }),
-    closeSync: () => (fd) => std.fs.closeSync(fd),
-    utimes: () => (fd, atime, mtime) => new Promise((resolve, reject) => {
-        std.fs.futimes(fd, atime, mtime, (err) => {
-            err ? reject(err) : resolve();
-        });
-    }),
-    utimesSync: () => (fd, atime, mtime) => std.fs.futimesSync(fd, atime, mtime),
-    stat: () => (fd) => new Promise((resolve, reject) => {
-        std.fs.fstat(fd, (err, stats) => {
-            err ? reject(err) : resolve(stats);
-        });
-    }),
-    statSync: () => (fd) => std.fs.fstat(fd),
-    truncate: () => (fd, len) => new Promise((resolve, reject) => {
-        std.fs.ftruncate(fd, len, (err) => {
-            err ? reject(err) : resolve();
-        });
-    }),
-    truncateSync: () => (fd, len) => std.fs.ftruncateSync(fd, len),
-    read: () => (fd, buffer, offset, length, position) => new Promise((resolve, reject) => {
-        std.fs.read(fd, buffer, offset, length, position, (err, bytesRead) => {
-            err ? reject(err) : resolve(bytesRead);
-        });
-    }),
-    readSync: () => (fd, buffer, offset, length, position) => std.fs.readSync(fd, buffer, offset, length, position),
-    write: () => (fd, buffer, offset, length, position) => new Promise((resolve, reject) => {
-        std.fs.write(fd, buffer, offset, length, position, (err, bytesWritten) => {
-            err ? reject(err) : resolve(bytesWritten);
-        });
-    }),
-    writeSync: () => (fd, buffer, offset, length, position) => std.fs.writeSync(fd, buffer, offset, length, position),
-    sync: () => (fd) => new Promise((resolve, reject) => {
-        std.fs.fsync(fd, (err) => {
-            err ? reject(err) : resolve();
-        });
-    }),
-    syncSync: () => (fd) => std.fs.fsyncSync(fd),
-    chown: () => (fd, uid, gid) => new Promise((resolve, reject) => {
-        std.fs.fchown(fd, uid, gid, (err) => {
-            err ? reject(err) : resolve();
-        });
-    }),
-    chownSYnc: () => (fd, uid, gid) => std.fs.fchownSync(fd, uid, gid),
-    chmod: () => (fd, mode) => new Promise((resolve, reject) => {
-        std.fs.fchmod(fd, mode, (err) => {
-            err ? reject(err) : resolve();
-        });
-    }),
-    chmodSync: () => (fd, mode) => std.fs.fchmodSync(fd, mode),
-    seek: () => (fd, offset, whence) => {
-        return new Promise((resolve, reject) => {
-            lazy.seek(fd, offset, whence, (err, filePos) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(filePos);
-            });
-        });
-    },
-    lock: () => (fd, flags) => {
-        const oper = stringToFlockFlags(flags);
-        return new Promise((resolve, reject) => {
-            lazy.flock(fd, oper, (err) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve();
-            });
-        });
-    }
-});
-
 const expandReadOptions = (options = {}) => {
     if (is.string(options)) {
         return { encoding: options };
@@ -353,7 +350,288 @@ export const existsSync = (path) => {
     }
 };
 
-export const copy = async (srcPath, dstPath, { ignoreExisting = false, cwd = undefined } = {}) => {
+export const utimesMillis = (path, atime, mtime, callback) => {
+    // if (!HAS_MILLIS_RES) return fs.utimes(path, atime, mtime, callback)
+    std.fs.open(path, "r+", (err, fd) => {
+        if (err) {
+            return callback(err);
+        }
+        std.fs.futimes(fd, atime, mtime, (futimesErr) => {
+            std.fs.close(fd, (closeErr) => {
+                if (callback) {
+                    return callback(futimesErr || closeErr);
+                }
+            });
+        });
+    });
+};
+
+export const copy = async (source, dest, options = {}) => {
+    const basePath = process.cwd();
+    const currentPath = std.path.resolve(basePath, source);
+    const targetPath = std.path.resolve(basePath, dest);
+    if (currentPath === targetPath) {
+        throw new x.NotAllowed("Source and destination must not be the same.");
+    }
+
+    const stats = await fs.lstat(source);
+    let dir = null;
+    if (stats.isDirectory()) {
+        const parts = dest.split(std.path.sep);
+        parts.pop();
+        dir = parts.join(std.path.sep);
+    } else {
+        dir = std.path.dirname(dest);
+    }
+
+    await fs.mkdirp(dir);
+
+    return new Promise((resolve, reject) => {
+        const filter = options.filter;
+        const transform = options.transform;
+        let overwrite = options.overwrite;
+        // If overwrite is undefined, use clobber, otherwise default to true:
+        if (is.undefined(overwrite)) {
+            overwrite = options.clobber;
+        }
+        if (is.undefined(overwrite)) {
+            overwrite = true;
+        }
+        const errorOnExist = options.errorOnExist;
+        const dereference = options.dereference;
+        const preserveTimestamps = options.preserveTimestamps === true;
+
+        let started = 0;
+        let finished = 0;
+        let running = 0;
+
+        let errored = false;
+
+        const doneOne = (skipped) => {
+            if (!skipped) {
+                running--;
+            }
+            finished++;
+            if ((started === finished) && (running === 0)) {
+                return resolve();
+            }
+        };
+
+        const onError = (err) => {
+            // ensure callback is defined & called only once:
+            if (!errored) {
+                errored = true;
+                return reject(err);
+            }
+        };
+
+        const copyFile = (file, target) => {
+            const readStream = fs.createReadStream(file.name);
+            const writeStream = fs.createWriteStream(target, { mode: file.mode });
+
+            readStream.on("error", onError);
+            writeStream.on("error", onError);
+
+            if (transform) {
+                transform(readStream, writeStream, file);
+            } else {
+                writeStream.on("open", () => {
+                    readStream.pipe(writeStream);
+                });
+            }
+
+            writeStream.once("close", () => {
+                std.fs.chmod(target, file.mode, (err) => {
+                    if (err) {
+                        return onError(err);
+                    }
+                    if (preserveTimestamps) {
+                        fs.utimesMillis(target, file.atime, file.mtime, (err) => {
+                            if (err) {
+                                return onError(err);
+                            }
+                            return doneOne();
+                        });
+                    } else {
+                        doneOne();
+                    }
+                });
+            });
+        };
+
+        const rmFile = (file, done) => {
+            std.fs.unlink(file, (err) => {
+                if (err) {
+                    return onError(err);
+                }
+                return done();
+            });
+        };
+
+        const copyDir = (dir) => {
+            fs.readdir(dir, (err, items) => {
+                if (err) {
+                    return onError(err);
+                }
+                items.forEach((item) => {
+                    startCopy(std.path.join(dir, item));
+                });
+                return doneOne();
+            });
+        };
+
+        const mkDir = (dir, target) => {
+            std.fs.mkdir(target, dir.mode, (err) => {
+                if (err) {
+                    return onError(err);
+                }
+                // despite setting mode in fs.mkdir, doesn't seem to work
+                // so we set it here.
+                std.fs.chmod(target, dir.mode, (err) => {
+                    if (err) {
+                        return onError(err);
+                    }
+                    copyDir(dir.name);
+                });
+            });
+        };
+
+        const isWritable = (path, done) => {
+            std.fs.lstat(path, (err) => {
+                if (err) {
+                    if (err.code === "ENOENT") {
+                        return done(true);
+                    }
+                    return done(false);
+                }
+                return done(false);
+            });
+        };
+
+        const onDir = (dir) => {
+            const target = dir.name.replace(currentPath, targetPath.replace("$", "$$$$")); // escapes '$' with '$$'
+            isWritable(target, (writable) => {
+                if (writable) {
+                    return mkDir(dir, target);
+                }
+                copyDir(dir.name);
+            });
+        };
+
+        const onFile = (file) => {
+            const target = file.name.replace(currentPath, targetPath.replace("$", "$$$$")); // escapes '$' with '$$'
+            isWritable(target, (writable) => {
+                if (writable) {
+                    copyFile(file, target);
+                } else {
+                    if (overwrite) {
+                        rmFile(target, () => {
+                            copyFile(file, target);
+                        });
+                    } else if (errorOnExist) {
+                        onError(new Error(`${target} already exists`));
+                    } else {
+                        doneOne();
+                    }
+                }
+            });
+        };
+
+        const makeLink = (linkPath, target) => {
+            std.fs.symlink(linkPath, target, (err) => {
+                if (err) {
+                    return onError(err);
+                }
+                return doneOne();
+            });
+        };
+
+        const checkLink = (resolvedPath, target) => {
+            if (dereference) {
+                resolvedPath = std.path.resolve(basePath, resolvedPath);
+            }
+            isWritable(target, (writable) => {
+                if (writable) {
+                    return makeLink(resolvedPath, target);
+                }
+                std.fs.readlink(target, (err, targetDest) => {
+                    if (err) {
+                        return onError(err);
+                    }
+
+                    if (dereference) {
+                        targetDest = std.path.resolve(basePath, targetDest);
+                    }
+                    if (targetDest === resolvedPath) {
+                        return doneOne();
+                    }
+                    return rmFile(target, () => {
+                        makeLink(resolvedPath, target);
+                    });
+                });
+            });
+        };
+
+        const onLink = (link) => {
+            const target = link.replace(currentPath, targetPath);
+            std.fs.readlink(link, (err, resolvedPath) => {
+                if (err) {
+                    return onError(err);
+                }
+                checkLink(resolvedPath, target);
+            });
+        };
+
+        const getStats = (source) => {
+            const stat = dereference ? std.fs.stat : std.fs.lstat;
+            running++;
+            stat(source, (err, stats) => {
+                if (err) {
+                    return onError(err);
+                }
+
+                // We need to get the mode from the stats object and preserve it.
+                const item = {
+                    name: source,
+                    mode: stats.mode,
+                    mtime: stats.mtime, // modified time
+                    atime: stats.atime, // access time
+                    stats // temporary
+                };
+
+                if (stats.isDirectory()) {
+                    return onDir(item);
+                } else if (stats.isFile() || stats.isCharacterDevice() || stats.isBlockDevice()) {
+                    return onFile(item);
+                } else if (stats.isSymbolicLink()) {
+                    // Symlinks don't really need to know about the mode.
+                    return onLink(source);
+                }
+            });
+        };
+
+        const startCopy = (source) => {
+            started++;
+            if (filter) {
+                if (filter instanceof RegExp) {
+                    adone.warn("Warning: fs-extra: Passing a RegExp filter is deprecated, use a function");
+                    if (!filter.test(source)) {
+                        return doneOne(true);
+                    }
+                } else if (is.function(filter)) {
+                    if (!filter(source, dest)) {
+                        return doneOne(true);
+                    }
+                }
+            }
+            return getStats(source);
+        };
+
+        startCopy(currentPath);
+    });
+};
+
+export const copyTo = async (srcPath, dstPath, { ignoreExisting = false, cwd = undefined } = {}) => {
     const baseSrcPath = adone.util.globParent(srcPath);
     if (is.string(cwd)) {
         if (!std.path.isAbsolute(dstPath)) {
@@ -401,9 +679,9 @@ export const rename = (oldPath, newPath, { retries = 10, delay = 100 } = {}) => 
 };
 
 export const tail = async (path, n = 10, { separator = is.windows ? "\r\n" : "\n", chunkLength = 4096, pos } = {}) => {
-    const fd = await fs.fd.open(path, "r");
+    const fd = await fs.open(path, "r");
     if (!pos) {
-        const stat = await fs.fd.stat(fd);
+        const stat = await fs.fstat(fd);
         pos = stat.size;
     }
     let buffer = Buffer.alloc(0);
@@ -426,7 +704,7 @@ export const tail = async (path, n = 10, { separator = is.windows ? "\r\n" : "\n
             exit = true;
         }
         // eslint-disable-next-line
-        bytesRead = await fs.fd.read(fd, chunk, 0, chunkLength, offset);
+        bytesRead = await fs.read(fd, chunk, 0, chunkLength, offset);
         buffer = Buffer.concat([chunk.slice(0, bytesRead), buffer], bytesRead + buffer.length);
         while (n && (i = buffer.lastIndexOf(separator)) !== -1) {
             t = buffer.slice(i + separator.length);

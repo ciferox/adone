@@ -166,7 +166,7 @@ export default class Directory {
     async clean() {
         const files = await this.files();
         for (const file of files) {
-            await file.unlink();
+            await file.unlink(); // eslint-disable-line
         }
     }
 
@@ -225,11 +225,11 @@ export default class Directory {
     }
 
     copyTo(destPath, options) {
-        return fs.copy(this._path, destPath, options);
+        return fs.copyTo(this._path, destPath, options);
     }
 
     copyFrom(srcPath, options) {
-        return fs.copy(srcPath, this._path, options);
+        return fs.copyTo(srcPath, this._path, options);
     }
 
     static async create(...path) {

@@ -75,7 +75,7 @@ export default class LogRotator extends EventEmitter {
             /**
              * Write the current file as the earliest file
              */
-            fd = await fs.fd.open(this.target, "r+");
+            fd = await fs.open(this.target, "r+");
             let src = fs.createReadStream(null, {
                 fd,
                 autoClose: false
@@ -91,15 +91,15 @@ export default class LogRotator extends EventEmitter {
             /**
              * Truncate the target
              */
-            await fs.fd.truncate(fd, 0);
+            await fs.ftruncate(fd, 0);
 
-            await fs.fd.close(fd);
+            await fs.close(fd);
             fd = null;
         } catch (err) {
             this.emit("rotateError", err);
         } finally {
             if (!is.null(fd)) {
-                await fs.fd.close(fd);
+                await fs.close(fd);
             }
             this._rotating = false;
         }

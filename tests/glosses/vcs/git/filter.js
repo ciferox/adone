@@ -466,10 +466,10 @@ describe("Filter", () => {
                 }, 0).then((result) => {
                     assert.strictEqual(result, 0);
                 }).then(() => {
-                    const fd = fs.fd.openSync(readmePath, "r");
+                    const fd = fs.openSync(readmePath, "r");
                     const readBuf = Buffer.allocUnsafe(largeBufferSize);
-                    const readLength = fs.fd.readSync(fd, readBuf, 0, largeBufferSize, 0);
-                    fs.fd.closeSync(fd);
+                    const readLength = fs.readSync(fd, readBuf, 0, largeBufferSize, 0);
+                    fs.closeSync(fd);
 
                     assert.notStrictEqual(readLength, largeBufferSize);
                     fs.writeFileSync(readmePath, "whoa", "utf8");
@@ -480,10 +480,10 @@ describe("Filter", () => {
                     };
                     return Checkout.head(test.repository, opts);
                 }).then(() => {
-                    const fd = fs.fd.openSync(readmePath, "r");
+                    const fd = fs.openSync(readmePath, "r");
                     const readBuf = Buffer.allocUnsafe(largeBufferSize);
-                    const readLength = fs.fd.readSync(fd, readBuf, 0, largeBufferSize, 0);
-                    fs.fd.closeSync(fd);
+                    const readLength = fs.readSync(fd, readBuf, 0, largeBufferSize, 0);
+                    fs.closeSync(fd);
 
                     assert.strictEqual(readLength, largeBufferSize);
                 });

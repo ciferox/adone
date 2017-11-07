@@ -1903,7 +1903,7 @@ describe("examples", function () {
             const file = new fs.File(__dirname, "fixtures", "test_gs_weird_bug.png");
             const fileId = new ObjectId();
             const gridStore = new GridStore(db, fileId, "w");
-            const fd = await fs.fd.open(file.path(), "r");
+            const fd = await fs.open(file.path(), "r");
             await gridStore.open();
             await gridStore.writeFile(fd);
             expect(await GridStore.read(db, fileId)).to.be.deep.equal(await file.contents("buffer"));

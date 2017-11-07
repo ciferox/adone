@@ -543,11 +543,11 @@ export default class GridStore {
 
     async writeFile(file) {
         if (is.string(file)) {
-            const fd = await fs.fd.open(file, "r");
+            const fd = await fs.open(file, "r");
             return this.writeFile(fd);
         }
         await this.open();
-        const stats = await fs.fd.stat(file);
+        const stats = await fs.fstat(file);
         let offset = 0;
         let index = 0;
 
@@ -555,7 +555,7 @@ export default class GridStore {
             // Allocate the buffer
             const _buffer = Buffer.alloc(this.chunkSize);
             // Read the file
-            const bytesRead = await fs.fd.read(file, _buffer, 0, _buffer.length, offset);
+            const bytesRead = await fs.read(file, _buffer, 0, _buffer.length, offset);
             offset = offset + bytesRead;
 
             // Create a new chunk for the data
@@ -569,7 +569,7 @@ export default class GridStore {
                 break;
             }
         }
-        await fs.fd.close(file);
+        await fs.close(file);
         await this.close();
         return this;
     }

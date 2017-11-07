@@ -25,9 +25,9 @@ export default class Storage {
             return;
         }
 
-        const fd = await adone.fs.fd.open(filename, flags);
-        const syncError = await adone.fs.fd.sync(fd).then(() => null, identity);
-        const closeError = await adone.fs.fd.close(fd).then(() => null, identity);
+        const fd = await adone.fs.open(filename, flags);
+        const syncError = await adone.fs.fsync(fd).then(() => null, identity);
+        const closeError = await adone.fs.close(fd).then(() => null, identity);
 
         if (syncError || closeError) {
             const e = new x.Exception("Failed to flush to storage");

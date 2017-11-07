@@ -14,8 +14,8 @@ describe("archive", "zip", "unpack", () => {
 
         if (implementRead) {
             InefficientRandomAccessReader.prototype.read = async (buffer, offset, length, position) => {
-                const fd = await adone.fs.fd.open(zipfilePath, "r");
-                const bytesRead = await adone.fs.fd.read(fd, buffer, offset, length, position);
+                const fd = await adone.fs.open(zipfilePath, "r");
+                const bytesRead = await adone.fs.read(fd, buffer, offset, length, position);
                 if (bytesRead < length) {
                     throw new Error("unexpected EOF");
                 }

@@ -284,7 +284,7 @@ export default class Package {
                 throw new adone.x.NotExists(`File ${indexPath} is not exist`);
             }
 
-            await fs.copy(indexPath, this.destPath);
+            await fs.copyTo(indexPath, this.destPath);
         }
 
         return fast.src([
