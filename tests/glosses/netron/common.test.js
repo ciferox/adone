@@ -2,7 +2,7 @@ const {
     is,
     net,
     std: { path },
-    netron: { DEFAULT_PORT, ACTION, STATUS, Netron, Reflection, Context, Public }
+    netron: { DEFAULT_PORT, ACTION, PEER_STATUS, Netron, Reflection, Context, Public }
 } = adone;
 
 let defaultPort = DEFAULT_PORT;
@@ -63,7 +63,7 @@ describe("netron", "common", function () {
         });
 
         it("right status sequence", async () => {
-            const sequence = [STATUS.OFFLINE, STATUS.CONNECTING, STATUS.HANDSHAKING, STATUS.ONLINE];
+            const sequence = [PEER_STATUS.OFFLINE, PEER_STATUS.CONNECTING, PEER_STATUS.HANDSHAKING, PEER_STATUS.ONLINE];
             let index = 0;
             await superNetron.bind();
             exNetron.on("peer create", (peer) => {
@@ -224,17 +224,6 @@ describe("netron", "common", function () {
         const superNetronPeers = superNetron.getPeers();
         assert.isOk(superNetronPeers.has(exNetron.uid));
         assert.equal(superNetronPeers.get(exNetron.uid).uid, exNetron.uid);
-    });
-
-    it("Peer#getStatus()/Peer#setStatus()", () => {
-        const p = new adone.netron.Peer();
-
-        const newStatus = Math.floor(Math.random() * STATUS.MAX);
-        p._setStatus(newStatus);
-        assert.equal(p.getStatus(), newStatus, "status changed");
-
-        p._setStatus(-1);
-        assert.equal(p.getStatus(), newStatus, "negative numbers don't change status");
     });
 
     describe("events", () => {

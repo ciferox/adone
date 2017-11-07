@@ -266,6 +266,21 @@ export default class Omnitron extends application.Application {
         await this.stop(serviceName);
         return this.start(serviceName);
     }
+
+    @Public({
+        description: "Returns connected peer UIDs"
+    })
+    getPeers() {
+        const peers = [...runtime.netron.getPeers().values()];
+
+        return peers.map((peer) => {
+            return {
+                uid: peer.uid,
+                address: peer.getRemoteAddress().full,
+                connectedTime: peer.connectedTime
+            };
+        });
+    }
 }
 
 if (require.main === module) {

@@ -1,7 +1,7 @@
 const {
     is,
     net,
-    netron: { Netron, DEFAULT_PORT, ACTION, STATUS, Context, Public }
+    netron: { Netron, DEFAULT_PORT, ACTION, PEER_STATUS, Context, Public }
 } = adone;
 
 let defaultPort = DEFAULT_PORT;
@@ -32,7 +32,7 @@ describe("netron", "websocket", "unit tests", () => {
 
         describe("Connect", () => {
             it("right status sequence", async () => {
-                const sequence = [STATUS.OFFLINE, STATUS.CONNECTING, STATUS.HANDSHAKING, STATUS.ONLINE];
+                const sequence = [PEER_STATUS.OFFLINE, PEER_STATUS.CONNECTING, PEER_STATUS.HANDSHAKING, PEER_STATUS.ONLINE];
                 let index = 0;
                 await superNetron.bind({
                     adapter: "ws",
@@ -196,19 +196,6 @@ describe("netron", "websocket", "unit tests", () => {
                 });
 
                 superNetron.disconnect();
-            });
-        });
-
-        describe("Peer.get/setStatus", () => {
-            it("Peer.get/setStatus", () => {
-                const p = new adone.netron.Peer();
-
-                const newStatus = 100 + Math.floor(Math.random() * (STATUS.MAX - 100));
-                p._setStatus(newStatus);
-                assert.equal(p.getStatus(), newStatus, "status changed");
-
-                p._setStatus(-1);
-                assert.equal(p.getStatus(), newStatus, "negative numbers don't change status");
             });
         });
 

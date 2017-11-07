@@ -12,13 +12,15 @@ const {
 export default class Dispatcher {
     constructor({ noisily = false, netronOptions = {} } = {}) {
         this.noisily = noisily;
-        Object.assign(runtime.netron.options, netronOptions);
+        adone.vendor.lodash.extend(runtime.netron.options, netronOptions);
 
-        runtime.netron.on("peer online", (peer) => {
-            noisily && adone.info(`Peer '${peer.getRemoteAddress().full}' (${peer.uid}) connected`);
-        }).on("peer offline", (peer) => {
-            noisily && adone.info(`Peer '${peer.getRemoteAddress().full}' (${peer.uid}) disconnected`);
-        });
+        if (noisily) {
+            runtime.netron.on("peer online", (peer) => {
+                adone.info(`Peer '${peer.getRemoteAddress().full}' (${peer.uid}) connected`);
+            }).on("peer offline", (peer) => {
+                adone.info(`Peer '${peer.getRemoteAddress().full}' (${peer.uid}) disconnected`);
+            });
+        }
 
         this.peer = null;
         this.descriptors = {
@@ -312,5 +314,9 @@ export default class Dispatcher {
 
     enumerate(filter) {
         return this.getInterface("omnitron").enumerate(filter);
+    }
+
+    getPeers() {
+        return this.getInterface("omnitron").getPeers();
     }
 }

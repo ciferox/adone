@@ -351,6 +351,57 @@ export default class Omnitron extends Subsystem {
         }
     }
 
+    @Command({
+        name: "peers",
+        help: "Show connected peers"
+    })
+    async peersCommand() {
+        try {
+            this._createProgress("obtaining");
+            await this._connectToLocal();
+            const peers = await omnitron.dispatcher.getPeers();
+
+            this._updateProgress("done", true, true);
+
+            adone.log(pretty.table(peers, {
+                width: "100%",
+                style: {
+                    head: ["gray"],
+                    compact: true
+                },
+                model: [
+                    {
+                        id: "uid",
+                        header: "UID",
+                        handle: (val) => {
+                            if (adone.runtime.netron.uid === val.uid) {
+                                return `{green-fg}{bold}${val.uid}{/green-fg}{/bold}`;
+                            }
+                            return `{green-fg}${val.uid}{/green-fg}`;
+                        },
+                        width: 38
+                    },
+                    {
+                        id: "address",
+                        header: "Address"
+                    },
+                    {
+                        id: "connectedTime",
+                        header: "Connected time",
+                        handle: (val) => {
+                            return adone.datetime.unix(val.connectedTime / 1000).format("L LTS");
+                        },
+                        width: 23
+                    }
+                ]
+            }));
+            return 0;
+        } catch (err) {
+            this._updateProgress(err.message, false);
+            return 1;
+        }
+    }
+
     // async gatesCommand() {
     //     try {
     //         adone.log(pretty.table(await omnitron.dispatcher.gates(), {

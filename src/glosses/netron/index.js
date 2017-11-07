@@ -69,14 +69,11 @@ export const ACTION = {
     MAX: 0x100 // = 256
 };
 
-export const STATUS = {
-    // Common statuses
+export const PEER_STATUS = {
     OFFLINE: 0,
     CONNECTING: 1,
     HANDSHAKING: 2,
-    ONLINE: 3,
-
-    MAX: 0x100
+    ONLINE: 3
 };
 
 const MAX_INTEGER = Number.MAX_SAFE_INTEGER >>> 0;

@@ -1,6 +1,6 @@
 const {
     is,
-    netron: { STATUS, Netron, Context, Public }
+    netron: { PEER_STATUS, Netron, Context, Public }
 } = adone;
 
 describe("netron", "own peers", () => {
@@ -17,7 +17,7 @@ describe("netron", "own peers", () => {
         assert.isTrue(is.netronOwnPeer(ownPeer));
         assert.isTrue(ownPeer.isConnected());
         assert.equal(ownPeer.uid, netron.uid);
-        assert.equal(ownPeer.getStatus(), STATUS.ONLINE);
+        assert.equal(ownPeer.getStatus(), PEER_STATUS.ONLINE);
         assert.isNull(await ownPeer.ping());
     });
 

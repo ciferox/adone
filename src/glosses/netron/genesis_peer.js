@@ -4,7 +4,7 @@ const {
     util,
     event: { AsyncEmitter },
     collection: { TimedoutMap },
-    netron: { STATUS, ACTION, RemoteStub, SequenceId, Stream }
+    netron: { PEER_STATUS, ACTION, RemoteStub, SequenceId, Stream }
 } = adone;
 
 export default class GenesisPeer extends AsyncEmitter {
@@ -18,7 +18,7 @@ export default class GenesisPeer extends AsyncEmitter {
             const awaiter = this._removeAwaiter(streamId);
             awaiter([1, new x.NetronTimeout(`Response timeout ${this.options.responseTimeout}ms exceeded`)]);
         });
-        this._status = STATUS.OFFLINE;
+        this._status = PEER_STATUS.OFFLINE;
         this._defs = new Map();
         this._ctxidDefs = new Map();
         this._ownDefIds = []; // super netron specific
@@ -31,6 +31,7 @@ export default class GenesisPeer extends AsyncEmitter {
         this._awaitingStreamIds = new Set();
 
         this.uid = null;
+        this.connectedTime = null;
     }
 
     connect(/*options*/) {
@@ -47,6 +48,10 @@ export default class GenesisPeer extends AsyncEmitter {
 
     write(/*data*/) {
         throw new x.NotImplemented("Method write() is not implemented");
+    }
+
+    getRemoteAddress() {
+        throw new x.NotImplemented("Method getRemoteAddress() is not implemented");
     }
 
     getStatus() {
@@ -202,16 +207,17 @@ export default class GenesisPeer extends AsyncEmitter {
     }
 
     _setStatus(status) {
-        if (status >= 0 && status < STATUS.MAX && status !== this._status) {
-            if (this._status === STATUS.ONLINE && status === STATUS.OFFLINE) {
+        if (status !== this._status) {
+            if (this._status === PEER_STATUS.ONLINE && status === PEER_STATUS.OFFLINE) {
                 for (const awaiter of this._responseAwaiters.values()) { // reject all the pending get requests
                     awaiter([1, new x.NetronPeerDisconnected()]);
                 }
             }
             this._status = status;
-            if (status === STATUS.OFFLINE) {
+            if (status === PEER_STATUS.OFFLINE) {
                 this._responseAwaiters.clear();
-            } else if (status === STATUS.ONLINE) {
+            } else if (status === PEER_STATUS.ONLINE) {
+                this.connectedTime = new Date();
                 this.netron.nuidPeerMap.set(this.uid, this);
             }
             this.emit("status", status);

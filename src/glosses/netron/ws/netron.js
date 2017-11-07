@@ -1,7 +1,7 @@
 const {
     is,
     x,
-    netron: { DEFAULT_PORT, ACTION, STATUS, GenesisNetron, ws: { Peer } }
+    netron: { DEFAULT_PORT, ACTION, PEER_STATUS, GenesisNetron, ws: { Peer } }
 } = adone;
 
 export default class Netron extends GenesisNetron {
@@ -25,7 +25,7 @@ export default class Netron extends GenesisNetron {
         switch (packet.getAction()) {
             case ACTION.CONTEXT_ATTACH: {
                 switch (packet.getStatus()) {
-                    case STATUS.ONLINE: {
+                    case PEER_STATUS.ONLINE: {
                         if (!packet.getImpulse()) {
                             const awaiter = peer._removeAwaiter(packet.streamId);
                             !is.undefined(awaiter) && awaiter(packet.data);
@@ -33,14 +33,14 @@ export default class Netron extends GenesisNetron {
                         break;
                     }
                     default: {
-                        adone.error(`${peer.uid} attempts 'attach' action with status ${this.getStatusName(peer.getStatus())}`);
+                        adone.error(`${peer.uid} attempts 'attach' action with status ${peer.getStatus()}`);
                     }
                 }
                 break;
             }
             case ACTION.CONTEXT_DETACH: {
                 switch (packet.getStatus()) {
-                    case STATUS.ONLINE: {
+                    case PEER_STATUS.ONLINE: {
                         if (!packet.getImpulse()) {
                             const awaiter = peer._removeAwaiter(packet.streamId);
                             !is.undefined(awaiter) && awaiter(packet.data);
@@ -48,7 +48,7 @@ export default class Netron extends GenesisNetron {
                         break;
                     }
                     default: {
-                        adone.error(`${peer.uid} attempts 'attach' action with status ${this.getStatusName(peer.getStatus())}`);
+                        adone.error(`${peer.uid} attempts 'attach' action with status ${peer.getStatus()}`);
                     }
                 }
                 break;

@@ -7,7 +7,7 @@ const {
     netron: {
         DEFAULT_PORT,
         ACTION,
-        STATUS,
+        PEER_STATUS,
         Reference,
         Interface,
         Stub,
@@ -42,8 +42,6 @@ export default class GenesisNetron extends AsyncEmitter {
             minTimeout: 300,
             maxTimeout: 3000
         }, options ? options.connect : null);
-
-        this.piStatuses = [STATUS.HANDSHAKING, STATUS.ONLINE];
 
         this._ownPeer = null;
         this._svrNetronAddrs = new Map();
@@ -93,10 +91,10 @@ export default class GenesisNetron extends AsyncEmitter {
                         reject(new x.Connect(`Peer ${addr} refused connection`));
                     }
                 });
-                peer._setStatus(STATUS.CONNECTING);
+                peer._setStatus(PEER_STATUS.CONNECTING);
                 await peer.connect(Object.assign({}, options, { port, host }));
                 this._svrNetronAddrs.set(addr, peer);
-                peer._setStatus(STATUS.HANDSHAKING);
+                peer._setStatus(PEER_STATUS.HANDSHAKING);
                 this._emitPeerEvent("peer connect", peer);
                 await this.send(peer, 1, peer.streamId.next(), 1, ACTION.GET, this.onSendHandshake(peer), async (payload) => {
                     try {
@@ -105,7 +103,7 @@ export default class GenesisNetron extends AsyncEmitter {
                             throw new adone.x.NotValid(`Not valid packet: ${typeof (data)}`);
                         }
                         this._onReceiveInitial(peer, data);
-                        peer._setStatus(STATUS.ONLINE);
+                        peer._setStatus(PEER_STATUS.ONLINE);
                         this._emitPeerEvent("peer online", peer);
                         await peer.connected();
                         hsStatus = 1;
@@ -302,14 +300,11 @@ export default class GenesisNetron extends AsyncEmitter {
 
     send(peer, impulse, streamId, packetId, action, data, awaiter) {
         const status = peer.getStatus();
-        if (this.piStatuses.includes(status)) {
-            if (is.function(awaiter)) {
-                peer._setAwaiter(streamId, awaiter);
-            }
-
-            return peer.write(Packet.create(packetId, streamId, impulse, action, status, data).raw);
+        if (is.function(awaiter)) {
+            peer._setAwaiter(streamId, awaiter);
         }
-        return Promise.reject(new x.NetronIllegalState(`Cannot send data (peer status is ${this.getStatusName(status)})`));
+
+        return peer.write(Packet.create(packetId, streamId, impulse, action, status, data).raw);
     }
 
     set(uid, defId, name, data) {
@@ -371,7 +366,6 @@ export default class GenesisNetron extends AsyncEmitter {
             return peer;
         }
         throw new x.Unknown(`Unknown peer '${uid}'`);
-
     }
 
     getPeerForInterface(int) {
@@ -480,7 +474,7 @@ export default class GenesisNetron extends AsyncEmitter {
         if (!is.null(peer.uid)) {
             this.nuidPeerMap.delete(peer.uid);
         }
-        peer._setStatus(STATUS.OFFLINE);
+        peer._setStatus(PEER_STATUS.OFFLINE);
         const listeners = this._remoteListeners.get(peer.uid);
         if (!is.undefined(listeners)) {
             for (const [eventName, fn] of listeners.entries()) {
@@ -558,7 +552,7 @@ export default class GenesisNetron extends AsyncEmitter {
         switch (action) {
             case ACTION.SET: {
                 switch (status) {
-                    case STATUS.HANDSHAKING: {
+                    case PEER_STATUS.HANDSHAKING: {
                         if (!packet.getImpulse()) {
                             const awaiter = peer._removeAwaiter(packet.streamId);
                             !is.undefined(awaiter) && awaiter(packet);
@@ -567,7 +561,7 @@ export default class GenesisNetron extends AsyncEmitter {
                         }
                         return;
                     }
-                    case STATUS.ONLINE: {
+                    case PEER_STATUS.ONLINE: {
                         if (packet.getImpulse()) {
                             const data = packet.data;
                             const defId = data[0];
@@ -594,7 +588,7 @@ export default class GenesisNetron extends AsyncEmitter {
             }
             case ACTION.GET: {
                 switch (status) {
-                    case STATUS.HANDSHAKING: {
+                    case PEER_STATUS.HANDSHAKING: {
                         if (!packet.getImpulse()) {
                             peer.disconnect();
                             adone.error("Flag `impulse` cannot be zero during request of handshake");
@@ -603,7 +597,7 @@ export default class GenesisNetron extends AsyncEmitter {
                         }
                         return;
                     }
-                    case STATUS.ONLINE: {
+                    case PEER_STATUS.ONLINE: {
                         const data = packet.data;
                         const defId = data[0];
                         const name = data[1];
@@ -632,16 +626,8 @@ export default class GenesisNetron extends AsyncEmitter {
             }
         }
 
-        if (status !== STATUS.ONLINE) {
-            const result = await this.customProcessPacket(peer, packet);
-            if (!result) {
-                adone.error(`${peer.uid} attempts '${action}' action with status ${this.getStatusName(status)}`);
-            }
-            return;
-        }
-
         // status = ONLINE
-
+        
         switch (action) {
             case ACTION.PING: {
                 if (packet.getImpulse()) {

@@ -2,7 +2,7 @@ const {
     is,
     x,
     net,
-    netron: { DEFAULT_PORT, ACTION, STATUS, GenesisNetron, Peer, RemoteStub }
+    netron: { DEFAULT_PORT, ACTION, PEER_STATUS, GenesisNetron, Peer, RemoteStub }
 } = adone;
 
 const IP_POLICY_NONE = 0;
@@ -212,7 +212,7 @@ export default class Netron extends GenesisNetron {
         }
         isConfirmed = await this.onConfirmConnection(peer);
         if (isConfirmed) {
-            peer._setStatus(STATUS.HANDSHAKING);
+            peer._setStatus(PEER_STATUS.HANDSHAKING);
             this._nonauthPeers.push(peer);
             peer.on("disconnect", () => {
                 this._peerDisconnected(peer);
@@ -275,11 +275,11 @@ export default class Netron extends GenesisNetron {
         switch (packet.getAction()) {
             case ACTION.GET: {
                 switch (status) {
-                    case STATUS.HANDSHAKING: {
+                    case PEER_STATUS.HANDSHAKING: {
                         try {
                             await this._onReceiveHandshake(peer, packet);
                             const p = this.send(peer, 0, packet.streamId, 1, ACTION.SET, this.onSendHandshake(peer));
-                            peer._setStatus(STATUS.ONLINE);
+                            peer._setStatus(PEER_STATUS.ONLINE);
                             await p;
                             this._emitPeerEvent("peer online", peer);
                         } catch (err) {
@@ -293,7 +293,7 @@ export default class Netron extends GenesisNetron {
             }
             case ACTION.CONTEXT_ATTACH: {
                 switch (status) {
-                    case STATUS.ONLINE: {
+                    case PEER_STATUS.ONLINE: {
                         if (packet.getImpulse()) {
                             try {
                                 const ctxData = packet.data;
@@ -312,14 +312,14 @@ export default class Netron extends GenesisNetron {
                         break;
                     }
                     default: {
-                        adone.error(`${peer.uid} attempts 'attach' action with status ${this.getStatusName(status)}`);
+                        adone.error(`${peer.uid} attempts 'attach' action with status ${status}`);
                     }
                 }
                 return true;
             }
             case ACTION.CONTEXT_DETACH: {
                 switch (status) {
-                    case STATUS.ONLINE: {
+                    case PEER_STATUS.ONLINE: {
                         if (packet.getImpulse()) {
                             const ctxId = packet.data;
                             try {
@@ -347,7 +347,7 @@ export default class Netron extends GenesisNetron {
                         break;
                     }
                     default: {
-                        adone.error(`${peer.uid} attempts 'detach' action with status ${this.getStatusName(status)}`);
+                        adone.error(`${peer.uid} attempts 'detach' action with status ${status}`);
                     }
                 }
                 return true;

@@ -1,6 +1,6 @@
 const {
     GenesisPeer,
-    STATUS
+    PEER_STATUS
 } = adone.netron;
 
 export default class OwnPeer extends GenesisPeer {
@@ -14,7 +14,7 @@ export default class OwnPeer extends GenesisPeer {
     }
 
     getStatus() {
-        return STATUS.ONLINE;
+        return PEER_STATUS.ONLINE;
     }
 
     set(defId, name, data) {
