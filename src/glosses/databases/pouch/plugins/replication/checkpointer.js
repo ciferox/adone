@@ -205,9 +205,22 @@ export default class Checkpointer {
 
     getCheckpoint() {
         const self = this;
+
+        if (self.opts && self.opts.writeSourceCheckpoint && !self.opts.writeTargetCheckpoint) {
+            return self.src.get(self.id).then((sourceDoc) => {
+                return sourceDoc.last_seq || LOWEST_SEQ;
+            }).catch((err) => {
+                /* istanbul ignore if */
+                if (err.status !== 404) {
+                    throw err;
+                }
+                return LOWEST_SEQ;
+            });
+        }
+
         return self.target.get(self.id).then((targetDoc) => {
-            if (self.readOnlySource) {
-                return Promise.resolve(targetDoc.last_seq);
+            if (self.opts && self.opts.writeTargetCheckpoint && !self.opts.writeSourceCheckpoint) {
+                return targetDoc.last_seq || LOWEST_SEQ;
             }
 
             return self.src.get(self.id).then((sourceDoc) => {

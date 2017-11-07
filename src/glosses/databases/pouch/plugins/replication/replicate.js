@@ -268,11 +268,16 @@ const _replicate = (src, target, opts, returnValue, result) => {
         const outResult = util.clone(result);
         if (changedDocs.length) {
             outResult.docs = changedDocs;
+            // Attach 'pending' property if server supports it (CouchDB 2.0+)
+            /* istanbul ignore if */
+            if (is.number(currentBatch.pending)) {
+                outResult.pending = currentBatch.pending;
+                delete currentBatch.pending;
+            }
             returnValue.emit("change", outResult);
         }
         writingCheckpoint = true;
-        return checkpointer.writeCheckpoint(currentBatch.seq,
-            session).then(() => {
+        return checkpointer.writeCheckpoint(currentBatch.seq, session).then(() => {
             writingCheckpoint = false;
             /* istanbul ignore if */
             if (returnValue.cancelled) {
@@ -396,6 +401,14 @@ const _replicate = (src, target, opts, returnValue, result) => {
         if (returnValue.cancelled) {
             return completeReplication();
         }
+        // Attach 'pending' property if server supports it (CouchDB 2.0+)
+        const pending = change.pending;
+        delete change.pending;
+        /* istanbul ignore if */
+        if (is.number(pending)) {
+            pendingBatch.pending = pending;
+        }
+
         const filter = filterChange(opts)(change);
         if (!filter) {
             return;

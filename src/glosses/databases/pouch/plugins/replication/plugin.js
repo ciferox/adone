@@ -1,4 +1,5 @@
 const {
+    is,
     database: {
         pouch: {
             plugin: { replication: plugin }
@@ -13,14 +14,17 @@ export default function replication(PouchDB) {
     Object.defineProperty(PouchDB.prototype, "replicate", {
         get() {
             const self = this;
-            return {
-                from(other, opts, callback) {
-                    return self.constructor.replicate(other, self, opts, callback);
-                },
-                to(other, opts, callback) {
-                    return self.constructor.replicate(self, other, opts, callback);
-                }
-            };
+            if (is.undefined(this.replicateMethods)) {
+                this.replicateMethods = {
+                    from(other, opts, callback) {
+                        return self.constructor.replicate(other, self, opts, callback);
+                    },
+                    to(other, opts, callback) {
+                        return self.constructor.replicate(self, other, opts, callback);
+                    }
+                };
+            }
+            return this.replicateMethods;
         }
     });
 

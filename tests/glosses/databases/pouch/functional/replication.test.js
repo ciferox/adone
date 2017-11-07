@@ -88,8 +88,7 @@ describe("database", "pouch", "suite2 replication", () => {
     it("Test basic pull replication plain api 2", (done) => {
         const remote = new DB(dbRemote);
         remote.bulkDocs({ docs }, {}).then(() => {
-            DB.replicate(
-                dbRemote, dbName).on("complete", (result) => {
+            DB.replicate(dbRemote, dbName).on("complete", (result) => {
                 assert.equal(result.ok, true);
                 assert.equal(result.docs_written, docs.length);
                 new DB(dbName).info().then((info) => {
@@ -115,16 +114,16 @@ describe("database", "pouch", "suite2 replication", () => {
         remote.bulkDocs({ docs }, {}).then(() => {
             DB.replicate(
                 dbRemote, dbName).on("complete", (result) => {
-                assert.equal(result.ok, true);
-                assert.equal(result.docs_written, docs.length);
-                new DB(dbName).info().then((info) => {
-                    verifyInfo(info, {
-                        update_seq: numDocs,
-                        doc_count: numDocs
+                    assert.equal(result.ok, true);
+                    assert.equal(result.docs_written, docs.length);
+                    new DB(dbName).info().then((info) => {
+                        verifyInfo(info, {
+                            update_seq: numDocs,
+                            doc_count: numDocs
+                        });
+                        done();
                     });
-                    done();
                 });
-            });
         });
     });
 
@@ -274,20 +273,20 @@ describe("database", "pouch", "suite2 replication", () => {
         remote.bulkDocs({ docs }, { new_edits: false }).then(() => {
             DB.replicate(
                 dbRemote, dbName).on("complete", (result) => {
-                assert.equal(result.ok, true);
-                assert.equal(result.docs_written, docs.length);
-                const db = new DB(dbName);
-                db.info().then((info) => {
-                    assert.equal(info.doc_count, 1, "doc_count");
-                    db.get("doc", { open_revs: "all" }).then((docs) => {
-                        const okDocs = docs.filter((doc) => {
-                            return doc.ok;
+                    assert.equal(result.ok, true);
+                    assert.equal(result.docs_written, docs.length);
+                    const db = new DB(dbName);
+                    db.info().then((info) => {
+                        assert.equal(info.doc_count, 1, "doc_count");
+                        db.get("doc", { open_revs: "all" }).then((docs) => {
+                            const okDocs = docs.filter((doc) => {
+                                return doc.ok;
+                            });
+                            assert.lengthOf(okDocs, numRevs);
+                            done();
                         });
-                        assert.lengthOf(okDocs, numRevs);
-                        done();
                     });
                 });
-            });
         });
     });
 
@@ -572,18 +571,6 @@ describe("database", "pouch", "suite2 replication", () => {
         const db = new DB(dbName);
         const remote = new DB(dbRemote);
 
-        db.bulkDocs({ docs }).then(() => {
-            DB.replicate(db, remote, { checkpoint: false })
-                .on("error", done)
-                .on("complete", () => {
-                    util.generateReplicationId(db, remote, {}).then((replicationId) => {
-                        ensureCheckpointIsMissing(db, replicationId).then(() => {
-                            return ensureCheckpointIsMissing(remote, replicationId);
-                        }).then(done).catch(done);
-                    }).catch(done);
-                });
-        }).catch(done);
-
         const ensureCheckpointIsMissing = (db, replicationId) => {
             return db.get(replicationId).then(() => {
                 throw new Error(`Found a checkpoint that should not exist for db ${db.name}`);
@@ -595,6 +582,18 @@ describe("database", "pouch", "suite2 replication", () => {
                 }
             });
         };
+
+        db.bulkDocs({ docs }).then(() => {
+            DB.replicate(db, remote, { checkpoint: false })
+                .on("error", done)
+                .on("complete", () => {
+                    util.generateReplicationId(db, remote, {}).then((replicationId) => {
+                        ensureCheckpointIsMissing(db, replicationId).then(() => {
+                            return ensureCheckpointIsMissing(remote, replicationId);
+                        }).then(done).catch(done);
+                    }).catch(done);
+                });
+        }).catch(done);
     });
 
     it("Test write checkpoints on source only", (done) => {
@@ -643,6 +642,159 @@ describe("database", "pouch", "suite2 replication", () => {
                             });
                         }).catch(done);
                     }).catch(done);
+                });
+        }).catch(done);
+    });
+
+    const interceptChanges = (source, interceptFunction) => {
+        const changes = source.changes;
+        source.changes = function (opts) {
+            interceptFunction(opts);
+            return changes.apply(source, arguments);
+        };
+    };
+
+    const assertSince = (opts, expectedSince) => {
+        if (expectedSince !== false) {
+            if (is.number(opts.since)) {
+                assert.equal(opts.since, expectedSince);
+            } else if (is.string(opts.since)) {
+                assert.match(opts.since, new RegExp(`^${expectedSince}-`));
+            } else {
+                throw new Error(`Can't handle type for opts.since: ${typeof opts.since} (value=${opts.since})`);
+            }
+        }
+    };
+
+    it("Test replication resumes when checkpointing is enabled", (done) => {
+        const db = new DB(dbName);
+        const remote = new DB(dbRemote);
+
+        let expectedSince = false;
+        interceptChanges(db, (opts) => {
+            assertSince(opts, expectedSince);
+            expectedSince = false;
+        });
+
+        db.bulkDocs({ docs: docs.slice(0, 1) }).then(() => {
+            DB.replicate(db, remote)
+                .on("error", done)
+                .on("complete", (result) => {
+                    assert.equal(result.docs_read, 1);
+                    assert.equal(result.docs_written, 1);
+                    db.bulkDocs({ docs: docs.slice(1, 2) })
+                        .then(() => {
+                            expectedSince = 1;
+                            DB.replicate(db, remote)
+                                .on("error", done)
+                                .on("complete", (result) => {
+                                    assert.equal(result.docs_read, 1);
+                                    assert.equal(result.docs_written, 1);
+                                    done();
+                                });
+                        });
+                });
+        }).catch(done);
+    });
+
+    it("Test replication resumes when checkpointing is disabled", (done) => {
+        const db = new DB(dbName);
+        const remote = new DB(dbRemote);
+
+        const replicateOpts = { checkpoint: false };
+
+        let expectedSince = false;
+        interceptChanges(db, (opts) => {
+            assertSince(opts, expectedSince);
+            expectedSince = false;
+        });
+
+        db.bulkDocs({ docs: docs.slice(0, 1) }).then(() => {
+            DB.replicate(db, remote, replicateOpts)
+                .on("error", done)
+                .on("complete", (result) => {
+                    assert.equal(result.docs_read, 1);
+                    assert.equal(result.docs_written, 1);
+
+                    db.bulkDocs({ docs: docs.slice(1, 2) })
+                        .then(() => {
+                            expectedSince = 0;
+                            DB.replicate(db, remote, replicateOpts)
+                                .on("error", done)
+                                .on("complete", (result) => {
+                                    assert.equal(result.docs_read, 1);
+                                    assert.equal(result.docs_written, 1);
+                                    done();
+                                });
+                        });
+                });
+        }).catch(done);
+    });
+
+    it("Test replication resumes when checkpointing on source only", (done) => {
+        const db = new DB(dbName);
+        const remote = new DB(dbRemote);
+
+        const replicateOpts = { checkpoint: "source" };
+
+        let expectedSince = false;
+        interceptChanges(db, (opts) => {
+            assertSince(opts, expectedSince);
+            expectedSince = false;
+        });
+
+        db.bulkDocs({ docs: docs.slice(0, 1) }).then(() => {
+            DB.replicate(db, remote, replicateOpts)
+                .on("error", done)
+                .on("complete", (result) => {
+                    assert.equal(result.docs_read, 1);
+                    assert.equal(result.docs_written, 1);
+
+                    db.bulkDocs({ docs: docs.slice(1, 2) })
+                        .then(() => {
+                            expectedSince = 1;
+                            DB.replicate(db, remote, replicateOpts)
+                                .on("error", done)
+                                .on("complete", (result) => {
+                                    assert.equal(result.docs_read, 1);
+                                    assert.equal(result.docs_written, 1);
+                                    done();
+                                });
+                        });
+                });
+        }).catch(done);
+    });
+
+    it("Test replication resumes when checkpointing on target only", (done) => {
+        const db = new DB(dbName);
+        const remote = new DB(dbRemote);
+
+        const replicateOpts = { checkpoint: "target" };
+
+        let expectedSince = false;
+        interceptChanges(db, (opts) => {
+            assertSince(opts, expectedSince);
+            expectedSince = false;
+        });
+
+        db.bulkDocs({ docs: docs.slice(0, 1) }).then(() => {
+            DB.replicate(db, remote, replicateOpts)
+                .on("error", done)
+                .on("complete", (result) => {
+                    assert.equal(result.docs_read, 1);
+                    assert.equal(result.docs_written, 1);
+
+                    db.bulkDocs({ docs: docs.slice(1, 2) })
+                        .then(() => {
+                            expectedSince = 1;
+                            DB.replicate(db, remote, replicateOpts)
+                                .on("error", done)
+                                .on("complete", (result) => {
+                                    assert.equal(result.docs_read, 1);
+                                    assert.equal(result.docs_written, 1);
+                                    done();
+                                });
+                        });
                 });
         }).catch(done);
     });
@@ -2280,15 +2432,12 @@ describe("database", "pouch", "suite2 replication", () => {
 
         // 2. We measure that the replication starts in the expected
         // place in the 'changes' function
-        const changes = source.changes;
-        source.changes = function (opts) {
-
+        interceptChanges(function (opts) {
             if (mismatch) {
                 assert.notEqual(opts.since, 0);
             }
             return changes.apply(source, arguments);
-        };
-
+        });
 
         const doc = { _id: "3", count: 0 };
         let put;
@@ -2355,8 +2504,7 @@ describe("database", "pouch", "suite2 replication", () => {
 
         // 2. We measure that the replication starts in the expected
         // place in the 'changes' function
-        const changes = source.changes;
-        source.changes = function (opts) {
+        interceptChanges(function (opts) {
             if (mismatch) {
                 // We expect this replication to start over,
                 // so the correct value of since is 0
@@ -2367,7 +2515,7 @@ describe("database", "pouch", "suite2 replication", () => {
             }
 
             return changes.apply(source, arguments);
-        };
+        });
 
         const doc = { _id: "3", count: 0 };
         let put;
@@ -2438,9 +2586,7 @@ describe("database", "pouch", "suite2 replication", () => {
 
         // 2. We measure that the replication starts in the expected
         // place in the 'changes' function
-        const changes = source.changes;
-
-        source.changes = function (opts) {
+        interceptChanges(function (opts) {
             if (mismatch) {
                 // If we resolve to 0, the checkpoint resolver has not
                 // been going through the sessions
@@ -2450,8 +2596,7 @@ describe("database", "pouch", "suite2 replication", () => {
             }
 
             return changes.apply(source, arguments);
-        };
-
+        });
 
         const doc = { _id: "3", count: 0 };
         let put;
@@ -2526,15 +2671,14 @@ describe("database", "pouch", "suite2 replication", () => {
         var targetPut = target.put;
         target.put = putter;
 
-        const changes = source.changes;
-        source.changes = function (opts) {
+        interceptChanges(function (opts) {
             if (secondRound) {
                 // Test 1: Check that we read the old style local doc
                 // and didn't start from 0
                 assert.notEqual(opts.since, 0);
             }
             return changes.apply(source, arguments);
-        };
+        });
 
         const doc = { _id: "3", count: 0 };
 
@@ -2834,7 +2978,7 @@ describe("database", "pouch", "suite2 replication", () => {
         const runs = 2;
         // helper. remove each document in db and bulk load docs into same
         const rebuildDocuments = async (db, docs) => {
-            const response = await db.allDocs({ include_docs: true })
+            const response = await db.allDocs({ include_docs: true });
             await Promise.all(response.rows.map((doc) => db.remove(doc).catch(adone.noop)));
             return bulkLoad(db, docs);
         };

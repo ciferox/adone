@@ -86,6 +86,45 @@ describe("database", "pouch", "suite2 replication_events", () => {
         });
     });
 
+    it("#5710 Test pending property support", (done) => {
+        const db = new DB(dbName);
+        const remote = new DB(dbRemote);
+        let docId = 0;
+        const numDocs = 10;
+
+        const generateDocs = (n) => {
+            return Array.apply(null, new Array(n)).map(() => {
+                docId += 1;
+                return {
+                    _id: docId.toString(),
+                    foo: Math.random().toString()
+                };
+            });
+        };
+
+        remote.bulkDocs(generateDocs(numDocs)).then(() => {
+            const repl = db.replicate.from(dbRemote, { retry: true, live: false, batch_size: 4 });
+            let pendingSum = 0;
+
+            repl.on("change", (info) => {
+                if (adone.is.number(info.pending)) {
+                    pendingSum += info.pending;
+                    if (info.pending === 0) {
+                        pendingSum += info.docs.length;
+                    }
+                }
+            });
+
+            repl.on("complete", () => {
+                if (pendingSum > 0) {
+                    assert.equal(pendingSum, numDocs);
+                }
+                done();
+            });
+        });
+    });
+
+
     // this test sets up a 2 way replication which initially transfers
     // documents from a remote to a local database.
     // At the same time, we insert documents locally - the changes
