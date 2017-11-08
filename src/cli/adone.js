@@ -83,6 +83,8 @@ class AdoneCLI extends application.CliApplication {
         ]
     })
     async main(args, opts, { rest }) {
+        console.log(adone.application.report.getReport());
+        return 0;
         let scriptPath = args.get("path");
         if (!std.path.isAbsolute(scriptPath)) {
             scriptPath = std.path.resolve(process.cwd(), scriptPath);

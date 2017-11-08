@@ -24,7 +24,7 @@ export default class ApplicationProjectTask extends project.generator.task.Base 
         await this.runTask("adoneConfig", {
             structure: {
                 src: {
-                    bin: {
+                    app: {
                         $task: "transpileExe",
                         $src: "src/app.js",
                         $dst: "bin"

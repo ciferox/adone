@@ -10,6 +10,8 @@ const {
     runtime
 } = adone;
 
+const previousUsage = process.cpuUsage();
+
 @Context({
     description: "Omnitron"
 })
@@ -55,7 +57,7 @@ export default class Omnitron extends application.Application {
     async uninitialize() {
         // Unitialize services in omnitron group
         // ...
-        
+
         // Uninitialize managers in right order
         for (const manager of ["service", "netron"]) {
             try {
@@ -120,12 +122,66 @@ export default class Omnitron extends application.Application {
         description: "Returns information about omnitron",
         type: Object
     })
-    async getInfo({ pid = true, version = true, realm = true, uptime = true, envs = true } = {}) {
+    async getInfo({ process: proc = false, version = false, realm = false, env = false, eventloop = false } = {}) {
         const result = {};
 
-        if (pid) {
-            result.pid = process.pid;
+        if (proc) {
+            const cpuUsage = process.cpuUsage(previousUsage);
+            cpuUsage.user = cpuUsage.user / 1000;
+            cpuUsage.system = cpuUsage.system / 1000;
+
+            const totalMemory = adone.std.os.totalmem();
+            const memoryUsage = process.memoryUsage();
+
+            result.process = {
+                id: process.pid,
+                uptime: Math.floor(process.uptime()),
+                cpuUsage,
+                memory: {
+                    total: adone.util.humanizeSize(totalMemory),
+                    used: `${adone.util.humanizeSize(memoryUsage.rss)} (${(memoryUsage.rss / totalMemory * 100).toFixed(0)}%)`,
+                    detail: memoryUsage
+                }
+            };
         }
+
+        // if (eventloop) {
+        //     const time = () => {
+        //         const t = process.hrtime();
+        //         return (t[0] * 1e3) + (t[1] / 1e6);
+        //     };
+        //     let start = time();
+        //     let delay = 0;
+        //     let timeout;
+
+        //     const check = () => {
+        //         // workaround for https://github.com/joyent/node/issues/8364
+        //         clearTimeout(timeout);
+
+        //         // how much time has actually elapsed in the loop beyond what
+        //         // setTimeout says is supposed to happen. we use setTimeout to
+        //         // cover multiple iterations of the event loop, getting a larger
+        //         // sample of what the process is working on.
+        //         const t = time();
+
+        //         // we use Math.max to handle case where timers are running efficiently
+        //         // and our callback executes earlier than `ms` due to how timers are
+        //         // implemented. this is ok. it means we're healthy.
+        //         delay = Math.max(0, t - start - 1000);
+        //         start = t;
+
+        //         timeout = setTimeout(check, 1000);
+        //         timeout.unref();
+        //     };
+
+        //     timeout = setTimeout(check, 1000);
+        //     timeout.unref();
+
+        //     // return the loop delay in milliseconds
+        //     return function () {
+        //         return delay;
+        //     };
+        // }
 
         if (version) {
             result.version = adone.package.version;
@@ -138,12 +194,8 @@ export default class Omnitron extends application.Application {
             };
         }
 
-        if (uptime) {
-            result.uptime = Math.floor(process.uptime());
-        }
-
-        if (envs) {
-            result.envs = Object.assign({}, process.env);
+        if (env) {
+            result.env = Object.assign({}, process.env);
         }
 
         return result;
@@ -268,6 +320,13 @@ export default class Omnitron extends application.Application {
     }
 
     @Public({
+        description: "Reports about omnitron process"
+    })
+    getReport() {
+        return adone.application.report.getReport();
+    }
+
+    @Public({
         description: "Returns connected peer UIDs"
     })
     getPeers() {
@@ -280,6 +339,22 @@ export default class Omnitron extends application.Application {
                 connectedTime: peer.connectedTime
             };
         });
+    }
+
+    @Public({
+        description: "Returns list of attached contexts"
+    })
+    getContexts() {
+        const result = [];
+
+        for (const [name, stub] of runtime.netron.contexts.entries()) {
+            result.push({
+                name,
+                description: stub.definition.description
+            });
+        }
+
+        return result;
     }
 }
 

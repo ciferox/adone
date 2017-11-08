@@ -91,16 +91,63 @@ export default class Omnitron extends Subsystem {
 
     @Command({
         name: "info",
-        help: "the omnitron's information"
+        help: "the omnitron's information",
+        arguments: [
+            {
+                name: "param",
+                nargs: "*",
+                type: String,
+                help: "Name of parameter(s): env, version, process, realm, eventloop"
+            }
+        ]
     })
-    async infoCommand() {
+    async infoCommand(args) {
+        try {
+            const params = args.get("param");
+            let options;
+            if (params.length === 0) {
+                options = {
+                    process: true,
+                    version: true,
+                    realm: true,
+                    eventloop: true,
+                    env: true
+                };
+            } else {
+                options = {};
+                for (const param of params) {
+                    options[param] = true;
+                }    
+            }
+            
+            this._createProgress("obtaining");
+            await this._connectToLocal();
+            const result = await omnitron.dispatcher.getInfo(options);
+            if (options.process) {
+                result.process.uptime = util.humanizeTime(1000 * result.process.uptime);
+                result.process.cpuUsage.user = util.humanizeTime(result.process.cpuUsage.user);
+                result.process.cpuUsage.system = util.humanizeTime(result.process.cpuUsage.system);
+            }
+            this._updateProgress("done", true, true);
+            adone.log(adone.text.pretty.json(result));
+            return 0;
+        } catch (err) {
+            this._updateProgress(err.message, false);
+            return 1;
+        }
+    }
+
+    @Command({
+        name: "report",
+        help: "report omnitron process statistics"
+    })
+    async reportCommand() {
         try {
             this._createProgress("obtaining");
             await this._connectToLocal();
-            const result = await omnitron.dispatcher.getInfo();
-            result.uptime = util.humanizeTime(1000 * result.uptime);
+            const result = await omnitron.dispatcher.getReport();
             this._updateProgress("done", true, true);
-            adone.log(adone.text.pretty.json(result));
+            adone.log(result);
             return 0;
         } catch (err) {
             this._updateProgress(err.message, false);
@@ -392,6 +439,42 @@ export default class Omnitron extends Subsystem {
                             return adone.datetime.unix(val.connectedTime / 1000).format("L LTS");
                         },
                         width: 23
+                    }
+                ]
+            }));
+            return 0;
+        } catch (err) {
+            this._updateProgress(err.message, false);
+            return 1;
+        }
+    }
+
+    @Command({
+        name: "contexts",
+        help: "Show attached contexts"
+    })
+    async contextsCommand() {
+        try {
+            this._createProgress("obtaining");
+            await this._connectToLocal();
+            const peers = await omnitron.dispatcher.getContexts();
+
+            this._updateProgress("done", true, true);
+
+            adone.log(pretty.table(peers, {
+                style: {
+                    head: ["gray"],
+                    compact: true
+                },
+                model: [
+                    {
+                        id: "name",
+                        header: "Name",
+                        style: "{green-fg}"
+                    },
+                    {
+                        id: "description",
+                        header: "Description"
                     }
                 ]
             }));

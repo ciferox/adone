@@ -319,4 +319,12 @@ export default class Dispatcher {
     getPeers() {
         return this.getInterface("omnitron").getPeers();
     }
+
+    getContexts() {
+        return this.getInterface("omnitron").getContexts();
+    }
+
+    getReport() {
+        return this.getInterface("omnitron").getReport();
+    }
 }
