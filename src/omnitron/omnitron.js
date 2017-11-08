@@ -122,7 +122,7 @@ export default class Omnitron extends application.Application {
         description: "Returns information about omnitron",
         type: Object
     })
-    async getInfo({ process: proc = false, version = false, realm = false, env = false, eventloop = false } = {}) {
+    async getInfo({ process: proc = false, version = false, realm = false, env = false } = {}) {
         const result = {};
 
         if (proc) {
@@ -135,53 +135,21 @@ export default class Omnitron extends application.Application {
 
             result.process = {
                 id: process.pid,
-                uptime: Math.floor(process.uptime()),
-                cpuUsage,
+                uptime: adone.util.humanizeTime(1000 * Math.floor(process.uptime())),
+                cpu: {
+                    user: adone.util.humanizeTime(cpuUsage.user),
+                    system: adone.util.humanizeTime(cpuUsage.system)
+                },
                 memory: {
                     total: adone.util.humanizeSize(totalMemory),
                     used: `${adone.util.humanizeSize(memoryUsage.rss)} (${(memoryUsage.rss / totalMemory * 100).toFixed(0)}%)`,
-                    detail: memoryUsage
+                    detail: {
+                        total: totalMemory,
+                        ...memoryUsage
+                    }
                 }
             };
         }
-
-        // if (eventloop) {
-        //     const time = () => {
-        //         const t = process.hrtime();
-        //         return (t[0] * 1e3) + (t[1] / 1e6);
-        //     };
-        //     let start = time();
-        //     let delay = 0;
-        //     let timeout;
-
-        //     const check = () => {
-        //         // workaround for https://github.com/joyent/node/issues/8364
-        //         clearTimeout(timeout);
-
-        //         // how much time has actually elapsed in the loop beyond what
-        //         // setTimeout says is supposed to happen. we use setTimeout to
-        //         // cover multiple iterations of the event loop, getting a larger
-        //         // sample of what the process is working on.
-        //         const t = time();
-
-        //         // we use Math.max to handle case where timers are running efficiently
-        //         // and our callback executes earlier than `ms` due to how timers are
-        //         // implemented. this is ok. it means we're healthy.
-        //         delay = Math.max(0, t - start - 1000);
-        //         start = t;
-
-        //         timeout = setTimeout(check, 1000);
-        //         timeout.unref();
-        //     };
-
-        //     timeout = setTimeout(check, 1000);
-        //     timeout.unref();
-
-        //     // return the loop delay in milliseconds
-        //     return function () {
-        //         return delay;
-        //     };
-        // }
 
         if (version) {
             result.version = adone.package.version;

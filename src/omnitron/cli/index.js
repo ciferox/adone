@@ -123,11 +123,6 @@ export default class Omnitron extends Subsystem {
             this._createProgress("obtaining");
             await this._connectToLocal();
             const result = await omnitron.dispatcher.getInfo(options);
-            if (options.process) {
-                result.process.uptime = util.humanizeTime(1000 * result.process.uptime);
-                result.process.cpuUsage.user = util.humanizeTime(result.process.cpuUsage.user);
-                result.process.cpuUsage.system = util.humanizeTime(result.process.cpuUsage.system);
-            }
             this._updateProgress("done", true, true);
             adone.log(adone.text.pretty.json(result));
             return 0;
