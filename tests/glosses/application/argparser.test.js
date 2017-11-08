@@ -1,5 +1,5 @@
 describe("application", () => {
-    const { application: { CliApplication } } = adone;
+    const { x, application: { CliApplication } } = adone;
 
     describe("argv handling", () => {
         let app = null;
@@ -339,6 +339,181 @@ describe("application", () => {
                     });
                 });
             });
+
+            describe("actions", () => {
+                describe("set", () => {
+                    it("should create a map of false values for not present values", async () => {
+                        app.defineArguments({
+                            arguments: [{
+                                name: "x",
+                                action: "set",
+                                set: "defaultFalse",
+                                choices: ["a", "b", "c"]
+                            }]
+                        });
+
+                        const { args } = await parse("a", "c");
+                        expect(args.get("x")).to.be.deep.equal({
+                            a: true,
+                            b: false,
+                            c: true
+                        });
+                    });
+
+                    it("should create a map with true values for not present values", async () => {
+                        app.defineArguments({
+                            arguments: [{
+                                name: "x",
+                                action: "set",
+                                set: "defaultTrue",
+                                choices: ["a", "b", "c"]
+                            }]
+                        });
+
+                        const { args } = await parse("a", "c");
+                        expect(args.get("x")).to.be.deep.equal({
+                            a: false,
+                            b: true,
+                            c: false
+                        });
+                    });
+
+                    it("should create a map with undefined values for not present values", async () => {
+                        app.defineArguments({
+                            arguments: [{
+                                name: "x",
+                                action: "set",
+                                set: "defaultUndefined",
+                                choices: ["a", "b", "c"]
+                            }]
+                        });
+
+                        const { args } = await parse("a", "c");
+                        expect(args.get("x")).to.be.deep.equal({
+                            a: true,
+                            b: undefined,
+                            c: true
+                        });
+                    });
+
+                    it("should create a map with undefined values for not present values by default", async () => {
+                        app.defineArguments({
+                            arguments: [{
+                                name: "x",
+                                action: "set",
+                                choices: ["a", "b", "c"]
+                            }]
+                        });
+
+                        const { args } = await parse("a", "c");
+                        expect(args.get("x")).to.be.deep.equal({
+                            a: true,
+                            b: undefined,
+                            c: true
+                        });
+                    });
+
+                    it("should create a map with false values when there are no args", async () => {
+                        app.defineArguments({
+                            arguments: [{
+                                name: "x",
+                                action: "set",
+                                set: "defaultFalse",
+                                choices: ["a", "b", "c"]
+                            }]
+                        });
+
+                        const { args } = await parse();
+                        expect(args.get("x")).to.be.deep.equal({
+                            a: false,
+                            b: false,
+                            c: false
+                        });
+                    });
+
+                    it("should create a map with true values when there are no args", async () => {
+                        app.defineArguments({
+                            arguments: [{
+                                name: "x",
+                                action: "set",
+                                set: "defaultTrue",
+                                choices: ["a", "b", "c"]
+                            }]
+                        });
+
+                        const { args } = await parse();
+                        expect(args.get("x")).to.be.deep.equal({
+                            a: true,
+                            b: true,
+                            c: true
+                        });
+                    });
+
+                    it("should create a map with undefined values when there are no args", async () => {
+                        app.defineArguments({
+                            arguments: [{
+                                name: "x",
+                                action: "set",
+                                set: "defaultUndefined",
+                                choices: ["a", "b", "c"]
+                            }]
+                        });
+
+                        const { args } = await parse();
+                        expect(args.get("x")).to.be.deep.equal({
+                            a: undefined,
+                            b: undefined,
+                            c: undefined
+                        });
+                    });
+
+                    it("should create a map with undefined values by default when there are no args", async () => {
+                        app.defineArguments({
+                            arguments: [{
+                                name: "x",
+                                action: "set",
+                                choices: ["a", "b", "c"]
+                            }]
+                        });
+
+                        const { args } = await parse();
+                        expect(args.get("x")).to.be.deep.equal({
+                            a: undefined,
+                            b: undefined,
+                            c: undefined
+                        });
+                    });
+
+                    it("should support a custom set function", async () => {
+                        const set = stub().callsFake((isSpecified, name) => {
+                            if (name === "b") {
+                                return isSpecified;
+                            }
+                            return !isSpecified;
+                        });
+                        app.defineArguments({
+                            arguments: [{
+                                name: "x",
+                                action: "set",
+                                set,
+                                choices: ["a", "b", "c"]
+                            }]
+                        });
+
+                        const { args } = await parse("a", "b");
+                        expect(args.get("x")).to.be.deep.equal({
+                            a: false,
+                            b: true,
+                            c: true
+                        });
+
+                        expect(set).to.have.been.calledThrice;
+                        expect(set.getCall(0)).to.have.been.calledWith(true, "a");
+                        expect(set.getCall(1)).to.have.been.calledWith(true, "b");
+                        expect(set.getCall(2)).to.have.been.calledWith(false, "c");
+                    });
+                });
+            });
         });
 
         describe("options", () => {
@@ -420,6 +595,28 @@ describe("application", () => {
                         });
                         const { opts } = await parse("--x", "1", "--x", "2", "--x", "3");
                         expect(opts.get("x")).to.be.deep.equal(["1", "2", "3"]);
+                    });
+                });
+
+                describe("count", () => {
+                    it("should count the number of occurencies", async () => {
+                        app.defineArguments({
+                            options: [
+                                { name: "-x", action: "count" }
+                            ]
+                        });
+                        const { opts } = await parse("-x", "-x", "-x");
+                        expect(opts.get("x")).to.be.equal(3);
+                    });
+
+                    it("should be 0 by default", async () => {
+                        app.defineArguments({
+                            options: [
+                                { name: "-x", action: "count" }
+                            ]
+                        });
+                        const { opts } = await parse();
+                        expect(opts.get("x")).to.be.equal(0);
                     });
                 });
             });
@@ -776,6 +973,51 @@ describe("application", () => {
                             expect(opts.get("y")).to.be.equal("");
                         }
                     });
+                });
+            });
+
+            describe("composite options", () => {
+                it("should split boolean options", async () => {
+                    app.defineArguments({
+                        options: ["-a", "-b", "-c"]
+                    });
+                    const { opts } = await parse("-abc");
+                    expect(opts.get("a")).to.be.true;
+                    expect(opts.get("b")).to.be.true;
+                    expect(opts.get("c")).to.be.true;
+                });
+
+                it("should not split if there is an exact match", async () => {
+                    app.defineArguments({
+                        options: ["-a", "-b", "-c", "-abc"]
+                    });
+                    const { opts } = await parse("-abc");
+                    expect(opts.get("a")).to.be.false;
+                    expect(opts.get("b")).to.be.false;
+                    expect(opts.get("c")).to.be.false;
+                    expect(opts.get("abc")).to.be.true;
+                });
+
+                it("should throw on an attempt to group an opt with args", async () => {
+                    app.defineArguments({
+                        options: ["-a", "-b", "-c", { name: "-d", nargs: 1 }]
+                    });
+                    const { errors } = await parse("-abd", "--1");
+                    expect(errors).to.have.length(1);
+                    expect(errors[0]).to.be.instanceof(x.IllegalState);
+                    expect(errors[0].message).to.be.equal("Options with arguments cannot be grouped: -d");
+                });
+
+                it("should handle options with count action", async () => {
+                    app.defineArguments({
+                        options: ["-a", "-b", "-c", "-d", { name: "-v", action: "count" }]
+                    });
+                    const { opts } = await parse("-a", "-cvv", "-vvvbvvv", "-v");
+                    expect(opts.get("a")).to.be.true;
+                    expect(opts.get("b")).to.be.true;
+                    expect(opts.get("c")).to.be.true;
+                    expect(opts.get("d")).to.be.false;
+                    expect(opts.get("v")).to.be.equal(9);
                 });
             });
         });

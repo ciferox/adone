@@ -87,6 +87,7 @@ class Argument {
         this.colors = options.colors;
         this._frozenColors = options._frozenColors;
         this._verify = options.verify;
+        this.set = options.set;
     }
 
     setCommand(command) {
@@ -109,6 +110,9 @@ class Argument {
         }
         if (this.action === "store_false") {
             return true;
+        }
+        if (this.action === "count") {
+            return 0;
         }
         if (this.nargs === "*") {
             return [];
@@ -182,6 +186,7 @@ class Argument {
             this.action === "store_true" ||
             this.action === "store_false" ||
             this.action === "store_const" ||
+            this.action === "count" ||
             this.nargs === "*"
         ) {
             return true;
@@ -226,7 +231,7 @@ class Argument {
 
         const [name] = options.name;
         if (options.action) {
-            if (!["store", "store_const", "store_true", "store_false", "append", "count"].includes(options.action)) {
+            if (!["store", "store_const", "store_true", "store_false", "append", "count", "set"].includes(options.action)) {
                 throw new x.InvalidArgument(`${name}: action should be one of [store, store_const, store_true, store_false, append, append_const, count]`);
             }
             switch (options.action) {
@@ -243,6 +248,33 @@ class Argument {
                         options.nargs = 0;
                     }
                     break;
+                case "set": {
+                    if (!options.choices) {
+                        throw new x.InvalidArgument(`${name}: cannot use 'set' action without choices`);
+                    }
+                    if ("nargs" in options) {
+                        throw new x.InvalidArgument(`${name}: cannot use nargs with 'set' action`);
+                    }
+                    switch (options.set) {
+                        case "defaultTrue":
+                            options.set = (isSpecified) => isSpecified ? false : true;
+                            break;
+                        case "defaultFalse":
+                            options.set = (isSpecified) => isSpecified ? true : false;
+                            break;
+                        case undefined:
+                        case "defaultUndefined":
+                            options.set = (specified) => specified ? true : undefined;
+                            break;
+                        default: {
+                            if (!is.function(options.set)) {
+                                throw new x.InvalidArgument(`${name}: 'set' must be a function`);
+                            }
+                        }
+                    }
+                    options.nargs = "*";
+                    break;
+                }
                 case "store":
                 case "append":
                     if ("nargs" in options) {
@@ -456,8 +488,8 @@ class PositionalArgument extends Argument {
             required: !(options.nargs === "?" || options.nargs === "*" || (!("nargs" in options) && options.choices))
         }, options);
         super(options, command);
-        if ("action" in options && options.action !== "store") {
-            throw new x.IllegalState(`${this.names[0]}: A positional agrument must have action = store`);
+        if ("action" in options && options.action !== "store" && options.action !== "set") {
+            throw new x.IllegalState(`${this.names[0]}: A positional agrument must have action 'store' or 'set'`);
         }
         if (this.names.length > 1) {
             throw new x.IllegalState(`${this.names[0]}: A positional argument cannot have multiple names`);
@@ -539,6 +571,9 @@ class OptionalArgument extends Argument {
             if (/^-+$/.test(name)) {
                 throw new x.IllegalState(`${this.names[0]}: The name of an optional argument must have a name: ${name}`);
             }
+        }
+        if (this.action === "set") {
+            throw new x.IllegalState(`${this.names[0]}: Cannot use 'set' action with an optional argument`);
         }
         this.group = options.group || UNNAMED;
         this.handler = options.handler || adone.noop;
@@ -1859,7 +1894,7 @@ export default class CliApplication extends application.Application {
             const state = ["start command"];
 
             next: for (; !finished;) {
-                const remaining = argv.length - 1 - partIndex;
+                let remaining = argv.length - 1 - partIndex;
                 switch (state.shift()) {
                     case "start command": {
                         positional = command.arguments.slice();
@@ -1910,6 +1945,33 @@ export default class CliApplication extends application.Application {
                         let matches = false;
                         // all the options starts with "-"
                         if (part[0] === "-") {
+                            if (part[1] !== "-" && part.length > 2) {
+                                // in this case we try to split composite options
+                                // -abc -> -a -b -c
+                                // by splittable we mean short boolean options, i.e. that have a short name alias (-x) and exactly 0 arguments
+                                // first of all there must not be an exact match for the whole option, i.e. -abc
+                                // and there must be an argument for each suboption, i.e. for -a, -b and -c
+                                const exactMatch = optional.some((arg) => arg.match(part)); // eslint-disable-line
+                                const splittable = !exactMatch && [...part.slice(1)].every((opt) => { // eslint-disable-line
+                                    for (let k = 0; k < optional.length; ++k) {
+                                        const arg = optional[k];
+                                        if (arg.match(`-${opt}`)) {
+                                            if (arg.nargs !== 0) {
+                                                // fatal error, stop parsing
+                                                throw new x.IllegalState(`Options with arguments cannot be grouped: -${opt}`);
+                                            }
+                                            return true;
+                                        }
+                                    }
+                                    return false;
+                                });
+                                if (splittable) {
+                                    argv.splice(partIndex, 1, ...[...part.slice(1)].map((x) => `-${x}`));
+                                    // the part splits into part.length - 1 parts
+                                    remaining += part.length - 2; // the current part has been counted
+                                    part = part.slice(0, 2);
+                                }
+                            }
                             for (let j = 0; j < optional.length; ++j) {
                                 if (optional[j].match(part)) {
                                     argument = optional[j];
@@ -1955,6 +2017,9 @@ export default class CliApplication extends application.Application {
                                         break;
                                     case "store_const":
                                         argument.value = argument.const;
+                                        break;
+                                    case "count":
+                                        ++argument.value;
                                         break;
                                     default:
                                         argument.value = argument.default;
@@ -2123,6 +2188,12 @@ export default class CliApplication extends application.Application {
                             }
                             argument._values.push(argument.value);
                         }
+                        if (argument.action === "set") {
+                            argument.value = argument.choices.reduce((x, y) => { // eslint-disable-line
+                                x[y] = argument.set(argument.value.includes(y), y);
+                                return x;
+                            }, {});
+                        }
                         if (argument.optional) {
                             // eslint-disable-next-line no-await-in-loop
                             const res = await argument.handler.call(
@@ -2145,7 +2216,12 @@ export default class CliApplication extends application.Application {
                         // check required arguments
                         for (const arg of positional) {
                             if (!arg.present) {
-                                if (arg.nargs === "*" || arg.nargs === "?") {
+                                if (arg.action === "set") {
+                                    arg.value = arg.choices.reduce((x, y) => {
+                                        x[y] = arg.set(false, y);
+                                        return x;
+                                    }, {});
+                                } else if (arg.nargs === "*" || arg.nargs === "?") {
                                     arg.value = arg.default;
                                 } else if (arg.nargs === "+") {
                                     errors.push(new x.IllegalState(`${arg.names[0]}: has not enough parameters, must have at least 1`));
