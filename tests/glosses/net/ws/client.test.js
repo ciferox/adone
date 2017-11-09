@@ -50,9 +50,9 @@ describe("net", "ws", "WebSocket", () => {
                 ws.on("error", (err) => {
                     // Skip this test on machines where 127.0.0.2 is disabled.
                     if (err.code === "EADDRNOTAVAIL") {
-                        return done();
+                        err = undefined;
                     }
-                    throw err;
+                    wss.close(() => done(err));
                 });
             });
 
@@ -63,12 +63,27 @@ describe("net", "ws", "WebSocket", () => {
         });
 
         it("accepts the localAddress option whether it was wrong interface", () => {
-            assert.throws(() => new Client(`ws://localhost:${port}`, { localAddress: "123.456.789.428" }), /must be a valid IP: 123.456.789.428/);
+            const localAddress = "123.456.789.428";
+
+            const err = assert.throws(() => {
+                new Client(`ws://localhost:${port}`, { localAddress });
+            });
+            expect(err).to.be.instanceof(TypeError);
+            expect(err.code).to.be.equal("ERR_INVALID_IP_ADDRESS");
+            expect(err.message).to.include(`Invalid IP address: ${localAddress}`);
         });
 
         it("accepts the family option", (done) => {
             const wss = new Server({ host: "::1", port: ++port }, () => {
                 new Client(`ws://localhost:${port}`, { family: 6 });
+            });
+
+            wss.on("error", (err) => {
+                // Skip this test on machines where IPv6 is not supported.
+                if (err.code === "EADDRNOTAVAIL") {
+                    err = undefined;
+                }
+                wss.close(() => done(err));
             });
 
             wss.on("connection", (ws, req) => {

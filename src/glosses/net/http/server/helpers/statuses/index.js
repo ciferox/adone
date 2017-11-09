@@ -30,3 +30,4 @@ export const isRedirect = (code) => is.number(code) && code >= 300 && code <= 30
 
 export const isRetry = (code) => code === 502 || code === 503 || code === 504;
 
+export const STATUS_CODES = rawCodes;

@@ -1142,6 +1142,17 @@ describe("util", "fakeClock", () => {
                 assert.isTrue(stb.called);
             });
 
+            it("does not remove interval with undefined interval", function () {
+                const s = stub();
+                const id = this.clock.setInterval(s);
+                assert.throws(() => {
+                    this.clock.clearTimeout(id);
+                }, "Cannot clear timer: timer created with setInterval() but cleared with clearTimeout()");
+                this.clock.tick(50);
+
+                assert.isTrue(s.called);
+            });
+
             it("does not remove immediate", function () {
                 const stb = stub();
                 const id = this.clock.setImmediate(stb);
@@ -1277,6 +1288,15 @@ describe("util", "fakeClock", () => {
                 assert.isFalse(stb.called);
             });
 
+            it("removes interval with undefined interval", function () {
+                const s = stub();
+                const id = this.clock.setInterval(s);
+                this.clock.clearInterval(id);
+                this.clock.tick(50);
+
+                assert.isFalse(s.called);
+            });
+
             it("does not remove timeout", function () {
                 const stb = stub();
                 const id = this.clock.setTimeout(stb, 50);
@@ -1333,7 +1353,7 @@ describe("util", "fakeClock", () => {
 
             it("creates real Date objects when Date constructor is gone", function () {
                 const realDate = new Date();
-                Date = noop; // eslint-disable-line no-native-reassign
+                global.Date = noop; // eslint-disable-line no-native-reassign
                 global.Date = noop;
 
                 const date = new this.clock.Date();
@@ -2016,6 +2036,49 @@ describe("util", "fakeClock", () => {
                 clock.runAll();
                 assert(!called);
                 clock.uninstall();
+            });
+
+            it("returns an empty list of timers on immediate uninstall", () => {
+                const clock = fakeClock.install();
+                const timers = clock.uninstall();
+                assert.deepE qual(timers, []);
+            });
+
+
+            it("returns a timer if uninstalling before it's called", () => {
+                const clock = fakeClock.install();
+                clock.setTimeout(() => { }, 100);
+                const timers = clock.uninstall();
+                assert.equal(timers.length, 1);
+                assert.equal(timers[0].createdAt, clock.now);
+                assert.equal(timers[0].callAt, clock.now + 100);
+                assert(!is.undefined(timers[0].id));
+            });
+
+            it("does not return already executed timers on uninstall", () => {
+                const clock = fakeClock.install();
+                clock.setTimeout(() => { }, 100);
+                clock.setTimeout(() => { }, 200);
+                clock.tick(100);
+                const timers = clock.uninstall();
+                assert.equal(timers.length, 1);
+                assert.equal(timers[0].createdAt, clock.now - 100);
+                assert.equal(timers[0].callAt, clock.now + 100);
+                assert(!is.undefined(timers[0].id));
+            });
+
+            it("returns multiple timers on uninstall if created", () => {
+                const clock = fakeClock.install();
+                for (let i = 0; i < 5; i++) {
+                    clock.setTimeout(() => { }, 100 * i);
+                }
+                const timers = clock.uninstall();
+                assert.equal(timers.length, 5);
+                for (let i = 0; i < 5; i++) {
+                    assert.equal(timers[i].createdAt, clock.now);
+                    assert.equal(timers[i].callAt, clock.now + 100 * i);
+                }
+                assert(!is.undefined(timers[0].id));
             });
 
             it("passes arguments when installed - GitHub#122", () => {

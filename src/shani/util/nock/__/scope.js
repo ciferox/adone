@@ -184,8 +184,11 @@ export default class Scope extends EventEmitter {
         return this;
     }
 
-    persist() {
-        this._persist = true;
+    persist(flag) {
+        this._persist = is.nil(flag) ? true : flag;
+        if (!is.boolean(this._persist)) {
+            throw new Error("Invalid arguments: argument should be a boolean");
+        }
         return this;
     }
 

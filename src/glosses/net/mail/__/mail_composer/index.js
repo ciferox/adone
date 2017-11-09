@@ -111,8 +111,12 @@ export default class MailComposer {
             if (attachment.filename) {
                 data.filename = attachment.filename;
             } else if (!isMessageNode && attachment.filename !== false) {
-                data.filename = (attachment.path || attachment.href || "").split("/").pop() || `attachment-${i + 1}`;
-                if (data.filename.indexOf(".") < 0) {
+                data.filename = (attachment.path || attachment.href || "")
+                    .split("/")
+                    .pop()
+                    .split("?")
+                    .shift() || `attachment-${i + 1}`;
+                if (!data.filename.includes(".")) {
                     data.filename += `.${__.mimeFuncs.detectExtension(data.contentType)}`;
                 }
             }
@@ -273,7 +277,12 @@ export default class MailComposer {
             }
 
             eventObject.filename = false;
-            eventObject.contentType = `text/calendar; charset="utf-8"; method=${(eventObject.method || "PUBLISH").toString().trim().toUpperCase()}`;
+            eventObject.contentType = `text/calendar; charset="utf-8"; method=${
+                (eventObject.method || "PUBLISH")
+                    .toString()
+                    .trim()
+                    .toUpperCase()
+            }`;
             if (!eventObject.headers) {
                 eventObject.headers = {};
             }

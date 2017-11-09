@@ -1237,6 +1237,17 @@ describe("terminal", "prompt", () => {
                 expect(collector.data()).to.include("ShortB");
             });
 
+            it("should use a string the `default` value", function (done) {
+                this.fixture.default = "chile";
+                this.expand = createExpand(this.fixture);
+
+                this.expand.run().then((answer) => {
+                    expect(answer).to.equal("chile");
+                    done();
+                });
+                emitEnter();
+            });
+
             it("should use the `default` argument value", async function () {
                 this.fixture.default = 1;
                 this.expand = createExpand(this.fixture);
@@ -1289,6 +1300,26 @@ describe("terminal", "prompt", () => {
                 await delay(50);
                 collector.stop();
                 expect(collector.data()).to.include("(aBcdh)");
+            });
+
+            it("should display and capitalize the default choice by name value", async function () {
+                this.fixture.default = "chile";
+                this.expand = createExpand(this.fixture);
+                const collector = getOutputCollector();
+                this.expand.run();
+                await delay(50);
+                collector.stop();
+                expect(collector.data()).to.include("(abCdh)");
+            });
+
+            it("should display and capitalize the default choice H (Help) `key` if no string default matched", async function () {
+                this.fixture.default = "chile!";
+                this.expand = createExpand(this.fixture);
+                const collector = getOutputCollector();
+                this.expand.run();
+                await delay(50);
+                collector.stop();
+                expect(collector.data()).to.be.include("(abcdH)");
             });
 
             it("should display and capitalize the default choice H (Help) `key` if none provided", async function () {
@@ -1459,6 +1490,15 @@ describe("terminal", "prompt", () => {
                 expect(answer).to.equal("bum");
             });
 
+            it("shouldn't allow an invalid string default to change position", async function () {
+                this.fixture.default = "babar";
+                const list = createList(this.fixture);
+                const promise = list.run();
+                emitEnter();
+                const answer = await promise;
+                expect(answer).to.be.equal("foo");
+            });
+
             it("shouldn't allow an invalid index as default", async function () {
                 this.fixture.default = 4;
                 const list = createList(this.fixture);
@@ -1572,6 +1612,16 @@ describe("terminal", "prompt", () => {
                 const list = createRawlist(this.fixture);
                 const promise = list.run();
                 emitLines(1);
+                const answer = await promise;
+                expect(answer).to.be.equal("foo");
+            });
+
+            it("shouldn't allow an invalid string default to change position", async function () {
+                this.fixture.default = "bumby";
+                const list = createRawlist(this.fixture);
+
+                const promise = list.run();
+                emitEnter();
                 const answer = await promise;
                 expect(answer).to.be.equal("foo");
             });

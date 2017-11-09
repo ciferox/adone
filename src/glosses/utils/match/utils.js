@@ -212,16 +212,16 @@ export const isEmptyString = (val) => String(val) === "" || String(val) === "./"
  * @returns {Function}
  */
 export const unixify = (options) => {
-    const opts = options || {};
+    options = options || {};
     return function (filepath) {
-        if (opts.stripPrefix !== false) {
+        if (isWindows() || options.unixify === true) {
+            filepath = toPosixPath(filepath);
+        }
+        if (options.stripPrefix !== false) {
             filepath = stripPrefix(filepath);
         }
-        if (opts.unescape === true) {
+        if (options.unescape === true) {
             filepath = unescape(filepath);
-        }
-        if (opts.unixify === true || isWindows()) {
-            filepath = toPosixPath(filepath);
         }
         return filepath;
     };

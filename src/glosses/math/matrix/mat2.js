@@ -119,8 +119,6 @@ export const multiply = (out, a, b) => {
     return out;
 };
 
-export const mul = multiply;
-
 export const rotate = (out, a, rad) => {
     const a0 = a[0];
     const a1 = a[1];
@@ -196,7 +194,6 @@ export const subtract = (out, a, b) => {
     out[3] = a[3] - b[3];
     return out;
 };
-export const sub = subtract;
 
 export const exactEquals = (a, b) => {
     return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3];
@@ -232,3 +229,7 @@ export const multiplyScalarAndAdd = (out, a, b, scale) => {
     out[3] = a[3] + (b[3] * scale);
     return out;
 };
+
+export const mul = multiply;
+
+export const sub = subtract;

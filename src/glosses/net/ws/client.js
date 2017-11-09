@@ -143,6 +143,7 @@ export default class Client extends adone.event.EventEmitter {
                 rejectUnauthorized: null,
                 passphrase: null,
                 ciphers: null,
+                ecdhCurve: null,
                 cert: null,
                 key: null,
                 pfx: null,
@@ -247,6 +248,7 @@ export default class Client extends adone.event.EventEmitter {
                 options.checkServerIdentity ||
                 options.passphrase ||
                 options.ciphers ||
+                options.ecdhCurve ||
                 options.cert ||
                 options.key ||
                 options.pfx ||
@@ -257,6 +259,9 @@ export default class Client extends adone.event.EventEmitter {
                 }
                 if (options.ciphers) {
                     requestOptions.ciphers = options.ciphers;
+                }
+                if (options.ecdhCurve) {
+                    requestOptions.ecdhCurve = options.ecdhCurve;
                 }
                 if (options.cert) {
                     requestOptions.cert = options.cert;
@@ -461,12 +466,6 @@ export default class Client extends adone.event.EventEmitter {
             this.emit("error", error);
         };
 
-        // sender event handlers
-        this._sender.onerror = (error) => {
-            this.close(1002, "");
-            this.emit("error", error);
-        };
-
         this.readyState = Client.OPEN;
         this.emit("open");
     }
@@ -505,16 +504,11 @@ export default class Client extends adone.event.EventEmitter {
                 this._socket.destroy();
             }
 
-            this._socket = null;
-        }
-
-        if (this._sender) {
-            this._sender = this._sender.onerror = null;
-        }
-
-        if (this._receiver) {
             this._receiver.cleanup(() => this.emitClose());
+
             this._receiver = null;
+            this._sender = null;
+            this._socket = null;
         } else {
             this.emitClose();
         }

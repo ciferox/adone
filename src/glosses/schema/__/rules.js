@@ -4,8 +4,12 @@ export default () => {
     const RULES = [
         {
             type: "number",
-            rules: [{ maximum: ["exclusiveMaximum"] },
-            { minimum: ["exclusiveMinimum"] }, "multipleOf", "format"]
+            rules: [
+                { maximum: ["exclusiveMaximum"] },
+                { minimum: ["exclusiveMinimum"] },
+                "multipleOf",
+                "format"
+            ]
         },
         {
             type: "string",
@@ -25,7 +29,7 @@ export default () => {
 
     const ALL = ["type"];
     const KEYWORDS = [
-        "additionalItems", "$schema", "id", "title",
+        "additionalItems", "$schema", "$id", "id", "title",
         "description", "default", "definitions"
     ];
     const TYPES = ["number", "integer", "string", "array", "object", "boolean", "null"];

@@ -1,4 +1,4 @@
-const equality = (arr1, arr2) => {
+const isEqual = (arr1, arr2) => {
     if (adone.is.number(arr1)) {
         return Math.abs(arr1 - arr2) < adone.math.matrix.EPSILON;
     }
@@ -15,4 +15,6 @@ const equality = (arr1, arr2) => {
     return true;
 };
 
-export default equality;
+export default function assertEquality(a, b) {
+    assert.ok(isEqual(a, b), `Expected ${JSON.stringify(a)} to be equal ${JSON.stringify(b)}`);
+}

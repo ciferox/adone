@@ -2,13 +2,13 @@ const { net: { ws: { exts } } } = adone;
 
 describe("net", "ws", "Extensions", () => {
     describe("parse", () => {
-        it("should parse", () => {
+        it("parses a single extension", () => {
             const extensions = exts.parse("foo");
 
             assert.deepStrictEqual(extensions, { foo: [{}] });
         });
 
-        it("should parse params", () => {
+        it("parses params", () => {
             const extensions = exts.parse("foo; bar; baz=1; bar=2");
 
             assert.deepStrictEqual(extensions, {
@@ -16,7 +16,7 @@ describe("net", "ws", "Extensions", () => {
             });
         });
 
-        it("should parse multiple extensions", () => {
+        it("parses multiple extensions", () => {
             const extensions = exts.parse("foo, bar; baz, foo; baz");
 
             assert.deepStrictEqual(extensions, {
@@ -25,29 +25,36 @@ describe("net", "ws", "Extensions", () => {
             });
         });
 
-        it("should parse quoted params", () => {
+        it("parses quoted params", () => {
             const extensions = exts.parse('foo; bar="hi"');
 
             assert.deepStrictEqual(extensions, {
                 foo: [{ bar: ["hi"] }]
             });
         });
+
+        it("ignores names that match Object.prototype properties", () => {
+            const parse = exts.parse;
+
+            assert.deepStrictEqual(parse("hasOwnProperty, toString"), {});
+            assert.deepStrictEqual(parse("foo; constructor"), { foo: [{}] });
+        });
     });
 
     describe("format", () => {
-        it("should format", () => {
+        it("formats a single extension", () => {
             const extensions = exts.format({ foo: {} });
 
             assert.strictEqual(extensions, "foo");
         });
 
-        it("should format params", () => {
+        it("formats params", () => {
             const extensions = exts.format({ foo: { bar: [true, 2], baz: 1 } });
 
             assert.strictEqual(extensions, "foo; bar; bar=2; baz=1");
         });
 
-        it("should format multiple extensions", () => {
+        it("formats multiple extensions", () => {
             const extensions = exts.format({
                 foo: [{}, { baz: true }],
                 bar: { baz: true }

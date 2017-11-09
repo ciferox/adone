@@ -270,7 +270,7 @@ export default class Packet {
         return new Date(y, m - 1, d, H, M, S, ms);
     }
 
-    readDateTimeString() {
+    readDateTimeString(decimals) {
         const length = this.readInt8();
         let y = 0;
         let m = 0;
@@ -295,6 +295,15 @@ export default class Packet {
         if (length > 10) {
             ms = this.readInt32();
             str += ".";
+
+            if (decimals) {
+                ms = leftPad(6, ms);
+
+                if (ms.length > decimals) {
+                    ms = ms.substring(0, decimals); // rounding is done at the MySQL side, only 0 are here
+                }
+            }
+
             str += ms;
         }
         return str;

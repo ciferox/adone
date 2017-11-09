@@ -24,7 +24,7 @@ const buildURL = (url, params, paramsSerializer) => {
     if (paramsSerializer) {
         serializedParams = paramsSerializer(params);
     } else {
-        serializedParams = adone.std.querystring.encode(params);
+        serializedParams = adone.util.querystring.stringify(params);
     }
 
     if (serializedParams) {
@@ -139,7 +139,7 @@ export default function adapter(options) {
             nodeOptions.maxRedirects = options.maxRedirects;
             transport = isHttps ? imports.followRedirects.https : imports.followRedirects.http;
         }
-        debugger;
+
         const req = transport.request(nodeOptions, (res) => {
             if (aborted) {
                 return;

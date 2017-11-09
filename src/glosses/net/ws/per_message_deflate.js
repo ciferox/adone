@@ -1,6 +1,78 @@
-const { is, std: { zlib } } = adone;
+const {
+    is,
+    std: { zlib },
+    util: { throttle },
+    promise
+} = adone;
+
 const TRAILER = Buffer.from([0x00, 0x00, 0xff, 0xff]);
 const EMPTY_BLOCK = Buffer.from([0x00]);
+const kWriteInProgress = Symbol("write-in-progress");
+const kPendingClose = Symbol("pending-close");
+const kTotalLength = Symbol("total-length");
+const kReject = Symbol("callback");
+const kBuffers = Symbol("buffers");
+const kError = Symbol("error");
+const kOwner = Symbol("owner");
+
+// We limit zlib concurrency, which prevents severe memory fragmentation
+// as documented in https://github.com/nodejs/node/issues/8871#issuecomment-250915913
+// and https://github.com/websockets/ws/issues/1202
+//
+// Intentionally global; it's the global thread pool that's
+// an issue.
+let zlibLimiter;
+
+
+/**
+ * The listener of the `zlib.DeflateRaw` stream `'data'` event.
+ *
+ * @param {Buffer} chunk A chunk of data
+ * @private
+ */
+const deflateOnData = function (chunk) {
+    this[kBuffers].push(chunk);
+    this[kTotalLength] += chunk.length;
+};
+
+/**
+ * The listener of the `zlib.InflateRaw` stream `'data'` event.
+ *
+ * @param {Buffer} chunk A chunk of data
+ * @private
+ */
+const inflateOnData = function (chunk) {
+    this[kTotalLength] += chunk.length;
+
+    if (
+        this[kOwner]._maxPayload < 1 ||
+        this[kTotalLength] <= this[kOwner]._maxPayload
+    ) {
+        this[kBuffers].push(chunk);
+        return;
+    }
+
+    this[kError] = new Error("Max payload size exceeded");
+    this[kError].closeCode = 1009;
+    this.removeListener("data", inflateOnData);
+    this.reset();
+};
+
+/**
+   * The listener of the `zlib.InflateRaw` stream `'error'` event.
+   *
+   * @param {Error} err The emitted error
+   * @private
+   */
+const inflateOnError = function (err) {
+    //
+    // There is no need to call `Zlib#close()` as the handle is automatically
+    // closed when an error is emitted.
+    //
+    this[kOwner]._inflate = null;
+    this[kReject](err);
+};
+
 
 export default class PerMessageDeflate {
     constructor(options, isServer, maxPayload) {
@@ -11,6 +83,13 @@ export default class PerMessageDeflate {
         this.params = null;
         this._maxPayload = maxPayload | 0;
         this._threshold = is.undefined(this._options.threshold) ? 1024 : this._options.threshold;
+
+        if (!zlibLimiter) {
+            const concurrency = !is.undefined(this._options.concurrencyLimit)
+                ? this._options.concurrencyLimit
+                : 10;
+            zlibLimiter = throttle(concurrency);
+        }
     }
 
     static get extensionName() {
@@ -54,16 +133,16 @@ export default class PerMessageDeflate {
 
     cleanup() {
         if (this._inflate) {
-            if (this._inflate.writeInProgress) {
-                this._inflate.pendingClose = true;
+            if (this._inflate[kWriteInProgress]) {
+                this._inflate[kPendingClose] = true;
             } else {
                 this._inflate.close();
                 this._inflate = null;
             }
         }
         if (this._deflate) {
-            if (this._deflate.writeInProgress) {
-                this._deflate.pendingClose = true;
+            if (this._deflate[kWriteInProgress]) {
+                this._deflate[kPendingClose] = true;
             } else {
                 this._deflate.close();
                 this._deflate = null;
@@ -168,131 +247,131 @@ export default class PerMessageDeflate {
     }
 
     decompress(data, fin, callback) {
-        const endpoint = this._isServer ? "client" : "server";
+        promise.nodeify(zlibLimiter(() => this._decompress(data, fin)), callback);
+    }
 
-        if (!this._inflate) {
-            const key = `${endpoint}_max_window_bits`;
-            const windowBits = !is.number(this.params[key]) ? zlib.Z_DEFAULT_WINDOWBITS : this.params[key];
+    _decompress(data, fin) {
+        return new Promise((resolve, reject) => {
+            const endpoint = this._isServer ? "client" : "server";
 
-            this._inflate = zlib.createInflateRaw({ windowBits });
-        }
-        this._inflate.writeInProgress = true;
-
-        let totalLength = 0;
-        const buffers = [];
-        let err;
-
-        const onData = (data) => {
-            totalLength += data.length;
-            if (this._maxPayload < 1 || totalLength <= this._maxPayload) {
-                return buffers.push(data);
-            }
-
-            err = new Error("Max payload size exceeded");
-            err.closeCode = 1009;
-            this._inflate.reset();
-        };
-
-        let cleanup = null;
-        const onError = (err) => {
-            cleanup();
-            callback(err);
-        };
-
-        cleanup = () => {
             if (!this._inflate) {
-                return;
+                const key = `${endpoint}_max_window_bits`;
+                const windowBits = !is.number(this.params[key])
+                    ? zlib.Z_DEFAULT_WINDOWBITS
+                    : this.params[key];
+
+                this._inflate = zlib.createInflateRaw({ windowBits });
+                this._inflate[kTotalLength] = 0;
+                this._inflate[kBuffers] = [];
+                this._inflate[kOwner] = this;
+                this._inflate.on("error", inflateOnError);
+                this._inflate.on("data", inflateOnData);
             }
 
-            this._inflate.removeListener("error", onError);
-            this._inflate.removeListener("data", onData);
-            this._inflate.writeInProgress = false;
+            this._inflate[kReject] = reject;
+            this._inflate[kWriteInProgress] = true;
 
-            if (
-                (fin && this.params[`${endpoint}_no_context_takeover`]) ||
-                this._inflate.pendingClose
-            ) {
-                this._inflate.close();
-                this._inflate = null;
+            this._inflate.write(data);
+            if (fin) {
+                this._inflate.write(TRAILER);
             }
-        };
 
-        this._inflate.on("error", onError).on("data", onData);
-        this._inflate.write(data);
-        if (fin) {
-            this._inflate.write(TRAILER);
-        }
+            this._inflate.flush(() => {
+                const err = this._inflate[kError];
 
-        this._inflate.flush(() => {
-            cleanup();
-            if (err) {
-                return callback(err);
-            } 
-            return callback(null, adone.util.buffer.concat(buffers, totalLength));
+                if (err) {
+                    this._inflate.close();
+                    this._inflate = null;
+                    reject(err);
+                    return;
+                }
+
+                const data = adone.util.buffer.concat(
+                    this._inflate[kBuffers],
+                    this._inflate[kTotalLength]
+                );
+
+                if (
+                    (fin && this.params[`${endpoint}_no_context_takeover`]) ||
+                    this._inflate[kPendingClose]
+                ) {
+                    this._inflate.close();
+                    this._inflate = null;
+                } else {
+                    this._inflate[kWriteInProgress] = false;
+                    this._inflate[kTotalLength] = 0;
+                    this._inflate[kBuffers] = [];
+                }
+
+                resolve(data);
+            });
         });
     }
 
     compress(data, fin, callback) {
-        if (!data || data.length === 0) {
-            process.nextTick(callback, null, EMPTY_BLOCK);
-            return;
-        }
+        promise.nodeify(zlibLimiter(() => this._compress(data, fin)), callback);
+    }
 
-        const endpoint = this._isServer ? "server" : "client";
-
-        if (!this._deflate) {
-            const key = `${endpoint}_max_window_bits`;
-            const windowBits = !is.number(this.params[key]) ? zlib.Z_DEFAULT_WINDOWBITS : this.params[key];
-
-            this._deflate = zlib.createDeflateRaw({
-                memLevel: this._options.memLevel,
-                flush: zlib.Z_SYNC_FLUSH,
-                windowBits
-            });
-        }
-        this._deflate.writeInProgress = true;
-
-        let totalLength = 0;
-        const buffers = [];
-
-        const onData = (data) => {
-            totalLength += data.length;
-            buffers.push(data);
-        };
-
-        let cleanup = null;
-        const onError = (err) => {
-            cleanup();
-            callback(err);
-        };
-
-        cleanup = () => {
-            if (!this._deflate) {
+    _compress(data, fin) {
+        return new Promise((resolve, reject) => { // no reject, what?
+            if (!data || data.length === 0) {
+                resolve(EMPTY_BLOCK);
                 return;
             }
 
-            this._deflate.removeListener("error", onError);
-            this._deflate.removeListener("data", onData);
-            this._deflate.writeInProgress = false;
+            const endpoint = this._isServer ? "server" : "client";
 
-            if (
-                (fin && this.params[`${endpoint}_no_context_takeover`]) ||
-                this._deflate.pendingClose
-            ) {
-                this._deflate.close();
-                this._deflate = null;
-            }
-        };
+            if (!this._deflate) {
+                const key = `${endpoint}_max_window_bits`;
+                const windowBits = !is.number(this.params[key])
+                    ? zlib.Z_DEFAULT_WINDOWBITS
+                    : this.params[key];
 
-        this._deflate.on("error", onError).on("data", onData);
-        this._deflate.write(data);
-        this._deflate.flush(zlib.Z_SYNC_FLUSH, () => {
-            cleanup();
-            let data = adone.util.buffer.concat(buffers, totalLength);
-            if (fin) {
-                data = data.slice(0, data.length - 4);
+                this._deflate = zlib.createDeflateRaw({
+                    memLevel: this._options.memLevel,
+                    level: this._options.level,
+                    flush: zlib.Z_SYNC_FLUSH,
+                    windowBits
+                });
+
+                this._deflate[kTotalLength] = 0;
+                this._deflate[kBuffers] = [];
+
+                //
+                // `zlib.DeflateRaw` emits an `'error'` event only when an attempt to use
+                // it is made after it has already been closed. This cannot happen here,
+                // so we only add a listener for the `'data'` event.
+                //
+                this._deflate.on("data", deflateOnData);
             }
-            callback(null, data);
+
+            this._deflate[kWriteInProgress] = true;
+
+            this._deflate.write(data);
+            this._deflate.flush(zlib.Z_SYNC_FLUSH, () => {
+                let data = adone.util.buffer.concat(
+                    this._deflate[kBuffers],
+                    this._deflate[kTotalLength]
+                );
+
+                if (fin) {
+                    data = data.slice(0, data.length - 4);
+                }
+
+                if (
+                    (fin && this.params[`${endpoint}_no_context_takeover`]) ||
+                    this._deflate[kPendingClose]
+                ) {
+                    this._deflate.close();
+                    this._deflate = null;
+                } else {
+                    this._deflate[kWriteInProgress] = false;
+                    this._deflate[kTotalLength] = 0;
+                    this._deflate[kBuffers] = [];
+                }
+
+                resolve(data);
+            });
         });
     }
 }

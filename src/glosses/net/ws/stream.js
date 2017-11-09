@@ -5,24 +5,8 @@ const buildProxy = (options, socketWrite, socketEnd) => {
         objectMode: options.objectMode
     });
 
-    proxy._destroyed = false;
     proxy._write = socketWrite;
     proxy._flush = socketEnd;
-
-    proxy.destroy = function (err) {
-        if (this._destroyed) {
-            return;
-        }
-        this._destroyed = true;
-
-        const self = this;
-        process.nextTick(() => {
-            if (err) {
-                self.emit("error", err);
-            }
-            self.emit("close");
-        });
-    };
 
     return proxy;
 };
@@ -53,7 +37,7 @@ const createClient = (target, protocols, options) => {
     const proxy = buildProxy(options, (chunk, enc, next) => {
         // avoid errors, this never happens unless
         // destroy() is called
-        if (socket.readyState !== adone.net.ws.Client.OPEN) {
+        if (socket.readyState !== socket.OPEN) {
             next();
             return;
         }
@@ -93,7 +77,7 @@ const createClient = (target, protocols, options) => {
     }
 
     // was already open when passed in
-    if (socket.readyState === adone.net.ws.Client.OPEN) {
+    if (socket.readyState === socket.OPEN) {
         stream = proxy;
     } else {
         stream = adone.stream.Duplexify.obj();
@@ -116,7 +100,7 @@ const createClient = (target, protocols, options) => {
     socket.onmessage = (event) => {
         let data = event.data;
         if (data instanceof ArrayBuffer) {
-            data = Buffer.from(new Uint8Array(data));
+            data = Buffer.from(data);
         } else {
             data = Buffer.from(data, "utf8");
         }

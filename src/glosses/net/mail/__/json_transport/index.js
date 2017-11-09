@@ -7,11 +7,11 @@ export default class JSONTransport {
     constructor(options = {}) {
         this.options = options;
 
-        this.name = "StreamTransport";
+        this.name = "JSONTransport";
         this.version = "x.x.x";  // TODO: adone version?
 
         this.logger = __.shared.getLogger(this.options, {
-            component: this.options.component || "stream-transport"
+            component: this.options.component || "json-transport"
         });
     }
 
@@ -38,7 +38,7 @@ export default class JSONTransport {
         }, "Composing JSON structure of %s to <%s>", messageId, recipients.join(", "));
 
         setImmediate(() => {
-            mail.resolveAll((err, data) => {
+            mail.normalize((err, data) => {
                 if (err) {
                     this.logger.error({
                         err,
@@ -48,43 +48,11 @@ export default class JSONTransport {
                     return done(err);
                 }
 
-                data.messageId = messageId;
-
-                for (const key of ["html", "text", "watchHtml"]) {
-                    if (data[key] && data[key].content) {
-                        if (is.string(data[key].content)) {
-                            data[key] = data[key].content;
-                        } else if (is.buffer(data[key].content)) {
-                            data[key] = data[key].content.toString();
-                        }
-                    }
-                }
-
-                if (data.icalEvent && is.buffer(data.icalEvent.content)) {
-                    data.icalEvent.content = data.icalEvent.content.toString("base64");
-                    data.icalEvent.encoding = "base64";
-                }
-
-                if (data.alternatives && data.alternatives.length) {
-                    for (const alternative of data.alternatives) {
-                        if (alternative && alternative.content && is.buffer(alternative.content)) {
-                            alternative.content = alternative.content.toString("base64");
-                            alternative.encoding = "base64";
-                        }
-                    }
-                }
-
-                if (data.attachments && data.attachments.length) {
-                    for (const attachment of data.attachments) {
-                        if (attachment && attachment.content && is.buffer(attachment.content)) {
-                            attachment.content = attachment.content.toString("base64");
-                            attachment.encoding = "base64";
-                        }
-                    }
-                }
+                delete data.envelope;
+                delete data.normalizedHeaders;
 
                 return done(null, {
-                    envelope: mail.data.envelope || mail.message.getEnvelope(),
+                    envelope,
                     messageId,
                     message: JSON.stringify(data)
                 });

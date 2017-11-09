@@ -1,4 +1,16 @@
-const { is, util, net: { mail: { __: { shared, MimeNode } } } } = adone;
+const {
+    is,
+    util,
+    net: {
+        mail: {
+            __: {
+                shared,
+                MimeNode,
+                mimeFuncs
+            }
+        }
+    }
+} = adone;
 
 export default class MailMessage {
     constructor(mailer, data = {}) {
@@ -40,7 +52,23 @@ export default class MailMessage {
         }
 
         if (this.data.attachments && this.data.attachments.length) {
-            this.data.attachments.forEach((alternative, i) => {
+            this.data.attachments.forEach((attachment, i) => {
+                if (!attachment.filename) {
+                    attachment.filename =
+                        (attachment.path || attachment.href || "")
+                            .split("/")
+                            .pop()
+                            .split("?")
+                            .shift() || `attachment-${i + 1}`;
+                    if (!attachment.filename.includes(".")) {
+                        attachment.filename += `.${mimeFuncs.detectExtension(attachment.contentType)}`;
+                    }
+                }
+
+                if (!attachment.contentType) {
+                    attachment.contentType = mimeFuncs.detectMimeType(attachment.filename || attachment.path || attachment.href || "bin");
+                }
+
                 keys.push([this.data.attachments, i]);
             });
         }
@@ -97,6 +125,82 @@ export default class MailMessage {
         };
 
         setImmediate(() => resolveNext());
+    }
+
+    normalize(callback) {
+        const envelope = this.data.envelope || this.message.getEnvelope();
+        const messageId = this.message.messageId();
+
+        this.resolveAll((err, data) => {
+            if (err) {
+                return callback(err);
+            }
+
+            data.envelope = envelope;
+            data.messageId = messageId;
+
+            ["html", "text", "watchHtml"].forEach((key) => {
+                if (data[key] && data[key].content) {
+                    if (is.string(data[key].content)) {
+                        data[key] = data[key].content;
+                    } else if (is.buffer(data[key].content)) {
+                        data[key] = data[key].content.toString();
+                    }
+                }
+            });
+
+            if (data.icalEvent && is.buffer(data.icalEvent.content)) {
+                data.icalEvent.content = data.icalEvent.content.toString("base64");
+                data.icalEvent.encoding = "base64";
+            }
+
+            if (data.alternatives && data.alternatives.length) {
+                data.alternatives.forEach((alternative) => {
+                    if (alternative && alternative.content && is.buffer(alternative.content)) {
+                        alternative.content = alternative.content.toString("base64");
+                        alternative.encoding = "base64";
+                    }
+                });
+            }
+
+            if (data.attachments && data.attachments.length) {
+                data.attachments.forEach((attachment) => {
+                    if (attachment && attachment.content && is.buffer(attachment.content)) {
+                        attachment.content = attachment.content.toString("base64");
+                        attachment.encoding = "base64";
+                    }
+                });
+            }
+
+            data.normalizedHeaders = {};
+            Object.keys(data.headers || {}).forEach((key) => {
+                let value = [].concat(data.headers[key] || []).shift();
+                value = (value && value.value) || value;
+                if (value) {
+                    if (["references", "in-reply-to", "message-id", "content-id"].includes(key)) {
+                        value = this.message._encodeHeaderValue(key, value);
+                    }
+                    data.normalizedHeaders[key] = value;
+                }
+            });
+
+            if (data.list && is.object(data.list)) {
+                const listHeaders = this._getListHeaders(data.list);
+                listHeaders.forEach((entry) => {
+                    data.normalizedHeaders[entry.key] = entry.value.map((val) => (val && val.value) || val).join(", ");
+                });
+            }
+
+            if (data.references) {
+                data.normalizedHeaders.references = this.message._encodeHeaderValue("references", data.references);
+            }
+
+            if (data.inReplyTo) {
+                data.normalizedHeaders["in-reply-to"] = this.message._encodeHeaderValue("in-reply-to", data.inReplyTo);
+            }
+
+            return callback(null, data);
+        });
     }
 
     setMailerHeader() {

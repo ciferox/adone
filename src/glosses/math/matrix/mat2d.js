@@ -111,8 +111,6 @@ export const multiply = (out, a, b) => {
     return out;
 };
 
-export const mul = multiply;
-
 export const rotate = (out, a, rad) => {
     const a0 = a[0];
     const a1 = a[1];
@@ -230,8 +228,6 @@ export const subtract = (out, a, b) => {
     return out;
 };
 
-export const sub = subtract;
-
 export const multiplyScalar = (out, a, b) => {
     out[0] = a[0] * b;
     out[1] = a[1] * b;
@@ -277,3 +273,7 @@ export const equals = (a, b) => {
         Math.abs(a4 - b4) <= adone.math.matrix.EPSILON * Math.max(1.0, Math.abs(a4), Math.abs(b4)) &&
         Math.abs(a5 - b5) <= adone.math.matrix.EPSILON * Math.max(1.0, Math.abs(a5), Math.abs(b5)));
 };
+
+export const mul = multiply;
+
+export const sub = subtract;

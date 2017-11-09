@@ -1,7 +1,13 @@
 const {
     is,
-    std
+    std,
+    util
 } = adone;
+
+const unescape = (string) => {
+    // `decodeUriComponent` turns `+` into ` `, but that's not wanted.
+    return util.querystring.unescape(string.replace(/\+/g, "%2B"));
+};
 
 const sourceMappingURL = (() => {
     const innerRegex = /[#@] sourceMappingURL=([^\s'"]*)/;
@@ -70,8 +76,9 @@ export const parseMapToJSON = (string, data) => {
 };
 
 const readSync = (read, url, data) => {
+    const readUrl = unescape(url);
     try {
-        return String(read(url));
+        return String(read(readUrl));
     } catch (error) {
         error.sourceMapData = data;
         throw error;
@@ -131,7 +138,8 @@ export const resolveSourceMap = (code, codeUrl, read, callback) => {
     if (!mapData || mapData.map) {
         return callbackAsync(callback, null, mapData);
     }
-    read(mapData.url, (error, result) => {
+    const readUrl = unescape(mapData.url);
+    read(readUrl, (error, result) => {
         if (error) {
             error.sourceMapData = mapData;
             return callback(error);
@@ -151,7 +159,8 @@ export const resolveSourceMapSync = (code, codeUrl, read) => {
     if (!mapData || mapData.map) {
         return mapData;
     }
-    mapData.map = readSync(read, mapData.url, mapData);
+    const readUrl = unescape(mapData.url);
+    mapData.map = readSync(read, readUrl, mapData);
     mapData.map = parseMapToJSON(mapData.map, mapData);
     return mapData;
 };
@@ -191,11 +200,16 @@ export const resolveSources = (map, mapUrl, read, options, callback) => {
         callback = options;
         options = {};
     }
-    let pending = map.sources.length;
+    let pending = map.sources ? map.sources.length : 0;
     const result = {
         sourcesResolved: [],
         sourcesContent: []
     };
+
+    if (pending === 0) {
+        callbackAsync(callback, null, result);
+        return;
+    }
 
     const done = function () {
         pending--;
@@ -210,7 +224,8 @@ export const resolveSources = (map, mapUrl, read, options, callback) => {
             result.sourcesContent[index] = sourceContent;
             callbackAsync(done, null);
         } else {
-            read(fullUrl, (error, source) => {
+            const readUrl = unescape(fullUrl);
+            read(readUrl, (error, source) => {
                 result.sourcesContent[index] = error ? error : String(source);
                 done();
             });
@@ -223,14 +238,20 @@ export const resolveSourcesSync = (map, mapUrl, read, options) => {
         sourcesResolved: [],
         sourcesContent: []
     };
+
+    if (!map.sources || map.sources.length === 0) {
+        return result;
+    }
+
     resolveSourcesHelper(map, mapUrl, options, (fullUrl, sourceContent, index) => {
         result.sourcesResolved[index] = fullUrl;
         if (!is.null(read)) {
             if (is.string(sourceContent)) {
                 result.sourcesContent[index] = sourceContent;
             } else {
+                const readUrl = unescape(fullUrl);
                 try {
-                    result.sourcesContent[index] = String(read(fullUrl));
+                    result.sourcesContent[index] = String(read(readUrl));
                 } catch (error) {
                     result.sourcesContent[index] = error;
                 }
@@ -265,7 +286,8 @@ export const resolve = (code, codeUrl, read, options, callback) => {
             sourcesRelativeTo: mapUrl,
             map: null
         };
-        read(mapUrl, (error, result) => {
+        const readUrl = unescape(mapUrl);
+        read(readUrl, (error, result) => {
             if (error) {
                 error.sourceMapData = data;
                 return callback(error);
@@ -301,7 +323,8 @@ export const resolveSync = (code, codeUrl, read, options) => {
             sourcesRelativeTo: mapUrl,
             map: null
         };
-        mapData.map = readSync(read, mapUrl, mapData);
+        const readUrl = unescape(mapUrl);
+        mapData.map = readSync(read, readUrl, mapData);
         mapData.map = parseMapToJSON(mapData.map, mapData);
     } else {
         mapData = resolveSourceMapSync(code, codeUrl, read);

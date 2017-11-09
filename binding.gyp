@@ -712,7 +712,7 @@
     ],
     }, {
         "target_name": "report",
-        "sources": [ "src/native/report/report.cc", "src/native/report/module.cc" ],
+        "sources": [ "src/native/report/report.cc", "src/native/report/module.cc", "src/native/report/utilities.cc" ],
         "include_dirs": [ 'nan' ],
         "conditions": [
         ["OS=='linux'", {

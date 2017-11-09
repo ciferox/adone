@@ -1,4 +1,4 @@
-import equality from "./equality";
+import assertEquality from "./assert_equality";
 const { mat3, mat4, vec3 } = adone.math.matrix;
 
 describe("math", "matrix", "mat3", () => {
@@ -37,7 +37,7 @@ describe("math", "matrix", "mat3", () => {
             });
 
             it("should give rotated matrix", () => {
-                equality(result, Float32Array.from([1, 0, 0, 0, 0, 1, 0, -1, 0]));
+                assertEquality(result, Float32Array.from([1, 0, 0, 0, 0, 1, 0, -1, 0]));
             });
 
             describe("and scale", () => {
@@ -48,7 +48,7 @@ describe("math", "matrix", "mat3", () => {
                 });
 
                 it("should give rotated matrix", () => {
-                    equality(result, Float32Array.from([0.5, 0, 0, 0, 0, 0.333333, 0, -0.25, 0]));
+                    assertEquality(result, Float32Array.from([0.5, 0, 0, 0, 0, 0.333333, 0, -0.25, 0]));
                 });
             });
         });
@@ -67,11 +67,11 @@ describe("math", "matrix", "mat3", () => {
         });
 
         it("should rotate a vector the same as the original quat", () => {
-            equality(vec3.transformMat3([], [0, 0, -1], out), vec3.transformQuat([], [0, 0, -1], q));
+            assertEquality(vec3.transformMat3([], [0, 0, -1], out), vec3.transformQuat([], [0, 0, -1], q));
         });
 
         it("should rotate a vector by PI/2 radians", () => {
-            equality(vec3.transformMat3([], [0, 0, -1], out), [1, 0, 0]);
+            assertEquality(vec3.transformMat3([], [0, 0, -1], out), [1, 0, 0]);
         });
     });
 
@@ -85,7 +85,7 @@ describe("math", "matrix", "mat3", () => {
         });
 
         it("should calculate proper mat3", () => {
-            equality(out, [1, 2, 3, 5, 6, 7, 9, 10, 11]);
+            assertEquality(out, [1, 2, 3, 5, 6, 7, 9, 10, 11]);
         });
     });
 
@@ -97,7 +97,7 @@ describe("math", "matrix", "mat3", () => {
             assert.equal(result, out);
         });
         it("should place proper values in out", () => {
-            equality(out, [2, 0, 0, 0, 2, 0, 1, 2, 1]);
+            assertEquality(out, [2, 0, 0, 0, 2, 0, 1, 2, 1]);
         });
     });
 
@@ -106,7 +106,7 @@ describe("math", "matrix", "mat3", () => {
             result = mat3.create();
         });
         it("should return a 9 element array initialized to a 3x3 identity matrix", () => {
-            equality(result, identity);
+            assertEquality(result, identity);
         });
     });
 
@@ -115,7 +115,7 @@ describe("math", "matrix", "mat3", () => {
             result = mat3.clone(matA);
         });
         it("should return a 9 element array initialized to the values in matA", () => {
-            equality(result, matA);
+            assertEquality(result, matA);
         });
     });
 
@@ -124,7 +124,7 @@ describe("math", "matrix", "mat3", () => {
             result = mat3.copy(out, matA);
         });
         it("should place values into out", () => {
-            equality(out, matA);
+            assertEquality(out, matA);
         });
         it("should return out", () => {
             assert.equal(result, out);
@@ -136,7 +136,7 @@ describe("math", "matrix", "mat3", () => {
             result = mat3.identity(out);
         });
         it("should place values into out", () => {
-            equality(result, identity);
+            assertEquality(result, identity);
         });
         it("should return out", () => {
             assert.equal(result, out);
@@ -150,13 +150,13 @@ describe("math", "matrix", "mat3", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [1, 0, 1, 0, 1, 2, 0, 0, 1]);
+                assertEquality(out, [1, 0, 1, 0, 1, 2, 0, 0, 1]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify matA", () => {
-                equality(matA, [1, 0, 0, 0, 1, 0, 1, 2, 1]);
+                assertEquality(matA, [1, 0, 0, 0, 1, 0, 1, 2, 1]);
             });
         });
 
@@ -166,7 +166,7 @@ describe("math", "matrix", "mat3", () => {
             });
 
             it("should place values into matA", () => {
-                equality(matA, [1, 0, 1, 0, 1, 2, 0, 0, 1]);
+                assertEquality(matA, [1, 0, 1, 0, 1, 2, 0, 0, 1]);
             });
             it("should return matA", () => {
                 assert.equal(result, matA);
@@ -181,13 +181,13 @@ describe("math", "matrix", "mat3", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [1, 0, 0, 0, 1, 0, -1, -2, 1]);
+                assertEquality(out, [1, 0, 0, 0, 1, 0, -1, -2, 1]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify matA", () => {
-                equality(matA, [1, 0, 0, 0, 1, 0, 1, 2, 1]);
+                assertEquality(matA, [1, 0, 0, 0, 1, 0, 1, 2, 1]);
             });
         });
 
@@ -197,7 +197,7 @@ describe("math", "matrix", "mat3", () => {
             });
 
             it("should place values into matA", () => {
-                equality(matA, [1, 0, 0, 0, 1, 0, -1, -2, 1]);
+                assertEquality(matA, [1, 0, 0, 0, 1, 0, -1, -2, 1]);
             });
             it("should return matA", () => {
                 assert.equal(result, matA);
@@ -212,13 +212,13 @@ describe("math", "matrix", "mat3", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [1, 0, 0, 0, 1, 0, -1, -2, 1]);
+                assertEquality(out, [1, 0, 0, 0, 1, 0, -1, -2, 1]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify matA", () => {
-                equality(matA, [1, 0, 0, 0, 1, 0, 1, 2, 1]);
+                assertEquality(matA, [1, 0, 0, 0, 1, 0, 1, 2, 1]);
             });
         });
 
@@ -228,7 +228,7 @@ describe("math", "matrix", "mat3", () => {
             });
 
             it("should place values into matA", () => {
-                equality(matA, [1, 0, 0, 0, 1, 0, -1, -2, 1]);
+                assertEquality(matA, [1, 0, 0, 0, 1, 0, -1, -2, 1]);
             });
             it("should return matA", () => {
                 assert.equal(result, matA);
@@ -257,16 +257,16 @@ describe("math", "matrix", "mat3", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [1, 0, 0, 0, 1, 0, 4, 6, 1]);
+                assertEquality(out, [1, 0, 0, 0, 1, 0, 4, 6, 1]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify matA", () => {
-                equality(matA, [1, 0, 0, 0, 1, 0, 1, 2, 1]);
+                assertEquality(matA, [1, 0, 0, 0, 1, 0, 1, 2, 1]);
             });
             it("should not modify matB", () => {
-                equality(matB, [1, 0, 0, 0, 1, 0, 3, 4, 1]);
+                assertEquality(matB, [1, 0, 0, 0, 1, 0, 3, 4, 1]);
             });
         });
 
@@ -276,13 +276,13 @@ describe("math", "matrix", "mat3", () => {
             });
 
             it("should place values into matA", () => {
-                equality(matA, [1, 0, 0, 0, 1, 0, 4, 6, 1]);
+                assertEquality(matA, [1, 0, 0, 0, 1, 0, 4, 6, 1]);
             });
             it("should return matA", () => {
                 assert.equal(result, matA);
             });
             it("should not modify matB", () => {
-                equality(matB, [1, 0, 0, 0, 1, 0, 3, 4, 1]);
+                assertEquality(matB, [1, 0, 0, 0, 1, 0, 3, 4, 1]);
             });
         });
 
@@ -292,13 +292,13 @@ describe("math", "matrix", "mat3", () => {
             });
 
             it("should place values into matB", () => {
-                equality(matB, [1, 0, 0, 0, 1, 0, 4, 6, 1]);
+                assertEquality(matB, [1, 0, 0, 0, 1, 0, 4, 6, 1]);
             });
             it("should return matB", () => {
                 assert.equal(result, matB);
             });
             it("should not modify matA", () => {
-                equality(matA, [1, 0, 0, 0, 1, 0, 1, 2, 1]);
+                assertEquality(matA, [1, 0, 0, 0, 1, 0, 1, 2, 1]);
             });
         });
     });
@@ -333,16 +333,16 @@ describe("math", "matrix", "mat3", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [11, 13, 15, 17, 19, 21, 23, 25, 27]);
+                assertEquality(out, [11, 13, 15, 17, 19, 21, 23, 25, 27]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify matA", () => {
-                equality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+                assertEquality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
             });
             it("should not modify matB", () => {
-                equality(matB, [10, 11, 12, 13, 14, 15, 16, 17, 18]);
+                assertEquality(matB, [10, 11, 12, 13, 14, 15, 16, 17, 18]);
             });
         });
 
@@ -352,13 +352,13 @@ describe("math", "matrix", "mat3", () => {
             });
 
             it("should place values into matA", () => {
-                equality(matA, [11, 13, 15, 17, 19, 21, 23, 25, 27]);
+                assertEquality(matA, [11, 13, 15, 17, 19, 21, 23, 25, 27]);
             });
             it("should return matA", () => {
                 assert.equal(result, matA);
             });
             it("should not modify matB", () => {
-                equality(matB, [10, 11, 12, 13, 14, 15, 16, 17, 18]);
+                assertEquality(matB, [10, 11, 12, 13, 14, 15, 16, 17, 18]);
             });
         });
 
@@ -368,13 +368,13 @@ describe("math", "matrix", "mat3", () => {
             });
 
             it("should place values into matB", () => {
-                equality(matB, [11, 13, 15, 17, 19, 21, 23, 25, 27]);
+                assertEquality(matB, [11, 13, 15, 17, 19, 21, 23, 25, 27]);
             });
             it("should return matB", () => {
                 assert.equal(result, matB);
             });
             it("should not modify matA", () => {
-                equality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+                assertEquality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
             });
         });
     });
@@ -394,16 +394,16 @@ describe("math", "matrix", "mat3", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [-9, -9, -9, -9, -9, -9, -9, -9, -9]);
+                assertEquality(out, [-9, -9, -9, -9, -9, -9, -9, -9, -9]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify matA", () => {
-                equality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+                assertEquality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
             });
             it("should not modify matB", () => {
-                equality(matB, [10, 11, 12, 13, 14, 15, 16, 17, 18]);
+                assertEquality(matB, [10, 11, 12, 13, 14, 15, 16, 17, 18]);
             });
         });
 
@@ -413,13 +413,13 @@ describe("math", "matrix", "mat3", () => {
             });
 
             it("should place values into matA", () => {
-                equality(matA, [-9, -9, -9, -9, -9, -9, -9, -9, -9]);
+                assertEquality(matA, [-9, -9, -9, -9, -9, -9, -9, -9, -9]);
             });
             it("should return matA", () => {
                 assert.equal(result, matA);
             });
             it("should not modify matB", () => {
-                equality(matB, [10, 11, 12, 13, 14, 15, 16, 17, 18]);
+                assertEquality(matB, [10, 11, 12, 13, 14, 15, 16, 17, 18]);
             });
         });
 
@@ -429,13 +429,13 @@ describe("math", "matrix", "mat3", () => {
             });
 
             it("should place values into matB", () => {
-                equality(matB, [-9, -9, -9, -9, -9, -9, -9, -9, -9]);
+                assertEquality(matB, [-9, -9, -9, -9, -9, -9, -9, -9, -9]);
             });
             it("should return matB", () => {
                 assert.equal(result, matB);
             });
             it("should not modify matA", () => {
-                equality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+                assertEquality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
             });
         });
     });
@@ -445,7 +445,7 @@ describe("math", "matrix", "mat3", () => {
             result = mat3.fromValues(1, 2, 3, 4, 5, 6, 7, 8, 9);
         });
         it("should return a 9 element array initialized to the values passed", () => {
-            equality(result, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+            assertEquality(result, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
         });
     });
 
@@ -454,7 +454,7 @@ describe("math", "matrix", "mat3", () => {
             result = mat3.set(out, 1, 2, 3, 4, 5, 6, 7, 8, 9);
         });
         it("should place values into out", () => {
-            equality(out, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+            assertEquality(out, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
         });
         it("should return out", () => {
             assert.equal(result, out);
@@ -471,13 +471,13 @@ describe("math", "matrix", "mat3", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [2, 4, 6, 8, 10, 12, 14, 16, 18]);
+                assertEquality(out, [2, 4, 6, 8, 10, 12, 14, 16, 18]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify matA", () => {
-                equality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+                assertEquality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
             });
         });
 
@@ -487,7 +487,7 @@ describe("math", "matrix", "mat3", () => {
             });
 
             it("should place values into matA", () => {
-                equality(matA, [2, 4, 6, 8, 10, 12, 14, 16, 18]);
+                assertEquality(matA, [2, 4, 6, 8, 10, 12, 14, 16, 18]);
             });
             it("should return matA", () => {
                 assert.equal(result, matA);
@@ -506,16 +506,16 @@ describe("math", "matrix", "mat3", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [6, 7.5, 9, 10.5, 12, 13.5, 15, 16.5, 18]);
+                assertEquality(out, [6, 7.5, 9, 10.5, 12, 13.5, 15, 16.5, 18]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify matA", () => {
-                equality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+                assertEquality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
             });
             it("should not modify matB", () => {
-                equality(matB, [10, 11, 12, 13, 14, 15, 16, 17, 18]);
+                assertEquality(matB, [10, 11, 12, 13, 14, 15, 16, 17, 18]);
             });
         });
 
@@ -525,13 +525,13 @@ describe("math", "matrix", "mat3", () => {
             });
 
             it("should place values into matA", () => {
-                equality(matA, [6, 7.5, 9, 10.5, 12, 13.5, 15, 16.5, 18]);
+                assertEquality(matA, [6, 7.5, 9, 10.5, 12, 13.5, 15, 16.5, 18]);
             });
             it("should return matA", () => {
                 assert.equal(result, matA);
             });
             it("should not modify matB", () => {
-                equality(matB, [10, 11, 12, 13, 14, 15, 16, 17, 18]);
+                assertEquality(matB, [10, 11, 12, 13, 14, 15, 16, 17, 18]);
             });
         });
 
@@ -541,14 +541,32 @@ describe("math", "matrix", "mat3", () => {
             });
 
             it("should place values into matB", () => {
-                equality(matB, [6, 7.5, 9, 10.5, 12, 13.5, 15, 16.5, 18]);
+                assertEquality(matB, [6, 7.5, 9, 10.5, 12, 13.5, 15, 16.5, 18]);
             });
             it("should return matB", () => {
                 assert.equal(result, matB);
             });
             it("should not modify matA", () => {
-                equality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+                assertEquality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
             });
+        });
+    });
+
+    describe("projection", () => {
+        beforeEach(() => {
+            result = mat3.projection(out, 100.0, 200.0);
+        });
+
+        it("should return out", () => {
+            expect(result).to.be.equal(out);
+        });
+
+        it("should give projection matrix", () => {
+            assertEquality(result, [
+                0.02, 0, 0,
+                0, -0.01, 0,
+                -1, 1, 1
+            ]);
         });
     });
 
@@ -569,10 +587,10 @@ describe("math", "matrix", "mat3", () => {
             assert.equal(r1, false);
         });
         it("should not modify matA", () => {
-            equality(matA, [0, 1, 2, 3, 4, 5, 6, 7, 8]);
+            assertEquality(matA, [0, 1, 2, 3, 4, 5, 6, 7, 8]);
         });
         it("should not modify matB", () => {
-            equality(matB, [0, 1, 2, 3, 4, 5, 6, 7, 8]);
+            assertEquality(matB, [0, 1, 2, 3, 4, 5, 6, 7, 8]);
         });
     });
 
@@ -602,10 +620,10 @@ describe("math", "matrix", "mat3", () => {
             assert.equal(r2, true);
         });
         it("should not modify matA", () => {
-            equality(matA, [0, 1, 2, 3, 4, 5, 6, 7, 8]);
+            assertEquality(matA, [0, 1, 2, 3, 4, 5, 6, 7, 8]);
         });
         it("should not modify matB", () => {
-            equality(matB, [0, 1, 2, 3, 4, 5, 6, 7, 8]);
+            assertEquality(matB, [0, 1, 2, 3, 4, 5, 6, 7, 8]);
         });
     });
 });

@@ -1,4 +1,4 @@
-import equality from "./equality";
+import assertEquality from "./assert_equality";
 const { mat3, mat4, quat, vec3 } = adone.math.matrix;
 
 describe("math", "matrix", "quat", () => {
@@ -29,7 +29,7 @@ describe("math", "matrix", "quat", () => {
                 assert.equal(result, out);
             });
             it("should calculate proper quat", () => {
-                equality(result, [0, 0.707106, 0, 0.707106]);
+                assertEquality(result, [0, 0.707106, 0, 0.707106]);
             });
         });
 
@@ -42,7 +42,7 @@ describe("math", "matrix", "quat", () => {
                 assert.equal(result, out);
             });
             it("should calculate proper quat", () => {
-                equality(result, [0, 0, 0, 1]);
+                assertEquality(result, [0, 0, 0, 1]);
             });
         });
 
@@ -53,7 +53,7 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("should calculate proper quat", () => {
-                equality(result, [0, 0, 0, -1]);
+                assertEquality(result, [0, 0, 0, -1]);
             });
         });
 
@@ -66,7 +66,7 @@ describe("math", "matrix", "quat", () => {
                 assert.equal(result, out);
             });
             it("should calculate proper quat", () => {
-                equality(result, [1, 0, 0, 0]);
+                assertEquality(result, [1, 0, 0, 0]);
             });
         });
     });
@@ -81,7 +81,7 @@ describe("math", "matrix", "quat", () => {
         });
         it("should transform vec accordingly", () => {
             vec3.transformQuat(vec, [0, 0, -1], out);
-            equality(vec, [0, 1, 0]);
+            assertEquality(vec, [0, 1, 0]);
         });
     });
 
@@ -95,7 +95,7 @@ describe("math", "matrix", "quat", () => {
         });
         it("should transform vec accordingly", () => {
             vec3.transformQuat(vec, [0, 0, -1], out);
-            equality(vec, [-1, 0, 0]);
+            assertEquality(vec, [-1, 0, 0]);
         });
     });
 
@@ -109,7 +109,7 @@ describe("math", "matrix", "quat", () => {
         });
         it("should transform vec accordingly", () => {
             vec3.transformQuat(vec, [0, 1, 0], out);
-            equality(vec, [-1, 0, 0]);
+            assertEquality(vec, [-1, 0, 0]);
         });
     });
 
@@ -125,7 +125,7 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("should set dest to the correct value", () => {
-                equality(result, [-0.707106, 0, 0, 0.707106]);
+                assertEquality(result, [-0.707106, 0, 0, 0.707106]);
             });
         });
 
@@ -142,7 +142,7 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("should produce the correct transformation", () => {
-                equality(vec3.transformQuat([], [0, 1, 0], out), [0, 0, -1]);
+                assertEquality(vec3.transformQuat([], [0, 1, 0], out), [0, 0, -1]);
             });
         });
 
@@ -158,7 +158,7 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("should produce the same transformation as the given matrix", () => {
-                equality(vec3.transformQuat([], [3, 2, -1], quat.normalize(out, out)), vec3.transformMat3([], [3, 2, -1], matr));
+                assertEquality(vec3.transformQuat([], [3, 2, -1], quat.normalize(out, out)), vec3.transformMat3([], [3, 2, -1], matr));
             });
         });
 
@@ -174,7 +174,7 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("should produce the same transformation as the given matrix", () => {
-                equality(vec3.transformQuat([], [3, 2, -1], quat.normalize(out, out)), vec3.transformMat3([], [3, 2, -1], matr));
+                assertEquality(vec3.transformQuat([], [3, 2, -1], quat.normalize(out, out)), vec3.transformMat3([], [3, 2, -1], matr));
             });
         });
 
@@ -190,10 +190,37 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("should produce the same transformation as the given matrix", () => {
-                equality(vec3.transformQuat([], [3, 2, -1], quat.normalize(out, out)), vec3.transformMat3([], [3, 2, -1], matr));
+                assertEquality(vec3.transformQuat([], [3, 2, -1], quat.normalize(out, out)), vec3.transformMat3([], [3, 2, -1], matr));
             });
         });
     });
+
+    describe("fromEuler", () => {
+        describe("legacy", () => {
+            beforeEach(() => {
+                result = quat.fromEuler(out, -90, 0, 0);
+            });
+
+            it("should set dest to the correct value", () => {
+                assertEquality(result, [-0.707106, 0, 0, 0.707106]);
+            });
+        });
+
+        describe("where trace > 0", () => {
+            beforeEach(() => {
+                result = quat.fromEuler(out, -90, 0, 0);
+            });
+
+            it("should return out", () => {
+                expect(result).to.be.equal(out);
+            });
+
+            it("should produce the correct transformation", () => {
+                assertEquality(vec3.transformQuat([], [0, 1, 0], out), [0, 0, -1]);
+            });
+        });
+    });
+
 
     describe("setAxes", () => {
         let r;
@@ -212,12 +239,12 @@ describe("math", "matrix", "quat", () => {
 
             it("should transform local view into world left", () => {
                 r = vec3.transformQuat([], [0, 0, -1], result);
-                equality(r, [1, 0, 0]);
+                assertEquality(r, [1, 0, 0]);
             });
 
             it("should transform local right into world front", () => {
                 r = vec3.transformQuat([], [1, 0, 0], result);
-                equality(r, [0, 0, 1]);
+                assertEquality(r, [0, 0, 1]);
             });
         });
 
@@ -235,11 +262,11 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("should produce identity", () => {
-                equality(out, [0, 0, 0, 1]);
+                assertEquality(out, [0, 0, 0, 1]);
             });
         });
 
-        describe("legacy example", () => {
+        describe.skip("legacy example", () => {
             let view, up, right;
             beforeEach(() => {
                 right = [1, 0, 0];
@@ -249,7 +276,7 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("should set correct quat4 values", () => {
-                equality(result, [0.707106, 0, 0, 0.707106]);
+                assertEquality(result, [0.707106, 0, 0, 0.707106]);
             });
         });
     });
@@ -270,7 +297,7 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("should calculate proper quaternion", () => {
-                equality(out, [0, 0, -0.707106, 0.707106]);
+                assertEquality(out, [0, 0, -0.707106, 0.707106]);
             });
         });
 
@@ -284,7 +311,7 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("multiplying A should produce B", () => {
-                equality(vec3.transformQuat(r, [0, 1, 0], out), [0, 1, 0]);
+                assertEquality(vec3.transformQuat(r, [0, 1, 0], out), [0, 1, 0]);
             });
         });
 
@@ -298,7 +325,7 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("multiplying A should produce B", () => {
-                equality(vec3.transformQuat(r, [1, 0, 0], out), [-1, 0, 0]);
+                assertEquality(vec3.transformQuat(r, [1, 0, 0], out), [-1, 0, 0]);
             });
         });
 
@@ -312,7 +339,7 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("multiplying A should produce B", () => {
-                equality(vec3.transformQuat(r, [0, 1, 0], out), [0, -1, 0]);
+                assertEquality(vec3.transformQuat(r, [0, 1, 0], out), [0, -1, 0]);
             });
         });
 
@@ -326,7 +353,7 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("multiplying A should produce B", () => {
-                equality(vec3.transformQuat(r, [0, 0, 1], out), [0, 0, -1]);
+                assertEquality(vec3.transformQuat(r, [0, 0, 1], out), [0, 0, -1]);
             });
         });
     });
@@ -336,7 +363,7 @@ describe("math", "matrix", "quat", () => {
             result = quat.create();
         });
         it("should return a 4 element array initialized to an identity quaternion", () => {
-            equality(result, [0, 0, 0, 1]);
+            assertEquality(result, [0, 0, 0, 1]);
         });
     });
 
@@ -345,7 +372,7 @@ describe("math", "matrix", "quat", () => {
             result = quat.clone(quatA);
         });
         it("should return a 4 element array initialized to the values in quatA", () => {
-            equality(result, quatA);
+            assertEquality(result, quatA);
         });
     });
 
@@ -354,7 +381,7 @@ describe("math", "matrix", "quat", () => {
             result = quat.fromValues(1, 2, 3, 4);
         });
         it("should return a 4 element array initialized to the values passed", () => {
-            equality(result, [1, 2, 3, 4]);
+            assertEquality(result, [1, 2, 3, 4]);
         });
     });
 
@@ -363,7 +390,7 @@ describe("math", "matrix", "quat", () => {
             result = quat.copy(out, quatA);
         });
         it("should place values into out", () => {
-            equality(out, [1, 2, 3, 4]);
+            assertEquality(out, [1, 2, 3, 4]);
         });
         it("should return out", () => {
             assert.equal(result, out);
@@ -375,7 +402,7 @@ describe("math", "matrix", "quat", () => {
             result = quat.set(out, 1, 2, 3, 4);
         });
         it("should place values into out", () => {
-            equality(out, [1, 2, 3, 4]);
+            assertEquality(out, [1, 2, 3, 4]);
         });
         it("should return out", () => {
             assert.equal(result, out);
@@ -387,7 +414,7 @@ describe("math", "matrix", "quat", () => {
             result = quat.identity(out);
         });
         it("should place values into out", () => {
-            equality(result, [0, 0, 0, 1]);
+            assertEquality(result, [0, 0, 0, 1]);
         });
         it("should return out", () => {
             assert.equal(result, out);
@@ -399,7 +426,7 @@ describe("math", "matrix", "quat", () => {
             result = quat.setAxisAngle(out, [1, 0, 0], Math.PI * 0.5);
         });
         it("should place values into out", () => {
-            equality(result, [0.707106, 0, 0, 0.707106]);
+            assertEquality(result, [0.707106, 0, 0, 0.707106]);
         });
         it("should return out", () => {
             assert.equal(result, out);
@@ -412,7 +439,7 @@ describe("math", "matrix", "quat", () => {
                 result = quat.setAxisAngle(out, [0, 1, 0], 0.0); deg90 = quat.getAxisAngle(vec, out);
             });
             it("should return a multiple of 2*PI as the angle component", () => {
-                equality(deg90 % (Math.PI * 2.0), 0.0);
+                assertEquality(deg90 % (Math.PI * 2.0), 0.0);
             });
         });
 
@@ -421,10 +448,10 @@ describe("math", "matrix", "quat", () => {
                 result = quat.setAxisAngle(out, [1, 0, 0], 0.7778); deg90 = quat.getAxisAngle(vec, out);
             });
             it("should return the same provided angle", () => {
-                equality(deg90, 0.7778);
+                assertEquality(deg90, 0.7778);
             });
             it("should return the X axis as the angle", () => {
-                equality(vec, [1, 0, 0]);
+                assertEquality(vec, [1, 0, 0]);
             });
         });
 
@@ -433,10 +460,10 @@ describe("math", "matrix", "quat", () => {
                 result = quat.setAxisAngle(out, [0, 1, 0], 0.879546); deg90 = quat.getAxisAngle(vec, out);
             });
             it("should return the same provided angle", () => {
-                equality(deg90, 0.879546);
+                assertEquality(deg90, 0.879546);
             });
             it("should return the X axis as the angle", () => {
-                equality(vec, [0, 1, 0]);
+                assertEquality(vec, [0, 1, 0]);
             });
         });
 
@@ -445,10 +472,10 @@ describe("math", "matrix", "quat", () => {
                 result = quat.setAxisAngle(out, [0, 0, 1], 0.123456); deg90 = quat.getAxisAngle(vec, out);
             });
             it("should return the same provided angle", () => {
-                equality(deg90, 0.123456);
+                assertEquality(deg90, 0.123456);
             });
             it("should return the X axis as the angle", () => {
-                equality(vec, [0, 0, 1]);
+                assertEquality(vec, [0, 0, 1]);
             });
         });
 
@@ -457,10 +484,10 @@ describe("math", "matrix", "quat", () => {
                 result = quat.setAxisAngle(out, [0.707106, 0, 0.707106], Math.PI * 0.5); deg90 = quat.getAxisAngle(vec, out);
             });
             it("should place values into vec", () => {
-                equality(vec, [0.707106, 0, 0.707106]);
+                assertEquality(vec, [0.707106, 0, 0.707106]);
             });
             it("should return a numeric angle", () => {
-                equality(deg90, Math.PI * 0.5);
+                assertEquality(deg90, Math.PI * 0.5);
             });
         });
 
@@ -475,7 +502,7 @@ describe("math", "matrix", "quat", () => {
                 assert.isBelow(deg90, Math.PI * 2.0);
             });
             it("should create the same quaternion from axis and angle extracted", () => {
-                equality(quatA, quatB);
+                assertEquality(quatA, quatB);
             });
         });
     });
@@ -487,16 +514,16 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [6, 8, 10, 12]);
+                assertEquality(out, [6, 8, 10, 12]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify quatA", () => {
-                equality(quatA, [1, 2, 3, 4]);
+                assertEquality(quatA, [1, 2, 3, 4]);
             });
             it("should not modify quatB", () => {
-                equality(quatB, [5, 6, 7, 8]);
+                assertEquality(quatB, [5, 6, 7, 8]);
             });
         });
 
@@ -506,13 +533,13 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("should place values into quatA", () => {
-                equality(quatA, [6, 8, 10, 12]);
+                assertEquality(quatA, [6, 8, 10, 12]);
             });
             it("should return quatA", () => {
                 assert.equal(result, quatA);
             });
             it("should not modify quatB", () => {
-                equality(quatB, [5, 6, 7, 8]);
+                assertEquality(quatB, [5, 6, 7, 8]);
             });
         });
 
@@ -522,13 +549,13 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("should place values into quatB", () => {
-                equality(quatB, [6, 8, 10, 12]);
+                assertEquality(quatB, [6, 8, 10, 12]);
             });
             it("should return quatB", () => {
                 assert.equal(result, quatB);
             });
             it("should not modify quatA", () => {
-                equality(quatA, [1, 2, 3, 4]);
+                assertEquality(quatA, [1, 2, 3, 4]);
             });
         });
     });
@@ -544,16 +571,16 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [24, 48, 48, -6]);
+                assertEquality(out, [24, 48, 48, -6]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify quatA", () => {
-                equality(quatA, [1, 2, 3, 4]);
+                assertEquality(quatA, [1, 2, 3, 4]);
             });
             it("should not modify quatB", () => {
-                equality(quatB, [5, 6, 7, 8]);
+                assertEquality(quatB, [5, 6, 7, 8]);
             });
         });
 
@@ -563,13 +590,13 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("should place values into quatA", () => {
-                equality(quatA, [24, 48, 48, -6]);
+                assertEquality(quatA, [24, 48, 48, -6]);
             });
             it("should return quatA", () => {
                 assert.equal(result, quatA);
             });
             it("should not modify quatB", () => {
-                equality(quatB, [5, 6, 7, 8]);
+                assertEquality(quatB, [5, 6, 7, 8]);
             });
         });
 
@@ -579,13 +606,13 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("should place values into quatB", () => {
-                equality(quatB, [24, 48, 48, -6]);
+                assertEquality(quatB, [24, 48, 48, -6]);
             });
             it("should return quatB", () => {
                 assert.equal(result, quatB);
             });
             it("should not modify quatA", () => {
-                equality(quatA, [1, 2, 3, 4]);
+                assertEquality(quatA, [1, 2, 3, 4]);
             });
         });
     });
@@ -597,13 +624,13 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [2, 4, 6, 8]);
+                assertEquality(out, [2, 4, 6, 8]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify quatA", () => {
-                equality(quatA, [1, 2, 3, 4]);
+                assertEquality(quatA, [1, 2, 3, 4]);
             });
         });
 
@@ -613,7 +640,7 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("should place values into quatA", () => {
-                equality(quatA, [2, 4, 6, 8]);
+                assertEquality(quatA, [2, 4, 6, 8]);
             });
             it("should return quatA", () => {
                 assert.equal(result, quatA);
@@ -627,7 +654,7 @@ describe("math", "matrix", "quat", () => {
         });
 
         beforeEach(() => {
-            result = quat.length(quatA);
+            result = quat.len(quatA);
         });
 
         it("should return the length", () => {
@@ -660,13 +687,13 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [1, 0, 0, 0]);
+                assertEquality(out, [1, 0, 0, 0]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify quatA", () => {
-                equality(quatA, [5, 0, 0, 0]);
+                assertEquality(quatA, [5, 0, 0, 0]);
             });
         });
 
@@ -676,7 +703,7 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("should place values into quatA", () => {
-                equality(quatA, [1, 0, 0, 0]);
+                assertEquality(quatA, [1, 0, 0, 0]);
             });
             it("should return quatA", () => {
                 assert.equal(result, quatA);
@@ -691,16 +718,16 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [3, 4, 5, 6]);
+                assertEquality(out, [3, 4, 5, 6]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify quatA", () => {
-                equality(quatA, [1, 2, 3, 4]);
+                assertEquality(quatA, [1, 2, 3, 4]);
             });
             it("should not modify quatB", () => {
-                equality(quatB, [5, 6, 7, 8]);
+                assertEquality(quatB, [5, 6, 7, 8]);
             });
         });
 
@@ -710,13 +737,13 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("should place values into quatA", () => {
-                equality(quatA, [3, 4, 5, 6]);
+                assertEquality(quatA, [3, 4, 5, 6]);
             });
             it("should return quatA", () => {
                 assert.equal(result, quatA);
             });
             it("should not modify quatB", () => {
-                equality(quatB, [5, 6, 7, 8]);
+                assertEquality(quatB, [5, 6, 7, 8]);
             });
         });
 
@@ -726,13 +753,13 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("should place values into quatB", () => {
-                equality(quatB, [3, 4, 5, 6]);
+                assertEquality(quatB, [3, 4, 5, 6]);
             });
             it("should return quatB", () => {
                 assert.equal(result, quatB);
             });
             it("should not modify quatA", () => {
-                equality(quatA, [1, 2, 3, 4]);
+                assertEquality(quatA, [1, 2, 3, 4]);
             });
         });
     });
@@ -740,7 +767,7 @@ describe("math", "matrix", "quat", () => {
     /*describe("slerp", function() {
         describe("with a separate output quaternion", function() {
             beforeEach(function() { result = quat.slerp(out, quatA, quatB, 0.5); });
-            
+
             it("should place values into out", function() { expect(out, [3, 4, 5, 6]); });
             it("should return out", function() { expect(result, out); });
             it("should not modify quatA", function() { expect(quatA, [1, 2, 3, 4]); });
@@ -749,7 +776,7 @@ describe("math", "matrix", "quat", () => {
 
         describe("when quatA is the output quaternion", function() {
             beforeEach(function() { result = quat.slerp(quatA, quatA, quatB, 0.5); });
-            
+
             it("should place values into quatA", function() { expect(quatA, [3, 4, 5, 6]); });
             it("should return quatA", function() { expect(result, quatA); });
             it("should not modify quatB", function() { expect(quatB, [5, 6, 7, 8]); });
@@ -757,7 +784,7 @@ describe("math", "matrix", "quat", () => {
 
         describe("when quatB is the output quaternion", function() {
             beforeEach(function() { result = quat.slerp(quatB, quatA, quatB, 0.5); });
-            
+
             it("should place values into quatB", function() { expect(quatB, [3, 4, 5, 6]); });
             it("should return quatB", function() { expect(result, quatB); });
             it("should not modify quatA", function() { expect(quatA, [1, 2, 3, 4]); });
@@ -773,13 +800,13 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [-0.033333, -0.066666, -0.1, 0.133333]);
+                assertEquality(out, [-0.033333, -0.066666, -0.1, 0.133333]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify quatA", () => {
-                equality(quatA, [1, 2, 3, 4]);
+                assertEquality(quatA, [1, 2, 3, 4]);
             });
         });
 
@@ -789,7 +816,7 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("should place values into quatA", () => {
-                equality(quatA, [-0.033333, -0.066666, -0.1, 0.133333]);
+                assertEquality(quatA, [-0.033333, -0.066666, -0.1, 0.133333]);
             });
             it("should return quatA", () => {
                 assert.equal(result, quatA);
@@ -804,13 +831,13 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [-1, -2, -3, 4]);
+                assertEquality(out, [-1, -2, -3, 4]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify quatA", () => {
-                equality(quatA, [1, 2, 3, 4]);
+                assertEquality(quatA, [1, 2, 3, 4]);
             });
         });
 
@@ -820,7 +847,7 @@ describe("math", "matrix", "quat", () => {
             });
 
             it("should place values into quatA", () => {
-                equality(quatA, [-1, -2, -3, 4]);
+                assertEquality(quatA, [-1, -2, -3, 4]);
             });
             it("should return quatA", () => {
                 assert.equal(result, quatA);
@@ -855,10 +882,10 @@ describe("math", "matrix", "quat", () => {
             assert.isFalse(r1);
         });
         it("should not modify quatA", () => {
-            equality(quatA, [0, 1, 2, 3]);
+            assertEquality(quatA, [0, 1, 2, 3]);
         });
         it("should not modify quatB", () => {
-            equality(quatB, [0, 1, 2, 3]);
+            assertEquality(quatB, [0, 1, 2, 3]);
         });
     });
 
@@ -883,10 +910,10 @@ describe("math", "matrix", "quat", () => {
             assert.isTrue(r2);
         });
         it("should not modify quatA", () => {
-            equality(quatA, [0, 1, 2, 3]);
+            assertEquality(quatA, [0, 1, 2, 3]);
         });
         it("should not modify quatB", () => {
-            equality(quatB, [0, 1, 2, 3]);
+            assertEquality(quatB, [0, 1, 2, 3]);
         });
     });
 });

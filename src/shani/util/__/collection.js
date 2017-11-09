@@ -77,6 +77,13 @@ export default class Collection {
         return this.add(util.spy.apply(util.spy, args));
     }
 
+    createStubInstance(constructor) {
+        if (!is.function(constructor)) {
+            throw new TypeError("The constructor should be a function.");
+        }
+        return this.stub(Object.create(constructor.prototype));
+    }
+
     stub(object, property, ...args) {
         if (object && !is.undefined(property) && !(property in object)) {
             throw new TypeError(`Cannot stub non-existent own property ${__.util.valueToString(property)}`);

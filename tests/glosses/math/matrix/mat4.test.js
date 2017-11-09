@@ -1,14 +1,12 @@
-import equality from "./equality";
+import assertEquality from "./assert_equality";
 const { mat4, vec3, quat } = adone.math.matrix;
 
-const buildMat4Tests = (useSIMD) => {
+const buildMat4Tests = () => {
     let out;
     let matA;
     let matB;
     let identity;
     let result;
-
-    mat4.TEST_PATH = useSIMD ? mat4.simd : mat4.scalar;
 
     return function () {
         beforeEach(() => {
@@ -27,7 +25,7 @@ const buildMat4Tests = (useSIMD) => {
                 result = mat4.create();
             });
             it("should return a 16 element array initialized to a 4x4 identity matrix", () => {
-                equality(result, identity);
+                assertEquality(result, identity);
             });
         });
 
@@ -36,7 +34,7 @@ const buildMat4Tests = (useSIMD) => {
                 result = mat4.clone(matA);
             });
             it("should return a 16 element array initialized to the values in matA", () => {
-                equality(result, matA);
+                assertEquality(result, matA);
             });
         });
 
@@ -45,7 +43,7 @@ const buildMat4Tests = (useSIMD) => {
                 result = mat4.copy(out, matA);
             });
             it("should place values into out", () => {
-                equality(out, matA);
+                assertEquality(out, matA);
             });
             it("should return out", () => {
                 assert.equal(result, out);
@@ -57,7 +55,7 @@ const buildMat4Tests = (useSIMD) => {
                 result = mat4.identity(out);
             });
             it("should place values into out", () => {
-                equality(result, identity);
+                assertEquality(result, identity);
             });
             it("should return out", () => {
                 assert.equal(result, out);
@@ -67,27 +65,27 @@ const buildMat4Tests = (useSIMD) => {
         describe("transpose", () => {
             describe("with a separate output matrix", () => {
                 beforeEach(() => {
-                    result = mat4.TEST_PATH.transpose(out, matA);
+                    result = mat4.transpose(out, matA);
                 });
 
                 it("should place values into out", () => {
-                    equality(out, [1, 0, 0, 1, 0, 1, 0, 2, 0, 0, 1, 3, 0, 0, 0, 1]);
+                    assertEquality(out, [1, 0, 0, 1, 0, 1, 0, 2, 0, 0, 1, 3, 0, 0, 0, 1]);
                 });
                 it("should return out", () => {
                     assert.equal(result, out);
                 });
                 it("should not modify matA", () => {
-                    equality(matA, [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 2, 3, 1]);
+                    assertEquality(matA, [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 2, 3, 1]);
                 });
             });
 
             describe("when matA is the output matrix", () => {
                 beforeEach(() => {
-                    result = mat4.TEST_PATH.transpose(matA, matA);
+                    result = mat4.transpose(matA, matA);
                 });
 
                 it("should place values into matA", () => {
-                    equality(matA, [
+                    assertEquality(matA, [
                         1, 0, 0, 1,
                         0, 1, 0, 2,
                         0, 0, 1, 3,
@@ -103,11 +101,11 @@ const buildMat4Tests = (useSIMD) => {
         describe("invert", () => {
             describe("with a separate output matrix", () => {
                 beforeEach(() => {
-                    result = mat4.TEST_PATH.invert(out, matA);
+                    result = mat4.invert(out, matA);
                 });
 
                 it("should place values into out", () => {
-                    equality(out, [
+                    assertEquality(out, [
                         1, 0, 0, 0,
                         0, 1, 0, 0,
                         0, 0, 1, 0,
@@ -118,7 +116,7 @@ const buildMat4Tests = (useSIMD) => {
                     assert.equal(result, out);
                 });
                 it("should not modify matA", () => {
-                    equality(matA, [
+                    assertEquality(matA, [
                         1, 0, 0, 0,
                         0, 1, 0, 0,
                         0, 0, 1, 0,
@@ -129,11 +127,11 @@ const buildMat4Tests = (useSIMD) => {
 
             describe("when matA is the output matrix", () => {
                 beforeEach(() => {
-                    result = mat4.TEST_PATH.invert(matA, matA);
+                    result = mat4.invert(matA, matA);
                 });
 
                 it("should place values into matA", () => {
-                    equality(matA, [
+                    assertEquality(matA, [
                         1, 0, 0, 0,
                         0, 1, 0, 0,
                         0, 0, 1, 0,
@@ -149,11 +147,11 @@ const buildMat4Tests = (useSIMD) => {
         describe("adjoint", () => {
             describe("with a separate output matrix", () => {
                 beforeEach(() => {
-                    result = mat4.TEST_PATH.adjoint(out, matA);
+                    result = mat4.adjoint(out, matA);
                 });
 
                 it("should place values into out", () => {
-                    equality(out, [
+                    assertEquality(out, [
                         1, 0, 0, 0,
                         0, 1, 0, 0,
                         0, 0, 1, 0,
@@ -164,7 +162,7 @@ const buildMat4Tests = (useSIMD) => {
                     assert.equal(result, out);
                 });
                 it("should not modify matA", () => {
-                    equality(matA, [
+                    assertEquality(matA, [
                         1, 0, 0, 0,
                         0, 1, 0, 0,
                         0, 0, 1, 0,
@@ -175,11 +173,11 @@ const buildMat4Tests = (useSIMD) => {
 
             describe("when matA is the output matrix", () => {
                 beforeEach(() => {
-                    result = mat4.TEST_PATH.adjoint(matA, matA);
+                    result = mat4.adjoint(matA, matA);
                 });
 
                 it("should place values into matA", () => {
-                    equality(matA, [
+                    assertEquality(matA, [
                         1, 0, 0, 0,
                         0, 1, 0, 0,
                         0, 0, 1, 0,
@@ -209,11 +207,11 @@ const buildMat4Tests = (useSIMD) => {
 
             describe("with a separate output matrix", () => {
                 beforeEach(() => {
-                    result = mat4.TEST_PATH.multiply(out, matA, matB);
+                    result = mat4.multiply(out, matA, matB);
                 });
 
                 it("should place values into out", () => {
-                    equality(out, [
+                    assertEquality(out, [
                         1, 0, 0, 0,
                         0, 1, 0, 0,
                         0, 0, 1, 0,
@@ -224,7 +222,7 @@ const buildMat4Tests = (useSIMD) => {
                     assert.equal(result, out);
                 });
                 it("should not modify matA", () => {
-                    equality(matA, [
+                    assertEquality(matA, [
                         1, 0, 0, 0,
                         0, 1, 0, 0,
                         0, 0, 1, 0,
@@ -232,7 +230,7 @@ const buildMat4Tests = (useSIMD) => {
                     ]);
                 });
                 it("should not modify matB", () => {
-                    equality(matB, [
+                    assertEquality(matB, [
                         1, 0, 0, 0,
                         0, 1, 0, 0,
                         0, 0, 1, 0,
@@ -243,11 +241,11 @@ const buildMat4Tests = (useSIMD) => {
 
             describe("when matA is the output matrix", () => {
                 beforeEach(() => {
-                    result = mat4.TEST_PATH.multiply(matA, matA, matB);
+                    result = mat4.multiply(matA, matA, matB);
                 });
 
                 it("should place values into matA", () => {
-                    equality(matA, [
+                    assertEquality(matA, [
                         1, 0, 0, 0,
                         0, 1, 0, 0,
                         0, 0, 1, 0,
@@ -258,7 +256,7 @@ const buildMat4Tests = (useSIMD) => {
                     assert.equal(result, matA);
                 });
                 it("should not modify matB", () => {
-                    equality(matB, [
+                    assertEquality(matB, [
                         1, 0, 0, 0,
                         0, 1, 0, 0,
                         0, 0, 1, 0,
@@ -269,11 +267,11 @@ const buildMat4Tests = (useSIMD) => {
 
             describe("when matB is the output matrix", () => {
                 beforeEach(() => {
-                    result = mat4.TEST_PATH.multiply(matB, matA, matB);
+                    result = mat4.multiply(matB, matA, matB);
                 });
 
                 it("should place values into matB", () => {
-                    equality(matB, [
+                    assertEquality(matB, [
                         1, 0, 0, 0,
                         0, 1, 0, 0,
                         0, 0, 1, 0,
@@ -284,7 +282,7 @@ const buildMat4Tests = (useSIMD) => {
                     assert.equal(result, matB);
                 });
                 it("should not modify matA", () => {
-                    equality(matA, [
+                    assertEquality(matA, [
                         1, 0, 0, 0,
                         0, 1, 0, 0,
                         0, 0, 1, 0,
@@ -297,11 +295,11 @@ const buildMat4Tests = (useSIMD) => {
         describe("translate", () => {
             describe("with a separate output matrix", () => {
                 beforeEach(() => {
-                    result = mat4.TEST_PATH.translate(out, matA, [4, 5, 6]);
+                    result = mat4.translate(out, matA, [4, 5, 6]);
                 });
 
                 it("should place values into out", () => {
-                    equality(out, [
+                    assertEquality(out, [
                         1, 0, 0, 0,
                         0, 1, 0, 0,
                         0, 0, 1, 0,
@@ -312,7 +310,7 @@ const buildMat4Tests = (useSIMD) => {
                     assert.equal(result, out);
                 });
                 it("should not modify matA", () => {
-                    equality(matA, [
+                    assertEquality(matA, [
                         1, 0, 0, 0,
                         0, 1, 0, 0,
                         0, 0, 1, 0,
@@ -323,11 +321,11 @@ const buildMat4Tests = (useSIMD) => {
 
             describe("when matA is the output matrix", () => {
                 beforeEach(() => {
-                    result = mat4.TEST_PATH.translate(matA, matA, [4, 5, 6]);
+                    result = mat4.translate(matA, matA, [4, 5, 6]);
                 });
 
                 it("should place values into matA", () => {
-                    equality(matA, [
+                    assertEquality(matA, [
                         1, 0, 0, 0,
                         0, 1, 0, 0,
                         0, 0, 1, 0,
@@ -343,11 +341,11 @@ const buildMat4Tests = (useSIMD) => {
         describe("scale", () => {
             describe("with a separate output matrix", () => {
                 beforeEach(() => {
-                    result = mat4.TEST_PATH.scale(out, matA, [4, 5, 6]);
+                    result = mat4.scale(out, matA, [4, 5, 6]);
                 });
 
                 it("should place values into out", () => {
-                    equality(out, [
+                    assertEquality(out, [
                         4, 0, 0, 0,
                         0, 5, 0, 0,
                         0, 0, 6, 0,
@@ -358,7 +356,7 @@ const buildMat4Tests = (useSIMD) => {
                     assert.equal(result, out);
                 });
                 it("should not modify matA", () => {
-                    equality(matA, [
+                    assertEquality(matA, [
                         1, 0, 0, 0,
                         0, 1, 0, 0,
                         0, 0, 1, 0,
@@ -369,11 +367,11 @@ const buildMat4Tests = (useSIMD) => {
 
             describe("when matA is the output matrix", () => {
                 beforeEach(() => {
-                    result = mat4.TEST_PATH.scale(matA, matA, [4, 5, 6]);
+                    result = mat4.scale(matA, matA, [4, 5, 6]);
                 });
 
                 it("should place values into matA", () => {
-                    equality(matA, [
+                    assertEquality(matA, [
                         4, 0, 0, 0,
                         0, 5, 0, 0,
                         0, 0, 6, 0,
@@ -396,7 +394,7 @@ const buildMat4Tests = (useSIMD) => {
                 });
 
                 it("should place values into out", () => {
-                    equality(out, [
+                    assertEquality(out, [
                         1, 0, 0, 0,
                         0, Math.cos(rad), Math.sin(rad), 0,
                         0, -Math.sin(rad), Math.cos(rad), 0,
@@ -407,7 +405,7 @@ const buildMat4Tests = (useSIMD) => {
                     assert.equal(result, out);
                 });
                 it("should not modify matA", () => {
-                    equality(matA, [
+                    assertEquality(matA, [
                         1, 0, 0, 0,
                         0, 1, 0, 0,
                         0, 0, 1, 0,
@@ -422,7 +420,7 @@ const buildMat4Tests = (useSIMD) => {
                 });
 
                 it("should place values into matA", () => {
-                    equality(matA, [
+                    assertEquality(matA, [
                         1, 0, 0, 0,
                         0, Math.cos(rad), Math.sin(rad), 0,
                         0, -Math.sin(rad), Math.cos(rad), 0,
@@ -440,11 +438,11 @@ const buildMat4Tests = (useSIMD) => {
 
             describe("with a separate output matrix", () => {
                 beforeEach(() => {
-                    result = mat4.TEST_PATH.rotateX(out, matA, rad);
+                    result = mat4.rotateX(out, matA, rad);
                 });
 
                 it("should place values into out", () => {
-                    equality(out, [
+                    assertEquality(out, [
                         1, 0, 0, 0,
                         0, Math.cos(rad), Math.sin(rad), 0,
                         0, -Math.sin(rad), Math.cos(rad), 0,
@@ -455,7 +453,7 @@ const buildMat4Tests = (useSIMD) => {
                     assert.equal(result, out);
                 });
                 it("should not modify matA", () => {
-                    equality(matA, [
+                    assertEquality(matA, [
                         1, 0, 0, 0,
                         0, 1, 0, 0,
                         0, 0, 1, 0,
@@ -466,11 +464,11 @@ const buildMat4Tests = (useSIMD) => {
 
             describe("when matA is the output matrix", () => {
                 beforeEach(() => {
-                    result = mat4.TEST_PATH.rotateX(matA, matA, rad);
+                    result = mat4.rotateX(matA, matA, rad);
                 });
 
                 it("should place values into matA", () => {
-                    equality(matA, [
+                    assertEquality(matA, [
                         1, 0, 0, 0,
                         0, Math.cos(rad), Math.sin(rad), 0,
                         0, -Math.sin(rad), Math.cos(rad), 0,
@@ -488,11 +486,11 @@ const buildMat4Tests = (useSIMD) => {
 
             describe("with a separate output matrix", () => {
                 beforeEach(() => {
-                    result = mat4.TEST_PATH.rotateY(out, matA, rad);
+                    result = mat4.rotateY(out, matA, rad);
                 });
 
                 it("should place values into out", () => {
-                    equality(out, [
+                    assertEquality(out, [
                         Math.cos(rad), 0, -Math.sin(rad), 0,
                         0, 1, 0, 0,
                         Math.sin(rad), 0, Math.cos(rad), 0,
@@ -503,7 +501,7 @@ const buildMat4Tests = (useSIMD) => {
                     assert.equal(result, out);
                 });
                 it("should not modify matA", () => {
-                    equality(matA, [
+                    assertEquality(matA, [
                         1, 0, 0, 0,
                         0, 1, 0, 0,
                         0, 0, 1, 0,
@@ -514,11 +512,11 @@ const buildMat4Tests = (useSIMD) => {
 
             describe("when matA is the output matrix", () => {
                 beforeEach(() => {
-                    result = mat4.TEST_PATH.rotateY(matA, matA, rad);
+                    result = mat4.rotateY(matA, matA, rad);
                 });
 
                 it("should place values into matA", () => {
-                    equality(matA, [
+                    assertEquality(matA, [
                         Math.cos(rad), 0, -Math.sin(rad), 0,
                         0, 1, 0, 0,
                         Math.sin(rad), 0, Math.cos(rad), 0,
@@ -536,11 +534,11 @@ const buildMat4Tests = (useSIMD) => {
 
             describe("with a separate output matrix", () => {
                 beforeEach(() => {
-                    result = mat4.TEST_PATH.rotateZ(out, matA, rad);
+                    result = mat4.rotateZ(out, matA, rad);
                 });
 
                 it("should place values into out", () => {
-                    equality(out, [
+                    assertEquality(out, [
                         Math.cos(rad), Math.sin(rad), 0, 0,
                         -Math.sin(rad), Math.cos(rad), 0, 0,
                         0, 0, 1, 0,
@@ -551,7 +549,7 @@ const buildMat4Tests = (useSIMD) => {
                     assert.equal(result, out);
                 });
                 it("should not modify matA", () => {
-                    equality(matA, [
+                    assertEquality(matA, [
                         1, 0, 0, 0,
                         0, 1, 0, 0,
                         0, 0, 1, 0,
@@ -562,11 +560,11 @@ const buildMat4Tests = (useSIMD) => {
 
             describe("when matA is the output matrix", () => {
                 beforeEach(() => {
-                    result = mat4.TEST_PATH.rotateZ(matA, matA, rad);
+                    result = mat4.rotateZ(matA, matA, rad);
                 });
 
                 it("should place values into matA", () => {
-                    equality(matA, [
+                    assertEquality(matA, [
                         Math.cos(rad), Math.sin(rad), 0, 0,
                         -Math.sin(rad), Math.cos(rad), 0, 0,
                         0, 0, 1, 0,
@@ -592,7 +590,7 @@ const buildMat4Tests = (useSIMD) => {
                     assert.equal(result, out);
                 });
                 it("should return the zero vector", () => {
-                    equality(result, [0, 0, 0]);
+                    assertEquality(result, [0, 0, 0]);
                 });
             });
 
@@ -603,7 +601,7 @@ const buildMat4Tests = (useSIMD) => {
                     result = mat4.getTranslation(out, matB);
                 });
                 it("should return translation vector", () => {
-                    equality(out, [4, 5, 6]);
+                    assertEquality(out, [4, 5, 6]);
                 });
             });
 
@@ -618,7 +616,7 @@ const buildMat4Tests = (useSIMD) => {
                     mat4.getTranslation(result, out);
                 });
                 it("should keep the same translation vector, regardless of rotation", () => {
-                    equality(result, [5, 6, 7]);
+                    assertEquality(result, [5, 6, 7]);
                 });
             });
         });
@@ -634,7 +632,7 @@ const buildMat4Tests = (useSIMD) => {
                     assert.equal(result, out);
                 });
                 it("should return the identity vector", () => {
-                    equality(result, [1, 1, 1]);
+                    assertEquality(result, [1, 1, 1]);
                 });
             });
 
@@ -647,7 +645,7 @@ const buildMat4Tests = (useSIMD) => {
                     result = mat4.getScaling(out, matA);
                 });
                 it("should return translation vector", () => {
-                    equality(out, [4, 5, 6]);
+                    assertEquality(out, [4, 5, 6]);
                 });
             });
 
@@ -662,7 +660,7 @@ const buildMat4Tests = (useSIMD) => {
                     mat4.getScaling(result, out);
                 });
                 it("should return the identity vector", () => {
-                    equality(result, [1, 1, 1]);
+                    assertEquality(result, [1, 1, 1]);
                 });
             });
 
@@ -677,7 +675,7 @@ const buildMat4Tests = (useSIMD) => {
                     mat4.getScaling(result, out);
                 });
                 it("should return the same scaling factor when created", () => {
-                    equality(result, [5, 6, 7]);
+                    assertEquality(result, [5, 6, 7]);
                 });
             });
 
@@ -696,7 +694,7 @@ const buildMat4Tests = (useSIMD) => {
                 it("should return the unit quaternion", () => {
                     const unitQuat = quat.create();
                     quat.identity(unitQuat);
-                    equality(result, unitQuat);
+                    assertEquality(result, unitQuat);
                 });
             });
 
@@ -709,7 +707,7 @@ const buildMat4Tests = (useSIMD) => {
                 it("should return the unit quaternion", () => {
                     const unitQuat = quat.create();
                     quat.identity(unitQuat);
-                    equality(result, unitQuat);
+                    assertEquality(result, unitQuat);
                 });
             });
 
@@ -729,8 +727,8 @@ const buildMat4Tests = (useSIMD) => {
                     const outaxis = vec3.create();
                     const outangle = quat.getAxisAngle(outaxis, result);
 
-                    equality(outaxis, testVec);
-                    equality(outangle, ang);
+                    assertEquality(outaxis, testVec);
+                    assertEquality(outangle, ang);
                 });
             });
         });
@@ -740,7 +738,7 @@ const buildMat4Tests = (useSIMD) => {
                 result = mat4.frustum(out, -1, 1, -1, 1, -1, 1);
             });
             it("should place values into out", () => {
-                equality(result, [
+                assertEquality(result, [
                     -1, 0, 0, 0,
                     0, -1, 0, 0,
                     0, 0, 0, -1,
@@ -758,7 +756,7 @@ const buildMat4Tests = (useSIMD) => {
                 result = mat4.perspective(out, fovy, 1, 0, 1);
             });
             it("should place values into out", () => {
-                equality(result, [
+                assertEquality(result, [
                     1, 0, 0, 0,
                     0, 1, 0, 0,
                     0, 0, -1, -1,
@@ -774,7 +772,7 @@ const buildMat4Tests = (useSIMD) => {
                     result = mat4.perspective(out, 45 * Math.PI / 180.0, 640 / 480, 0.1, 200);
                 });
                 it("should calculate correct matrix", () => {
-                    equality(result, [
+                    assertEquality(result, [
                         1.81066, 0, 0, 0,
                         0, 2.414213, 0, 0,
                         0, 0, -1.001, -1,
@@ -789,7 +787,7 @@ const buildMat4Tests = (useSIMD) => {
                 result = mat4.ortho(out, -1, 1, -1, 1, -1, 1);
             });
             it("should place values into out", () => {
-                equality(result, [
+                assertEquality(result, [
                     1, 0, 0, 0,
                     0, 1, 0, 0,
                     0, 0, -1, 0,
@@ -818,17 +816,17 @@ const buildMat4Tests = (useSIMD) => {
 
                 it("should transform view into local -Z", () => {
                     result = vec3.transformMat4(new Float32Array(3), view, out);
-                    equality(result, [0, 0, -1]);
+                    assertEquality(result, [0, 0, -1]);
                 });
 
                 it("should transform up into local +Y", () => {
                     result = vec3.transformMat4(new Float32Array(3), up, out);
-                    equality(result, [0, 1, 0]);
+                    assertEquality(result, [0, 1, 0]);
                 });
 
                 it("should transform right into local +X", () => {
                     result = vec3.transformMat4(new Float32Array(3), right, out);
-                    equality(result, [1, 0, 0]);
+                    assertEquality(result, [1, 0, 0]);
                 });
 
                 it("should return out", () => {
@@ -846,17 +844,17 @@ const buildMat4Tests = (useSIMD) => {
 
                 it("should transform a point 'above' into local +Y", () => {
                     result = vec3.transformMat4(new Float32Array(3), [0, 2, -1], out);
-                    equality(result, [0, 1, 0]);
+                    assertEquality(result, [0, 1, 0]);
                 });
 
                 it("should transform a point 'right of' into local +X", () => {
                     result = vec3.transformMat4(new Float32Array(3), [1, 2, 0], out);
-                    equality(result, [1, 0, 0]);
+                    assertEquality(result, [1, 0, 0]);
                 });
 
                 it("should transform a point 'in front of' into local -Z", () => {
                     result = vec3.transformMat4(new Float32Array(3), [0, 1, 0], out);
-                    equality(result, [0, 0, -1]);
+                    assertEquality(result, [0, 0, -1]);
                 });
             });
 
@@ -867,7 +865,7 @@ const buildMat4Tests = (useSIMD) => {
                 result = mat4.lookAt(out, eye, center, up);
             });
             it("should place values into out", () => {
-                equality(result, [
+                assertEquality(result, [
                     1, 0, 0, 0,
                     0, 1, 0, 0,
                     0, 0, 1, 0,
@@ -876,6 +874,84 @@ const buildMat4Tests = (useSIMD) => {
             });
             it("should return out", () => {
                 assert.equal(result, out);
+            });
+        });
+
+        describe("targetTo", () => {
+            let eye = new Float32Array([0, 0, 1]);
+            let center = new Float32Array([0, 0, -1]);
+            let up = new Float32Array([0, 1, 0]);
+            let view;
+            let right;
+
+            describe("looking down", () => {
+                beforeEach(() => {
+                    view = new Float32Array([0, -1, 0]);
+                    up = new Float32Array([0, 0, -1]);
+                    right = new Float32Array([1, 0, 0]);
+                    result = mat4.targetTo(out, [0, 0, 0], view, up);
+                });
+
+                it("should transform view into local Z", () => {
+                    result = vec3.transformMat4(new Float32Array(3), view, out);
+                    assertEquality(result, [0, 0, 1]);
+                });
+
+                it("should transform up into local -Y", () => {
+                    result = vec3.transformMat4(new Float32Array(3), up, out);
+                    assertEquality(result, [0, -1, 0]);
+                });
+
+                it("should transform right into local +X", () => {
+                    result = vec3.transformMat4(new Float32Array(3), right, out);
+                    assertEquality(result, [1, 0, 0]);
+                });
+
+                it("should return out", () => {
+                    expect(result).to.be.equal(out);
+                });
+            });
+
+            describe("#74", () => {
+                beforeEach(() => {
+                    mat4.targetTo(out,
+                        new Float32Array([0, 2, 0]),
+                        new Float32Array([0, 0.6, 0]),
+                        new Float32Array([0, 0, -1]));
+                });
+
+                it("should transform a point 'above' into local +Y", () => {
+                    result = vec3.transformMat4(new Float32Array(3), [0, 2, -1], out);
+                    assertEquality(result, [0, 1, -2]);
+                });
+
+                it("should transform a point 'right of' into local +X", () => {
+                    result = vec3.transformMat4(new Float32Array(3), [1, 2, 0], out);
+                    assertEquality(result, [1, 2, -2]);
+                });
+
+                it("should transform a point 'in front of' into local -Z", () => {
+                    result = vec3.transformMat4(new Float32Array(3), [0, 1, 0], out);
+                    assertEquality(result, [0, 2, -1]);
+                });
+            });
+
+            beforeEach(() => {
+                eye = new Float32Array([0, 0, 1]);
+                center = new Float32Array([0, 0, -1]);
+                up = new Float32Array([0, 1, 0]);
+                result = mat4.targetTo(out, eye, center, up);
+            });
+            it("should place values into out", () => {
+                assertEquality(result, [
+                    1, 0, 0, 0,
+                    0, 1, 0, 0,
+                    0, 0, 1, 0,
+                    0, 0, 1, 1
+                ]);
+            });
+            it("should return out", () => {
+                expect(result).to.be.equal(out);
             });
         });
 
@@ -910,16 +986,16 @@ const buildMat4Tests = (useSIMD) => {
                 });
 
                 it("should place values into out", () => {
-                    equality(out, [18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48]);
+                    assertEquality(out, [18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48]);
                 });
                 it("should return out", () => {
-                    equality(result, out);
+                    assertEquality(result, out);
                 });
                 it("should not modify matA", () => {
-                    equality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+                    assertEquality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
                 });
                 it("should not modify matB", () => {
-                    equality(matB, [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);
+                    assertEquality(matB, [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);
                 });
             });
 
@@ -929,13 +1005,13 @@ const buildMat4Tests = (useSIMD) => {
                 });
 
                 it("should place values into matA", () => {
-                    equality(matA, [18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48]);
+                    assertEquality(matA, [18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48]);
                 });
                 it("should return matA", () => {
-                    equality(result, matA);
+                    assertEquality(result, matA);
                 });
                 it("should not modify matB", () => {
-                    equality(matB, [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);
+                    assertEquality(matB, [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);
                 });
             });
 
@@ -945,13 +1021,13 @@ const buildMat4Tests = (useSIMD) => {
                 });
 
                 it("should place values into matB", () => {
-                    equality(matB, [18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48]);
+                    assertEquality(matB, [18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48]);
                 });
                 it("should return matB", () => {
-                    equality(result, matB);
+                    assertEquality(result, matB);
                 });
                 it("should not modify matA", () => {
-                    equality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+                    assertEquality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
                 });
             });
         });
@@ -971,16 +1047,16 @@ const buildMat4Tests = (useSIMD) => {
                 });
 
                 it("should place values into out", () => {
-                    equality(out, [-16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16]);
+                    assertEquality(out, [-16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16]);
                 });
                 it("should return out", () => {
-                    equality(result, out);
+                    assertEquality(result, out);
                 });
                 it("should not modify matA", () => {
-                    equality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+                    assertEquality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
                 });
                 it("should not modify matB", () => {
-                    equality(matB, [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);
+                    assertEquality(matB, [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);
                 });
             });
 
@@ -990,13 +1066,13 @@ const buildMat4Tests = (useSIMD) => {
                 });
 
                 it("should place values into matA", () => {
-                    equality(matA, [-16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16]);
+                    assertEquality(matA, [-16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16]);
                 });
                 it("should return matA", () => {
-                    equality(result, matA);
+                    assertEquality(result, matA);
                 });
                 it("should not modify matB", () => {
-                    equality(matB, [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);
+                    assertEquality(matB, [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);
                 });
             });
 
@@ -1006,13 +1082,13 @@ const buildMat4Tests = (useSIMD) => {
                 });
 
                 it("should place values into matB", () => {
-                    equality(matB, [-16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16]);
+                    assertEquality(matB, [-16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16]);
                 });
                 it("should return matB", () => {
-                    equality(result, matB);
+                    assertEquality(result, matB);
                 });
                 it("should not modify matA", () => {
-                    equality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+                    assertEquality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
                 });
             });
         });
@@ -1022,7 +1098,7 @@ const buildMat4Tests = (useSIMD) => {
                 result = mat4.fromValues(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
             });
             it("should return a 16 element array initialized to the values passed", () => {
-                equality(result, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+                assertEquality(result, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
             });
         });
 
@@ -1031,10 +1107,10 @@ const buildMat4Tests = (useSIMD) => {
                 result = mat4.set(out, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
             });
             it("should place values into out", () => {
-                equality(out, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+                assertEquality(out, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
             });
             it("should return out", () => {
-                equality(result, out);
+                assertEquality(result, out);
             });
         });
 
@@ -1048,13 +1124,13 @@ const buildMat4Tests = (useSIMD) => {
                 });
 
                 it("should place values into out", () => {
-                    equality(out, [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32]);
+                    assertEquality(out, [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32]);
                 });
                 it("should return out", () => {
-                    equality(result, out);
+                    assertEquality(result, out);
                 });
                 it("should not modify matA", () => {
-                    equality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+                    assertEquality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
                 });
             });
 
@@ -1064,10 +1140,10 @@ const buildMat4Tests = (useSIMD) => {
                 });
 
                 it("should place values into matA", () => {
-                    equality(matA, [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32]);
+                    assertEquality(matA, [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32]);
                 });
                 it("should return matA", () => {
-                    equality(result, matA);
+                    assertEquality(result, matA);
                 });
             });
         });
@@ -1083,16 +1159,16 @@ const buildMat4Tests = (useSIMD) => {
                 });
 
                 it("should place values into out", () => {
-                    equality(out, [9.5, 11, 12.5, 14, 15.5, 17, 18.5, 20, 21.5, 23, 24.5, 26, 27.5, 29, 30.5, 32]);
+                    assertEquality(out, [9.5, 11, 12.5, 14, 15.5, 17, 18.5, 20, 21.5, 23, 24.5, 26, 27.5, 29, 30.5, 32]);
                 });
                 it("should return out", () => {
-                    equality(result, out);
+                    assertEquality(result, out);
                 });
                 it("should not modify matA", () => {
-                    equality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+                    assertEquality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
                 });
                 it("should not modify matB", () => {
-                    equality(matB, [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);
+                    assertEquality(matB, [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);
                 });
             });
 
@@ -1102,13 +1178,13 @@ const buildMat4Tests = (useSIMD) => {
                 });
 
                 it("should place values into matA", () => {
-                    equality(matA, [9.5, 11, 12.5, 14, 15.5, 17, 18.5, 20, 21.5, 23, 24.5, 26, 27.5, 29, 30.5, 32]);
+                    assertEquality(matA, [9.5, 11, 12.5, 14, 15.5, 17, 18.5, 20, 21.5, 23, 24.5, 26, 27.5, 29, 30.5, 32]);
                 });
                 it("should return matA", () => {
-                    equality(result, matA);
+                    assertEquality(result, matA);
                 });
                 it("should not modify matB", () => {
-                    equality(matB, [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);
+                    assertEquality(matB, [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);
                 });
             });
 
@@ -1118,13 +1194,13 @@ const buildMat4Tests = (useSIMD) => {
                 });
 
                 it("should place values into matB", () => {
-                    equality(matB, [9.5, 11, 12.5, 14, 15.5, 17, 18.5, 20, 21.5, 23, 24.5, 26, 27.5, 29, 30.5, 32]);
+                    assertEquality(matB, [9.5, 11, 12.5, 14, 15.5, 17, 18.5, 20, 21.5, 23, 24.5, 26, 27.5, 29, 30.5, 32]);
                 });
                 it("should return matB", () => {
-                    equality(result, matB);
+                    assertEquality(result, matB);
                 });
                 it("should not modify matA", () => {
-                    equality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+                    assertEquality(matA, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
                 });
             });
         });
@@ -1148,10 +1224,10 @@ const buildMat4Tests = (useSIMD) => {
                 assert.isFalse(r1);
             });
             it("should not modify matA", () => {
-                equality(matA, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
+                assertEquality(matA, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             });
             it("should not modify matB", () => {
-                equality(matB, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
+                assertEquality(matB, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             });
         });
 
@@ -1180,14 +1256,13 @@ const buildMat4Tests = (useSIMD) => {
                 assert.isTrue(r2);
             });
             it("should not modify matA", () => {
-                equality(matA, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
+                assertEquality(matA, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             });
             it("should not modify matB", () => {
-                equality(matB, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
+                assertEquality(matB, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             });
         });
     };
 };
 
-describe("math", "matrix", "mat4 (SISD)", buildMat4Tests(false));
-describe("math", "matrix", "mat4 (SIMD)", buildMat4Tests(true));
+describe("math", "matrix", "mat4 (SISD)", buildMat4Tests());

@@ -125,7 +125,7 @@ export const identity = (out) => {
     return out;
 };
 
-scalar.transpose = (out, a) => {
+export const transpose = (out, a) => {
     // If we are transposing ourselves we can skip a few steps but have to cache some values
     if (out === a) {
         const a01 = a[1];
@@ -169,32 +169,7 @@ scalar.transpose = (out, a) => {
     return out;
 };
 
-simd.transpose = (out, a) => {
-    const a0 = adone.math.simd.Float32x4.load(a, 0);
-    const a1 = adone.math.simd.Float32x4.load(a, 4);
-    const a2 = adone.math.simd.Float32x4.load(a, 8);
-    const a3 = adone.math.simd.Float32x4.load(a, 12);
-
-    let tmp01 = adone.math.simd.Float32x4.shuffle(a0, a1, 0, 1, 4, 5);
-    let tmp23 = adone.math.simd.Float32x4.shuffle(a2, a3, 0, 1, 4, 5);
-    const out0 = adone.math.simd.Float32x4.shuffle(tmp01, tmp23, 0, 2, 4, 6);
-    const out1 = adone.math.simd.Float32x4.shuffle(tmp01, tmp23, 1, 3, 5, 7);
-    adone.math.simd.Float32x4.store(out, 0, out0);
-    adone.math.simd.Float32x4.store(out, 4, out1);
-
-    tmp01 = adone.math.simd.Float32x4.shuffle(a0, a1, 2, 3, 6, 7);
-    tmp23 = adone.math.simd.Float32x4.shuffle(a2, a3, 2, 3, 6, 7);
-    const out2 = adone.math.simd.Float32x4.shuffle(tmp01, tmp23, 0, 2, 4, 6);
-    const out3 = adone.math.simd.Float32x4.shuffle(tmp01, tmp23, 1, 3, 5, 7);
-    adone.math.simd.Float32x4.store(out, 8, out2);
-    adone.math.simd.Float32x4.store(out, 12, out3);
-
-    return out;
-};
-
-export const transpose = simd.transpose;
-
-scalar.invert = (out, a) => {
+export const invert = (out, a) => {
     const a00 = a[0];
     const a01 = a[1];
     const a02 = a[2];
@@ -253,96 +228,7 @@ scalar.invert = (out, a) => {
     return out;
 };
 
-simd.invert = (out, a) => {
-    const a0 = adone.math.simd.Float32x4.load(a, 0);
-    const a1 = adone.math.simd.Float32x4.load(a, 4);
-    const a2 = adone.math.simd.Float32x4.load(a, 8);
-    const a3 = adone.math.simd.Float32x4.load(a, 12);
-
-    // Compute matrix adjugate
-    let tmp1 = adone.math.simd.Float32x4.shuffle(a0, a1, 0, 1, 4, 5);
-    let row1 = adone.math.simd.Float32x4.shuffle(a2, a3, 0, 1, 4, 5);
-    const row0 = adone.math.simd.Float32x4.shuffle(tmp1, row1, 0, 2, 4, 6);
-    row1 = adone.math.simd.Float32x4.shuffle(row1, tmp1, 1, 3, 5, 7);
-    tmp1 = adone.math.simd.Float32x4.shuffle(a0, a1, 2, 3, 6, 7);
-    let row3 = adone.math.simd.Float32x4.shuffle(a2, a3, 2, 3, 6, 7);
-    let row2 = adone.math.simd.Float32x4.shuffle(tmp1, row3, 0, 2, 4, 6);
-    row3 = adone.math.simd.Float32x4.shuffle(row3, tmp1, 1, 3, 5, 7);
-
-    tmp1 = adone.math.simd.Float32x4.mul(row2, row3);
-    tmp1 = adone.math.simd.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
-    let minor0 = adone.math.simd.Float32x4.mul(row1, tmp1);
-    let minor1 = adone.math.simd.Float32x4.mul(row0, tmp1);
-    tmp1 = adone.math.simd.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
-    minor0 = adone.math.simd.Float32x4.sub(adone.math.simd.Float32x4.mul(row1, tmp1), minor0);
-    minor1 = adone.math.simd.Float32x4.sub(adone.math.simd.Float32x4.mul(row0, tmp1), minor1);
-    minor1 = adone.math.simd.Float32x4.swizzle(minor1, 2, 3, 0, 1);
-
-    tmp1 = adone.math.simd.Float32x4.mul(row1, row2);
-    tmp1 = adone.math.simd.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
-    minor0 = adone.math.simd.Float32x4.add(adone.math.simd.Float32x4.mul(row3, tmp1), minor0);
-    let minor3 = adone.math.simd.Float32x4.mul(row0, tmp1);
-    tmp1 = adone.math.simd.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
-    minor0 = adone.math.simd.Float32x4.sub(minor0, adone.math.simd.Float32x4.mul(row3, tmp1));
-    minor3 = adone.math.simd.Float32x4.sub(adone.math.simd.Float32x4.mul(row0, tmp1), minor3);
-    minor3 = adone.math.simd.Float32x4.swizzle(minor3, 2, 3, 0, 1);
-
-    tmp1 = adone.math.simd.Float32x4.mul(adone.math.simd.Float32x4.swizzle(row1, 2, 3, 0, 1), row3);
-    tmp1 = adone.math.simd.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
-    row2 = adone.math.simd.Float32x4.swizzle(row2, 2, 3, 0, 1);
-    minor0 = adone.math.simd.Float32x4.add(adone.math.simd.Float32x4.mul(row2, tmp1), minor0);
-    let minor2 = adone.math.simd.Float32x4.mul(row0, tmp1);
-    tmp1 = adone.math.simd.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
-    minor0 = adone.math.simd.Float32x4.sub(minor0, adone.math.simd.Float32x4.mul(row2, tmp1));
-    minor2 = adone.math.simd.Float32x4.sub(adone.math.simd.Float32x4.mul(row0, tmp1), minor2);
-    minor2 = adone.math.simd.Float32x4.swizzle(minor2, 2, 3, 0, 1);
-
-    tmp1 = adone.math.simd.Float32x4.mul(row0, row1);
-    tmp1 = adone.math.simd.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
-    minor2 = adone.math.simd.Float32x4.add(adone.math.simd.Float32x4.mul(row3, tmp1), minor2);
-    minor3 = adone.math.simd.Float32x4.sub(adone.math.simd.Float32x4.mul(row2, tmp1), minor3);
-    tmp1 = adone.math.simd.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
-    minor2 = adone.math.simd.Float32x4.sub(adone.math.simd.Float32x4.mul(row3, tmp1), minor2);
-    minor3 = adone.math.simd.Float32x4.sub(minor3, adone.math.simd.Float32x4.mul(row2, tmp1));
-
-    tmp1 = adone.math.simd.Float32x4.mul(row0, row3);
-    tmp1 = adone.math.simd.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
-    minor1 = adone.math.simd.Float32x4.sub(minor1, adone.math.simd.Float32x4.mul(row2, tmp1));
-    minor2 = adone.math.simd.Float32x4.add(adone.math.simd.Float32x4.mul(row1, tmp1), minor2);
-    tmp1 = adone.math.simd.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
-    minor1 = adone.math.simd.Float32x4.add(adone.math.simd.Float32x4.mul(row2, tmp1), minor1);
-    minor2 = adone.math.simd.Float32x4.sub(minor2, adone.math.simd.Float32x4.mul(row1, tmp1));
-
-    tmp1 = adone.math.simd.Float32x4.mul(row0, row2);
-    tmp1 = adone.math.simd.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
-    minor1 = adone.math.simd.Float32x4.add(adone.math.simd.Float32x4.mul(row3, tmp1), minor1);
-    minor3 = adone.math.simd.Float32x4.sub(minor3, adone.math.simd.Float32x4.mul(row1, tmp1));
-    tmp1 = adone.math.simd.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
-    minor1 = adone.math.simd.Float32x4.sub(minor1, adone.math.simd.Float32x4.mul(row3, tmp1));
-    minor3 = adone.math.simd.Float32x4.add(adone.math.simd.Float32x4.mul(row1, tmp1), minor3);
-
-    // Compute matrix determinant
-    let det = adone.math.simd.Float32x4.mul(row0, minor0);
-    det = adone.math.simd.Float32x4.add(adone.math.simd.Float32x4.swizzle(det, 2, 3, 0, 1), det);
-    det = adone.math.simd.Float32x4.add(adone.math.simd.Float32x4.swizzle(det, 1, 0, 3, 2), det);
-    tmp1 = adone.math.simd.Float32x4.reciprocalApproximation(det);
-    det = adone.math.simd.Float32x4.sub(adone.math.simd.Float32x4.add(tmp1, tmp1), adone.math.simd.Float32x4.mul(det, adone.math.simd.Float32x4.mul(tmp1, tmp1)));
-    det = adone.math.simd.Float32x4.swizzle(det, 0, 0, 0, 0);
-    if (!det) {
-        return null;
-    }
-
-    // Compute matrix inverse
-    adone.math.simd.Float32x4.store(out, 0, adone.math.simd.Float32x4.mul(det, minor0));
-    adone.math.simd.Float32x4.store(out, 4, adone.math.simd.Float32x4.mul(det, minor1));
-    adone.math.simd.Float32x4.store(out, 8, adone.math.simd.Float32x4.mul(det, minor2));
-    adone.math.simd.Float32x4.store(out, 12, adone.math.simd.Float32x4.mul(det, minor3));
-    return out;
-};
-
-export const invert = simd.invert;
-
-scalar.adjoint = (out, a) => {
+export const adjoint = (out, a) => {
     const a00 = a[0];
     const a01 = a[1];
     const a02 = a[2];
@@ -379,84 +265,6 @@ scalar.adjoint = (out, a) => {
     return out;
 };
 
-simd.adjoint = (out, a) => {
-    const a0 = adone.math.simd.Float32x4.load(a, 0);
-    const a1 = adone.math.simd.Float32x4.load(a, 4);
-    const a2 = adone.math.simd.Float32x4.load(a, 8);
-    const a3 = adone.math.simd.Float32x4.load(a, 12);
-
-    // Transpose the source matrix.  Sort of.  Not a true transpose operation
-    let tmp1 = adone.math.simd.Float32x4.shuffle(a0, a1, 0, 1, 4, 5);
-    let row1 = adone.math.simd.Float32x4.shuffle(a2, a3, 0, 1, 4, 5);
-    const row0 = adone.math.simd.Float32x4.shuffle(tmp1, row1, 0, 2, 4, 6);
-    row1 = adone.math.simd.Float32x4.shuffle(row1, tmp1, 1, 3, 5, 7);
-
-    tmp1 = adone.math.simd.Float32x4.shuffle(a0, a1, 2, 3, 6, 7);
-    let row3 = adone.math.simd.Float32x4.shuffle(a2, a3, 2, 3, 6, 7);
-    let row2 = adone.math.simd.Float32x4.shuffle(tmp1, row3, 0, 2, 4, 6);
-    row3 = adone.math.simd.Float32x4.shuffle(row3, tmp1, 1, 3, 5, 7);
-
-    tmp1 = adone.math.simd.Float32x4.mul(row2, row3);
-    tmp1 = adone.math.simd.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
-    let minor0 = adone.math.simd.Float32x4.mul(row1, tmp1);
-    let minor1 = adone.math.simd.Float32x4.mul(row0, tmp1);
-    tmp1 = adone.math.simd.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
-    minor0 = adone.math.simd.Float32x4.sub(adone.math.simd.Float32x4.mul(row1, tmp1), minor0);
-    minor1 = adone.math.simd.Float32x4.sub(adone.math.simd.Float32x4.mul(row0, tmp1), minor1);
-    minor1 = adone.math.simd.Float32x4.swizzle(minor1, 2, 3, 0, 1);
-
-    tmp1 = adone.math.simd.Float32x4.mul(row1, row2);
-    tmp1 = adone.math.simd.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
-    minor0 = adone.math.simd.Float32x4.add(adone.math.simd.Float32x4.mul(row3, tmp1), minor0);
-    let minor3 = adone.math.simd.Float32x4.mul(row0, tmp1);
-    tmp1 = adone.math.simd.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
-    minor0 = adone.math.simd.Float32x4.sub(minor0, adone.math.simd.Float32x4.mul(row3, tmp1));
-    minor3 = adone.math.simd.Float32x4.sub(adone.math.simd.Float32x4.mul(row0, tmp1), minor3);
-    minor3 = adone.math.simd.Float32x4.swizzle(minor3, 2, 3, 0, 1);
-
-    tmp1 = adone.math.simd.Float32x4.mul(adone.math.simd.Float32x4.swizzle(row1, 2, 3, 0, 1), row3);
-    tmp1 = adone.math.simd.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
-    row2 = adone.math.simd.Float32x4.swizzle(row2, 2, 3, 0, 1);
-    minor0 = adone.math.simd.Float32x4.add(adone.math.simd.Float32x4.mul(row2, tmp1), minor0);
-    let minor2 = adone.math.simd.Float32x4.mul(row0, tmp1);
-    tmp1 = adone.math.simd.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
-    minor0 = adone.math.simd.Float32x4.sub(minor0, adone.math.simd.Float32x4.mul(row2, tmp1));
-    minor2 = adone.math.simd.Float32x4.sub(adone.math.simd.Float32x4.mul(row0, tmp1), minor2);
-    minor2 = adone.math.simd.Float32x4.swizzle(minor2, 2, 3, 0, 1);
-
-    tmp1 = adone.math.simd.Float32x4.mul(row0, row1);
-    tmp1 = adone.math.simd.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
-    minor2 = adone.math.simd.Float32x4.add(adone.math.simd.Float32x4.mul(row3, tmp1), minor2);
-    minor3 = adone.math.simd.Float32x4.sub(adone.math.simd.Float32x4.mul(row2, tmp1), minor3);
-    tmp1 = adone.math.simd.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
-    minor2 = adone.math.simd.Float32x4.sub(adone.math.simd.Float32x4.mul(row3, tmp1), minor2);
-    minor3 = adone.math.simd.Float32x4.sub(minor3, adone.math.simd.Float32x4.mul(row2, tmp1));
-
-    tmp1 = adone.math.simd.Float32x4.mul(row0, row3);
-    tmp1 = adone.math.simd.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
-    minor1 = adone.math.simd.Float32x4.sub(minor1, adone.math.simd.Float32x4.mul(row2, tmp1));
-    minor2 = adone.math.simd.Float32x4.add(adone.math.simd.Float32x4.mul(row1, tmp1), minor2);
-    tmp1 = adone.math.simd.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
-    minor1 = adone.math.simd.Float32x4.add(adone.math.simd.Float32x4.mul(row2, tmp1), minor1);
-    minor2 = adone.math.simd.Float32x4.sub(minor2, adone.math.simd.Float32x4.mul(row1, tmp1));
-
-    tmp1 = adone.math.simd.Float32x4.mul(row0, row2);
-    tmp1 = adone.math.simd.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
-    minor1 = adone.math.simd.Float32x4.add(adone.math.simd.Float32x4.mul(row3, tmp1), minor1);
-    minor3 = adone.math.simd.Float32x4.sub(minor3, adone.math.simd.Float32x4.mul(row1, tmp1));
-    tmp1 = adone.math.simd.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
-    minor1 = adone.math.simd.Float32x4.sub(minor1, adone.math.simd.Float32x4.mul(row3, tmp1));
-    minor3 = adone.math.simd.Float32x4.add(adone.math.simd.Float32x4.mul(row1, tmp1), minor3);
-
-    adone.math.simd.Float32x4.store(out, 0, minor0);
-    adone.math.simd.Float32x4.store(out, 4, minor1);
-    adone.math.simd.Float32x4.store(out, 8, minor2);
-    adone.math.simd.Float32x4.store(out, 12, minor3);
-    return out;
-};
-
-export const adjoint = simd.adjoint;
-
 export const determinant = (a) => {
     const a00 = a[0];
     const a01 = a[1];
@@ -492,56 +300,7 @@ export const determinant = (a) => {
     return b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
 };
 
-simd.multiply = (out, a, b) => {
-    const a0 = adone.math.simd.Float32x4.load(a, 0);
-    const a1 = adone.math.simd.Float32x4.load(a, 4);
-    const a2 = adone.math.simd.Float32x4.load(a, 8);
-    const a3 = adone.math.simd.Float32x4.load(a, 12);
-
-    const b0 = adone.math.simd.Float32x4.load(b, 0);
-    const out0 = adone.math.simd.Float32x4.add(
-        adone.math.simd.Float32x4.mul(adone.math.simd.Float32x4.swizzle(b0, 0, 0, 0, 0), a0),
-        adone.math.simd.Float32x4.add(
-            adone.math.simd.Float32x4.mul(adone.math.simd.Float32x4.swizzle(b0, 1, 1, 1, 1), a1),
-            adone.math.simd.Float32x4.add(
-                adone.math.simd.Float32x4.mul(adone.math.simd.Float32x4.swizzle(b0, 2, 2, 2, 2), a2),
-                adone.math.simd.Float32x4.mul(adone.math.simd.Float32x4.swizzle(b0, 3, 3, 3, 3), a3))));
-    adone.math.simd.Float32x4.store(out, 0, out0);
-
-    const b1 = adone.math.simd.Float32x4.load(b, 4);
-    const out1 = adone.math.simd.Float32x4.add(
-        adone.math.simd.Float32x4.mul(adone.math.simd.Float32x4.swizzle(b1, 0, 0, 0, 0), a0),
-        adone.math.simd.Float32x4.add(
-            adone.math.simd.Float32x4.mul(adone.math.simd.Float32x4.swizzle(b1, 1, 1, 1, 1), a1),
-            adone.math.simd.Float32x4.add(
-                adone.math.simd.Float32x4.mul(adone.math.simd.Float32x4.swizzle(b1, 2, 2, 2, 2), a2),
-                adone.math.simd.Float32x4.mul(adone.math.simd.Float32x4.swizzle(b1, 3, 3, 3, 3), a3))));
-    adone.math.simd.Float32x4.store(out, 4, out1);
-
-    const b2 = adone.math.simd.Float32x4.load(b, 8);
-    const out2 = adone.math.simd.Float32x4.add(
-        adone.math.simd.Float32x4.mul(adone.math.simd.Float32x4.swizzle(b2, 0, 0, 0, 0), a0),
-        adone.math.simd.Float32x4.add(
-            adone.math.simd.Float32x4.mul(adone.math.simd.Float32x4.swizzle(b2, 1, 1, 1, 1), a1),
-            adone.math.simd.Float32x4.add(
-                adone.math.simd.Float32x4.mul(adone.math.simd.Float32x4.swizzle(b2, 2, 2, 2, 2), a2),
-                adone.math.simd.Float32x4.mul(adone.math.simd.Float32x4.swizzle(b2, 3, 3, 3, 3), a3))));
-    adone.math.simd.Float32x4.store(out, 8, out2);
-
-    const b3 = adone.math.simd.Float32x4.load(b, 12);
-    const out3 = adone.math.simd.Float32x4.add(
-        adone.math.simd.Float32x4.mul(adone.math.simd.Float32x4.swizzle(b3, 0, 0, 0, 0), a0),
-        adone.math.simd.Float32x4.add(
-            adone.math.simd.Float32x4.mul(adone.math.simd.Float32x4.swizzle(b3, 1, 1, 1, 1), a1),
-            adone.math.simd.Float32x4.add(
-                adone.math.simd.Float32x4.mul(adone.math.simd.Float32x4.swizzle(b3, 2, 2, 2, 2), a2),
-                adone.math.simd.Float32x4.mul(adone.math.simd.Float32x4.swizzle(b3, 3, 3, 3, 3), a3))));
-    adone.math.simd.Float32x4.store(out, 12, out3);
-
-    return out;
-};
-
-scalar.multiply = (out, a, b) => {
+export const multiply = (out, a, b) => {
     const a00 = a[0];
     const a01 = a[1];
     const a02 = a[2];
@@ -564,7 +323,6 @@ scalar.multiply = (out, a, b) => {
     let b1 = b[1];
     let b2 = b[2];
     let b3 = b[3];
-
     out[0] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
     out[1] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
     out[2] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
@@ -590,11 +348,7 @@ scalar.multiply = (out, a, b) => {
     return out;
 };
 
-export const multiply = simd.multiply;
-
-export const mul = multiply;
-
-scalar.translate = (out, a, v) => {
+export const translate = (out, a, v) => {
     const x = v[0];
     const y = v[1];
     const z = v[2];
@@ -631,32 +385,7 @@ scalar.translate = (out, a, v) => {
     return out;
 };
 
-simd.translate = (out, a, v) => {
-    let a0 = adone.math.simd.Float32x4.load(a, 0);
-    let a1 = adone.math.simd.Float32x4.load(a, 4);
-    let a2 = adone.math.simd.Float32x4.load(a, 8);
-    const a3 = adone.math.simd.Float32x4.load(a, 12);
-    const vec = adone.math.simd.Float32x4(v[0], v[1], v[2], 0);
-
-    if (a !== out) {
-        out[0] = a[0]; out[1] = a[1]; out[2] = a[2]; out[3] = a[3];
-        out[4] = a[4]; out[5] = a[5]; out[6] = a[6]; out[7] = a[7];
-        out[8] = a[8]; out[9] = a[9]; out[10] = a[10]; out[11] = a[11];
-    }
-
-    a0 = adone.math.simd.Float32x4.mul(a0, adone.math.simd.Float32x4.swizzle(vec, 0, 0, 0, 0));
-    a1 = adone.math.simd.Float32x4.mul(a1, adone.math.simd.Float32x4.swizzle(vec, 1, 1, 1, 1));
-    a2 = adone.math.simd.Float32x4.mul(a2, adone.math.simd.Float32x4.swizzle(vec, 2, 2, 2, 2));
-
-    const t0 = adone.math.simd.Float32x4.add(a0, adone.math.simd.Float32x4.add(a1, adone.math.simd.Float32x4.add(a2, a3)));
-    adone.math.simd.Float32x4.store(out, 12, t0);
-
-    return out;
-};
-
-export const translate = simd.translate;
-
-scalar.scale = (out, a, v) => {
+export const scale = (out, a, v) => {
     const x = v[0];
     const y = v[1];
     const z = v[2];
@@ -679,27 +408,6 @@ scalar.scale = (out, a, v) => {
     out[15] = a[15];
     return out;
 };
-
-simd.scale = (out, a, v) => {
-    const vec = adone.math.simd.Float32x4(v[0], v[1], v[2], 0);
-
-    const a0 = adone.math.simd.Float32x4.load(a, 0);
-    adone.math.simd.Float32x4.store(out, 0, adone.math.simd.Float32x4.mul(a0, adone.math.simd.Float32x4.swizzle(vec, 0, 0, 0, 0)));
-
-    const a1 = adone.math.simd.Float32x4.load(a, 4);
-    adone.math.simd.Float32x4.store(out, 4, adone.math.simd.Float32x4.mul(a1, adone.math.simd.Float32x4.swizzle(vec, 1, 1, 1, 1)));
-
-    const a2 = adone.math.simd.Float32x4.load(a, 8);
-    adone.math.simd.Float32x4.store(out, 8, adone.math.simd.Float32x4.mul(a2, adone.math.simd.Float32x4.swizzle(vec, 2, 2, 2, 2)));
-
-    out[12] = a[12];
-    out[13] = a[13];
-    out[14] = a[14];
-    out[15] = a[15];
-    return out;
-};
-
-export const scale = simd.scale;
 
 export const rotate = (out, a, rad, axis) => {
     let x = axis[0];
@@ -767,7 +475,7 @@ export const rotate = (out, a, rad, axis) => {
     return out;
 };
 
-scalar.rotateX = (out, a, rad) => {
+export const rotateX = (out, a, rad) => {
     const s = Math.sin(rad);
     const c = Math.cos(rad);
     const a10 = a[4];
@@ -802,32 +510,7 @@ scalar.rotateX = (out, a, rad) => {
     return out;
 };
 
-simd.rotateX = (out, a, rad) => {
-    const s = adone.math.simd.Float32x4.splat(Math.sin(rad));
-    const c = adone.math.simd.Float32x4.splat(Math.cos(rad));
-
-    if (a !== out) { // If the source and destination differ, copy the unchanged rows
-        out[0] = a[0];
-        out[1] = a[1];
-        out[2] = a[2];
-        out[3] = a[3];
-        out[12] = a[12];
-        out[13] = a[13];
-        out[14] = a[14];
-        out[15] = a[15];
-    }
-
-    // Perform axis-specific matrix multiplication
-    const a1 = adone.math.simd.Float32x4.load(a, 4);
-    const a2 = adone.math.simd.Float32x4.load(a, 8);
-    adone.math.simd.Float32x4.store(out, 4, adone.math.simd.Float32x4.add(adone.math.simd.Float32x4.mul(a1, c), adone.math.simd.Float32x4.mul(a2, s)));
-    adone.math.simd.Float32x4.store(out, 8, adone.math.simd.Float32x4.sub(adone.math.simd.Float32x4.mul(a2, c), adone.math.simd.Float32x4.mul(a1, s)));
-    return out;
-};
-
-export const rotateX = simd.rotateX;
-
-scalar.rotateY = (out, a, rad) => {
+export const rotateY = (out, a, rad) => {
     const s = Math.sin(rad);
     const c = Math.cos(rad);
     const a00 = a[0];
@@ -862,32 +545,7 @@ scalar.rotateY = (out, a, rad) => {
     return out;
 };
 
-simd.rotateY = (out, a, rad) => {
-    const s = adone.math.simd.Float32x4.splat(Math.sin(rad));
-    const c = adone.math.simd.Float32x4.splat(Math.cos(rad));
-
-    if (a !== out) { // If the source and destination differ, copy the unchanged rows
-        out[4] = a[4];
-        out[5] = a[5];
-        out[6] = a[6];
-        out[7] = a[7];
-        out[12] = a[12];
-        out[13] = a[13];
-        out[14] = a[14];
-        out[15] = a[15];
-    }
-
-    // Perform axis-specific matrix multiplication
-    const a0 = adone.math.simd.Float32x4.load(a, 0);
-    const a2 = adone.math.simd.Float32x4.load(a, 8);
-    adone.math.simd.Float32x4.store(out, 0, adone.math.simd.Float32x4.sub(adone.math.simd.Float32x4.mul(a0, c), adone.math.simd.Float32x4.mul(a2, s)));
-    adone.math.simd.Float32x4.store(out, 8, adone.math.simd.Float32x4.add(adone.math.simd.Float32x4.mul(a0, s), adone.math.simd.Float32x4.mul(a2, c)));
-    return out;
-};
-
-export const rotateY = simd.rotateY;
-
-scalar.rotateZ = (out, a, rad) => {
+export const rotateZ = (out, a, rad) => {
     const s = Math.sin(rad);
     const c = Math.cos(rad);
     const a00 = a[0];
@@ -921,31 +579,6 @@ scalar.rotateZ = (out, a, rad) => {
     out[7] = a13 * c - a03 * s;
     return out;
 };
-
-simd.rotateZ = (out, a, rad) => {
-    const s = adone.math.simd.Float32x4.splat(Math.sin(rad));
-    const c = adone.math.simd.Float32x4.splat(Math.cos(rad));
-
-    if (a !== out) { // If the source and destination differ, copy the unchanged last row
-        out[8] = a[8];
-        out[9] = a[9];
-        out[10] = a[10];
-        out[11] = a[11];
-        out[12] = a[12];
-        out[13] = a[13];
-        out[14] = a[14];
-        out[15] = a[15];
-    }
-
-    // Perform axis-specific matrix multiplication
-    const a0 = adone.math.simd.Float32x4.load(a, 0);
-    const a1 = adone.math.simd.Float32x4.load(a, 4);
-    adone.math.simd.Float32x4.store(out, 0, adone.math.simd.Float32x4.add(adone.math.simd.Float32x4.mul(a0, c), adone.math.simd.Float32x4.mul(a1, s)));
-    adone.math.simd.Float32x4.store(out, 4, adone.math.simd.Float32x4.sub(adone.math.simd.Float32x4.mul(a1, c), adone.math.simd.Float32x4.mul(a0, s)));
-    return out;
-};
-
-export const rotateZ = simd.rotateZ;
 
 export const fromTranslation = (out, v) => {
     out[0] = 1;
@@ -1516,12 +1149,106 @@ export const lookAt = (out, eye, center, up) => {
     return out;
 };
 
+export const targetTo = (out, eye, target, up) => {
+    const eyex = eye[0];
+    const eyey = eye[1];
+    const eyez = eye[2];
+    const upx = up[0];
+    const upy = up[1];
+    const upz = up[2];
+
+    let z0 = eyex - target[0];
+    let z1 = eyey - target[1];
+    let z2 = eyez - target[2];
+
+    let len = z0 * z0 + z1 * z1 + z2 * z2;
+    if (len > 0) {
+        len = 1 / Math.sqrt(len);
+        z0 *= len;
+        z1 *= len;
+        z2 *= len;
+    }
+
+    const x0 = upy * z2 - upz * z1;
+    const x1 = upz * z0 - upx * z2;
+    const x2 = upx * z1 - upy * z0;
+
+    out[0] = x0;
+    out[1] = x1;
+    out[2] = x2;
+    out[3] = 0;
+    out[4] = z1 * x2 - z2 * x1;
+    out[5] = z2 * x0 - z0 * x2;
+    out[6] = z0 * x1 - z1 * x0;
+    out[7] = 0;
+    out[8] = z0;
+    out[9] = z1;
+    out[10] = z2;
+    out[11] = 0;
+    out[12] = eyex;
+    out[13] = eyey;
+    out[14] = eyez;
+    out[15] = 1;
+    return out;
+};
+
 export const str = (a) => {
-    return `mat4(${a[0]}, ${a[1]}, ${a[2]}, ${a[3]}, ${a[4]}, ${a[5]}, ${a[6]}, ${a[7]}, ${a[8]}, ${a[9]}, ${a[10]}, ${a[11]}, ${a[12]}, ${a[13]}, ${a[14]}, ${a[15]})`;
+    return `mat4(${
+        a[0]
+    }, ${
+        a[1]
+    }, ${
+        a[2]
+    }, ${
+        a[3]
+    }, ${
+        a[4]
+    }, ${
+        a[5]
+    }, ${
+        a[6]
+    }, ${
+        a[7]
+    }, ${
+        a[8]
+    }, ${
+        a[9]
+    }, ${
+        a[10]
+    }, ${
+        a[11]
+    }, ${
+        a[12]
+    }, ${
+        a[13]
+    }, ${
+        a[14]
+    }, ${
+        a[15]
+    })`;
 };
 
 export const frob = (a) => {
-    return (Math.sqrt(Math.pow(a[0], 2) + Math.pow(a[1], 2) + Math.pow(a[2], 2) + Math.pow(a[3], 2) + Math.pow(a[4], 2) + Math.pow(a[5], 2) + Math.pow(a[6], 2) + Math.pow(a[7], 2) + Math.pow(a[8], 2) + Math.pow(a[9], 2) + Math.pow(a[10], 2) + Math.pow(a[11], 2) + Math.pow(a[12], 2) + Math.pow(a[13], 2) + Math.pow(a[14], 2) + Math.pow(a[15], 2)));
+    return (
+        Math.sqrt(
+            Math.pow(a[0], 2)
+            + Math.pow(a[1], 2)
+            + Math.pow(a[2], 2)
+            + Math.pow(a[3], 2)
+            + Math.pow(a[4], 2)
+            + Math.pow(a[5], 2)
+            + Math.pow(a[6], 2)
+            + Math.pow(a[7], 2)
+            + Math.pow(a[8], 2)
+            + Math.pow(a[9], 2)
+            + Math.pow(a[10], 2)
+            + Math.pow(a[11], 2)
+            + Math.pow(a[12], 2)
+            + Math.pow(a[13], 2)
+            + Math.pow(a[14], 2)
+            + Math.pow(a[15], 2)
+        )
+    );
 };
 
 export const add = (out, a, b) => {
@@ -1563,8 +1290,6 @@ export const subtract = (out, a, b) => {
     out[15] = a[15] - b[15];
     return out;
 };
-
-export const sub = subtract;
 
 export const multiplyScalar = (out, a, b) => {
     out[0] = a[0] * b;
@@ -1665,3 +1390,7 @@ export const equals = (a, b) => {
         Math.abs(a14 - b14) <= adone.math.matrix.EPSILON * Math.max(1.0, Math.abs(a14), Math.abs(b14)) &&
         Math.abs(a15 - b15) <= adone.math.matrix.EPSILON * Math.max(1.0, Math.abs(a15), Math.abs(b15)));
 };
+
+export const mul = multiply;
+
+export const sub = subtract;

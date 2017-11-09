@@ -12,9 +12,10 @@ const { parseURL, isFresh, contentType, Accepts, typeIs } = helper;
 const idempotentMethods = new Set(["GET", "HEAD", "PUT", "DELETE", "OPTIONS", "TRACE"]);
 
 export default class Request {
-    constructor(server, req) {
+    constructor(server, req, res) {
         this.server = server;
         this.req = req;
+        this.res = res;
         this.originalUrl = req.url;
         this.ctx = null;
         this._querycache = null;

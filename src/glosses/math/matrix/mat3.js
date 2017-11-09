@@ -227,8 +227,6 @@ export const multiply = (out, a, b) => {
     return out;
 };
 
-export const mul = multiply;
-
 export const translate = (out, a, v) => {
     const a00 = a[0];
     const a01 = a[1];
@@ -452,12 +450,37 @@ export const normalFromMat4 = (out, a) => {
     return out;
 };
 
+export const projection = (out, width, height) => {
+    out[0] = 2 / width;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 0;
+    out[4] = -2 / height;
+    out[5] = 0;
+    out[6] = -1;
+    out[7] = 1;
+    out[8] = 1;
+    return out;
+};
+
 export const str = (a) => {
     return `mat3(${a[0]}, ${a[1]}, ${a[2]}, ${a[3]}, ${a[4]}, ${a[5]}, ${a[6]}, ${a[7]}, ${a[8]})`;
 };
 
 export const frob = (a) => {
-    return (Math.sqrt(Math.pow(a[0], 2) + Math.pow(a[1], 2) + Math.pow(a[2], 2) + Math.pow(a[3], 2) + Math.pow(a[4], 2) + Math.pow(a[5], 2) + Math.pow(a[6], 2) + Math.pow(a[7], 2) + Math.pow(a[8], 2)));
+    return (
+        Math.sqrt(
+            Math.pow(a[0], 2)
+            + Math.pow(a[1], 2)
+            + Math.pow(a[2], 2)
+            + Math.pow(a[3], 2)
+            + Math.pow(a[4], 2)
+            + Math.pow(a[5], 2)
+            + Math.pow(a[6], 2)
+            + Math.pow(a[7], 2)
+            + Math.pow(a[8], 2)
+        )
+    );
 };
 
 export const add = (out, a, b) => {
@@ -485,8 +508,6 @@ export const subtract = (out, a, b) => {
     out[8] = a[8] - b[8];
     return out;
 };
-
-export const sub = subtract;
 
 export const multiplyScalar = (out, a, b) => {
     out[0] = a[0] * b;
@@ -548,3 +569,7 @@ export const equals = (a, b) => {
         Math.abs(a7 - b7) <= adone.math.matrix.EPSILON * Math.max(1.0, Math.abs(a7), Math.abs(b7)) &&
         Math.abs(a8 - b8) <= adone.math.matrix.EPSILON * Math.max(1.0, Math.abs(a8), Math.abs(b8)));
 };
+
+export const mul = multiply;
+
+export const sub = subtract;

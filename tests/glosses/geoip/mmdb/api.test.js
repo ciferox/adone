@@ -16,6 +16,12 @@ describe("geoip", "mmdb", "api", () => {
             expect(err).not.to.be.null;
             expect(err.message).to.be.match(/no such file or directory/);
         });
+
+        it("should handler reader errors", async () => {
+            await assert.throws(async () => {
+                await mmdb.open(fixtures.getFile("broken.dat").path());
+            }, "Cannot parse binary database");
+        });
     });
 
     describe("openSync()", () => {

@@ -174,6 +174,10 @@ export default class PromiseConnection extends EventEmitter {
         return this.connection.escape(value);
     }
 
+    escapeId(value) {
+        return this.connection.escapeId(value);
+    }
+
     format(sql, values) {
         return this.connection.format(sql, values);
     }

@@ -38,11 +38,25 @@ export default class Execute {
                     if (is.date(this.parameters[i])) {
                         const d = this.parameters[i];
                         // TODO: move to asMysqlDateTime()
-                        this.parameters[i] = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`;
+                        this.parameters[i] = `${
+                            d.getFullYear()
+                        }-${
+                            d.getMonth() + 1
+                        }-${
+                            d.getDate()
+                        } ${
+                            d.getHours()
+                        }:${
+                            d.getMinutes()
+                        }:${
+                            d.getSeconds()
+                        }.${
+                            d.getMilliseconds().toString().padStart(3, "0")
+                        }`;
                     }
                     if (is.datetime(this.parameters[i])) {
                         // TODO: move to asMysqlDateTime()
-                        this.parameters[i] = this.parameters[i].format("YYYY-M-D H:m:s");
+                        this.parameters[i] = this.parameters[i].format("YYYY-M-D H:m:s.SSS");
                     }
                     if (is.buffer(this.parameters[i])) {
                         length += packet.Packet.lengthCodedNumberLength(this.parameters[i].length);

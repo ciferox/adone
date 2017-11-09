@@ -1,4 +1,4 @@
-import equality from "./equality";
+import assertEquality from "./assert_equality";
 const { vec2 } = adone.math.matrix;
 
 describe("math", "matrix", "vec2", () => {
@@ -16,7 +16,7 @@ describe("math", "matrix", "vec2", () => {
             result = vec2.create();
         });
         it("should return a 2 element array initialized to 0s", () => {
-            equality(result, [0, 0]);
+            assertEquality(result, [0, 0]);
         });
     });
 
@@ -25,7 +25,7 @@ describe("math", "matrix", "vec2", () => {
             result = vec2.clone(vecA);
         });
         it("should return a 2 element array initialized to the values in vecA", () => {
-            equality(result, vecA);
+            assertEquality(result, vecA);
         });
     });
 
@@ -34,7 +34,7 @@ describe("math", "matrix", "vec2", () => {
             result = vec2.fromValues(1, 2);
         });
         it("should return a 2 element array initialized to the values passed", () => {
-            equality(result, [1, 2]);
+            assertEquality(result, [1, 2]);
         });
     });
 
@@ -43,7 +43,7 @@ describe("math", "matrix", "vec2", () => {
             result = vec2.copy(out, vecA);
         });
         it("should place values into out", () => {
-            equality(out, [1, 2]);
+            assertEquality(out, [1, 2]);
         });
         it("should return out", () => {
             assert.equal(result, out);
@@ -55,7 +55,7 @@ describe("math", "matrix", "vec2", () => {
             result = vec2.set(out, 1, 2);
         });
         it("should place values into out", () => {
-            equality(out, [1, 2]);
+            assertEquality(out, [1, 2]);
         });
         it("should return out", () => {
             assert.equal(result, out);
@@ -69,16 +69,16 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [4, 6]);
+                assertEquality(out, [4, 6]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [1, 2]);
+                assertEquality(vecA, [1, 2]);
             });
             it("should not modify vecB", () => {
-                equality(vecB, [3, 4]);
+                assertEquality(vecB, [3, 4]);
             });
         });
 
@@ -88,13 +88,13 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into vecA", () => {
-                equality(vecA, [4, 6]);
+                assertEquality(vecA, [4, 6]);
             });
             it("should return vecA", () => {
                 assert.equal(result, vecA);
             });
             it("should not modify vecB", () => {
-                equality(vecB, [3, 4]);
+                assertEquality(vecB, [3, 4]);
             });
         });
 
@@ -104,13 +104,13 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into vecB", () => {
-                equality(vecB, [4, 6]);
+                assertEquality(vecB, [4, 6]);
             });
             it("should return vecB", () => {
                 assert.equal(result, vecB);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [1, 2]);
+                assertEquality(vecA, [1, 2]);
             });
         });
     });
@@ -126,16 +126,16 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [-2, -2]);
+                assertEquality(out, [-2, -2]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [1, 2]);
+                assertEquality(vecA, [1, 2]);
             });
             it("should not modify vecB", () => {
-                equality(vecB, [3, 4]);
+                assertEquality(vecB, [3, 4]);
             });
         });
 
@@ -145,13 +145,13 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into vecA", () => {
-                equality(vecA, [-2, -2]);
+                assertEquality(vecA, [-2, -2]);
             });
             it("should return vecA", () => {
                 assert.equal(result, vecA);
             });
             it("should not modify vecB", () => {
-                equality(vecB, [3, 4]);
+                assertEquality(vecB, [3, 4]);
             });
         });
 
@@ -161,13 +161,13 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into vecB", () => {
-                equality(vecB, [-2, -2]);
+                assertEquality(vecB, [-2, -2]);
             });
             it("should return vecB", () => {
                 assert.equal(result, vecB);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [1, 2]);
+                assertEquality(vecA, [1, 2]);
             });
         });
     });
@@ -183,16 +183,16 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [3, 8]);
+                assertEquality(out, [3, 8]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [1, 2]);
+                assertEquality(vecA, [1, 2]);
             });
             it("should not modify vecB", () => {
-                equality(vecB, [3, 4]);
+                assertEquality(vecB, [3, 4]);
             });
         });
 
@@ -202,13 +202,13 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into vecA", () => {
-                equality(vecA, [3, 8]);
+                assertEquality(vecA, [3, 8]);
             });
             it("should return vecA", () => {
                 assert.equal(result, vecA);
             });
             it("should not modify vecB", () => {
-                equality(vecB, [3, 4]);
+                assertEquality(vecB, [3, 4]);
             });
         });
 
@@ -218,13 +218,13 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into vecB", () => {
-                equality(vecB, [3, 8]);
+                assertEquality(vecB, [3, 8]);
             });
             it("should return vecB", () => {
                 assert.equal(result, vecB);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [1, 2]);
+                assertEquality(vecA, [1, 2]);
             });
         });
     });
@@ -240,16 +240,16 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [0.3333333, 0.5]);
+                assertEquality(out, [0.3333333, 0.5]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [1, 2]);
+                assertEquality(vecA, [1, 2]);
             });
             it("should not modify vecB", () => {
-                equality(vecB, [3, 4]);
+                assertEquality(vecB, [3, 4]);
             });
         });
 
@@ -259,13 +259,13 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into vecA", () => {
-                equality(vecA, [0.3333333, 0.5]);
+                assertEquality(vecA, [0.3333333, 0.5]);
             });
             it("should return vecA", () => {
                 assert.equal(result, vecA);
             });
             it("should not modify vecB", () => {
-                equality(vecB, [3, 4]);
+                assertEquality(vecB, [3, 4]);
             });
         });
 
@@ -275,13 +275,13 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into vecB", () => {
-                equality(vecB, [0.3333333, 0.5]);
+                assertEquality(vecB, [0.3333333, 0.5]);
             });
             it("should return vecB", () => {
                 assert.equal(result, vecB);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [1, 2]);
+                assertEquality(vecA, [1, 2]);
             });
         });
     });
@@ -297,13 +297,13 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [3, 4]);
+                assertEquality(out, [3, 4]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [Math.E, Math.PI]);
+                assertEquality(vecA, [Math.E, Math.PI]);
             });
         });
 
@@ -313,7 +313,7 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into vecA", () => {
-                equality(vecA, [3, 4]);
+                assertEquality(vecA, [3, 4]);
             });
             it("should return vecA", () => {
                 assert.equal(result, vecA);
@@ -332,13 +332,13 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [2, 3]);
+                assertEquality(out, [2, 3]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [Math.E, Math.PI]);
+                assertEquality(vecA, [Math.E, Math.PI]);
             });
         });
 
@@ -348,7 +348,7 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into vecA", () => {
-                equality(vecA, [2, 3]);
+                assertEquality(vecA, [2, 3]);
             });
             it("should return vecA", () => {
                 assert.equal(result, vecA);
@@ -367,16 +367,16 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [1, 2]);
+                assertEquality(out, [1, 2]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [1, 4]);
+                assertEquality(vecA, [1, 4]);
             });
             it("should not modify vecB", () => {
-                equality(vecB, [3, 2]);
+                assertEquality(vecB, [3, 2]);
             });
         });
 
@@ -386,13 +386,13 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into vecA", () => {
-                equality(vecA, [1, 2]);
+                assertEquality(vecA, [1, 2]);
             });
             it("should return vecA", () => {
                 assert.equal(result, vecA);
             });
             it("should not modify vecB", () => {
-                equality(vecB, [3, 2]);
+                assertEquality(vecB, [3, 2]);
             });
         });
 
@@ -402,13 +402,13 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into vecB", () => {
-                equality(vecB, [1, 2]);
+                assertEquality(vecB, [1, 2]);
             });
             it("should return vecB", () => {
                 assert.equal(result, vecB);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [1, 4]);
+                assertEquality(vecA, [1, 4]);
             });
         });
     });
@@ -424,16 +424,16 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [3, 4]);
+                assertEquality(out, [3, 4]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [1, 4]);
+                assertEquality(vecA, [1, 4]);
             });
             it("should not modify vecB", () => {
-                equality(vecB, [3, 2]);
+                assertEquality(vecB, [3, 2]);
             });
         });
 
@@ -443,13 +443,13 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into vecA", () => {
-                equality(vecA, [3, 4]);
+                assertEquality(vecA, [3, 4]);
             });
             it("should return vecA", () => {
                 assert.equal(result, vecA);
             });
             it("should not modify vecB", () => {
-                equality(vecB, [3, 2]);
+                assertEquality(vecB, [3, 2]);
             });
         });
 
@@ -459,13 +459,13 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into vecB", () => {
-                equality(vecB, [3, 4]);
+                assertEquality(vecB, [3, 4]);
             });
             it("should return vecB", () => {
                 assert.equal(result, vecB);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [1, 4]);
+                assertEquality(vecA, [1, 4]);
             });
         });
     });
@@ -481,13 +481,13 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [3, 3]);
+                assertEquality(out, [3, 3]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [Math.E, Math.PI]);
+                assertEquality(vecA, [Math.E, Math.PI]);
             });
         });
 
@@ -497,7 +497,7 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into vecA", () => {
-                equality(vecA, [3, 3]);
+                assertEquality(vecA, [3, 3]);
             });
             it("should return vecA", () => {
                 assert.equal(result, vecA);
@@ -512,13 +512,13 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [2, 4]);
+                assertEquality(out, [2, 4]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [1, 2]);
+                assertEquality(vecA, [1, 2]);
             });
         });
 
@@ -528,7 +528,7 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into vecA", () => {
-                equality(vecA, [2, 4]);
+                assertEquality(vecA, [2, 4]);
             });
             it("should return vecA", () => {
                 assert.equal(result, vecA);
@@ -543,16 +543,16 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [2.5, 4]);
+                assertEquality(out, [2.5, 4]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [1, 2]);
+                assertEquality(vecA, [1, 2]);
             });
             it("should not modify vecB", () => {
-                equality(vecB, [3, 4]);
+                assertEquality(vecB, [3, 4]);
             });
         });
 
@@ -562,13 +562,13 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into vecA", () => {
-                equality(vecA, [2.5, 4]);
+                assertEquality(vecA, [2.5, 4]);
             });
             it("should return vecA", () => {
                 assert.equal(result, vecA);
             });
             it("should not modify vecB", () => {
-                equality(vecB, [3, 4]);
+                assertEquality(vecB, [3, 4]);
             });
         });
 
@@ -578,13 +578,13 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into vecB", () => {
-                equality(vecB, [2.5, 4]);
+                assertEquality(vecB, [2.5, 4]);
             });
             it("should return vecB", () => {
                 assert.equal(result, vecB);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [1, 2]);
+                assertEquality(vecA, [1, 2]);
             });
         });
     });
@@ -623,7 +623,7 @@ describe("math", "matrix", "vec2", () => {
         });
 
         beforeEach(() => {
-            result = vec2.length(vecA);
+            result = vec2.len(vecA);
         });
 
         it("should return the length", () => {
@@ -652,13 +652,13 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [-1, -2]);
+                assertEquality(out, [-1, -2]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [1, 2]);
+                assertEquality(vecA, [1, 2]);
             });
         });
 
@@ -668,7 +668,7 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into vecA", () => {
-                equality(vecA, [-1, -2]);
+                assertEquality(vecA, [-1, -2]);
             });
             it("should return vecA", () => {
                 assert.equal(result, vecA);
@@ -687,13 +687,13 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [1, 0]);
+                assertEquality(out, [1, 0]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [5, 0]);
+                assertEquality(vecA, [5, 0]);
             });
         });
 
@@ -703,7 +703,7 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into vecA", () => {
-                equality(vecA, [1, 0]);
+                assertEquality(vecA, [1, 0]);
             });
             it("should return vecA", () => {
                 assert.equal(result, vecA);
@@ -720,10 +720,10 @@ describe("math", "matrix", "vec2", () => {
             assert.equal(result, 11);
         });
         it("should not modify vecA", () => {
-            equality(vecA, [1, 2]);
+            assertEquality(vecA, [1, 2]);
         });
         it("should not modify vecB", () => {
-            equality(vecB, [3, 4]);
+            assertEquality(vecB, [3, 4]);
         });
     });
 
@@ -736,16 +736,16 @@ describe("math", "matrix", "vec2", () => {
         });
 
         it("should place values into out", () => {
-            equality(out3, [0, 0, -2]);
+            assertEquality(out3, [0, 0, -2]);
         });
         it("should return out", () => {
             assert.equal(result, out3);
         });
         it("should not modify vecA", () => {
-            equality(vecA, [1, 2]);
+            assertEquality(vecA, [1, 2]);
         });
         it("should not modify vecB", () => {
-            equality(vecB, [3, 4]);
+            assertEquality(vecB, [3, 4]);
         });
     });
 
@@ -756,16 +756,16 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [2, 3]);
+                assertEquality(out, [2, 3]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [1, 2]);
+                assertEquality(vecA, [1, 2]);
             });
             it("should not modify vecB", () => {
-                equality(vecB, [3, 4]);
+                assertEquality(vecB, [3, 4]);
             });
         });
 
@@ -775,13 +775,13 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into vecA", () => {
-                equality(vecA, [2, 3]);
+                assertEquality(vecA, [2, 3]);
             });
             it("should return vecA", () => {
                 assert.equal(result, vecA);
             });
             it("should not modify vecB", () => {
-                equality(vecB, [3, 4]);
+                assertEquality(vecB, [3, 4]);
             });
         });
 
@@ -791,13 +791,13 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into vecB", () => {
-                equality(vecB, [2, 3]);
+                assertEquality(vecB, [2, 3]);
             });
             it("should return vecB", () => {
                 assert.equal(result, vecB);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [1, 2]);
+                assertEquality(vecA, [1, 2]);
             });
         });
     });
@@ -809,7 +809,7 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should result in a unit length vector", () => {
-                assert.closeTo(vec2.length(out), 1.0, 0.1);
+                assert.closeTo(vec2.len(out), 1.0, 0.1);
             });
             it("should return out", () => {
                 assert.equal(result, out);
@@ -822,7 +822,7 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should result in a unit length vector", () => {
-                assert.closeTo(vec2.length(out), 5.0, 0.1);
+                assert.closeTo(vec2.len(out), 5.0, 0.1);
             });
             it("should return out", () => {
                 assert.equal(result, out);
@@ -842,16 +842,16 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [7, 10]);
+                assertEquality(out, [7, 10]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [1, 2]);
+                assertEquality(vecA, [1, 2]);
             });
             it("should not modify matA", () => {
-                equality(matA, [1, 2, 3, 4]);
+                assertEquality(matA, [1, 2, 3, 4]);
             });
         });
 
@@ -861,13 +861,13 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into vecA", () => {
-                equality(vecA, [7, 10]);
+                assertEquality(vecA, [7, 10]);
             });
             it("should return vecA", () => {
                 assert.equal(result, vecA);
             });
             it("should not modify matA", () => {
-                equality(matA, [1, 2, 3, 4]);
+                assertEquality(matA, [1, 2, 3, 4]);
             });
         });
     });
@@ -884,16 +884,16 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into out", () => {
-                equality(out, [12, 16]);
+                assertEquality(out, [12, 16]);
             });
             it("should return out", () => {
                 assert.equal(result, out);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [1, 2]);
+                assertEquality(vecA, [1, 2]);
             });
             it("should not modify matA", () => {
-                equality(matA, [1, 2, 3, 4, 5, 6]);
+                assertEquality(matA, [1, 2, 3, 4, 5, 6]);
             });
         });
 
@@ -903,13 +903,13 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should place values into vecA", () => {
-                equality(vecA, [12, 16]);
+                assertEquality(vecA, [12, 16]);
             });
             it("should return vecA", () => {
                 assert.equal(result, vecA);
             });
             it("should not modify matA", () => {
-                equality(matA, [1, 2, 3, 4, 5, 6]);
+                assertEquality(matA, [1, 2, 3, 4, 5, 6]);
             });
         });
     });
@@ -931,7 +931,7 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should update all values", () => {
-                equality(vecArray, [
+                assertEquality(vecArray, [
                     0.447214, 0.894427,
                     0.6, 0.8,
                     0, 0
@@ -948,7 +948,7 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should update all values", () => {
-                equality(vecArray, [
+                assertEquality(vecArray, [
                     2, 4,
                     4, 6,
                     1, 2
@@ -958,7 +958,7 @@ describe("math", "matrix", "vec2", () => {
                 assert.equal(result, vecArray);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [1, 2]);
+                assertEquality(vecA, [1, 2]);
             });
         });
 
@@ -968,7 +968,7 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should update all values except the first vector", () => {
-                equality(vecArray, [
+                assertEquality(vecArray, [
                     1, 2,
                     4, 6,
                     1, 2
@@ -978,7 +978,7 @@ describe("math", "matrix", "vec2", () => {
                 assert.equal(result, vecArray);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [1, 2]);
+                assertEquality(vecA, [1, 2]);
             });
         });
 
@@ -988,7 +988,7 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should update all values except the last vector", () => {
-                equality(vecArray, [
+                assertEquality(vecArray, [
                     2, 4,
                     4, 6,
                     0, 0
@@ -998,7 +998,7 @@ describe("math", "matrix", "vec2", () => {
                 assert.equal(result, vecArray);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [1, 2]);
+                assertEquality(vecA, [1, 2]);
             });
         });
 
@@ -1008,7 +1008,7 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("should update all values except the second vector", () => {
-                equality(vecArray, [
+                assertEquality(vecArray, [
                     2, 4,
                     3, 4,
                     1, 2
@@ -1018,7 +1018,7 @@ describe("math", "matrix", "vec2", () => {
                 assert.equal(result, vecArray);
             });
             it("should not modify vecA", () => {
-                equality(vecA, [1, 2]);
+                assertEquality(vecA, [1, 2]);
             });
         });
 
@@ -1028,7 +1028,7 @@ describe("math", "matrix", "vec2", () => {
             });
 
             it("values should remain unchanged", () => {
-                equality(vecArray, [
+                assertEquality(vecArray, [
                     1, 2,
                     3, 4,
                     0, 0
@@ -1069,10 +1069,10 @@ describe("math", "matrix", "vec2", () => {
             assert.isFalse(r1);
         });
         it("should not modify vecA", () => {
-            equality(vecA, [0, 1]);
+            assertEquality(vecA, [0, 1]);
         });
         it("should not modify vecB", () => {
-            equality(vecB, [0, 1]);
+            assertEquality(vecB, [0, 1]);
         });
     });
 
@@ -1101,10 +1101,10 @@ describe("math", "matrix", "vec2", () => {
             assert.isTrue(r2);
         });
         it("should not modify vecA", () => {
-            equality(vecA, [0, 1]);
+            assertEquality(vecA, [0, 1]);
         });
         it("should not modify vecB", () => {
-            equality(vecB, [0, 1]);
+            assertEquality(vecB, [0, 1]);
         });
     });
 });

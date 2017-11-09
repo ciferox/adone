@@ -270,6 +270,10 @@ describe("datetime", "getters and setters", () => {
         const b = adone.datetime([2012, 1, 29]);
         assert.equal(adone.datetime(b).year(2017).format("YYYY-MM-DD"), "2017-02-28", "set from last day of february on a leap year to a non leap year");
         assert.equal(adone.datetime(b).year(2004).format("YYYY-MM-DD"), "2004-02-29", "set from last day of february on a leap year to a leap year");
+
+        const c = adone.datetime([2012, 9, 4]);
+        assert.equal(adone.datetime(c).year(2017).format("YYYY-MM-DD"), "2017-10-04", "set from a random day on a leap year to a non leap year");
+        assert.equal(adone.datetime(c).year(2004).format("YYYY-MM-DD"), "2004-10-04", "set from a random day on a leap year to a leap year");
     });
 
 

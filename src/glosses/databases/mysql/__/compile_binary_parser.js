@@ -27,7 +27,7 @@ const readCodeFor = (field, config, options, fieldNum) => {
             return unsigned ? "packet.readInt16();" : "packet.readSInt16();";
         }
         case c.type.LONG:
-        case c.type.INT24: {  // in binary protocol int24 is encoded in 4 bytes int32
+        case c.type.INT24: { // in binary protocol int24 is encoded in 4 bytes int32
             return unsigned ? "packet.readInt32();" : "packet.readSInt32();";
         }
         case c.type.YEAR: {
@@ -47,7 +47,7 @@ const readCodeFor = (field, config, options, fieldNum) => {
         case c.type.TIMESTAMP:
         case c.type.NEWDATE: {
             if (config.dateStrings) {
-                return "packet.readDateTimeString();";
+                return `packet.readDateTimeString(${field.decimals});`;
             }
             return "packet.readDateTime();";
         }

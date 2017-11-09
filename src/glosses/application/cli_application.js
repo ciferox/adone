@@ -285,7 +285,7 @@ class Argument {
                             break;
                         default: {
                             if (!is.function(options.set)) {
-                                throw new x.InvalidArgument(`${name}: 'set' must be a function`);
+                                throw new x.InvalidArgument(`${name}: 'set' must be a function or one of: defaultTrue, defaultFalse, defaultUndefined, trueOnEmpty, falseOnEmpty, undefinedOnEmpty`);
                             }
                         }
                     }

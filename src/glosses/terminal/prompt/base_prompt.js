@@ -198,7 +198,9 @@ export default class BasePrompt {
             },
             when() {
                 return true;
-            }
+            },
+            suffix: "",
+            prefix: styler.green("?")
         });
 
         // Check to make sure prompt requirements are there
@@ -305,7 +307,7 @@ export default class BasePrompt {
      * @return {String} prompt question string
      */
     getQuestion() {
-        let message = `${styler.green("?")} ${styler.bold(this.opt.message)}${styler.reset(" ")}`;
+        let message = `${this.opt.prefix} ${styler.bold(this.opt.message)}${this.opt.suffix}${styler.reset(" ")}`;
 
         // Append the default if available, and if question isn't answered
         if (is.exist(this.opt.default) && this.status !== "answered") {

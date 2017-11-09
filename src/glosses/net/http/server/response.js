@@ -16,9 +16,10 @@ const {
 const EMPTY = Symbol("empty");
 
 export default class Response {
-    constructor(server, res) {
+    constructor(server, res, req) {
         this.server = server;
         this.res = res;
+        this.req = req;
         this.ctx = null;
         this._checkedContinue = false;
     }
@@ -47,9 +48,14 @@ export default class Response {
         if (!is.number(code)) {
             throw new x.InvalidArgument("status code must be a number");
         }
-        this.res.statusMessage = status.getMessageByCode(code);
+        if (!status.codes.has(code)) {
+            throw new x.InvalidArgument(`invalid status code: ${code}`);
+        }
         this._explicitStatus = true;
         this.res.statusCode = code;
+        if (this.req.httpVersionMajor < 2) {
+            this.res.statusMessage = status.getMessageByCode(code);
+        }
         if (this.body && status.isEmptyBody(code)) {
             this.body = null;
         }

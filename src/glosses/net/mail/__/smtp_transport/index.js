@@ -171,7 +171,7 @@ export default class SMTPTransport extends EventEmitter {
                     return;
                 }
                 returned = true;
-                setTimeout(() => {
+                const timer = setTimeout(() => {
                     if (returned) {
                         return;
                     }
@@ -182,7 +182,13 @@ export default class SMTPTransport extends EventEmitter {
                         err.code = "ETLS";
                     }
                     callback(err);
-                }, 1000).unref();
+                }, 1000);
+
+                try {
+                    timer.unref();
+                } catch (E) {
+                    // Ignore. Happens on envs with non-node timer implementation
+                }
             });
 
             const sendMessage = () => {

@@ -36,9 +36,10 @@ export default class XOAuth2 extends Stream {
 
         if (options && options.serviceClient) {
             if (!options.privateKey || !options.user) {
-                return setImmediate(() => {
+                setImmediate(() => {
                     this.emit("error", new x.InvalidArgument('Options "privateKey" and "user" are required for service account!'));
                 });
+                return;
             }
 
             const serviceRequestTimeout = Math.min(Math.max(Number(this.options.serviceRequestTimeout) || 0, 0), 3600);
@@ -296,7 +297,10 @@ export default class XOAuth2 extends Stream {
             '{"alg":"RS256","typ":"JWT"}',
             JSON.stringify(payload)
         ].map((val) => this.toBase64URL(val)).join(".");
-        const signature = crypto.createSign("RSA-SHA256").update(payload).sign(this.options.privateKey);
+        const signature = crypto
+            .createSign("RSA-SHA256")
+            .update(payload)
+            .sign(this.options.privateKey);
         return `${payload}.${this.toBase64URL(signature)}`;
     }
 }

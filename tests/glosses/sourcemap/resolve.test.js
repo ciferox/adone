@@ -36,7 +36,13 @@ const map = {
         sources: ["foo.js", "lib/bar.js", "../vendor/dom.js", "/version.js", "//foo.org/baz.js"],
         sourcesContent: ["foo.js", null, null, "/version.js", "//foo.org/baz.js"],
         names: []
-    }
+    },
+    noSources: {
+        mappings: "",
+        sources: [],
+        names: []
+    },
+    empty: {}
 };
 map.simpleString = JSON.stringify(map.simple);
 map.XSSIsafe = `)]}'${map.simpleString}`;
@@ -457,6 +463,20 @@ const testResolveSources = (method, sync) => {
             });
         }
         {
+            const result = await method(map.noSources, mapUrl, wrap(identity));
+            expect(result).to.be.deep.equal({
+                sourcesResolved: [],
+                sourcesContent: []
+            }, "noSources");
+        }
+        {
+            const result = await method(map.empty, mapUrl, wrap(identity));
+            expect(result).to.be.deep.equal({
+                sourcesResolved: [],
+                sourcesContent: []
+            }, "empty");
+        }
+        {
             const result = await method(map.simple, mapUrl, wrap(read(["non", "string"])));
             expect(result).to.be.deep.equal({
                 sourcesResolved: ["http://example.com/a/b/c/foo.js"],
@@ -854,6 +874,16 @@ const testResolve = (method, sync) => {
             ], "mixed");
         }
         {
+            const result = await method(code.fileRelative, codeUrl, readMap(map.noSources));
+            expect(result.sourcesResolved).to.be.deep.equal([], "noSources");
+            expect(result.sourcesContent).to.be.deep.equal([], "noSources");
+        }
+        {
+            const result = await method(code.fileRelative, codeUrl, readMap(map.empty));
+            expect(result.sourcesResolved).to.be.deep.equal([], "noSources");
+            expect(result.sourcesContent).to.be.deep.equal([], "noSources");
+        }
+        {
             const result = await method(code.fileRelative, codeUrl, wrap(read([map.simpleString])));
             expect(result.sourcesResolved).to.be.deep.equal(["http://example.com/a/b/c/foo.js"], "read non-string");
             expect(result.sourcesContent).to.be.deep.equal([map.simpleString], "read non-string");
@@ -1018,5 +1048,84 @@ describe("sourcemap", "resolve", () => {
 
     specify(".parseMapToJSON", () => {
         expect(sourcemap.parseMapToJSON(map.XSSIsafe)).to.be.deep.equal(map.simple);
+    });
+
+    describe("read", () => {
+        const mapUrl = "operators%20map.json";
+        const codeUrl = "./built files/operators:+-<>%25.js";
+        const sourceUrl = "../source files/operators:+-<>%25.coffee";
+
+        const readTest = (files) => {
+            return function (file, callback) {
+                const fileData = files[file];
+                assert.ok(fileData, "decoded file name");
+                if (callback) {
+                    callback(null, fileData);
+                } else {
+                    return fileData;
+                }
+            };
+        };
+
+        const testResolveSourceMap = (method, sync) => {
+            return async () => {
+                if (!sync) {
+                    method = adone.promise.promisify(method);
+                }
+
+                const read = readTest({
+                    "built files/operators map.json": "{}"
+                });
+
+                await method(u(mapUrl), codeUrl, read);
+            };
+        };
+
+        specify(".resolveSourceMap", testResolveSourceMap(sourcemap.resolveSourceMap, false));
+
+        specify(".resolveSourceMapSync", testResolveSourceMap(sourcemap.resolveSourceMapSync, true));
+
+        const testResolveSources = (method, sync) => {
+            return async () => {
+                if (!sync) {
+                    method = adone.promise.promisify(method);
+                }
+
+                const map = {
+                    sources: [sourceUrl]
+                };
+                const read = readTest({
+                    "../source files/operators:+-<>%.coffee": "source code"
+                });
+
+                await method(map, mapUrl, read);
+            };
+        };
+
+        specify(".resolveSources", testResolveSources(sourcemap.resolveSources, false));
+
+        specify(".resolveSourcesSync", testResolveSources(sourcemap.resolveSourcesSync, true));
+
+        const testResolve = (method, sync) => {
+            return async () => {
+                if (!sync) {
+                    method = adone.promise.promisify(method);
+                }
+
+                const map = {
+                    sources: [sourceUrl]
+                };
+                const read = readTest({
+                    "built files/operators map.json": JSON.stringify(map),
+                    "source files/operators:+-<>%.coffee": "source code"
+                });
+
+                await method(u(mapUrl), codeUrl, read);
+            };
+        };
+
+        specify(".resolve", testResolve(sourcemap.resolve, false));
+
+        specify(".resolveSync", testResolve(sourcemap.resolveSync, true));
     });
 });

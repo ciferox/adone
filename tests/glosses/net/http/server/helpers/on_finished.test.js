@@ -47,7 +47,7 @@ describe("net", "http", "helpers", "on finished", () => {
         describe("when using keep-alive", () => {
             it("should fire for each response", (done) => {
                 let called = false;
-                var server = http.createServer((req, res) => {
+                const server = http.createServer((req, res) => {
                     onFinished(res, () => {
                         if (called) {
                             socket.end();
@@ -156,7 +156,7 @@ describe("net", "http", "helpers", "on finished", () => {
                 const server = http.createServer((req, res) => {
                     onFinished(res, (err, msg) => {
                         server.close();
-                        assert.ok(err);
+                        assert.ok(!err);
                         assert.equal(msg, res);
                         done();
                     });
@@ -235,7 +235,7 @@ describe("net", "http", "helpers", "on finished", () => {
         describe("when using keep-alive", () => {
             it("should fire for each request", (done) => {
                 let called = false;
-                var server = http.createServer((req, res) => {
+                const server = http.createServer((req, res) => {
                     let data = "";
 
                     onFinished(req, (err) => {
@@ -299,7 +299,7 @@ describe("net", "http", "helpers", "on finished", () => {
                 const server = http.createServer((req, res) => {
                     onFinished(req, (err, msg) => {
                         server.close();
-                        assert.ok(err);
+                        assert.ok(!err);
                         assert.equal(msg, req);
                         done();
                     });

@@ -72,7 +72,7 @@ describe("notifier", "notify-send", () => {
     });
 
     it("should remove extra options that are not supported by notify-send", async () => {
-        const expected = ['"title"', '"body"', "--icon", '"icon-string"'];
+        const expected = ['"title"', '"body"', "--icon", '"icon-string"', "--expire-time", '"100"'];
 
         util.command = function (notifier, argsList) {
             expect(argsList).to.be.deep.equal(expected);
@@ -83,6 +83,7 @@ describe("notifier", "notify-send", () => {
             title: "title",
             message: "body",
             icon: "icon-string",
+            time: 100,
             tullball: "notValid"
         });
     }

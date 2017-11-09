@@ -623,6 +623,23 @@ describe("net", "http", "server", "middleware", "router", "Router", () => {
         });
     });
 
+    it("sets the allowed methods to a single Allow header #273", async () => {
+        // https://tools.ietf.org/html/rfc7231#section-7.4.1
+        const server = new Server();
+        const router = new Router();
+
+        server.use(router.routes());
+        server.use(router.allowedMethods());
+
+        router.get("/", () => { });
+
+        const res = await request(server)
+            .options("/")
+            .expectStatus(200)
+            .expectHeader("allow", "HEAD, GET");
+        expect(res.rawHeaders.filter((x) => x === "Allow")).to.have.length(1);
+    });
+
     it("supports custom routing detect path: ctx.routerPath", async () => {
         const server = new Server();
         const router = new Router();

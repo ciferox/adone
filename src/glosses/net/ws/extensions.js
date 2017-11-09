@@ -8,7 +8,13 @@ const parse = (value) => {
     value.split(",").forEach((v) => {
         const params = v.split(";");
         const token = params.shift().trim();
-        const paramsList = extensions[token] = extensions[token] || [];
+
+        if (is.undefined(extensions[token])) {
+            extensions[token] = [];
+        } else if (!extensions.hasOwnProperty(token)) {
+            return;
+        }
+
         const parsedParams = {};
 
         params.forEach((param) => {
@@ -27,10 +33,14 @@ const parse = (value) => {
                     value = value.slice(0, value.length - 1);
                 }
             }
-            (parsedParams[key] = parsedParams[key] || []).push(value);
+            if (is.undefined(parsedParams[key])) {
+                parsedParams[key] = [value];
+            } else if (parsedParams.hasOwnProperty(key)) {
+                parsedParams[key].push(value);
+            }
         });
 
-        paramsList.push(parsedParams);
+        extensions[token].push(parsedParams);
     });
 
     return extensions;

@@ -35,6 +35,9 @@ export default class PoolResource extends EventEmitter {
                     break;
                 }
                 default:
+                    if (!this.options.auth.user && !this.options.auth.pass) {
+                        break;
+                    }
                     this.auth = {
                         type: "LOGIN",
                         user: this.options.auth.user,
@@ -97,7 +100,7 @@ export default class PoolResource extends EventEmitter {
                     return;
                 }
                 returned = true;
-                setTimeout(() => {
+                const timer = setTimeout(() => {
                     if (returned) {
                         return;
                     }
@@ -108,7 +111,13 @@ export default class PoolResource extends EventEmitter {
                         err.code = "ETLS";
                     }
                     callback(err);
-                }, 1000).unref();
+                }, 1000);
+
+                try {
+                    timer.unref();
+                } catch (E) {
+                    // Ignore. Happens on envs with non-node timer implementation
+                }
             });
 
             this.connection.connect(() => {

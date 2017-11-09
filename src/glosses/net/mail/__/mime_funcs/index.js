@@ -92,7 +92,11 @@ export const splitMimeEncodedString = (str, maxlen) => {
  * @return {String} Single or several mime words joined together
  */
 export const encodeWord = (data, mimeWordEncoding, maxLength) => {
-    mimeWordEncoding = (mimeWordEncoding || "Q").toString().toUpperCase().trim().charAt(0);
+    mimeWordEncoding = (mimeWordEncoding || "Q")
+        .toString()
+        .toUpperCase()
+        .trim()
+        .charAt(0);
     maxLength = maxLength || 0;
 
     let encodedStr;
@@ -105,7 +109,10 @@ export const encodeWord = (data, mimeWordEncoding, maxLength) => {
     if (mimeWordEncoding === "Q") {
         // https://tools.ietf.org/html/rfc2047#section-5 rule (3)
         encodedStr = __.qp.encode(data).replace(/[^a-z0-9!*+\-\/=]/ig, (chr) => {
-            const ord = chr.charCodeAt(0).toString(16).toUpperCase();
+            const ord = chr
+                .charCodeAt(0)
+                .toString(16)
+                .toUpperCase();
             if (chr === " ") {
                 return "_";
             }
@@ -190,7 +197,10 @@ export const encodeWords = (value, mimeWordEncoding, maxLength) => {
 
 export const encodeURICharComponent = (chr) => {
     let res = "";
-    let ord = chr.charCodeAt(0).toString(16).toUpperCase();
+    let ord = chr
+        .charCodeAt(0)
+        .toString(16)
+        .toUpperCase();
 
     if (ord.length % 2) {
         ord = `0${ord}`;

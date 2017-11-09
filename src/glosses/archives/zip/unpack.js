@@ -328,7 +328,7 @@ class ZipFile extends EventEmitter {
         this.emittedError = false;
 
         if (!this.lazyEntries) {
-            setImmediate(() => this.readEntry().catch(adone.noop));
+            setImmediate(() => this._readEntry().catch(adone.noop));
         }
     }
 
@@ -341,6 +341,13 @@ class ZipFile extends EventEmitter {
     }
 
     async readEntry() {
+        if (!this.lazyEntries) {
+            throw new x.IllegalState("readEntry() called without lazyEntries:true");
+        }
+        return this._readEntry();
+    }
+
+    async _readEntry() {
         if (this.entryCount === this.entriesRead) {
             // done with metadata
             setImmediate(() => {
@@ -540,7 +547,7 @@ class ZipFile extends EventEmitter {
             this.emit("entry", entry);
 
             if (!this.lazyEntries) {
-                process.nextTick(() => this.readEntry().catch(adone.noop));
+                process.nextTick(() => this._readEntry().catch(adone.noop));
             }
 
             return entry;

@@ -37,10 +37,22 @@ describe("net", "http", "helpers", "status", () => {
         });
     });
 
+    describe(".STATUS_CODES", () => {
+        it("should be a map of code to message", () => {
+            assert.equal(status.STATUS_CODES[200], "OK");
+        });
+
+        it("should include codes from Node.js", () => {
+            Object.keys(std.http.STATUS_CODES).forEach(function forEachCode(code) {
+                assert.ok(status.STATUS_CODES[code], `contains ${code}`);
+            });
+        });
+    });
+
     describe(".codes", () => {
         it("should include codes from Node.js", () => {
             Object.keys(std.http.STATUS_CODES).forEach(function forEachCode(code) {
-                assert.ok(status.codes.has(Number(code)));
+                assert.ok(status.codes.has(Number(code)), code);
             });
         });
     });

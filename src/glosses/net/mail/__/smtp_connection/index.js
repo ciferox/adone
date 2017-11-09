@@ -42,7 +42,10 @@ export default class SMTPConnection extends EventEmitter {
     constructor(options) {
         super(options);
 
-        this.id = crypto.randomBytes(8).toString("base64").replace(/\W/g, "");
+        this.id = crypto
+            .randomBytes(8)
+            .toString("base64")
+            .replace(/\W/g, "");
         this.stage = "init";
 
         this.options = options || {};
@@ -302,7 +305,10 @@ export default class SMTPConnection extends EventEmitter {
         this._auth = authData || {};
 
         // Select SASL authentication method
-        this._authMethod = (this._auth.method || "").toString().trim().toUpperCase() || false;
+        this._authMethod = (this._auth.method || "")
+            .toString()
+            .trim()
+            .toUpperCase() || false;
         if (!this._authMethod && this._auth.oauth2 && !this._auth.credentials) {
             this._authMethod = "XOAUTH2";
         } else if (!this._authMethod || (this._authMethod === "XOAUTH2" && !this._auth.oauth2)) {
@@ -390,15 +396,22 @@ export default class SMTPConnection extends EventEmitter {
             message.on("error", (err) => callback(this._formatError(err, "ESTREAM", false, "API")));
         }
 
+        let startTime = Date.now();
         this._setEnvelope(envelope, (err, info) => {
             if (err) {
                 return callback(err);
             }
+            let envelopeTime = Date.now();
             const stream = this._createSendStream((err, str) => {
                 if (err) {
                     return callback(err);
                 }
+
+                info.envelopeTime = envelopeTime - startTime;
+                info.messageTime = Date.now() - envelopeTime;
+                info.messageSize = stream.outByteCount;
                 info.response = str;
+
                 return callback(null, info);
             });
             if (is.stream(message)) {

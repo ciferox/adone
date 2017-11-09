@@ -147,12 +147,15 @@ const addTimer = (clock, timer) => {
         throw new Error("Callback must be provided to timer calls");
     }
 
+    timer.type = timer.immediate ? "Immediate" : "Timeout";
+
     if (timer.hasOwnProperty("delay")) {
         timer.delay = timer.delay > maxTimeout ? 1 : timer.delay;
         timer.delay = Math.max(0, timer.delay);
     }
 
     if (timer.hasOwnProperty("interval")) {
+        timer.type = "Interval";
         timer.interval = timer.interval > maxTimeout ? 1 : timer.interval;
     }
 
@@ -268,16 +271,6 @@ const callTimer = (clock, timer) => {
     }
 };
 
-const timerType = (timer) => {
-    if (timer.immediate) {
-        return "Immediate";
-    }
-    if (!is.undefined(timer.interval)) {
-        return "Interval";
-    }
-    return "Timeout";
-};
-
 const clearTimer = (clock, timerId, ttype) => {
     if (!timerId) {
         // null appears to be allowed in most browsers, and appears to be
@@ -296,10 +289,10 @@ const clearTimer = (clock, timerId, ttype) => {
     if (clock.timers.hasOwnProperty(timerId)) {
         // check that the ID matches a timer of the correct type
         const timer = clock.timers[timerId];
-        if (timerType(timer) === ttype) {
+        if (timer.type === ttype) {
             delete clock.timers[timerId];
         } else {
-            throw new Error(`Cannot clear timer: timer created with set${timerType(timer)}() but cleared with clear${ttype}()`);
+            throw new Error(`Cannot clear timer: timer created with set${timer.type}() but cleared with clear${ttype}()`);
         }
     }
 };
@@ -341,11 +334,12 @@ export const timers = {
     nextTick: global.process.nextTick
 };
 
-export const createClock = (now, loopLimit) => {
+export const createClock = (start, loopLimit) => {
+    start = start || 0;
     loopLimit = loopLimit || 1000;
 
     const clock = {
-        now: getEpoch(now),
+        now: getEpoch(start),
         hrNow: 0,
         timeouts: {},
         Date: createDate(),
@@ -585,6 +579,14 @@ export const install = (...args) => {
         }
         // Prevent multiple executions which will completely remove these props
         clock.methods = [];
+
+        // return pending timers, to enable checking what timers remained on uninstall
+        if (!clock.timers) {
+            return [];
+        }
+        return Object.keys(clock.timers).map(function mapper(key) {
+            return clock.timers[key];
+        });
     };
 
     clock.methods = methods || [];

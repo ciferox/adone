@@ -199,6 +199,15 @@ export default class Pool extends EventEmitter {
         this.releaseConnection(connection);
     }
 
+    format(sql, values) {
+        return mysql.format(
+            sql,
+            values,
+            this.config.connectionConfig.stringifyObjects,
+            this.config.connectionConfig.timezone
+        );
+    }
+
     escape(value) {
         return __.escape(
             value,

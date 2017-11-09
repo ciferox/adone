@@ -107,7 +107,7 @@ describe("archive", "zip", "pack", () => {
         expect(finalSize).not.to.be.equal(-1, "final size should be known");
         const data = await zipfile.outputStream.pipe(adone.stream.concat("buffer"));
         expect(data.length).to.be.equal(finalSize, "prediction is wrong");
-        const zipFile = await unpack.fromBuffer(data);
+        const zipFile = await unpack.fromBuffer(data, { lazyEntries: true });
         const actual = [];
         for ( ; ; ) {
             const entry = await zipFile.readEntry();

@@ -21,8 +21,6 @@ export default class Sender {
         this._bufferedBytes = 0;
         this._deflating = false;
         this._queue = [];
-
-        this.onerror = null;
     }
 
     static frame(data, options) {
@@ -237,13 +235,6 @@ export default class Sender {
 
         this._deflating = true;
         perMessageDeflate.compress(data, options.fin, (err, buf) => {
-            if (err) {
-                if (cb) {
-                    return cb(err);
-                }
-                this.onerror(err);
-            }
-
             options.readOnly = false;
             this.sendFrame(Sender.frame(buf, options), cb);
             this._deflating = false;

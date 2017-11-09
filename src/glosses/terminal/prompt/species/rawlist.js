@@ -58,6 +58,9 @@ export default class RawlistPrompt extends terminal.BasePrompt {
         const def = this.opt.default;
         if (_.isNumber(def) && def >= 0 && def < this.opt.choices.realLength) {
             this.selected = this.rawDefault = def;
+        } else if (!_.isNumber(def) && !is.nil(def)) {
+            const index = _.findIndex(this.opt.choices.realChoices, ({ value }) => value === def);
+            this.selected = this.rawDefault = Math.max(index, 0);
         }
 
         // Make sure no default is set (so it won't be printed)

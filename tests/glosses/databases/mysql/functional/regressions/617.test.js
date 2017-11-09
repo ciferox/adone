@@ -27,7 +27,7 @@ describe("database", "mysql", "functional", "regressions", "617", () => {
         },
         {
             id: 2,
-            date: "2017-07-26 09:36:42.123000",
+            date: "2017-07-26 09:36:42.123",
             name: "Jane"
         }
     ];

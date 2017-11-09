@@ -11,6 +11,96 @@ describe("shani", "util", "__", "collection", () => {
         assert.isFunction(collection.mock);
     });
 
+    describe(".createStubInstance", () => {
+        beforeEach(function () {
+            this.collection = new Collection();
+        });
+
+        it("stubs existing methods", function () {
+            const Class = function () { };
+            Class.prototype.method = function () { };
+
+            const stub = this.collection.createStubInstance(Class);
+            stub.method.returns(3);
+            assert.equal(3, stub.method());
+        });
+
+        it("resets all stub methods on reset()", function () {
+            const Class = function () { };
+            Class.prototype.method1 = function () { };
+            Class.prototype.method2 = function () { };
+            Class.prototype.method3 = function () { };
+
+            const stub = this.collection.createStubInstance(Class);
+            stub.method1.returns(1);
+            stub.method2.returns(2);
+            stub.method3.returns(3);
+
+            assert.equal(3, stub.method3());
+
+            this.collection.reset();
+            assert.equal(undefined, stub.method1());
+            assert.equal(undefined, stub.method2());
+            assert.equal(undefined, stub.method3());
+        });
+
+        it("doesn't stub fake methods", function () {
+            const Class = function () { };
+
+            const stub = this.collection.createStubInstance(Class);
+            assert.throws(() => {
+                stub.method.returns(3);
+            });
+        });
+
+        it("doesn't call the constructor", function () {
+            const Class = function (a, b) {
+                const c = a + b;
+                throw c;
+            };
+            Class.prototype.method = function () { };
+
+            const stub = this.collection.createStubInstance(Class);
+            assert.doesNotThrow(() => {
+                stub.method(3);
+            });
+        });
+
+        it("retains non function values", function () {
+            const TYPE = "some-value";
+            const Class = function () { };
+            Class.prototype.type = TYPE;
+
+            const stub = this.collection.createStubInstance(Class);
+            assert.equal(TYPE, stub.type);
+        });
+
+        it("has no side effects on the prototype", function () {
+            const proto = {
+                method() {
+                    throw "error";
+                }
+            };
+            const Class = function () { };
+            Class.prototype = proto;
+
+            const stub = this.collection.createStubInstance(Class);
+            assert.doesNotThrow(stub.method);
+            assert.throws(proto.method);
+        });
+
+        it("throws exception for non function params", () => {
+            const types = [{}, 3, "hi!"];
+
+            for (let i = 0; i < types.length; i++) {
+                // yes, it's silly to create functions in a loop, it's also a test
+                assert.throws(function () { // eslint-disable-line no-loop-func
+                    this.collection.createStubInstance(types[i]);
+                });
+            }
+        });
+    });
+
     describe(".stub", () => {
         beforeEach(function () {
             this.collection = new Collection();
@@ -28,16 +118,14 @@ describe("shani", "util", "__", "collection", () => {
         });
 
         it("fails if stubbing symbol on null", function () {
-            if (typeof Symbol === "function") {
-                const collection = this.collection;
+            const collection = this.collection;
 
-                assert.throws(
-                    () => {
-                        collection.stub(null, Symbol());
-                    },
-                    "Trying to stub property 'Symbol()' of null"
-                );
-            }
+            assert.throws(
+                () => {
+                    collection.stub(null, Symbol());
+                },
+                "Trying to stub property 'Symbol()' of null"
+            );
         });
 
         it("creates a stub", function () {
@@ -92,19 +180,17 @@ describe("shani", "util", "__", "collection", () => {
             assert.equal(this.collection.stub(object, "method"), object.method);
         });
 
-        if (typeof process !== "undefined") {
-            describe("on node", () => {
-                beforeEach(() => {
-                    process.env.HELL = "Ain't too bad";
-                });
-
-                it("stubs environment property", function () {
-                    this.collection.stub(process.env, "HELL").value("froze over");
-                    assert.equal(process.env.HELL, "froze over");
-
-                });
+        describe("on node", () => {
+            beforeEach(() => {
+                process.env.HELL = "Ain't too bad";
             });
-        }
+
+            it("stubs environment property", function () {
+                this.collection.stub(process.env, "HELL").value("froze over");
+                assert.equal(process.env.HELL, "froze over");
+
+            });
+        });
     });
 
     describe("stub anything", () => {
@@ -136,14 +222,12 @@ describe("shani", "util", "__", "collection", () => {
         });
 
         it("fails if Symbol does not exist", function () {
-            if (typeof Symbol === "function") {
-                const collection = this.collection;
-                const object = {};
+            const collection = this.collection;
+            const object = {};
 
-                assert.throws(() => {
-                    collection.stub(object, Symbol());
-                }, "Cannot stub non-existent own property Symbol()");
-            }
+            assert.throws(() => {
+                collection.stub(object, Symbol());
+            }, "Cannot stub non-existent own property Symbol()");
         });
     });
 

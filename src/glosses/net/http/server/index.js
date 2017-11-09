@@ -111,13 +111,18 @@ export class Server extends EventEmitter {
         }
 
         return (req, res) => {
-            res.statusCode = 404;
             const ctx = this.createContext(req, res);
-            const onerror = (err) => ctx.onerror(err);
-            const handleResponse = () => Server.respond(ctx);
-            http.server.helper.onFinished(res, onerror);
-            return fn(ctx).then(handleResponse).catch(onerror);
+            return this.handleRequest(ctx, fn);
         };
+    }
+
+    handleRequest(ctx, fnMiddleware) {
+        const res = ctx.res;
+        res.statusCode = 404;
+        const onerror = (err) => ctx.onerror(err);
+        const handleResponse = () => Server.respond(ctx);
+        http.server.helper.onFinished(res, onerror);
+        return fnMiddleware(ctx).then(handleResponse).catch(onerror);
     }
 
     async unbind() {
@@ -146,8 +151,8 @@ export class Server extends EventEmitter {
     }
 
     createContext(req, res) {
-        const request = new adone.net.http.server.Request(this, req);
-        const response = new adone.net.http.server.Response(this, res);
+        const request = new adone.net.http.server.Request(this, req, res);
+        const response = new adone.net.http.server.Response(this, res, req);
         request.response = response;
         response.request = request;
         const context = new adone.net.http.server.Context(this, request, response);

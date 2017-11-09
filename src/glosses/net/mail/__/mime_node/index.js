@@ -61,7 +61,11 @@ export default class MimeNode {
         /**
          * Indicates which encoding should be used for header strings: "Q" or "B"
          */
-        this.textEncoding = (options.textEncoding || "").toString().trim().charAt(0).toUpperCase();
+        this.textEncoding = (options.textEncoding || "")
+            .toString()
+            .trim()
+            .charAt(0)
+            .toUpperCase();
 
         /**
          * Immediate parent for this node (or undefined if not set)
@@ -412,10 +416,16 @@ export default class MimeNode {
 
     getTransferEncoding() {
         let transferEncoding = false;
-        const contentType = (this.getHeader("Content-Type") || "").toString().toLowerCase().trim();
+        const contentType = (this.getHeader("Content-Type") || "")
+            .toString()
+            .toLowerCase()
+            .trim();
 
         if (this.content) {
-            transferEncoding = (this.getHeader("Content-Transfer-Encoding") || "").toString().toLowerCase().trim();
+            transferEncoding = (this.getHeader("Content-Transfer-Encoding") || "")
+                .toString()
+                .toLowerCase()
+                .trim();
             if (!transferEncoding || !["base64", "quoted-printable"].includes(transferEncoding)) {
                 if (/^text\//i.test(contentType)) {
                     // If there are no special symbols, no need to modify the text
@@ -1042,18 +1052,26 @@ export default class MimeNode {
             }
             // space separated list of values enclosed in <>
             case "References": {
-                value = [].concat.apply([], [].concat(value || "").map((elm) => { // eslint-disable-line prefer-spread
-                    elm = (elm || "").toString().replace(/\r?\n|\r/g, " ").trim();
-                    return elm.replace(/<[^>]*>/g, (str) => str.replace(/\s/g, "")).split(/\s+/);
-                })).map((elm) => {
-                    if (elm.charAt(0) !== "<") {
-                        elm = `<${elm}`;
-                    }
-                    if (elm.charAt(elm.length - 1) !== ">") {
-                        elm = `${elm}>`;
-                    }
-                    return elm;
-                });
+                value = [].concat
+                    .apply(
+                        [],
+                        [].concat(value || "").map((elm) => { // eslint-disable-line prefer-spread
+                            elm = (elm || "")
+                                .toString()
+                                .replace(/\r?\n|\r/g, " ")
+                                .trim();
+                            return elm.replace(/<[^>]*>/g, (str) => str.replace(/\s/g, "")).split(/\s+/);
+                        })
+                    )
+                    .map((elm) => {
+                        if (elm.charAt(0) !== "<") {
+                            elm = `<${elm}`;
+                        }
+                        if (elm.charAt(elm.length - 1) !== ">") {
+                            elm = `${elm}>`;
+                        }
+                        return elm;
+                    });
 
                 return value.join(" ").trim();
             }

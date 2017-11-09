@@ -233,10 +233,13 @@ export default class ExpandPrompt extends terminal.BasePrompt {
      * @param  {Number} defaultIndex - the choice index to capitalize
      * @return {String} The rendered choices key string
      */
-    generateChoicesString(choices, defaultIndex) {
+    generateChoicesString(choices, defaultChoice) {
         let defIndex = choices.realLength - 1;
-        if (is.number(defaultIndex) && this.opt.choices.getChoice(defaultIndex)) {
-            defIndex = defaultIndex;
+        if (is.number(defaultChoice) && this.opt.choices.getChoice(defaultChoice)) {
+            defIndex = defaultChoice;
+        } else if (is.string(defaultChoice)) {
+            const index = choices.realChoices.findIndex(({ value }) => value === defaultChoice);
+            defIndex = (index === -1 ? defIndex : index);
         }
         const defStr = this.opt.choices.pluck("key");
         this.rawDefault = defStr[defIndex];

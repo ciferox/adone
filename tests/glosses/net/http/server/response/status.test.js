@@ -1,7 +1,7 @@
 import * as helpers from "../helpers";
 
 describe("net", "http", "server", "response", "status", () => {
-    const { net: { http: { server: { Server, helper: { status } } } } } = adone;
+    const { is, net: { http: { server: { Server, helper: { status } } } } } = adone;
 
     describe("when a status code", () => {
         describe("and valid", () => {
@@ -47,6 +47,17 @@ describe("net", "http", "server", "response", "status", () => {
         });
     });
 
+    describe("and HTTP/2", () => {
+        it("should not set the status message", () => {
+            const res = helpers.response({
+                httpVersionMajor: 2,
+                httpVersion: "2.0"
+            });
+            res.status = 200;
+            assert(!res.res.statusMessage);
+        });
+    });
+
     describe("when a status string", () => {
         it("should throw", () => {
             assert.throws(() => helpers.response().status = "forbidden", "status code must be a number");
@@ -63,9 +74,9 @@ describe("net", "http", "server", "response", "status", () => {
                 ctx.set("Content-Length", "15");
                 ctx.set("Transfer-Encoding", "chunked");
                 ctx.status = status;
-                assert(ctx.response.header["content-type"] == null);
-                assert(ctx.response.header["content-length"] == null);
-                assert(ctx.response.header["transfer-encoding"] == null);
+                assert(is.nil(ctx.response.header["content-type"]));
+                assert(is.nil(ctx.response.header["content-length"]));
+                assert(is.nil(ctx.response.header["transfer-encoding"]));
             });
 
             await request(server)

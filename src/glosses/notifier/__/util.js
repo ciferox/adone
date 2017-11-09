@@ -12,6 +12,7 @@ const notifySendFlags = {
     u: "urgency",
     urgency: "urgency",
     t: "expire-time",
+    time: "expire-time",
     e: "expire-time",
     expire: "expire-time",
     "expire-time": "expire-time",
@@ -35,6 +36,7 @@ export const command = (notifier, options) => {
     notifier = shellwordsEscape(notifier);
 
     return new Promise((resolve, reject) => {
+        console.log(`${notifier} ${options.join(" ")}`);
         cp.exec(
             `${notifier} ${options.join(" ")}`,
             (error, stdout, stderr) => {

@@ -2315,7 +2315,11 @@ export const detectMimeType = (filename) => {
     }
 
     const parsed = path.parse(filename);
-    const extension = (parsed.ext.substr(1) || parsed.name || "").split("?").shift().trim().toLowerCase();
+    const extension = (parsed.ext.substr(1) || parsed.name || "")
+        .split("?")
+        .shift()
+        .trim()
+        .toLowerCase();
     let value = defaultMimeType;
 
     if (extensions.has(extension)) {
@@ -2332,7 +2336,10 @@ export const detectExtension = (mimeType) => {
     if (!mimeType) {
         return defaultExtension;
     }
-    const parts = (mimeType || "").toLowerCase().trim().split("/");
+    const parts = (mimeType || "")
+        .toLowerCase()
+        .trim()
+        .split("/");
     const rootType = parts.shift().trim();
     const subType = parts.join("/").trim();
 

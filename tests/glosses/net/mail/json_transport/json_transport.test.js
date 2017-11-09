@@ -27,7 +27,9 @@ describe("net", "mail", "JSON Transport Tests", () => {
             html: fs.createReadStream(path.resolve(__dirname, "fixtures", "body.html")).pipe(stream.replace("\r\n", "\n")),
             text: "hello world",
             attachments: [{
-                filename: "image.png",
+                filename: "img.png",
+                path: path.resolve(__dirname, "fixtures", "image.png")
+            }, {
                 path: path.resolve(__dirname, "fixtures", "image.png")
             }]
         };
@@ -60,7 +62,13 @@ describe("net", "mail", "JSON Transport Tests", () => {
                 text: "hello world",
                 attachments: [{
                     content: "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEUAAAD///+l2Z/dAAAAM0lEQVR4nGP4/5/h/1+G/58ZDrAz3D/McH8yw83NDDeNGe4Ug9C9zwz3gVLMDA/A6P9/AFGGFyjOXZtQAAAAAElFTkSuQmCC",
+                    filename: "img.png",
+                    contentType: "image/png",
+                    encoding: "base64"
+                }, {
+                    content: "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEUAAAD///+l2Z/dAAAAM0lEQVR4nGP4/5/h/1+G/58ZDrAz3D/McH8yw83NDDeNGe4Ug9C9zwz3gVLMDA/A6P9/AFGGFyjOXZtQAAAAAElFTkSuQmCC",
                     filename: "image.png",
+                    contentType: "image/png",
                     encoding: "base64"
                 }],
                 headers: {},

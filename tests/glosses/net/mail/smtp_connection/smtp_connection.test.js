@@ -763,6 +763,9 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                         accepted: ["test1@valid.recipient", "test3@valid.recipient"],
                         rejected: ["test2@invalid.recipient"],
                         rejectedErrors: info.rejectedErrors,
+                        envelopeTime: info.envelopeTime,
+                        messageTime: info.messageTime,
+                        messageSize: info.messageSize,
                         response: "250 OK: message queued"
                     });
                     expect(info.rejectedErrors.length).to.equal(1);
@@ -794,6 +797,9 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                     expect(info).to.deep.equal({
                         accepted: ["test@valid.recipient"],
                         rejected: [],
+                        envelopeTime: info.envelopeTime,
+                        messageTime: info.messageTime,
+                        messageSize: info.messageSize,
                         response: "250 OK: message queued"
                     });
                     done();
@@ -809,6 +815,9 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                     expect(info).to.deep.equal({
                         accepted: ["test@valid.recipient"],
                         rejected: [],
+                        envelopeTime: info.envelopeTime,
+                        messageTime: info.messageTime,
+                        messageSize: info.messageSize,
                         response: "250 OK: message queued"
                     });
                     client.reset((err) => {
@@ -822,6 +831,9 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                             expect(info).to.deep.equal({
                                 accepted: ["test2@valid.recipient"],
                                 rejected: [],
+                                envelopeTime: info.envelopeTime,
+                                messageTime: info.messageTime,
+                                messageSize: info.messageSize,
                                 response: "250 OK: message queued"
                             });
                             done();
@@ -840,6 +852,9 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                         accepted: ["test1@valid.recipient", "test3@valid.recipient"],
                         rejected: ["test2@invalid.recipient"],
                         rejectedErrors: info.rejectedErrors,
+                        envelopeTime: info.envelopeTime,
+                        messageTime: info.messageTime,
+                        messageSize: info.messageSize,
                         response: "250 OK: message queued"
                     });
                     expect(info.rejectedErrors.length).to.equal(1);
@@ -894,6 +909,9 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                     expect(info).to.deep.equal({
                         accepted: ["test2@valid.recipient"],
                         rejected: [],
+                        envelopeTime: info.envelopeTime,
+                        messageTime: info.messageTime,
+                        messageSize: info.messageSize,
                         response: "250 OK: message queued"
                     });
                     done();
@@ -931,6 +949,9 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                         accepted: ["test1@valid.recipient", "test3õ@valid.recipient"],
                         rejected: ["test2@invalid.recipient"],
                         rejectedErrors: info.rejectedErrors,
+                        envelopeTime: info.envelopeTime,
+                        messageTime: info.messageTime,
+                        messageSize: info.messageSize,
                         response: "250 OK: message queued"
                     });
                     done();
@@ -948,6 +969,9 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                         accepted: ["test1@valid.recipient", "test3õ@valid.recipient"],
                         rejected: ["test2@invalid.recipient"],
                         rejectedErrors: info.rejectedErrors,
+                        envelopeTime: info.envelopeTime,
+                        messageTime: info.messageTime,
+                        messageSize: info.messageSize,
                         response: "250 OK: message queued"
                     });
                     done();

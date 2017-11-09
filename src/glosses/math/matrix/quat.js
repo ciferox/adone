@@ -9,6 +9,14 @@ export const create = () => {
     return out;
 };
 
+export const identity = (out) => {
+    out[0] = 0;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 1;
+    return out;
+};
+
 export const setAxisAngle = (out, axis, rad) => {
     rad = rad * 0.5;
     const s = Math.sin(rad);
@@ -16,112 +24,6 @@ export const setAxisAngle = (out, axis, rad) => {
     out[1] = s * axis[1];
     out[2] = s * axis[2];
     out[3] = Math.cos(rad);
-    return out;
-};
-
-export const normalize = vec4.normalize;
-
-export const rotationTo = (function () {
-    const tmpvec3 = vec3.create();
-    const xUnitVec3 = vec3.fromValues(1, 0, 0);
-    const yUnitVec3 = vec3.fromValues(0, 1, 0);
-
-    return function (out, a, b) {
-        const dot = vec3.dot(a, b);
-        if (dot < -0.999999) {
-            vec3.cross(tmpvec3, xUnitVec3, a);
-            if (vec3.length(tmpvec3) < 0.000001) {
-                vec3.cross(tmpvec3, yUnitVec3, a);
-            }
-            vec3.normalize(tmpvec3, tmpvec3);
-            setAxisAngle(out, tmpvec3, Math.PI);
-            return out;
-        } else if (dot > 0.999999) {
-            out[0] = 0;
-            out[1] = 0;
-            out[2] = 0;
-            out[3] = 1;
-            return out;
-        }
-        vec3.cross(tmpvec3, a, b);
-        out[0] = tmpvec3[0];
-        out[1] = tmpvec3[1];
-        out[2] = tmpvec3[2];
-        out[3] = 1 + dot;
-        return normalize(out, out);
-    };
-})();
-
-export const fromMat3 = (out, m) => {
-    // Algorithm in Ken Shoemake's article in 1987 SIGGRAPH course notes
-    // article "Quaternion Calculus and Fast Animation".
-    const fTrace = m[0] + m[4] + m[8];
-    let fRoot;
-
-    if (fTrace > 0.0) {
-        // |w| > 1/2, may as well choose w > 1/2
-        fRoot = Math.sqrt(fTrace + 1.0);  // 2w
-        out[3] = 0.5 * fRoot;
-        fRoot = 0.5 / fRoot;  // 1/(4w)
-        out[0] = (m[5] - m[7]) * fRoot;
-        out[1] = (m[6] - m[2]) * fRoot;
-        out[2] = (m[1] - m[3]) * fRoot;
-    } else {
-        // |w| <= 1/2
-        let i = 0;
-        if (m[4] > m[0]) {
-            i = 1;
-        }
-        if (m[8] > m[i * 3 + i]) {
-            i = 2;
-        }
-        const j = (i + 1) % 3;
-        const k = (i + 2) % 3;
-
-        fRoot = Math.sqrt(m[i * 3 + i] - m[j * 3 + j] - m[k * 3 + k] + 1.0);
-        out[i] = 0.5 * fRoot;
-        fRoot = 0.5 / fRoot;
-        out[3] = (m[j * 3 + k] - m[k * 3 + j]) * fRoot;
-        out[j] = (m[j * 3 + i] + m[i * 3 + j]) * fRoot;
-        out[k] = (m[k * 3 + i] + m[i * 3 + k]) * fRoot;
-    }
-
-    return out;
-};
-
-export const setAxes = (function () {
-    const matr = mat3.create();
-
-    return function (out, view, right, up) {
-        matr[0] = right[0];
-        matr[3] = right[1];
-        matr[6] = right[2];
-
-        matr[1] = up[0];
-        matr[4] = up[1];
-        matr[7] = up[2];
-
-        matr[2] = -view[0];
-        matr[5] = -view[1];
-        matr[8] = -view[2];
-
-        return normalize(out, fromMat3(out, matr));
-    };
-})();
-
-export const clone = vec4.clone;
-
-export const fromValues = vec4.fromValues;
-
-export const copy = vec4.copy;
-
-export const set = vec4.set;
-
-export const identity = (out) => {
-    out[0] = 0;
-    out[1] = 0;
-    out[2] = 0;
-    out[3] = 1;
     return out;
 };
 
@@ -141,8 +43,6 @@ export const getAxisAngle = (outAxis, q) => {
     return rad;
 };
 
-export const add = vec4.add;
-
 export const multiply = (out, a, b) => {
     const ax = a[0];
     const ay = a[1];
@@ -159,10 +59,6 @@ export const multiply = (out, a, b) => {
     out[3] = aw * bw - ax * bx - ay * by - az * bz;
     return out;
 };
-
-export const mul = multiply;
-
-export const scale = vec4.scale;
 
 export const rotateX = (out, a, rad) => {
     rad *= 0.5;
@@ -227,10 +123,6 @@ export const calculateW = (out, a) => {
     return out;
 };
 
-export const dot = vec4.dot;
-
-export const lerp = vec4.lerp;
-
 export const slerp = (out, a, b, t) => {
     // benchmarks:
     //    http://jsperf.com/quaternion-slerp-implementations
@@ -268,7 +160,7 @@ export const slerp = (out, a, b, t) => {
         scale0 = Math.sin((1.0 - t) * omega) / sinom;
         scale1 = Math.sin(t * omega) / sinom;
     } else {
-        // "from" and "to" quaternions are very close 
+        // "from" and "to" quaternions are very close
         //  ... so we can do a linear interpolation
         scale0 = 1.0 - t;
         scale1 = t;
@@ -281,19 +173,6 @@ export const slerp = (out, a, b, t) => {
 
     return out;
 };
-
-export const sqlerp = (function () {
-    const temp1 = create();
-    const temp2 = create();
-
-    return function (out, a, b, c, d, t) {
-        slerp(temp1, a, d, t);
-        slerp(temp2, b, c, t);
-        slerp(out, temp1, temp2, 2 * t * (1 - t));
-
-        return out;
-    };
-}());
 
 export const invert = (out, a) => {
     const a0 = a[0];
@@ -320,6 +199,86 @@ export const conjugate = (out, a) => {
     return out;
 };
 
+export const fromMat3 = (out, m) => {
+    // Algorithm in Ken Shoemake's article in 1987 SIGGRAPH course notes
+    // article "Quaternion Calculus and Fast Animation".
+    const fTrace = m[0] + m[4] + m[8];
+    let fRoot;
+
+    if (fTrace > 0.0) {
+        // |w| > 1/2, may as well choose w > 1/2
+        fRoot = Math.sqrt(fTrace + 1.0); // 2w
+        out[3] = 0.5 * fRoot;
+        fRoot = 0.5 / fRoot; // 1/(4w)
+        out[0] = (m[5] - m[7]) * fRoot;
+        out[1] = (m[6] - m[2]) * fRoot;
+        out[2] = (m[1] - m[3]) * fRoot;
+    } else {
+        // |w| <= 1/2
+        let i = 0;
+        if (m[4] > m[0]) {
+            i = 1;
+        }
+        if (m[8] > m[i * 3 + i]) {
+            i = 2;
+        }
+        const j = (i + 1) % 3;
+        const k = (i + 2) % 3;
+
+        fRoot = Math.sqrt(m[i * 3 + i] - m[j * 3 + j] - m[k * 3 + k] + 1.0);
+        out[i] = 0.5 * fRoot;
+        fRoot = 0.5 / fRoot;
+        out[3] = (m[j * 3 + k] - m[k * 3 + j]) * fRoot;
+        out[j] = (m[j * 3 + i] + m[i * 3 + j]) * fRoot;
+        out[k] = (m[k * 3 + i] + m[i * 3 + k]) * fRoot;
+    }
+
+    return out;
+};
+
+export const fromEuler = (out, x, y, z) => {
+    const halfToRad = 0.5 * Math.PI / 180.0;
+    x *= halfToRad;
+    y *= halfToRad;
+    z *= halfToRad;
+
+    const sx = Math.sin(x);
+    const cx = Math.cos(x);
+    const sy = Math.sin(y);
+    const cy = Math.cos(y);
+    const sz = Math.sin(z);
+    const cz = Math.cos(z);
+
+    out[0] = sx * cy * cz - cx * sy * sz;
+    out[1] = cx * sy * cz + sx * cy * sz;
+    out[2] = cx * cy * sz - sx * sy * cz;
+    out[3] = cx * cy * cz + sx * sy * sz;
+
+    return out;
+};
+
+export const str = (a) => {
+    return `quat(${a[0]}, ${a[1]}, ${a[2]}, ${a[3]})`;
+};
+
+export const clone = vec4.clone;
+
+export const fromValues = vec4.fromValues;
+
+export const copy = vec4.copy;
+
+export const set = vec4.set;
+
+export const add = vec4.add;
+
+export const mul = multiply;
+
+export const scale = vec4.scale;
+
+export const dot = vec4.dot;
+
+export const lerp = vec4.lerp;
+
 export const length = vec4.length;
 
 export const len = length;
@@ -328,10 +287,73 @@ export const squaredLength = vec4.squaredLength;
 
 export const sqrLen = squaredLength;
 
-export const str = (a) => {
-    return `quat(${a[0]}, ${a[1]}, ${a[2]}, ${a[3]})`;
-};
+export const normalize = vec4.normalize;
 
 export const exactEquals = vec4.exactEquals;
 
 export const equals = vec4.equals;
+
+export const rotationTo = (function () {
+    const tmpvec3 = vec3.create();
+    const xUnitVec3 = vec3.fromValues(1, 0, 0);
+    const yUnitVec3 = vec3.fromValues(0, 1, 0);
+
+    return function (out, a, b) {
+        const dot = vec3.dot(a, b);
+        if (dot < -0.999999) {
+            vec3.cross(tmpvec3, xUnitVec3, a);
+            if (vec3.len(tmpvec3) < 0.000001) {
+                vec3.cross(tmpvec3, yUnitVec3, a);
+            }
+            vec3.normalize(tmpvec3, tmpvec3);
+            setAxisAngle(out, tmpvec3, Math.PI);
+            return out;
+        } else if (dot > 0.999999) {
+            out[0] = 0;
+            out[1] = 0;
+            out[2] = 0;
+            out[3] = 1;
+            return out;
+        }
+        vec3.cross(tmpvec3, a, b);
+        out[0] = tmpvec3[0];
+        out[1] = tmpvec3[1];
+        out[2] = tmpvec3[2];
+        out[3] = 1 + dot;
+        return normalize(out, out);
+
+    };
+})();
+
+export const sqlerp = (function () {
+    const temp1 = create();
+    const temp2 = create();
+
+    return function (out, a, b, c, d, t) {
+        slerp(temp1, a, d, t);
+        slerp(temp2, b, c, t);
+        slerp(out, temp1, temp2, 2 * t * (1 - t));
+
+        return out;
+    };
+}());
+
+export const setAxes = (function () {
+    const matr = mat3.create();
+
+    return function (out, view, right, up) {
+        matr[0] = right[0];
+        matr[3] = right[1];
+        matr[6] = right[2];
+
+        matr[1] = up[0];
+        matr[4] = up[1];
+        matr[7] = up[2];
+
+        matr[2] = -view[0];
+        matr[5] = -view[1];
+        matr[8] = -view[2];
+
+        return normalize(out, fromMat3(out, matr));
+    };
+})();

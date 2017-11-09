@@ -58,7 +58,8 @@ export default class ListPrompt extends terminal.BasePrompt {
         if (is.number(def) && def >= 0 && def < this.opt.choices.realLength) {
             this.selected = def;
         } else if (!is.number(def) && !is.nil(def)) {
-            this.selected = this.opt.choices.pluck("value").indexOf(def);
+            const index = this.opt.choices.realChoices.findIndex(({ value }) => value === def);
+            this.selected = Math.max(index, 0);
         }
 
         // Make sure no default is set (so it won't be printed)

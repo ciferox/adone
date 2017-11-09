@@ -145,13 +145,13 @@ export class Router {
                             throw notImplementedThrowable;
                         } else {
                             ctx.status = 501;
-                            ctx.set("Allow", allowedArr);
+                            ctx.set("Allow", allowedArr.join(", "));
                         }
                     } else if (allowedArr.length) {
                         if (ctx.method === "OPTIONS") {
                             ctx.status = 200;
                             ctx.body = "";
-                            ctx.set("Allow", allowedArr);
+                            ctx.set("Allow", allowedArr.join(", "));
                         } else if (!allowed[ctx.method]) {
                             if (options.throw) {
                                 let notAllowedThrowable;
@@ -163,7 +163,7 @@ export class Router {
                                 throw notAllowedThrowable;
                             } else {
                                 ctx.status = 405;
-                                ctx.set("Allow", allowedArr);
+                                ctx.set("Allow", allowedArr.join(", "));
                             }
                         }
                     }

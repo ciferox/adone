@@ -24,7 +24,7 @@ export default class SESTransport extends EventEmitter {
         this.ses = this.options.SES;
 
         this.name = "SESTransport";
-        this.version = "x.x.x";  // TODO: adone version ?
+        this.version = "x.x.x"; // TODO: adone version ?
 
         this.logger = __.shared.getLogger(this.options, {
             component: this.options.component || "ses-transport"
@@ -123,7 +123,11 @@ export default class SESTransport extends EventEmitter {
 
         const delay = Math.max(oldest + 1001, now + 20);
         this.sendingRateTTL = setTimeout(() => this._checkRatedQueue(), now - delay);
-        this.sendingRateTTL.unref();
+        try {
+            this.sendingRateTTL.unref();
+        } catch (E) {
+            // Ignore. Happens on envs with non-node timer implementation
+        }
         return false;
     }
 

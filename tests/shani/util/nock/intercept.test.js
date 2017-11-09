@@ -4636,4 +4636,35 @@ describe("shani", "util", "nock", "intercept", () => {
             });
         }).flushHeaders();
     });
+
+    it("stops persisting a persistent nock", (done) => {
+        nock.cleanAll();
+        const scope = nock("http://persist.com")
+            .persist(true)
+            .get("/")
+            .reply(200, "Persisting all the way");
+
+        assert.ok(!scope.isDone());
+        http.get("http://persist.com/", () => {
+            assert.ok(scope.isDone());
+            assert.deepEqual(nock.activeMocks(), ["GET http://persist.com:80/"]);
+            scope.persist(false);
+            http.get("http://persist.com/", () => {
+                assert.equal(nock.activeMocks().length, 0);
+                assert.ok(scope.isDone());
+                http.get("http://persist.com/")
+                    .on("error", (e) => {
+                        assert.match(e.toString(), /No match for request/);
+                        done();
+                    })
+                    .end();
+            }).end();
+        }).end();
+    });
+
+    it("should throw an error when persist flag isn't a boolean", () => {
+        assert.throws(() => {
+            nock("http://persist.com").persist("string");
+        }, "argument should be a boolean");
+    });
 });

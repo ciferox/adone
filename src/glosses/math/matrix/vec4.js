@@ -57,8 +57,6 @@ export const subtract = (out, a, b) => {
     return out;
 };
 
-export const sub = subtract;
-
 export const multiply = (out, a, b) => {
     out[0] = a[0] * b[0];
     out[1] = a[1] * b[1];
@@ -67,8 +65,6 @@ export const multiply = (out, a, b) => {
     return out;
 };
 
-export const mul = multiply;
-
 export const divide = (out, a, b) => {
     out[0] = a[0] / b[0];
     out[1] = a[1] / b[1];
@@ -76,8 +72,6 @@ export const divide = (out, a, b) => {
     out[3] = a[3] / b[3];
     return out;
 };
-
-export const div = divide;
 
 export const ceil = (out, a) => {
     out[0] = Math.ceil(a[0]);
@@ -143,8 +137,6 @@ export const distance = (a, b) => {
     return Math.sqrt(x * x + y * y + z * z + w * w);
 };
 
-export const dist = distance;
-
 export const squaredDistance = (a, b) => {
     const x = b[0] - a[0];
     const y = b[1] - a[1];
@@ -152,8 +144,6 @@ export const squaredDistance = (a, b) => {
     const w = b[3] - a[3];
     return x * x + y * y + z * z + w * w;
 };
-
-export const sqrDist = squaredDistance;
 
 export const length = (a) => {
     const x = a[0];
@@ -163,8 +153,6 @@ export const length = (a) => {
     return Math.sqrt(x * x + y * y + z * z + w * w);
 };
 
-export const len = length;
-
 export const squaredLength = (a) => {
     const x = a[0];
     const y = a[1];
@@ -172,8 +160,6 @@ export const squaredLength = (a) => {
     const w = a[3];
     return x * x + y * y + z * z + w * w;
 };
-
-export const sqrLen = squaredLength;
 
 export const negate = (out, a) => {
     out[0] = -a[0];
@@ -271,6 +257,43 @@ export const transformQuat = (out, a, q) => {
     return out;
 };
 
+export const str = (a) => {
+    return `vec4(${a[0]}, ${a[1]}, ${a[2]}, ${a[3]})`;
+};
+
+export const exactEquals = (a, b) => {
+    return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3];
+};
+
+export const equals = (a, b) => {
+    const a0 = a[0];
+    const a1 = a[1];
+    const a2 = a[2];
+    const a3 = a[3];
+    const b0 = b[0];
+    const b1 = b[1];
+    const b2 = b[2];
+    const b3 = b[3];
+    return (Math.abs(a0 - b0) <= adone.math.matrix.EPSILON * Math.max(1.0, Math.abs(a0), Math.abs(b0)) &&
+            Math.abs(a1 - b1) <= adone.math.matrix.EPSILON * Math.max(1.0, Math.abs(a1), Math.abs(b1)) &&
+            Math.abs(a2 - b2) <= adone.math.matrix.EPSILON * Math.max(1.0, Math.abs(a2), Math.abs(b2)) &&
+            Math.abs(a3 - b3) <= adone.math.matrix.EPSILON * Math.max(1.0, Math.abs(a3), Math.abs(b3)));
+};
+
+export const sub = subtract;
+
+export const mul = multiply;
+
+export const div = divide;
+
+export const dist = distance;
+
+export const sqrDist = squaredDistance;
+
+export const len = length;
+
+export const sqrLen = squaredLength;
+
 export const forEach = (function () {
     const vec = create();
 
@@ -300,26 +323,3 @@ export const forEach = (function () {
         return a;
     };
 })();
-
-export const str = (a) => {
-    return `vec4(${a[0]}, ${a[1]}, ${a[2]}, ${a[3]})`;
-};
-
-export const exactEquals = (a, b) => {
-    return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3];
-};
-
-export const equals = (a, b) => {
-    const a0 = a[0];
-    const a1 = a[1];
-    const a2 = a[2];
-    const a3 = a[3];
-    const b0 = b[0];
-    const b1 = b[1];
-    const b2 = b[2];
-    const b3 = b[3];
-    return (Math.abs(a0 - b0) <= adone.math.matrix.EPSILON * Math.max(1.0, Math.abs(a0), Math.abs(b0)) &&
-        Math.abs(a1 - b1) <= adone.math.matrix.EPSILON * Math.max(1.0, Math.abs(a1), Math.abs(b1)) &&
-        Math.abs(a2 - b2) <= adone.math.matrix.EPSILON * Math.max(1.0, Math.abs(a2), Math.abs(b2)) &&
-        Math.abs(a3 - b3) <= adone.math.matrix.EPSILON * Math.max(1.0, Math.abs(a3), Math.abs(b3)));
-};
