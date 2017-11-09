@@ -342,57 +342,63 @@ describe("application", () => {
 
             describe("actions", () => {
                 describe("set", () => {
-                    it("should create a map of false values for not present values", async () => {
-                        app.defineArguments({
-                            arguments: [{
-                                name: "x",
-                                action: "set",
-                                set: "defaultFalse",
-                                choices: ["a", "b", "c"]
-                            }]
-                        });
+                    describe("defaultFalse", () => {
+                        it("should create a map of false values for not present values", async () => {
+                            app.defineArguments({
+                                arguments: [{
+                                    name: "x",
+                                    action: "set",
+                                    set: "defaultFalse",
+                                    choices: ["a", "b", "c"]
+                                }]
+                            });
 
-                        const { args } = await parse("a", "c");
-                        expect(args.get("x")).to.be.deep.equal({
-                            a: true,
-                            b: false,
-                            c: true
-                        });
-                    });
-
-                    it("should create a map with true values for not present values", async () => {
-                        app.defineArguments({
-                            arguments: [{
-                                name: "x",
-                                action: "set",
-                                set: "defaultTrue",
-                                choices: ["a", "b", "c"]
-                            }]
-                        });
-
-                        const { args } = await parse("a", "c");
-                        expect(args.get("x")).to.be.deep.equal({
-                            a: false,
-                            b: true,
-                            c: false
+                            const { args } = await parse("a", "c");
+                            expect(args.get("x")).to.be.deep.equal({
+                                a: true,
+                                b: false,
+                                c: true
+                            });
                         });
                     });
 
-                    it("should create a map with undefined values for not present values", async () => {
-                        app.defineArguments({
-                            arguments: [{
-                                name: "x",
-                                action: "set",
-                                set: "defaultUndefined",
-                                choices: ["a", "b", "c"]
-                            }]
-                        });
+                    describe("defaultTrue", () => {
+                        it("should create a map with true values for not present values", async () => {
+                            app.defineArguments({
+                                arguments: [{
+                                    name: "x",
+                                    action: "set",
+                                    set: "defaultTrue",
+                                    choices: ["a", "b", "c"]
+                                }]
+                            });
 
-                        const { args } = await parse("a", "c");
-                        expect(args.get("x")).to.be.deep.equal({
-                            a: true,
-                            b: undefined,
-                            c: true
+                            const { args } = await parse("a", "c");
+                            expect(args.get("x")).to.be.deep.equal({
+                                a: false,
+                                b: true,
+                                c: false
+                            });
+                        });
+                    });
+
+                    describe("defaultUndefined", () => {
+                        it("should create a map with undefined values for not present values", async () => {
+                            app.defineArguments({
+                                arguments: [{
+                                    name: "x",
+                                    action: "set",
+                                    set: "defaultUndefined",
+                                    choices: ["a", "b", "c"]
+                                }]
+                            });
+
+                            const { args } = await parse("a", "c");
+                            expect(args.get("x")).to.be.deep.equal({
+                                a: true,
+                                b: undefined,
+                                c: true
+                            });
                         });
                     });
 
@@ -410,77 +416,6 @@ describe("application", () => {
                             a: true,
                             b: undefined,
                             c: true
-                        });
-                    });
-
-                    it("should create a map with false values when there are no args", async () => {
-                        app.defineArguments({
-                            arguments: [{
-                                name: "x",
-                                action: "set",
-                                set: "defaultFalse",
-                                choices: ["a", "b", "c"]
-                            }]
-                        });
-
-                        const { args } = await parse();
-                        expect(args.get("x")).to.be.deep.equal({
-                            a: false,
-                            b: false,
-                            c: false
-                        });
-                    });
-
-                    it("should create a map with true values when there are no args", async () => {
-                        app.defineArguments({
-                            arguments: [{
-                                name: "x",
-                                action: "set",
-                                set: "defaultTrue",
-                                choices: ["a", "b", "c"]
-                            }]
-                        });
-
-                        const { args } = await parse();
-                        expect(args.get("x")).to.be.deep.equal({
-                            a: true,
-                            b: true,
-                            c: true
-                        });
-                    });
-
-                    it("should create a map with undefined values when there are no args", async () => {
-                        app.defineArguments({
-                            arguments: [{
-                                name: "x",
-                                action: "set",
-                                set: "defaultUndefined",
-                                choices: ["a", "b", "c"]
-                            }]
-                        });
-
-                        const { args } = await parse();
-                        expect(args.get("x")).to.be.deep.equal({
-                            a: undefined,
-                            b: undefined,
-                            c: undefined
-                        });
-                    });
-
-                    it("should create a map with undefined values by default when there are no args", async () => {
-                        app.defineArguments({
-                            arguments: [{
-                                name: "x",
-                                action: "set",
-                                choices: ["a", "b", "c"]
-                            }]
-                        });
-
-                        const { args } = await parse();
-                        expect(args.get("x")).to.be.deep.equal({
-                            a: undefined,
-                            b: undefined,
-                            c: undefined
                         });
                     });
 
@@ -508,9 +443,117 @@ describe("application", () => {
                         });
 
                         expect(set).to.have.been.calledThrice;
-                        expect(set.getCall(0)).to.have.been.calledWith(true, "a");
-                        expect(set.getCall(1)).to.have.been.calledWith(true, "b");
-                        expect(set.getCall(2)).to.have.been.calledWith(false, "c");
+                        expect(set.getCall(0)).to.have.been.calledWith(true, "a", 2);
+                        expect(set.getCall(1)).to.have.been.calledWith(true, "b", 2);
+                        expect(set.getCall(2)).to.have.been.calledWith(false, "c", 2);
+                    });
+
+                    describe("trueOnEmpty", () => {
+                        it("should create a map with all true values if there are no args", async () => {
+                            app.defineArguments({
+                                arguments: [{
+                                    name: "x",
+                                    action: "set",
+                                    set: "trueOnEmpty",
+                                    choices: ["a", "b", "c"]
+                                }]
+                            });
+                            const { args } = await parse();
+                            expect(await args.get("x")).to.be.deep.equal({
+                                a: true,
+                                b: true,
+                                c: true
+                            });
+                        });
+
+                        it("should create a map with true values for present keys and undefined values for not present", async () => {
+                            app.defineArguments({
+                                arguments: [{
+                                    name: "x",
+                                    action: "set",
+                                    set: "trueOnEmpty",
+                                    choices: ["a", "b", "c"]
+                                }]
+                            });
+                            const { args } = await parse("a", "c");
+                            expect(await args.get("x")).to.be.deep.equal({
+                                a: true,
+                                b: undefined,
+                                c: true
+                            });
+                        });
+                    });
+                });
+
+                describe("falseOnEmpty", () => {
+                    it("should create a map with all false values if there are no args", async () => {
+                        app.defineArguments({
+                            arguments: [{
+                                name: "x",
+                                action: "set",
+                                set: "falseOnEmpty",
+                                choices: ["a", "b", "c"]
+                            }]
+                        });
+                        const { args } = await parse();
+                        expect(await args.get("x")).to.be.deep.equal({
+                            a: false,
+                            b: false,
+                            c: false
+                        });
+                    });
+
+                    it("should create a map with true values for present keys and undefined values for not present", async () => {
+                        app.defineArguments({
+                            arguments: [{
+                                name: "x",
+                                action: "set",
+                                set: "falseOnEmpty",
+                                choices: ["a", "b", "c"]
+                            }]
+                        });
+                        const { args } = await parse("a", "c");
+                        expect(await args.get("x")).to.be.deep.equal({
+                            a: true,
+                            b: undefined,
+                            c: true
+                        });
+                    });
+                });
+
+                describe("undefinedOnEmpty", () => {
+                    it("should create a map with all undefined values if there are no args", async () => {
+                        app.defineArguments({
+                            arguments: [{
+                                name: "x",
+                                action: "set",
+                                set: "undefinedOnEmpty",
+                                choices: ["a", "b", "c"]
+                            }]
+                        });
+                        const { args } = await parse();
+                        expect(await args.get("x")).to.be.deep.equal({
+                            a: undefined,
+                            b: undefined,
+                            c: undefined
+                        });
+                    });
+
+                    it("should create a map with true values for present keys and undefined values for not present", async () => {
+                        app.defineArguments({
+                            arguments: [{
+                                name: "x",
+                                action: "set",
+                                set: "undefinedOnEmpty",
+                                choices: ["a", "b", "c"]
+                            }]
+                        });
+                        const { args } = await parse("a", "c");
+                        expect(await args.get("x")).to.be.deep.equal({
+                            a: true,
+                            b: undefined,
+                            c: true
+                        });
                     });
                 });
             });

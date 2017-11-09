@@ -263,8 +263,25 @@ class Argument {
                             options.set = (isSpecified) => isSpecified ? true : false;
                             break;
                         case undefined:
+                        case "undefinedOnEmpty":
                         case "defaultUndefined":
-                            options.set = (specified) => specified ? true : undefined;
+                            options.set = (isSpecified) => isSpecified ? true : undefined;
+                            break;
+                        case "trueOnEmpty":
+                            options.set = (isSpecified, name, totalNum) => {
+                                if (totalNum === 0) {
+                                    return true;
+                                }
+                                return isSpecified ? true : undefined;
+                            };
+                            break;
+                        case "falseOnEmpty":
+                            options.set = (isSpecified, name, totalNum) => {
+                                if (totalNum === 0) {
+                                    return false;
+                                }
+                                return isSpecified ? true : undefined;
+                            };
                             break;
                         default: {
                             if (!is.function(options.set)) {
@@ -2189,8 +2206,9 @@ export default class CliApplication extends application.Application {
                             argument._values.push(argument.value);
                         }
                         if (argument.action === "set") {
+                            const totalNum = util.unique(argument.value).length;
                             argument.value = argument.choices.reduce((x, y) => { // eslint-disable-line
-                                x[y] = argument.set(argument.value.includes(y), y);
+                                x[y] = argument.set(argument.value.includes(y), y, totalNum);
                                 return x;
                             }, {});
                         }
@@ -2218,7 +2236,7 @@ export default class CliApplication extends application.Application {
                             if (!arg.present) {
                                 if (arg.action === "set") {
                                     arg.value = arg.choices.reduce((x, y) => {
-                                        x[y] = arg.set(false, y);
+                                        x[y] = arg.set(false, y, 0);
                                         return x;
                                     }, {});
                                 } else if (arg.nargs === "*" || arg.nargs === "?") {
