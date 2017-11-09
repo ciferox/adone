@@ -1,4 +1,8 @@
-const { is, fs, std } = adone;
+const {
+    is,
+    fs,
+    system: { process: { exec } }
+} = adone;
 
 export default class Editor {
     constructor({ text = "", editor = null, path = null, ext = "" } = {}) {
@@ -14,10 +18,15 @@ export default class Editor {
         this.args = args;
     }
 
-    spawn() {
-        return std.child_process.spawn(this.bin, this.args.concat([this.path]), {
+    async spawn({ detached = false } = {}) {
+        const child = exec(this.bin, this.args.concat([this.path]), {
+            detached,
             stdio: "inherit"
         });
+        if (detached) {
+            detached.unref();
+        }
+        return child;
     }
 
     async run() {
@@ -25,13 +34,7 @@ export default class Editor {
             this.path = await fs.tmpName({ ext: this.ext });
         }
         await fs.writeFile(this.path, this.text);
-        const childProcess = this.spawn();
-        await new Promise((resolve) => {
-            childProcess.on("exit", () => {
-                resolve();
-            });
-        });
-
+        await this.spawn();
         this.text = await fs.readFile(this.path, { encoding: "utf8" });
         return this.text;
     }

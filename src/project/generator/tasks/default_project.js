@@ -22,7 +22,9 @@ export default class DefaultProjectTask extends project.generator.task.Base {
             tasks.push("git");
         }
         
-        const observer = await this.manager.runInSeries(tasks);
+        const observer = await this.manager.runInSeries(tasks, null, {
+            cwd: this.context.project.cwd
+        });
         return observer.result;
     }
 }

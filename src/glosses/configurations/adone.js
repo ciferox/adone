@@ -7,7 +7,6 @@ const {
 const CONFIG_NAME = "adone.json";
 
 const SUB_CONFIGS = Symbol();
-const ENTRIES = Symbol();
 
 export default class AdoneConfiguration extends adone.configuration.Generic {
     constructor({ cwd } = {}) {
@@ -27,7 +26,7 @@ export default class AdoneConfiguration extends adone.configuration.Generic {
      * Returns sub configurations.
      */
     getSubConfigs() {
-        return [...this[SUB_CONFIGS].values()].map((sub) => sub.confgi);
+        return [...this[SUB_CONFIGS].values()].map((sub) => sub.config);
     }
 
     /**
@@ -52,10 +51,13 @@ export default class AdoneConfiguration extends adone.configuration.Generic {
      * 
      * @param {*} cwd path where config should be saved
      */
-    async save({ cwd = this.getCwd() } = {}) {
-        for (const config of this[SUB_CONFIGS].values()) {
-            await config.save(cwd); // eslint-disable-line
+    async save({ cwd = this.getCwd(), subConfigs = false } = {}) {
+        if (subConfigs) {
+            for (const config of this[SUB_CONFIGS].values()) {
+                await config.save({ cwd }); // eslint-disable-line
+            }
         }
+
         return super.save(is.string(cwd) ? std.path.join(cwd, CONFIG_NAME) : CONFIG_NAME, null, {
             space: "    "
         });

@@ -11,7 +11,7 @@ export default class ApplicationProjectTask extends project.generator.task.Base 
         });
 
         const srcPath = std.path.join(this.context.project.cwd, "src");
-        
+
         await fs.mkdirp(srcPath);
 
         await this.runTask("application", {
@@ -22,6 +22,7 @@ export default class ApplicationProjectTask extends project.generator.task.Base 
 
         // Update adone config
         await this.runTask("adoneConfig", {
+            cwd: this.context.project.cwd,
             structure: {
                 src: {
                     app: {
@@ -37,7 +38,7 @@ export default class ApplicationProjectTask extends project.generator.task.Base 
                         ],
                         $dst: "lib"
                     }
-                }    
+                }
             },
             bin: "bin/app.js",
             main: "lib"
@@ -45,6 +46,7 @@ export default class ApplicationProjectTask extends project.generator.task.Base 
 
         if (!this.context.flag.skipJsconfig) {
             await this.runTask("jsconfig", {
+                cwd: this.context.project.cwd,
                 include: ["src"]
             });
         }

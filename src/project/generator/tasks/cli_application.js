@@ -33,14 +33,14 @@ class {{ name }}Application extends application.CliApplication {
             {
                 name: "color",
                 type: String,
-                choices: ["red", green", "blue"]
+                choices: ["red", "green", "blue"],
                 help: "Color of message"
             }
         ]
     })
     async main(args, opts) {
         const color = args.get("color");
-        term.print(\`{\${color}-fg}Main command succesfully executed!{/\${color}-fg}\n\`);
+        term.print(\`{\${color}-fg}Main command succesfully executed!{/\${color}-fg}\\n\`);
         return 0;
     }
 
@@ -49,7 +49,7 @@ class {{ name }}Application extends application.CliApplication {
         help: "Test command",
     })
     async testCommand(args, opts) {
-        term.print("{bold}Test command successfully executed!{/}\n");
+        term.print("{bold}Test command successfully executed!{/}\\n");
         return 0;
     }
 

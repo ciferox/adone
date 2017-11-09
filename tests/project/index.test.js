@@ -11,7 +11,9 @@ const {
 const FIXTURES_PATH = std.path.join(__dirname, "fixtures");
 const fixture = (...args) => std.path.join(FIXTURES_PATH, ...args);
 
-describe("project", () => {
+describe("project", function () {
+    this.timeout(60000);
+
     describe("generator", () => {
         const paths = [];
 
@@ -20,6 +22,14 @@ describe("project", () => {
             paths.push(path);
             return path;
         };
+
+        before(async () => {
+            await fs.mkdirp(fixture());
+        });
+
+        after(async () => {
+            await fs.rm(fixture());
+        });
 
         const randomName = (prefix = "test") => `${prefix}${text.random(4)}_${text.random(5)}_${text.random(6)}`;
 
@@ -240,16 +250,22 @@ describe("project", () => {
                         skipGit,
                         skipNpm
                     };
-                    const context = await manager.createProject(projectConfig);
+                    await manager.createProject(projectConfig);
 
-                    assert.deepEqual(util.pick(context.config.adone.raw, ["name", "description", "version", "author"]), util.pick(projectConfig, ["name", "description", "version", "author"]));
+                    const adoneConfig = await adone.configuration.Adone.load({
+                        cwd
+                    });
+                    assert.deepEqual(util.pick(adoneConfig.raw, ["name", "description", "version", "author"]), util.pick(projectConfig, ["name", "description", "version", "author"]));
                     assert.sameMembers(await fs.readdir(cwd), files);
                     if (!skipGit) {
                         assert.isTrue(await fs.is.directory(std.path.join(cwd, ".git")));
                     }
 
-                    if (is.configuration(context.config.npm)) {
-                        assert.deepEqual(util.pick(context.config.npm.raw, ["name", "description", "version", "author"]), util.pick(projectConfig, ["name", "description", "version", "author"]));
+                    if (await fs.exists(std.path.join(cwd, adone.configuration.Npm.name))) {
+                        const npmConfig = await adone.configuration.Npm.load({
+                            cwd
+                        });
+                        assert.deepEqual(util.pick(npmConfig.raw, ["name", "description", "version", "author"]), util.pick(projectConfig, ["name", "description", "version", "author"]));
                     }
 
                     // if (!skipEslint) {
@@ -257,8 +273,10 @@ describe("project", () => {
                     // }
 
                     if (!skipJsconfig) {
-                        assert.isTrue(is.configuration(context.config.jsconfig));
-                        assert.isFalse(is.propertyOwned(context.config.jsconfig.raw, "include"));
+                        const jsconfig = await adone.configuration.Jsconfig.load({
+                            cwd
+                        });
+                        assert.isFalse(is.propertyOwned(jsconfig.raw, "include"));
                     }
                 });
             }
@@ -277,15 +295,18 @@ describe("project", () => {
                         author: "Adone Core Team",
                         type
                     };
-                    const context = await manager.createProject(projectConfig);
+                    await manager.createProject(projectConfig);
 
+                    const adoneConfig = await adone.configuration.Adone.load({
+                        cwd
+                    });
                     if (["cli.command", "omnitron.service"].includes(type)) {
-                        assert.deepEqual(util.pick(context.config.adone.raw, ["name", "description", "version", "author", "type", "main"]), {
+                        assert.deepEqual(util.pick(adoneConfig.raw, ["name", "description", "version", "author", "type", "main"]), {
                             ...projectConfig,
                             main: "lib"
                         });
                     } else {
-                        assert.deepEqual(util.pick(context.config.adone.raw, ["name", "description", "version", "author", "type", "bin", "main"]), {
+                        assert.deepEqual(util.pick(adoneConfig.raw, ["name", "description", "version", "author", "type", "bin", "main"]), {
                             ...projectConfig,
                             main: "lib",
                             bin: "bin/app.js"
@@ -302,46 +323,63 @@ describe("project", () => {
                         assert.isTrue(await fs.exists(std.path.join(cwd, "src", "app.js")));
                     }
 
-                    if (is.configuration(context.config.npm)) {
-                        assert.deepEqual(util.pick(context.config.npm.raw, ["name", "description", "version", "author"]), util.pick(projectConfig, ["name", "description", "version", "author"]));
-                    }
+                    const npmConfig = await adone.configuration.Npm.load({
+                        cwd
+                    });
+                    assert.deepEqual(util.pick(npmConfig.raw, ["name", "description", "version", "author"]), util.pick(projectConfig, ["name", "description", "version", "author"]));
 
                     // assert.isTrue(is.configuration(context.config.eslint));
 
-                    assert.isTrue(is.configuration(context.config.jsconfig));
-                    assert.isTrue(is.array(context.config.jsconfig.raw.include));
+                    const jsconfig = await adone.configuration.Jsconfig.load({
+                        cwd
+                    });
+                    assert.isTrue(is.array(jsconfig.raw.include));
                 });
             }
 
-            it("sub project", async () => {
-                const name = `project_${text.random(8)}`;
-                const cwd = getPathFor(name);
-                await fs.mkdir(cwd);
+            describe.only("sub projects", () => {
+                it("create one subproject", async () => {
+                    const name = `project_${text.random(8)}`;
+                    const cwd = getPathFor(name);
+                    await fs.mkdir(cwd);
+    
+                    const manager = new Manager({ cwd });
+                    const projectConfig = {
+                        name,
+                        description: "project description",
+                        version: "3.0.0",
+                        author: "Adone Core Team" 
+                    };
+                    const context = await manager.createProject(projectConfig);
 
-                const manager = new Manager({ cwd });
-                const projectConfig = {
-                    name,
-                    description: "project description",
-                    version: "3.0.0",
-                    author: "Adone Core Team" 
-                };
-                const context = await manager.createProject(projectConfig);
-                const subContext = await manager.createSubProject({
-                    name: "jit",
-                    dirName: "service",
-                    type: "omnitron.service"
+                    const adoneConfig = await adone.configuration.Adone.load({
+                        cwd
+                    });
+
+                    assert.lengthOf(adoneConfig.getSubConfigs(), 0);
+
+                    const subContext = await manager.createSubProject({
+                        name: "jit",
+                        dirName: "service",
+                        type: "omnitron.service"
+                    });
+
+                    await adoneConfig.load();
+                    assert.lengthOf(adoneConfig.getSubConfigs(), 1);
+    
+                    const subCwd = std.path.join(cwd, "service");
+                    assert.sameMembers(await fs.readdir(subCwd), ["adone.json", "src"]);
+                    assert.isTrue(await fs.is.directory(std.path.join(subCwd, "src")));
+                    assert.isTrue(await fs.exists(std.path.join(subCwd, "src", "index.js")));
+    
+                    assert.equal(manager.config.raw.structure.service, "service");
+                    
+                    const relativeDir = std.path.relative(context.project.cwd, std.path.join(subContext.project.cwd, "src"));                
+                    const jsconfig = await adone.configuration.Jsconfig.load({
+                        cwd
+                    });
+                    assert.isTrue(jsconfig.raw.include.includes(relativeDir));
                 });
-
-                const subCwd = std.path.join(cwd, "service");
-                assert.sameMembers(await fs.readdir(subCwd), ["adone.json", "src"]);
-                assert.isTrue(await fs.is.directory(std.path.join(subCwd, "src")));
-                assert.isTrue(await fs.exists(std.path.join(subCwd, "src", "index.js")));
-
-                assert.equal(manager.config.raw.structure.service, "service");
-                
-                const relativeDir = std.path.relative(context.project.cwd, std.path.join(subContext.project.cwd, "src"));                
-                await context.config.jsconfig.load();
-                assert.isTrue(context.config.jsconfig.raw.include.includes(relativeDir));
             });
         });
     });

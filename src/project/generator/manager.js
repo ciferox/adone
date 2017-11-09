@@ -33,11 +33,10 @@ export default class ProjectGenerator extends task.Manager {
                 skipEslint: false,
                 ...util.pick(input, ["skipGit", "skipNpm", "skipJsconfig", "skipEslint"])
             },
-            project: util.pick(input, ["name", "type", "description", "version", "author", "cwd"]),
-            config: {}
+            project: util.pick(input, ["name", "type", "description", "version", "author", "cwd"])
         };
 
-        await this._checkAndcreateProject(context, input);
+        await this._checkAndCreateProject(context, input);
         return context;
     }
 
@@ -57,11 +56,10 @@ export default class ProjectGenerator extends task.Manager {
                 version: this.owner.config.raw.version,
                 author: this.owner.config.raw.author,
                 ...util.pick(input, ["name", "type", "description", "version", "author"])
-            },
-            config: {}
+            }
         };
 
-        await this._checkAndcreateProject(context, input);
+        await this._checkAndCreateProject(context, input);
 
         // Update parent project
         this.useContext(this.owner.cwd);
@@ -75,7 +73,7 @@ export default class ProjectGenerator extends task.Manager {
             // Update parent jsconfig.json if it exists
             if (await fs.exists(std.path.join(this.owner.cwd, configuration.Jsconfig.name))) {
                 await this.runAndWait("jsconfig", {
-                    // cwd,
+                    cwd: this.owner.cwd,
                     include: [std.path.relative(this.owner.cwd, std.path.join(cwd, "src"))]
                 });
             }
@@ -84,7 +82,7 @@ export default class ProjectGenerator extends task.Manager {
         return context;
     }
 
-    async _checkAndcreateProject(context, input) {
+    async _checkAndCreateProject(context, input) {
         if (!is.string(context.project.name)) {
             throw new adone.x.InvalidArgument("Invalid name of project");
         }
@@ -104,6 +102,5 @@ export default class ProjectGenerator extends task.Manager {
 
     async createFile(input) {
         return this.runAndWait(text.toCamelCase(input.type), input);
-    }
-    
+    }    
 }

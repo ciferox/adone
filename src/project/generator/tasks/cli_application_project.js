@@ -22,9 +22,10 @@ export default class CliApplicationProjectTask extends project.generator.task.Ba
 
         // Update adone config
         await this.runTask("adoneConfig", {
+            cwd: this.context.project.cwd,
             structure: {
                 src: {
-                    bin: {
+                    app: {
                         $task: "transpileExe",
                         $src: "src/app.js",
                         $dst: "bin"
@@ -45,6 +46,7 @@ export default class CliApplicationProjectTask extends project.generator.task.Ba
 
         if (!this.context.flag.skipJsconfig) {
             await this.runTask("jsconfig", {
+                cwd: this.context.project.cwd,
                 include: ["src"]
             });
         }

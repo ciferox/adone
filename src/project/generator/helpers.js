@@ -29,4 +29,5 @@ export const createFile = async (template, { name, fileName, cwd, skipName = fal
     });
 
     await fs.writeFile(filePath, content);
+    return filePath;
 };

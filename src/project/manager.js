@@ -75,12 +75,15 @@ export default class ProjectManager extends task.Manager {
     async createSubProject(input) {
         this._checkLoaded();
         const generator = await this.getGenerator();
-        return generator.createSubProject(input);
+        const context = await generator.createSubProject(input);
+        await this.config.load();
+        return context;
+
     }
 
-    async createFile(options) {
+    async createFile(input) {
         const generator = await this.getGenerator();
-        return generator.createFile(options);
+        return generator.createFile(input);
     }
 
     getProjectEntries(path) {

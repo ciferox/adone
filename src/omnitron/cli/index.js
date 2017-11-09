@@ -4,7 +4,6 @@ const {
     application,
     is,
     text: { pretty },
-    util,
     omnitron,
     std
 } = adone;
