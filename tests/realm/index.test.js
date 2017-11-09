@@ -108,7 +108,7 @@ describe("realm", () => {
         for (const name of ["invalid_type", "no_name", "no_script", "bad_script1", "bad_script2", "bad_script3", "invalid_complex"]) {
             for (const symlink of [false]) {
                 // eslint-disable-next-line
-                it(`should rollbak installation of invalid cli command${symlink ? " with symlink " : " "}(${name})`, async () => {
+                it(`should rollback installation of invalid cli command${symlink ? " with symlink " : " "}(${name})`, async () => {
                     const cliCommandPath = std.path.join(__dirname, "packages", `cli_command_${name}`);
 
                     const config = await adone.configuration.Adone.load({

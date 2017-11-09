@@ -148,6 +148,10 @@ export default class ProjectManager extends task.Manager {
             throw new adone.x.NotValid(`Not valid version part: ${part}`);
         }
 
+        if (!is.string(this.config.raw.version)) {
+            this.config.raw.version = "0.0.0";
+        }
+
         const version = this.config.raw.version;
 
         if (!adone.semver.valid(version, loose)) {

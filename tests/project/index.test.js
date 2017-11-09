@@ -356,7 +356,7 @@ describe("project", function () {
                         cwd
                     });
 
-                    assert.lengthOf(adoneConfig.getSubConfigs(), 0);
+                    assert.lengthOf(adoneConfig.getSubConfigs().config, 0);
 
                     const subContext = await manager.createSubProject({
                         name: "jit",
@@ -365,7 +365,7 @@ describe("project", function () {
                     });
 
                     await adoneConfig.load();
-                    assert.lengthOf(adoneConfig.getSubConfigs(), 1);
+                    assert.lengthOf(adoneConfig.getSubConfigs().config, 1);
     
                     const subCwd = std.path.join(cwd, "service");
                     assert.sameMembers(await fs.readdir(subCwd), ["adone.json", "src"]);

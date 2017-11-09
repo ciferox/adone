@@ -54,7 +54,7 @@ describe("configuration", "Adone", () => {
         });
 
         it("get sub configuration by name", async () => {
-            const subConfig = config.getSubConfig("sub2");
+            const subConfig = config.getSubConfig("sub2").config;
 
             assert.equal(subConfig.raw.name, "another_name");
             assert.equal(subConfig.raw.description, "another_descr");
@@ -99,8 +99,8 @@ describe("configuration", "Adone", () => {
         });
 
         it("project entries of sub configurations", async () => {
-            const subConfig1 = config.getSubConfig("sub1");
-            const subConfig2 = config.getSubConfig("sub2");
+            const subConfig1 = config.getSubConfig("sub1").config;
+            const subConfig2 = config.getSubConfig("sub2").config;
 
             assert.sameDeepMembers(subConfig1.getEntries(), [
                 {

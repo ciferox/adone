@@ -5,14 +5,11 @@ const {
     is,
     fs,
     std,
-    fast,
     text,
     util
 } = adone;
 
 const __ = adone.private(adone.realm);
-
-const CONFIG_NAME = "realm.json";
 
 export default class Realm {
     constructor() {
@@ -34,7 +31,7 @@ export default class Realm {
             }
             await this.lock();
             pkg = this._package(options);
-            return pkg.install();
+            await pkg.install();
         } catch (err) {
             !is.null(pkg) && await pkg.rollback(err);
             throw err;

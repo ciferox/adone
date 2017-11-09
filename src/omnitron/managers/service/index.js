@@ -84,7 +84,19 @@ export default class ServiceManager extends application.Subsystem {
                 serviceData.status = STATUS.INVALID;
                 await this.services.set(svcName, serviceData); // eslint-disable-line
             }
-            services.push(serviceData);
+
+            const maintainer = this.groupMaintainers.get(serviceData.group);
+            let pid;
+            if (is.undefined(maintainer)) {
+                pid = "";
+            } else {
+                pid = maintainer.pid || "";
+            }
+
+            services.push({
+                pid,
+                ...serviceData
+            });
         }
 
         if (is.string(status)) {

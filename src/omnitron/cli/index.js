@@ -370,6 +370,10 @@ export default class Omnitron extends Subsystem {
                         header: "Description"
                     },
                     {
+                        id: "pid",
+                        header: "PID"
+                    },
+                    {
                         id: "status",
                         header: "Status",
                         style: (val) => {

@@ -99,8 +99,8 @@ export default class Package {
                     throw new adone.x.NotValid("Invalid or useless package");
                 }
 
-                for (const cfg of subConfigs) {
-                    await this._unregisterPackage(cfg.origFull); // eslint-disable-line
+                for (const sub of subConfigs) {
+                    await this._unregisterPackage(sub.config); // eslint-disable-line
                 }
             }
 
@@ -193,17 +193,17 @@ export default class Package {
 
             this.rollbackData.subProjects = [];
 
-            for (const cfg of subConfigs) {
-                const destPath = std.path.join(this.destPath, cfg.rel.getRelativePath());
+            for (const sub of subConfigs) {
+                const destPath = std.path.join(this.destPath, sub.dirName);
                 // Update adone.json config with all assigned properties from project's main adone.conf.
-                await cfg.origFull.save(destPath); // eslint-disable-line
+                await sub.config.save(); // eslint-disable-line
 
                 this.rollbackData.subProjects.push({
-                    adoneConf: cfg.origFull,
+                    adoneConf: sub.config,
                     destPath
                 });
 
-                await this._registerPackage(cfg.origFull, destPath); // eslint-disable-line
+                await this._registerPackage(sub.config, destPath); // eslint-disable-line
             }
         }
 
@@ -296,7 +296,9 @@ export default class Package {
     }
 
     async _buildProject() {
-        const manager = new adone.project.Manager(this.path);
+        const manager = new adone.project.Manager({
+            cwd: this.path
+        });
         manager.setSilent(this.realm.silent);
         await manager.load();
         await manager.rebuild();

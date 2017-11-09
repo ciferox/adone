@@ -122,7 +122,7 @@ export default class ServiceMaintainer extends AsyncEmitter {
                 adone.error(err);
                 reject(err);
             };
-            
+
             await this.setServiceStatus(name, STATUS.STARTING);
             await this.spawn();
             if (this.procStatus === PROCESS_STATUS.SPAWNING) {
@@ -236,7 +236,7 @@ export default class ServiceMaintainer extends AsyncEmitter {
                 const child = std.child_process.spawn(process.execPath, [SERVICE_APP_PATH], {
                     detached: true,
                     cwd: process.cwd(),
-                    env: Object.assign(process.env, {
+                    env: Object.assign({}, process.env, {
                         OMNITRON_PORT: this.manager.parent.subsystem("netron").getServicePort(),
                         OMNITRON_SERVICE_GROUP: this.group
                     }),

@@ -26,7 +26,7 @@ export default class AdoneConfiguration extends adone.configuration.Generic {
      * Returns sub configurations.
      */
     getSubConfigs() {
-        return [...this[SUB_CONFIGS].values()].map((sub) => sub.config);
+        return [...this[SUB_CONFIGS].values()];
     }
 
     /**
@@ -35,7 +35,7 @@ export default class AdoneConfiguration extends adone.configuration.Generic {
      * @param {*} name entry name
      */
     getSubConfig(name) {
-        return this[SUB_CONFIGS].get(name).config;
+        return this[SUB_CONFIGS].get(name);
     }
 
     /**
