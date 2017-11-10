@@ -1,24 +1,34 @@
-const tmp = adone.std.path.join(adone.std.os.tmpdir(), `raf-${process.pid}-${Date.now()}`);
-let i = 0;
-
-try {
-    adone.std.fs.mkdirSync(tmp);
-} catch (err) {
-    // ...
-}
-
-function gen() {
-    return adone.std.path.join(tmp, `${++i}.txt`);
-}
-
 describe("fs", "RandomAccessFile", () => {
+    const {
+        RandomAccessFile
+    } = adone.fs;
+
+    /**
+     * @type {adone.fs.Directory}
+     */
+    let tmpdir;
+    let filepath;
+
+    before(async () => {
+        tmpdir = await adone.fs.Directory.createTmp();
+        filepath = tmpdir.getFile("test").path();
+    });
+
+    afterEach(async () => {
+        await tmpdir.clean();
+    });
+
+    after(async () => {
+        await tmpdir.unlink();
+    });
+
     it("write and read", async () => {
-        const file = await adone.fs.RandomAccessFile.open(gen());
+        const file = await RandomAccessFile.open(filepath);
         let isOk = true;
         try {
-            await file.write(new Buffer("hello"), 0);
+            await file.write(Buffer.from("hello"), 0);
             const buf = await file.read(5, 0);
-            assert.deepEqual(buf, new Buffer("hello"));
+            assert.deepEqual(buf, Buffer.from("hello"));
             await file.close();
             await file.unlink();
         } catch (err) {
@@ -28,11 +38,11 @@ describe("fs", "RandomAccessFile", () => {
     });
 
     it("read empty", async () => {
-        const file = await adone.fs.RandomAccessFile.open(gen());
+        const file = await RandomAccessFile.open(filepath);
         let isOk = true;
         try {
             const buf = await file.read(0, 0);
-            assert.deepEqual(buf, new Buffer(0));
+            assert.deepEqual(buf, Buffer.alloc(0));
             await file.close();
             await file.unlink();
         } catch (err) {
@@ -42,7 +52,7 @@ describe("fs", "RandomAccessFile", () => {
     });
 
     it("read range > file", async () => {
-        const file = await adone.fs.RandomAccessFile.open(gen());
+        const file = await RandomAccessFile.open(filepath);
         let isOk = false;
         try {
             await file.read(5, 0);
@@ -55,18 +65,18 @@ describe("fs", "RandomAccessFile", () => {
     });
 
     it("random access write and read", async () => {
-        const file = await adone.fs.RandomAccessFile.open(gen());
+        const file = await RandomAccessFile.open(filepath);
         let isOk = true;
 
         try {
-            await file.write(new Buffer("hi"), 10);
-            await file.write(new Buffer("hello"), 0);
+            await file.write(Buffer.from("hi"), 10);
+            await file.write(Buffer.from("hello"), 0);
             let buf = await file.read(2, 10);
-            assert.deepEqual(buf, new Buffer("hi"));
+            assert.deepEqual(buf, Buffer.from("hi"));
             buf = await file.read(5, 0);
-            assert.deepEqual(buf, new Buffer("hello"));
+            assert.deepEqual(buf, Buffer.from("hello"));
             buf = await file.read(5, 5);
-            assert.deepEqual(buf, new Buffer([0, 0, 0, 0, 0]));
+            assert.deepEqual(buf, Buffer.from([0, 0, 0, 0, 0]));
             await file.close();
             await file.unlink();
         } catch (err) {
@@ -77,15 +87,15 @@ describe("fs", "RandomAccessFile", () => {
     });
 
     it("re-open", async () => {
-        const name = gen();
-        const file = await adone.fs.RandomAccessFile.open(name);
+        const name = filepath;
+        const file = await RandomAccessFile.open(name);
         let isOk = true;
 
         try {
-            await file.write(new Buffer("hello"), 10);
-            const file2 = await adone.fs.RandomAccessFile.open(name);
+            await file.write(Buffer.from("hello"), 10);
+            const file2 = await RandomAccessFile.open(name);
             const buf = await file2.read(5, 10);
-            assert.deepEqual(buf, new Buffer("hello"));
+            assert.deepEqual(buf, Buffer.from("hello"));
             await file.close();
             await file.unlink();
         } catch (err) {
@@ -95,14 +105,14 @@ describe("fs", "RandomAccessFile", () => {
     });
 
     it("re-open and truncate", async () => {
-        const name = gen();
-        const file = await adone.fs.RandomAccessFile.open(name);
+        const name = filepath;
+        const file = await RandomAccessFile.open(name);
         let file2;
         let isOk = false;
 
         try {
-            await file.write(new Buffer("hello"), 10);
-            file2 = await adone.fs.RandomAccessFile.open(name, { truncate: 0 });
+            await file.write(Buffer.from("hello"), 10);
+            file2 = await RandomAccessFile.open(name, { truncate: 0 });
             await file2.read(5, 10);
         } catch (err) {
             isOk = (err.message === "Could not satisfy length");
@@ -113,24 +123,24 @@ describe("fs", "RandomAccessFile", () => {
     });
 
     it("append mode", async () => {
-        const name = gen();
-        let file = await adone.fs.RandomAccessFile.open(name, { appendable: true });
+        const name = filepath;
+        let file = await RandomAccessFile.open(name, { appendable: true });
         let isOk = true;
         try {
-            await file.write(new Buffer("hello"));
-            await file.write(new Buffer(", "));
+            await file.write(Buffer.from("hello"));
+            await file.write(Buffer.from(", "));
             await file.close();
-            file = await adone.fs.RandomAccessFile.open(name, { appendable: true });
-            await file.write(new Buffer("world"));
-            await file.write(new Buffer("!!!"));
+            file = await RandomAccessFile.open(name, { appendable: true });
+            await file.write(Buffer.from("world"));
+            await file.write(Buffer.from("!!!"));
             await file.close();
-            file = await adone.fs.RandomAccessFile.open(name, { writable: false });
+            file = await RandomAccessFile.open(name, { writable: false });
             let buf = await file.read(7, 2);
-            assert.deepEqual(buf, new Buffer("llo, wo"));
+            assert.deepEqual(buf, Buffer.from("llo, wo"));
             buf = await file.read(2, 9);
-            assert.deepEqual(buf, new Buffer("rl"));
+            assert.deepEqual(buf, Buffer.from("rl"));
             buf = await file.read(3, 11);
-            assert.deepEqual(buf, new Buffer("d!!"));
+            assert.deepEqual(buf, Buffer.from("d!!"));
             await file.close();
             await file.unlink();
         } catch (err) {
@@ -141,14 +151,14 @@ describe("fs", "RandomAccessFile", () => {
     });
 
     it("mkdir path", async () => {
-        const name = adone.std.path.join(tmp, `${++i}-folder`, "test.txt");
-        const file = await adone.fs.RandomAccessFile.open(name);
+        const name = tmpdir.getFile("a", "b", "c", "d.txt").path();
+        const file = await RandomAccessFile.open(name);
         let isOk = true;
 
         try {
-            await file.write(new Buffer("hello"), 0);
+            await file.write(Buffer.from("hello"), 0);
             const buf = await file.read(5, 0);
-            assert.deepEqual(buf, new Buffer("hello"));
+            assert.deepEqual(buf, Buffer.from("hello"));
             await file.close();
             await file.unlink();
         } catch (err) {
@@ -158,10 +168,10 @@ describe("fs", "RandomAccessFile", () => {
     });
 
     it("end", async () => {
-        const name = gen();
+        const name = filepath;
         const atime = new Date(1000 * Math.round((Date.now() + 1000 * 60 * 60 * 10) / 1000));
         const mtime = new Date(1000 * Math.round((Date.now() + 1000 * 60 * 60 * 20) / 1000));
-        const file = await adone.fs.RandomAccessFile.open(name, { atime });
+        const file = await RandomAccessFile.open(name, { atime });
         let isOk = true;
         try {
             await file.end();
@@ -181,7 +191,7 @@ describe("fs", "RandomAccessFile", () => {
     });
 
     it("should resolve the filename's path", () => {
-        const file = new adone.fs.RandomAccessFile("hello", { cwd: "2" });
+        const file = new RandomAccessFile("hello", { cwd: "2" });
         expect(file.filename).to.be.equal(adone.std.path.resolve("2", "hello"));
     });
 });

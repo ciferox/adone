@@ -32,7 +32,7 @@ describe("fs", "copyTo", () => {
     it("should copy a whole directory", async () => {
         const srcPath = spath.join(FIXTURES_PATH, "*");
         const names = await fs.readdir(FIXTURES_PATH);
-        
+
         await fs.copyTo(srcPath, DST_PATH);
 
         for (const name of names) {

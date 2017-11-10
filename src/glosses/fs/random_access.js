@@ -140,7 +140,7 @@ export class RandomAccessFile extends adone.event.EventEmitter {
         const dir = path.dirname(filename);
 
         if (dir) {
-            await adone.fs.mkdir(dir);
+            await adone.fs.mkdirp(dir);
         }
 
         let fd;
