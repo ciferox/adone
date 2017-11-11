@@ -105,14 +105,15 @@ class Argument {
         if (this._default !== EMPTY_VALUE) {
             return this._default;
         }
-        if (this.action === "store_true") {
-            return false;
-        }
-        if (this.action === "store_false") {
-            return true;
-        }
-        if (this.action === "count") {
-            return 0;
+        switch (this.action) {
+            case "store_true":
+                return false;
+            case "store_false":
+                return true;
+            case "count":
+                return 0;
+            case "append":
+                return [];
         }
         if (this.nargs === "*") {
             return [];

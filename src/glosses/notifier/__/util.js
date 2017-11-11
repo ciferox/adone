@@ -36,7 +36,6 @@ export const command = (notifier, options) => {
     notifier = shellwordsEscape(notifier);
 
     return new Promise((resolve, reject) => {
-        console.log(`${notifier} ${options.join(" ")}`);
         cp.exec(
             `${notifier} ${options.join(" ")}`,
             (error, stdout, stderr) => {

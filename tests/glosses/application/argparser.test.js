@@ -639,6 +639,17 @@ describe("application", () => {
                         const { opts } = await parse("--x", "1", "--x", "2", "--x", "3");
                         expect(opts.get("x")).to.be.deep.equal(["1", "2", "3"]);
                     });
+
+                    it("should be [] by default", async () => {
+                        app.defineArguments({
+                            options: [
+                                { name: "--x", action: "append" },
+                                { name: "--a" }
+                            ]
+                        });
+                        const { opts } = await parse("--a");
+                        expect(opts.get("x")).to.be.deep.equal([]);
+                    });
                 });
 
                 describe("count", () => {
