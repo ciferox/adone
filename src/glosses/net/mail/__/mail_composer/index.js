@@ -105,7 +105,7 @@ export default class MailComposer {
                 contentType: attachment.contentType ||
                 __.mimeFuncs.detectMimeType(attachment.filename || attachment.path || attachment.href || "bin"),
                 contentDisposition: attachment.contentDisposition || (isMessageNode ? "inline" : "attachment"),
-                contentTransferEncoding: attachment.contentTransferEncoding
+                contentTransferEncoding: "contentTransferEncoding" in attachment ? attachment.contentTransferEncoding : "base64"
             };
 
             if (attachment.filename) {
@@ -551,7 +551,7 @@ export default class MailComposer {
         }
 
         for (const item of parts[1].split(";")) {
-            if (/^\w+\/[^\/]+$/i.test(item)) {
+            if (/^\w+\/[^/]+$/i.test(item)) {
                 element.contentType = element.contentType || item.toLowerCase();
             }
         }

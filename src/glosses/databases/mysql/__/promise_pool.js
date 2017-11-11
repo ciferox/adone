@@ -22,6 +22,15 @@ const inheritEvents = (source, target, events) => {
     }
 };
 
+class PromisePoolConnection extends __.PromiseConnection {
+    destroy(...args) {
+        return __.PoolConnection.prototype.destroy.apply(
+            this.connection,
+            args
+        );
+    }
+}
+
 export default class PromisePool extends EventEmitter {
     constructor(pool) {
         super();
@@ -32,7 +41,7 @@ export default class PromisePool extends EventEmitter {
     getConnection() {
         return new Promise((resolve, reject) => {
             this.pool.getConnection((err, connection) => {
-                err ? reject(err) : new __.PromiseConnection(connection);
+                err ? reject(err) : new PromisePoolConnection(connection);
             });
         });
     }

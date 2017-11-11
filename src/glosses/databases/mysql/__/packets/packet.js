@@ -676,7 +676,8 @@ export default class Packet {
         const errorCode = this.readInt16();
         let sqlState = "";
         if (this.buffer[this.offset] === 0x23) {
-            sqlState = this.readBuffer(6).toString();
+            this.skip(1);
+            sqlState = this.readBuffer(5).toString();
         }
         const message = this.readString(undefined, encoding);
         const err = new x.Exception(message);
