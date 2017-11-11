@@ -1,7 +1,9 @@
 // @flow
 
+import type { PluginPasses } from "../../config";
 // import convertSourceMap, { type SourceMap } from "convert-source-map";
 // import sourceMap from "source-map";
+// import generate from "@babel/generator";
 
 const {
   js: { compiler: { generate } },
@@ -11,6 +13,7 @@ const {
 import type File from "./file";
 
 export default function generateCode(
+  pluginPasses: PluginPasses,
   file: File,
 ): {
   outputCode: string,
@@ -18,16 +21,33 @@ export default function generateCode(
 } {
   const { opts, ast, shebang, code, inputMap } = file;
 
-  let gen = generate;
-  if (opts.generatorOpts && opts.generatorOpts.generator) {
-    gen = opts.generatorOpts.generator;
+  const results = [];
+  for (const plugins of pluginPasses) {
+    for (const plugin of plugins) {
+      const { generatorOverride } = plugin;
+      if (generatorOverride) {
+        const result = generatorOverride(
+          ast,
+          opts.generatorOpts,
+          code,
+          generate,
+        );
+
+        if (result !== undefined) results.push(result);
+      }
+    }
   }
 
-  let { code: outputCode, map: outputMap } = gen(
-    ast,
-    opts.generatorOpts ? Object.assign(opts, opts.generatorOpts) : opts,
-    code,
-  );
+  let result;
+  if (results.length === 0) {
+    result = generate(ast, opts.generatorOpts, code);
+  } else if (results.length === 1) {
+    result = results[0];
+  } else {
+    throw new Error("More than one plugin attempted to override codegen.");
+  }
+
+  let { code: outputCode, map: outputMap } = result;
 
   if (shebang) {
     // add back shebang

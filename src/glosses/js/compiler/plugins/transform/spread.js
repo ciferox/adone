@@ -1,4 +1,8 @@
-export default function ({ types: t }, options) {
+const {
+    js: { compiler: { types: t } }
+} = adone;
+
+export default function (api, options) {
     const { loose } = options;
 
     const getSpreadLiteral = (spread, scope) => {

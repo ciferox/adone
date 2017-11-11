@@ -1,10 +1,10 @@
 const {
-    js: { compiler: { helper: { moduleImports: { addDefault, isModule } } } }
+    js: { compiler: { types: t, helper: { moduleImports: { addDefault, isModule } } } }
 } = adone;
 
 import definitions from "./definitions";
 
-export default function ({ types: t }) {
+export default function () {
     const getRuntimeModuleName = (opts) => opts.moduleName || "babel-runtime";
     const has = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
 

@@ -54,58 +54,6 @@ export function loadPreset(
   return { filepath, value };
 }
 
-export function loadParser(
-  name: string,
-  dirname: string,
-): { filepath: string, value: Function } {
-  const filepath = resolve.sync(name, { basedir: dirname });
-
-  const mod = requireModule("parser", filepath);
-
-  if (!mod) {
-    throw new Error(
-      `Parser ${name} relative to ${dirname} does not export an object`,
-    );
-  }
-  if (typeof mod.parse !== "function") {
-    throw new Error(
-      `Parser ${name} relative to ${dirname} does not export a .parse function`,
-    );
-  }
-  const value = mod.parse;
-
-  return {
-    filepath,
-    value,
-  };
-}
-
-export function loadGenerator(
-  name: string,
-  dirname: string,
-): { filepath: string, value: Function } {
-  const filepath = resolve.sync(name, { basedir: dirname });
-
-  const mod = requireModule("generator", filepath);
-
-  if (!mod) {
-    throw new Error(
-      `Generator ${name} relative to ${dirname} does not export an object`,
-    );
-  }
-  if (typeof mod.print !== "function") {
-    throw new Error(
-      `Generator ${name} relative to ${dirname} does not export a .print function`,
-    );
-  }
-  const value = mod.print;
-
-  return {
-    filepath,
-    value,
-  };
-}
-
 function standardizeName(type: "plugin" | "preset", name: string) {
   // Let absolute and relative paths through.
   if (path.isAbsolute(name)) return name;
@@ -193,7 +141,7 @@ function requireModule(type: string, name: string): mixed {
   if (LOADING_MODULES.has(name)) {
     throw new Error(
       // eslint-disable-next-line max-len
-      `Reentrant ${type} detected trying to load "${name}". This module is not ignored and is trying to load itself while compiling itself, zleading to a dependency cycle. We recommend adding it to your "ignore" list in your babelrc, or to a .babelignore.`,
+      `Reentrant ${type} detected trying to load "${name}". This module is not ignored and is trying to load itself while compiling itself, leading to a dependency cycle. We recommend adding it to your "ignore" list in your babelrc, or to a .babelignore.`,
     );
   }
 

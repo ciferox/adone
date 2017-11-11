@@ -1,8 +1,8 @@
 const {
-    js: { compiler: { template, helper: { functionName } } }
+    js: { compiler: { types: t, template, helper: { functionName } } }
 } = adone;
 
-export default function ({ types: t }, options) {
+export default function (api, options) {
     const { loose } = options;
 
     const findBareSupers = {
@@ -34,10 +34,10 @@ export default function ({ types: t }, options) {
         value: VALUE
       });
     `({
-                REF: ref,
-                KEY: t.isIdentifier(key) && !computed ? t.stringLiteral(key.name) : key,
-                VALUE: value || scope.buildUndefinedNode(),
-            });
+            REF: ref,
+            KEY: t.isIdentifier(key) && !computed ? t.stringLiteral(key.name) : key,
+            VALUE: value || scope.buildUndefinedNode(),
+        });
     };
 
     const buildClassPropertyLoose = (ref, { key, value, computed }, scope) => {

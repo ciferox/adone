@@ -1,4 +1,8 @@
-export default function ({ types: t }) {
+const {
+    js: { compiler: { types: t } }
+} = adone;
+
+export default function () {
     const getTempId = (scope) => {
         let id = scope.path.getData("functionBind");
         if (id) {

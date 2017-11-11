@@ -1,4 +1,8 @@
-export default function ({ types: t }) {
+const {
+    js: { compiler: { types: t } }
+} = adone;
+
+export default function () {
     const replaceNumberArg = function ({ node }) {
         if (node.callee.name !== "Number") {
             return;

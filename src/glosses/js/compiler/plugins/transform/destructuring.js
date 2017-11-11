@@ -1,4 +1,8 @@
-export default function ({ types: t }) {
+const {
+    js: { compiler: { types: t } }
+} = adone;
+
+export default function () {
     /**
      * Test if a VariableDeclaration's declarations contains any Patterns.
      */

@@ -1,5 +1,5 @@
 const {
-    js: { compiler: { types: t, template, traverse: { visitors } } }
+    js: { compiler: { types: t, template, traverse } }
 } = adone;
 
 const noMethodVisitor = {
@@ -12,7 +12,7 @@ const noMethodVisitor = {
     }
 };
 
-const verifyConstructorVisitor = visitors.merge([
+const verifyConstructorVisitor = traverse.visitors.merge([
     noMethodVisitor,
     {
         MemberExpression: {
@@ -59,7 +59,7 @@ const verifyConstructorVisitor = visitors.merge([
     }
 ]);
 
-const findThisesVisitor = visitors.merge([
+const findThisesVisitor = traverse.visitors.merge([
     noMethodVisitor,
     {
         ThisExpression(path) {

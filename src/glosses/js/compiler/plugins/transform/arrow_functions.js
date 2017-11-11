@@ -1,4 +1,4 @@
-export default function (c, options) {
+export default function (api, options) {
     const { spec } = options;
 
     return {

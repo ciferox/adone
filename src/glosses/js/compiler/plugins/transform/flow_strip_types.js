@@ -1,4 +1,8 @@
-export default function ({ types: t }) {
+const {
+    js: { compiler: { types: t } }
+} = adone;
+
+export default function () {
     const FLOW_DIRECTIVE = "@flow";
 
     let skipStrip = false;

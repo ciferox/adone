@@ -1,5 +1,5 @@
 const {
-    js: { compiler: { helper: { simpleAccess, moduleTransforms: {
+    js: { compiler: { template, types: t, helper: { simpleAccess, moduleTransforms: {
         isModule,
         rewriteModuleStatementsAndPrepareHeader,
         isSideEffectImport,
@@ -9,7 +9,7 @@ const {
     } } } }
 } = adone;
 
-export default function ({ types: t, template }, options) {
+export default function (api, options) {
     const {
         loose,
         allowTopLevelThis,

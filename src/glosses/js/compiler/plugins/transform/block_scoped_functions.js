@@ -1,4 +1,8 @@
-export default function ({ types: t }) {
+const {
+    js: { compiler: { types: t } }
+} = adone;
+
+export default function () {
     const statementList = function (key, path) {
         const paths: Array = path.get(key);
 

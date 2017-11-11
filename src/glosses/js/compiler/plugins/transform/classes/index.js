@@ -2,10 +2,10 @@ import LooseTransformer from "./loose";
 import VanillaTransformer from "./vanilla";
 
 const {
-    js: { compiler: { helper: { annotateAsPure, functionName } } }
+    js: { compiler: { types: t, helper: { annotateAsPure, functionName } } }
 } = adone;
 
-export default function ({ types: t }, options) {
+export default function (api, options) {
     const { loose } = options;
     const Constructor = loose ? LooseTransformer : VanillaTransformer;
 

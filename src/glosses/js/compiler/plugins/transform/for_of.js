@@ -1,4 +1,8 @@
-export default function ({ template, types: t }, options) {
+const {
+    js: { compiler: { template, types: t } }
+} = adone;
+
+export default function (api, options) {
     const { loose } = options;
 
     const buildForOfArray = template(`

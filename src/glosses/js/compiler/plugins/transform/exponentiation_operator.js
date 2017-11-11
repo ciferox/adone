@@ -1,4 +1,8 @@
-export default function ({ types: t }) {
+const {
+    js: { compiler: { types: t } }
+} = adone;
+
+export default function () {
     return {
         inherits: adone.js.compiler.plugin.syntax.exponentiationOperator,
 
