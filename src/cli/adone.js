@@ -79,22 +79,34 @@ class AdoneCLI extends application.CliApplication {
             {
                 name: "--sourcemaps",
                 help: "Force enable sourcemaps support"
+            },
+            {
+                name: ["-e", "--exec"],
+                help: "Execute code"
             }
         ]
     })
     async main(args, opts, { rest }) {
-        let scriptPath = args.get("path");
-        if (!std.path.isAbsolute(scriptPath)) {
-            scriptPath = std.path.resolve(process.cwd(), scriptPath);
+        if (opts.has("exec")) {
+            const m = new adone.js.Module(process.cwd(), {
+                transform: adone.js.Module.transforms.transpile(adone.require.options)
+            });
+
+            m._compile(args.get("path"), "index.js");
+        } else {
+            let scriptPath = args.get("path");
+            if (!std.path.isAbsolute(scriptPath)) {
+                scriptPath = std.path.resolve(process.cwd(), scriptPath);
+            }
+
+            adone.__argv__ = [process.argv[0], scriptPath, ...rest];
+
+            if (opts.get("sourcemaps")) {
+                adone.sourcemap.support(Error).install();
+            }
+
+            adone.require(scriptPath);
         }
-
-        adone.__argv__ = [process.argv[0], scriptPath, ...rest];
-
-        if (opts.get("sourcemaps")) {
-            adone.sourcemap.support(Error).install();
-        }
-
-        adone.require(scriptPath);
     }
 
     @Command({

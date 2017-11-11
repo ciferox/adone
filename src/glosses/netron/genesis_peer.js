@@ -64,7 +64,12 @@ export default class GenesisPeer extends AsyncEmitter {
         if (remoteStreamId === 0) {
             // initiator side -> outgoing stream
             const id = this.streamId.next();
-            stream = new Stream({ peer: this, id, highWaterMark, allowHalfOpen });
+            stream = new Stream({
+                peer: this,
+                id,
+                highWaterMark,
+                allowHalfOpen
+            });
             try {
                 await this.netron.send(this, 1, this.streamId.next(), 1, ACTION.STREAM_REQUEST, id);
                 this._requestedStreams.set(stream.id, stream);
@@ -78,7 +83,12 @@ export default class GenesisPeer extends AsyncEmitter {
             }
 
             const id = this.streamId.next();
-            stream = new Stream({ peer: this, id, highWaterMark, allowHalfOpen });
+            stream = new Stream({
+                peer: this,
+                id,
+                highWaterMark,
+                allowHalfOpen
+            });
             try {
                 await this.netron.send(this, 1, this.streamId.next(), 1, ACTION.STREAM_ACCEPT, { origin: remoteStreamId, remote: id });
                 this._awaitingStreamIds.delete(remoteStreamId);
@@ -390,10 +400,9 @@ export default class GenesisPeer extends AsyncEmitter {
     }
 
     _getStreamFromPacket(packet) {
-        const streamId = packet.streamId;
-        const stream = this._streams.get(streamId);
+        const stream = this._streams.get(packet.streamId);
         if (is.undefined(stream)) {
-            return adone.log(`No local stream associated with remote stream id: ${streamId}`);
+            return adone.log(`No local stream associated with remote stream id: ${packet.streamId}`);
         }
         return stream;
     }
