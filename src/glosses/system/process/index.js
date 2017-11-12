@@ -718,7 +718,7 @@ export const getChildPids = async (pid) => {
     // ```
 
     const normalizeHeader = (str) => {
-        if (!is.win32) {
+        if (!is.windows) {
             return str;
         }
 
@@ -737,9 +737,11 @@ export const getChildPids = async (pid) => {
     };
 
     let stdout;
-    if (is.win32) {
+    if (is.windows) {
         // See also: https://github.com/nodejs/node-v0.x-archive/issues/2318
-        stdout = await execStdout("wmic.exe", ["PROCESS", "GET", "Name,ProcessId,ParentProcessId,Status"]);
+        stdout = await execStdout("wmic.exe", ["PROCESS", "GET", "Name,ProcessId,ParentProcessId,Status"], {
+            __winShell: true
+        });
     } else {
         stdout = await execStdout("ps", ["-A", "-o", "ppid,pid,stat,comm"]);
     }
@@ -761,11 +763,11 @@ export const getChildPids = async (pid) => {
         const proc = {};
         const h = headers.slice();
         while (h.length) {
-            proc[h.shift()] = h.length ? columns.shift() : columns.join(" ");
+            proc[h.shift().toLowerCase()] = h.length ? columns.shift() : columns.join(" ");
         }
 
-        if (parents.includes(proc.PPID)) {
-            parents.push(proc.PID);
+        if (parents.includes(proc.ppid)) {
+            parents.push(proc.pid);
             childPids.push(proc);
         }
     }
@@ -774,15 +776,17 @@ export const getChildPids = async (pid) => {
 };
 
 export const kill = (input, { force = false, tree = true, windows } = {}) => {
-    const fn = is.win32 ? (input) => {
+    const fn = is.windows ? (input) => {
         const args = [];
 
-        if (is.plainObject(windows) && windows.system && windows.username && windows.password) {
-            args.push("/s", windows.system, "/u", windows.username, "/p", windows.password);
-        }
+        if (is.plainObject(windows)) {
+            if (windows.system && windows.username && windows.password) {
+                args.push("/s", windows.system, "/u", windows.username, "/p", windows.password);
+            }
 
-        if (windows.filter) {
-            args.push("/fi", windows.filter);
+            if (windows.filter) {
+                args.push("/fi", windows.filter);
+            }
         }
 
         if (force) {
@@ -793,7 +797,7 @@ export const kill = (input, { force = false, tree = true, windows } = {}) => {
             args.push("/t");
         }
 
-        input.forEach((x) => args.push(is.numeral(x) ? "/pid" : "/im", x));
+        args.push(is.numeral(input) ? "/pid" : "/im", input);
 
         return exec("taskkill", args);
     } : (input) => {
@@ -820,9 +824,9 @@ export const kill = (input, { force = false, tree = true, windows } = {}) => {
     // Don't kill ourselves
     input = adone.util.arrify(input).filter((x) => x !== process.pid);
 
-    return Promise.all(input.map((input) => {
-        return fn(input).catch((err) => {
-            errors.push(`Killing process ${input} failed: ${err.message.replace(/.*\n/, "").replace(/kill: \d+: /, "").trim()}`);
+    return Promise.all(input.map((val) => {
+        return fn(val).catch((err) => {
+            errors.push(`Killing process ${val} failed: ${err.message.replace(/.*\n/, "").replace(/kill: \d+: /, "").trim()}`);
         });
     })).then(() => {
         if (errors.length > 0) {

@@ -21,6 +21,7 @@ const HANDLERS = Symbol();
 const EXITING = Symbol();
 const IS_MAIN = Symbol();
 const INTERACTIVE = Symbol();
+const EXIT_SIGNALS = Symbol();
 
 export default class Application extends application.Subsystem {
     constructor({ name = std.path.basename(process.argv[1], std.path.extname(process.argv[1])), interactive = true } = {}) {
@@ -32,6 +33,7 @@ export default class Application extends application.Subsystem {
         this[ERROR_SCOPE] = false;
         this[REPORT] = null;
         this[INTERACTIVE] = interactive;
+        this[EXIT_SIGNALS] = null;
 
         this.setMaxListeners(Infinity);
     }
@@ -140,13 +142,13 @@ export default class Application extends application.Subsystem {
 
     exitOnSignal(...names) {
         for (const sigName of names) {
-            if (is.nil(this._exitSignals)) {
-                this._exitSignals = [];
+            if (is.null(this[EXIT_SIGNALS])) {
+                this[EXIT_SIGNALS] = [];
             }
-            if (this._exitSignals.includes(sigName)) {
+            if (this[EXIT_SIGNALS].includes(sigName)) {
                 continue;
             }
-            this._exitSignals.push(sigName);
+            this[EXIT_SIGNALS].push(sigName);
             process.on(sigName, () => this[HANDLERS].signalExit(sigName));
             if (sigName === "SIGINT" || sigName === "SIGTERM") {
                 process.removeListener(sigName, adone.noop);
@@ -231,8 +233,8 @@ export default class Application extends application.Subsystem {
         process.removeListener("unhandledRejection", this[HANDLERS].unhandledRejection);
         process.removeListener("rejectionHandled", this[HANDLERS].rejectionHandled);
         process.removeListener("beforeExit", this[HANDLERS].beforeExit);
-        if (is.array(this._exitSignals)) {
-            for (const sigName of this._exitSignals) {
+        if (is.array(this[EXIT_SIGNALS])) {
+            for (const sigName of this[EXIT_SIGNALS]) {
                 process.removeListener(sigName, this[HANDLERS].signalExit);
             }
         }

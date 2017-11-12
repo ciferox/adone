@@ -19,10 +19,220 @@
                 "$dst": "lib/cli"
             },
             "glosses": {
+                "application": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/application/**/*.js",
+                    "$dst": "lib/glosses/application"
+                },
+                "archives": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/archives/**/*.js",
+                    "$dst": "lib/glosses/archives"
+                },
+                "assertion": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/assertion/**/*.js",
+                    "$dst": "lib/glosses/assertion"
+                },
+                "collections": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/collections/**/*.js",
+                    "$dst": "lib/glosses/collections"
+                },
+                "compressors": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/compressors/**/*.js",
+                    "$dst": "lib/glosses/compressors"
+                },
+                "configurations": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/configurations/**/*.js",
+                    "$dst": "lib/glosses/configurations"
+                },
+                "crypto": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/crypto/**/*.js",
+                    "$dst": "lib/glosses/crypto"
+                },
+                "data": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/data/**/*.js",
+                    "$dst": "lib/glosses/data"
+                },
+                "databases": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/databases/**/*.js",
+                    "$dst": "lib/glosses/databases"
+                },
+                "datetime": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/datetime/**/*.js",
+                    "$dst": "lib/glosses/datetime"
+                },
+                "diff": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/diff/**/*.js",
+                    "$dst": "lib/glosses/diff"
+                },
+                "events": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/events/**/*.js",
+                    "$dst": "lib/glosses/events"
+                },
+                "exceptions": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/exceptions/**/*.js",
+                    "$dst": "lib/glosses/exceptions"
+                },
+                "fs": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/fs/**/*.js",
+                    "$dst": "lib/glosses/fs"
+                },
+                "geoip": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/geoip/**/*.js",
+                    "$dst": "lib/glosses/geoip"
+                },
+                "hardware": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/hardware/**/*.js",
+                    "$dst": "lib/glosses/hardware"
+                },
+                "is": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/is/**/*.js",
+                    "$dst": "lib/glosses/is"
+                },
                 "js": {
                     "$task": "adoneTranspile",
-                    "$src": "src/glosses/**/*.js",
-                    "$dst": "lib/glosses"
+                    "$src": "src/glosses/js/**/*.js",
+                    "$dst": "lib/glosses/js"
+                },
+                "math": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/math/**/*.js",
+                    "$dst": "lib/glosses/math"
+                },
+                "meta": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/meta/**/*.js",
+                    "$dst": "lib/glosses/meta"
+                },
+                "metrics": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/metrics/**/*.js",
+                    "$dst": "lib/glosses/metrics"
+                },
+                "net": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/net/**/*.js",
+                    "$dst": "lib/glosses/net"
+                },
+                "netron": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/netron/**/*.js",
+                    "$dst": "lib/glosses/netron"
+                },
+                "netscan": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/netscan/**/*.js",
+                    "$dst": "lib/glosses/netscan"
+                },
+                "notifier": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/notifier/**/*.js",
+                    "$dst": "lib/glosses/notifier"
+                },
+                "promise": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/promise/**/*.js",
+                    "$dst": "lib/glosses/promise"
+                },
+                "punycode": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/punycode/**/*.js",
+                    "$dst": "lib/glosses/punycode"
+                },
+                "regex": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/regex/**/*.js",
+                    "$dst": "lib/glosses/regex"
+                },
+                "schema": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/schema/**/*.js",
+                    "$dst": "lib/glosses/schema"
+                },
+                "semver": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/semver/**/*.js",
+                    "$dst": "lib/glosses/semver"
+                },
+                "shell": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/shell/**/*.js",
+                    "$dst": "lib/glosses/shell"
+                },
+                "sourcemap": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/sourcemap/**/*.js",
+                    "$dst": "lib/glosses/sourcemap"
+                },
+                "streams": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/streams/**/*.js",
+                    "$dst": "lib/glosses/streams"
+                },
+                "system": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/system/**/*.js",
+                    "$dst": "lib/glosses/system"
+                },
+                "tasks": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/tasks/**/*.js",
+                    "$dst": "lib/glosses/tasks"
+                },
+                "templating": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/templating/**/*.js",
+                    "$dst": "lib/glosses/templating"
+                },
+                "terminal": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/terminal/**/*.js",
+                    "$dst": "lib/glosses/terminal"
+                },
+                "text": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/text/**/*.js",
+                    "$dst": "lib/glosses/text"
+                },
+                "uri": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/uri/**/*.js",
+                    "$dst": "lib/glosses/uri"
+                },
+                "utils": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/utils/**/*.js",
+                    "$dst": "lib/glosses/utils"
+                },
+                "vault": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/vault/**/*.js",
+                    "$dst": "lib/glosses/vault"
+                },
+                "vcs": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/vcs/**/*.js",
+                    "$dst": "lib/glosses/vcs"
+                },
+                "virtualization": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/virtualization/**/*.js",
+                    "$dst": "lib/glosses/virtualization"
                 },
                 "dot": {
                     "$task": "adoneDotCompiler",

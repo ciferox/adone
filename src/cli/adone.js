@@ -93,6 +93,17 @@ class AdoneCLI extends application.CliApplication {
             });
 
             m._compile(args.get("path"), "index.js");
+            let result = m.exports;
+            if (result.__esModule) {
+                result = result.default;
+            }
+            if (is.asyncFunction(result)) {
+                await result();
+            } else if (is.function(result)) {
+                result();
+            } else if (!is.nil(result)) {
+                adone.log(result);
+            }
         } else {
             let scriptPath = args.get("path");
             if (!std.path.isAbsolute(scriptPath)) {

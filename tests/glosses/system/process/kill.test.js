@@ -67,14 +67,14 @@ describe("system", "process", () => {
         assert.isFalse(await exists(pid));
     });
 
-    if (is.win32) {
+    if (is.windows) {
         it("title", async () => {
             const title = "notepad.exe";
             const pid = childProcess.spawn(title).pid;
 
             await kill(title, { force: true });
 
-            assert.isFalse(await kill(pid));
+            assert.isFalse(await exists(pid));
         });
     } else {
         it("title", async () => {
@@ -118,9 +118,12 @@ describe("system", "process", () => {
             try {
                 await promise.delay(1000);
                 const children = await getChildPids(child.pid);
-                expect(children).to.have.lengthOf(10);
+                expect(children).to.have.lengthOf(is.windows ? 11 : 10);
                 await Promise.all([
-                    kill(child.pid, { tree: true }),
+                    kill(child.pid, {
+                        tree: true,
+                        force: is.windows
+                    }),
                     exit.waitForCall()
                 ]);
                 for (const child of children) {

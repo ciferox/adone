@@ -1,4 +1,5 @@
 const {
+    is,
     promise,
     std: { path, child_process: cp },
     system: { process: { getChildPids, kill } },
@@ -20,7 +21,9 @@ describe("system", "process", () => {
         let children = await getChildPids(parent.pid);
 
         assert.isTrue(children.length > 0);
-        kill(parent.pid);
+        kill(parent.pid, {
+            force: is.windows
+        });
 
         await promise.delay(2000);
         children = await getChildPids(parent.pid);
@@ -49,9 +52,11 @@ describe("system", "process", () => {
             const expectedPids = util.reFindAll(/child pid: (\d+)/g, stdout).map((x) => Number(x[1])).sort();
 
             await promise.delay(1000);
-            expect(children.map((x) => Number(x.PID)).sort()).to.be.deep.equal(expectedPids);
+            expect(children.map((x) => Number(x.pid)).sort()).to.be.deep.equal(expectedPids);
         } finally {
-            kill(child.pid);
+            kill(child.pid, {
+                force: is.windows
+            });
         }
     });
 
@@ -59,7 +64,9 @@ describe("system", "process", () => {
         const child = cp.exec(`node ${scripts.child}`, (error, stdout, stderr) => { });
         await promise.delay(200);
         let children = await getChildPids(child.pid.toString());
-        await kill(child.pid);
+        await kill(child.pid, {
+            force: is.windows
+        });
 
         await promise.delay(1000);
         children = await getChildPids(child.pid.toString());
