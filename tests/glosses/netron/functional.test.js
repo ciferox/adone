@@ -133,7 +133,7 @@ describe("netron", "native", "functional tests", () => {
                 await exNetron.connect();
                 exNetron.disconnect();
 
-                return Promise.all( [p1, p2, p3, p4] );
+                return Promise.all([p1, p2, p3, p4]);
             });
 
             it("Client", async () => {
@@ -190,7 +190,7 @@ describe("netron", "native", "functional tests", () => {
                 await exNetron.connect();
                 exNetron.disconnect();
 
-                return Promise.all( [p1, p2, p3, p4] );
+                return Promise.all([p1, p2, p3, p4]);
             });
         });
 
@@ -394,9 +394,9 @@ describe("netron", "native", "functional tests", () => {
                 addDocument(name, doc) {
                     if (this._docs.size >= this._totalSize || this._docs.has(name)) {
                         return false;
-                    } 
+                    }
                     this._docs.set(name, doc);
-                    
+
                     return true;
                 }
 
@@ -837,9 +837,9 @@ describe("netron", "native", "functional tests", () => {
                             if (this.keeper) {
                                 depthLabel++;
                                 return (await this.keeper.getCounter()) + 1;
-                            } 
+                            }
                             return 1;
-                            
+
                         }
 
                         @Public()
@@ -1043,7 +1043,7 @@ describe("netron", "native", "functional tests", () => {
 
                 for (const i of ["local", "remote"]) {
                     // eslint-disable-next-line
-                    it(`${i} - standart exceptions`, async() => {
+                    it(`${i} - standart exceptions`, async () => {
                         let okCount = 0;
                         superNetron.attachContext(new StdErrs(), "a");
                         await superNetron.bind({ port: NETRON_PORT });
@@ -1073,8 +1073,8 @@ describe("netron", "native", "functional tests", () => {
                         let okCount = 0;
 
                         @Context()
-                        class AdoneErrs {}
-                        
+                        class AdoneErrs { }
+
                         const adoneErrors = adone.x.adoneExceptions;
                         for (const AdoneError of adoneErrors) {
                             if (adone.x.exceptionIdMap[AdoneError] < 1000) {
@@ -1094,7 +1094,7 @@ describe("netron", "native", "functional tests", () => {
                             const peer = await exNetron.connect({ port: NETRON_PORT });
                             iA = peer.getInterfaceByName("a");
                         }
-                        
+
                         for (const AdoneError of adoneErrors) {
                             try {
                                 await iA[`throw${AdoneError.prototype.name}`]();
@@ -1103,6 +1103,36 @@ describe("netron", "native", "functional tests", () => {
                             }
                         }
                         assert.isOk(okCount === adoneErrors.length);
+                    });
+                }
+
+                for (const i of ["local", "remote"]) {
+                    it(`${i} - should not fail when a non-standard error is sent`, async () => { // eslint-disable-line
+                        class MyError extends Error { }
+
+                        @Context()
+                        class NonStdErr {
+                            @Public()
+                            throw() {
+                                throw new MyError("Hello World!");
+                            }
+                        }
+
+                        superNetron.attachContext(new NonStdErr(), "a");
+                        await superNetron.bind({ port: NETRON_PORT });
+
+                        let iA;
+
+                        if (i === "local") {
+                            iA = superNetron.getInterfaceByName("a");
+                        } else {
+                            const peer = await exNetron.connect({ port: NETRON_PORT });
+                            iA = peer.getInterfaceByName("a");
+                        }
+
+                        await assert.throws(async () => {
+                            await iA.throw();
+                        }, "Hello World!");
                     });
                 }
             });
