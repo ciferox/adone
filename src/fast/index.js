@@ -30,6 +30,7 @@ fast.plugin = lazify({
     decompres: "./plugins/decompress",
     pack: "./plugins/pack",
     unpack: "./plugins/unpack",
+    archive: "./plugins/archive",
     transpile: "./plugins/transpile",
     deleteLines: "./plugins/delete_lines",
     rename: "./plugins/rename",
