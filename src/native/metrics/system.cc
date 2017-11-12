@@ -23,11 +23,6 @@ static char version[64];
 static char codeName[128];
 static uint32_t buildNumber;
 
-int fcntl(int fildes, int cmd, ...)
-{
-    return -1;
-}
-
 // Win32_Process class
 
 struct
@@ -309,6 +304,7 @@ static void EIO_Seek(uv_work_t *req)
     }
 }
 
+#ifndef ADONE_OS_WINDOWS
 static void EIO_Fcntl(uv_work_t *req)
 {
     store_data_t *data = static_cast<store_data_t *>(req->data);
@@ -339,6 +335,7 @@ static void EIO_Fcntl(uv_work_t *req)
         data->error = errno;
     }
 }
+#endif
 
 #if ADONE_OS_WINDOWS
 
@@ -438,24 +435,6 @@ static inline int IsInt64(double x)
 #define GET_OFFSET(a) ((a)->IsNumber() ? (a)->IntegerValue() : -1)
 #endif
 
-static void EIO_UTime(uv_work_t *req)
-{
-    store_data_t *utime_data = static_cast<store_data_t *>(req->data);
-
-    off_t i = utime(utime_data->path, &utime_data->utime_buf);
-    free(utime_data->path);
-
-    if (i == (off_t)-1)
-    {
-        utime_data->result = -1;
-        utime_data->error = errno;
-    }
-    else
-    {
-        utime_data->result = i;
-    }
-}
-
 class System : public node::ObjectWrap
 {
   public:
@@ -472,9 +451,10 @@ class System : public node::ObjectWrap
         Nan::SetMethod(t, "getThreadCount", System::GetThreadCount);
 
         Nan::SetMethod(t, "seek", System::Seek);
+#ifndef ADONE_OS_WINDOWS
         Nan::SetMethod(t, "fcntl", System::Fcntl);
+#endif
         Nan::SetMethod(t, "flock", System::Flock);
-        Nan::SetMethod(t, "utime", System::UTime);
         Nan::SetMethod(t, "statVFS", System::StatVFS);
 
 #ifdef SEEK_SET
@@ -836,8 +816,8 @@ class System : public node::ObjectWrap
         info.GetReturnValue().SetUndefined();
     }
 
+#ifndef ADONE_OS_WINDOWS
     //  fs.fcntl(fd, cmd, [arg])
-
     static NAN_METHOD(Fcntl)
     {
         if (info.Length() < 3 ||
@@ -877,49 +857,7 @@ class System : public node::ObjectWrap
 
         info.GetReturnValue().SetUndefined();
     }
-
-    // Wrapper for utime(2).
-    //   fs.utime( path, atime, mtime, [callback] )
-
-    static NAN_METHOD(UTime)
-    {
-        if (info.Length() < 3 || info.Length() > 4 || !info[0]->IsString() || !info[1]->IsNumber() || !info[2]->IsNumber())
-        {
-            return THROW_BAD_ARGS;
-        }
-
-        String::Utf8Value path(info[0]->ToString());
-        time_t atime = info[1]->IntegerValue();
-        time_t mtime = info[2]->IntegerValue();
-
-        // Synchronous call needs much less work
-        if (!info[3]->IsFunction())
-        {
-            struct utimbuf buf;
-            buf.actime = atime;
-            buf.modtime = mtime;
-            int ret = utime(*path, &buf);
-            if (ret != 0)
-                return Nan::ThrowError(Nan::ErrnoException(errno, "utime", "", *path));
-            info.GetReturnValue().SetUndefined();
-            return;
-        }
-
-        store_data_t *utime_data = new store_data_t();
-
-        utime_data->cb = new Nan::Callback((Local<Function>)info[3].As<Function>());
-        utime_data->fs_op = FS_OP_UTIME;
-        utime_data->path = strdup(*path);
-        utime_data->utime_buf.actime = atime;
-        utime_data->utime_buf.modtime = mtime;
-
-        uv_work_t *req = new uv_work_t;
-        req->data = utime_data;
-        uv_queue_work(uv_default_loop(), req, EIO_UTime, (uv_after_work_cb)EIO_After);
-
-        info.GetReturnValue().SetUndefined();
-    }
-
+#endif
     // Wrapper for statvfs(2).
     //   fs.statVFS( path, [callback] )
 

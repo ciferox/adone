@@ -441,6 +441,124 @@ class AdoneCLI extends application.CliApplication {
         }
         return 0;
     }
+
+    // Temporary commands, until the builds for all supported systems are ready
+
+    @Command({
+        name: "clean",
+        help: "Clean project",
+        arguments: [
+            {
+                name: "path",
+                nargs: "?",
+                help: "Project entry path"
+            }
+        ]
+    })
+    async cleanCommand(args) {
+        try {
+            const path = args.has("path") ? args.get("path") : null;
+            const manager = new adone.project.Manager();
+            await manager.load();
+            await manager.clean(path);
+            return 0;
+        } catch (err) {
+            term.print(`{red-fg}${err.message}{/}`);
+            return 1;
+        }
+    }
+
+    @Command({
+        name: "build",
+        help: "Build project",
+        arguments: [
+            {
+                name: "path",
+                nargs: "?",
+                help: "Project entry path"
+            }
+        ],
+        options: [
+            {
+                name: "--watch",
+                help: "Watch files changes"
+            }
+        ]
+    })
+    async buildCommand(args, opts) {
+        try {
+            const path = args.has("path") ? args.get("path") : null;
+            const manager = new adone.project.Manager();
+            await manager.load();
+            await manager.build(path);
+            if (opts.has("watch")) {
+                await manager.watch(path);
+                return;
+            }
+            return 0;
+        } catch (err) {
+            adone.log(err);
+            // term.print(`{red-fg}${err.message}{/}`);
+            return 1;
+        }
+    }
+
+    @Command({
+        name: "rebuild",
+        help: "Rebuild project",
+        options: [
+            {
+                name: "--watch",
+                help: "Watch files changes"
+            },
+        ],
+        arguments: [
+            {
+                name: "path",
+                nargs: "?",
+                help: "Project entry path"
+            }
+        ]
+    })
+    async rebuildCommand(args, opts) {
+        try {
+            const path = args.has("path") ? args.get("path") : null;
+            const manager = new adone.project.Manager();
+            await manager.load();
+            await manager.rebuild(path);
+            if (opts.has("watch")) {
+                await manager.watch(path);
+                return;
+            }
+            return 0;
+        } catch (err) {
+            term.print(`{red-fg}${err.message}{/}`);
+            return 1;
+        }
+    }
+
+    @Command({
+        name: "watch",
+        help: "Watch project",
+        arguments: [
+            {
+                name: "path",
+                nargs: "?",
+                help: "Project entry path"
+            }
+        ]
+    })
+    async watchCommand(args, opts) {
+        try {
+            const path = args.has("path") ? args.get("path") : null;
+            const manager = new adone.project.Manager();
+            await manager.load();
+            await manager.watch(path);
+        } catch (err) {
+            term.print(`{red-fg}${err.message}{/}`);
+            return 1;
+        }
+    }
 }
 
 application.runCli(AdoneCLI);

@@ -33,12 +33,36 @@ const paths = {
         from: ["src/cli/adone.js"],
         to: "bin"
     },
+    cli: {
+        from: ["!src/cli/adone.js", "src/cli/**/*"],
+        to: "lib/cli"
+    },
+    fast: {
+        from: ["src/fast/**/*"],
+        to: "lib/fast"
+    },
+    shani: {
+        from: ["src/shani/**/*"],
+        to: "lib/shani"
+    },
+    project: {
+        from: ["src/project/**/*"],
+        to: "lib/project"
+    },
+    realm: {
+        from: ["src/realm/**/*"],
+        to: "lib/realm"
+    },
+    specter: {
+        from: ["src/specter/**/*"],
+        to: "lib/specter"
+    },
     omnitron: {
         from: ["src/omnitron/**/*"],
         to: "lib/omnitron"
     },
     glosses: {
-        from: ["src/glosses/**/*", "!src/glosses/vendor/**/*", "!src/glosses/schema/dot/*"],
+        from: ["src/glosses/**/*", "!src/glosses/schema/dot/*"],
         to: "lib/glosses"
     },
     schemaTemplates: {
@@ -48,14 +72,6 @@ const paths = {
     index: {
         from: ["src/index.js"],
         to: "lib"
-    },
-    tests: {
-        from: ["tests/*.js", "tests/glosses*/shani/**/*"],
-        to: "libTests"
-    },
-    examples: {
-        from: ["examples/**/*.js"],
-        to: "libExamples"
     },
     vendor: {
         from: ["src/vendor/**/*"],
@@ -157,6 +173,78 @@ const buildGlosses = () => gulp.src(paths.glosses.from)
     .pipe(notify({ message: "Done: glosses", onLast: true }))
     .pipe(gulp.dest(paths.glosses.to));
 
+const buildCli = () => gulp.src(paths.cli.from)
+    .pipe(errorHandler())
+    .pipe(cache("cli"))
+    .pipe(sourcemaps.init())
+    .pipe(transform())
+    .pipe(sourcemaps.mapSources((sourcePath, file) => {
+        return path.relative(path.dirname(path.resolve(paths.cli.to, file.relative)), file.path);
+    }))
+    .pipe(sourcemaps.write("."))
+    .pipe(notify({ message: "Done: cli", onLast: true }))
+    .pipe(gulp.dest(paths.cli.to));
+
+const buildFast = () => gulp.src(paths.fast.from)
+    .pipe(errorHandler())
+    .pipe(cache("cli"))
+    .pipe(sourcemaps.init())
+    .pipe(transform())
+    .pipe(sourcemaps.mapSources((sourcePath, file) => {
+        return path.relative(path.dirname(path.resolve(paths.fast.to, file.relative)), file.path);
+    }))
+    .pipe(sourcemaps.write("."))
+    .pipe(notify({ message: "Done: fast", onLast: true }))
+    .pipe(gulp.dest(paths.fast.to));
+
+const buildShani = () => gulp.src(paths.shani.from)
+    .pipe(errorHandler())
+    .pipe(cache("cli"))
+    .pipe(sourcemaps.init())
+    .pipe(transform())
+    .pipe(sourcemaps.mapSources((sourcePath, file) => {
+        return path.relative(path.dirname(path.resolve(paths.shani.to, file.relative)), file.path);
+    }))
+    .pipe(sourcemaps.write("."))
+    .pipe(notify({ message: "Done: shani", onLast: true }))
+    .pipe(gulp.dest(paths.shani.to));
+
+const buildProject = () => gulp.src(paths.project.from)
+    .pipe(errorHandler())
+    .pipe(cache("project"))
+    .pipe(sourcemaps.init())
+    .pipe(transform())
+    .pipe(sourcemaps.mapSources((sourcePath, file) => {
+        return path.relative(path.dirname(path.resolve(paths.project.to, file.relative)), file.path);
+    }))
+    .pipe(sourcemaps.write("."))
+    .pipe(notify({ message: "Done: project", onLast: true }))
+    .pipe(gulp.dest(paths.project.to));
+
+const buildRealm = () => gulp.src(paths.realm.from)
+    .pipe(errorHandler())
+    .pipe(cache("realm"))
+    .pipe(sourcemaps.init())
+    .pipe(transform())
+    .pipe(sourcemaps.mapSources((sourcePath, file) => {
+        return path.relative(path.dirname(path.resolve(paths.realm.to, file.relative)), file.path);
+    }))
+    .pipe(sourcemaps.write("."))
+    .pipe(notify({ message: "Done: realm", onLast: true }))
+    .pipe(gulp.dest(paths.realm.to));
+
+const buildSpecter = () => gulp.src(paths.specter.from)
+    .pipe(errorHandler())
+    .pipe(cache("specter"))
+    .pipe(sourcemaps.init())
+    .pipe(transform())
+    .pipe(sourcemaps.mapSources((sourcePath, file) => {
+        return path.relative(path.dirname(path.resolve(paths.specter.to, file.relative)), file.path);
+    }))
+    .pipe(sourcemaps.write("."))
+    .pipe(notify({ message: "Done: specter", onLast: true }))
+    .pipe(gulp.dest(paths.specter.to));
+
 const buildSchemaTemplates = (cb) => {
     // shit..
     const defs = {};
@@ -217,30 +305,6 @@ const buildSchemaTemplates = (cb) => {
         });
 };
 
-const buildTests = () => gulp.src(paths.tests.from)
-    .pipe(errorHandler())
-    .pipe(cache("tests"))
-    .pipe(sourcemaps.init())
-    .pipe(transform())
-    .pipe(sourcemaps.mapSources((sourcePath, file) => {
-        return path.relative(path.dirname(path.resolve(paths.tests.to, file.relative)), file.path);
-    }))
-    .pipe(sourcemaps.write("."))
-    .pipe(notify({ message: "Done: tests", onLast: true }))
-    .pipe(gulp.dest(paths.tests.to));
-
-const buildExamples = () => gulp.src(paths.examples.from)
-    .pipe(errorHandler())
-    .pipe(cache("examples"))
-    .pipe(sourcemaps.init())
-    .pipe(transform())
-    .pipe(sourcemaps.mapSources((sourcePath, file) => {
-        return path.relative(path.dirname(path.resolve(paths.examples.to, file.relative)), file.path);
-    }))
-    .pipe(sourcemaps.write("."))
-    .pipe(notify({ message: "Done: examples", onLast: true }))
-    .pipe(gulp.dest(paths.examples.to));
-
 const copyVendor = () => gulp.src(paths.vendor.from)
     .pipe(errorHandler())
     .pipe(cache("vendor"))
@@ -253,31 +317,46 @@ gulp.task("build-bin", ["clean-bin"], buildBin);
 gulp.task("clean-glosses", () => del(paths.glosses.to));
 gulp.task("build-glosses", ["clean-glosses"], buildGlosses);
 
+gulp.task("clean-cli", () => del(paths.cli.to));
+gulp.task("build-cli", ["clean-cli"], buildCli);
+
+gulp.task("clean-fast", () => del(paths.fast.to));
+gulp.task("build-fast", ["clean-cli"], buildFast);
+
+gulp.task("clean-shani", () => del(paths.shani.to));
+gulp.task("build-shani", ["clean-cli"], buildShani);
+
+gulp.task("clean-project", () => del(paths.project.to));
+gulp.task("build-project", ["clean-project"], buildProject);
+
+gulp.task("clean-realm", () => del(paths.realm.to));
+gulp.task("build-realm", ["clean-realm"], buildRealm);
+
+gulp.task("clean-specter", () => del(paths.specter.to));
+gulp.task("build-specter", ["clean-realm"], buildSpecter);
+
 gulp.task("clean-omnitron", () => del(paths.omnitron.to));
 gulp.task("build-omnitron", ["clean-omnitron"], buildOmnitron);
 
 gulp.task("clean-index", () => del(path.join(paths.index.to, "index.js")));
 gulp.task("build-index", [], buildIndex);
 
-gulp.task("clean-tests", () => del(paths.tests.to));
-gulp.task("build-tests", ["clean-tests"], buildTests);
-
-gulp.task("clean-examples", () => del(paths.examples.to));
-gulp.task("build-examples", ["clean-tests"], buildExamples);
-
 gulp.task("build-vendor", ["clean-glosses"], copyVendor);
 
 gulp.task("clean-schema-templates", () => del(paths.schemaTemplates.to));
 gulp.task("build-schema-templates", ["clean-schema-templates"], buildSchemaTemplates);
 
-gulp.task("clean", ["clean-examples", "clean-tests", "clean-glosses", "clean-bin", "clean-omnitron", "clean-index", "clean-schema-templates"]);
-gulp.task("build", ["build-examples", "build-tests", "build-glosses", "build-bin", "build-omnitron", "build-index", "build-vendor", "build-schema-templates"]);
+gulp.task("clean", ["clean-glosses", "clean-bin", "clean-cli", "clean-fast", "clean-shani", "clean-project", "clean-realm", "clean-specter", "clean-omnitron", "clean-index", "clean-schema-templates"]);
+gulp.task("build", ["build-glosses", "build-bin", "build-cli", "build-fast", "build-shani", "build-project", "build-realm", "build-specter", "build-omnitron", "build-index", "build-vendor", "build-schema-templates"]);
 
 gulp.task("watch", ["build"], () => {
     gulp.watch(paths.bin.from, buildBin);
-    gulp.watch(paths.tests.from, buildTests);
-    gulp.watch(paths.examples.from, buildExamples);
     gulp.watch(paths.glosses.from, buildGlosses);
+    gulp.watch(paths.cli.from, buildCli);
+    gulp.watch(paths.fast.from, buildFast);
+    gulp.watch(paths.shani.from, buildShani);
+    gulp.watch(paths.project.from, buildProject);
+    gulp.watch(paths.realm.from, buildRealm);
     gulp.watch(paths.omnitron.from, buildOmnitron);
     gulp.watch(paths.index.from, buildIndex);
     gulp.watch(paths.vendor.from, copyVendor);

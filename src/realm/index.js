@@ -14,6 +14,16 @@ adone.lazifyPrivate({
     AbstractHandler: "./__/package/abstract_handler"
 }, exports, require);
 
+export const createDirs = async () => {
+    await adone.fs.mkdirp(adone.realm.config.packagesPath);
+    
+    if (!(await adone.fs.exists(adone.realm.config.lockFilePath))) {
+        // Create lockfile
+        await adone.fs.mkdirp(adone.realm.config.runtimePath);
+        await adone.fs.writeFile(adone.realm.config.lockFilePath, "");
+    }
+};
+
 // !!!!!!! This function should be called before 'realm.js' config is loaded. !!!!!!! //
 export const init = async (name = ".adone_dev", customPath) => {
     let path;
@@ -37,13 +47,7 @@ export const init = async (name = ".adone_dev", customPath) => {
     process.env.ADONE_HOME = path;
     process.env.ADONE_REALM = name;
 
-    await adone.fs.mkdirp(adone.realm.config.packagesPath);
-    
-    if (!(await adone.fs.exists(adone.realm.config.lockFilePath))) {
-        // Create lockfile
-        await adone.fs.mkdirp(adone.realm.config.runtimePath);
-        await adone.fs.writeFile(adone.realm.config.lockFilePath, "");
-    }
+    await createDirs();
 
     return path;
 };

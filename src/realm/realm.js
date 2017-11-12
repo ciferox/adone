@@ -95,7 +95,9 @@ export default class Realm {
     //     }
     // }
 
-    lock() {
+    async lock() {
+        // Force create runtime directory.
+        await adone.realm.createDirs();
         return locking.create(adone.realm.config.lockFilePath);
     }
 
