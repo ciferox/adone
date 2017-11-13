@@ -27,13 +27,15 @@ describe("project", function () {
             await fs.mkdirp(fixture());
         });
 
-        after(async () => {
+        after(async function () {
+            this.timeout(30000);
             await fs.rm(fixture());
         });
 
         const randomName = (prefix = "test") => `${prefix}${text.random(4)}_${text.random(5)}_${text.random(6)}`;
 
-        afterEach(async () => {
+        afterEach(async function () {
+            this.timeout(30000);
             for (const path of paths) {
                 await fs.rm(path); // eslint-disable-line
             }
@@ -337,7 +339,7 @@ describe("project", function () {
                 });
             }
 
-            describe.only("sub projects", () => {
+            describe("sub projects", () => {
                 it("create one subproject", async () => {
                     const name = `project_${text.random(8)}`;
                     const cwd = getPathFor(name);
@@ -356,7 +358,7 @@ describe("project", function () {
                         cwd
                     });
 
-                    assert.lengthOf(adoneConfig.getSubConfigs().config, 0);
+                    assert.lengthOf(adoneConfig.getSubConfigs(), 0);
 
                     const subContext = await manager.createSubProject({
                         name: "jit",
@@ -365,7 +367,7 @@ describe("project", function () {
                     });
 
                     await adoneConfig.load();
-                    assert.lengthOf(adoneConfig.getSubConfigs().config, 1);
+                    assert.lengthOf(adoneConfig.getSubConfigs(), 1);
     
                     const subCwd = std.path.join(cwd, "service");
                     assert.sameMembers(await fs.readdir(subCwd), ["adone.json", "src"]);

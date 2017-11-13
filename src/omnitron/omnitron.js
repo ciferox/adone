@@ -21,7 +21,7 @@ export default class Omnitron extends application.Application {
         await fs.mkdirp(adone.realm.config.runtimePath);
 
         // Load omnitron configuration
-        this.config = await omnitron.loadConfig();
+        this.config = await omnitron.Configuration.load();
 
         this.db = new omnitron.SystemDB();
 
@@ -31,24 +31,32 @@ export default class Omnitron extends application.Application {
             group: "manager"
         });
 
-        this.exitOnSignal("SIGQUIT", "SIGTERM", "SIGINT");
-        process.on("SIGILL", () => {
-            if (is.function(global.gc)) {
-                global.gc();
-                adone.info("Forced garbage collector");
-            }
-        });
+        if (!is.windows) {
+            this.exitOnSignal("SIGQUIT", "SIGTERM", "SIGINT");
+            process.on("SIGILL", () => {
+                if (is.function(global.gc)) {
+                    global.gc();
+                    adone.info("Forced garbage collector");
+                }
+            });
+        }
     }
 
     async initialize() {
         await this.db.open();
+        adone.info("System database opened");
+
         await runtime.netron.attachContext(this, "omnitron");
+        adone.info("Omnitron context attached");
+
         await this.createPidFile();
     }
 
     async main() {
         if (is.function(process.send)) {
-            process.send({ pid: process.pid });
+            process.send({
+                pid: process.pid
+            });
         }
 
         adone.info(`Omnitron v${adone.package.version} started`);
@@ -62,7 +70,6 @@ export default class Omnitron extends application.Application {
         for (const manager of ["service", "netron"]) {
             try {
                 await this.uninitializeSubsystem(manager); // eslint-disable-line
-                adone.info(`Manager '${manager}' uninitialized`);
             } catch (err) {
                 adone.error(err);
             }
@@ -74,7 +81,9 @@ export default class Omnitron extends application.Application {
         await this.db.close();
         adone.info("System database closed");
 
-        return this.deletePidFile();
+        await this.deletePidFile();
+
+        adone.info("Omnitron stopped");
     }
 
     async createPidFile() {
@@ -97,7 +106,7 @@ export default class Omnitron extends application.Application {
         if (is.string(sigName)) {
             adone.info(`Killed by signal '${sigName}'`);
         } else {
-            adone.info("Killed by self");
+            adone.info("Killed using api");
         }
         return super._signalExit(sigName);
     }
@@ -114,8 +123,10 @@ export default class Omnitron extends application.Application {
     @Public({
         description: "Kill omnitron"
     })
-    killSelf() {
-        this._signalExit();
+    kill() {
+        process.nextTick(() => {
+            this._signalExit();
+        });
     }
 
     @Public({
@@ -124,6 +135,13 @@ export default class Omnitron extends application.Application {
     })
     async getInfo({ process: proc = false, version = false, realm = false, env = false } = {}) {
         const result = {};
+
+        if (!proc && !version && !realm && !env) {
+            proc = true;
+            version = true;
+            realm = true;
+            env = true;
+        }
 
         if (proc) {
             const cpuUsage = process.cpuUsage(previousUsage);

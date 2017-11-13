@@ -94,34 +94,18 @@ export default class Omnitron extends Subsystem {
         arguments: [
             {
                 name: "param",
-                nargs: "*",
-                type: String,
+                action: "set",
+                set: "trueOnEmpty",
+                choices: ["process", "version", "realm", "env"],
                 help: "Name of parameter(s): env, version, process, realm, eventloop"
             }
         ]
     })
     async infoCommand(args) {
         try {
-            const params = args.get("param");
-            let options;
-            if (params.length === 0) {
-                options = {
-                    process: true,
-                    version: true,
-                    realm: true,
-                    eventloop: true,
-                    env: true
-                };
-            } else {
-                options = {};
-                for (const param of params) {
-                    options[param] = true;
-                }    
-            }
-            
             this._createProgress("obtaining");
             await this._connectToLocal();
-            const result = await omnitron.dispatcher.getInfo(options);
+            const result = await omnitron.dispatcher.getInfo(args.get("param"));
             this._updateProgress("done", true, true);
             adone.log(adone.text.pretty.json(result));
             return 0;

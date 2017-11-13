@@ -58,7 +58,7 @@ export default class Dispatcher {
     async connectLocal({ forceStart = true } = {}, _counter = 0) {
         let status = 0;
         if (is.null(this.peer)) {
-            const localGate = (await adone.omnitron.loadConfig()).raw.gates[0];
+            const localGate = (await adone.omnitron.Configuration.load()).raw.gates[0];
             if (is.nil(localGate)) {
                 throw new x.NotExists("Configuration for gate 'local' is not found");
             }
@@ -104,15 +104,15 @@ export default class Dispatcher {
                         forceStart: false
                     });
                 }
-                const result = await this.getInterface("omnitron").getInfo({
-                    pid: true
+                const result = await this.getInfo({
+                    process: true
                 });
 
                 if (shouldDisconnect) {
                     await this.peer.disconnect();
                 }
 
-                return result;
+                return result.process.id;
             }
             return new Promise(async (resolve, reject) => {
                 const omnitronConfig = adone.realm.config.omnitron;
@@ -147,8 +147,7 @@ export default class Dispatcher {
     async stopOmnitron() {
         const isActive = await this.isOmnitronActive();
         if (isActive) {
-            // Can be used in test environment.
-            if (is.string(adone.realm.config.omnitron.pidFilePath)) {
+            if (await adone.fs.exists(adone.realm.config.omnitron.pidFilePath)) {
                 try {
                     const checkAlive = async (pid) => {
                         let elapsed = 0;
@@ -170,7 +169,9 @@ export default class Dispatcher {
                             await this.connectLocal({
                                 forceStart: false
                             });
-                            await this.killSelf();
+                            await this.kill();
+                            await this.peer.disconnect();
+                            this.peer = null;
                             await checkAlive(pid);
                         } catch (err) {
                             return 0;
@@ -208,7 +209,7 @@ export default class Dispatcher {
     }
 
     async restartOmnitron(spiritualWay = true) {
-        await this.kill();
+        await this.stopOmnitron();
         await this.startOmnitron(spiritualWay);
         await this.connectLocal({
             forceStart: false
@@ -219,7 +220,7 @@ export default class Dispatcher {
         const n = new netron.Netron();
         let isOK = false;
         try {
-            const localGate = (await adone.omnitron.loadConfig()).raw.gates[0];
+            const localGate = (await adone.omnitron.Configuration.load()).raw.gates[0];
             await n.connect(localGate);
             await n.disconnect();
             isOK = true;
@@ -268,8 +269,8 @@ export default class Dispatcher {
 
     // Omnitron interface
 
-    killSelf() {
-        return this.getInterface("omnitron").killSelf();
+    kill() {
+        return this.getInterface("omnitron").kill();
     }
 
     getInfo(options) {

@@ -31,7 +31,8 @@ export default class Realm {
             }
             await this.lock();
             pkg = this._package(options);
-            await pkg.install();
+            const conf = await pkg.install();
+            return conf;
         } catch (err) {
             !is.null(pkg) && await pkg.rollback(err);
             throw err;

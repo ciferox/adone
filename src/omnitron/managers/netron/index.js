@@ -23,9 +23,11 @@ export default class NetronManager extends application.Subsystem {
         for (const gate of this.parent.config.raw.gates) {
             await runtime.netron.bind(gate); // eslint-disable-line
         }
+
+        adone.info("Manager 'netron' initialized");
     }
 
-    async unintialize() {
+    async uninitialize() {
         try {
             await runtime.netron.disconnect();
             await runtime.netron.unbind();
@@ -35,6 +37,8 @@ export default class NetronManager extends application.Subsystem {
         } catch (err) {
             adone.error(err);
         }
+
+        adone.info("Manager 'netron' uninitialized");
     }
 
     getServicePort() {

@@ -23,8 +23,6 @@ export const STATUSES = [
     STATUS.STOPPING
 ];
 
-export const CONFIG_NAME = "omnitron.json";
-
 adone.definePredicates({
     omnitronService: "OMNITRON_SERVICE"
 });
@@ -37,22 +35,3 @@ lazify({
     Dispatcher: "./dispatcher",
     dispatcher: () => new adone.omnitron.Dispatcher()
 }, adone.asNamespace(exports), require);
-
-export let config = null; // eslint-disable-line
-
-export const loadConfig = async () => {
-    if (is.null(config)) {
-        config = new adone.omnitron.Configuration({
-            cwd: adone.realm.config.configsPath
-        });
-
-        if (await adone.fs.exists(adone.std.path.join(adone.realm.config.configsPath, CONFIG_NAME))) {
-            // assign config from home
-            await config.load(CONFIG_NAME);
-        } else {
-            await config.save();
-        }
-    }
-
-    return config;
-};

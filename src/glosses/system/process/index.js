@@ -692,6 +692,10 @@ export const getChildPids = async (pid) => {
         pid = pid.toString();
     }
 
+    if (!is.string(pid)) {
+        throw new adone.x.InvalidArgument(`Invalid process identifier: ${pid}`);
+    }
+
     //
     // The `ps-tree` module behaves differently on *nix vs. Windows
     // by spawning different programs and parsing their output.
@@ -805,7 +809,7 @@ export const kill = (input, { force = false, tree = true, windows } = {}) => {
 
         if (tree && is.numeral(input)) {
             return getChildPids(input).then((children) => {
-                const pids = children.map((child) => child.PID);
+                const pids = children.map((child) => child.pid);
                 pids.push(input);
                 if (force) {
                     pids.unshift("-9");

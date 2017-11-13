@@ -48,6 +48,8 @@ export default class ServiceManager extends application.Subsystem {
                 }
             }
         }
+
+        adone.info("Manager 'service' initialized");
     }
 
     async uninitialize() {
@@ -59,6 +61,8 @@ export default class ServiceManager extends application.Subsystem {
         await Promise.all(promises);
 
         this.groupMaintainers.clear();
+
+        adone.info("Manager 'service' uninitialized");
     }
 
     async enumerate({ name, status } = {}) {
@@ -90,7 +94,7 @@ export default class ServiceManager extends application.Subsystem {
             if (is.undefined(maintainer)) {
                 pid = "";
             } else {
-                pid = maintainer.pid || "";
+                pid = maintainer.getPid() || "";
             }
 
             services.push({

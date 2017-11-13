@@ -35,10 +35,11 @@ describe("omnitron", () => {
 
         afterEach(async () => {
             await dispatcher.stopOmnitron();
+            // await adone.promise.delay(1000);
         });
 
         it("config, pidfile and log files should exist", async () => {
-            assert.isTrue(await fs.exists(std.path.join(adone.realm.config.configsPath, adone.omnitron.CONFIG_NAME)));
+            assert.isTrue(await fs.exists(std.path.join(adone.realm.config.configsPath, adone.omnitron.Configuration.name)));
             assert.isTrue(await fs.exists(adone.realm.config.omnitron.pidFilePath));
             assert.isTrue(await fs.exists(adone.realm.config.omnitron.logFilePath));
             assert.isTrue(await fs.exists(adone.realm.config.omnitron.errorLogFilePath));
@@ -52,8 +53,8 @@ describe("omnitron", () => {
             assert.equal(info.realm.name, ".adone_test");
             assert.equal(info.realm.uid, (await realm.getInstance()).id);
 
-            assert.equal(info.envs.ADONE_REALM, info.realm.name);
-            assert.isOk(info.envs.ADONE_HOME.endsWith(".adone_test"));
+            assert.equal(info.env.ADONE_REALM, info.realm.name);
+            assert.isOk(info.env.ADONE_HOME.endsWith(".adone_test"));
         });
 
         it("should not be any services initially", async () => {
@@ -106,7 +107,7 @@ describe("omnitron", () => {
                     symlink: false
                 });
                 installedServices.push(adoneConf);
-                await checkServiceStatus(adoneConf.name, STATUS.DISABLED); // eslint-disable-line
+                await checkServiceStatus(adoneConf.raw.name, STATUS.DISABLED); // eslint-disable-line
             }
         };
 
@@ -248,12 +249,13 @@ describe("omnitron", () => {
             result = await iOmnitron.enumerate();
             assert.lengthOf(result, 1);
 
-            assert.deepEqual(adone.vendor.lodash.omit(result[0], "group"), {
+            assert.deepEqual(adone.vendor.lodash.omit(result[0], ["group"]), {
                 name: service1Config.raw.name,
                 author: service1Config.raw.author,
                 description: service1Config.raw.description,
                 version: service1Config.raw.version,
                 status: STATUS.DISABLED,
+                pid: "",
                 mainPath: std.path.join(adone.realm.config.omnitron.servicesPath, "test1", service1Config.getMainPath())
             });
 
@@ -273,6 +275,7 @@ describe("omnitron", () => {
                     version: service1Config.raw.version,
                     status: STATUS.DISABLED,
                     group: (result[0].name === service1Config.raw.name) ? result[0].group : result[1].group,
+                    pid: "",
                     mainPath: std.path.join(adone.realm.config.omnitron.servicesPath, "test1", service1Config.getMainPath())
                 },
                 {
@@ -282,6 +285,7 @@ describe("omnitron", () => {
                     version: service2Config.raw.version,
                     status: "disabled",
                     group: (result[0].name === service2Config.raw.name) ? result[0].group : result[1].group,
+                    pid: "",
                     mainPath: std.path.join(adone.realm.config.omnitron.servicesPath, "test2", service2Config.getMainPath())
                 }
             ]);
@@ -516,10 +520,11 @@ describe("omnitron", () => {
             await enableServices(["test1", "test2"]);
 
             const omniInfo = await iOmnitron.getInfo({
-                pid: true
+                process: true
             });
 
-            let children = await adone.system.process.getChildPids(omniInfo.pid);
+            let children = await adone.system.process.getChildPids(omniInfo.process.id);
+            // adone.log(children);
 
             assert.lengthOf(children, 0);
 
@@ -538,7 +543,7 @@ describe("omnitron", () => {
 
             await startServices(["test1", "test2"]);
 
-            children = await adone.system.process.getChildPids(omniInfo.pid);
+            children = await adone.system.process.getChildPids(omniInfo.process.id);
             assert.lengthOf(children, 1);
 
             // const list = await iOmnitron.enumerate();
