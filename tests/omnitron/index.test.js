@@ -48,7 +48,7 @@ describe("omnitron", () => {
         it("correct omnitron information", async () => {
             const info = await iOmnitron.getInfo();
 
-            assert.equal(info.version, adone.package.version);
+            assert.equal(info.version.adone, adone.package.version);
 
             assert.equal(info.realm.name, ".adone_test");
             assert.equal(info.realm.uid, (await realm.getInstance()).id);

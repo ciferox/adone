@@ -518,7 +518,8 @@ describe("system", "process", () => {
         const fallback = (code) => errnameFallback(null, code);
 
         const makeTests = (name, m, expected) => {
-            it(`${name}: >=0 exit codes`, async () => {
+            // In node 9.x this test leads to SIGABRT
+            it.skip(`${name}: >=0 exit codes`, async () => {
                 // Throws >= 0
                 await assert.throws(async () => m(0), /err >= 0/);
                 await assert.throws(async () => m(1), /err >= 0/);

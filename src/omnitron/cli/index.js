@@ -420,7 +420,7 @@ export default class Omnitron extends Subsystem {
                         handle: (val) => {
                             return adone.datetime.unix(val.connectedTime / 1000).format("L LTS");
                         },
-                        width: 23
+                        width: 24
                     }
                 ]
             }));

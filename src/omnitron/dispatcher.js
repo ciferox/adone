@@ -217,7 +217,12 @@ export default class Dispatcher {
     }
 
     async isOmnitronActive() {
-        const n = new netron.Netron();
+        const n = new netron.Netron({
+            connect: {
+                retries: 1,
+                minTimeout: 10
+            }
+        });
         let isOK = false;
         try {
             const localGate = (await adone.omnitron.Configuration.load()).raw.gates[0];

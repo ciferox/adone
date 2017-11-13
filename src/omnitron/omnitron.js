@@ -170,7 +170,10 @@ export default class Omnitron extends application.Application {
         }
 
         if (version) {
-            result.version = adone.package.version;
+            result.version = {
+                adone: adone.package.version,
+                ...process.versions
+            };
         }
 
         if (realm) {
