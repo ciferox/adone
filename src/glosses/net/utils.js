@@ -2,6 +2,8 @@ const {
     is
 } = adone;
 
+const DEFAULT_HOST = "localhost";
+
 export const isLocal = (port, host) => ((is.nil(port) && is.nil(host)) || is.string(port));
 
 export const normalizeAddr = (port, host, defaultPort) => {
@@ -12,17 +14,17 @@ export const normalizeAddr = (port, host, defaultPort) => {
             host = null;
             port = port.pathname;
         } else {
-            host = port.hostname || "0.0.0.0";
+            host = port.hostname || DEFAULT_HOST;
             port = Number.parseInt(port.port, 10);
         }
     } else if (is.object(port)) {
-        host = port.host || "0.0.0.0";
+        host = port.host || DEFAULT_HOST;
         port = port.port || 1024;
     } else {
         if (is.nil(port)) {
             port = defaultPort || 1024;
         }
-        host = host || "0.0.0.0";
+        host = host || DEFAULT_HOST;
     }
 
     return [port, host];

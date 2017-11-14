@@ -13,7 +13,7 @@ export default class Stream extends EventEmitter {
         this.id = id;
         this.remoteId = null;
         this.packetId = new SequenceId();
-        this._dataPacketId = 0;
+        this._lastPacketId = 0;
         this._endPacketId = 0;
 
         this._readableState = {
@@ -94,7 +94,6 @@ export default class Stream extends EventEmitter {
             this.netron.send(this.peer, 0, this.id, this.packetId.next(), ACTION.STREAM_END).catch((err) => this.emit("error", err)).then(() => {
                 this.ending = false;
                 this.ended = true;
-                this._releaseRemoteStream();
                 if (!this.allowHalfOpen) {
                     this._rEnd();
                 }
@@ -104,21 +103,13 @@ export default class Stream extends EventEmitter {
 
     _rEnd() {
         this.remoteEnding = true;
-        if (this._readableState.buffer.empty) {
-            this.remoteEnding = false;
-            this.remoteEnded = true;
-            this.emit("end");
-            this._releaseRemoteStream();
-            if (!this.allowHalfOpen) {
-                this.ending = false;
-                this.ended = true;
+        if (this._endPacketId === 0 || this._endPacketId === (this._lastPacketId + 1)) {
+            if (this._readableState.buffer.empty) {
+                this.remoteEnding = false;
+                this.remoteEnded = true;
+                this.emit("end");
+                this.peer._streams.delete(this.remoteId);
             }
-        }
-    }
-
-    _releaseRemoteStream() {
-        if ((this.ended && this.remoteEnded) || !this.allowHalfOpen) {
-            this.peer._streams.delete(this.remoteId);
         }
     }
 
@@ -126,7 +117,7 @@ export default class Stream extends EventEmitter {
         if (this._readableState.nullPushed) {
             return false;
         }
-        this._dataPacketId = packetId;
+        this._lastPacketId = packetId;
         if (chunk === adone.null) {
             this._readableState.nullPushed = true;
             this._rEnd();

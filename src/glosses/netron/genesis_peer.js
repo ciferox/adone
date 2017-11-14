@@ -58,44 +58,42 @@ export default class GenesisPeer extends AsyncEmitter {
         return this._status;
     }
 
-    async createStream({ remoteStreamId = 0, highWaterMark = 16, allowHalfOpen = true } = {}) {
-        let stream;
+    async requestStream({ highWaterMark = 16, allowHalfOpen = true } = {}) {
+        const id = this.streamId.next();
+        const stream = new Stream({
+            peer: this,
+            id,
+            highWaterMark,
+            allowHalfOpen
+        });
+        try {
+            await this.netron.send(this, 1, this.streamId.next(), 1, ACTION.STREAM_REQUEST, id);
+            this._requestedStreams.set(stream.id, stream);
+        } catch (err) {
+            throw err;
+        }
+        return stream;
+    }
 
-        if (remoteStreamId === 0) {
-            // initiator side -> outgoing stream
-            const id = this.streamId.next();
-            stream = new Stream({
-                peer: this,
-                id,
-                highWaterMark,
-                allowHalfOpen
-            });
-            try {
-                await this.netron.send(this, 1, this.streamId.next(), 1, ACTION.STREAM_REQUEST, id);
-                this._requestedStreams.set(stream.id, stream);
-            } catch (err) {
-                throw err;
-            }
-        } else {
-            // acceptor side -> incomming stream
-            if (!this._awaitingStreamIds.has(remoteStreamId)) {
-                throw new x.NotExists("No awaiting stream with such id");
-            }
+    async acceptStream({ remoteStreamId, highWaterMark = 16, allowHalfOpen = true } = {}) {
+        // acceptor side -> incomming stream
+        if (!this._awaitingStreamIds.has(remoteStreamId)) {
+            throw new x.NotExists("No awaiting stream with such id");
+        }
 
-            const id = this.streamId.next();
-            stream = new Stream({
-                peer: this,
-                id,
-                highWaterMark,
-                allowHalfOpen
-            });
-            try {
-                await this.netron.send(this, 1, this.streamId.next(), 1, ACTION.STREAM_ACCEPT, { origin: remoteStreamId, remote: id });
-                this._awaitingStreamIds.delete(remoteStreamId);
-                this._enableStream(stream, remoteStreamId);
-            } catch (err) {
-                throw err;
-            }
+        const id = this.streamId.next();
+        const stream = new Stream({
+            peer: this,
+            id,
+            highWaterMark,
+            allowHalfOpen
+        });
+        try {
+            await this.netron.send(this, 1, this.streamId.next(), 1, ACTION.STREAM_ACCEPT, { origin: remoteStreamId, remote: id });
+            this._awaitingStreamIds.delete(remoteStreamId);
+            this._enableStream(stream, remoteStreamId);
+        } catch (err) {
+            throw err;
         }
 
         return stream;
@@ -379,7 +377,7 @@ export default class GenesisPeer extends AsyncEmitter {
         }
     }
 
-    _streamProcessData(packet) {
+    _streamData(packet) {
         const stream = this._getStreamFromPacket(packet);
         stream && stream._push(packet.data, packet.id);
     }

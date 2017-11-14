@@ -115,35 +115,35 @@ describe("net", "Socket/Server", () => {
 
             it("bind()", async () => {
                 await server.bind();
-                assert.equal(server.address().full, `tcp://0.0.0.0:${defaultPort}`);
+                assert.equal(server.address().full, `tcp://127.0.0.1:${defaultPort}`);
                 await checkBind(server, defaultPort);
             });
 
             it("bind({ port = string address })", async () => {
-                await server.bind({ port: `tcp://0.0.0.0:${SERVER_PORT}` });
+                await server.bind({ port: `tcp://127.0.0.1:${SERVER_PORT}` });
 
-                assert.equal(server.address().full, `tcp://0.0.0.0:${SERVER_PORT}`);
+                assert.equal(server.address().full, `tcp://127.0.0.1:${SERVER_PORT}`);
                 await checkBind(server, SERVER_PORT);
             });
 
             it("bind({ host })", async () => {
-                await server.bind({ host: "0.0.0.0" });
+                await server.bind({ host: "127.0.0.1" });
 
-                assert.equal(server.address().full, `tcp://0.0.0.0:${defaultPort}`);
+                assert.equal(server.address().full, `tcp://127.0.0.1:${defaultPort}`);
                 await checkBind(server, defaultPort);
             });
 
             it("bind({ port })", async () => {
                 await server.bind({ port: SERVER_PORT });
 
-                assert.equal(server.address().full, `tcp://0.0.0.0:${SERVER_PORT}`);
+                assert.equal(server.address().full, `tcp://127.0.0.1:${SERVER_PORT}`);
                 await checkBind(server, SERVER_PORT);
             });
 
             it("bind({ host, port })", async () => {
-                await server.bind({ host: "0.0.0.0", port: SERVER_PORT });
+                await server.bind({ host: "127.0.0.1", port: SERVER_PORT });
 
-                assert.equal(server.address().full, `tcp://0.0.0.0:${SERVER_PORT}`);
+                assert.equal(server.address().full, `tcp://127.0.0.1:${SERVER_PORT}`);
                 await checkBind(server, SERVER_PORT);
             });
 
@@ -306,9 +306,9 @@ describe("net", "Socket/Server", () => {
             it("server.address()", () => {
                 assert.deepEqual(server.address(), {
                     port: SERVER_PORT,
-                    address: "0.0.0.0",
+                    address: "127.0.0.1",
                     family: "IPv4",
-                    full: `tcp://0.0.0.0:${SERVER_PORT}`,
+                    full: `tcp://127.0.0.1:${SERVER_PORT}`,
                     protocol: "tcp:"
                 });
             });
@@ -562,35 +562,35 @@ describe("net", "Socket/Server", () => {
 
             it("bind()", async () => {
                 await server.bind(Object.assign({}, serverOptions));
-                assert.equal(server.address().full, `tcp://0.0.0.0:${defaultPort}`);
+                assert.equal(server.address().full, `tcp://127.0.0.1:${defaultPort}`);
                 await checkBind(server, defaultPort);
             });
 
             it("bind({ port = string address })", async () => {
-                await server.bind(Object.assign({ port: `tcp://0.0.0.0:${SERVER_PORT}` }, serverOptions));
+                await server.bind(Object.assign({ port: `tcp://127.0.0.1:${SERVER_PORT}` }, serverOptions));
 
-                assert.equal(server.address().full, `tcp://0.0.0.0:${SERVER_PORT}`);
+                assert.equal(server.address().full, `tcp://127.0.0.1:${SERVER_PORT}`);
                 await checkBind(server, SERVER_PORT);
             });
 
             it("bind({ host })", async () => {
-                await server.bind(Object.assign({ host: "0.0.0.0" }, serverOptions));
+                await server.bind(Object.assign({ host: "127.0.0.1" }, serverOptions));
 
-                assert.equal(server.address().full, `tcp://0.0.0.0:${defaultPort}`);
+                assert.equal(server.address().full, `tcp://127.0.0.1:${defaultPort}`);
                 await checkBind(server, defaultPort);
             });
 
             it("bind({ port })", async () => {
                 await server.bind(Object.assign({ port: SERVER_PORT }, serverOptions));
 
-                assert.equal(server.address().full, `tcp://0.0.0.0:${SERVER_PORT}`);
+                assert.equal(server.address().full, `tcp://127.0.0.1:${SERVER_PORT}`);
                 await checkBind(server, SERVER_PORT);
             });
 
             it("bind({ host, port })", async () => {
-                await server.bind(Object.assign({ host: "0.0.0.0", port: SERVER_PORT }, serverOptions));
+                await server.bind(Object.assign({ host: "127.0.0.1", port: SERVER_PORT }, serverOptions));
 
-                assert.equal(server.address().full, `tcp://0.0.0.0:${SERVER_PORT}`);
+                assert.equal(server.address().full, `tcp://127.0.0.1:${SERVER_PORT}`);
                 await checkBind(server, SERVER_PORT);
             });
 
@@ -754,9 +754,9 @@ describe("net", "Socket/Server", () => {
             it("server.address()", () => {
                 assert.deepEqual(server.address(), {
                     port: SERVER_PORT,
-                    address: "0.0.0.0",
+                    address: "127.0.0.1",
                     family: "IPv4",
-                    full: `tcp://0.0.0.0:${SERVER_PORT}`,
+                    full: `tcp://127.0.0.1:${SERVER_PORT}`,
                     protocol: "tcp:"
                 });
             });

@@ -5,7 +5,6 @@ const {
 } = adone;
 
 let defaultPort = DEFAULT_PORT;
-// let NETRON_PORT = 32348;
 
 const fixturePath = (relPath) => path.join(__dirname, "..", "fixtures", relPath);
 
@@ -16,7 +15,6 @@ describe("Streams", function () {
 
     before(async () => {
         defaultPort = await net.util.getPort(defaultPort);
-        // NETRON_PORT = await net.util.getPort({ exclude: [defaultPort] });
     });
 
     beforeEach(async () => {
@@ -34,7 +32,7 @@ describe("Streams", function () {
     it("should add stream and requested stream id to associated sets", async () => {
         await superNetron.bind();
         const clientPeer = await exNetron.connect();
-        const wStream = await clientPeer.createStream();
+        const wStream = await clientPeer.requestStream();
         const cstreams = clientPeer._getAwaitingStreams();
         assert.equal(cstreams.length, 1);
         assert.deepEqual(cstreams[0], wStream);
@@ -48,10 +46,10 @@ describe("Streams", function () {
     it("should await for other side accept", async () => {
         await superNetron.bind();
         const clientPeer = await exNetron.connect();
-        const wStream = await clientPeer.createStream();
+        const wStream = await clientPeer.requestStream();
         const serverPeer = superNetron.getPeer(exNetron.uid);
         await adone.promise.delay(500);
-        const p = serverPeer.createStream({ remoteStreamId: wStream.id });
+        const p = serverPeer.acceptStream({ remoteStreamId: wStream.id });
         const acceptedStreamId = await wStream.waitForAccept();
         const rStream = await p;
         assert.equal(acceptedStreamId, rStream.id);
@@ -64,10 +62,10 @@ describe("Streams", function () {
                 it(`should end stream on readable side (allowHalfOpen=${allowHalfOpen} + ${dataCase} data + ${checkType})`, async () => {
                     await superNetron.bind();
                     const clientPeer = await exNetron.connect();
-                    const wStream = await clientPeer.createStream({ allowHalfOpen });
+                    const wStream = await clientPeer.requestStream({ allowHalfOpen });
                     const serverPeer = superNetron.getPeer(exNetron.uid);
                     await adone.promise.delay(500);
-                    let p = serverPeer.createStream({ remoteStreamId: wStream.id, allowHalfOpen });
+                    let p = serverPeer.acceptStream({ remoteStreamId: wStream.id, allowHalfOpen });
                     await wStream.waitForAccept();
 
                     let wEnd = false;
@@ -115,10 +113,10 @@ describe("Streams", function () {
     it("should not write data after end", async () => {
         await superNetron.bind();
         const clientPeer = await exNetron.connect();
-        const wStream = await clientPeer.createStream();
+        const wStream = await clientPeer.requestStream();
         const serverPeer = superNetron.getPeer(exNetron.uid);
         await adone.promise.delay(500);
-        let p = serverPeer.createStream({ remoteStreamId: wStream.id });
+        let p = serverPeer.acceptStream({ remoteStreamId: wStream.id });
         await wStream.waitForAccept();
 
         let wEnd = false;
@@ -148,10 +146,10 @@ describe("Streams", function () {
     it("should receive data after end", async () => {
         await superNetron.bind();
         const clientPeer = await exNetron.connect();
-        const wStream = await clientPeer.createStream();
+        const wStream = await clientPeer.requestStream();
         const serverPeer = superNetron.getPeer(exNetron.uid);
         await adone.promise.delay(500);
-        let p = serverPeer.createStream({ remoteStreamId: wStream.id });
+        let p = serverPeer.acceptStream({ remoteStreamId: wStream.id });
         await wStream.waitForAccept();
 
         let wEnd = false;
@@ -163,9 +161,9 @@ describe("Streams", function () {
         const rStream = await p;
 
         let data = null;
-        const coreStreamR = new adone.stream.CoreStream();
-        rStream.pipe(coreStreamR);
-        p = coreStreamR.map((d) => data = d).on("end", () => rEnd = true);
+        const coreServerStream = new adone.stream.CoreStream();
+        rStream.pipe(coreServerStream);
+        p = coreServerStream.map((d) => data = d).on("end", () => rEnd = true);
 
         wStream.write("adone");
         wStream.end();
@@ -178,9 +176,9 @@ describe("Streams", function () {
         assert.equal(wEnd, false, "On writable side 'end' event was not happened");
         assert.equal(rEnd, true, "On readable side 'end' event was not happened");
 
-        const coreStreamW = new adone.stream.CoreStream();
-        wStream.pipe(coreStreamW);
-        p = coreStreamW.map((d) => data = d).on("end", () => wEnd = true);
+        const coreClientStream = new adone.stream.CoreStream();
+        wStream.pipe(coreClientStream);
+        p = coreClientStream.map((d) => data = d).on("end", () => wEnd = true);
         rStream.write("enoda");
         rStream.end();
 
@@ -190,101 +188,125 @@ describe("Streams", function () {
         assert.equal(wEnd, true, "On writable side 'end' event was not happened");
     });
 
-    it("one way data sending", async () => {
+    it("one way data sending with correct order", async () => {
         await superNetron.bind();
         const clientPeer = await exNetron.connect();
-        const wStream = await clientPeer.createStream();
+        const wStream = await clientPeer.requestStream();
         const serverPeer = superNetron.getPeer(exNetron.uid);
 
         const rMessages = [];
         await adone.promise.delay(500);
-        let p = serverPeer.createStream({ remoteStreamId: wStream.id });
+        let p = serverPeer.acceptStream({ remoteStreamId: wStream.id });
         await wStream.waitForAccept();
         const rStream = await p;
 
-        const rActualMessages = [];
+        const actualMessages = [];
         const coreStream = new adone.stream.CoreStream();
         rStream.pipe(coreStream);
         p = coreStream.map((data) => {
-            rActualMessages.push(data);
+            actualMessages.push(data);
             return data;
         });
 
-        for (let i = 0; i < 1000; i++) {
-            const msg = adone.text.random(adone.math.random(10, 10000));
-            rMessages.push(msg);
-            wStream.write(msg);
+        for (let id = 0; id < 3000; id++) {
+            const data = adone.text.random(adone.math.random(1, 65536));
+            const packet = {
+                id,
+                data
+            };
+            rMessages.push(packet);
+            wStream.write(packet);
         }
 
         wStream.end();
 
         await p;
-        assert.sameMembers(rMessages, rActualMessages);
+        
+        for (let id = 0; id < 3000; id++) {
+            assert.deepEqual(rMessages[id], actualMessages[id]);
+        }
     });
 
     for (const tcase of ["initiator", "acceptor"]) {
         // eslint-disable-next-line
-        it.skip(`two way data sending - end initiated by ${tcase}`, async () => {
+        it(`two way data sending - end initiated by ${tcase}`, async () => {
             await superNetron.bind();
             const clientPeer = await exNetron.connect();
-            const wStream = await clientPeer.createStream({ allowHalfOpen: false });
+            const clientStream = await clientPeer.requestStream({ allowHalfOpen: false });
             const serverPeer = superNetron.getPeer(exNetron.uid);
 
-            const wMessages = [];
-            const rMessages = [];
+            const clientMessages = [];
+            const serverMessages = [];
             await adone.promise.delay(500);
-            const p = serverPeer.createStream({ remoteStreamId: wStream.id, allowHalfOpen: false });
-            await wStream.waitForAccept();
-            const rStream = await p;
+            const p = serverPeer.acceptStream({ remoteStreamId: clientStream.id, allowHalfOpen: false });
+            await clientStream.waitForAccept();
+            const serverStream = await p;
 
-            const wActualMessages = [];
-            const coreStreamR = new adone.stream.CoreStream();
-            rStream.pipe(coreStreamR);
-            const p1 = coreStreamR.map((data) => {
-                wActualMessages.push(data);
+            const actualClientMessages = [];
+            const coreServerStream = new adone.stream.CoreStream();
+            serverStream.pipe(coreServerStream);
+            const p1 = coreServerStream.map((data) => {
+                actualClientMessages.push(data);
                 return data;
             });
 
-            const rActualMessages = [];
-            const coreStreamW = new adone.stream.CoreStream();
-            wStream.pipe(coreStreamW);
-            const p2 = coreStreamW.map((data) => {
-                rActualMessages.push(data);
+            const actualServerMessages = [];
+            const coreClientStream = new adone.stream.CoreStream();
+            clientStream.pipe(coreClientStream);
+            const p2 = coreClientStream.map((data) => {
+                actualServerMessages.push(data);
                 return data;
             });
 
-            for (let i = 0; i < 3000; i++) {
-                let msg = adone.text.random(adone.math.random(10, 10000));
-                wMessages.push(msg);
-                wStream.write(msg);
+            for (let id = 0; id < 3000; id++) {
+                let data = adone.text.random(adone.math.random(10, 30000));
+                const clientPacket = {
+                    id,
+                    data
+                };
+                clientMessages.push(clientPacket);
+                clientStream.write(clientPacket);
 
-                msg = adone.text.random(adone.math.random(10, 10000));
-                rMessages.push(msg);
-                rStream.write(msg);
+                data = adone.text.random(adone.math.random(10, 30000));
+                const serverPacket = {
+                    id,
+                    data
+                };
+                serverMessages.push(serverPacket);
+                serverStream.write(serverPacket);
             }
 
             if (tcase === "initiator") {
-                wStream.end();
+                clientStream.end();
             } else {
-                rStream.end();
+                serverStream.end();
             }
-            
+
             await Promise.all([p1, p2]);
-            
-            expect(rMessages).to.have.lengthOf(rActualMessages.length);
-            expect(wMessages).to.have.lengthOf(wActualMessages.length);
-            expect(rMessages).to.be.deep.equal(rActualMessages);
-            expect(wMessages).to.be.deep.equal(wActualMessages);
+
+            if (tcase === "initiator") {
+                for (let id = 0; id < 3000; id++) {
+                    assert.deepEqual(clientMessages[id], actualClientMessages[id]);
+                }
+            } else {
+                for (let id = 0; id < 3000; id++) {
+                    assert.deepEqual(serverMessages[id], actualServerMessages[id]);
+                }
+            }
+            // expect(serverMessages).to.have.lengthOf(actualServerMessages.length);
+            // expect(clientMessages).to.have.lengthOf(actualClientMessages.length);
+            // expect(serverMessages).to.be.deep.equal(actualServerMessages);
+            // expect(clientMessages).to.be.deep.equal(actualClientMessages);
         });
     }
 
     it("should flow data after resume", async () => {
         await superNetron.bind();
         const clientPeer = await exNetron.connect();
-        const wStream = await clientPeer.createStream();
+        const wStream = await clientPeer.requestStream();
         const serverPeer = superNetron.getPeer(exNetron.uid);
         await adone.promise.delay(500);
-        const p = serverPeer.createStream({ remoteStreamId: wStream.id });
+        const p = serverPeer.acceptStream({ remoteStreamId: wStream.id });
         await wStream.waitForAccept();
         const rStream = await p;
 
@@ -313,10 +335,10 @@ describe("Streams", function () {
         it(`should send ${fileName} file`, async () => {
             await superNetron.bind();
             const clientPeer = await exNetron.connect();
-            const wStream = await clientPeer.createStream({ allowHalfOpen: false });
+            const wStream = await clientPeer.requestStream({ allowHalfOpen: false });
             const serverPeer = superNetron.getPeer(exNetron.uid);
             await adone.promise.delay(500);
-            const p = serverPeer.createStream({ remoteStreamId: wStream.id });
+            const p = serverPeer.acceptStream({ remoteStreamId: wStream.id });
             await wStream.waitForAccept();
             const rStream = await p;
 
@@ -341,10 +363,10 @@ describe("Streams", function () {
         it(`should send ${dataSize / 1024 / 1024}MB of data`, async () => {
             await superNetron.bind();
             const clientPeer = await exNetron.connect();
-            const wStream = await clientPeer.createStream({ allowHalfOpen: false });
+            const wStream = await clientPeer.requestStream({ allowHalfOpen: false });
             const serverPeer = superNetron.getPeer(exNetron.uid);
             await adone.promise.delay(500);
-            const p = serverPeer.createStream({ remoteStreamId: wStream.id });
+            const p = serverPeer.acceptStream({ remoteStreamId: wStream.id });
             await wStream.waitForAccept();
             const rStream = await p;
 

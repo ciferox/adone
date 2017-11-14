@@ -767,7 +767,7 @@ export default class GenesisNetron extends AsyncEmitter {
                 break;
             }
             case ACTION.STREAM_DATA: {
-                peer._streamProcessData(packet);
+                peer._streamData(packet);
                 break;
             }
             case ACTION.STREAM_PAUSE: {
