@@ -19,7 +19,7 @@ const NEXT_VALUABLE_ID = "nextValuableId";
 export default class Vault {
     /**
      * Creates vault instance
-     * @param {{ location, ValuableClass } = {}} options 
+     * @param {{ location, ValuableClass } = {}} options
      */
     constructor(options) {
         this.options = Object.assign({}, options, {
@@ -162,7 +162,8 @@ export default class Vault {
         await val.clear();
         this.vids.splice(this.vids.indexOf(val.id), 1);
         this.nameIdMap.delete(name);
-        return this._deleteMeta(__.valuable(val.id));
+        await this._setMeta(VIDS, this.vids); // TODO: do it in one batch somehow?
+        await this._deleteMeta(__.valuable(val.id));
     }
 
     async clear({ hosts = true, tags = false } = {}) {

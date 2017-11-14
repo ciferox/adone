@@ -299,6 +299,19 @@ describe("Vault", () => {
         assert.instanceOf(err, adone.x.NotExists);
     });
 
+    it("should correctly reopen db after delete", async () => {
+        await openVault();
+        const val = await vInstance.create("val");
+        let val2 = await vInstance.create("val2");
+        await val.set("num", 17);
+        await val2.set("num", 18);
+        await vInstance.delete("val");
+        await vInstance.close();
+        await vInstance.open();
+        val2 = await vInstance.get("val2");
+        expect(await val2.get("num")).to.be.equal(18);
+    });
+
     it("get nonexistent item of valuable", async () => {
         await openVault();
         const val = await vInstance.create("val");
