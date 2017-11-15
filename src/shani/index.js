@@ -1093,7 +1093,8 @@ export class Engine {
                     fakeClock: () => util.fakeClock,
                     system: () => shani.util.system,
                     forkProcess: () => shani.util.system.process.bindFork(dirname),
-                    forkProcessSync: () => shani.util.system.process.bindForkSync(dirname)
+                    forkProcessSync: () => shani.util.system.process.bindForkSync(dirname),
+                    nodeRequire: () => require // only for hacks and absolute paths
                 }, global.$, m.require.bind(m), { configurable: true });
 
                 adone.lazify({
@@ -1110,7 +1111,8 @@ export class Engine {
                     fakeClock: () => global.$.fakeClock,
                     system: () => global.$.system,
                     forkProcess: () => global.$.forkProcess,
-                    forkProcessSync: () => global.$.forkProcessSync
+                    forkProcessSync: () => global.$.forkProcessSync,
+                    nodeRequire: () => require // only for hacks and absolute paths
                 }, global, null, { configurable: true });
 
                 for (const name of topass) {

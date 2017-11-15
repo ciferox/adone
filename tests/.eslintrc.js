@@ -25,6 +25,7 @@ module.exports = {
         "specter": true,
         "include": true,
         "forkProcess": true,
-        "nock": true
+        "nock": true,
+        "nodeRequire": true
     }
 };

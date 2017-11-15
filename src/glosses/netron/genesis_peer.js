@@ -400,7 +400,7 @@ export default class GenesisPeer extends AsyncEmitter {
     _getStreamFromPacket(packet) {
         const stream = this._streams.get(packet.streamId);
         if (is.undefined(stream)) {
-            return adone.log(`No local stream associated with remote stream id: ${packet.streamId}`);
+            return adone.log(`No local stream associated with remote stream with id ${packet.streamId}`);
         }
         return stream;
     }

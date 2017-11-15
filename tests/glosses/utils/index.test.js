@@ -231,7 +231,7 @@ describe("util", () => {
                     callback(null, "test");
                 }
             ], (err) => {
-                expect(err === null, `${err} passed instead of 'null'`);
+                expect(is.null(err), `${err} passed instead of 'null'`);
                 done();
             });
         });
@@ -861,6 +861,43 @@ describe("util", () => {
             const a = { a: 1, b: 2, c: 3 };
             const b = pick(a, ["a", "b", "d"]);
             expect(b).to.be.deep.equal({ a: 1, b: 2 });
+        });
+    });
+
+    describe.only("omit", () => {
+        const { omit } = util;
+
+        it("should omit a key from the object", () => {
+            assert.deepEqual(omit({ a: "a", b: "b", c: "c" }, "a"), { b: "b", c: "c" });
+            assert.deepEqual(omit({ aaa: "a", bbb: "b", ccc: "c" }, "aaa"), { bbb: "b", ccc: "c" });
+        });
+
+        it("should omit an array of keys from the object", () => {
+            assert.deepEqual(omit({ a: "a", b: "b", c: "c" }, ["a", "c"]), { b: "b" });
+        });
+
+        it("should return the object if no keys are given", () => {
+            assert.deepEqual(omit({ a: "a", b: "b", c: "c" }), { a: "a", b: "b", c: "c" });
+        });
+
+        it("should return a new object when no keys are given", () => {
+            const obj = { a: "a", b: "b", c: "c" };
+            assert(omit(obj) !== obj);
+        });
+
+        it("should omit using a filter function", () => {
+            const foo = omit({ a: "a", b: "b", c: "c" }, (key) => key === "a");
+            const bar = omit({ a: "a", b: "b", c() { } }, (key, val) => is.function(val));
+            assert.deepEqual(foo, { b: "b", c: "c" });
+            assert.deepEqual(bar, { a: "a", b: "b" });
+        });
+
+        it("should return an empty object if the first arg is not an object", () => {
+            assert.deepEqual(omit(null, { a: "a", b: "b", c: "c" }), {});
+        });
+
+        it("should return an empty object if no object is specified", () => {
+            assert.deepEqual(omit(), {});
         });
     });
 

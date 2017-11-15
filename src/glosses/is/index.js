@@ -918,6 +918,27 @@ export const ip4 = (ip) => adone.regex.ip4.test(ip);
 
 export const ip6 = (ip) => adone.regex.ip4.test(ip);
 
+export const knownError = (err) => {
+    if (!(err instanceof Error)) {
+        return false;
+    }
+    const name = err.constructor.name;
+
+    for (const Exc of adone.x.adoneExceptions) {
+        if (name === Exc.name) {
+            return true;
+        }
+    }
+
+    for (const Exc of adone.x.stdExceptions) {
+        if (name === Exc.name) {
+            return true;
+        }
+    }
+
+    return false;
+};
+
 adone.lazify({
     validUTF8: () => adone.native.Common.isValidUTF8
 }, exports, require);

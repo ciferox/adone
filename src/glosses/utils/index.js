@@ -863,6 +863,36 @@ export const pick = (obj, props) => {
     return newObj;
 };
 
+export const omit = (obj, props) => {
+    if (!is.object(obj)) {
+        return {};
+    }
+
+    let isShouldOmit;
+    if (is.function(props)) {
+        isShouldOmit = props;
+    } else if (is.array(props)) {
+        isShouldOmit = props.includes.bind(props);
+    } else if (is.string(props)) {
+        isShouldOmit = (val) => val === props;
+    } else {
+        isShouldOmit = adone.falsely;
+    }
+
+    const keys = Object.keys(obj);
+    const result = {};
+
+    for (let i = 0; i < keys.length; i++) {
+        const key = keys[i];
+        const val = obj[key];
+    
+        if (!isShouldOmit(key, val, obj)) {
+            result[key] = val;
+        }
+    }
+    return result;
+};
+
 export const repeat = (item, n) => {
     const arr = new Array(n);
     for (let i = 0; i < n; ++i) {

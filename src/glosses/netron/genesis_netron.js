@@ -1,3 +1,5 @@
+import { normalize } from "path";
+
 const {
     is,
     x,
@@ -613,7 +615,14 @@ export default class GenesisNetron extends AsyncEmitter {
                             adone.error(err);
                             if (err.name !== "NetronIllegalState") {
                                 try {
-                                    await this.send(peer, 0, packet.streamId, 1, ACTION.SET, [1, err]);
+                                    let normErr;
+                                    if (is.knownError(err)) {
+                                        normErr = err;
+                                    } else {
+                                        normErr = new Error(err.message);
+                                        normErr.stack = err.stack;
+                                    }
+                                    await this.send(peer, 0, packet.streamId, 1, ACTION.SET, [1, normErr]);
                                 } catch (err) {
                                     adone.error(err);
                                 }

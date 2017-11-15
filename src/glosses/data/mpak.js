@@ -560,7 +560,7 @@ adone.lazify({
         // 125 - Date
         // 124 - Map
         // 123 - Set
-        // 120-122 - reserved for std types
+        // 120-122 - reserved
         // 119 - adone.math.Long
         // 110-118 - reserved for other adone types
         // 100-109 - reserved for netron types
