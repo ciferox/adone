@@ -88,6 +88,7 @@ class Argument {
         this._frozenColors = options._frozenColors;
         this._verify = options.verify;
         this.set = options.set;
+        this.enabled = options.enabled;
     }
 
     setCommand(command) {
@@ -416,6 +417,12 @@ class Argument {
             }
         } else if (options.colors === false) {
             options._frozenColors = true;
+        }
+
+        if ("enabled" in options) {
+            options.enabled = Boolean(options.enabled);
+        } else {
+            options.enabled = true;
         }
 
         return options;
@@ -934,6 +941,9 @@ class Command {
         if (!(newArgument instanceof PositionalArgument)) {
             newArgument = new PositionalArgument(newArgument);
         }
+        if (!newArgument.enabled) {
+            return;
+        }
         if (this.hasArgument(newArgument)) {
             throw new x.IllegalState(`${this.names[0]}: Cannot add the argument ${newArgument.names[0]} due to name collision`);
         }
@@ -960,6 +970,9 @@ class Command {
     addOption(newOption) {
         if (!(newOption instanceof OptionalArgument)) {
             newOption = new OptionalArgument(newOption);
+        }
+        if (!newOption.enabled) {
+            return;
         }
         if (this.hasOption(newOption)) {
             throw new x.IllegalState(`${this.names[0]}: Cannot add the option ${newOption.names[0]} due to name collision`);
@@ -1786,6 +1799,10 @@ export default class CliApplication extends application.Application {
         }
         const option = new OptionalArgument(optParams);
 
+        if (!option.enabled) {
+            return;
+        }
+
         let cmd;
         try {
             cmd = this._getCommand(commandsChain);
@@ -2229,7 +2246,7 @@ export default class CliApplication extends application.Application {
                     }
                     case "finish": {
                         if (remaining >= 0) { // it should be -1 if there are no elements, so we have extra args, weird
-                            errors.push(new x.IllegalState(`unknown parameter ${part}`));
+                            errors.push(new x.IllegalState(`unknown parameter: ${part}`));
                         }
                         finished = true;
                         // check required arguments

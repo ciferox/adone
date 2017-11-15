@@ -557,6 +557,32 @@ describe("application", () => {
                     });
                 });
             });
+
+            describe("enabled flag", () => {
+                it("should not add disabled argument", async () => {
+                    app.defineArguments({
+                        arguments: [{
+                            name: "x"
+                        }, {
+                            name: "y",
+                            enabled: true
+                        }, {
+                            name: "z",
+                            enabled: false
+                        }]
+                    });
+
+                    const { args, errors } = await parse("1", "2", "3");
+                    expect(args.get("x")).to.be.equal("1");
+                    expect(args.get("y")).to.be.equal("2");
+                    assert.throws(() => {
+                        args.get("z");
+                    }, "No such argument: z");
+                    expect(errors).to.have.length(1);
+                    expect(errors[0]).to.be.instanceof(x.IllegalState);
+                    expect(errors[0].message).to.be.equal("unknown parameter: 3");
+                });
+            });
         });
 
         describe("options", () => {
@@ -1072,6 +1098,71 @@ describe("application", () => {
                     expect(opts.get("c")).to.be.true;
                     expect(opts.get("d")).to.be.false;
                     expect(opts.get("v")).to.be.equal(9);
+                });
+            });
+
+            describe("enabled flag", () => {
+                it("should not add disabled option", async () => {
+                    app.defineArguments({
+                        options: [{
+                            name: "-a"
+                        }, {
+                            name: "--hello",
+                            enabled: true
+                        }, {
+                            name: "--world",
+                            nargs: 1,
+                            enabled: false
+                        }]
+                    });
+
+                    const { opts, errors } = await parse("--hello", "-a", "--world", "2");
+                    expect(opts.get("hello")).to.be.true;
+                    expect(opts.get("a")).to.be.true;
+                    assert.throws(() => {
+                        opts.get("world");
+                    }, "No such argument: world");
+                    expect(errors).to.have.length(2);
+                    expect(errors[0]).to.be.instanceof(x.IllegalState);
+                    expect(errors[0].message).to.be.equal("unknown option: --world");
+                    expect(errors[1]).to.be.instanceof(x.IllegalState);
+                    expect(errors[1].message).to.be.equal("unknown parameter: 2");
+                });
+
+                it("should not add disabled option via defineOption", async () => {
+                    app.defineArguments({
+                        options: [{
+                            name: "--hello"
+                        }, {
+                            name: "--world",
+                            enabled: true
+                        }]
+                    });
+
+                    app.defineOption({
+                        name: "--c",
+                        nargs: 1,
+                        enabled: false
+                    });
+
+                    app.defineOption({
+                        name: "--d",
+                        nargs: 1,
+                        enabled: true
+                    });
+
+                    const { opts, errors } = await parse("--hello", "--world", "--d", "1", "--c", "2");
+                    expect(opts.get("hello")).to.be.true;
+                    expect(opts.get("world")).to.be.true;
+                    expect(opts.get("d")).to.be.equal("1");
+                    assert.throws(() => {
+                        opts.get("c");
+                    }, "No such argument: c");
+                    expect(errors).to.have.length(2);
+                    expect(errors[0]).to.be.instanceof(x.IllegalState);
+                    expect(errors[0].message).to.be.equal("unknown option: --c");
+                    expect(errors[1]).to.be.instanceof(x.IllegalState);
+                    expect(errors[1].message).to.be.equal("unknown parameter: 2");
                 });
             });
         });
