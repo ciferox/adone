@@ -55,16 +55,38 @@ export default class Realm {
 
         const result = [];
         for (const name of packages) {
-            // eslint-disable-next-line
-            const adoneConf = await adone.configuration.Adone.load({
-                cwd: std.path.join(adone.realm.config.packagesPath, name)
-            });
+            let isValid = true;
+            const packagePath = std.path.join(adone.realm.config.packagesPath, name);
+            const lstat = await fs.lstat(packagePath); // eslint-disable-line
 
-            result.push({
+            if (lstat.isSymbolicLink()) {
+                try {
+                    const stat = await fs.stat(packagePath); // eslint-disable-line
+                } catch (err) {
+                    if (err.code === "ENOENT") {
+                        isValid = false;
+                    }
+                }
+            }
+
+            const packageInfo = {
                 name,
-                version: adoneConf.raw.version,
-                description: adoneConf.raw.description || ""
-            });
+                isValid,
+                isSymlink: lstat.isSymbolicLink()
+            };
+
+            // eslint-disable-next-line
+            if (isValid && await fs.exists(std.path.join(packagePath, adone.configuration.Adone.name))) {
+                // eslint-disable-next-line
+                const adoneConf = await adone.configuration.Adone.load({
+                    cwd: packagePath
+                });
+
+                packageInfo.version = adoneConf.raw.version;
+                packageInfo.description = adoneConf.raw.description || "";
+            }
+
+            result.push(packageInfo);
         }
 
         if (keyword.length === 0) {

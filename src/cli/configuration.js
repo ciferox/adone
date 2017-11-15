@@ -2,6 +2,8 @@ const {
     is
 } = adone;
 
+const CONFIG_NAME = "cli.json";
+
 export default class Configuration extends adone.configuration.Generic {
     constructor(options) {
         super(options);
@@ -32,12 +34,31 @@ export default class Configuration extends adone.configuration.Generic {
     }
 
     load() {
-        return super.load(adone.cli.CONFIG_NAME);
+        return super.load(CONFIG_NAME);
     }
 
     save() {
-        return super.save(adone.cli.CONFIG_NAME, null, {
+        return super.save(CONFIG_NAME, null, {
             space: "    "
         });
+    }
+
+    static async load() {
+        const config = new Configuration({
+            cwd: adone.realm.config.configsPath
+        });
+
+        if (await adone.fs.exists(adone.std.path.join(adone.realm.config.configsPath, CONFIG_NAME))) {
+            // assign config from home
+            await config.load(CONFIG_NAME);
+        } else {
+            await config.save();
+        }
+    
+        return config;
+    }
+
+    static get name() {
+        return CONFIG_NAME;
     }
 }

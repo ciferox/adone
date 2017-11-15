@@ -28,7 +28,7 @@ export default class CliCommandHandler extends __.AbstractHandler {
             subsystem: indexPath
         };
 
-        const cliConfig = await adone.cli.loadConfig();
+        const cliConfig = await adone.cli.Configuration.load();
         if (!is.array(cliConfig.raw.commands)) {
             cliConfig.raw.commands = [];
         }
@@ -53,7 +53,7 @@ export default class CliCommandHandler extends __.AbstractHandler {
     }
 
     async unregister(adoneConf) {
-        const cliConfig = await adone.cli.loadConfig();
+        const cliConfig = await adone.cli.Configuration.load();
         const index = cliConfig.raw.commands.findIndex((x) => adoneConf.raw.name === x.name);
         if (index >= 0) {
             cliConfig.raw.commands.splice(index, 1);
@@ -63,7 +63,7 @@ export default class CliCommandHandler extends __.AbstractHandler {
 
     async list() {
         const result = [];
-        const cliConfig = await adone.cli.loadConfig();
+        const cliConfig = await adone.cli.Configuration.load();
         const commands = cliConfig.raw.commands;
 
         for (const command of commands) {

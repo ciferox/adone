@@ -80,27 +80,45 @@ export default class Package {
         try {
             this.destPath = std.path.join(adone.realm.config.packagesPath, this.name);
 
-            if (!(await fs.exists(this.destPath))) {
-                throw new adone.x.NotExists(`Package ${this.name} is not exists`);
+            const lstat = await fs.lstat(this.destPath); // eslint-disable-line
+
+            let isValid = true;
+            if (lstat.isSymbolicLink()) {
+                try {
+                    const stat = await fs.stat(this.destPath); // eslint-disable-line
+                } catch (err) {
+                    if (err.code === "ENOENT") {
+                        isValid = false;
+                    }
+                }
             }
 
-            const adoneConf = await adone.configuration.Adone.load({
-                cwd: this.destPath
-            });
-
-            this.fullName = this.name;
-            this.name = is.string(adoneConf.raw.type) ? `${adoneConf.raw.type}.${adoneConf.raw.name}` : adoneConf.raw.name;
-
-            if (is.string(adoneConf.raw.type)) {
-                await this._unregisterPackage(adoneConf);
+            if (!isValid) {
+                // This is not complete solution. Additionally it is necessary to notify all handlers,
+                // passing them path to pacakge with the damaged symlink.
             } else {
-                const subConfigs = adoneConf.getSubConfigs();
-                if (subConfigs.length === 0) {
-                    throw new adone.x.NotValid("Invalid or useless package");
+                if (!(await fs.exists(this.destPath))) {
+                    throw new adone.x.NotExists(`Package ${this.name} is not exists`);
                 }
 
-                for (const sub of subConfigs) {
-                    await this._unregisterPackage(sub.config); // eslint-disable-line
+                const adoneConf = await adone.configuration.Adone.load({
+                    cwd: this.destPath
+                });
+
+                this.fullName = this.name;
+                this.name = is.string(adoneConf.raw.type) ? `${adoneConf.raw.type}.${adoneConf.raw.name}` : adoneConf.raw.name;
+
+                if (is.string(adoneConf.raw.type)) {
+                    await this._unregisterPackage(adoneConf);
+                } else {
+                    const subConfigs = adoneConf.getSubConfigs();
+                    if (subConfigs.length === 0) {
+                        throw new adone.x.NotValid("Invalid or useless package");
+                    }
+
+                    for (const sub of subConfigs) {
+                        await this._unregisterPackage(sub.config); // eslint-disable-line
+                    }
                 }
             }
 
@@ -138,7 +156,7 @@ export default class Package {
     async rollback(err) {
         if (is.plainObject(this.rollbackData)) {
             if (is.array(this.rollbackData.subProjects)) {
-                const cliConfig = await adone.cli.loadConfig();
+                const cliConfig = await adone.cli.Configuration.load();
                 for (const subInfo of this.rollbackData.subProjects) {
                     cliConfig.deleteCommand(subInfo.adoneConf.raw.name);
                 }
@@ -275,8 +293,8 @@ export default class Package {
                     srcPath,
                     "!**/*.map"
                 ], {
-                    cwd: this.path
-                }).dest(std.path.join(this.destPath, dstDir), DEST_OPTIONS);
+                        cwd: this.path
+                    }).dest(std.path.join(this.destPath, dstDir), DEST_OPTIONS);
             }
         } else {
             const indexPath = std.path.join(this.path, "index.js");
@@ -291,8 +309,8 @@ export default class Package {
             "**/.meta/**/*",
             "**/adone.json"
         ], {
-            cwd: this.path
-        }).dest(this.destPath, DEST_OPTIONS);
+                cwd: this.path
+            }).dest(this.destPath, DEST_OPTIONS);
     }
 
     async _buildProject() {

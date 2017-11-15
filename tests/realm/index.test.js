@@ -3,14 +3,21 @@ const {
     cli,
     realm,
     std,
-    system: { process: { exec } }
+    system: { process: { exec } },
+    text
 } = adone;
 
 const ADONE_PATH = std.path.join(adone.rootPath, "bin", "adone.js");
 
+const PACKAGES_PATH = std.path.join(__dirname, "packages");
+const FIXTURES_PATH = std.path.join(__dirname, "fixtures");
+const fixture = (...args) => std.path.join(FIXTURES_PATH, ...args);
+
 describe("realm", () => {
     let realmInstance;
     let cliConfig;
+
+    const randomName = (prefix = "test") => `${prefix}${text.random(4)}_${text.random(5)}_${text.random(6)}`;
 
     before(async () => {
         await realm.init(".adone_test");
@@ -18,7 +25,7 @@ describe("realm", () => {
         realmInstance = await realm.getInstance();
         realmInstance.setSilent(true);
 
-        cliConfig = await cli.loadConfig();
+        cliConfig = await cli.Configuration.load();
     });
 
     after(async () => {
@@ -243,6 +250,52 @@ describe("realm", () => {
             assert.isFalse(await dir.exists());
 
             await systemDb.close();
+        });
+    });
+
+    describe("uninstall packages with broken symlinks", () => {
+
+        afterEach(async () => {
+            await fs.rmdir(FIXTURES_PATH);
+        });
+
+        // This is incomplete test
+        it("cli.command", async () => {
+            const name = randomName("project");
+            const cwd = fixture(name);
+            
+            await fs.mkdirp(cwd);
+    
+            await fs.copyTo(std.path.join(PACKAGES_PATH, "cli_command_simple", "*"), cwd);
+    
+            const installOptions = {
+                name: cwd,
+                symlink: true
+            };
+    
+            await realmInstance.install(installOptions);
+            
+            const list = await realmInstance.list();
+            assert.lengthOf(list, 1);
+            assert.equal(list[0].name, "cli.command.simple");
+    
+            await cliConfig.load();
+            assert.lengthOf(cliConfig.raw.commands, 1);
+    
+            const packagePath = std.path.join(adone.realm.config.packagesPath, "cli.command.simple");
+            
+            assert.isTrue(await fs.exists(packagePath));
+    
+            await fs.rm(cwd);
+    
+            const lstat = await fs.lstat(packagePath);
+            assert.isTrue(lstat.isSymbolicLink());
+    
+            await realmInstance.uninstall({
+                name: list[0].name
+            });
+    
+            await assert.throws(async () => fs.lstat(packagePath));
         });
     });
 });

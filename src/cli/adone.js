@@ -51,7 +51,7 @@ class RealmManager extends application.Subsystem {
 })
 class AdoneCLI extends application.CliApplication {
     async configure() {
-        this.config = await adone.cli.loadConfig();
+        this.config = await adone.cli.Configuration.load();
 
         // expose cli interface for subsystems.
         this.exposeCliInterface();
@@ -216,7 +216,14 @@ class AdoneCLI extends application.CliApplication {
                     {
                         id: "name",
                         header: "Package",
-                        handle: (item) => `{green-fg}{bold}${item.name}{/bold} ${item.version}{/green-fg} {grey-fg}- ${item.description}{/grey-fg}`
+                        handle: (item) => {
+                            const color = item.isValid ? "{green-fg}" : "{red-fg}";
+                            const version = is.undefined(item.version) ? "" : ` ${item.version}`;
+                            const description = is.undefined(item.description) ? "" : ` {grey-fg}- ${item.description}{/grey-fg}`;
+                            const invalid = item.isValid ? "" : "{red-fg} (not valid){/}";
+
+                            return `${color}{bold}${item.name}{/bold}${version}{/}${description}${invalid}`;
+                        }
                     }
                 ]
             }));
