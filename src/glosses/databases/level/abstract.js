@@ -272,23 +272,30 @@ export class AbstractBackend {
             throw new Error("batch(array) requires an array argument");
         }
 
-        let i = 0;
-        const l = array.length;
-        let e;
+        const serialized = [];
 
-        for (; i < l; i++) {
-            e = array[i];
-            if (!is.object(e)) {
+        for (const i of array) {
+            if (!is.object(i)) {
                 continue;
             }
 
+            const e = Object.assign({}, i);
+
             this._checkKey(e.type, "type");
             this._checkKey(e.key, "key");
+
+            e.key = this._serializeKey(e.key);
+
+            if (e.type !== "del") {
+                e.value = this._serializeValue(e.value);
+            }
+
+            serialized.push(e);
         }
 
         if (is.function(this._batch)) {
             return new Promise((resolve, reject) => {
-                this._batch(array, options, (err) => {
+                this._batch(serialized, options, (err) => {
                     if (err) {
                         return reject(err);
                     }

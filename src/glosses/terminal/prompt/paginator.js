@@ -7,8 +7,9 @@ const {
  * a subset of the choices if the list is too long.
  */
 export default class Paginator {
-    constructor(term) {
+    constructor(term, screen) {
         this.term = term;
+        this.screen = screen;
         this.pointer = 0;
         this.lastIndex = 0;
     }
@@ -16,7 +17,13 @@ export default class Paginator {
     paginate(output, active, pageSize) {
         pageSize = pageSize || 7;
         const middleOfList = Math.floor(pageSize / 2);
-        const lines = output.split("\n");
+        let lines = output.split("\n");
+
+        if (this.screen) {
+            lines = this.screen.breakLines(lines);
+            active = _.sum(lines.map((lineParts) => lineParts.length).splice(0, active));
+            lines = _.flatten(lines);
+        }
 
         // Make sure there's enough lines to paginate
         if (lines.length <= pageSize) {

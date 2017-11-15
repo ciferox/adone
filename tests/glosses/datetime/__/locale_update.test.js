@@ -164,4 +164,12 @@ describe("datetime", "locale update", () => {
         });
         assert.ok(adone.datetime.utc("2015-01-01", "YYYY-MM-DD").format("MMMM"), "First", "months uses child");
     });
+
+    it("update existing locale", () => {
+        adone.datetime.updateLocale("de", {
+            monthsShort: ["JAN", "FEB", "MÄR", "APR", "MAI", "JUN", "JUL", "AUG", "SEP", "OKT", "NOV", "DEZ"]
+        });
+        assert.equal(adone.datetime("2017-02-01").format("YYYY MMM MMMM"), "2017 FEB Februar");
+        adone.datetime.updateLocale("de", null);
+    });
 });

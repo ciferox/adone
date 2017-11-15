@@ -176,6 +176,24 @@ class ScreenManager {
         }
         return width;
     }
+
+    breakLines(lines, width) {
+        // Break lines who're longer than the cli width so we can normalize the natural line
+        // returns behavior across terminals.
+        width = width || this.normalizedCliWidth();
+        const regex = new RegExp(`(?:(?:\\033[[0-9;]*m)*.?){1,${width}}`, "g");
+        return lines.map((line) => {
+            const chunk = line.match(regex);
+            // Last match is always empty
+            chunk.pop();
+            return chunk || "";
+        });
+    }
+
+    forceLineReturn(content, width) {
+        width = width || this.normalizedCliWidth();
+        return _.flatten(this.breakLines(content.split("\n"), width)).join("\n");
+    }
 }
 
 export default class BasePrompt {

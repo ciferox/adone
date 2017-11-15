@@ -61,7 +61,7 @@ export default class ExpandPrompt extends terminal.BasePrompt {
         // Setup the default string (capitalize the default key)
         this.opt.default = this.generateChoicesString(this.opt.choices, this.opt.default);
 
-        this.paginator = new terminal.Paginator(this.term);
+        this.paginator = new terminal.Paginator(this.term, this.screen);
     }
 
     /**

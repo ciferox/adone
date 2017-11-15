@@ -65,7 +65,7 @@ export default class ListPrompt extends terminal.BasePrompt {
         // Make sure no default is set (so it won't be printed)
         this.opt.default = null;
 
-        this.paginator = new terminal.Paginator(this.term);
+        this.paginator = new terminal.Paginator(this.term, this.screen);
     }
 
     /**

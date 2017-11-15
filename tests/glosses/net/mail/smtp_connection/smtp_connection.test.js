@@ -602,6 +602,43 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
             });
         });
 
+        it("should return error for missing credentials", (done) => {
+            expect(client.authenticated).to.be.false;
+            client.login(
+                {
+                    user: "testuser"
+                },
+                (err) => {
+                    expect(err).to.exist;
+                    expect(client.authenticated).to.be.false;
+                    expect(err.message).to.match(/^Missing credentials/);
+                    expect(err.code).to.equal("EAUTH");
+                    expect(err.response).to.be.undefined;
+                    done();
+                }
+            );
+        });
+
+        it("should return error for incomplete credentials", (done) => {
+            expect(client.authenticated).to.be.false;
+            client.login(
+                {
+                    user: "testuser",
+                    credentials: {
+                        user: "testuser"
+                    }
+                },
+                (err) => {
+                    expect(err).to.exist;
+                    expect(client.authenticated).to.be.false;
+                    expect(err.message).to.match(/^Missing credentials/);
+                    expect(err.code).to.equal("EAUTH");
+                    expect(err.response).to.be.undefined;
+                    done();
+                }
+            );
+        });
+
         describe("xoauth2 login", function () {
             this.timeout(10 * 1000);
             let x2server;

@@ -175,7 +175,7 @@ const decodeStr = (val, offset, length) => val.slice(offset, indexOf(val, 0, off
 const addLength = (str) => {
     const len = Buffer.byteLength(str);
     let digits = Math.floor(Math.log(len) / Math.log(10)) + 1;
-    if (len + digits > Math.pow(10, digits)) {
+    if (len + digits >= Math.pow(10, digits)) {
         digits++;
     }
 

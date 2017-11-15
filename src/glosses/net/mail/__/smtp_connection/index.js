@@ -316,7 +316,7 @@ export default class SMTPConnection extends EventEmitter {
             this._authMethod = (this._supportedAuth[0] || "PLAIN").toUpperCase().trim();
         }
 
-        if (this._authMethod !== "XOAUTH2" && !this._auth.credentials) {
+        if (this._authMethod !== "XOAUTH2" && (!this._auth.credentials || !this._auth.credentials.user || !this._auth.credentials.pass)) {
             if (this._auth.user && this._auth.pass) {
                 this._auth.credentials = {
                     user: this._auth.user,
@@ -345,9 +345,9 @@ export default class SMTPConnection extends EventEmitter {
                 });
                 this._sendCommand(`AUTH PLAIN ${Buffer.from(
                     //this._auth.user+'\u0000'+
-                    `\u0000${  // skip authorization identity as it causes problems with some servers
-                    this._auth.credentials.user}\u0000${
-                    this._auth.credentials.pass}`, "utf-8").toString("base64")}`);
+                    `\u0000${ // skip authorization identity as it causes problems with some servers
+                        this._auth.credentials.user}\u0000${
+                        this._auth.credentials.pass}`, "utf-8").toString("base64")}`);
                 return;
             }
             case "CRAM-MD5": {
@@ -396,12 +396,12 @@ export default class SMTPConnection extends EventEmitter {
             message.on("error", (err) => callback(this._formatError(err, "ESTREAM", false, "API")));
         }
 
-        let startTime = Date.now();
+        const startTime = Date.now();
         this._setEnvelope(envelope, (err, info) => {
             if (err) {
                 return callback(err);
             }
-            let envelopeTime = Date.now();
+            const envelopeTime = Date.now();
             const stream = this._createSendStream((err, str) => {
                 if (err) {
                     return callback(err);
@@ -1399,7 +1399,7 @@ export default class SMTPConnection extends EventEmitter {
             // Message failed
             return callback(this._formatError("Message failed", "EMESSAGE", str, "DATA"));
         }
-            // Message sent succesfully
+        // Message sent succesfully
         return callback(null, str);
 
     }

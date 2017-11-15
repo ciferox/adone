@@ -949,6 +949,45 @@ describe("net", "http", "server", "middleware", "router", "Router", () => {
             url = router.url("chapters", "Learning ECMA6", 123);
             expect(url).to.be.equal("/books/chapters/Learning%20ECMA6/123");
         });
+
+        it("generates URL for given route name with params and query params", () => {
+            const router = new Router();
+            router.get("books", "/books/:category/:id", (ctx) => {
+                ctx.status = 204;
+            });
+            {
+                const url = router.url("books", "programming", 4, {
+                    query: { page: 3, limit: 10 }
+                });
+                expect(url).to.be.equal("/books/programming/4?page=3&limit=10");
+            }
+            {
+                const url = router.url("books",
+                    { category: "programming", id: 4 },
+                    { query: { page: 3, limit: 10 } }
+                );
+                expect(url).to.be.equal("/books/programming/4?page=3&limit=10");
+            }
+            {
+                const url = router.url("books",
+                    { category: "programming", id: 4 },
+                    { query: "page=3&limit=10" }
+                );
+                expect(url).to.be.equal("/books/programming/4?page=3&limit=10");
+            }
+        });
+
+
+        it("generates URL for given route name without params and query params", () => {
+            const router = new Router();
+            router.get("category", "/category", (ctx) => {
+                ctx.status = 204;
+            });
+            const url = router.url("category", {
+                query: { page: 3, limit: 10 }
+            });
+            expect(url).to.be.equal("/category?page=3&limit=10");
+        });
     });
 
     describe("Router#param()", () => {

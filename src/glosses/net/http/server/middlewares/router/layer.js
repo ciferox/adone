@@ -59,23 +59,41 @@ export default class Layer {
         return path.match(this.regexp).slice(1);
     }
 
-    //  URL for route using given `params`
-    url(...args) {
-        const url = this.path.replace("\(\.\*\)", "");
+    url(params, options, ...rest) {
+        let args = params;
+        const url = this.path.replace("(.*)", "");
         const toPath = pathToRegexp.compile(url);
 
-        if (is.object(args[0])) {
-            return toPath(args[0]);
+        if (!is.object(params)) {
+            args = [params, options, ...rest];
+            if (is.object(args[args.length - 1])) {
+                options = args[args.length - 1];
+                args = args.slice(0, args.length - 1);
+            }
         }
 
         const tokens = pathToRegexp.parse(url);
-        const replace = {};
-        for (let len = tokens.length, i = 0, j = 0; i < len; i++) {
-            if (tokens[i].name) {
-                replace[tokens[i].name] = args[j++];
+        let replace = {};
+
+        if (is.array(args)) {
+            for (let len = tokens.length, i = 0, j = 0; i < len; i++) {
+                if (tokens[i].name) {
+                    replace[tokens[i].name] = args[j++];
+                }
             }
+        } else if (tokens.some((token) => token.name)) {
+            replace = params;
+        } else {
+            options = params;
         }
-        return toPath(replace);
+
+        const replaced = toPath(replace);
+
+        if (options && options.query) {
+            return new adone.URI(replaced).query(options.query).toString();
+        }
+
+        return replaced;
     }
 
     // run validations on route named parameters

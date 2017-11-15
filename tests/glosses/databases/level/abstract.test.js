@@ -53,16 +53,16 @@ describe("database", "level", "abstract", () => {
 
         const buffer = Buffer.alloc(0);
         const test = new Test("foobar");
-        
+
         assert.equal(test._serializeKey(1), "1", "_serializeKey converts to string");
         assert.equal(test._serializeKey(buffer), buffer, "_serializeKey returns Buffer as is");
 
         assert.equal(test._serializeValue(null), "", "_serializeValue converts null to empty string");
         assert.equal(test._serializeValue(undefined), "", "_serializeValue converts undefined to empty string");
-        
+
         assert.equal(test._serializeValue(1), "1", "_serializeValue converts to string");
         assert.equal(test._serializeValue(buffer), buffer, "_serializeValue returns Buffer as is");
-        
+
         process.browser = true;
         assert.equal(test._serializeValue(1), 1, "_serializeValue returns value as is when process.browser");
         delete process.browser;
@@ -94,7 +94,7 @@ describe("database", "level", "abstract", () => {
     });
 
     it("test close() extensibility", async () => {
-        class Test extends AbstractBackend {}
+        class Test extends AbstractBackend { }
         const _close = stub().yields(null);
         Test.prototype._close = _close;
 
@@ -111,7 +111,7 @@ describe("database", "level", "abstract", () => {
         const expectedOptions = { asBuffer: true };
         const expectedKey = "a key";
 
-        class Test extends AbstractBackend {}
+        class Test extends AbstractBackend { }
         Test.prototype._get = _get;
 
         const test = new Test("foobar");
@@ -168,7 +168,7 @@ describe("database", "level", "abstract", () => {
         const expectedKey = "a key";
         const expectedValue = "a value";
 
-        class Test extends AbstractBackend {}
+        class Test extends AbstractBackend { }
         Test.prototype._put = _put;
 
         const test = new Test("foobar");
@@ -194,7 +194,10 @@ describe("database", "level", "abstract", () => {
     it("test batch() extensibility", async () => {
         const _batch = stub().yields(null);
         const expectedOptions = { options: 1 };
-        const expectedArray = [1, 2];
+        const expectedArray = [
+            { type: "put", key: "1", value: "1" },
+            { type: "del", key: "2" }
+        ];
 
         class Test extends AbstractBackend {
         }
@@ -207,7 +210,7 @@ describe("database", "level", "abstract", () => {
         assert.equal(_batch.callCount, 1);
         assert.equal(_batch.getCall(0).thisValue, test);
         assert.equal(_batch.getCall(0).args.length, 3);
-        assert.equal(_batch.getCall(0).args[0], expectedArray);
+        assert.deepEqual(_batch.getCall(0).args[0], expectedArray);
         assert.deepEqual(_batch.getCall(0).args[1], {});
 
         await test.batch(expectedArray, expectedOptions);
@@ -215,7 +218,7 @@ describe("database", "level", "abstract", () => {
         assert.equal(_batch.callCount, 2);
         assert.equal(_batch.getCall(1).thisValue, test);
         assert.equal(_batch.getCall(1).args.length, 3);
-        assert.equal(_batch.getCall(1).args[0], expectedArray);
+        assert.deepEqual(_batch.getCall(1).args[0], expectedArray);
         assert.deepEqual(_batch.getCall(1).args[1], expectedOptions);
 
         await test.batch(expectedArray, null);
@@ -223,7 +226,7 @@ describe("database", "level", "abstract", () => {
         assert.equal(_batch.callCount, 3);
         assert.equal(_batch.getCall(2).thisValue, test);
         assert.equal(_batch.getCall(2).args.length, 3);
-        assert.equal(_batch.getCall(2).args[0], expectedArray);
+        assert.deepEqual(_batch.getCall(2).args[0], expectedArray);
         assert.ok(_batch.getCall(2).args[1]);
     });
 
@@ -270,7 +273,7 @@ describe("database", "level", "abstract", () => {
     it("test write() extensibility", async () => {
         const _write = stub().yields(null);
 
-        class Test extends AbstractChainedBatch {}
+        class Test extends AbstractChainedBatch { }
         Test.prototype._write = _write;
 
         const test = new Test("foobar");
@@ -289,7 +292,7 @@ describe("database", "level", "abstract", () => {
         const expectedKey = "key";
         const expectedValue = "value";
 
-        class Test extends AbstractChainedBatch {}
+        class Test extends AbstractChainedBatch { }
         Test.prototype._put = _put;
 
         const test = new Test(factory("foobar"));
@@ -306,7 +309,7 @@ describe("database", "level", "abstract", () => {
         const _del = spy();
         const expectedKey = "key";
 
-        class Test extends AbstractChainedBatch {}
+        class Test extends AbstractChainedBatch { }
         Test.prototype._del = _del;
 
         const test = new Test(factory("foobar"));
@@ -321,7 +324,7 @@ describe("database", "level", "abstract", () => {
     it("test clear() extensibility", () => {
         const _clear = spy();
 
-        class Test extends AbstractChainedBatch {}
+        class Test extends AbstractChainedBatch { }
         Test.prototype._clear = _clear;
 
         const test = new Test(factory("foobar"));
@@ -363,7 +366,7 @@ describe("database", "level", "abstract", () => {
     it("test next() extensibility", async () => {
         const _next = stub().yields(null);
 
-        class Test extends AbstractIterator {}
+        class Test extends AbstractIterator { }
         Test.prototype._next = _next;
 
         const test = new Test("foobar");
@@ -379,7 +382,7 @@ describe("database", "level", "abstract", () => {
     it("test end() extensibility", async () => {
         const _end = stub().yields(null);
 
-        class Test extends AbstractIterator {}
+        class Test extends AbstractIterator { }
         Test.prototype._end = _end;
 
         const test = new Test("foobar");
@@ -390,8 +393,8 @@ describe("database", "level", "abstract", () => {
         assert.equal(_end.getCall(0).args.length, 1);
     });
 
-    it("test serialization extensibility", async () => {
-        class Test extends AbstractBackend {}
+    it("test serialization extensibility (put)", async () => {
+        class Test extends AbstractBackend { }
         Test.prototype._serializeKey = function (key) {
             assert.equal(key, "no");
             return "foo";
@@ -413,9 +416,103 @@ describe("database", "level", "abstract", () => {
         assert.equal(_put.getCall(0).args[1], "bar");
     });
 
+    it("test serialization extensibility (del)", async () => {
+        class Test extends AbstractBackend { }
+        const serializeKey = Test.prototype._serializeKey = mock().withExactArgs("no").returns("foo");
+        const serializeValue = Test.prototype._serializeValue = mock().throws("Should not be called");
+        const _del = Test.prototype._del = mock().withArgs("foo").yields(null);
+
+        const test = new Test("foobar");
+        await test.del("no");
+
+        expect(_del).to.have.been.calledOnce;
+        expect(serializeKey).to.have.been.calledOnce;
+        expect(serializeValue).to.have.not.been.called;
+    });
+
+    it("test serialization extensibility (batch array put)", async () => {
+        class Test extends AbstractBackend { }
+        const serializeKey = Test.prototype._serializeKey = mock().withExactArgs("no").returns("foo");
+        const serializeValue = Test.prototype._serializeValue = mock().withExactArgs("nope").returns("bar");
+        const _batch = Test.prototype._batch = mock().once().yields(null);
+
+        const test = new Test("foobar");
+        await test.batch([{ type: "put", key: "no", value: "nope" }]);
+
+        expect(_batch).to.have.been.calledOnce;
+        expect(serializeKey).to.have.been.calledOnce;
+        expect(serializeValue).to.have.been.calledOnce;
+        expect(_batch.getCall(0)).to.been.calledWith([{ type: "put", key: "foo", value: "bar" }]);
+    });
+
+    it("test serialization extensibility (batch chain put)", async () => {
+        class Test extends AbstractBackend { }
+        const serializeKey = Test.prototype._serializeKey = mock().withExactArgs("no").returns("foo");
+        const serializeValue = Test.prototype._serializeValue = mock().withExactArgs("nope").returns("bar");
+        const _batch = Test.prototype._batch = mock().once().yields(null);
+
+        const test = new Test("foobar");
+        await test.chainedBatch().put("no", "nope").write();
+
+        expect(_batch).to.have.been.calledOnce;
+        expect(serializeKey).to.have.been.calledOnce;
+        expect(serializeValue).to.have.been.calledOnce;
+        expect(_batch.getCall(0)).to.been.calledWith([{ type: "put", key: "foo", value: "bar" }]);
+    });
+
+    it("test serialization extensibility (batch array del)", async () => {
+        class Test extends AbstractBackend { }
+        const serializeKey = Test.prototype._serializeKey = mock().withExactArgs("no").returns("foo");
+        const serializeValue = Test.prototype._serializeValue = mock().throws("Should not be called");
+        const _batch = Test.prototype._batch = mock().once().yields(null);
+
+        const test = new Test("foobar");
+        await test.batch([{ type: "del", key: "no" }]);
+
+        expect(_batch).to.have.been.calledOnce;
+        expect(serializeKey).to.have.been.calledOnce;
+        expect(serializeValue).to.have.not.been.called;
+        expect(_batch.getCall(0)).to.have.been.calledWith([{ type: "del", key: "foo" }]);
+    });
+
+    it("test serialization extensibility (batch chain del)", async () => {
+        class Test extends AbstractBackend { }
+        const serializeKey = Test.prototype._serializeKey = mock().withExactArgs("no").returns("foo");
+        const serializeValue = Test.prototype._serializeValue = mock().throws("Should not be called");
+        const _batch = Test.prototype._batch = mock().once().yields(null);
+
+        const test = new Test("foobar");
+        await test.chainedBatch().del("no").write();
+
+        expect(_batch).to.have.been.calledOnce;
+        expect(serializeKey).to.have.been.calledOnce;
+        expect(serializeValue).to.have.not.been.called;
+        expect(_batch.getCall(0)).to.have.been.calledWith([{ type: "del", key: "foo" }]);
+    });
+
+    it("test serialization extensibility (batch array is not mutated)", async () => {
+        class Test extends AbstractBackend { }
+        const serializeKey = Test.prototype._serializeKey = mock().withExactArgs("no").returns("foo");
+        const serializeValue = Test.prototype._serializeValue = mock().withExactArgs("nope").returns("bar");
+        const _batch = Test.prototype._batch = mock().once().yields(null);
+
+        const test = new Test("foobar");
+
+        const op = { type: "put", key: "no", value: "nope" };
+        await test.batch([op]);
+
+        expect(_batch).to.have.been.calledOnce;
+        expect(serializeKey).to.have.been.calledOnce;
+        expect(serializeValue).to.have.been.calledOnce;
+        expect(_batch.getCall(0)).to.been.calledWith([{ type: "put", key: "foo", value: "bar" }]);
+
+        expect(op.key).to.be.equal("no");
+        expect(op.value).to.be.equal("nope");
+    });
+
     describe(".status", () => {
         it("empty prototype", async () => {
-            class Test extends AbstractBackend {}
+            class Test extends AbstractBackend { }
             const test = new Test("foobar");
             assert.equal(test.status, "new");
 
@@ -427,7 +524,7 @@ describe("database", "level", "abstract", () => {
         });
 
         it("open error", async () => {
-            class Test extends AbstractBackend {}
+            class Test extends AbstractBackend { }
             Test.prototype._open = function (options, cb) {
                 cb(new Error());
             };
@@ -444,7 +541,7 @@ describe("database", "level", "abstract", () => {
         });
 
         it("close error", async () => {
-            class Test extends AbstractBackend {}
+            class Test extends AbstractBackend { }
             Test.prototype._close = function (cb) {
                 cb(new Error());
             };
@@ -462,7 +559,7 @@ describe("database", "level", "abstract", () => {
         });
 
         it("open", async () => {
-            class Test extends AbstractBackend {}
+            class Test extends AbstractBackend { }
             Test.prototype._open = function (options, cb) {
                 process.nextTick(cb);
             };
@@ -475,7 +572,7 @@ describe("database", "level", "abstract", () => {
         });
 
         it("close", async () => {
-            class Test extends AbstractBackend {}
+            class Test extends AbstractBackend { }
             Test.prototype._close = function (cb) {
                 process.nextTick(cb);
             };

@@ -7,13 +7,13 @@ export const sourceData = (function () {
         d.push({
             type: "put",
             key: k,
-            value: Math.random()
+            value: String(Math.random())
         });
     }
     return d;
 }());
 export const transformSource = function (d) {
-    return { key: d.key, value: String(d.value) };
+    return { key: d.key, value: d.value };
 };
 
 export const setUp = function (leveldown, testCommon) {

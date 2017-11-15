@@ -306,8 +306,9 @@ export const updateLocale = (name, config) => {
     if (is.exist(config)) {
         let parentConfig = baseConfig;
         // MERGE
-        if (is.exist(locales[name])) {
-            parentConfig = locales[name]._config;
+        const tmpLocale = loadLocale(name);
+        if (!is.nil(tmpLocale)) {
+            parentConfig = tmpLocale._config;
         }
         config = mergeConfigs(parentConfig, config);
         const locale = new Locale(config);
