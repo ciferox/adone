@@ -110,6 +110,9 @@ describe("fast", "transform", "revision hash", () => {
         await fromdir.addFile("bar", "bombaleilo-d41d8cd98f.css");
 
         await fast.src(srcPath).map((file) => {
+            if (file.isDirectory()) { // ?
+                return file;
+            }
             if (file.basename.startsWith("hello")) {
                 file.revOrigBase = fromdir.path();
                 file.revOrigPath = fromdir.getFile("foo", "hello.css").path();
@@ -122,7 +125,7 @@ describe("fast", "transform", "revision hash", () => {
                 file.revName = "bombaleilo-d41d8cd98f.css";
             }
             return file;
-        }).revisionHash({ manifest: true }).map((file) => {
+        }).revisionHash({ manifest: true }).forEach((file) => {
             const MANIFEST = {};
             MANIFEST["foo/hello.css"] = "foo/hello-d41d8cd98f.css";
             MANIFEST["bar/bombaleilo.css"] = "bar/bombaleilo-d41d8cd98f.css";
@@ -137,6 +140,9 @@ describe("fast", "transform", "revision hash", () => {
         await fromdir.addFile("bar", "scriptbar-d41d8cd98f.js");
 
         await fast.src(srcPath).map((file) => {
+            if (file.isDirectory()) {
+                return file;
+            }
             if (file.basename.startsWith("scriptfoo")) {
                 file.revOrigBase = fromdir.getFile("vendor1").path();
                 file.revOrigPath = fromdir.getFile("vendor1", "foo", "scriptfoo.js").path();
@@ -210,7 +216,10 @@ describe("fast", "transform", "revision hash", () => {
     it("should handle a . in the folder name", async () => {
         await fromdir.addFile("hello.com", "hello.css");
 
-        await fast.src(srcPath).revisionHash().map((file) => {
+        await fast.src(srcPath).revisionHash().forEach((file) => {
+            if (file.isDirectory()) {
+                return;
+            }
             expect(file.relative).to.be.equal("hello.com/hello-d41d8cd98f.css".split("/").join(path.sep));
             expect(file.revOrigPath).to.be.equal(fromdir.getFile("hello.com", "hello.css").path());
         });
@@ -224,6 +233,9 @@ describe("fast", "transform", "revision hash", () => {
             fromdir.getDirectory("app", "**", "*").path(),
             fromdir.getDirectory("assets", "**", "*").path()
         ]).map((file) => {
+            if (file.isDirectory()) {
+                return file;
+            }
             if (file.basename.startsWith("scriptfoo")) {
                 file.revOrigPath = "scriptfoo.js";
             } else {

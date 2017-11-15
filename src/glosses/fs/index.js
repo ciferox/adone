@@ -126,6 +126,7 @@ const fs = adone.lazify({
             err ? reject(err) : resolve(result);
         });
     }),
+    readlinkSync: () => (path, options) => std.fs.readlinkSync(path, options),
     unlink: () => (path) => new Promise((resolve, reject) => {
         std.fs.unlink(path, (err) => {
             err ? reject(err) : resolve();
@@ -198,6 +199,7 @@ const fs = adone.lazify({
             err ? reject(err) : resolve();
         });
     }),
+    utimesSync: () => (path, atime, mtime) => std.fs.utimesSync(path, atime, mtime),
     mkdir: () => (path, mode) => new Promise((resolve, reject) => {
         std.fs.mkdir(path, mode, (err) => {
             err ? reject(err) : resolve();

@@ -5,7 +5,7 @@ export default function plugin() {
         x
     } = adone;
 
-    return function extract(archiveType, extractorOptions = {}) {
+    return function unpack(archiveType, extractorOptions = {}) {
         if (!(archiveType in adone.archive)) {
             throw new x.InvalidArgument(`Unknown archive type: ${archiveType}`);
         }
@@ -16,50 +16,114 @@ export default function plugin() {
                 this.push(file);
                 return;
             }
-            const isBuffer = file.isBuffer();
-            const stream = new archive.RawUnpackStream(extractorOptions);
-            const p = new Promise((resolve, reject) => {
-                stream.on("entry", (header, stream, next) => {
-                    if (header.type !== "file") {
-                        // just ignore
-                        return next();
-                    }
-                    const entryFile = file.clone();
-                    entryFile.path = std.path.resolve(entryFile.base, header.name);
-                    entryFile.stat = entryFile.stat || new std.fs.Stats();
-                    entryFile.stat.mtime = header.mtime;
-                    entryFile.stat.mode = header.mode;
+            switch (archiveType) {
+                case "tar": {
+                    const isBuffer = file.isBuffer();
+                    const stream = new archive.RawUnpackStream(extractorOptions);
+                    const p = new Promise((resolve, reject) => {
+                        stream.on("entry", (header, stream, next) => {
+                            const entryFile = file.clone({ contents: false });
+                            entryFile.contents = null;
+                            entryFile.path = std.path.resolve(entryFile.dirname, entryFile.stem, header.name);
+                            entryFile.stat = new std.fs.Stats();
+                            entryFile.stat.mtime = header.mtime;
+                            entryFile.stat.mode = header.mode;
+                            entryFile.stat.mtimeMs = header.mtime.getTime();
 
-                    if (isBuffer) {
-                        stream.pipe(adone.stream.concat()).then((data) => {
-                            if (is.array(data)) {
-                                data = Buffer.alloc(0);
+                            switch (header.type) {
+                                case "file": {
+                                    entryFile.stat.mode |= std.fs.constants.S_IFREG;
+
+                                    if (isBuffer) {
+                                        stream.pipe(adone.stream.concat()).then((data) => {
+                                            if (is.array(data)) {
+                                                data = Buffer.alloc(0);
+                                            }
+                                            entryFile.contents = data;
+                                            this.push(entryFile);
+                                            next();
+                                        }).catch((err) => {
+                                            next(err); // will destroy the stream and emit the error
+                                        });
+                                    } else {
+                                        entryFile.contents = stream;
+                                        next();
+                                    }
+                                    break;
+                                }
+                                case "directory": {
+                                    entryFile.stat.mode |= std.fs.constants.S_IFDIR;
+                                    this.push(entryFile);
+                                    next();
+                                    break;
+                                }
+                                case "symlink": {
+                                    // TODO: what if `links` is false ?
+                                    entryFile.stat.mode |= std.fs.constants.S_IFLNK;
+                                    entryFile.symlink = header.linkname;
+                                    this.push(entryFile);
+                                    next();
+                                    break;
+                                }
+                                default: {
+                                    // ignore?
+                                    next();
+                                }
                             }
-                            entryFile.contents = data;
-                            this.push(entryFile);
-                            next();
-                        }).catch((err) => {
-                            next(err); // will destroy the stream and emit the error
                         });
+                        stream.once("finish", resolve);
+                        stream.once("error", (err) => {
+                            if (!isBuffer) {
+                                file.contents.close();
+                            }
+                            stream.destroy();
+                            reject(err);
+                        });
+                    });
+                    if (isBuffer) {
+                        stream.end(file.contents);
                     } else {
-                        entryFile.contents = stream;
+                        file.contents.pipe(stream);
                     }
-                });
-                stream.once("finish", resolve);
-                stream.once("error", (err) => {
-                    if (!isBuffer) {
-                        file.contents.close();
+                    await p;
+                    break;
+                }
+                case "zip": {
+                    let contents;
+                    if (file.isBuffer()) {
+                        contents = file.contents;
+                    } else if (file.isStream()) {
+                        // TODO: how to handle large files?
+                        contents = await file.contents.pipe(new adone.collection.BufferList());
+                        file.contents = contents;
+                    } else {
+                        throw new x.NotSupported("Zip unpacker support only streams and buffers");
                     }
-                    stream.destroy();
-                    reject(err);
-                });
-            });
-            if (isBuffer) {
-                stream.end(file.contents);
-            } else {
-                file.contents.pipe(stream);
+                    const zipfile = await adone.archive.zip.unpack.fromBuffer(contents, { ...extractorOptions, lazyEntries: true });
+                    for (; ;) {
+                        const entry = await zipfile.readEntry(); // eslint-disable-line
+                        if (is.null(entry)) {
+                            break;
+                        }
+                        const entryFile = file.clone();
+                        entryFile.stat = new std.fs.Stats();
+                        entryFile.stat.mode = (entry.externalFileAttributes >> 16) >>> 0;
+                        entryFile.stat.mtime = entry.getLastModDate().toDate();
+                        entryFile.stat.mtimeMs = entryFile.stat.mtime.getTime();
+                        if (entry.fileName.endsWith("/")) {
+                            entryFile.stat.mode |= std.fs.constants.S_IFDIR;
+                            entryFile.path = std.path.resolve(entryFile.dirname, entryFile.stem, entry.fileName.slice(0, -1));
+                            entryFile.contents = null;
+                        } else {
+                            entryFile.path = std.path.resolve(entryFile.dirname, entryFile.stem, entry.fileName);
+                            entryFile.stat.mode |= std.fs.constants.S_IFREG;
+                            entryFile.contents = await zipfile.openReadStream(entry); // eslint-disable-line
+                        }
+                        this.push(entryFile);
+                    }
+                    break;
+                }
             }
-            await p;
         });
     };
 }

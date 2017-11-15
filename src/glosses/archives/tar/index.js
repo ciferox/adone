@@ -58,6 +58,7 @@ const statAll = (stat, cwd, ignore, entries, sort) => {
 };
 
 export const packStream = (cwd = process.cwd(), opts = {}) => {
+    cwd = String(cwd);
     const ignore = opts.ignore || adone.noop;
     let map = opts.map || adone.noop;
     const mapStream = opts.mapStream || adone.identity;
@@ -178,6 +179,7 @@ const mkdirfix = async (name, opts) => {
 };
 
 export const unpackStream = (cwd = process.cwd(), opts = {}) => {
+    cwd = String(cwd);
     const ignore = opts.ignore || adone.noop;
     let map = opts.map || adone.noop;
     const mapStream = opts.mapStream || adone.identity;

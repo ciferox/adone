@@ -175,9 +175,6 @@ export const globSource = (globs, { cwd = process.cwd(), base = null, dot = true
     return adone.fs.glob(globs, { dot, index: true })
         .through(async function fileWrapper({ path, index }) {
             const stat = await (links ? adone.fs.lstat : adone.fs.stat)(path);
-            if (stat.isDirectory()) {
-                return;
-            }
             const _base = base || globsParents[index];
             this.push(new adone.fast.File({
                 cwd,

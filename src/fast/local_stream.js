@@ -26,7 +26,7 @@ export class FastLocalStream extends adone.fast.Stream {
     }
 
     static async bufferReader(file) {
-        if (file.isSymbolic() || file.isBuffer()) {
+        if (file.isSymbolic() || file.isBuffer() || file.isDirectory()) {
             return file;
         }
         if (file.isNull()) {
@@ -47,7 +47,7 @@ export class FastLocalStream extends adone.fast.Stream {
     }
 
     static async streamReader(file) {
-        if (file.isSymbolic() || !file.isNull()) {
+        if (file.isSymbolic() || !file.isNull() || file.isDirectory()) {
             return file;
         }
         file.contents = std.fs.createReadStream(file.path);
@@ -57,6 +57,7 @@ export class FastLocalStream extends adone.fast.Stream {
 
     dest(dir, {
         mode = 0o644,
+        dirMode = 0o777 & (~process.umask()),
         flag = "w",
         cwd = this._cwd || process.cwd(),
         produceFiles = false,
@@ -66,40 +67,55 @@ export class FastLocalStream extends adone.fast.Stream {
     } = {}) {
         const isDirFunction = is.function(dir);
         if (!isDirFunction) {
-            dir = std.path.resolve(cwd, dir);
+            dir = std.path.resolve(cwd, String(dir));
         }
         return this.through(async function writing(file) {
-            if (file.isNull()) {
-                file.contents = Buffer.alloc(0);
+            if (file.isNull() && !file.isDirectory() && !file.isSymbolic()) {
+                return; // ?
             }
             const destBase = isDirFunction ? dir(file) : dir;
             const destPath = std.path.resolve(destBase, file.relative);
-            const dirname = std.path.dirname(destPath);
 
             file.stat = file.stat || new std.fs.Stats();
-            file.stat.mode = file.stat.mode || mode;
-
-            await adone.fs.mkdirp(dirname);
-
-            const fd = await adone.fs.open(destPath, flag, mode);
-            try {
-                if (file.isStream()) {
-                    await new Promise((resolve, reject) => {
-                        const writeStream = std.fs.createWriteStream(null, { fd }).once("error", reject);
-                        file.contents.once("error", reject).once("end", resolve);
-                        file.contents.pipe(writeStream, { end: false });
-                    });
-                } else {
-                    await adone.fs.write(fd, file.contents);
+            file.stat.mode = file.stat.mode || (file.isDirectory() ? dirMode : mode);
+            if (file.isDirectory()) {
+                await adone.fs.mkdirp(std.path.dirname(destPath), dirMode);
+                await adone.fs.mkdirp(destPath, file.stat.mode);
+                const fd = await adone.fs.open(destPath, "r");
+                try {
+                    await helper.updateMetadata(fd, file, { originMode, originTimes, originOwner });
+                } finally {
+                    await adone.fs.close(fd);
                 }
-                file.flag = flag;
-                file.cwd = cwd;
-                file.base = destBase;
-                file.path = destPath;
-                await helper.updateMetadata(fd, file, { originMode, originTimes, originOwner });
-            } finally {
-                await adone.fs.close(fd);
+            } else if (file.isSymbolic()) {
+                await adone.fs.mkdirp(std.path.dirname(destPath), dirMode);
+                await adone.fs.symlink(file.symlink, destPath);
+                // cannot change metadata?
+            } else {
+                await adone.fs.mkdirp(std.path.dirname(destPath), dirMode);
+                const fd = await adone.fs.open(destPath, flag, mode);
+                try {
+                    if (file.isStream()) {
+                        await new Promise((resolve, reject) => {
+                            const writeStream = std.fs.createWriteStream(null, { fd }).once("error", reject);
+                            file.contents.once("error", reject).once("end", resolve);
+                            file.contents.pipe(writeStream, { end: false });
+                        });
+                    } else {
+                        // Buffer
+                        await adone.fs.write(fd, file.contents);
+                    }
+                    await helper.updateMetadata(fd, file, { originMode, originTimes, originOwner });
+                } finally {
+                    await adone.fs.close(fd);
+                }
             }
+
+            file.flag = flag;
+            file.cwd = cwd;
+            file.base = destBase;
+            file.path = destPath;
+
             if (produceFiles) {
                 this.push(file);
             }
@@ -117,7 +133,7 @@ export const src = (globs, {
     dot = true,
     links = false
 } = {}) => {
-    globs = util.arrify(globs).map((x) => helper.resolveGlob(x, cwd));
+    globs = util.arrify(globs).map((x) => helper.resolveGlob(String(x), cwd));
     const source = helper.globSource(globs, { cwd, base, dot, links });
     const fast = new FastLocalStream(source, { read, buffer, stream, cwd });
     fast.once("end", () => source.end({ force: true }));
@@ -147,8 +163,13 @@ export const watchSource = (globs, {
         ignoreInitial: true,
         ...watcherOptions
     }).on("all", (event, path, stat) => {
-        if (event !== "add" && event !== "change") {
-            return;
+        switch (event) {
+            case "add":
+            case "change":
+            case "addDir":
+                break;
+            default:
+                return;
         }
         if (!dot) {
             const filename = std.path.basename(path);

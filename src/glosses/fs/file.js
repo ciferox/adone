@@ -48,6 +48,14 @@ export default class File {
         return stdFs.lstatSync(this._path);
     }
 
+    async utimes(atime, mtime) {
+        await fs.utimes(this._path, atime, mtime);
+    }
+
+    utimesSync(atime, mtime) {
+        fs.utimesSync(this._path, atime, mtime);
+    }
+
     mode() {
         return this.stat().then((stat) => new adone.fs.Mode(stat));
     }
@@ -91,8 +99,12 @@ export default class File {
         return fs.existsSync(this._path);
     }
 
-    create({ mode = 0o755 } = {}) {
-        return this.write("", { mode });
+    async create({ mode = 0o755, contents, atime = null, mtime = null } = {}) {
+        await this.write(contents, { mode });
+        if (!is.null(atime) || !is.null(mtime)) {
+            // TODO: -1 will be converted to now, ok?
+            await this.utimes(is.null(atime) ? -1 : atime, is.null(mtime) ? -1 : mtime);
+        }
     }
 
     write(buffer, { encoding = this._encoding, mode = 0o755, flag = "w" } = {}) {
@@ -156,6 +168,15 @@ export default class File {
         this._path = newPath;
     }
 
+    readlink(options) {
+        return fs.readlink(this._path, options);
+    }
+
+    readlinkSync(options) {
+        return fs.readlinkSync(this._path, options);
+    }
+
+    // TODO: not usable? review
     symbolicLink(path) {
         if (path instanceof File) {
             path = path.path();
@@ -166,5 +187,9 @@ export default class File {
     async size() {
         const stat = await this.stat();
         return stat.size;
+    }
+
+    toString() {
+        return this._path;
     }
 }

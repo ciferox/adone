@@ -48,9 +48,21 @@ export default class Directory {
         return fs.exists(this._path);
     }
 
-    async create({ mode = 0o777 } = {}) {
+    async utimes(atime, mtime) {
+        await fs.utimes(this._path, atime, mtime);
+    }
+
+    utimesSync(atime, mtime) {
+        fs.utimesSync(this._path, atime, mtime);
+    }
+
+    async create({ mode = 0o777 & (~process.umask()), mtime = null, atime = null } = {}) {
         if (!(await this.exists())) {
-            return fs.mkdirp(this._path, mode);
+            await fs.mkdirp(this._path, mode);
+        }
+        if (!is.null(atime) || !is.null(mtime)) {
+            // TODO: -1 will be converted to now, ok?
+            await this.utimes(is.null(atime) ? -1 : atime, is.null(mtime) ? -1 : mtime);
         }
     }
 
@@ -94,7 +106,7 @@ export default class Directory {
     }
 
     async addFile(...filename) {
-        const opts = { contents: null, mode: 0o666 };
+        const opts = { contents: "", mode: 0o666, mtime: null, atime: null };
         if (is.object(filename[filename.length - 1])) {
             Object.assign(opts, filename.pop());
         }
@@ -104,21 +116,26 @@ export default class Directory {
         }
         filename = filename.pop();
         const file = new fs.File(spath.join(root.path(), filename));
-        await file.create({ mode: opts.mode });
-        if (opts.contents) {
-            await file.write(opts.contents);
-        }
+        await file.create(opts);
         return file;
     }
 
     async addDirectory(...filename) {
+        const opts = {
+            mode: 0o777 & (~process.umask()),
+            mtime: null,
+            atime: null
+        };
+        if (is.object(filename[filename.length - 1])) {
+            Object.assign(opts, filename.pop());
+        }
         let root = this;
         if (filename.length > 1) {
             root = await this._ensurePath(filename.slice(0, -1));
         }
         filename = filename.pop();
         const dir = new Directory(spath.join(root.path(), filename));
-        await dir.create();
+        await dir.create(opts);
         return dir;
     }
 
@@ -234,6 +251,14 @@ export default class Directory {
 
     copyFrom(srcPath, options) {
         return fs.copyTo(srcPath, this._path, options);
+    }
+
+    toString() {
+        return this._path;
+    }
+
+    mode() {
+        return this.stat().then((stat) => new adone.fs.Mode(stat));
     }
 
     static async create(...path) {

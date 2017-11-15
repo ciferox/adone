@@ -2,6 +2,7 @@ export default function plugin() {
     const {
         is,
         std,
+        fs,
         x
     } = adone;
 
@@ -15,24 +16,46 @@ export default function plugin() {
         if (!is.string(packerOptions.filename)) {
             throw new x.InvalidArgument("Filename is required");
         }
+        const {
+            filename,
+            mode = 0o644
+        } = packerOptions;
+
+        if (!filename) {
+            throw new x.InvalidArgument("fast.pack: You must specify filename");
+        }
+
         switch (archiveType) {
             case "tar": {
                 const archive = adone.archive.tar;
                 const stream = new archive.RawPackStream();
-                const self = this;
+                let resultFile = null;
                 return this.through(async (file) => {
-                    if (file.isNull() && !file.isSymbolic()) {
+                    if (file.isNull() && !file.isSymbolic() && !file.isDirectory()) {
                         // ok? add an empty file?
                         return;
                     }
+
+                    if (!resultFile) {
+                        resultFile = file.clone({ contents: false });
+                    }
+
                     const header = {
                         name: file.relative,
                         mode: file.stat && file.stat.mode,
                         mtime: file.stat && file.stat.mtime,
-                        type: file.isSymbolic() ? "symlink" : "file"
+                        type: !file.isNull()
+                            ? "file"
+                            : file.isDirectory()
+                                ? "directory"
+                                : "symlink"
                     };
                     if (file.isSymbolic()) {
                         header.linkname = file.symlink;
+                        stream.entry(header);
+                        return;
+                    }
+                    if (file.isDirectory()) {
                         stream.entry(header);
                         return;
                     }
@@ -50,56 +73,53 @@ export default function plugin() {
                     }
                 }, function flush() {
                     stream.finalize();
-                    const cwd = packerOptions.cwd || self._cwd || process.cwd();
-                    const base = packerOptions.base || cwd;
-                    const file = new adone.fast.File({
-                        path: std.path.resolve(base, packerOptions.filename),
-                        cwd: packerOptions.cwd || this._cwd || process.cwd(),
-                        base: packerOptions.base || null,
-                        contents: stream
-                    });
-                    this.push(file);
+                    resultFile.path = std.path.resolve(resultFile.base, filename);
+                    if (resultFile.stat) {
+                        resultFile.stat.mode = mode | fs.constants.S_IFREG;
+                    }
+                    resultFile.contents = stream;
+                    this.push(resultFile);
                 });
             }
             case "zip": {
                 const zipfile = new adone.archive.zip.pack.ZipFile();
-                const self = this;
                 const {
-                    compress = true,
-                    filename
+                    compress = true
                 } = packerOptions;
-                if (!filename) {
-                    throw new x.InvalidArgument("fast.pack: You must specify filename");
-                }
+                let resultFile = null;
                 return this.through(/** @param {adone.fast.I.File} file */async (file) => {
-                    if (file.isNull() && !file.isSymbolic()) {
+                    if (file.isNull() && !file.isSymbolic() && !file.isDirectory()) {
                         // ok? add an empty file?
                         return;
                     }
-
+                    if (!resultFile) {
+                        resultFile = file.clone({ contents: false });
+                    }
                     const opts = {
-                        mtime: file.stat && file.stat.mtime,
-                        mode: file.stat && file.stat.mode,
-                        compress
+                        mtime: file.stat ? file.stat.mtime : new Date(),
+                        mode: file.stat && file.stat.mode
                     };
-                    if (file.isBuffer()) {
-                        zipfile.addBuffer(file.contents, file.relative, opts);
-                    } else if (file.isStream()) {
-                        zipfile.addReadStream(file.contents, file.relative, opts);
-                    } else if (file.isSymbolic()) {
-                        throw new x.NotSupported(`zip packer does not support symlinks: ${file.path}`);
+                    if (file.isDirectory()) {
+                        zipfile.addEmptyDirectory(file.relative, opts);
+                    } else {
+                        opts.compress = compress;
+                        if (file.isBuffer()) {
+                            opts.compress = compress;
+                            zipfile.addBuffer(file.contents, file.relative, opts);
+                        } else if (file.isStream()) {
+                            zipfile.addReadStream(file.contents, file.relative, opts);
+                        } else if (file.isSymbolic()) {
+                            throw new x.NotSupported(`zip packer does not support symlinks: ${file.path}`);
+                        }
                     }
                 }, async function flush() {
                     await zipfile.end();
-                    const cwd = packerOptions.cwd || self._cwd || process.cwd();
-                    const base = packerOptions.base || cwd;
-                    const file = new adone.fast.File({
-                        path: std.path.resolve(base, filename),
-                        cwd: packerOptions.cwd || this._cwd || process.cwd(),
-                        base: packerOptions.base || null,
-                        contents: zipfile.outputStream
-                    });
-                    this.push(file);
+                    resultFile.path = std.path.resolve(resultFile.base, filename);
+                    if (resultFile.stat) {
+                        resultFile.stat.mode = mode | fs.constants.S_IFREG;
+                    }
+                    resultFile.contents = zipfile.outputStream;
+                    this.push(resultFile);
                 });
             }
             default: {
