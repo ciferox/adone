@@ -1,7 +1,6 @@
 const {
     is,
-    x,
-    task
+    x
 } = adone;
 
 /**
@@ -21,28 +20,40 @@ export default class TaskManager extends adone.event.AsyncEmitter {
      * Adds task to manager.
      * 
      * @param {string} name name of task
-     * @param {class} TaskClass task class inherited from {adone.task.Task}
+     * @param {class|function} task task class inherited from {adone.task.Task} or function
      * @param {object} options 
      */
-    addTask(name, TaskClass, options) {
+    addTask(name, task, options) {
         if (this._tasks.has(name)) {
             throw new x.Exists(`Task '${name}' already exists`);
         }
-        return this.setTask(name, TaskClass, options);
+        return this.setTask(name, task, options);
     }
 
     /**
      * Adds or replaces task with specified name.
      * 
      * @param {string} name task name
-     * @param {class} TaskClass task class inherited from {adone.task.Task}
+     * @param {class|function} task task class inherited from {adone.task.Task} or function
      * @param {object} options 
      */
-    setTask(name, TaskClass, options) {
-        this._checkTask(TaskClass);
+    setTask(name, task, options) {
+        this._checkTask(task);
         const taskInfo = this._initTaskInfo(Object.assign({
             name
         }, options));
+
+        let TaskClass;
+        if (is.class(task)) {
+            TaskClass = task;
+        } else {
+            TaskClass = class extends adone.task.Task {
+                run(...args) {
+                    return task(...args);
+                }
+            };
+        }
+
         taskInfo.meta.Class = TaskClass;
         return this._installTask(taskInfo);
     }
@@ -135,34 +146,30 @@ export default class TaskManager extends adone.event.AsyncEmitter {
     }
 
     /**
-     * Runs task in parallel.
+     * Runs tasks in parallel.
      * 
-     * @param {array} tasks array of task names
+     * @param {array} tasks array of tasks
      */
     runInParallel(tasks, options, ...args) {
         return this.runOnce(adone.task.flow.Parallel, tasks, options, ...args);
     }
 
     /**
-     * Runs tasks in series, but result of each will be passed to next one as arguments.
-     * 
-     * @param {array} tasks array of task names
-     */
-    runWaterfall(tasks, options, ...args) {
-        return this.runOnce(adone.task.flow.Waterfall, tasks, options, ...args);
-    }
-
-    /**
      * Runs task once.
      * 
-     * @param {class} TaskClass 
+     * @param {class} task 
      * @param {*} args 
      */
-    async runOnce(TaskClass, ...args) {
-        const randomName = adone.text.random(32);
-        await this.addTask(randomName, TaskClass);
-        const observer = await this._run(null, randomName, ...args);
-        this.deleteTask(randomName);
+    async runOnce(task, ...args) {
+        let name;
+        if (is.class(task) && !this.hasTask(task.name)) {
+            name = task.name;
+        } else {
+            name = adone.text.random(32);
+        }
+        await this.addTask(name, task);
+        const observer = await this._run(null, name, ...args);
+        this.deleteTask(name);
 
         return observer;
     }
@@ -175,7 +182,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
             }
             this._contexts.set(name, newContext);
             this._activeContext = newContext;
-        } else {   
+        } else {
             this._activeContext = context;
         }
     }
@@ -197,7 +204,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
                 this._uninstallTask(taskInfo);
             }
         };
-        
+
         if (is.promise(taskObserver.result)) {
             adone.promise.finally(taskObserver.result, releaseRunner).catch(adone.noop);
         } else {
@@ -214,9 +221,9 @@ export default class TaskManager extends adone.event.AsyncEmitter {
             if (!is.null(this._activeContext)) {
                 instance.context = this._activeContext;
             }
-            
-            const taskObserver = new task.TaskObserver(instance);
-            taskObserver.state = task.STATE.RUNNING;
+
+            const taskObserver = new adone.task.TaskObserver(instance, taskInfo.meta.name);
+            taskObserver.state = adone.task.STATE.RUNNING;
             try {
                 taskObserver.result = instance.run(...args);
             } catch (err) {
@@ -225,13 +232,13 @@ export default class TaskManager extends adone.event.AsyncEmitter {
 
             if (is.promise(taskObserver.result)) {
                 taskObserver.result.then(() => {
-                    taskObserver.state = (taskObserver.state === task.STATE.CANCELLING) ? task.STATE.CANCELLED : task.STATE.COMPLETED;
+                    taskObserver.state = (taskObserver.state === adone.task.STATE.CANCELLING) ? adone.task.STATE.CANCELLED : adone.task.STATE.COMPLETED;
                 }).catch((err) => {
-                    taskObserver.state = task.STATE.FAILED;
+                    taskObserver.state = adone.task.STATE.FAILED;
                     taskObserver.error = err;
                 });
             } else {
-                taskObserver.state = task.STATE.COMPLETED;
+                taskObserver.state = adone.task.STATE.COMPLETED;
             }
             return taskObserver;
         };
@@ -262,15 +269,15 @@ export default class TaskManager extends adone.event.AsyncEmitter {
         this._tasks.delete(taskInfo.meta.name);
     }
 
-    _checkTask(TaskClass) {
-        if (!is.class(TaskClass)) {
-            throw new x.NotValid("Task should be a class");
-        }
+    _checkTask(task) {
+        if (is.class(task)) {
+            const taskInstance = new task();
 
-        const task = new TaskClass();
-
-        if (!is.task(task)) {
-            throw new x.NotValid("The task class should be inherited from 'adone.task.Task' class");
+            if (!is.task(taskInstance)) {
+                throw new x.NotValid("The task class should be inherited from 'adone.task.Task' class");
+            }
+        } else if (!is.function(task)) {
+            throw new x.NotValid("Task should be a class or a function");
         }
     }
 

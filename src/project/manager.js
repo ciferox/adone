@@ -47,6 +47,7 @@ export default class ProjectManager extends task.Manager {
         await this.addTask("copy", project.task.Copy);
         await this.addTask("transpile", project.task.Transpile);
         await this.addTask("transpileExe", project.task.TranspileExe);
+        await this.addTask("watch", project.task.Watch);
 
         // Load custom tasks
         const tasksPath = std.path.join(this.cwd, ".adone", "tasks.js");
@@ -90,56 +91,42 @@ export default class ProjectManager extends task.Manager {
         return this.config.getEntries(path);
     }
 
-    async clean(path) {
+    clean(path) {
         this._checkLoaded();
-        const entries = this._getEntries(path);
-
-        const results = [];
-        for (const entry of entries) {
-            const observer = await this.run("delete", entry); // eslint-disable-line
-            results.push(observer.result);
-        }
-
-        return Promise.all(results);
+        return this.runInParallel(this._getEntries(path).filter((entry) => this._checkEntry(entry)).map((entry) => ({
+            task: "delete",
+            args: entry
+        })));
     }
 
-    async build(path) {
+    build(path) {
         this._checkLoaded();
-        const entries = this._getEntries(path);
+        return this.runInParallel(this._getEntries(path).filter((entry) => this._checkEntry(entry)).map((entry) => ({
+            task: entry.$task,
+            args: entry
+        })));
+    }
 
-        const promises = [];
-        for (const entry of entries) {
-            if (!this._checkEntry(entry)) {
-                continue;
+    rebuild(path) {
+        this._checkLoaded();
+        return this.runInSeries([
+            async () => {
+                const observer = await this.clean(path);
+                return observer.result;
+            },
+            async () => {
+                const observer = await this.build(path);
+                return observer.result;
             }
-
-            const observer = await this.run(entry.$task, entry); // eslint-disable-line
-            promises.push(observer.result);
-        }
-
-        return Promise.all(promises);
+        ]);
     }
 
-    async rebuild(path) {
-        await this.clean(path);
-        await this.build(path);
-    }
-
-    async watch(path) {
+    watch(path) {
         this._checkLoaded();
-        const entries = this._getEntries(path);
-
-        const promises = [];
-        for (const entry of entries) {
-            if (!this._checkEntry(entry)) {
-                continue;
-            }
-
-            const observer = await this.runOnce(project.task.Watch, entry); // eslint-disable-line
-            promises.push(observer.result);
-        }
-
-        return Promise.all(promises);
+        return this.runInParallel(this._getEntries(path).filter((entry) => this._checkEntry(entry)).map((entry) => ({
+            task: "watch",
+            args: entry
+        })));
     }
 
     async incVersion({ part = "minor", preid = undefined, loose = false } = {}) {

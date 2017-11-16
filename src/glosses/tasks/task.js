@@ -53,8 +53,9 @@ export class Task {
 adone.tag.add(Task, "TASK");
 
 export class TaskObserver {
-    constructor(task) {
+    constructor(task, name) {
         this.task = task;
+        this.name = name;
         this.state = STATE.IDLE;
         this.result = undefined;
         this.error = undefined;
@@ -64,7 +65,10 @@ export class TaskObserver {
      * Cancels task.
      */
     async cancel() {
-        if (this.task.isCancelable() && this.state === STATE.RUNNING) {
+        if (!this.task.isCancelable()) {
+            throw new adone.x.NotAllowed(`Task '${this.name}' is not cancelable`);
+        }
+        if (this.state === STATE.RUNNING) {
             this.state = STATE.CANCELLING;
             const defer = adone.promise.defer();            
             await this.task.cancel(defer);
@@ -110,6 +114,20 @@ export class TaskObserver {
             await defer;
             this.state = STATE.RUNNING;
         }
+    }
+
+    /**
+     * Returns true if the task is suspendable.
+     */
+    isSuspendable() {
+        return this.task.isSuspendable();
+    }
+
+    /**
+     * Returns true if the task is cancelable.
+     */
+    isCancelable() {
+        return this.task.isCancelable();
     }
 
     /**

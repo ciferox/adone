@@ -47,4 +47,13 @@ export default class WatchTask extends adone.project.task.Transform {
             });
         }
     }
+
+    cancel(defer) {
+        !is.null(this.stream) && this.stream.destroy();
+        defer.resolve();
+    }
+
+    isCancelable() {
+        return true;
+    }
 }
