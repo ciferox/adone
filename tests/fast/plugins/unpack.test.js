@@ -1,11 +1,8 @@
 describe("fast", "transform", "unpack", () => {
     const {
+        is,
         collection: {
             BufferList
-        },
-        archive: {
-            tar,
-            zip
         },
         fast,
         fs
@@ -56,7 +53,9 @@ describe("fast", "transform", "unpack", () => {
             }
         });
 
-        it("should set proper file mode", async () => {
+        it("should set proper file mode", {
+            skip: is.windows
+        }, async () => {
             const input = await tmpdir.addDirectory("input");
             await input.addFile("a", { contents: "abc", mode: 0o444 });
             await input.addFile("b", { contents: "def", mode: 0o641 });
@@ -133,7 +132,9 @@ describe("fast", "transform", "unpack", () => {
             }
         });
 
-        it("should set proper directory mode", async () => {
+        it("should set proper directory mode", {
+            skip: is.windows
+        }, async () => {
             const input = await tmpdir.addDirectory("input");
             await input.addDirectory("a", { mode: 0o700 });
 
@@ -173,7 +174,9 @@ describe("fast", "transform", "unpack", () => {
 
         // TODO: handle nested directories mtime?
 
-        it("should handle symlinks", async () => {
+        it("should handle symlinks", {
+            skip: is.windows
+        }, async () => {
             const input = await tmpdir.addDirectory("input");
             await input.addFile("hello", { contents: "world" });
             await fs.symlink("hello", input.getFile("symlink").path());
@@ -268,7 +271,9 @@ describe("fast", "transform", "unpack", () => {
             }
         });
 
-        it("should set proper file mode", async () => {
+        it("should set proper file mode", {
+            skip: is.windows
+        }, async () => {
             const input = await tmpdir.addDirectory("input");
             await input.addFile("a", { contents: "abc", mode: 0o444 });
             await input.addFile("b", { contents: "def", mode: 0o641 });
@@ -345,7 +350,9 @@ describe("fast", "transform", "unpack", () => {
             }
         });
 
-        it("should set proper directory mode", async () => {
+        it("should set proper directory mode", {
+            skip: is.windows
+        }, async () => {
             const input = await tmpdir.addDirectory("input");
             await input.addDirectory("a", { mode: 0o700 });
 

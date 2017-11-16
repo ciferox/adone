@@ -13,15 +13,12 @@ export default function plugin() {
         if (is.string(packerOptions)) {
             packerOptions = { filename: packerOptions };
         }
-        if (!is.string(packerOptions.filename)) {
-            throw new x.InvalidArgument("Filename is required");
-        }
         const {
             filename,
             mode = 0o644
         } = packerOptions;
 
-        if (!filename) {
+        if (!is.string(filename)) {
             throw new x.InvalidArgument("fast.pack: You must specify filename");
         }
 

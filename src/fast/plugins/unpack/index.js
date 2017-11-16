@@ -121,6 +121,7 @@ export default function plugin() {
                         }
                         this.push(entryFile);
                     }
+                    await zipfile.close();
                     break;
                 }
             }

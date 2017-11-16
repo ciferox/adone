@@ -614,6 +614,9 @@ const setFsWatchFileListener = (path, fullPath, options, handlers) => {
     };
 };
 
+const normalizePath = is.windows ? util.normalizePath : adone.identity;
+const unnormalizePath = is.windows ? (x) => x.replace(/\//g, "\\") : adone.identity;
+
 export default class Watcher extends event.EventEmitter {
     constructor({
         persistent = true,
@@ -737,18 +740,17 @@ export default class Watcher extends event.EventEmitter {
                     return `!${std.path.join(cwd, path.substring(1))}`;
                 }
                 return std.path.join(cwd, path);
-
             });
         }
 
         // set aside negated glob strings
-        paths = paths.filter((path) => {
+        paths = paths.map(normalizePath).filter((path) => {
             if (path[0] === "!") {
                 this._ignoredPaths.add(path.substring(1));
             } else {
                 // if a path is being added that was previously ignored, stop ignoring it
                 this._ignoredPaths.delete(path);
-                delete this._ignoredPaths.delete(`${path}/**`);
+                this._ignoredPaths.delete(`${path}/**`);
 
                 // reset the cached userIgnored anymatch fn
                 // to make ignoredPaths changes effective
@@ -809,7 +811,7 @@ export default class Watcher extends event.EventEmitter {
         if (this.closed) {
             return this;
         }
-        paths = util.flatten(util.arrify(paths));
+        paths = util.flatten(util.arrify(paths)).map(normalizePath);
 
         paths.forEach((path) => {
             // convert to absolute path unless relative path already matches
@@ -893,6 +895,7 @@ export default class Watcher extends event.EventEmitter {
         if (this.options.cwd) {
             path = std.path.relative(this.options.cwd, path);
         }
+        path = unnormalizePath(path);
         const args = [event, path, ...vals];
 
         const awf = this.options.awaitWriteFinish;

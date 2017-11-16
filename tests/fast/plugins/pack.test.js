@@ -1,5 +1,6 @@
 describe("fast", "transform", "pack", () => {
     const {
+        is,
         collection,
         archive: {
             tar,
@@ -27,10 +28,9 @@ describe("fast", "transform", "pack", () => {
     });
 
     describe("tar", () => {
-        it("should correctly pack directories", async () => {
+        it("should pack files", async () => {
             const input = await tmpdir.addDirectory("input");
-            await input.addDirectory("a", "b", "c");
-            await input.addDirectory("a", "d");
+            await input.addFile("hello", { contents: "world" });
             const output = await tmpdir.addDirectory("output");
 
             await fast
@@ -44,13 +44,35 @@ describe("fast", "transform", "pack", () => {
             await new Promise((resolve) => {
                 archive.contentsStream().pipe(tar.unpackStream(extracted)).on("finish", resolve);
             });
+            expect(await extracted.getFile("hello").exists()).to.be.true;
+            expect(await extracted.getFile("hello").contents()).to.be.equal("world");
+        });
+
+        it("should correctly pack directories", async () => {
+            const input = await tmpdir.addDirectory("input");
+            await input.addDirectory("a", "b", "c");
+            await input.addDirectory("a", "d");
+            const output = await tmpdir.addDirectory("output");
+
+            await fast
+                .src(input.getFile("**", "*"))
+                .pack("tar", { filename: "archive.tar" })
+                .dest(output);
+
+            const archive = output.getFile("archive.tar");
+            const extracted = await output.addDirectory("extracted");
+            await new Promise((resolve) => {
+                archive.contentsStream().pipe(tar.unpackStream(extracted)).on("finish", resolve);
+            });
             expect(await extracted.getDirectory("a").exists()).to.be.true;
             expect(await extracted.getDirectory("a", "b").exists()).to.be.true;
             expect(await extracted.getDirectory("a", "b", "c").exists()).to.be.true;
             expect(await extracted.getDirectory("a", "d").exists()).to.be.true;
         });
 
-        it("should pack directories with proper modes", async () => {
+        it("should pack directories with proper modes", {
+            skip: is.windows
+        }, async () => {
             const input = await tmpdir.addDirectory("input");
             await input.addDirectory("a", { mode: 0o775 });
             await input.addDirectory("a", "b", { mode: 0o770 });
@@ -80,9 +102,11 @@ describe("fast", "transform", "pack", () => {
             expect(await extracted.getDirectory("a", "d").mode() & 0o777).to.be.equal(0o711);
         });
 
-        // TODO: test directories mtime?
+        // TODO: test nested directories mtime?
 
-        it("should set proper file mode", async () => {
+        it("should set proper file mode", {
+            skip: is.windows
+        }, async () => {
             const input = await tmpdir.addDirectory("input");
             await input.addFile("hello", { mode: 0o741 });
             const output = await tmpdir.addDirectory("output");
@@ -127,7 +151,31 @@ describe("fast", "transform", "pack", () => {
             expect((await extracted.getFile("hello").stat()).mtimeMs).to.be.equal(1000);
         });
 
-        it("should handle symlinks", async () => {
+        it("should set proper directory mtime", async () => {
+            const input = await tmpdir.addDirectory("input");
+            await input.addDirectory("hello", { mtime: new Date(1234567890000) });
+            const output = await tmpdir.addDirectory("output");
+
+            await fast
+                .src(input.getFile("**", "*"))
+                .pack("tar", { filename: "archive.tar" })
+                .dest(output);
+
+            expect(await output.getFile("archive.tar").exists()).to.be.true;
+            const archive = output.getFile("archive.tar");
+            expect(await archive.exists()).to.be.true;
+            const extracted = await output.addDirectory("extracted");
+            await new Promise((resolve) => {
+                archive.contentsStream().pipe(tar.unpackStream(extracted)).on("finish", resolve);
+            });
+
+            expect(await extracted.getFile("hello").exists()).to.be.true;
+            expect((await extracted.getFile("hello").stat()).mtimeMs).to.be.equal(1234567890000);
+        });
+
+        it("should handle symlinks", {
+            skip: is.windows
+        }, async () => {
             const input = await tmpdir.addDirectory("input");
             await input.addFile("hello", { contents: "world" });
             await fs.symlink("hello", input.getFile("symlink").path());
@@ -164,6 +212,7 @@ describe("fast", "transform", "pack", () => {
                 entry.contents = (await stream.pipe(new collection.BufferList())).toString(); // eslint-disable-line
                 entries.push(entry);
             }
+            await zipfile.close();
             return entries;
         };
 
@@ -211,7 +260,9 @@ describe("fast", "transform", "pack", () => {
             }
         });
 
-        it("should set proper file mode", async () => {
+        it("should set proper file mode", {
+            skip: is.windows
+        }, async () => {
             const input = await tmpdir.addDirectory("input");
             await input.addFile("hello", { contents: "world", mode: 0o600 });
             const output = await tmpdir.addDirectory("output");
@@ -227,39 +278,9 @@ describe("fast", "transform", "pack", () => {
             expect((entries[0].externalFileAttributes >> 16) & 0o777).to.be.equal(0o600);
         });
 
-        it("should set proper directory mode", async () => {
-            const input = await tmpdir.addDirectory("input");
-            await input.addDirectory("dir", { mode: 0o700 });
-            const output = await tmpdir.addDirectory("output");
-
-            await fast
-                .src(input.getFile("**", "*"))
-                .pack("zip", { filename: "archive.zip" })
-                .dest(output);
-
-            expect(await output.getFile("archive.zip").exists()).to.be.true;
-            const entries = await readEntries(output.getFile("archive.zip"));
-            expect(entries).to.have.length(1);
-            expect((entries[0].externalFileAttributes >> 16) & 0o777).to.be.equal(0o700);
-        });
-
-        it("should set proper file mode", async () => {
-            const input = await tmpdir.addDirectory("input");
-            await input.addFile("hello", { contents: "world", mode: 0o600 });
-            const output = await tmpdir.addDirectory("output");
-
-            await fast
-                .src(input.getFile("**", "*"))
-                .pack("zip", { filename: "archive.zip" })
-                .dest(output);
-
-            expect(await output.getFile("archive.zip").exists()).to.be.true;
-            const entries = await readEntries(output.getFile("archive.zip"));
-            expect(entries).to.have.length(1);
-            expect((entries[0].externalFileAttributes >> 16) & 0o777).to.be.equal(0o600);
-        });
-
-        it("should set proper directory mode", async () => {
+        it("should set proper directory mode", {
+            skip: is.windows
+        }, async () => {
             const input = await tmpdir.addDirectory("input");
             await input.addDirectory("dir", { mode: 0o700 });
             const output = await tmpdir.addDirectory("output");
@@ -306,5 +327,7 @@ describe("fast", "transform", "pack", () => {
             expect(entries).to.have.length(1);
             expect(entries[0].getLastModDate().unix()).to.be.equal(1234567890);
         });
+
+        // TODO: test nested directories mitme?
     });
 });

@@ -332,12 +332,15 @@ class ZipFile extends EventEmitter {
         }
     }
 
-    close() {
+    async close() {
         if (!this.isOpen) {
             return;
         }
         this.isOpen = false;
-        this.reader.unref();
+        await new Promise((resolve) => {
+            this.reader.unref();
+            this.once("close", resolve);
+        });
     }
 
     async readEntry() {

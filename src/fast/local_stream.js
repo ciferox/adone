@@ -97,9 +97,9 @@ export class FastLocalStream extends adone.fast.Stream {
                 try {
                     if (file.isStream()) {
                         await new Promise((resolve, reject) => {
-                            const writeStream = std.fs.createWriteStream(null, { fd }).once("error", reject);
-                            file.contents.once("error", reject).once("end", resolve);
-                            file.contents.pipe(writeStream, { end: false });
+                            const writeStream = std.fs.createWriteStream(null, { fd, autoClose: false });
+                            file.contents.once("error", reject);
+                            file.contents.pipe(writeStream).once("error", reject).once("finish", resolve);
                         });
                     } else {
                         // Buffer

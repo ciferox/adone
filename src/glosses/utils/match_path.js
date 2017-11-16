@@ -50,10 +50,11 @@ export default function matchPath(criteria, value = null, { index = false, start
             if (p === string || (altString && p === altString)) {
                 return index ? idx : true;
             }
-            if (adone.util.match.isMatch(string, p, { dot })) {
+            const normalizedP = adone.util.normalizePath(p);
+            if (adone.util.match.isMatch(string, normalizedP, { dot })) {
                 return index ? idx : true;
             }
-            if (altString && adone.util.match.isMatch(altString, p, { dot })) {
+            if (altString && adone.util.match.isMatch(altString, normalizedP, { dot })) {
                 return index ? idx : true;
             }
         }

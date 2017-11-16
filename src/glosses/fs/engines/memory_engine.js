@@ -37,6 +37,7 @@ const SYMLINK_LOOP = Symbol();
 
 const getgid = is.windows ? () => -1 : process.getgid;
 const getuid = is.windows ? () => -1 : process.getuid;
+const getgroups = is.windows ? () => [-1] : process.getgroups;
 
 // const lazy = adone.lazify({
 //     uid: () => is.windows ? -1 : process.getuid(),
@@ -813,7 +814,7 @@ class VFS {
 
         if (node.uid === getuid()) {
             set = (node.mode >> 6) & 0o777;
-        } else if (process.getgroups().includes(node.gid)) {
+        } else if (getgroups().includes(node.gid)) {
             set = (node.mode >> 3) & 0o777;
         } else {
             set = node.mode & 0o777;

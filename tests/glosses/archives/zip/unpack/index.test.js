@@ -305,6 +305,7 @@ describe("archive", "zip", "unpack", () => {
                 readStream.pipe(writer);
             });
             zipfile.on("end", () => {
+
             });
             zipfile.on("close", () => {
                 if (doneWithStream) {

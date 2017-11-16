@@ -353,7 +353,9 @@ describe("fast", "transform", "wiredep", () => {
     });
 
     describe("events", () => {
-        const filePath = "html/index-emitter.html";
+        const filePath = is.windows
+            ? "html\\index-emitter.html"
+            : "html/index-emitter.html";
         let fileData;
 
         before((done) => {

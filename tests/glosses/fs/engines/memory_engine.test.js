@@ -1,5 +1,5 @@
 describe("fs", "engine", "MemoryEngine", () => {
-    const { fs, stream: { concat }, promise } = adone;
+    const { is, fs, stream: { concat }, promise } = adone;
     const { engine: { MemoryEngine } } = fs;
     const c = MemoryEngine.constants;
     const { Stats } = adone.std.fs;
@@ -101,42 +101,42 @@ describe("fs", "engine", "MemoryEngine", () => {
                     nothing: ctx.file({
                         contents: "hello",
                         mode: 0o707,
-                        uid: -1
+                        uid: -2
                     }),
                     r: ctx.file({
                         contents: "hello",
                         mode: 0o747,
-                        uid: -1
+                        uid: -2
                     }),
                     w: ctx.file({
                         contents: "hello",
                         mode: 0o727,
-                        uid: -1
+                        uid: -2
                     }),
                     x: ctx.file({
                         contents: "hello",
                         mode: 0o717,
-                        uid: -1
+                        uid: -2
                     }),
                     rw: ctx.file({
                         contents: "hello",
                         mode: 0o767,
-                        uid: -1
+                        uid: -2
                     }),
                     rx: ctx.file({
                         contents: "hello",
                         mode: 0o757,
-                        uid: -1
+                        uid: -2
                     }),
                     wx: ctx.file({
                         contents: "hello",
                         mode: 0o737,
-                        uid: -1
+                        uid: -2
                     }),
                     rwx: ctx.file({
                         contents: "hello",
                         mode: 0o777,
-                        uid: -1
+                        uid: -2
                     })
                 }));
 
@@ -178,50 +178,50 @@ describe("fs", "engine", "MemoryEngine", () => {
                     nothing: ctx.file({
                         contents: "hello",
                         mode: 0o770,
-                        uid: -1,
-                        gid: -1
+                        uid: -2,
+                        gid: -2
                     }),
                     r: ctx.file({
                         contents: "hello",
                         mode: 0o774,
-                        uid: -1,
-                        gid: -1
+                        uid: -2,
+                        gid: -2
                     }),
                     w: ctx.file({
                         contents: "hello",
                         mode: 0o772,
-                        uid: -1,
-                        gid: -1
+                        uid: -2,
+                        gid: -2
                     }),
                     x: ctx.file({
                         contents: "hello",
                         mode: 0o771,
-                        uid: -1,
-                        gid: -1
+                        uid: -2,
+                        gid: -2
                     }),
                     rw: ctx.file({
                         contents: "hello",
                         mode: 0o776,
-                        uid: -1,
-                        gid: -1
+                        uid: -2,
+                        gid: -2
                     }),
                     rx: ctx.file({
                         contents: "hello",
                         mode: 0o775,
-                        uid: -1,
-                        gid: -1
+                        uid: -2,
+                        gid: -2
                     }),
                     wx: ctx.file({
                         contents: "hello",
                         mode: 0o773,
-                        uid: -1,
-                        gid: -1
+                        uid: -2,
+                        gid: -2
                     }),
                     rwx: ctx.file({
                         contents: "hello",
                         mode: 0o777,
-                        uid: -1,
-                        gid: -1
+                        uid: -2,
+                        gid: -2
                     })
                 }));
 
@@ -349,42 +349,42 @@ describe("fs", "engine", "MemoryEngine", () => {
                     nothing: ctx.file({
                         contents: "hello",
                         mode: 0o707,
-                        uid: -1
+                        uid: -2
                     }),
                     r: ctx.file({
                         contents: "hello",
                         mode: 0o747,
-                        uid: -1
+                        uid: -2
                     }),
                     w: ctx.file({
                         contents: "hello",
                         mode: 0o727,
-                        uid: -1
+                        uid: -2
                     }),
                     x: ctx.file({
                         contents: "hello",
                         mode: 0o717,
-                        uid: -1
+                        uid: -2
                     }),
                     rw: ctx.file({
                         contents: "hello",
                         mode: 0o767,
-                        uid: -1
+                        uid: -2
                     }),
                     rx: ctx.file({
                         contents: "hello",
                         mode: 0o757,
-                        uid: -1
+                        uid: -2
                     }),
                     wx: ctx.file({
                         contents: "hello",
                         mode: 0o737,
-                        uid: -1
+                        uid: -2
                     }),
                     rwx: ctx.file({
                         contents: "hello",
                         mode: 0o777,
-                        uid: -1
+                        uid: -2
                     })
                 }));
 
@@ -421,55 +421,55 @@ describe("fs", "engine", "MemoryEngine", () => {
                 engine.accessSync("/rwx", c.R_OK | c.W_OK | c.X_OK);
             });
 
-            it("should apply 'others' set and throw EACCES if there are no corresponding rights", () => {
+            it("should apply 'others' set and throw EACCES if there are no corresponding rights (sync)", () => {
                 engine.add((ctx) => ({
                     nothing: ctx.file({
                         contents: "hello",
                         mode: 0o770,
-                        uid: -1,
-                        gid: -1
+                        uid: -2,
+                        gid: -2
                     }),
                     r: ctx.file({
                         contents: "hello",
                         mode: 0o774,
-                        uid: -1,
-                        gid: -1
+                        uid: -2,
+                        gid: -2
                     }),
                     w: ctx.file({
                         contents: "hello",
                         mode: 0o772,
-                        uid: -1,
-                        gid: -1
+                        uid: -2,
+                        gid: -2
                     }),
                     x: ctx.file({
                         contents: "hello",
                         mode: 0o771,
-                        uid: -1,
-                        gid: -1
+                        uid: -2,
+                        gid: -2
                     }),
                     rw: ctx.file({
                         contents: "hello",
                         mode: 0o776,
-                        uid: -1,
-                        gid: -1
+                        uid: -2,
+                        gid: -2
                     }),
                     rx: ctx.file({
                         contents: "hello",
                         mode: 0o775,
-                        uid: -1,
-                        gid: -1
+                        uid: -2,
+                        gid: -2
                     }),
                     wx: ctx.file({
                         contents: "hello",
                         mode: 0o773,
-                        uid: -1,
-                        gid: -1
+                        uid: -2,
+                        gid: -2
                     }),
                     rwx: ctx.file({
                         contents: "hello",
                         mode: 0o777,
-                        uid: -1,
-                        gid: -1
+                        uid: -2,
+                        gid: -2
                     })
                 }));
 
@@ -1927,7 +1927,7 @@ describe("fs", "engine", "MemoryEngine", () => {
                     });
                 });
 
-                describe("O_NOFOLLOW", () => {
+                describe("O_NOFOLLOW", { skip: is.windows }, () => {
                     it("should throw ELOOP if the pathname is a symlink", async () => {
                         engine.add((ctx) => ({
                             a: {
@@ -2287,7 +2287,7 @@ describe("fs", "engine", "MemoryEngine", () => {
                     });
                 });
 
-                describe("O_NOFOLLOW", () => {
+                describe("O_NOFOLLOW", { skip: is.windows }, () => {
                     it("should throw ELOOP if the pathname is a symlink", () => {
                         engine.add((ctx) => ({
                             a: {
@@ -2310,7 +2310,7 @@ describe("fs", "engine", "MemoryEngine", () => {
                         }
                     });
 
-                    it("should follow earlier symbolic components", () => {
+                    it.only("should follow earlier symbolic components", () => {
                         engine.add((ctx) => ({
                             a: {
                                 a: ctx.file("hello"),

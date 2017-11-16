@@ -1,5 +1,5 @@
 describe("fs", "engine", "AbstactEngine", () => {
-    const { fs } = adone;
+    const { is, fs } = adone;
     const { engine } = fs;
     const { MemoryEngine, AbstractEngine, StandardEngine } = engine;
 
@@ -243,7 +243,9 @@ describe("fs", "engine", "AbstactEngine", () => {
             expect(readdir).to.have.been.calledOnce;
         });
 
-        it("should support require from memory with std.fs mock", () => {
+        it("should support require from memory with std.fs mock", {
+            skip: is.windows // TODO: figure out how to handle namespaced paths on windows
+        }, () => {
             const memory = new MemoryEngine().add((ctx) => ({
                 "script.js": ctx.file(`
                     const a = require("./a");

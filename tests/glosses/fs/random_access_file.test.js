@@ -1,7 +1,10 @@
 describe("fs", "RandomAccessFile", () => {
     const {
-        RandomAccessFile
-    } = adone.fs;
+        fs: {
+            RandomAccessFile
+        },
+        is
+    } = adone;
 
     /**
      * @type {adone.fs.Directory}
@@ -97,6 +100,7 @@ describe("fs", "RandomAccessFile", () => {
             const buf = await file2.read(5, 10);
             assert.deepEqual(buf, Buffer.from("hello"));
             await file.close();
+            await file2.close();
             await file.unlink();
         } catch (err) {
             isOk = false;
@@ -118,11 +122,14 @@ describe("fs", "RandomAccessFile", () => {
             isOk = (err.message === "Could not satisfy length");
         }
         await file.close();
+        await file2.close();
         await file.unlink();
         assert.isOk(isOk);
     });
 
-    it("append mode", async () => {
+    it.only("append mode", {
+        skip: is.windows
+    }, async () => {
         const name = filepath;
         let file = await RandomAccessFile.open(name, { appendable: true });
         let isOk = true;

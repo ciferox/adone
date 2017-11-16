@@ -45,9 +45,13 @@ describe("fast", "transform", "useref", () => {
             path: "hello.js",
             contents: fs.createReadStream(f.path())
         });
-        await assert.throws(async () => {
-            await new Stream([file]).useref();
-        });
+        try {
+            await assert.throws(async () => {
+                await new Stream([file]).useref();
+            });
+        } finally {
+            file.contents.close();
+        }
     });
 
     it("should replace reference in css block and return replaced files", async () => {

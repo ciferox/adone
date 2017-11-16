@@ -2041,7 +2041,7 @@ describe("util", "fakeClock", () => {
             it("returns an empty list of timers on immediate uninstall", () => {
                 const clock = fakeClock.install();
                 const timers = clock.uninstall();
-                assert.deepE qual(timers, []);
+                assert.deepEqual(timers, []);
             });
 
 

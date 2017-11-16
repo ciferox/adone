@@ -1,10 +1,24 @@
 describe("fs", "glob", () => {
-    const { fs } = adone;
+    const { is, fs, std } = adone;
     const { glob } = fs;
     const { Glob } = glob;
     const { delay } = adone.promise;
 
     const virtual = new fs.engine.MemoryEngine();
+
+    const root = std.path.resolve("/");
+
+    const normalizePath = !is.windows ? adone.identity : (x) => {
+        x = x.replace(/\//g, "\\");
+        if (x[0] === "\\") {
+            x = `${root}${x.slice(1)}`;
+        }
+        return x;
+    };
+
+    const normalizePaths = is.windows
+        ? (x) => x.map(normalizePath)
+        : adone.identity;
 
     before(() => {
         const stdfs = new fs.engine.StandardEngine().mount(virtual, "/virtual");
@@ -23,7 +37,7 @@ describe("fs", "glob", () => {
         virtual.addFiles("{1..10}", () => "hello");
         const result = await glob("/virtual/*");
         expect(result).to.have.lengthOf(10);
-        expect(result.sort()).to.be.deep.equal([
+        expect(result.sort()).to.be.deep.equal(normalizePaths([
             "/virtual/1",
             "/virtual/10",
             "/virtual/2",
@@ -34,7 +48,7 @@ describe("fs", "glob", () => {
             "/virtual/7",
             "/virtual/8",
             "/virtual/9"
-        ]);
+        ]));
     });
 
     it("should return only directories when */ and mark them with /", async () => {
@@ -47,13 +61,13 @@ describe("fs", "glob", () => {
         }));
 
         const result = await glob("/virtual/*/");
-        expect(result.sort()).to.be.deep.equal([
+        expect(result.sort()).to.be.deep.equal(normalizePaths([
             "/virtual/a/",
             "/virtual/b/",
             "/virtual/c/",
             "/virtual/d/",
             "/virtual/e/"
-        ]);
+        ]));
     });
 
     it("should recursively walk through directories when **", async () => {
@@ -70,7 +84,7 @@ describe("fs", "glob", () => {
         }));
 
         const result = await glob("/virtual/**");
-        expect(result.sort()).to.be.deep.equal([
+        expect(result.sort()).to.be.deep.equal(normalizePaths([
             "/virtual/",
             "/virtual/a",
             "/virtual/a/b",
@@ -78,7 +92,7 @@ describe("fs", "glob", () => {
             "/virtual/a/b/c/d",
             "/virtual/a/e",
             "/virtual/f"
-        ]);
+        ]));
     });
 
     it("should return only directories when **/", async () => {
@@ -95,12 +109,12 @@ describe("fs", "glob", () => {
         }));
 
         const result = await glob("/virtual/**/");
-        expect(result.sort()).to.be.deep.equal([
+        expect(result.sort()).to.be.deep.equal(normalizePaths([
             "/virtual/",
             "/virtual/a/",
             "/virtual/a/b/",
             "/virtual/a/b/c/"
-        ]);
+        ]));
     });
 
     it("should not return the root when **/*", async () => {
@@ -117,14 +131,14 @@ describe("fs", "glob", () => {
         }));
 
         const result = await glob("/virtual/**/*");
-        expect(result.sort()).to.be.deep.equal([
+        expect(result.sort()).to.be.deep.equal(normalizePaths([
             "/virtual/a",
             "/virtual/a/b",
             "/virtual/a/b/c",
             "/virtual/a/b/c/d",
             "/virtual/a/e",
             "/virtual/f"
-        ]);
+        ]));
     });
 
     it("should return only nested directories when **/*/", async () => {
@@ -141,11 +155,11 @@ describe("fs", "glob", () => {
         }));
 
         const result = await glob("/virtual/**/*/");
-        expect(result.sort()).to.be.deep.equal([
+        expect(result.sort()).to.be.deep.equal(normalizePaths([
             "/virtual/a/",
             "/virtual/a/b/",
             "/virtual/a/b/c/"
-        ]);
+        ]));
     });
 
     it("should return only matched files with **", async () => {
@@ -168,13 +182,13 @@ describe("fs", "glob", () => {
         }));
 
         const result = await glob("/virtual/**/*e");
-        expect(result.sort()).to.be.deep.equal([
+        expect(result.sort()).to.be.deep.equal(normalizePaths([
             "/virtual/a/b/e",
             "/virtual/a/e",
             "/virtual/a/e/e",
             "/virtual/fe",
             "/virtual/fe/fe"
-        ]);
+        ]));
     });
 
     it("should return only matched directories with **", async () => {
@@ -199,11 +213,11 @@ describe("fs", "glob", () => {
         }));
 
         const result = await glob("/virtual/**/*e/");
-        expect(result.sort()).to.be.deep.equal([
+        expect(result.sort()).to.be.deep.equal(normalizePaths([
             "/virtual/a/e/",
             "/virtual/a/e/e/",
             "/virtual/fe/"
-        ]);
+        ]));
     });
 
     it("should match nested patterns", async () => {
@@ -222,11 +236,11 @@ describe("fs", "glob", () => {
 
         const result = await glob("/virtual/**/b/*");
 
-        expect(result.sort()).to.be.deep.equal([
+        expect(result.sort()).to.be.deep.equal(normalizePaths([
             "/virtual/a/b/c",
             "/virtual/b/b",
             "/virtual/b/b/c"
-        ]);
+        ]));
     });
 
     describe("non-glob patterns", () => {
@@ -236,7 +250,7 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("/virtual/a");
-            expect(result).to.be.deep.equal(["/virtual/a"]);
+            expect(result).to.be.deep.equal(normalizePaths(["/virtual/a"]));
         });
 
         it("should return a directory", async () => {
@@ -247,7 +261,7 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("/virtual/a/");
-            expect(result).to.be.deep.equal(["/virtual/a/"]);
+            expect(result).to.be.deep.equal(normalizePaths(["/virtual/a/"]));
         });
 
         it("should return nothing if not a directory matches to a directory pattern", async () => {
@@ -281,7 +295,7 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("/virtual/**/*");
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "/virtual/a",
                 "/virtual/a/b",
                 "/virtual/a/b/c",
@@ -291,7 +305,7 @@ describe("fs", "glob", () => {
                 "/virtual/b/d",
                 "/virtual/b/d/e",
                 "/virtual/b/d/f"
-            ]);
+            ]));
         });
 
         it("should not get into an infinite loop with cyclic references", async () => {
@@ -307,7 +321,7 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("/virtual/**/*");
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "/virtual/a",
                 "/virtual/a/b",
                 "/virtual/a/b/a",
@@ -318,7 +332,7 @@ describe("fs", "glob", () => {
                 "/virtual/b/a/b",
                 "/virtual/b/a/c",
                 "/virtual/b/c"
-            ]);
+            ]));
         });
 
         it("should not fail on dead links", async () => {
@@ -330,14 +344,14 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("/virtual/**/*");
-            expect(result).to.be.deep.equal([
+            expect(result).to.be.deep.equal(normalizePaths([
                 "/virtual/a",
                 "/virtual/a/a0",
                 "/virtual/a/b"
-            ]);
+            ]));
         });
 
-        it("should follow symlinks when follow = true", async () => {
+        it("should follow symlinks when follow = true", { skip: is.windows }, async () => {
             virtual.add((ctx) => ({
                 a: {
                     a0: ctx.file("hello")
@@ -357,7 +371,7 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("/virtual/**/*", { follow: true });
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "/virtual/a",
                 "/virtual/a/a0",
                 "/virtual/b",
@@ -373,7 +387,7 @@ describe("fs", "glob", () => {
                 "/virtual/c/d/b/b0",
                 "/virtual/c/d/d0",
                 "/virtual/c/d/d1"
-            ]);
+            ]));
         });
 
         it("should get into an infinite loop with cyclic references when follow = true but stop when the ELOOP raises", async () => {
@@ -390,10 +404,10 @@ describe("fs", "glob", () => {
 
             const result = await glob("/virtual/**/*", { follow: true });
             expect(result.length).to.be.greaterThan(10); // 10 with no follow, here we must have much more
-            expect(result).to.include("/virtual/a/b/a");
-            expect(result).to.include("/virtual/a/b/a/b/a/b/a/b");
-            expect(result).to.include("/virtual/b/a/b");
-            expect(result).to.include("/virtual/b/a/b/a/b/a/b/a");
+            expect(result).to.include(normalizePath("/virtual/a/b/a"));
+            expect(result).to.include(normalizePath("/virtual/a/b/a/b/a/b/a/b"));
+            expect(result).to.include(normalizePath("/virtual/b/a/b"));
+            expect(result).to.include(normalizePath("/virtual/b/a/b/a/b/a/b/a"));
         });
 
         it("should return a directory when directories are requested if a symlink refers to a directory", async () => {
@@ -409,24 +423,24 @@ describe("fs", "glob", () => {
             }));
             {
                 const result = await glob("/virtual/**/*/");
-                expect(result.sort()).to.be.deep.equal([
+                expect(result.sort()).to.be.deep.equal(normalizePaths([
                     "/virtual/a/",
                     "/virtual/a/b/",
                     "/virtual/b/",
                     "/virtual/c/"
-                ]);
+                ]));
             }
             {
                 const result = await glob("/virtual/c/");
-                expect(result).to.be.deep.equal(["/virtual/c/"]);
+                expect(result).to.be.deep.equal(normalizePaths(["/virtual/c/"]));
             }
             {
                 const result = await glob("/virtual/*/");
-                expect(result.sort()).to.be.deep.equal([
+                expect(result.sort()).to.be.deep.equal(normalizePaths([
                     "/virtual/a/",
                     "/virtual/b/",
                     "/virtual/c/"
-                ]);
+                ]));
             }
         });
 
@@ -445,21 +459,21 @@ describe("fs", "glob", () => {
 
             {
                 const result = await glob("a/symlink/a/b/c/**/b/c/**", { cwd: "/virtual" });
-                expect(result.sort()).to.be.deep.equal([
+                expect(result.sort()).to.be.deep.equal(normalizePaths([
                     "a/symlink/a/b/c/a/b/c",
                     "a/symlink/a/b/c/a/b/c/a",
                     "a/symlink/a/b/c/a/b/c/a/b",
                     "a/symlink/a/b/c/a/b/c/a/b/c"
-                ]);
+                ]));
             }
             {
                 const result = await glob("a/symlink/a/b/c/**/b/c/**/b/c/**", { cwd: "/virtual" });
-                expect(result.sort()).to.be.deep.equal([
+                expect(result.sort()).to.be.deep.equal(normalizePaths([
                     "a/symlink/a/b/c/a/b/c/a/b/c",
                     "a/symlink/a/b/c/a/b/c/a/b/c/a",
                     "a/symlink/a/b/c/a/b/c/a/b/c/a/b",
                     "a/symlink/a/b/c/a/b/c/a/b/c/a/b/c"
-                ]);
+                ]));
             }
             {
                 const result = await glob("a/symlink/a/b/**/b/c/**", { cwd: "/virtual" });
@@ -481,12 +495,12 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("a/symlink/a/b/c/a/b/c/a/b/c//a/b/c////a/b/c/**/b/c/**", { cwd: "/virtual" });
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "a/symlink/a/b/c/a/b/c/a/b/c//a/b/c////a/b/c/a/b/c",
                 "a/symlink/a/b/c/a/b/c/a/b/c//a/b/c////a/b/c/a/b/c/a",
                 "a/symlink/a/b/c/a/b/c/a/b/c//a/b/c////a/b/c/a/b/c/a/b",
                 "a/symlink/a/b/c/a/b/c/a/b/c//a/b/c////a/b/c/a/b/c/a/b/c"
-            ]);
+            ]));
         });
 
         it("should correctly work with many links", async () => {
@@ -520,7 +534,7 @@ describe("fs", "glob", () => {
             }));
             {
                 const result = await glob("/virtual/**/*");
-                expect(result.sort()).to.be.deep.equal([
+                expect(result.sort()).to.be.deep.equal(normalizePaths([
                     "/virtual/a",
                     "/virtual/a/b",
                     "/virtual/a/b/c",
@@ -546,11 +560,11 @@ describe("fs", "glob", () => {
                     "/virtual/e/t/v/a",
                     "/virtual/f",
                     "/virtual/f/a"
-                ]);
+                ]));
             }
             {
                 const result = await glob("/virtual/**/*/");
-                expect(result.sort()).to.be.deep.equal([
+                expect(result.sort()).to.be.deep.equal(normalizePaths([
                     "/virtual/a/",
                     "/virtual/a/b/",
                     "/virtual/a/b/c/",
@@ -574,11 +588,11 @@ describe("fs", "glob", () => {
                     "/virtual/e/t/u/b/",
                     "/virtual/e/t/v/",
                     "/virtual/f/"
-                ]);
+                ]));
             }
             {
                 const result = await glob("/virtual/**/*/*");
-                expect(result.sort()).to.be.deep.equal([
+                expect(result.sort()).to.be.deep.equal(normalizePaths([
                     "/virtual/a/b",
                     "/virtual/a/b/c",
                     "/virtual/a/b/c/d",
@@ -607,7 +621,7 @@ describe("fs", "glob", () => {
                     "/virtual/e/t/v",
                     "/virtual/e/t/v/a",
                     "/virtual/f/a"
-                ]);
+                ]));
             }
         });
     });
@@ -626,28 +640,28 @@ describe("fs", "glob", () => {
 
             {
                 const result = await glob("/virtual/.");
-                expect(result.sort()).to.be.deep.equal([
+                expect(result.sort()).to.be.deep.equal(normalizePaths([
                     "/virtual/."
-                ]);
+                ]));
             }
             {
                 const result = await glob("/virtual/./");
-                expect(result.sort()).to.be.deep.equal([
+                expect(result.sort()).to.be.deep.equal(normalizePaths([
                     "/virtual/./"
-                ]);
+                ]));
             }
             {
                 const result = await glob("/virtual/./*");
-                expect(result.sort()).to.be.deep.equal([
+                expect(result.sort()).to.be.deep.equal(normalizePaths([
                     "/virtual/./a",
                     "/virtual/./b"
-                ]);
+                ]));
             }
             {
                 const result = await glob("/virtual/*/.");
-                expect(result.sort()).to.be.deep.equal([
+                expect(result.sort()).to.be.deep.equal(normalizePaths([
                     "/virtual/b/."
-                ]);
+                ]));
             }
         });
 
@@ -663,13 +677,13 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("/virtual/**/./*");
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "/virtual/./a",
                 "/virtual/./b",
                 "/virtual/b/./b0",
                 "/virtual/b/./c",
                 "/virtual/b/c/./c0"
-            ]);
+            ]));
         });
 
         it("should normally handle . in differenct places", async () => {
@@ -684,10 +698,10 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("/virtual/**/././*/./");
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "/virtual/././b/./",
                 "/virtual/b/././c/./"
-            ]);
+            ]));
         });
     });
 
@@ -705,28 +719,28 @@ describe("fs", "glob", () => {
 
             {
                 const result = await glob("/virtual/b/..");
-                expect(result.sort()).to.be.deep.equal([
+                expect(result.sort()).to.be.deep.equal(normalizePaths([
                     "/virtual/b/.."
-                ]);
+                ]));
             }
             {
                 const result = await glob("/virtual/b/../");
-                expect(result.sort()).to.be.deep.equal([
+                expect(result.sort()).to.be.deep.equal(normalizePaths([
                     "/virtual/b/../"
-                ]);
+                ]));
             }
             {
                 const result = await glob("/virtual/b/../b/../*");
-                expect(result.sort()).to.be.deep.equal([
+                expect(result.sort()).to.be.deep.equal(normalizePaths([
                     "/virtual/b/../b/../a",
                     "/virtual/b/../b/../b"
-                ]);
+                ]));
             }
             {
                 const result = await glob("/virtual/*/..");
-                expect(result.sort()).to.be.deep.equal([
+                expect(result.sort()).to.be.deep.equal(normalizePaths([
                     "/virtual/b/.."
-                ]);
+                ]));
             }
         });
 
@@ -742,12 +756,12 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("/virtual/*/**/../*");
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "/virtual/b/../a",
                 "/virtual/b/../b",
                 "/virtual/b/c/../b0",
                 "/virtual/b/c/../c"
-            ]);
+            ]));
         });
 
         it("should normally handle .. in differenct places", async () => {
@@ -767,7 +781,7 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("/virtual/*/**/././../*/./..");
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "/virtual/e/././../e/./..",
                 "/virtual/e/b/././../b/./..",
                 "/virtual/e/b/././../c/./..",
@@ -776,7 +790,7 @@ describe("fs", "glob", () => {
                 "/virtual/e/c/././../c/./..",
                 "/virtual/e/c/e/././../b/./..",
                 "/virtual/e/c/e/././../c/./.."
-            ]);
+            ]));
         });
     });
 
@@ -793,13 +807,13 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("**/*", { cwd: "/virtual" });
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "a",
                 "b",
                 "b/b0",
                 "b/c",
                 "b/c/c0"
-            ]);
+            ]));
         });
 
         it("should properly handle ..", async () => {
@@ -814,13 +828,13 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("../**/*", { cwd: "/virtual/b" });
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "../a",
                 "../b",
                 "../b/b0",
                 "../b/c",
                 "../b/c/c0"
-            ]);
+            ]));
         });
 
         it("should properly handle .", async () => {
@@ -835,13 +849,13 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("./**/*", { cwd: "/virtual" });
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "./a",
                 "./b",
                 "./b/b0",
                 "./b/c",
                 "./b/c/c0"
-            ]);
+            ]));
         });
 
         it("should not emit the empty root when **", async () => {
@@ -853,11 +867,11 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("**", { cwd: "/virtual" });
-            expect(result).to.be.deep.equal([
+            expect(result).to.be.deep.equal(normalizePaths([
                 "a",
                 "b",
                 "b/a"
-            ]);
+            ]));
         });
 
         it("should strip trailing slashes", async () => {
@@ -869,11 +883,11 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("**", { cwd: "/virtual///////////" });
-            expect(result).to.be.deep.equal([
+            expect(result).to.be.deep.equal(normalizePaths([
                 "a",
                 "b",
                 "b/a"
-            ]);
+            ]));
         });
     });
 
@@ -888,10 +902,10 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("/*", { root: "/virtual/b" });
-            expect(result).to.be.deep.equal([
+            expect(result).to.be.deep.equal(normalizePaths([
                 "/virtual/b/a",
                 "/virtual/b/c"
-            ]);
+            ]));
         });
 
         it("should strip trailing slashes", async () => {
@@ -904,10 +918,10 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("/*", { root: "/virtual/b/////////" });
-            expect(result).to.be.deep.equal([
+            expect(result).to.be.deep.equal(normalizePaths([
                 "/virtual/b/a",
                 "/virtual/b/c"
-            ]);
+            ]));
         });
 
         it("should support roots relative to the cwd", async () => {
@@ -920,10 +934,10 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("/*", { root: "b", cwd: "/virtual" });
-            expect(result).to.be.deep.equal([
+            expect(result).to.be.deep.equal(normalizePaths([
                 "/virtual/b/a",
                 "/virtual/b/c"
-            ]);
+            ]));
         });
     });
 
@@ -940,11 +954,11 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("/virtual/**/*", { nodir: true });
-            expect(result).to.be.deep.equal([
+            expect(result).to.be.deep.equal(normalizePaths([
                 "/virtual/a",
                 "/virtual/b/b0",
                 "/virtual/b/c/c0"
-            ]);
+            ]));
         });
     });
 
@@ -1009,11 +1023,11 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("/virtual/**/*");
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "/virtual/b",
                 "/virtual/b/c",
                 "/virtual/b/c/c0"
-            ]);
+            ]));
         });
 
         it("should emit hidden entries when dot is true", async () => {
@@ -1031,7 +1045,7 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("/virtual/**/*", { dot: true });
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "/virtual/.a",
                 "/virtual/b",
                 "/virtual/b/.b0",
@@ -1039,7 +1053,7 @@ describe("fs", "glob", () => {
                 "/virtual/b/c/.d",
                 "/virtual/b/c/.d/d0",
                 "/virtual/b/c/c0"
-            ]);
+            ]));
         });
 
         it("should emit hidden entries when it is explicitly set", async () => {
@@ -1057,11 +1071,11 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("/virtual/**/.*");
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "/virtual/.a",
                 "/virtual/b/.b0",
                 "/virtual/b/c/.d"
-            ]);
+            ]));
         });
     });
 
@@ -1078,13 +1092,13 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("**/*", { cwd: "/virtual", absolute: true });
-            expect(result).to.be.deep.equal([
+            expect(result).to.be.deep.equal(normalizePaths([
                 "/virtual/a",
                 "/virtual/b",
                 "/virtual/b/b0",
                 "/virtual/b/c",
                 "/virtual/b/c/c0"
-            ]);
+            ]));
         });
 
         it("should return normalized absolute patterns when absolute, normalized and cwd are set", async () => {
@@ -1099,10 +1113,10 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("*/./*", { cwd: "/virtual", absolute: true, normalized: true });
-            expect(result).to.be.deep.equal([
+            expect(result).to.be.deep.equal(normalizePaths([
                 "/virtual/b/b0",
                 "/virtual/b/c"
-            ]);
+            ]));
         });
     });
 
@@ -1119,10 +1133,10 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("/virtual/*/./*");
-            expect(result).to.be.deep.equal([
+            expect(result).to.be.deep.equal(normalizePaths([
                 "/virtual/b/./b0",
                 "/virtual/b/./c"
-            ]);
+            ]));
         });
 
         it("should return normalized paths when normalized is set", async () => {
@@ -1137,10 +1151,10 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("/virtual/*/./*", { normalized: true });
-            expect(result).to.be.deep.equal([
+            expect(result).to.be.deep.equal(normalizePaths([
                 "/virtual/b/b0",
                 "/virtual/b/c"
-            ]);
+            ]));
         });
 
         it("should return normalized relative paths for relative patterns", async () => {
@@ -1155,10 +1169,10 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("*/./*", { normalized: true, cwd: "/virtual" });
-            expect(result).to.be.deep.equal([
+            expect(result).to.be.deep.equal(normalizePaths([
                 "b/b0",
                 "b/c"
-            ]);
+            ]));
         });
     });
 
@@ -1175,11 +1189,11 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob(["/virtual/**/a", "/virtual/**/*0"]);
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "/virtual/a",
                 "/virtual/b/b0",
                 "/virtual/b/c/c0"
-            ]);
+            ]));
         });
 
         it("should correctly handle relative and non relative given patterns", async () => {
@@ -1194,11 +1208,11 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob(["**/*0", "/virtual/**/c"], { cwd: "/virtual" });
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "/virtual/b/c",
                 "b/b0",
                 "b/c/c0"
-            ]);
+            ]));
         });
     });
 
@@ -1215,9 +1229,9 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob(["**/a*", "**/*a"], { cwd: "/virtual" });
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "a"
-            ]);
+            ]));
         });
 
         it("should not remove duplicates when unique is unset", async () => {
@@ -1232,10 +1246,10 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob(["**/a*", "**/*a"], { cwd: "/virtual", unique: false });
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "a",
                 "a"
-            ]);
+            ]));
         });
 
         it("should remove duplicates when absolute is set and relative and absolute patterns are given", async () => {
@@ -1250,16 +1264,16 @@ describe("fs", "glob", () => {
             }));
             {
                 const result = await glob(["/virtual/**/a*", "**/*a"], { cwd: "/virtual" });
-                expect(result.sort()).to.be.deep.equal([
+                expect(result.sort()).to.be.deep.equal(normalizePaths([
                     "/virtual/a",
                     "a"
-                ]);
+                ]));
             }
             {
                 const result = await glob(["/virtual/**/a*", "**/*a"], { cwd: "/virtual", absolute: true });
-                expect(result.sort()).to.be.deep.equal([
+                expect(result.sort()).to.be.deep.equal(normalizePaths([
                     "/virtual/a"
-                ]);
+                ]));
             }
         });
 
@@ -1276,16 +1290,16 @@ describe("fs", "glob", () => {
 
             {
                 const result = await glob(["**/b/.", "**/b"], { cwd: "/virtual" });
-                expect(result.sort()).to.be.deep.equal([
+                expect(result.sort()).to.be.deep.equal(normalizePaths([
                     "b",
                     "b/."
-                ]);
+                ]));
             }
             {
                 const result = await glob(["**/b/.", "**/b"], { cwd: "/virtual", normalized: true });
-                expect(result.sort()).to.be.deep.equal([
+                expect(result.sort()).to.be.deep.equal(normalizePaths([
                     "b"
-                ]);
+                ]));
             }
 
         });
@@ -1304,11 +1318,11 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob(["**/*0", "/virtual/**/c"], { cwd: "/virtual", index: true });
-            expect(result.map((x) => x.path).sort()).to.be.deep.equal([
+            expect(result.map((x) => x.path).sort()).to.be.deep.equal(normalizePaths([
                 "/virtual/b/c",
                 "b/b0",
                 "b/c/c0"
-            ]);
+            ]));
             for (const res of result) {
                 switch (res.path) {
                     case "/virtual/b/c": {
@@ -1336,11 +1350,11 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob(["**/*0", "!**/*.js", "/virtual/**/c"], { cwd: "/virtual", index: true });
-            expect(result.map((x) => x.path).sort()).to.be.deep.equal([
+            expect(result.map((x) => x.path).sort()).to.be.deep.equal(normalizePaths([
                 "/virtual/b/c",
                 "b/b0",
                 "b/c/c0"
-            ]);
+            ]));
             for (const res of result) {
                 switch (res.path) {
                     case "/virtual/b/c": {
@@ -1371,12 +1385,12 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob(["**/*", "!**/c*"], { cwd: "/virtual" });
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "a",
                 "b",
                 "b/b0",
                 "b/c/e"
-            ]);
+            ]));
         });
 
         it("should exclude subtree with **", async () => {
@@ -1392,9 +1406,9 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob(["**/*", "!b/**"], { cwd: "/virtual" });
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "a"
-            ]);
+            ]));
         });
 
         it("should not exclude the directory itself when **/*", async () => {
@@ -1410,10 +1424,10 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob(["**/*", "!b/**/*"], { cwd: "/virtual" });
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "a",
                 "b"
-            ]);
+            ]));
         });
 
         it("should not exclude files with matching name for **", async () => {
@@ -1435,13 +1449,13 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob(["**/*", "!**/b*/**/*"], { cwd: "/virtual" });
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "a",
                 "b",
                 "c",
                 "c/b",
                 "c/baa"
-            ]);
+            ]));
         });
 
         it("should support multiple ignore patterns", async () => {
@@ -1492,7 +1506,7 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob(["**/*", "!**/c/**", "!**/*y", "!d/a/b", "!*/e/*"], { cwd: "/virtual" });
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "a",
                 "b",
                 "b/b0",
@@ -1510,7 +1524,7 @@ describe("fs", "glob", () => {
                 "f/i/j",
                 "f/i/j/k",
                 "f/i/j/k/l"
-            ]);
+            ]));
         });
 
         it("should support dotted files", async () => {
@@ -1532,14 +1546,14 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob(["**/*", "!**/.*", "!**/.*/**"], { cwd: "/virtual", dot: true });
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "a",
                 "b",
                 "b/b0",
                 "c",
                 "c/b",
                 "c/baa"
-            ]);
+            ]));
         });
     });
 
@@ -1560,7 +1574,7 @@ describe("fs", "glob", () => {
         }));
 
         const result = await glob("/virtual/{a,b}/**");
-        expect(result.sort()).to.be.deep.equal([
+        expect(result.sort()).to.be.deep.equal(normalizePaths([
             "/virtual/a/",
             "/virtual/a/b",
             "/virtual/a/c",
@@ -1569,7 +1583,7 @@ describe("fs", "glob", () => {
             "/virtual/b/c",
             "/virtual/b/d",
             "/virtual/b/d/e"
-        ]);
+        ]));
     });
 
     it("should correctly handle non normalized cases", async () => {
@@ -1590,11 +1604,11 @@ describe("fs", "glob", () => {
 
         {
             const result = await glob("/virtual/a/abc{fed/g,def}/**///**/");
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "/virtual/a/abcdef/",
                 "/virtual/a/abcdef/g/",
                 "/virtual/a/abcfed/g/"
-            ]);
+            ]));
         }
     });
 
@@ -1618,14 +1632,14 @@ describe("fs", "glob", () => {
         }));
 
         const result = await glob("/virtual/{a,b/d}/**/*");
-        expect(result.sort()).to.be.deep.equal([
+        expect(result.sort()).to.be.deep.equal(normalizePaths([
             "/virtual/a/b",
             "/virtual/a/c",
             "/virtual/a/c/d",
             "/virtual/b/d/e",
             "/virtual/b/d/f",
             "/virtual/b/d/f/g"
-        ]);
+        ]));
     });
 
     describe("extglob", () => {
@@ -1644,12 +1658,12 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("/virtual/**/!(*.js|b)");
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "/virtual/a",
                 "/virtual/a/c",
                 "/virtual/a/c/d",
                 "/virtual/a/d"
-            ]);
+            ]));
         });
 
         it("should support ?", async () => {
@@ -1671,11 +1685,11 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("/virtual/**/c?(0|2|3)/*");
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "/virtual/a/c/a",
                 "/virtual/a/c0/b",
                 "/virtual/a/c2/d"
-            ]);
+            ]).sort());
         });
 
         it("should support *", async () => {
@@ -1700,12 +1714,12 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("/virtual/**/b*(c|o|r|e)/*");
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "/virtual/a/b/e",
                 "/virtual/a/bcore/a",
                 "/virtual/a/bcorecoreeroc/c",
                 "/virtual/a/beorc/b"
-            ]);
+            ]));
         });
 
         it("should support +", async () => {
@@ -1727,11 +1741,11 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("/virtual/**/+(c|o|r|e)/*");
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "/virtual/a/core/a",
                 "/virtual/a/corecoreeroc/c",
                 "/virtual/a/eorc/b"
-            ]);
+            ]));
         });
 
         it("should support @", async () => {
@@ -1753,11 +1767,11 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("/virtual/**/@(core*|*w)/*");
-            expect(result.sort()).to.be.deep.equal([
+            expect(result.sort()).to.be.deep.equal(normalizePaths([
                 "/virtual/a/core/a",
                 "/virtual/a/corew/d",
                 "/virtual/a/hew/e"
-            ]);
+            ]));
         });
     });
 
@@ -1770,11 +1784,11 @@ describe("fs", "glob", () => {
         }));
 
         const result = await glob("/virtual/[ab]?([1-5])");
-        expect(result.sort()).to.be.deep.equal([
+        expect(result.sort()).to.be.deep.equal(normalizePaths([
             "/virtual/a",
             "/virtual/a5",
             "/virtual/b"
-        ]);
+        ]));
     });
 
     it("should emit error event when some error occures", async () => {
@@ -1853,12 +1867,12 @@ describe("fs", "glob", () => {
         }));
 
         const result = await glob("**/*/**", { cwd: "/virtual" });
-        expect(result).to.be.deep.equal([
+        expect(result).to.be.deep.equal(normalizePaths([
             "a",
             "a/a",
             "a/d",
             "a/d/e"
-        ]);
+        ]));
     });
 
     describe("Glob", () => {
@@ -1994,7 +2008,9 @@ describe("fs", "glob", () => {
             await a.addFile("c", "d", "c", "b");
             await a.addFile("cb", "e", "f");
             const c = await a.addDirectory("symlink", "a", "b");
-            await fs.symlink("../..", c.getDirectory("c").path());
+            if (!is.windows) {
+                await fs.symlink("../..", c.getDirectory("c").path());
+            }
             await a.addFile("x", ".y", "b");
             await a.addFile("z", ".y", "b");
         });
@@ -2006,9 +2022,26 @@ describe("fs", "glob", () => {
         const cases = JSON.parse(fs.readFileSync(adone.std.path.join(__dirname, "bash_results.json")));
 
         for (const [pattern, expected] of Object.entries(cases)) {
-            it(pattern, async () => { // eslint-disable-line
+            it(pattern, async function () { // eslint-disable-line
+                if (
+                    is.windows
+                    && (
+                        pattern.includes("symlink") // depends on the symlink behaviour
+                        || pattern === "**/abcdef/g/../**"
+                        || pattern === "**/abcdef/g/.././*"
+                    )
+                ) {
+                    this.skip();
+                    return;
+                }
+                for (const e of expected) {
+                    if (is.windows && e.includes("symlink")) {
+                        this.skip();
+                        return;
+                    }
+                }
                 const result = await glob(pattern, { cwd });
-                expect(result.sort()).to.be.deep.equal(expected);
+                expect(result.sort()).to.be.deep.equal(normalizePaths(expected));
             });
         }
     });

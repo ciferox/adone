@@ -1,5 +1,6 @@
 describe("fs", "mkdirp", () => {
     const {
+        is,
         fs
     } = adone;
 
@@ -71,7 +72,9 @@ describe("fs", "mkdirp", () => {
         }
     });
 
-    it("should support a custom mode", async () => {
+    it("should support a custom mode", {
+        skip: is.windows
+    }, async () => {
         const a = tmp.getDirectory("a");
         const b = a.getDirectory("b");
         await fs.mkdirp(b.path(), 0o755);
@@ -79,7 +82,9 @@ describe("fs", "mkdirp", () => {
         expect((await b.stat()).mode & 0o777).to.be.equal(0o755);
     });
 
-    it("should support a custom mode for arrays", async () => {
+    it("should support a custom mode for arrays", {
+        skip: is.windows
+    }, async () => {
         const parent = tmp.getDirectory("a", "b", "c");
         const paths = [
             parent.getDirectory("d"),
@@ -146,7 +151,9 @@ describe("fs", "mkdirp", () => {
             ]);
         });
 
-        it("should support a custom mode", () => {
+        it("should support a custom mode", {
+            skip: is.windows
+        }, () => {
             const a = tmp.getDirectory("a");
             const b = a.getDirectory("b");
             fs.mkdirpSync(b.path(), 0o755);
@@ -154,7 +161,9 @@ describe("fs", "mkdirp", () => {
             expect((b.statSync()).mode & 0o777).to.be.equal(0o755);
         });
 
-        it("should support a custom mode for arrays", () => {
+        it("should support a custom mode for arrays", {
+            skip: is.windows
+        }, () => {
             const parent = tmp.getDirectory("a", "b", "c");
             const paths = [
                 parent.getDirectory("d"),

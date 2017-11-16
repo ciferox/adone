@@ -92,7 +92,9 @@ describe("fast", () => {
             expect(await hello.exists()).to.be.true;
         });
 
-        it("should create a directory with the origin mode", async () => {
+        it("should create a directory with the origin mode", {
+            skip: is.windows
+        }, async () => {
             await tmpdir.addDirectory("in", "hello", { mode: 0o700 });
             await fast
                 .src(tmpdir.getFile("in", "**", "*"))
@@ -102,7 +104,9 @@ describe("fast", () => {
             expect(await hello.mode() & 0o777).to.be.equal(0o700);
         });
 
-        it("should create a directory with the origin times", async () => {
+        it("should create a directory with the origin times", {
+            skip: is.windows
+        }, async () => {
             await tmpdir.addDirectory("in", "hello", {
                 atime: new Date(0),
                 mtime: new Date(100000)
@@ -117,7 +121,9 @@ describe("fast", () => {
             expect(stat.mtimeMs).to.be.equal(100000);
         });
 
-        it("should update metadata if receives directory after nested file", async () => {
+        it("should update metadata if receives directory after nested file", {
+            skip: is.windows
+        }, async () => {
             const helloIn = await tmpdir.addDirectory("in", "hello", {
                 mode: 0o700
             });

@@ -290,11 +290,28 @@ export class RandomAccessFdReader extends AbstractRandomAccessReader {
     constructor(fd) {
         super();
         this.fd = fd;
+        this.streams = new Set();
     }
 
     _readStreamForRange(start, end) {
         --end;
-        return fs.createReadStream(null, { fd: this.fd, start, end, autoClose: false });
+        const stream = fs.createReadStream(null, { fd: this.fd, start, end, autoClose: false });
+        this.streams.add(stream);
+        stream.once("end", () => {
+            this.streams.delete(stream);
+        });
+        return stream;
+    }
+
+    async close() {
+        await Promise.all([...this.streams].map((stream) => new Promise((resolve) => {
+            stream.once("end", resolve);
+        })));
+        try {
+            await fs.close(this.fd);
+        } catch (err) {
+            // ?
+        }
     }
 }
 

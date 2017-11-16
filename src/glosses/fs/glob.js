@@ -797,7 +797,7 @@ const absoluteGetter = (entry) => entry.absolutePath;
 const relativeGetter = (entry) => entry.path;
 const normalizedAbsoluteGetter = (entry) => entry.normalizedAbsolute;
 const normalizedRelativeGetter = (entry) => entry.normalizedRelative;
-const defaultRoot = resolve("/");
+const defaultRoot = is.windows ? resolve("/").slice(0, -1) : resolve("/");
 
 class Glob extends EventEmitter {
     constructor(patterns, {
@@ -906,7 +906,7 @@ class Glob extends EventEmitter {
         });
 
         this.nodir = nodir;
-        this.cwd = removeTrailingSlashes(normalize(cwd));
+        this.cwd = removeTrailingSlashes(normalize(resolve(cwd)));
         this.unique = unique;
         this.rawEntries = rawEntries || stat || index;
         this.absolute = absolute;
