@@ -442,7 +442,7 @@ export default class Connection extends EventEmitter {
             });
             this.connection.setTimeout(this.connectionTimeout);
         } else {
-            this.connection.on("connect", () => {
+            this.connection.once("connect", () => {
                 // Set socket timeout instead of connection timeout
                 this.connection.setTimeout(this.socketTimeout);
                 // Emit connect event

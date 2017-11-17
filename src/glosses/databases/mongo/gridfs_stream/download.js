@@ -185,25 +185,26 @@ export default class GridFSBucketReadStream extends Readable {
                 return this._handleError(new Error(errmsg));
             }
 
-            if (doc.data.length() !== expectedLength) {
+            let buf = is.buffer(doc.data) ? doc.data : doc.data.buffer;
+
+            if (buf.length !== expectedLength) {
                 if (bytesRemaining <= 0) {
                     errmsg = `ExtraChunk: Got unexpected n: ${doc.n}`;
                     return this._handleError(new Error(errmsg));
                 }
 
-                errmsg = `ChunkIsWrongSize: Got unexpected length: ${doc.data.length()}, expected: ${expectedLength}`;
+                errmsg = `ChunkIsWrongSize: Got unexpected length: ${buf.length}, expected: ${expectedLength}`;
                 return this._handleError(new Error(errmsg));
             }
 
-            this.s.bytesRead += doc.data.length();
+            this.s.bytesRead += buf.length;
 
-            if (doc.data.buffer.length === 0) {
+            if (buf.length === 0) {
                 return this.push(null);
             }
 
             let sliceStart = null;
             let sliceEnd = null;
-            let buf = doc.data.buffer;
 
             if (!is.nil(this.s.bytesToSkip)) {
                 sliceStart = this.s.bytesToSkip;
@@ -216,7 +217,7 @@ export default class GridFSBucketReadStream extends Readable {
 
             // If the remaining amount of data left is < chunkSize read the right amount of data
             if (this.s.options.end && (
-                (this.s.options.end - this.s.bytesToSkip) < doc.data.length()
+                (this.s.options.end - this.s.bytesToSkip) < buf.length
             )) {
                 sliceEnd = (this.s.options.end - this.s.bytesToSkip);
             }

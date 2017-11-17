@@ -584,7 +584,8 @@ export default class AbstractPouchDB extends EventEmitter {
                     rev: leaf,
                     revs: opts.revs,
                     latest: opts.latest,
-                    attachments: opts.attachments
+                    attachments: opts.attachments,
+                    binary: opts.binary
                 }, (err, doc) => {
                     if (!err) {
                         // using latest=true can produce duplicates

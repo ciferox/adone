@@ -487,13 +487,13 @@ const topologyMonitor = (self, options) => {
                 if (err) {
                     return self.emit("error", err);
                 }
-                self.emit("error", new MongoError("no primary found in replicaset"));
+                self.emit("error", new MongoError("no primary found in replicaset or invalid replica set name"));
                 return self.destroy({ force: true });
             } else if (!self.s.replicaSetState.hasSecondary() && self.s.options.secondaryOnlyConnectionAllowed) {
                 if (err) {
                     return self.emit("error", err);
                 }
-                self.emit("error", new MongoError("no secondary found in replicaset"));
+                self.emit("error", new MongoError("no secondary found in replicaset or invalid replica set name"));
                 return self.destroy({ force: true });
             }
 

@@ -5,10 +5,15 @@ describe("archive", "tar", () => {
         return Math.floor(st.mtime.getTime() / 1000);
     };
 
-    const fixtures = new adone.fs.Directory(std.path.join(__dirname, "fixtures"));
+    const fixtures = new adone.fs.Directory(__dirname, "fixtures");
+    const copy = fixtures.getDirectory("copy");
 
     beforeEach(async () => {
-        await fixtures.getDirectory("copy").unlink().catch(noop);
+        await copy.unlink();
+    });
+
+    after(async () => {
+        await copy.unlink();
     });
 
     specify("copy a -> copy/a", async () => {
