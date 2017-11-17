@@ -5,12 +5,12 @@ import type { PluginPasses } from "../../config";
 // import sourceMap from "source-map";
 // import generate from "@babel/generator";
 
+import type File from "./file";
+
 const {
   js: { compiler: { generate } },
   sourcemap
 } = adone;
-
-import type File from "./file";
 
 export default function generateCode(
   pluginPasses: PluginPasses,
@@ -43,6 +43,15 @@ export default function generateCode(
     result = generate(ast, opts.generatorOpts, code);
   } else if (results.length === 1) {
     result = results[0];
+
+    if (typeof result.then === "function") {
+      throw new Error(
+        `You appear to be using an async parser plugin, ` +
+          `which your current version of Babel does not support. ` +
+          `If you're using a published plugin, ` +
+          `you may need to upgrade your @babel/core version.`,
+      );
+    }
   } else {
     throw new Error("More than one plugin attempted to override codegen.");
   }

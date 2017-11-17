@@ -1,14 +1,10 @@
 // @flow
 
-// import * as t from "@babel/types";
 import type { PluginPasses } from "../config";
-// import convertSourceMap, { typeof Converter } from "convert-source-map";
-// import { parse } from "babylon";
-// import { codeFrameColumns } from "@babel/code-frame";
 import File from "./file/file";
 
 const {
-  js: { compiler: { parse, codeFrameColumns } },
+  js: { compiler: { types: t, parse, codeFrameColumns } },
   sourcemap: { convert }
 } = adone;
 
@@ -81,6 +77,14 @@ function parser(pluginPasses, options, code) {
     if (results.length === 0) {
       return parse(code, options.parserOpts);
     } else if (results.length === 1) {
+      if (typeof results[0].then === "function") {
+        throw new Error(
+          `You appear to be using an async codegen plugin, ` +
+            `which your current version of Babel does not support. ` +
+            `If you're using a published plugin, you may need to upgrade ` +
+            `your @babel/core version.`,
+        );
+      }
       return results[0];
     }
     throw new Error("More than one plugin attempted to override parsing.");

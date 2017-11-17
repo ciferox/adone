@@ -388,5 +388,6 @@ adone.lazify({
         json: "./pretties/json",
         table: "./pretties/table"
     }, null, require),
-    Fuzzy: "./fuzzy"
+    Fuzzy: "./fuzzy",
+    charcode: "./charcodes"
 }, adone.asNamespace(exports), require);

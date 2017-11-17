@@ -9,6 +9,10 @@ import { isIdentifierChar, isIdentifierStart } from "../../util/identifier";
 import type { Pos, Position } from "../../util/location";
 import { isNewLine } from "../../util/whitespace";
 
+const {
+  text: { charcode }
+} = adone;
+
 const HEX_NUMBER = /^[\da-fA-F]+$/;
 const DECIMAL_NUMBER = /^\d+$/;
 
@@ -84,10 +88,10 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         const ch = this.input.charCodeAt(this.state.pos);
 
         switch (ch) {
-          case 60: // "<"
-          case 123: // "{"
+          case charcode.lessThan:
+          case charcode.leftCurlyBrace:
             if (this.state.pos === this.state.start) {
-              if (ch === 60 && this.state.exprAllowed) {
+              if (ch === charcode.lessThan && this.state.exprAllowed) {
                 ++this.state.pos;
                 return this.finishToken(tt.jsxTagStart);
               }
@@ -96,7 +100,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             out += this.input.slice(chunkStart, this.state.pos);
             return this.finishToken(tt.jsxText, out);
 
-          case 38: // "&"
+          case charcode.ampersand:
             out += this.input.slice(chunkStart, this.state.pos);
             out += this.jsxReadEntity();
             chunkStart = this.state.pos;
@@ -118,7 +122,10 @@ export default (superClass: Class<Parser>): Class<Parser> =>
       const ch = this.input.charCodeAt(this.state.pos);
       let out;
       ++this.state.pos;
-      if (ch === 13 && this.input.charCodeAt(this.state.pos) === 10) {
+      if (
+        ch === charcode.carriageReturn &&
+        this.input.charCodeAt(this.state.pos) === charcode.lineFeed
+      ) {
         ++this.state.pos;
         out = normalizeCRLF ? "\n" : "\r\n";
       } else {
@@ -140,8 +147,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
 
         const ch = this.input.charCodeAt(this.state.pos);
         if (ch === quote) break;
-        if (ch === 38) {
-          // "&"
+        if (ch === charcode.ampersand) {
           out += this.input.slice(chunkStart, this.state.pos);
           out += this.jsxReadEntity();
           chunkStart = this.state.pos;
@@ -205,7 +211,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
       const start = this.state.pos;
       do {
         ch = this.input.charCodeAt(++this.state.pos);
-      } while (isIdentifierChar(ch) || ch === 45); // "-"
+      } while (isIdentifierChar(ch) || ch === charcode.dash);
       return this.finishToken(
         tt.jsxName,
         this.input.slice(start, this.state.pos),
@@ -513,17 +519,20 @@ export default (superClass: Class<Parser>): Class<Parser> =>
           return this.jsxReadWord();
         }
 
-        if (code === 62) {
+        if (code === charcode.greaterThan) {
           ++this.state.pos;
           return this.finishToken(tt.jsxTagEnd);
         }
 
-        if ((code === 34 || code === 39) && context === tc.j_oTag) {
+        if (
+          (code === charcode.quotationMark || code === charcode.apostrophe) &&
+          context === tc.j_oTag
+        ) {
           return this.jsxReadString(code);
         }
       }
 
-      if (code === 60 && this.state.exprAllowed) {
+      if (code === charcode.lessThan && this.state.exprAllowed) {
         ++this.state.pos;
         return this.finishToken(tt.jsxTagStart);
       }

@@ -1,7 +1,7 @@
 {
     "name": "adone",
     "description": "The generalized core of 'cyber-fractal systems' infrastructure.",
-    "version": "0.6.64",
+    "version": "0.6.65",
     "author": "Adone Core Team <info@adone.io>",
     "structure": {
         "src": {
