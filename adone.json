@@ -144,6 +144,11 @@
                     "$src": "src/glosses/notifier/**/*.js",
                     "$dst": "lib/glosses/notifier"
                 },
+                "odm": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/odm/**/*.js",
+                    "$dst": "lib/glosses/odm"
+                },
                 "promise": {
                     "$task": "adoneTranspile",
                     "$src": "src/glosses/promise/**/*.js",

@@ -344,6 +344,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         vcs: "./glosses/vcs",
         regex: "./glosses/regex",
         task: "./glosses/tasks",
+        odm: "./glosses/odm",
 
         // components
         project: "./project",

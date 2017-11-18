@@ -22,7 +22,7 @@ class {{ name }}Application extends application.Application {
     }
 
     async main() {
-
+        adone.runtime.term.print("{bold}Awesome adone application!{/}\\n");
         return 0;
     }
 

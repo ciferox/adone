@@ -1,0 +1,163 @@
+const start = require("./common");
+const mongoose = adone.odm;
+const random = adone.odm.utils.random;
+const Aggregate = adone.odm.Aggregate;
+const Schema = mongoose.Schema;
+
+/**
+ * Setup.
+ */
+
+const userSchema = new Schema({
+    name: String,
+    age: Number
+});
+
+const collection = `aggregate_${random()}`;
+mongoose.model("Aggregate", userSchema);
+
+describe("model aggregate", () => {
+    const group = { $group: { _id: null, maxAge: { $max: "$age" } } };
+    const project = { $project: { maxAge: 1, _id: 0 } };
+    let db, A, maxAge;
+
+    let mongo26_or_greater = false;
+
+    before((done) => {
+        db = start();
+        A = db.model("Aggregate", collection);
+
+        const authors = "guillermo nathan tj damian marco".split(" ");
+        const num = 10;
+        const docs = [];
+        maxAge = 0;
+
+        for (let i = 0; i < num; ++i) {
+            const age = Math.random() * 100 | 0;
+            maxAge = Math.max(maxAge, age);
+            docs.push({ author: authors[i % authors.length], age });
+        }
+
+        A.create(docs, (err) => {
+            assert.ifError(err);
+            start.mongodVersion((err, version) => {
+                if (err) {
+                    throw err;
+                }
+                mongo26_or_greater = version[0] > 2 || (version[0] === 2 && version[1] >= 6);
+                if (!mongo26_or_greater) {
+                    console.log("not testing mongodb 2.6 features");
+                }
+                done();
+            });
+        });
+    });
+
+    after((done) => {
+        db.close(done);
+    });
+
+    describe("works", () => {
+        it("with argument lists", function (done) {
+            this.timeout(4000);
+
+            A.aggregate(group, project, (err, res) => {
+                assert.ifError(err);
+                assert.ok(res);
+                assert.equal(res.length, 1);
+                assert.ok("maxAge" in res[0]);
+                assert.equal(res[0].maxAge, maxAge);
+                done();
+            });
+        });
+
+        it("when return promise", function (done) {
+            this.timeout(4000);
+
+            A.aggregate(group, project).then((res) => {
+                assert.ok(res);
+                assert.equal(1, res.length);
+                assert.ok("maxAge" in res[0]);
+                assert.equal(maxAge, res[0].maxAge);
+                done();
+            });
+        });
+
+        it("with arrays", function (done) {
+            this.timeout(4000);
+
+            A.aggregate([group, project], (err, res) => {
+                assert.ifError(err);
+                assert.ok(res);
+                assert.equal(res.length, 1);
+                assert.ok("maxAge" in res[0]);
+                assert.equal(res[0].maxAge, maxAge);
+                done();
+            });
+        });
+
+        it("with Aggregate syntax", function (done) {
+            this.timeout(4000);
+
+            var promise = A.aggregate()
+                .group(group.$group)
+                .project(project.$project)
+                .exec((err, res) => {
+                    assert.ifError(err);
+                    assert.ok(promise instanceof mongoose.Promise);
+                    assert.ok(res);
+                    assert.equal(res.length, 1);
+                    assert.ok("maxAge" in res[0]);
+                    assert.equal(res[0].maxAge, maxAge);
+                    done();
+                });
+        });
+
+        it("with Aggregate syntax if callback not provided", function (done) {
+            this.timeout(4000);
+
+            const promise = A.aggregate()
+                .group(group.$group)
+                .project(project.$project)
+                .exec();
+
+            promise.then((res) => {
+                assert.ok(promise instanceof mongoose.Promise);
+                assert.ok(res);
+                assert.equal(res.length, 1);
+                assert.ok("maxAge" in res[0]);
+                assert.equal(maxAge, res[0].maxAge);
+                done();
+            }).end();
+        });
+
+        it("when returning Aggregate", (done) => {
+            assert(A.aggregate(project) instanceof Aggregate);
+            done();
+        });
+
+        it("can use helper for $out", function (done) {
+            if (!mongo26_or_greater) {
+                return done();
+            }
+
+            this.timeout(4000);
+
+            const outputCollection = `aggregate_output_${random()}`;
+            A.aggregate()
+                .group(group.$group)
+                .project(project.$project)
+                .out(outputCollection)
+                .exec((error) => {
+                    assert.ifError(error);
+                    A.db.collection(outputCollection).find().toArray((error, documents) => {
+                        assert.ifError(error);
+                        assert.equal(documents.length, 1);
+                        assert.ok("maxAge" in documents[0]);
+                        assert.equal(maxAge, documents[0].maxAge);
+                        done();
+                    });
+                });
+        });
+    });
+});

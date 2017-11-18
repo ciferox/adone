@@ -14,6 +14,8 @@ describe("task", () => {
             this._runDefer = null;
             this._suspendDefer = null;
             this._cancelDefer = null;
+            this.reallySuspended = false;
+            this.reallyResumed = false;
         }
 
         async run(suspendable = false, cancelable = false, maxTimeout = 1000) {
@@ -27,6 +29,7 @@ describe("task", () => {
         }
 
         async _run() {
+            this.reallySuspended = false;
             for (; ;) {
                 await promise.delay(10); // eslint-disable-line
                 this.data++;
@@ -37,10 +40,13 @@ describe("task", () => {
 
                 if (!is.null(this._suspendDefer)) {
                     this._suspendDefer.resolve();
+                    this.reallyResumed = false;
+                    this.reallySuspended = true;
                     return;
                 }
                 if (!is.null(this._cancelDefer)) {
                     this._runDefer.resolve(this.data);
+                    await adone.promise.delay(300); // eslint-disable-line
                     this._cancelDefer.resolve();
                     return;
                 }
@@ -59,10 +65,13 @@ describe("task", () => {
             this._suspendDefer = defer;
         }
 
-        resume(defer) {
-            this._suspendDefer = null;
-            this._run();
-            defer.resolve();
+        async resume(defer) {
+            adone.promise.delay(200).then(() => {
+                this._suspendDefer = null;
+                this._run();
+                this.reallyResumed = true;
+                defer.resolve();
+            });
         }
 
         cancel(defer) {
@@ -249,9 +258,11 @@ describe("task", () => {
             const observer = await manager.run("a", true);
             await promise.delay(200);
             await observer.suspend();
+            assert.isTrue(observer.task.reallySuspended);
             assert.isTrue(observer.isSuspended());
             await promise.delay(100);
             await observer.resume();
+            assert.isTrue(observer.task.reallyResumed);
             assert.isTrue(observer.isRunning());
             assert.equal(await observer.result, 100);
         });
@@ -261,9 +272,9 @@ describe("task", () => {
             const observer = await manager.run("a", false, true);
             await promise.delay(200);
             await observer.cancel();
+            assert.isTrue(observer.isCancelled());
             assert.notEqual(await observer.result, 100);
             assert.isFalse(observer.isCompleted());
-            assert.isTrue(observer.isCancelled());
         });
     });
 

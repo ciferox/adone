@@ -330,6 +330,11 @@
                 "index": "glosses/notifier/index",
                 "src": "glosses/notifier/**/*"
             },
+            "odm": {
+                "description": "Object document mapper",
+                "index": "glosses/odm/index",
+                "src": "glosses/odm/**/*"
+            },
             "omnitron": {
                 "description": "Omnitron",
                 "index": "omnitron/index",

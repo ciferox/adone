@@ -1,0 +1,48 @@
+const MongooseError = require("./");
+const util = require("util");
+
+const {
+    is
+} = adone;
+
+/*!
+ * OverwriteModel Error constructor.
+ *
+ * @inherits MongooseError
+ */
+
+function DocumentNotFoundError(query) {
+    let msg;
+    const messages = MongooseError.messages;
+    if (!is.nil(messages.DocumentNotFoundError)) {
+        msg = is.function(messages.DocumentNotFoundError) ?
+            messages.DocumentNotFoundError(query) :
+            messages.DocumentNotFoundError;
+    } else {
+        msg = `No document found for query "${util.inspect(query)}"`;
+    }
+
+    MongooseError.call(this, msg);
+
+    this.name = "DocumentNotFoundError";
+    if (Error.captureStackTrace) {
+        Error.captureStackTrace(this);
+    } else {
+        this.stack = new Error().stack;
+    }
+
+    this.query = query;
+}
+
+/*!
+ * Inherits from MongooseError.
+ */
+
+DocumentNotFoundError.prototype = Object.create(MongooseError.prototype);
+DocumentNotFoundError.prototype.constructor = MongooseError;
+
+/*!
+ * exports
+ */
+
+module.exports = DocumentNotFoundError;

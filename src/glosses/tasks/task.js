@@ -72,7 +72,7 @@ export class TaskObserver {
             this.state = STATE.CANCELLING;
             const defer = adone.promise.defer();            
             await this.task.cancel(defer);
-            await defer;
+            await defer.promise;
         }
     }
 
@@ -111,7 +111,7 @@ export class TaskObserver {
         if (this.state === STATE.SUSPENDED) {
             const defer = adone.promise.defer();
             await this.task.resume(defer);
-            await defer;
+            await defer.promise;
             this.state = STATE.RUNNING;
         }
     }

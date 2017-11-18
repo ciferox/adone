@@ -1,7 +1,5 @@
 const {
     application: { locking },
-    configuration,
-    x,
     is,
     fs,
     std,
@@ -51,6 +49,7 @@ export default class Realm {
     }
 
     async list({ keyword = "", threshold = 0.2 } = {}) {
+        await fs.mkdirp(adone.realm.config.packagesPath);
         const packages = await fs.readdir(adone.realm.config.packagesPath);
 
         const result = [];

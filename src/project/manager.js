@@ -9,6 +9,18 @@ const {
 
 const VERSION_PARTS = ["major", "minor", "patch", "premajor", "preminor", "prepatch", "prerelease"];
 
+const checkEntry = (entry) => {
+    if (is.nil(entry.$dst)) {
+        return false;
+    }
+
+    if (!is.string(entry.$task)) {
+        entry.$task = "copy";
+    }
+
+    return true;
+};
+
 export default class ProjectManager extends task.Manager {
     constructor({ cwd = process.cwd() } = {}) {
         super();
@@ -93,7 +105,7 @@ export default class ProjectManager extends task.Manager {
 
     clean(path) {
         this._checkLoaded();
-        return this.runInParallel(this._getEntries(path).filter((entry) => this._checkEntry(entry)).map((entry) => ({
+        return this.runInParallel(this._getEntries(path).map((entry) => ({
             task: "delete",
             args: entry
         })));
@@ -101,7 +113,7 @@ export default class ProjectManager extends task.Manager {
 
     build(path) {
         this._checkLoaded();
-        return this.runInParallel(this._getEntries(path).filter((entry) => this._checkEntry(entry)).map((entry) => ({
+        return this.runInParallel(this._getEntries(path).map((entry) => ({
             task: entry.$task,
             args: entry
         })));
@@ -123,7 +135,7 @@ export default class ProjectManager extends task.Manager {
 
     watch(path) {
         this._checkLoaded();
-        return this.runInParallel(this._getEntries(path).filter((entry) => this._checkEntry(entry)).map((entry) => ({
+        return this.runInParallel(this._getEntries(path).map((entry) => ({
             task: "watch",
             args: entry
         })));
@@ -171,19 +183,7 @@ export default class ProjectManager extends task.Manager {
             adone.info(`No entries'${is.string(path) ? ` for ${path}` : ""}'`);
         }
 
-        return entries;
-    }
-
-    _checkEntry(entry) {
-        if (is.nil(entry.$dst)) {
-            return false;
-        }
-
-        if (!is.string(entry.$task)) {
-            entry.$task = "copy";
-        }
-
-        return true;
+        return entries.filter(checkEntry);
     }
 
     _checkLoaded() {

@@ -205,33 +205,38 @@ class AdoneCLI extends application.CliApplication {
                 keyword: args.get("keyword")
             });
 
-            adone.log(adone.text.pretty.table(result, {
-                borderless: true,
-                noHeader: true,
-                style: {
-                    head: null,
-                    compact: true
-                },
-                model: [
-                    {
-                        id: "name",
-                        header: "Package",
-                        handle: (item) => {
-                            const color = item.isValid ? "{green-fg}" : "{red-fg}";
-                            const version = is.undefined(item.version) ? "" : ` ${item.version}`;
-                            const description = is.undefined(item.description) ? "" : ` {grey-fg}- ${item.description}{/grey-fg}`;
-                            const invalid = item.isValid ? "" : "{red-fg} (not valid){/}";
+            if (result.length > 0) {
+                adone.log(adone.text.pretty.table(result, {
+                    borderless: true,
+                    noHeader: true,
+                    style: {
+                        head: null,
+                        compact: true
+                    },
+                    model: [
+                        {
+                            id: "name",
+                            header: "Package",
+                            handle: (item) => {
+                                const color = item.isValid ? "{green-fg}" : "{red-fg}";
+                                const version = is.undefined(item.version) ? "" : ` ${item.version}`;
+                                const description = is.undefined(item.description) ? "" : ` {grey-fg}- ${item.description}{/grey-fg}`;
+                                const invalid = item.isValid ? "" : "{red-fg} (not valid){/}";
+                                const symlink = item.isSymlink ? " {yellow-fg}(symlink){/yellow-fg}" : "";
 
-                            return `${color}{bold}${item.name}{/bold}${version}{/}${description}${invalid}`;
+                                return `${color}{bold}${item.name}{/bold}${version}{/}${symlink}${description}${invalid}`;
+                            }
                         }
-                    }
-                ]
-            }));
+                    ]
+                }));
+            } else {
+                term.print("{grey-fg}No packages{/}\n");
+            }
 
             return 0;
         } catch (err) {
             // adone.log(err);
-            term.print(`{red-fg}${err.message}{/}`);
+            term.print(`{red-fg}${err.message}{/}\n`);
             return 1;
         }
     }
@@ -432,7 +437,7 @@ class AdoneCLI extends application.CliApplication {
                             break;
                         }
                         case "Object": {
-                            styleLiteral(type, key);
+                            term.print(styleLiteral(type, key));
                             break;
                         }
                         default:
