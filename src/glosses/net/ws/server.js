@@ -4,24 +4,6 @@ const socketError = () => {
     this.destroy();
 };
 
-const acceptExtensions = (options, offer) => {
-    const pmd = options.perMessageDeflate;
-    const extensions = {};
-
-    if (pmd && offer[adone.net.ws.PerMessageDeflate.extensionName]) {
-        const perMessageDeflate = new adone.net.ws.PerMessageDeflate(
-            pmd !== true ? pmd : {},
-            true,
-            options.maxPayload
-        );
-
-        perMessageDeflate.accept(offer[adone.net.ws.PerMessageDeflate.extensionName]);
-        extensions[adone.net.ws.PerMessageDeflate.extensionName] = perMessageDeflate;
-    }
-
-    return extensions;
-};
-
 const abortConnection = (socket, code, message) => {
     if (socket.writable) {
         message = message || adone.std.http.STATUS_CODES[code];
@@ -91,10 +73,18 @@ export default class Server extends adone.event.EventEmitter {
             }
         }
 
+        if (options.perMessageDeflate === true) {
+            options.perMessageDeflate = {};
+        }
+
         if (options.clientTracking) {
             this.clients = new Set();
         }
         this.options = options;
+    }
+
+    address() {
+        return this._server.address();
     }
 
     close(cb) {
@@ -140,6 +130,7 @@ export default class Server extends adone.event.EventEmitter {
         socket.on("error", socketError);
 
         const version = Number(req.headers["sec-websocket-version"]);
+        const extensions = {};
 
         if (
             req.method !== "GET" || req.headers.upgrade.toLowerCase() !== "websocket" ||
@@ -147,6 +138,27 @@ export default class Server extends adone.event.EventEmitter {
             !this.shouldHandle(req)
         ) {
             return abortConnection(socket, 400);
+        }
+
+        if (this.options.perMessageDeflate) {
+            const perMessageDeflate = new adone.net.ws.PerMessageDeflate(
+                this.options.perMessageDeflate,
+                true,
+                this.options.maxPayload
+            );
+
+            try {
+                const offers = adone.net.ws.exts.parse(
+                    req.headers["sec-websocket-extensions"]
+                );
+
+                if (offers[adone.net.ws.PerMessageDeflate.extensionName]) {
+                    perMessageDeflate.accept(offers[adone.net.ws.PerMessageDeflate.extensionName]);
+                    extensions[adone.net.ws.PerMessageDeflate.extensionName] = perMessageDeflate;
+                }
+            } catch (err) {
+                return abortConnection(socket, 400);
+            }
         }
 
         let protocol = (req.headers["sec-websocket-protocol"] || "").split(/, */);
@@ -179,18 +191,27 @@ export default class Server extends adone.event.EventEmitter {
                         return abortConnection(socket, code || 401, message);
                     }
 
-                    this.completeUpgrade(protocol, version, req, socket, head, cb);
+                    this.completeUpgrade(
+                        protocol,
+                        extensions,
+                        version,
+                        req,
+                        socket,
+                        head,
+                        cb
+                    );
                 });
                 return;
-            } else if (!this.options.verifyClient(info)) {
+            }
+            if (!this.options.verifyClient(info)) {
                 return abortConnection(socket, 401);
             }
         }
 
-        this.completeUpgrade(protocol, version, req, socket, head, cb);
+        this.completeUpgrade(protocol, extensions, version, req, socket, head, cb);
     }
 
-    completeUpgrade(protocol, version, req, socket, head, cb) {
+    completeUpgrade(protocol, extensions, version, req, socket, head, cb) {
         //
         // Destroy the socket if the client has already sent a FIN packet.
         //
@@ -213,24 +234,12 @@ export default class Server extends adone.event.EventEmitter {
             headers.push(`Sec-WebSocket-Protocol: ${protocol}`);
         }
 
-        const offer = adone.net.ws.exts.parse(req.headers["sec-websocket-extensions"]);
-        let extensions;
-
-        try {
-            extensions = acceptExtensions(this.options, offer);
-        } catch (err) {
-            return abortConnection(socket, 400);
-        }
-
-        const props = Object.keys(extensions);
-
-        if (props.length) {
-            const serverExtensions = props.reduce((obj, key) => {
-                obj[key] = [extensions[key].params];
-                return obj;
-            }, {});
-
-            headers.push(`Sec-WebSocket-Extensions: ${adone.net.ws.exts.format(serverExtensions)}`);
+        if (extensions[adone.net.ws.PerMessageDeflate.extensionName]) {
+            const params = extensions[adone.net.ws.PerMessageDeflate.extensionName].params;
+            const value = adone.net.ws.exts.format({
+                [adone.net.ws.PerMessageDeflate.extensionName]: [params]
+            });
+            headers.push(`Sec-WebSocket-Extensions: ${value}`);
         }
 
         //
@@ -238,7 +247,7 @@ export default class Server extends adone.event.EventEmitter {
         //
         this.emit("headers", headers, req);
 
-        socket.write(headers.concat("", "").join("\r\n"));
+        socket.write(headers.concat("\r\n").join("\r\n"));
 
         const client = new adone.net.ws.Client([socket, head], null, {
             maxPayload: this.options.maxPayload,

@@ -169,16 +169,7 @@ export default class Client extends adone.event.EventEmitter {
             const key = adone.std.crypto.randomBytes(16).toString("base64");
             const httpObj = isSecure ? adone.std.https : adone.std.http;
 
-            //
-            // Prepare extensions.
-            //
-            const extensionsOffer = {};
             let perMessageDeflate;
-
-            if (options.perMessageDeflate) {
-                perMessageDeflate = new adone.net.ws.PerMessageDeflate(options.perMessageDeflate !== true ? options.perMessageDeflate : {}, false);
-                extensionsOffer[adone.net.ws.PerMessageDeflate.extensionName] = perMessageDeflate.offer();
-            }
 
             const requestOptions = {
                 port: serverUrl.port || (isSecure ? 443 : 80),
@@ -195,8 +186,14 @@ export default class Client extends adone.event.EventEmitter {
             if (options.headers) {
                 Object.assign(requestOptions.headers, options.headers);
             }
-            if (Object.keys(extensionsOffer).length) {
-                requestOptions.headers["Sec-WebSocket-Extensions"] = adone.net.ws.exts.format(extensionsOffer);
+            if (options.perMessageDeflate) {
+                perMessageDeflate = new adone.net.ws.PerMessageDeflate(
+                    options.perMessageDeflate !== true ? options.perMessageDeflate : {},
+                    false
+                );
+                requestOptions.headers["Sec-WebSocket-Extensions"] = adone.net.ws.exts.format({
+                    [adone.net.ws.PerMessageDeflate.extensionName]: perMessageDeflate.offer()
+                });
             }
             if (options.protocol) {
                 requestOptions.headers["Sec-WebSocket-Protocol"] = options.protocol;
@@ -363,18 +360,23 @@ export default class Client extends adone.event.EventEmitter {
                     this.protocol = serverProt;
                 }
 
-                const serverExtensions = adone.net.ws.exts.parse(res.headers["sec-websocket-extensions"]);
-
-                if (perMessageDeflate && serverExtensions[adone.net.ws.PerMessageDeflate.extensionName]) {
+                if (perMessageDeflate) {
                     try {
-                        perMessageDeflate.accept(serverExtensions[adone.net.ws.PerMessageDeflate.extensionName]);
+                        const serverExtensions = adone.net.ws.exts.parse(
+                            res.headers["sec-websocket-extensions"]
+                        );
+
+                        if (serverExtensions[adone.net.ws.PerMessageDeflate.extensionName]) {
+                            perMessageDeflate.accept(
+                                serverExtensions[adone.net.ws.PerMessageDeflate.extensionName]
+                            );
+                            this.extensions[adone.net.ws.PerMessageDeflate.extensionName] = perMessageDeflate;
+                        }
                     } catch (err) {
                         socket.destroy();
-                        this.emit("error", new Error("Invalid extension parameter"));
+                        this.emit("error", new Error("invalid Sec-WebSocket-Extensions header"));
                         return this.finalize(true);
                     }
-
-                    this.extensions[adone.net.ws.PerMessageDeflate.extensionName] = perMessageDeflate;
                 }
 
                 this.setSocket(socket, head);

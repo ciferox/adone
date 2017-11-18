@@ -14,7 +14,7 @@ describe("net", "proxy", "http", "client", "createSocket", () => {
         proxyServer.use(async (ctx) => {
             await ctx.connect();
         });
-        await proxyServer.listen(0);
+        await proxyServer.bind();
         const proxyPort = proxyServer.address().port;
 
         try {
@@ -30,7 +30,7 @@ describe("net", "proxy", "http", "client", "createSocket", () => {
             });
             expect(data.toString()).to.be.include("HELLO");
         } finally {
-            proxyServer.close();
+            proxyServer.unbind();
             realServer.close();
         }
     });
@@ -51,7 +51,7 @@ describe("net", "proxy", "http", "client", "createSocket", () => {
         proxyServer.use(async (ctx) => {
             await ctx.connect();
         });
-        await proxyServer.listen(0);
+        await proxyServer.bind();
         const proxyPort = proxyServer.address().port;
         try {
             const socket = await createSocket(`http://test:pest@localhost:${proxyPort}`, realPort, "localhost");
@@ -66,7 +66,7 @@ describe("net", "proxy", "http", "client", "createSocket", () => {
             });
             expect(data.toString()).to.be.include("HELLO");
         } finally {
-            proxyServer.close();
+            proxyServer.unbind();
             realServer.close();
         }
     });
@@ -87,14 +87,14 @@ describe("net", "proxy", "http", "client", "createSocket", () => {
         proxyServer.use(async (ctx) => {
             await ctx.connect();
         });
-        await proxyServer.listen(0);
+        await proxyServer.bind();
         const proxyPort = proxyServer.address().port;
         try {
             await expect(async () => {
                 await createSocket(`http://test:kest@localhost:${proxyPort}`, realPort, "localhost");
             }).to.throw();
         } finally {
-            proxyServer.close();
+            proxyServer.unbind();
             realServer.close();
         }
     });
