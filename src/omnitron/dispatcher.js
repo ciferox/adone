@@ -119,7 +119,7 @@ export default class Dispatcher {
                 await adone.fs.mkdirp(std.path.dirname(omnitronConfig.logFilePath));
                 this.descriptors.stdout = std.fs.openSync(omnitronConfig.logFilePath, "a");
                 this.descriptors.stderr = std.fs.openSync(omnitronConfig.errorLogFilePath, "a");
-                const child = std.child_process.spawn(process.execPath || "node", [std.path.resolve(adone.rootPath, "lib/omnitron/omnitron.js")], {
+                const child = std.child_process.spawn(process.execPath || "node", [std.path.resolve(adone.rootPath, "lib/omnitron/omnitron/index.js")], {
                     detached: true,
                     cwd: process.cwd(),
                     stdio: ["ipc", this.descriptors.stdout, this.descriptors.stderr]
@@ -246,7 +246,7 @@ export default class Dispatcher {
 
     async registerService(serviceName) {
         try {
-            const systemDb = new omnitron.SystemDB();
+            const systemDb = new omnitron.DB();
             await systemDb.open();
             await systemDb.registerService(serviceName);
             await systemDb.close();
@@ -260,7 +260,7 @@ export default class Dispatcher {
 
     async unregisterService(serviceName) {
         try {
-            const systemDb = new omnitron.SystemDB();
+            const systemDb = new omnitron.DB();
             await systemDb.open();
             await systemDb.unregisterService(serviceName);
             await systemDb.close();

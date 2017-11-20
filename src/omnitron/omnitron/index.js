@@ -23,12 +23,11 @@ export default class Omnitron extends application.Application {
         // Load omnitron configuration
         this.config = await omnitron.Configuration.load();
 
-        this.db = new omnitron.SystemDB();
+        this.db = new omnitron.DB();
 
-        // Add managers as subsystems
-        await this.addSubsystemsFrom(std.path.join(__dirname, "managers"), {
-            useFilename: true,
-            group: "manager"
+        // Add subsystems
+        await this.addSubsystemsFrom(std.path.join(__dirname, "subsystems"), {
+            useFilename: true
         });
 
         if (!is.windows) {
@@ -44,7 +43,7 @@ export default class Omnitron extends application.Application {
 
     async initialize() {
         await this.db.open();
-        adone.info("System database opened");
+        adone.info("Database opened");
 
         await runtime.netron.attachContext(this, "omnitron");
         adone.info("Omnitron context attached");
@@ -79,7 +78,7 @@ export default class Omnitron extends application.Application {
         adone.info("Omnitron context detached");
 
         await this.db.close();
-        adone.info("System database closed");
+        adone.info("Database closed");
 
         await this.deletePidFile();
 

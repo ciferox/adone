@@ -28,10 +28,10 @@ adone.definePredicates({
 });
 
 lazify({
-    SystemDB: "./systemdb",
     Configuration: "./configuration",
     Service: "./service",
     Omnitron: "./omnitron",
+    DB: "./omnitron/db",
     Dispatcher: "./dispatcher",
     dispatcher: () => new adone.omnitron.Dispatcher()
 }, adone.asNamespace(exports), require);

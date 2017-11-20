@@ -99,10 +99,10 @@ class ServiceApplication extends application.Application {
             throw new adone.x.NotValid("Service should be a class");
         }
 
-        const subsystem = new ServiceClass({
-            peer: this.peer,
-            config: serviceData
-        });
+        const subsystem = new ServiceClass();
+        subsystem[Symbol.for("omnitron.Service#peer")] = this.peer;
+        subsystem[Symbol.for("omnitron.Service#config")] = serviceData;
+        
         if (!(subsystem instanceof adone.omnitron.Service)) {
             throw new adone.x.NotValid("The class of service should inherit the class 'adone.omnitron.BaseService'");
         }
@@ -114,7 +114,7 @@ class ServiceApplication extends application.Application {
             subsystem
         });
 
-        // It is not necessary to wait for the subsystems to be configured and initialized, since it will notify about it.
+        // It is not necessary to wait for the subsystem to be configured and initialized, since it will notify about it.
         process.nextTick(async () => {
             const deleteAndNotify = (error) => {
                 this.deleteSubsystem(serviceData.name, true);

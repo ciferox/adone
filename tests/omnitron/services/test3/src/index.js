@@ -11,16 +11,12 @@ class Test3 {
 }
 
 export default class Test3Service extends adone.omnitron.Service {
-    async initialize() {
+    async initializeService() {
         this.context = new Test3(this);
         await this.peer.attachContextRemote(this.context, "test3");
-
-        return super.initialize();
     }
 
-    async uninitialize() {
+    async uninitializeService() {
         await this.peer.detachContextRemote("test3");
-
-        return super.uninitialize();
     }
 }

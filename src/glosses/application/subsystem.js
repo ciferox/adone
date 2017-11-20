@@ -125,7 +125,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
     }
 
     /**
-     * Configure specified subsystem.
+     * Configures specified subsystem.
      *
      * @param {string} name Name of subsystem
      * @returns {Promise<void>}
@@ -133,6 +133,47 @@ export default class Subsystem extends adone.event.AsyncEmitter {
     async configureSubsystem(name) {
         const sysInfo = this.getSubsystemInfo(name);
         await this._configureSubsystem(sysInfo);
+    }
+
+    /**
+     * Loads subsystem and performs configuration and initialization phases.
+     * 
+     * @param {adone.application.Subsystem|string} subsystem instance of subsystem or path.
+     * @param {object} options 
+     */
+    async loadSubsystem(subsystem, { name = null, description = "", transpile = false } = {}) {
+        const sysInfo = await this.addSubsystem({ subsystem, name, description, transpile });
+        name = sysInfo.name;
+        await this.configureSubsystem(name);
+        await this.initializeSubsystem(name);
+        return sysInfo;
+    }
+
+    /**
+     * Uninitializes subsystem and performs full unload of subsystem including require cache.
+     * 
+     * @param {string} name 
+     */
+    async unloadSubsystem(name) {
+        const { instance, path } = await this.getSubsystemInfo(name);
+        switch (instance[STATE_SYMBOL]) {
+            case STATE.INITIALIZED:
+                await this.uninitializeSubsystem(name);
+                break;
+            case STATE.INITIALIZING:
+            case STATE.CONFIGURED: // ?
+            case STATE.CONFIGURING: // ?
+                await instance.waitForState(STATE.INITIALIZED);
+                await this.uninitializeSubsystem(name);
+                break;
+            case STATE.UNINITIALIZING:
+                await instance.waitForState(STATE.UNINITIALIZED);
+                break;
+        }
+        await this.deleteSubsystem(name);
+        if (is.string(path)) {
+            adone.require.cache.unref(path);
+        }
     }
 
     /**
@@ -276,7 +317,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
      * @param {array|function} filter Array of subsystem names or filter [async] function '(name) => true | false'.
      * @returns {Promise<void>}
      */
-    async addSubsystemsFrom(path, { useFilename = false, filter, group = "subsystem", configureArgs = [], addOnCommand = false } = {}) {
+    async addSubsystemsFrom(path, { useFilename = false, filter, ...options } = {}) {
         if (!std.path.isAbsolute(path)) {
             throw new x.NotValid("Path should be absolute");
         }
@@ -298,11 +339,9 @@ export default class Subsystem extends adone.event.AsyncEmitter {
                 }
                 // eslint-disable-next-line
                 await this.addSubsystem({
+                    ...options,
                     name,
-                    subsystem: std.path.join(path, file),
-                    group,
-                    configureArgs,
-                    addOnCommand
+                    subsystem: std.path.join(path, file)
                 });
             }
         }
@@ -392,36 +431,6 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         await this._uninitialize();
         await this._forceConfigured();
         await this._initialize();
-    }
-
-    async loadSubsystem(subsystem, { name = null, description = "", transpile = false } = {}) {
-        const sysInfo = await this.addSubsystem({ subsystem, name, description, transpile });
-        name = name || sysInfo.name;
-        await this.configureSubsystem(name);
-        await this.initializeSubsystem(name);
-        return this.getSubsystemInfo(name);
-    }
-
-    async unloadSubsystem(name) {
-        const { instance, path } = await this.getSubsystemInfo(name);
-        switch (instance[STATE_SYMBOL]) {
-            case STATE.INITIALIZED:
-                await this.uninitializeSubsystem(name);
-                break;
-            case STATE.INITIALIZING:
-            case STATE.CONFIGURED: // ?
-            case STATE.CONFIGURING: // ?
-                await instance.waitForState(STATE.INITIALIZED);
-                await this.uninitializeSubsystem(name);
-                break;
-            case STATE.UNINITIALIZING:
-                await instance.waitForState(STATE.UNINITIALIZED);
-                break;
-        }
-        await this.deleteSubsystem(name);
-        if (path) {
-            adone.require.cache.unref(path);
-        }
     }
 }
 tag.add(Subsystem, "SUBSYSTEM");

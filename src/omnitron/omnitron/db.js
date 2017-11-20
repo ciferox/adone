@@ -6,7 +6,7 @@ const {
     x
 } = adone;
 
-export default class SystemDB {
+export default class DB {
     constructor() {
         this.raw = new vault.Vault({
             location: adone.realm.config.omnitron.dbPath

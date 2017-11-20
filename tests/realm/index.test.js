@@ -225,7 +225,7 @@ describe("realm", () => {
         });
 
         it("should not install service in case of omnitron's system db is busy", async () => {
-            const systemDb = new adone.omnitron.SystemDB();
+            const systemDb = new adone.omnitron.DB();
             await systemDb.open();
             
             const omnitronServicePath = std.path.join(__dirname, "packages", "omnitron_service_good");

@@ -293,8 +293,8 @@ export default class Package {
                     srcPath,
                     "!**/*.map"
                 ], {
-                        cwd: this.path
-                    }).dest(std.path.join(this.destPath, dstDir), DEST_OPTIONS);
+                    cwd: this.path
+                }).dest(std.path.join(this.destPath, dstDir), DEST_OPTIONS);
             }
         } else {
             const indexPath = std.path.join(this.path, "index.js");
@@ -309,8 +309,8 @@ export default class Package {
             "**/.meta/**/*",
             "**/adone.json"
         ], {
-                cwd: this.path
-            }).dest(this.destPath, DEST_OPTIONS);
+            cwd: this.path
+        }).dest(this.destPath, DEST_OPTIONS);
     }
 
     async _buildProject() {
@@ -319,6 +319,7 @@ export default class Package {
         });
         manager.setSilent(this.realm.silent);
         await manager.load();
-        await manager.rebuild();
+        const observer = await manager.rebuild();
+        return observer.result;
     }
 }
