@@ -194,7 +194,7 @@ export default class Omnitron extends Subsystem {
             }
         ]
     })
-    async startServiceCommand(args) {
+    async startCommand(args) {
         try {
             this._createProgress("starting");
             const name = args.get("service");
@@ -219,9 +219,9 @@ export default class Omnitron extends Subsystem {
             }
         ]
     })
-    async stopServiceCommand(args) {
+    async stopCommand(args) {
         try {
-            this._createProgress("dtopping");
+            this._createProgress("stopping");
             const name = args.get("service");
             await this._connectToLocal();
             await omnitron.dispatcher.stopService(name);
@@ -334,45 +334,49 @@ export default class Omnitron extends Subsystem {
 
             this._updateProgress("done", true, true);
 
-            adone.log(pretty.table(services, {
-                style: {
-                    head: ["gray"],
-                    compact: true
-                },
-                model: [
-                    {
-                        id: "name",
-                        header: "Name",
-                        style: "{green-fg}"
+            if (services.length > 0) {
+                adone.log(pretty.table(services, {
+                    style: {
+                        head: ["gray"],
+                        compact: true
                     },
-                    {
-                        id: "group",
-                        header: "Group"
-                    },
-                    {
-                        id: "description",
-                        header: "Description"
-                    },
-                    {
-                        id: "pid",
-                        header: "PID"
-                    },
-                    {
-                        id: "status",
-                        header: "Status",
-                        style: (val) => {
-                            switch (val) {
-                                case "disabled": return "{red-bg}{white-fg}";
-                                case "inactive": return "{yellow-bg}{black-fg}";
-                                case "active": return "{green-bg}{black-fg}";
-                                default: return "";
-                            }
+                    model: [
+                        {
+                            id: "name",
+                            header: "Name",
+                            style: "{green-fg}"
                         },
-                        format: " %s ",
-                        align: "right"
-                    }
-                ]
-            }));
+                        {
+                            id: "group",
+                            header: "Group"
+                        },
+                        {
+                            id: "description",
+                            header: "Description"
+                        },
+                        {
+                            id: "pid",
+                            header: "PID"
+                        },
+                        {
+                            id: "status",
+                            header: "Status",
+                            style: (val) => {
+                                switch (val) {
+                                    case "disabled": return "{red-bg}{white-fg}";
+                                    case "inactive": return "{yellow-bg}{black-fg}";
+                                    case "active": return "{green-bg}{black-fg}";
+                                    default: return "";
+                                }
+                            },
+                            format: " %s ",
+                            align: "right"
+                        }
+                    ]
+                }));
+            } else {
+                adone.runtime.term.print("{white-fg}No services{/}\n");
+            }
             return 0;
         } catch (err) {
             this._updateProgress(err.message, false);
@@ -460,6 +464,132 @@ export default class Omnitron extends Subsystem {
                     }
                 ]
             }));
+            return 0;
+        } catch (err) {
+            this._updateProgress(err.message, false);
+            return 1;
+        }
+    }
+
+    @Command({
+        name: "subsystems",
+        help: "Show omnitron subsystems"
+    })
+    async subsystemsCommand() {
+        try {
+            this._createProgress("obtaining");
+            await this._connectToLocal();
+            const peers = await omnitron.dispatcher.getSubsystems();
+
+            this._updateProgress("done", true, true);
+
+            adone.log(pretty.table(peers, {
+                style: {
+                    head: ["gray"],
+                    compact: true
+                },
+                model: [
+                    {
+                        id: "name",
+                        header: "Name",
+                        style: "{green-fg}"
+                    },
+                    {
+                        id: "group",
+                        header: "Group"
+                    },
+                    {
+                        id: "path",
+                        header: "Path"
+                    },
+                    {
+                        id: "description",
+                        header: "Description"
+                    }
+                ]
+            }));
+            return 0;
+        } catch (err) {
+            this._updateProgress(err.message, false);
+            return 1;
+        }
+    }
+
+    @Command({
+        name: "load",
+        help: "Load subsystem",
+        arguments: [
+            {
+                name: "path",
+                type: String,
+                help: "Path to subsystem"
+            }
+        ],
+        options: [
+            {
+                name: "--name",
+                type: String,
+                help: "Name of subsystem"
+            },
+            {
+                name: "--group",
+                type: String,
+                default: "subsystem",
+                help: "Group of subsystem"
+            },
+            {
+                name: "--description",
+                type: String,
+                default: "",
+                help: "Description of subsystem"
+            },
+            {
+                name: "--transpile",
+                help: "Should transpile or not"
+            }
+        ]
+    })
+    async loadCommand(args, opts) {
+        try {
+            this._createProgress("loading");
+            let path = args.get("path");
+            if (!std.path.isAbsolute(path)) {
+                path = std.path.join(process.cwd(), path);
+            }
+
+            await this._connectToLocal();
+            await omnitron.dispatcher.loadSubsystem(path, {
+                name: opts.has("name") ? opts.get("name") : null,
+                group: opts.get("group"),
+                description: opts.get("description"),
+                transpile: opts.has("transpile")
+            });
+            this._updateProgress("done", true);
+            return 0;
+        } catch (err) {
+            this._updateProgress(err.message, false);
+            return 1;
+        }
+    }
+
+    @Command({
+        name: "unload",
+        help: "Unload subsystem",
+        arguments: [
+            {
+                name: "name",
+                type: String,
+                help: "Name of subsystem"
+            }
+        ]
+    })
+    async unloadCommand(args) {
+        try {
+            this._createProgress("unloading");
+            const name = args.get("name");
+            await this._connectToLocal();
+            await omnitron.dispatcher.unloadSubsystem(name);
+            this._updateProgress("done", true);
             return 0;
         } catch (err) {
             this._updateProgress(err.message, false);

@@ -333,4 +333,16 @@ export default class Dispatcher {
     getReport() {
         return this.getInterface("omnitron").getReport();
     }
+
+    getSubsystems() {
+        return this.getInterface("omnitron").getSubsystems();
+    }
+
+    loadSubsystem(subsystem, options) {
+        return this.getInterface("omnitron").loadSubsystem(subsystem, options);
+    }
+
+    unloadSubsystem(name) {
+        return this.getInterface("omnitron").unloadSubsystem(name);
+    }
 }

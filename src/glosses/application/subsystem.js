@@ -141,8 +141,8 @@ export default class Subsystem extends adone.event.AsyncEmitter {
      * @param {adone.application.Subsystem|string} subsystem instance of subsystem or path.
      * @param {object} options 
      */
-    async loadSubsystem(subsystem, { name = null, description = "", transpile = false } = {}) {
-        const sysInfo = await this.addSubsystem({ subsystem, name, description, transpile });
+    async loadSubsystem(subsystem, { name = null, description = "", group, transpile = false } = {}) {
+        const sysInfo = await this.addSubsystem({ subsystem, name, description, group, transpile });
         name = sysInfo.name;
         await this.configureSubsystem(name);
         await this.initializeSubsystem(name);

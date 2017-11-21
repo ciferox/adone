@@ -16,7 +16,6 @@ const api = adone.lazify({
 
 export default class ServiceManager extends application.Subsystem {
     async configure() {
-        this.meta = null;
         this.services = null;
         this.groupMaintainers = new Map();
 
@@ -27,8 +26,7 @@ export default class ServiceManager extends application.Subsystem {
     }
 
     async initialize() {
-        this.meta = await this.parent.db.getServicesValuable();
-        this.services = vault.slice(this.meta, "service");
+        this.services = await this.parent.db.getMetaValuable("service");
 
         const VALID_STATUSES = [STATUS.DISABLED, STATUS.INACTIVE];
 
@@ -112,6 +110,21 @@ export default class ServiceManager extends application.Subsystem {
         return services;
     }
 
+    async checkService(name) {
+        const services = await this.enumerate({
+            name
+        });
+        if (services.length === 0) {
+            throw new adone.x.Unknown(`Unknown service: ${name}`);
+        }
+
+        if (services[0].status === adone.omnitron.STATUS.INVALID) {
+            throw new adone.x.NotValid(`Service '${name}' is invalid`);
+        }
+
+        return services[0];
+    }
+
     async enumerateByGroup(group) {
         const services = await this.enumerate();
 
@@ -151,31 +164,6 @@ export default class ServiceManager extends application.Subsystem {
                 result.push(service.group);
             }
         }
-
-        return result;
-    }
-
-    async getService(name, checkExists = true) {
-        const path = std.path.join(SERVICES_PATH, name);
-        if (checkExists && !(await fs.exists(path))) {
-            throw new x.Unknown(`Unknown service: ${name}`);
-        }
-
-        const adoneConf = await adone.configuration.Adone.load({
-            cwd: path
-        });
-
-        const result = {
-            name: adoneConf.raw.name,
-            description: adoneConf.raw.description || "",
-            version: adoneConf.raw.version || "",
-            author: adoneConf.raw.author || "",
-            path
-        };
-
-        Object.assign(result, {
-            group: null
-        }, await this.services.get(name));
 
         return result;
     }

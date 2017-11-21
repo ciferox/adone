@@ -27,7 +27,8 @@ export default class Omnitron extends application.Application {
 
         // Add subsystems
         await this.addSubsystemsFrom(std.path.join(__dirname, "subsystems"), {
-            useFilename: true
+            useFilename: true,
+            group: "core"
         });
 
         if (!is.windows) {
@@ -62,6 +63,8 @@ export default class Omnitron extends application.Application {
     }
 
     async uninitialize() {
+        await this.deletePidFile();
+
         // Unitialize services in omnitron group
         // ...
 
@@ -74,13 +77,13 @@ export default class Omnitron extends application.Application {
             }
         }
 
-        await runtime.netron.detachContext("omnitron");
-        adone.info("Omnitron context detached");
+        if (runtime.netron.hasContext("omnitron")) {
+            await runtime.netron.detachContext("omnitron");
+            adone.info("Omnitron context detached");
+        }
 
         await this.db.close();
         adone.info("Database closed");
-
-        await this.deletePidFile();
 
         adone.info("Omnitron stopped");
     }
@@ -300,6 +303,14 @@ export default class Omnitron extends application.Application {
     }
 
     @Public({
+        description: "Returns valuable used as service configuration store"
+    })
+    async getServiceConfiguration(name) {
+        await this.subsystem("service").checkService(name);
+        return this.db.getServiceConfiguration(name);
+    }
+
+    @Public({
         description: "Restarts service"
     })
     async restart(serviceName) {
@@ -343,6 +354,30 @@ export default class Omnitron extends application.Application {
         }
 
         return result;
+    }
+
+    // Subsystems
+    @Public()
+    getSubsystems() {
+        return super.getSubsystems().map((ss) => ({
+            name: ss.name,
+            group: ss.group,
+            description: ss.description,
+            path: ss.path
+        }));
+    }
+
+    @Public()
+    async loadSubsystem(path, options) {
+        await super.loadSubsystem(path, options);
+    }
+
+    @Public()
+    async unloadSubsystem(name) {
+        if (["netron", "service"].includes(name)) {
+            throw new adone.x.NotAllowed("Unload core subsystem is not possible");
+        }
+        await super.unloadSubsystem(name);
     }
 }
 

@@ -230,7 +230,7 @@ class AdoneCLI extends application.CliApplication {
                     ]
                 }));
             } else {
-                term.print("{grey-fg}No packages{/}\n");
+                term.print("{white-fg}No packages{/}\n");
             }
 
             return 0;

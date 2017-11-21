@@ -1,12 +1,30 @@
-@adone.netron.Context()
+const {
+    is,
+    netron: { Context, Public }
+} = adone;
+
+@Context()
 class Test3 {
-    constructor(subsystem) {
-        this.subsystem = subsystem;
+    constructor(service) {
+        this.service = service;
     }
 
-    @adone.netron.Public()
-    getInfo() {
-        return this.subsystem.config;
+    @Public()
+    check(name) {
+        if (name !== this.service.name) {
+            throw new adone.x.NotValid(`Invalid service name: ${this.service.name}`);
+        }
+        if (!is.netronPeer(this.service.peer)) {
+            throw new adone.x.NotValid("Invalid service peer");
+        }
+    }
+
+    @Public()
+    async saveConfig() {
+        const config = await this.service.getConfiguration();
+        await config.set("key1", "adone");
+        await config.set("key2", 888);
+        await config.set("key3", new Date());
     }
 }
 

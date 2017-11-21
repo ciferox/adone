@@ -6,7 +6,11 @@ class Test2 {
 
     @adone.netron.Public()
     getInfo() {
-        return this.subsystem.config;
+        return {
+            name: this.subsystem.name,
+            group: this.subsystem.parent.group,
+            pid: process.pid
+        };
     }
 }
 

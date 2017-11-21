@@ -81,16 +81,16 @@ class ServiceApplication extends application.Application {
     }
 
     @Public()
-    async loadService(serviceData) {
+    async loadService({ name, description, path } = {}) {
         // It's important that application should be fully initialized before any service can be loaded.
         if (this.getState() <= application.STATE.INITIALIZED) {
             await this.waitForState(application.STATE.INITIALIZED);
         }
-        if (this.hasSubsystem(serviceData.name)) {
-            throw new adone.x.Exists(`Service ${serviceData.name} already loaded`);
+        if (this.hasSubsystem(name)) {
+            throw new adone.x.Exists(`Service ${name} already loaded`);
         }
 
-        const mod = require(serviceData.mainPath);
+        const mod = require(path);
         if (!mod.__esModule) {
             throw new adone.x.NotValid("Service module should be es6-module");
         }
@@ -101,37 +101,37 @@ class ServiceApplication extends application.Application {
 
         const subsystem = new ServiceClass();
         subsystem[Symbol.for("omnitron.Service#peer")] = this.peer;
-        subsystem[Symbol.for("omnitron.Service#config")] = serviceData;
-        
+        subsystem.name = name;
+
         if (!(subsystem instanceof adone.omnitron.Service)) {
             throw new adone.x.NotValid("The class of service should inherit the class 'adone.omnitron.BaseService'");
         }
 
         this.addSubsystem({
-            name: serviceData.name,
-            description: serviceData.description,
-            group: this.group,
+            name,
+            description,
+            group: "service",
             subsystem
         });
 
         // It is not necessary to wait for the subsystem to be configured and initialized, since it will notify about it.
         process.nextTick(async () => {
             const deleteAndNotify = (error) => {
-                this.deleteSubsystem(serviceData.name, true);
+                this.deleteSubsystem(name, true);
                 return this.iMaintainer.notifyServiceStatus({
-                    name: serviceData.name,
+                    name,
                     status: application.STATE.FAILED,
                     error
                 });
             };
 
             try {
-                await this.configureSubsystem(serviceData.name);
+                await this.configureSubsystem(name);
             } catch (err) {
                 return deleteAndNotify(err);
             }
             try {
-                await this.initializeSubsystem(serviceData.name);
+                await this.initializeSubsystem(name);
             } catch (err) {
                 return deleteAndNotify(err);
             }

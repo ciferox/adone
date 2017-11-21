@@ -1,5 +1,6 @@
 const {
     fs,
+    is,
     configuration,
     std,
     omnitron: { STATUS, dispatcher },
@@ -21,7 +22,7 @@ describe("omnitron", () => {
     });
 
     after(async () => {
-        // await realm.clean();
+        await realm.clean();
     });
 
     describe("basics", () => {
@@ -35,7 +36,6 @@ describe("omnitron", () => {
 
         afterEach(async () => {
             await dispatcher.stopOmnitron();
-            // await adone.promise.delay(1000);
         });
 
         it("config, pidfile and log files should exist", async () => {
@@ -203,7 +203,7 @@ describe("omnitron", () => {
         const runProjectsTask = async (taskName) => {
             const servicePath = std.path.join(__dirname, "services");
             const names = await fs.readdir(servicePath);
-            
+
 
             for (const name of names) {
                 const projectManager = new adone.project.Manager({
@@ -340,9 +340,6 @@ describe("omnitron", () => {
             });
 
             assert.equal(info.name, adoneConf.raw.name);
-            assert.equal(info.description, adoneConf.raw.description);
-            assert.equal(info.version, adoneConf.raw.version);
-            assert.equal(info.author, adoneConf.raw.author);
 
             await stopServices(["test1"]);
         });
@@ -369,6 +366,19 @@ describe("omnitron", () => {
             await stopServices(["test1"]);
         });
 
+        it("log files should be created for service", async () => {
+            await installService(std.path.join(__dirname, "services", "test2"));
+            const serviceInfo = (await iOmnitron.enumerate())[0];
+            const stdoutPath = std.path.join(adone.realm.config.omnitron.logsPath, `${serviceInfo.group}.log`);
+            const stderrPath = std.path.join(adone.realm.config.omnitron.logsPath, `${serviceInfo.group}-err.log`);
+
+            await enableServices(["test2"]);
+            await startServices(["test2"]);
+            assert.isTrue(await fs.exists(stdoutPath));
+            assert.isTrue(await fs.exists(stderrPath));
+            await stopServices(["test2"]);
+        });
+
         it("start already active services should have throws", async () => {
             await installService(std.path.join(__dirname, "services", "test1"));
             await enableServices(["test1"]);
@@ -378,6 +388,15 @@ describe("omnitron", () => {
             assert.instanceOf(err, x.IllegalState);
 
             await stopServices(["test1"]);
+        });
+
+        it("check service data", async () => {
+            await installService(std.path.join(__dirname, "services", "test3"));
+            await enableServices(["test3"]);
+            await startServices(["test3"]);
+            const iTest3 = await dispatcher.getInterface("test3");
+            await iTest3.check("test3");
+            await stopServices(["test3"]);
         });
 
         it("stop single service in a group should initiate process exit(0)", async () => {
@@ -396,6 +415,47 @@ describe("omnitron", () => {
             await adone.promise.delay(1000);
 
             assert.isFalse(adone.system.process.exists(pid));
+        });
+
+        describe.only("subsystems", () => {
+            it("list subsystems", async () => {
+                const subsystems = await iOmnitron.getSubsystems();
+                assert.sameMembers(subsystems.map((s) => s.name), ["netron", "service"]);
+            });
+
+            it("load/unload subsystem", async () => {
+                await iOmnitron.loadSubsystem(std.path.join(__dirname, "subsystems", "injectable.js"), {
+                    name: "payload",
+                    transpile: true
+                });
+                let contexts = await iOmnitron.getContexts();
+                assert.sameMembers(contexts.map((x) => x.name), ["omnitron", "payload"]);
+                const iPayload = dispatcher.getInterface("payload");
+                assert.deepEqual(await iOmnitron.getInfo({
+                    env: true,
+                    realm: true,
+                    version: true
+                }), await iPayload.getInfo({
+                    env: true,
+                    realm: true,
+                    version: true
+                }));
+
+                await iOmnitron.unloadSubsystem("payload");
+                contexts = await iOmnitron.getContexts();
+                assert.sameMembers(contexts.map((x) => x.name), ["omnitron"]);
+
+                const err = await assert.throws(async () => iPayload.getInfo());
+                assert.instanceOf(err, adone.x.Unknown);
+            });
+
+            it("should not allow unload core subsystems", async () => {
+                let err = await assert.throws(async () => iOmnitron.unloadSubsystem("netron"));
+                assert.instanceOf(err, adone.x.NotAllowed);
+
+                err = await assert.throws(async () => iOmnitron.unloadSubsystem("service"));
+                assert.instanceOf(err, adone.x.NotAllowed);
+            });
         });
 
         describe("groups", () => {
@@ -509,6 +569,36 @@ describe("omnitron", () => {
                 err = await assert.throws(async () => iOmnitron.getMaintainer(list[1].group));
                 assert.instanceOf(err, adone.x.Unknown);
             });
+
+            it("new log files should be created after change service group", async () => {
+                await installService(std.path.join(__dirname, "services", "test2"));
+                const serviceInfo = (await iOmnitron.enumerate())[0];
+                let stdoutPath = std.path.join(adone.realm.config.omnitron.logsPath, `${serviceInfo.group}.log`);
+                let stderrPath = std.path.join(adone.realm.config.omnitron.logsPath, `${serviceInfo.group}-err.log`);
+
+                await enableServices(["test2"]);
+                await startServices(["test2"]);
+                assert.isTrue(await fs.exists(stdoutPath));
+                assert.isTrue(await fs.exists(stderrPath));
+                await stopServices(["test2"]);
+
+                await iOmnitron.configureService("test2", {
+                    group: "test2"
+                });
+
+                await startServices(["test2"]);
+
+                assert.isTrue(await fs.exists(stdoutPath));
+                assert.isTrue(await fs.exists(stderrPath));
+
+                stdoutPath = std.path.join(adone.realm.config.omnitron.logsPath, "test2.log");
+                stderrPath = std.path.join(adone.realm.config.omnitron.logsPath, "test2-err.log");
+
+                assert.isTrue(await fs.exists(stdoutPath));
+                assert.isTrue(await fs.exists(stderrPath));
+
+                await stopServices(["test2"]);
+            });
         });
 
         it("in-group services should start in single process", async () => {
@@ -567,6 +657,20 @@ describe("omnitron", () => {
             await adone.promise.delay(1000);
 
             assert.isFalse(adone.system.process.exists(pid));
+        });
+
+        it("use service configuration", async () => {
+            await installService(std.path.join(__dirname, "services", "test3"));
+            await enableServices(["test3"]);
+            await startServices(["test3"]);
+            const iTest3 = await dispatcher.getInterface("test3");
+            await iTest3.saveConfig("test3");
+            await stopServices(["test3"]);
+
+            const iConfig = await iOmnitron.getServiceConfiguration("test3");
+            assert.equal(await iConfig.get("key1"), "adone");
+            assert.equal(await iConfig.get("key2"), 888);
+            assert.isTrue(is.date(await iConfig.get("key3")));
         });
     });
 });

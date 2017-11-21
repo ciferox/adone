@@ -8,19 +8,13 @@ const TEMPLATE =
 } = adone;
 
 export default class {{ name }} extends Service {
-    async configure() {
-
-        return super.configure();
+    async configureService() {
     }
 
-    async initialize() {
-
-        return super.initialize();
+    async initializeService() {
     }
 
-    async uninitialize() {
-
-        return super.uninitialize();
+    async uninitializeService() {
     }
 }
 `;
