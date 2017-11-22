@@ -702,4 +702,85 @@ describe("collection", "LinkedList", () => {
             expect(s).to.have.not.been.called;
         });
     });
+
+    describe("iterator", () => {
+        describe("remove", () => {
+            it("should remove node from the front", () => {
+                const a = new LinkedList();
+                a.push(1);
+                a.push(2);
+                a.push(3);
+                a.push(4);
+                a.push(5);
+                const it = a[Symbol.iterator]();
+                const v = it.next();
+                expect(v.value).to.be.equal(1);
+                it.remove();
+                expect([...a]).to.be.deep.equal([2, 3, 4, 5]);
+            });
+
+            it("should remove node from the middle", () => {
+                const a = new LinkedList();
+                a.push(1);
+                a.push(2);
+                a.push(3);
+                a.push(4);
+                a.push(5);
+                const it = a[Symbol.iterator]();
+                let v = it.next();
+                expect(v.value).to.be.equal(1);
+                v = it.next();
+                expect(v.value).to.be.equal(2);
+                v = it.next();
+                expect(v.value).to.be.equal(3);
+                it.remove();
+                expect([...a]).to.be.deep.equal([1, 2, 4, 5]);
+            });
+
+            it("should remove node from the back", () => {
+                const a = new LinkedList();
+                a.push(1);
+                a.push(2);
+                a.push(3);
+                a.push(4);
+                a.push(5);
+                const it = a[Symbol.iterator]();
+                it.next();
+                it.next();
+                it.next();
+                it.next();
+                const v = it.next();
+                expect(v.value).to.be.equal(5);
+                it.remove();
+                expect([...a]).to.be.deep.equal([1, 2, 3, 4]);
+            });
+        });
+
+        describe("reset", () => {
+            it("should reset the iterator", () => {
+                const a = new LinkedList();
+                a.push(1);
+                a.push(2);
+                a.push(3);
+                a.push(4);
+                a.push(5);
+                const it = a[Symbol.iterator]();
+                it.next();
+                it.next();
+                expect(it.next().value).to.be.equal(3);
+                it.reset();
+                expect(it.next().value).to.be.equal(1);
+                it.next();
+                it.next();
+                it.next();
+                expect(it.next().value).to.be.equal(5);
+                it.reset();
+                expect(it.next().value).to.be.equal(1);
+                expect(it.next().value).to.be.equal(2);
+                expect(it.next().value).to.be.equal(3);
+                expect(it.next().value).to.be.equal(4);
+                expect(it.next().value).to.be.equal(5);
+            });
+        });
+    });
 });

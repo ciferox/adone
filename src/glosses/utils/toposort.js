@@ -1,3 +1,5 @@
+const { is } = adone;
+
 const uniqueNodes = (arr) => {
     const res = new Set();
     for (let i = 0, len = arr.length; i < len; i++) {
@@ -8,44 +10,62 @@ const uniqueNodes = (arr) => {
 };
 
 const toposortArray = (nodes, edges) => {
-    let cursor = nodes.length;
-    const sorted = new Array(cursor);
-    const visited = {};
-    let i = cursor;
+    //initialize the placement of nodes into the sorted array at the end
+    let place = nodes.length;
 
-    const visit = (node, i, predecessors) => {
-        if (predecessors.includes(node)) {
-            throw new Error(`Cyclic dependency: ${JSON.stringify(node)}`);
+    //initialize the sorted array with the same length as the unique nodes array
+    const sorted = new Array(nodes.length);
+
+    //define a visitor function that recursively traverses dependencies.
+    const visit = (node, predecessors) => {
+        //check if a node is dependent of itself
+        if ( predecessors.length !== 0 && predecessors.includes(node)) {
+            throw new Error( `Cyclic dependency found. ${node} is dependent of itself.\nDependency chain: ${predecessors.join( " -> " )} => ${node}` );
         }
 
-        if (!nodes.includes(node)) {
-            throw new Error(`Found unknown node. Make sure to provided all involved nodes. Unknown node: ${JSON.stringify(node)}`);
-        }
+        const index = nodes.indexOf(node);
 
-        if (visited[i]) {
-            return;
-        }
-        visited[i] = true;
+        //if the node still exists, traverse its dependencies
+        if (index !== -1) {
+            let copy = false;
 
-        // outgoing edges
-        const outgoing = edges.filter((edge) => {
-            return edge[0] === node;
-        });
-        i = outgoing.length;
-        if (i > 0) {
-            const preds = predecessors.concat(node);
-            do {
-                const child = outgoing[--i][1];
-                visit(child, nodes.indexOf(child), preds);
-            } while (i);
-        }
+            //mark the node as false to exclude it from future iterations
+            nodes[index] = false;
 
-        sorted[--cursor] = node;
+            //loop through all edges and follow dependencies of the current node
+            for (const edge of edges) {
+                if (edge[0] === node) {
+                    // lazily create a copy of predecessors with the current node concatenated onto it
+                    copy = copy || predecessors.concat([node]);
+
+                    // recurse to node dependencies
+                    visit(edge[1], copy);
+                }
+            }
+
+            //add the node to the next place in the sorted array
+            sorted[--place] = node;
+        }
     };
 
-    while (i--) {
-        if (!visited[i]) {
-            visit(nodes[i], i, []);
+    for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+
+        //ignore nodes that have been excluded
+        if (node !== false) {
+            //mark the node as false to exclude it from future iterations
+            nodes[i] = false;
+
+            //loop through all edges and follow dependencies of the current node
+            for (const edge of edges) {
+                if (edge[0] === node) {
+                    //recurse to node dependencies
+                    visit( edge[1], [node]);
+                }
+            }
+
+            //add the node to the next place in the sorted array
+            sorted[--place] = node;
         }
     }
 
@@ -57,3 +77,50 @@ export default function toposort(edges) {
 }
 
 toposort.array = toposortArray;
+toposort.Sorter = class Sorter {
+    constructor() {
+        this.edges = [];
+    }
+
+    add(item, deps) {
+        if (!is.string(item) || !item) {
+            throw new TypeError("Dependent name must be given as a not empty string");
+        }
+
+        deps = is.array(deps) ? deps : [deps];
+
+        if (deps.length > 0) {
+            for (const dep of deps) {
+                if (!is.string(dep) || !dep) {
+                    throw new TypeError("Dependency name must be given as a not empty string");
+                }
+
+                this.edges.push([item, dep]);
+            }
+
+        } else {
+            this.edges.push([item]);
+        }
+
+        return this;
+    }
+
+    sort() {
+        const nodes = [];
+
+        for (const edge of this.edges) {
+            for (const node of edge) {
+                if (!nodes.includes(node)) {
+                    nodes.push(node);
+                }
+            }
+        }
+
+        return toposortArray(nodes, this.edges);
+    }
+
+    clear() {
+        this.edges = [];
+        return this;
+    }
+};

@@ -1,5 +1,7 @@
 import { hooks as datetime, setHookCallback } from "./__/utils";
 
+const { is } = adone;
+
 adone.lazifyPrivate({
     create: "./__/create",
     unit: "./__/units",
@@ -8,7 +10,8 @@ adone.lazifyPrivate({
     format: "./__/format",
     locale: "./__/locale",
     parse: "./__/parse",
-    util: "./__/utils"
+    util: "./__/utils",
+    tz: "./__/tz"
 }, datetime, require);
 
 const __ = adone.private(datetime);
@@ -66,8 +69,68 @@ datetime.dos = ({ date, time }) => {
     return datetime([year, month, day, hour, minute, second, millisecond]);
 };
 
+datetime.tz = (...args) => {
+    // const args = Array.prototype.slice.call(arguments, 0, -1);
+    // const name = arguments[arguments.length - 1];
+    const input = args[0];
+    const name = args.pop();
+    const zone = __.tz.getZone(name);
+    const out = datetime.utc(...args);
+
+    if (zone && !is.datetime(input) && __.tz.needsOffset(out)) {
+        out.add(zone.parse(out), "minutes");
+    }
+
+    out.tz(name);
+
+    return out;
+};
+
+adone.lazify({
+    _zones: () => __.tz.zones,
+    _links: () => __.tz.links,
+    _names: () => __.tz.names,
+    add: () => __.tz.addZone,
+    link: () => __.tz.addLink,
+    load: () => __.tz.loadData,
+    zone: () => __.tz.getZone,
+    zoneExists: () => __.tz.zoneExists,
+    guess: () => __.tz.guess,
+    names: () => __.tz.getNames,
+    Zone: () => __.tz.Zone,
+    unpack: () => __.tz.unpack,
+    unpackBase60: () => __.tz.unpackBase60,
+    needsOffset: () => __.tz.needsOffset,
+    reload: () => __.tz.reload
+}, datetime.tz);
+
+Object.defineProperties(datetime.tz, {
+    moveInvalidForward: {
+        get() {
+            return __.tz.getMoveInvalidForward();
+        },
+        set(v) {
+            __.tz.setMoveInvalidForward(v);
+        }
+    },
+    moveAmbiguousForward: {
+        get() {
+            return __.tz.getMoveAmbiguousForward();
+        },
+        set(v) {
+            return __.tz.setMoveAmbiguousForward(v);
+        }
+    }
+});
+
+datetime.tz.setDefault = (name) => {
+    datetime.defaultZone = name ? __.tz.getZone(name) : null;
+    return datetime;
+};
+
 datetime.defaultFormat = "YYYY-MM-DDTHH:mm:ssZ";
 datetime.defaultFormatUtc = "YYYY-MM-DDTHH:mm:ss[Z]";
+datetime.defaultZone = null;
 
 adone.asNamespace(datetime);
 

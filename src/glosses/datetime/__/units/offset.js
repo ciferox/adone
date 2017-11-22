@@ -75,8 +75,26 @@ export const cloneWithOffset = (input, model) => {
 
 };
 
-// HOOKS
+hooks.updateOffset = function (dt, keepTime) {
+    const zone = adone.datetime.defaultZone;
+    let offset;
 
-// This function will be called whenever an ExDate is mutated.
-// It is intended to keep the offset in sync with the timezone.
-hooks.updateOffset = function () {};
+    if (is.undefined(dt._z)) {
+        if (zone && __.tz.needsOffset(dt) && !dt._isUTC) {
+            dt._d = adone.datetime.utc(dt._a)._d;
+            dt.utc().add(zone.parse(dt), "minutes");
+        }
+        dt._z = zone;
+    }
+    if (dt._z) {
+        offset = dt._z.utcOffset(dt);
+        if (Math.abs(offset) < 16) {
+            offset = offset / 60;
+        }
+        if (!is.undefined(dt.utcOffset)) {
+            dt.utcOffset(-offset, keepTime);
+        } else {
+            dt.zone(offset, keepTime);
+        }
+    }
+};

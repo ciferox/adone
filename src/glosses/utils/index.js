@@ -50,7 +50,10 @@ const util = adone.lazify({
     retry: "./retry",
     machineId: "./machine_id",
     querystring: "./querystring",
-    merge: "./merge"
+    merge: "./merge",
+    pool: "./pool",
+    terraformer: "./terraformer",
+    inflection: "./inflection"
 }, adone.asNamespace(exports), require);
 
 const irregularPlurals = {
@@ -182,7 +185,9 @@ const irregularPlurals = {
     woman: "women"
 };
 
-// Массив собственных имён для plain-объекта (см. util.keys()).
+/*
+ * An array of the own keys of the plain object (see util.keys)
+ */
 const objectOwnProps = Object.getOwnPropertyNames({}.__proto__);
 
 export const arrify = (val) => {
@@ -885,7 +890,7 @@ export const omit = (obj, props) => {
     for (let i = 0; i < keys.length; i++) {
         const key = keys[i];
         const val = obj[key];
-    
+
         if (!isShouldOmit(key, val, obj)) {
             result[key] = val;
         }

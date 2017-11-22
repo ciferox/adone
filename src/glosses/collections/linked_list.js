@@ -13,6 +13,45 @@ class Node {
     }
 }
 
+class Iterator {
+    constructor(list) {
+        this.list = list;
+        this.reset();
+    }
+
+    reset() {
+        this.i = 0;
+        this.cursor = null;
+        this._done = false;
+        this._started = false;
+    }
+
+    remove() {
+        if (this._done) {
+            return false;
+        }
+        this.list.removeNode(this.cursor);
+    }
+
+    _advanceCursor() {
+        if (this._started === false) {
+            this._started = true;
+            this.cursor = this.list.head;
+        } else {
+            this.cursor = this.cursor.next;
+        }
+    }
+
+    next() {
+        if (this.i++ >= this.list.length) {
+            this._done = true;
+            return { done: true };
+        }
+        this._advanceCursor();
+        return { value: this.cursor.value, done: false };
+    }
+}
+
 /**
  * Represents a linked list
  */
@@ -306,18 +345,7 @@ export default class LinkedList {
      * Returns an iterator over the list elements
      */
     [Symbol.iterator]() {
-        let cursor = this.head;
-        let i = 0;
-        return {
-            next: () => {
-                if (i++ >= this.length) {
-                    return { done: true };
-                }
-                const value = cursor.value;
-                cursor = cursor.next;
-                return { value, done: false };
-            }
-        };
+        return new Iterator(this);
     }
 
     /**
@@ -373,3 +401,4 @@ export default class LinkedList {
  * Default length of a new created linked list
  */
 LinkedList.DEFAULT_LENGTH = 16;
+LinkedList.Iterator = Iterator;

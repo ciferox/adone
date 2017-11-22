@@ -124,6 +124,12 @@ export const copyConfig = (to, from) => {
     if (!is.undefined(from._locale)) {
         to._locale = from._locale;
     }
+    if (!is.undefined(from._z)) {
+        to._z = from._z;
+    }
+    if (!is.undefined(from._a)) {
+        to._a = from._a;
+    }
 
     if (customProperties.length > 0) {
         for (const prop of customProperties) {
@@ -771,6 +777,7 @@ export class Datetime {
     }
 
     utc(keepLocalTime) {
+        this._z = null;
         return this.utcOffset(0, keepLocalTime);
     }
 
@@ -850,11 +857,32 @@ export class Datetime {
     }
 
     zoneAbbr() {
+        if (this._z) {
+            return this._z.abbr(this);
+        }
         return this._isUTC ? "UTC" : "";
     }
 
     zoneName() {
+        if (this._z) {
+            return this._z.abbr(this);
+        }
         return this._isUTC ? "Coordinated Universal Time" : "";
+    }
+
+    tz(name, keepTime) {
+        if (name) {
+            this._z = __.tz.getZone(name);
+            if (this._z) {
+                datetime.updateOffset(this, keepTime);
+            } else {
+                throw new Error(`datetime timezone has no data for ${name}.`);
+            }
+            return this;
+        }
+        if (this._z) {
+            return this._z.name;
+        }
     }
 }
 

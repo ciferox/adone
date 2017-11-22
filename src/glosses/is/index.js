@@ -779,6 +779,7 @@ export const configuration = (obj) => adone.tag.has(obj, "CONFIGURATION");
 export const datetime = (obj) => adone.tag.has(obj, "DATETIME");
 
 export const windows = (platform === "win32");
+
 export const linux = (platform === "linux");
 
 export const freebsd = (platform === "freebsd");
@@ -916,7 +917,21 @@ export const binaryPath = (x) => binaryExtensions.has(adone.std.path.extname(x).
 
 export const ip4 = (ip) => adone.regex.ip4.test(ip);
 
-export const ip6 = (ip) => adone.regex.ip4.test(ip);
+export const ip6 = (ip) => adone.regex.ip6.test(ip);
+
+export const ip = (ip, version = adone.null) => {
+    if (version === adone.null) {
+        return ip4(ip) || ip6(ip);
+    }
+    switch (Number(version)) {
+        case 4:
+            return ip4(ip);
+        case 6:
+            return ip6(ip);
+        default:
+            return false; // ?
+    }
+};
 
 export const knownError = (err) => {
     if (!(err instanceof Error)) {
@@ -939,6 +954,50 @@ export const knownError = (err) => {
     return false;
 };
 
+const uuidPatterns = {
+    1: /^[0-9a-f]{8}-[0-9a-f]{4}-[1][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    2: /^[0-9a-f]{8}-[0-9a-f]{4}-[2][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    3: /^[0-9a-f]{8}-[0-9a-f]{4}-[3][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    4: /^[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    5: /^[0-9a-f]{8}-[0-9a-f]{4}-[5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    all: /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+};
+
+export const uuid = (str, version = "all") => {
+    if (!string(str)) {
+        return false;
+    }
+    const pattern = uuidPatterns[version];
+    return pattern && pattern.test(str);
+};
+
+const toDate = (date) => {
+    date = Date.parse(date);
+    return !isNaN(date) ? new Date(date) : null;
+};
+
+export const before = (str, date = String(new Date())) => {
+    if (!string(str)) {
+        return false; // TODO: Date and datetime support
+    }
+    const comparison = toDate(date);
+    const original = toDate(str);
+    return Boolean(original && comparison && original < comparison);
+};
+
+
+export const after = (str, date = String(new Date())) => {
+    if (!string(str)) {
+        return false;  // TODO: Date and datetime support
+    }
+    const comparison = toDate(date);
+    const original = toDate(str);
+    return Boolean(original && comparison && original > comparison);
+};
+
 adone.lazify({
-    validUTF8: () => adone.native.Common.isValidUTF8
+    validUTF8: () => adone.native.Common.isValidUTF8,
+    fqdn: "./fqdn",
+    url: "./url",
+    email: "./email",
 }, exports, require);

@@ -340,6 +340,11 @@
                 "index": "omnitron/index",
                 "src": "omnitron/**/*"
             },
+            "orm": {
+                "description": "Object-Relational Mapping",
+                "index": "glosses/orm",
+                "src": "glosses/orm/**/*"
+            },
             "project": {
                 "description": "Adone project management stuff",
                 "index": "project/index",

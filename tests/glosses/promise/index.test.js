@@ -1,5 +1,5 @@
 describe("promise", () => {
-    const { promise } = adone;
+    const { promise, x } = adone;
 
     describe("defer", () => {
         it("should have a promise", () => {
@@ -442,6 +442,202 @@ describe("promise", () => {
         it("execution with error", () => {
             return b.badAsync(input).then(assert.fail, (e) => {
                 assert.equal(e, err);
+            });
+        });
+    });
+
+    describe.only("retry", () => {
+        const { retry } = promise;
+        let soRejected;
+        let soResolved;
+
+        beforeEach(() => {
+            soRejected = Math.random().toString();
+            soResolved = Math.random().toString();
+        });
+
+        it("should reject immediately if max is 1 (using options)", async () => {
+            const callback = stub();
+            callback.resolves(soResolved);
+            callback.onCall(0).rejects(new Error(soRejected));
+            await assert.throws(async () => {
+                await retry(callback, { max: 1, backoffBase: 0 });
+            }, soRejected);
+            expect(callback.callCount).to.equal(1);
+        });
+
+        it("should reject immediately if max is 1 (using integer)", async () => {
+            const callback = stub();
+            callback.resolves(soResolved);
+            callback.onCall(0).rejects(new Error(soRejected));
+            await assert.throws(async () => {
+                await retry(callback, 1);
+            }, soRejected);
+            expect(callback.callCount).to.equal(1);
+        });
+
+        it("should reject after all tries if still rejected", async () => {
+            const callback = stub();
+            callback.rejects(new Error(soRejected));
+            await assert.throws(async () => {
+                await retry(callback, { max: 3, backoffBase: 0 });
+            }, soRejected);
+            expect(callback.firstCall.args).to.deep.equal([{ current: 1 }]);
+            expect(callback.secondCall.args).to.deep.equal([{ current: 2 }]);
+            expect(callback.thirdCall.args).to.deep.equal([{ current: 3 }]);
+            expect(callback.callCount).to.equal(3);
+        });
+
+        it("should resolve immediately if resolved on first try", async () => {
+            const callback = stub();
+            callback.resolves(soResolved);
+            callback.onCall(0).resolves(soResolved);
+            expect(await retry(callback, { max: 10, backoffBase: 0 })).to.be.equal(soResolved);
+        });
+
+        it("should resolve if resolved before hitting max", async () => {
+            const callback = stub();
+            callback.rejects(new Error(soRejected));
+            callback.onCall(3).resolves(soResolved);
+            expect(await retry(callback, { max: 10, backoffBase: 0 })).to.be.equal(soResolved);
+            expect(callback.firstCall.args).to.deep.equal([{ current: 1 }]);
+            expect(callback.secondCall.args).to.deep.equal([{ current: 2 }]);
+            expect(callback.thirdCall.args).to.deep.equal([{ current: 3 }]);
+            expect(callback.callCount).to.equal(4);
+        });
+
+        describe("timeout", () => {
+            it("should throw if reject on first attempt", async () => {
+                await assert.throws(async () => {
+                    await retry(() => promise.delay(1000), {
+                        max: 1,
+                        backoffBase: 0,
+                        timeout: 1000
+                    });
+                }, x.Timeout);
+            });
+
+            it("should throw if reject on last attempt", async () => {
+                let count = 0;
+                await assert.throws(async () => {
+                    await retry(() => {
+                        count++;
+                        if (count === 3) {
+                            return promise.delay(3500);
+                        }
+                        return Promise.reject(new Error());
+                    }, {
+                        max: 3,
+                        backoffBase: 0,
+                        timeout: 1500
+                    });
+                }, x.Timeout);
+                expect(count).to.equal(3);
+            });
+        });
+
+        describe("match", () => {
+            it("should continue retry while error is equal to match string", async () => {
+                const callback = stub();
+                callback.rejects(new Error(soRejected));
+                callback.onCall(3).resolves(soResolved);
+                expect(await retry(callback, { max: 15, backoffBase: 0, match: `Error: ${soRejected}` })).to.be.equal(soResolved);
+                expect(callback.callCount).to.equal(4);
+            });
+
+            it("should reject immediately if error is not equal to match string", async () => {
+                const callback = stub();
+                callback.rejects(new Error(soRejected));
+                await assert.throws(async () => {
+                    await retry(callback, { max: 15, backoffBase: 0, match: "A custom error string" });
+                }, soRejected);
+                expect(callback.callCount).to.equal(1);
+            });
+
+            it("should continue retry while error is instanceof match", async () => {
+                const callback = stub();
+                callback.rejects(new Error(soRejected));
+                callback.onCall(4).resolves(soResolved);
+
+                expect(await retry(callback, { max: 15, backoffBase: 0, match: Error })).to.be.equal(soResolved);
+                expect(callback.callCount).to.equal(5);
+            });
+
+            it("should reject immediately if error is not instanceof match", async () => {
+                const callback = stub();
+                callback.rejects(new Error(soRejected));
+                await assert.throws(async () => {
+                    await retry(callback, { max: 15, backoffBase: 0, match() { } });
+                }, Error);
+                expect(callback.callCount).to.equal(1);
+            });
+
+            it("should continue retry while error is equal to match string in array", async () => {
+                const callback = stub();
+                callback.rejects(new Error(soRejected));
+                callback.onCall(4).resolves(soResolved);
+                expect(await retry(callback, { max: 15, backoffBase: 0, match: [`Error: ${soRejected + 1}`, `Error: ${soRejected}`] })).to.be.equal(soResolved);
+                expect(callback.callCount).to.equal(5);
+            });
+
+            it("should reject immediately if error is not equal to match string in array", async () => {
+                const callback = stub();
+                callback.rejects(new Error(soRejected));
+                await assert.throws(async () => {
+                    await retry(callback, { max: 15, backoffBase: 0, match: [`Error: ${soRejected + 1}`, `Error: ${soRejected + 2}`] });
+                }, Error);
+                expect(callback.callCount).to.equal(1);
+            });
+
+            it("should reject immediately if error is not instanceof match in array", async () => {
+                const callback = stub();
+                callback.rejects(new Error(soRejected));
+                await assert.throws(async () => {
+                    await retry(callback, { max: 15, backoffBase: 0, match: [`Error: ${soRejected + 1}`, function foo() { }] });
+                }, Error);
+                expect(callback.callCount).to.equal(1);
+            });
+
+            it("should continue retry while error is instanceof match in array", async () => {
+                const callback = stub();
+                callback.rejects(new Error(soRejected));
+                callback.onCall(4).resolves(soResolved);
+                expect(await retry(callback, { max: 15, backoffBase: 0, match: [`Error: ${soRejected + 1}`, Error] })).to.be.equal(soResolved);
+                expect(callback.callCount).to.equal(5);
+            });
+        });
+
+        describe("backoff", () => {
+            it("should resolve after 5 retries and an eventual delay over 1800ms using default backoff", async () => {
+                const startTime = adone.datetime();
+                const callback = stub();
+                callback.rejects(new Error(soRejected));
+                callback.onCall(5).resolves(soResolved);
+                expect(await retry(callback, { max: 15 })).to.be.equal(soResolved);
+                expect(adone.datetime().diff(startTime)).to.be.above(1800);
+                expect(adone.datetime().diff(startTime)).to.be.below(3400);
+            });
+
+            it("should resolve after 1 retry and initial delay equal to the backoffBase", async () => {
+                const initialDelay = 100;
+                const callback = stub();
+                const startTime = adone.datetime();
+                callback.onCall(0).rejects(new Error(soRejected));
+                callback.onCall(1).resolves(soResolved);
+                expect(await retry(callback, { max: 2, backoffBase: initialDelay, backoffExponent: 3 })).to.be.equal(soResolved);
+                expect(callback.callCount).to.equal(2);
+                expect(adone.datetime().diff(startTime)).to.be.within(initialDelay, initialDelay + 50); // allow for some overhead
+            });
+
+            it("should throw TimeoutError and cancel backoff delay if timeout is reached", async () => {
+                await assert.throws(async () => {
+                    await retry(() => {
+                        return promise.delay(2000);
+                    }, {
+                        max: 3,
+                        timeout: 1000
+                    });
+                }, x.Timeout);
             });
         });
     });

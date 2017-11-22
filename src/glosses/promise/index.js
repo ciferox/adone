@@ -223,3 +223,85 @@ const _finally = (promise, onFinally) => {
 };
 
 export { _finally as finally };
+
+/**
+ * Calls the given function after some timeout until the result is returned or it cannot be restarted anymore
+ */
+export const retry = async (callback, options) => {
+    if (!callback || !options) {
+        throw new Error("requires a callback and an options set or a number");
+    }
+
+    if (is.number(options)) {
+        options = { max: options };
+    }
+
+    options = {
+        $current: options.$current || 1,
+        max: options.max,
+        timeout: options.timeout || undefined,
+        match: options.match || [],
+        backoffBase: is.undefined(options.backoffBase) ? 100 : options.backoffBase,
+        backoffExponent: options.backoffExponent || 1.1,
+        report: options.report || null,
+        name: options.name || callback.name || "unknown"
+    };
+
+    // Massage match option into array so we can blindly treat it as such later
+    if (!is.array(options.match)) {
+        options.match = [options.match];
+    }
+
+    if (options.report) {
+        options.report(`Trying ${options.name} #${options.$current} at ${new Date().toLocaleTimeString()}`, options);
+    }
+
+    for (; ;) {
+        try {
+            let p = Promise.resolve(callback({ current: options.$current })); // eslint-disable-line
+            if (options.timeout) {
+                p = timeout(p, options.timeout);
+            }
+            return await p; // eslint-disable-line
+        } catch (err) {
+            if (options.report) {
+                options.report(`Try ${options.name} #${options.$current} failed: ${err.toString()}`, options, err);
+            }
+            let shouldRetry = options.$current < options.max;
+            if (shouldRetry && options.match.length && err) {
+                // If match is defined we should fail if it is not met
+                shouldRetry = options.match.reduce((shouldRetry, match) => {
+                    if (shouldRetry) {
+                        return shouldRetry;
+                    }
+
+                    if (
+                        match === err.toString()
+                        || match === err.message
+                        || (is.function(match) && err instanceof match)
+                        || (
+                            match instanceof RegExp && (match.test(err.message)
+                            || match.test(err.toString()))
+                        )
+                    ) {
+                        shouldRetry = true;
+                    }
+                    return shouldRetry;
+                }, false);
+            }
+
+            if (!shouldRetry) {
+                throw err;
+            }
+
+            const retryDelay = Math.pow(options.backoffBase, Math.pow(options.backoffExponent, (options.$current - 1)));
+            options.$current++;
+            if (retryDelay) {
+                if (options.report) {
+                    options.report(`Delaying retry of ${options.name} by ${retryDelay}`, options);
+                }
+                await delay(retryDelay); // eslint-disable-line
+            }
+        }
+    }
+};
