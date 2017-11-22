@@ -23,11 +23,11 @@ export default function isEmail(str, options) {
         ...options
     };
 
-    if (options.require_display_name || options.allow_display_name) {
+    if (options.requireDisplayName || options.allowDisplayName) {
         const displayEmail = str.match(displayName);
         if (displayEmail) {
             str = displayEmail[1];
-        } else if (options.require_display_name) {
+        } else if (options.requireDisplayName) {
             return false;
         }
     }
@@ -41,22 +41,22 @@ export default function isEmail(str, options) {
         user = user.replace(/\./g, "").toLowerCase();
     }
 
-    if (!isByteLength(user, 64) || !isByteLength(domain, 64)) {
+    if (!isByteLength(user, 64) || !isByteLength(domain, 254)) {
         return false;
     }
 
-    if (!is.fqdn(domain, { requireTld: options.require_tld })) {
+    if (!is.fqdn(domain, { requireTld: options.requireTld })) {
         return false;
     }
 
     if (user[0] === '"') {
         user = user.slice(1, user.length - 1);
-        return options.allow_utf8_local_part
+        return options.allowUtf8LocalPart
             ? quotedEmailUserUtf8.test(user)
             : quotedEmailUser.test(user);
     }
 
-    const pattern = options.allow_utf8_local_part
+    const pattern = options.allowUtf8LocalPart
         ? emailUserUtf8Part
         : emailUserPart;
 
