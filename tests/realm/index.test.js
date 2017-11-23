@@ -14,7 +14,7 @@ const FIXTURES_PATH = std.path.join(__dirname, "fixtures");
 const fixture = (...args) => std.path.join(FIXTURES_PATH, ...args);
 
 describe("realm", () => {
-    let realmInstance;
+    let realmManager;
     let cliConfig;
 
     const randomName = (prefix = "test") => `${prefix}${text.random(4)}_${text.random(5)}_${text.random(6)}`;
@@ -22,8 +22,8 @@ describe("realm", () => {
     before(async () => {
         await realm.init(".adone_test");
         await realm.clean();
-        realmInstance = await realm.getInstance();
-        realmInstance.setSilent(true);
+        realmManager = await realm.getManager();
+        realmManager.setSilent(true);
 
         cliConfig = await cli.Configuration.load();
     });
@@ -39,15 +39,18 @@ describe("realm", () => {
     });
 
     it("bad install argument", async () => {
-        const err = await assert.throws(async () => realmInstance.install(std.path.join(__dirname)));
+        const err = await assert.throws(async () => {
+            const observer = await realmManager.install(std.path.join(__dirname));
+            return observer.result;
+        });
         assert.instanceOf(err, adone.x.InvalidArgument);
     });
 
     it("lock/unlock", async () => {
         const lockPath = std.path.join(realm.config.runtimePath, "realm");
-        await realmInstance.lock();
+        await realmManager.lock();
         assert.isTrue(await adone.application.locking.check(lockPath));
-        await realmInstance.unlock();
+        await realmManager.unlock();
         assert.isFalse(await adone.application.locking.check(lockPath));
     });
 
@@ -65,7 +68,8 @@ describe("realm", () => {
                         installOptions.build = true;
                     }
 
-                    await realmInstance.install(installOptions);
+                    let observer = await realmManager.install(installOptions);
+                    await observer.result;
 
                     const config = await adone.configuration.Adone.load({
                         cwd: cliCommandPath
@@ -91,9 +95,10 @@ describe("realm", () => {
                         assert.equal(result.stdout, "well done");
                     }
 
-                    await realmInstance.uninstall({
+                    observer = await realmManager.uninstall({
                         name: packageName
                     });
+                    await observer.result;
 
                     assert.isFalse(await dir.exists());
 
@@ -141,7 +146,10 @@ describe("realm", () => {
                         symlink
                     };
 
-                    const err = await assert.throws(async () => realmInstance.install(installOptions));
+                    const err = await assert.throws(async () => {
+                        const observer = await realmManager.install(installOptions);
+                        return observer.result;
+                    });
                     assert.instanceOf(err, Error);
 
                     assert.isFalse(await dir.exists());
@@ -176,13 +184,15 @@ describe("realm", () => {
                 name: omnitronServicePath
             };
 
-            await realmInstance.install(installOptions);
+            let observer = await realmManager.install(installOptions);
+            await observer.result;
 
             assert.isTrue(await dir.exists());
 
-            await realmInstance.uninstall({
+            observer = await realmManager.uninstall({
                 name: packageName
             });
+            await observer.result;
 
             assert.isFalse(await dir.exists());
         });
@@ -210,16 +220,17 @@ describe("realm", () => {
                 name: omnitronServicePath
             };
 
-            await realmInstance.install(installOptions);
+            let observer = await realmManager.install(installOptions);
+            await observer.result;
 
             assert.isTrue(await dir.exists());
 
-            await realmInstance.uninstall({
+            observer = await realmManager.uninstall({
                 name: packageName
             });
+            await observer.result;
 
             assert.isFalse(await dir.exists());
-
 
             await adone.omnitron.dispatcher.stopOmnitron();
         });
@@ -244,7 +255,10 @@ describe("realm", () => {
                 name: omnitronServicePath
             };
 
-            const err = await assert.throws(async () => realmInstance.install(installOptions));
+            const err = await assert.throws(async () => {
+                const observer = await realmManager.install(installOptions);
+                return observer.result;
+            });
             assert.instanceOf(err, Error);
 
             assert.isFalse(await dir.exists());
@@ -254,9 +268,8 @@ describe("realm", () => {
     });
 
     describe("uninstall packages with broken symlinks", () => {
-
         afterEach(async () => {
-            await fs.rmdir(FIXTURES_PATH);
+            await fs.rm(FIXTURES_PATH);
         });
 
         // This is incomplete test
@@ -273,9 +286,11 @@ describe("realm", () => {
                 symlink: true
             };
     
-            await realmInstance.install(installOptions);
+            let observer = await realmManager.install(installOptions);
+            await observer.result;
             
-            const list = await realmInstance.list();
+            observer = await realmManager.list();
+            const list = await observer.result;
             assert.lengthOf(list, 1);
             assert.equal(list[0].name, "cli.command.simple");
     
@@ -291,9 +306,10 @@ describe("realm", () => {
             const lstat = await fs.lstat(packagePath);
             assert.isTrue(lstat.isSymbolicLink());
     
-            await realmInstance.uninstall({
+            observer = await realmManager.uninstall({
                 name: list[0].name
             });
+            await observer.result;
     
             await assert.throws(async () => fs.lstat(packagePath));
         });

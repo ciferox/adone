@@ -116,6 +116,20 @@ export class TaskObserver {
         }
     }
 
+    async finally(fn) {
+        if (is.promise(this.result)) {
+            this.result = this.result.then(async (result) => {
+                await fn();
+                return result;
+            }).catch(async (err) => {
+                await fn();
+                throw err;
+            });
+        } else {
+            await fn();
+        }
+    }
+
     /**
      * Returns true if the task is suspendable.
      */

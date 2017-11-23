@@ -6,13 +6,10 @@ const {
 adone.lazify({
     config: () => require(std.path.join(adone.rootPath, "realm.js")),
     path: () => adone.realm.config.home,
-    Realm: "./realm"
+    TypeHandler: "./type_handler",
+    Manager: "./manager",
+    task: "./tasks"
 }, adone.asNamespace(exports), require);
-
-adone.lazifyPrivate({
-    Package: "./__/package",
-    AbstractHandler: "./__/package/abstract_handler"
-}, exports, require);
 
 export const createDirs = async () => {
     await adone.fs.mkdirp(adone.realm.config.packagesPath);
@@ -80,12 +77,9 @@ export const clean = async ({ skipRealmFiles = true } = {}) => {
     }
 };
 
-let realmInstance = null;
-
-export const getInstance = async () => {
-    if (is.null(realmInstance)) {
-        realmInstance = new adone.realm.Realm();
-        await realmInstance._initialize();
+export const getManager = async () => {
+    if (is.null(adone.runtime.realm)) {
+        adone.runtime.realm = await adone.realm.Manager.create();
     }
-    return realmInstance;
+    return adone.runtime.realm;
 };

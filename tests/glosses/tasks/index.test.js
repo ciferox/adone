@@ -721,4 +721,96 @@ describe("task", () => {
         assert.lengthOf(Object.keys(result), 2);
         assert.sameMembers(Object.values(result), [777, 888]);
     });
+
+    describe("TaskObserver#finally", () => {
+        it("finally function should be executed atomically (async)", async () => {
+            let val;
+            class TaskA extends task.Task {
+                async run() {
+                    await promise.delay(100);
+                    val = 1;
+                }
+            }
+            
+            await manager.addTask("a", TaskA);
+            const observer = await manager.run("a");
+            
+            observer.finally(async () => {
+                await adone.promise.delay(100);
+                val = 2;
+            });
+            await observer.result;
+            assert.equal(val, 2);
+        });
+
+        it("finally function should be executed atomically (async)", async () => {
+            let val = 0;
+            class TaskA extends task.Task {
+                run() {
+                    val = 1;
+                }
+            }
+            
+            await manager.addTask("a", TaskA);
+            const observer = await manager.run("a");            
+            observer.finally(() => {
+                val = 2;
+            });
+            await observer.result;
+            assert.equal(val, 2);
+        });
+    });
+
+    describe("undo", () => {
+        it("task's undo method should be executed atomically (async)", async () => {
+            const data = [];
+            
+            class TaskA extends task.Task {
+                async run() {
+                    data.push(1);
+                    await promise.delay(100);
+                    data.push(2);
+                    throw new adone.x.Runtime("task error");
+                }
+
+                async undo() {
+                    await adone.promise.delay(1000);
+                    data.length = 0;
+                }
+            }
+            
+            await manager.addTask("a", TaskA);
+            try {
+                const observer = await manager.run("a");
+                await observer.result;
+            } catch (err) {
+                assert.lengthOf(data, 0);
+            }
+        });
+
+        it("task's undo method should be executed atomically (sync)", async () => {
+            const data = [];
+            
+            class TaskA extends task.Task {
+                run() {
+                    data.push(1);
+                    data.push(2);
+                    throw new adone.x.Runtime("task error");
+                }
+
+                async undo() {
+                    await adone.promise.delay(1000);
+                    data.length = 0;
+                }
+            }
+            
+            await manager.addTask("a", TaskA);
+            try {
+                const observer = await manager.run("a");
+                await observer.result;
+            } catch (err) {
+                assert.lengthOf(data, 0);
+            }
+        });
+    });
 });

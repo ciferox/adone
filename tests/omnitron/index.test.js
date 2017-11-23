@@ -10,15 +10,15 @@ const {
 
 describe("omnitron", () => {
     let iOmnitron;
-    let realmInstance;
+    let realmManager;
 
     before(async function () {
         this.timeout(25000);
         await realm.init(".adone_test");
         await realm.clean();
 
-        realmInstance = await realm.getInstance();
-        realmInstance.setSilent(true);
+        realmManager = await realm.getManager();
+        realmManager.setSilent(true);
     });
 
     after(async () => {
@@ -51,7 +51,7 @@ describe("omnitron", () => {
             assert.equal(info.version.adone, adone.package.version);
 
             assert.equal(info.realm.name, ".adone_test");
-            assert.equal(info.realm.uid, (await realm.getInstance()).id);
+            assert.equal(info.realm.uid, (await realm.getManager()).id);
 
             assert.equal(info.env.ADONE_REALM, info.realm.name);
             assert.isOk(info.env.ADONE_HOME.endsWith(".adone_test"));
@@ -102,10 +102,12 @@ describe("omnitron", () => {
         const installServices = async (paths) => {
             for (const name of paths) {
                 // eslint-disable-next-line
-                const adoneConf = await realmInstance.install({
+                const observer = await realmManager.install({
                     name,
                     symlink: false
                 });
+                const adoneConf = await observer.result; // eslint-disable-line
+
                 installedServices.push(adoneConf);
                 await checkServiceStatus(adoneConf.raw.name, STATUS.DISABLED); // eslint-disable-line
             }
@@ -114,25 +116,28 @@ describe("omnitron", () => {
         const uninstallServices = async () => {
             for (const conf of installedServices) {
                 // eslint-disable-next-line
-                await realmInstance.uninstall({
+                const observer = await realmManager.uninstall({
                     name: `omnitron.service.${conf.raw.name}`
                 });
+                await observer.result; // eslint-disable-line
             }
 
             installedServices.length = 0;
         };
 
         const installService = async (path, symlink = false) => {
-            installedServices.push(await realmInstance.install({
+            const observer = await realmManager.install({
                 name: path,
                 symlink
-            }));
+            });
+            installedServices.push(await observer.result);
         };
 
         const uninstallService = async (name) => {
-            await realmInstance.uninstall({
+            const observer = await realmManager.uninstall({
                 name: `omnitron.service.${name}`
             });
+            await observer.result;
 
             const index = installedServices.findIndex((conf) => conf.raw.name === name);
             if (index >= 0) {

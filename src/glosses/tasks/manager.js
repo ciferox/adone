@@ -181,7 +181,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
 
         const runTask = await this._createTaskRunner(context, taskInfo);
         taskInfo.instances.add(runTask);
-        const taskObserver = runTask(args);
+        const taskObserver = await runTask(args);
 
         const releaseRunner = () => {
             taskInfo.instances.delete(runTask);
@@ -200,7 +200,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
     }
 
     async _createTaskRunner(context, taskInfo) {
-        return (args) => {
+        return async (args) => {
             const instance = this._createTaskInstance(taskInfo);
 
             const taskObserver = new adone.task.TaskObserver(instance, taskInfo.meta.name);
@@ -208,10 +208,21 @@ export default class TaskManager extends adone.event.AsyncEmitter {
             try {
                 taskObserver.result = instance.run(...args);
             } catch (err) {
+                if (is.function(taskObserver.task.undo)) {
+                    await taskObserver.task.undo(err);
+                }
                 taskObserver.result = Promise.reject(err);
             }
 
             if (is.promise(taskObserver.result)) {
+                // Wrap promise if task has undo method.
+                if (is.function(taskObserver.task.undo)) {
+                    taskObserver.result = taskObserver.result.then(adone.identity, async (err) => {
+                        await taskObserver.task.undo(err);
+                        throw err;
+                    });
+                }
+
                 taskObserver.result.then(() => {
                     taskObserver.state = (taskObserver.state === adone.task.STATE.CANCELLING) ? adone.task.STATE.CANCELLED : adone.task.STATE.COMPLETED;
                 }).catch((err) => {

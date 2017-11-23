@@ -239,14 +239,18 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
                     enumerable: true,
                     writable: true,
                     value: null
+                },
+                realm: {
+                    enumerable: true,
+                    writable: true,
+                    value: null
                 }
             });
 
             adone.lazify({
                 term: () => new adone.terminal.Terminal(),
                 logger: () => adone.application.Logger.default(),
-                netron: () => new adone.netron.Netron(),
-                realm: () => new adone.realm.Realm()
+                netron: () => new adone.netron.Netron()
             }, runtime);
 
             return runtime;

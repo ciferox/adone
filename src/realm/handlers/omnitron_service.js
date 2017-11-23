@@ -2,12 +2,11 @@ const {
     is,
     fs,
     std,
-    omnitron: { dispatcher }
+    omnitron: { dispatcher },
+    realm
 } = adone;
 
-const __ = adone.private(adone.realm);
-
-export default class OmnitronServiceHandler extends __.AbstractHandler {
+export default class OmnitronServiceHandler extends realm.TypeHandler {
     constructor(pkg) {
         super(pkg, "Omnitron services", "omnitron.service");
     }

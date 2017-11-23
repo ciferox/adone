@@ -196,7 +196,7 @@ describe("project", function () {
             });
         }
 
-        describe("projects", () => {
+        describe("project generating", () => {
             const defaultProjects = [
                 {
                     skipNpm: false,
@@ -383,6 +383,7 @@ describe("project", function () {
                     assert.isTrue(jsconfig.raw.include.includes(relativeDir));
                 });
             });
+            
         });
     });
 });

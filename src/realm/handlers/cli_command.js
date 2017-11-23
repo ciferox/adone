@@ -1,11 +1,10 @@
 const {
     is,
+    realm,
     std
 } = adone;
 
-const __ = adone.private(adone.realm);
-
-export default class CliCommandHandler extends __.AbstractHandler {
+export default class CliCommandHandler extends realm.TypeHandler {
     constructor(pkg) {
         super(pkg, "Adone cli commands", "cli.command");
     }

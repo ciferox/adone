@@ -1,4 +1,4 @@
-export default class AbstractHandler {
+export default class TypeHandler {
     constructor(pkg, name, type) {
         this.name = name;
         this.type = type;

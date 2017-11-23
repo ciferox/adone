@@ -13,7 +13,7 @@ const {
     Command,
     MainCommand,
     CliSubsystem,
-    CommandsGroup
+    CommandsGroups
 } = application.CliApplication;
 
 class RealmManager extends application.Subsystem {
@@ -40,13 +40,20 @@ class RealmManager extends application.Subsystem {
     }
 }
 
-@CommandsGroup({
-    name: "subsystem",
-    description: "Subsystems"
-})
+@CommandsGroups([
+    {
+        name: "subsystem",
+        description: "Subsystems"
+    },
+    {
+        name: "realm",
+        description: "Realm management"
+    }
+])
 @CliSubsystem({
     name: "realm",
-    description: "Realm management",
+    group: "realm",
+    description: "Realm tools",
     subsystem: new RealmManager()
 })
 class AdoneCLI extends application.CliApplication {
@@ -122,6 +129,7 @@ class AdoneCLI extends application.CliApplication {
 
     @Command({
         name: "install",
+        group: "realm",
         help: "Install adone glosses, extensions, applications, etc.",
         arguments: [
             {
@@ -144,12 +152,13 @@ class AdoneCLI extends application.CliApplication {
     })
     async installCommand(args, opts) {
         try {
-            const realmInstance = await adone.realm.getInstance();
-            await realmInstance.install({
+            const realmManager = await adone.realm.getManager();
+            const observer = await realmManager.install({
                 name: args.get("name"),
                 symlink: opts.has("symlink"),
                 build: opts.has("build")
             });
+            await observer.result;
 
             return 0;
         } catch (err) {
@@ -161,6 +170,7 @@ class AdoneCLI extends application.CliApplication {
 
     @Command({
         name: "uninstall",
+        group: "realm",
         help: "Uninstall adone glosses, extensions, applications, etc.",
         arguments: [
             {
@@ -173,10 +183,11 @@ class AdoneCLI extends application.CliApplication {
     })
     async uninstallCommand(args) {
         try {
-            const realmInstance = await adone.realm.getInstance();
-            await realmInstance.uninstall({
+            const realmManager = await adone.realm.getManager();
+            const observer = await realmManager.uninstall({
                 name: args.get("name")
             });
+            await observer.result;
 
             return 0;
         } catch (err) {
@@ -188,6 +199,7 @@ class AdoneCLI extends application.CliApplication {
 
     @Command({
         name: "list",
+        group: "realm",
         help: "List installed packages",
         arguments: [
             {
@@ -200,10 +212,11 @@ class AdoneCLI extends application.CliApplication {
     })
     async listCommand(args) {
         try {
-            const realmInstance = await adone.realm.getInstance();
-            const result = await realmInstance.list({
+            const realmManager = await adone.realm.getManager();
+            const observer = await realmManager.list({
                 keyword: args.get("keyword")
             });
+            const result = await observer.result;
 
             if (result.length > 0) {
                 adone.log(adone.text.pretty.table(result, {
