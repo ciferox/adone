@@ -10,7 +10,7 @@ const {
 } = adone;
 
 export default class NpmTask extends project.generator.task.Base {
-    async run({ cwd, dependencies, devDependencies } = {}) {        
+    async run({ cwd, dependencies, devDependencies } = {}, context) {
         const config = new configuration.Npm({
             cwd
         });
@@ -24,7 +24,7 @@ export default class NpmTask extends project.generator.task.Base {
                     node: ">=8.0.0"
                 },
                 dependencies: {}
-            }, util.pick(this.context.project, ["name", "version", "description", "author"]));
+            }, util.pick(context.project, ["name", "version", "description", "author"]));
 
             await config.save();
         }
@@ -37,7 +37,7 @@ export default class NpmTask extends project.generator.task.Base {
                     name: dep,
                     section: "dependencies"
                 };
-                if (this.context.flag.skipNpm) {
+                if (context.flag.skipNpm) {
                     info.args = ["view", dep, "version"];
                 } else {
                     info.args = ["i", dep];
@@ -52,7 +52,7 @@ export default class NpmTask extends project.generator.task.Base {
                     name: devDep,
                     section: "devDependencies"
                 };
-                if (this.context.flag.skipNpm) {
+                if (context.flag.skipNpm) {
                     info.args = ["view", devDep, "version"];
                 } else {
                     info.args = ["i", devDep, "--save-dev"];
@@ -67,12 +67,12 @@ export default class NpmTask extends project.generator.task.Base {
                 cwd
             });
 
-            if (this.context.flag.skipNpm) {
+            if (context.flag.skipNpm) {
                 config.set([pkg.section, pkg.name], `^${text.stripLastCRLF(result.stdout)}`);
             }
         }
 
-        if (this.context.flag.skipNpm) {
+        if (context.flag.skipNpm) {
             await config.save();
         }
     }

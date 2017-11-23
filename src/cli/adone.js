@@ -483,7 +483,8 @@ class AdoneCLI extends application.CliApplication {
             const path = args.has("path") ? args.get("path") : null;
             const manager = new adone.project.Manager();
             await manager.load();
-            await manager.clean(path);
+            const observer = await manager.clean(path);
+            await observer.result;
             return 0;
         } catch (err) {
             term.print(`{red-fg}${err.message}{/}`);
@@ -513,9 +514,11 @@ class AdoneCLI extends application.CliApplication {
             const path = args.has("path") ? args.get("path") : null;
             const manager = new adone.project.Manager();
             await manager.load();
-            await manager.build(path);
+            let observer = await manager.build(path);
+            await observer.result;
             if (opts.has("watch")) {
-                await manager.watch(path);
+                observer = await manager.watch(path);
+                await observer.result;
                 return;
             }
             return 0;
@@ -548,9 +551,11 @@ class AdoneCLI extends application.CliApplication {
             const path = args.has("path") ? args.get("path") : null;
             const manager = new adone.project.Manager();
             await manager.load();
-            await manager.rebuild(path);
+            let observer = await manager.rebuild(path);
+            await observer.result;
             if (opts.has("watch")) {
-                await manager.watch(path);
+                observer = await manager.watch(path);
+                await observer.result;
                 return;
             }
             return 0;
@@ -576,7 +581,8 @@ class AdoneCLI extends application.CliApplication {
             const path = args.has("path") ? args.get("path") : null;
             const manager = new adone.project.Manager();
             await manager.load();
-            await manager.watch(path);
+            const observer = await manager.watch(path);
+            await observer.result;
         } catch (err) {
             term.print(`{red-fg}${err.message}{/}`);
             return 1;

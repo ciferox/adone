@@ -682,49 +682,6 @@ describe("task", () => {
                 assert.equal(await observer.result, 7);
             });
         });
-
-        it("tasks shared context", async () => {
-            const id = "778899";
-            class TaskA extends task.Task {
-                async run() {
-                    assert.equal(this.context.id, id);
-                    this.context.data.name = "adone";
-                    this.context.data.dt = new Date();
-                }
-            }
-
-            class TaskB extends task.Task {
-                async run() {
-                    assert.equal(this.context.id, id);
-                    assert.equal(this.context.data.name, "adone");
-                    assert.isTrue(is.date(this.context.data.dt));
-                    this.context.data.version = "1.0.0";
-                    return 7;
-                }
-            }
-
-            class TaskC extends task.Task {
-                async run() {
-                    assert.equal(this.context.id, id);
-                    assert.equal(this.context.data.name, "adone");
-                    assert.equal(this.context.data.version, "1.0.0");
-                    assert.isTrue(is.date(this.context.data.dt));
-                    return 7;
-                }
-            }
-
-            manager.useContext("default", {
-                id,
-                data: {
-                }
-            });
-
-            await manager.addTask("a", TaskA);
-            await manager.addTask("b", TaskB);
-
-            const observer = await manager.runInSeries(["a", "b", TaskC]);
-            await observer.result;
-        });
     });
 
     it("runInSeries() with functions", async () => {

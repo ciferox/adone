@@ -8,7 +8,7 @@ const {
 } = adone;
 
 export default class AdoneConfigTask extends project.generator.task.Base {
-    async run(input) {
+    async run(input, context) {
         const cwd = input.cwd;
         const config = new configuration.Adone({
             cwd
@@ -17,7 +17,7 @@ export default class AdoneConfigTask extends project.generator.task.Base {
         if (await fs.exists(configPath)) {
             await config.load();
         } else {
-            config.merge(util.pick(this.context.project, ["name", "description", "version", "author", "type"]));
+            config.merge(util.pick(context.project, ["name", "description", "version", "author", "type"]));
         }
 
         if (is.plainObject(input)) {

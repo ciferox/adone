@@ -12,8 +12,6 @@ export default class TaskManager extends adone.event.AsyncEmitter {
     constructor() {
         super();
         this._tasks = new Map();
-        this._contexts = new Map();
-        this._activeContext = null;
     }
 
     /**
@@ -174,19 +172,6 @@ export default class TaskManager extends adone.event.AsyncEmitter {
         return observer;
     }
 
-    useContext(name, newContext = {}) {
-        const context = this._contexts.get(name);
-        if (is.undefined(context)) {
-            if (!is.plainObject(newContext)) {
-                throw new x.InvalidArgument("Сontext can only be an object");
-            }
-            this._contexts.set(name, newContext);
-            this._activeContext = newContext;
-        } else {
-            this._activeContext = context;
-        }
-    }
-
     async _run(context, name, ...args) {
         const taskInfo = this._getTaskInfo(name);
 
@@ -217,10 +202,6 @@ export default class TaskManager extends adone.event.AsyncEmitter {
     async _createTaskRunner(context, taskInfo) {
         return (args) => {
             const instance = this._createTaskInstance(taskInfo);
-
-            if (!is.null(this._activeContext)) {
-                instance.context = this._activeContext;
-            }
 
             const taskObserver = new adone.task.TaskObserver(instance, taskInfo.meta.name);
             taskObserver.state = adone.task.STATE.RUNNING;

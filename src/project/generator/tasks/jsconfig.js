@@ -7,7 +7,7 @@ const {
 } = adone;
 
 export default class JsconfigTask extends project.generator.task.Base {
-    async run({ cwd, include, exclude } = {}) {
+    async run({ cwd, include, exclude } = {}, context) {
         const config = new configuration.Jsconfig({
             cwd
         });

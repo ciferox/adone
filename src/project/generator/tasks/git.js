@@ -50,16 +50,16 @@ Thumbs.db
 `;
 
 export default class GitTask extends project.generator.task.Base {
-    async run() {
+    async run(input, context) {
         const time = adone.datetime.now() / 1000;
         const zoneOffset = adone.datetime().utcOffset();
 
         // Create .gitignore file
-        await fs.writeFile(std.path.join(this.context.project.cwd, ".gitignore"), GITIGNORE_CONTENT);
+        await fs.writeFile(std.path.join(context.project.cwd, ".gitignore"), GITIGNORE_CONTENT);
 
         // Initialize repository, add all files to git and create first commit.
         const logoContent = await fs.readFile(std.path.join(adone.etcPath, "media", "adone.txt"), { encoding: "utf8" });
-        const repository = await git.Repository.init(this.context.project.cwd, 0);
+        const repository = await git.Repository.init(context.project.cwd, 0);
         const index = await repository.refreshIndex();
         await index.addAll();
         await index.write();

@@ -5,24 +5,27 @@ const {
 } = adone;
 
 export default class CliApplicationProjectTask extends project.generator.task.Base {
-    async run() {
+    async run(input, context) {
         await this.runTask("defaultProject", {
+            ...input,
             skipGit: true
-        });
+        }, context);
+        // Fix 'skipGit' flag
+        context.flag.skipGit = input.skipGit;
 
-        const srcPath = std.path.join(this.context.project.cwd, "src");
-        
+        const srcPath = std.path.join(input.cwd, "src");
+
         await fs.mkdirp(srcPath);
 
         await this.runTask("cliApplication", {
-            name: this.context.project.name,
+            name: input.name,
             fileName: "app.js",
             cwd: srcPath
-        });
+        }, context);
 
         // Update adone config
         await this.runTask("adoneConfig", {
-            cwd: this.context.project.cwd,
+            cwd: input.cwd,
             structure: {
                 src: {
                     app: {
@@ -38,21 +41,21 @@ export default class CliApplicationProjectTask extends project.generator.task.Ba
                         ],
                         $dst: "lib"
                     }
-                }    
+                }
             },
             bin: "bin/app.js",
             main: "lib"
-        });
+        }, context);
 
-        if (!this.context.flag.skipJsconfig) {
+        if (!input.skipJsconfig) {
             await this.runTask("jsconfig", {
-                cwd: this.context.project.cwd,
+                cwd: input.cwd,
                 include: ["src"]
-            });
+            }, context);
         }
 
-        if (!this.context.flag.skipGit) {
-            await this.runTask("git");
+        if (!input.skipGit) {
+            await this.runTask("git", {}, context);
         }
     }
 }

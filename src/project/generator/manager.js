@@ -4,8 +4,7 @@ const {
     is,
     std,
     task,
-    text,
-    util
+    text
 } = adone;
 
 export default class ProjectGenerator extends task.Manager {
@@ -13,6 +12,7 @@ export default class ProjectGenerator extends task.Manager {
         super();
 
         this.owner = owner;
+        this.contexts = new Map();
     }
 
     async useDefaultTasks() {
@@ -25,44 +25,29 @@ export default class ProjectGenerator extends task.Manager {
     }
 
     async createProject(input) {
-        const context = {
-            flag: {
-                skipGit: false,
-                skipNpm: false,
-                skipJsconfig: false,
-                skipEslint: false,
-                ...util.pick(input, ["skipGit", "skipNpm", "skipJsconfig", "skipEslint"])
-            },
-            project: util.pick(input, ["name", "type", "description", "version", "author", "cwd"])
-        };
-
-        await this._checkAndCreateProject(context, input);
+        const context = {};
+        await this._checkAndCreateProject(input, context);
+        this.contexts.set(input.cwd, context);
         return context;
     }
 
     async createSubProject(input) {
         const cwd = std.path.join(this.owner.cwd, is.string(input.dirName) ? input.dirName : input.name);
-        const context = {
-            flag: {
-                ...util.pick(input, ["skipGit", "skipNpm", "skipJsconfig", "skipEslint"]),
-                skipGit: true,
-                skipEslint: true,
-                skipJsconfig: true
-            },
-            project: {
-                cwd,
-                name: this.owner.config.raw.name,
-                description: this.owner.config.raw.description,
-                version: this.owner.config.raw.version,
-                author: this.owner.config.raw.author,
-                ...util.pick(input, ["name", "type", "description", "version", "author"])
-            }
-        };
+        const context = {};
 
-        await this._checkAndCreateProject(context, input);
+        await this._checkAndCreateProject({
+            name: this.owner.config.raw.name,
+            description: this.owner.config.raw.description,
+            version: this.owner.config.raw.version,
+            author: this.owner.config.raw.author,
+            ...input,
+            cwd,
+            skipGit: true,
+            skipEslint: true,
+            skipJsconfig: true
+        }, context);
 
-        // Update parent project
-        this.useContext(this.owner.cwd);
+        this.contexts.set(cwd, context);
         
         // Adone parent adone.json
         const subName = is.string(input.dirName) ? input.dirName : input.name;
@@ -75,29 +60,28 @@ export default class ProjectGenerator extends task.Manager {
                 await this.runAndWait("jsconfig", {
                     cwd: this.owner.cwd,
                     include: [std.path.relative(this.owner.cwd, std.path.join(cwd, "src"))]
-                });
+                }, this.contexts.get(this.owner.cwd));
             }
         }
 
         return context;
     }
 
-    async _checkAndCreateProject(context, input) {
-        if (!is.string(context.project.name)) {
+    async _checkAndCreateProject(input, context) {
+        if (!is.string(input.name)) {
             throw new adone.x.InvalidArgument("Invalid name of project");
         }
 
-        if (await fs.exists(context.project.cwd)) {
-            const files = await fs.readdir(context.project.cwd);
+        if (await fs.exists(input.cwd)) {
+            const files = await fs.readdir(input.cwd);
             if (files.length > 0) {
-                throw new adone.x.Exists(`Path '${context.project.cwd}' exists and is not empty`);
+                throw new adone.x.Exists(`Path '${input.cwd}' exists and is not empty`);
             }
         } else {
-            await fs.mkdirp(context.project.cwd);
+            await fs.mkdirp(input.cwd);
         }
 
-        this.useContext(context.project.cwd, context);
-        await this.runAndWait(`${is.string(input.type) ? text.toCamelCase(input.type) : "default"}Project`);
+        await this.runAndWait(`${is.string(input.type) ? text.toCamelCase(input.type) : "default"}Project`, input, context);
     }
 
     async createFile(input) {

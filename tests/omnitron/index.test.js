@@ -417,7 +417,7 @@ describe("omnitron", () => {
             assert.isFalse(adone.system.process.exists(pid));
         });
 
-        describe.only("subsystems", () => {
+        describe("subsystems", () => {
             it("list subsystems", async () => {
                 const subsystems = await iOmnitron.getSubsystems();
                 assert.sameMembers(subsystems.map((s) => s.name), ["netron", "service"]);
@@ -672,5 +672,24 @@ describe("omnitron", () => {
             assert.equal(await iConfig.get("key2"), 888);
             assert.isTrue(is.date(await iConfig.get("key3")));
         });
+
+        for (const stage of ["configure", "initialize"]) {
+            // eslint-disable-next-line
+            it(`start service with insane ${stage} stage`, async () => {
+                await installService(std.path.join(__dirname, "services", `${stage}_fail`));
+                await enableServices(["fail"]);
+                const info = await iOmnitron.getInfo({
+                    process: true
+                });
+                const err = await assert.throws(async () => startServices(["fail"]));
+                assert.instanceOf(err, adone.x.Runtime);
+    
+                // Waiting for process exit
+                await adone.promise.delay(100);
+    
+                const childs = await adone.system.process.getChildPids(info.process.id);
+                assert.lengthOf(childs, 0);
+            });
+        }
     });
 });

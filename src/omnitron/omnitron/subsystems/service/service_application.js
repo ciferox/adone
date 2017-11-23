@@ -65,6 +65,8 @@ class ServiceApplication extends application.Application {
                 await this.peer.disconnect();
             } catch (err) {
                 //
+            } finally {
+                this.peer = null;
             }
         }
     }
@@ -116,13 +118,16 @@ class ServiceApplication extends application.Application {
 
         // It is not necessary to wait for the subsystem to be configured and initialized, since it will notify about it.
         process.nextTick(async () => {
-            const deleteAndNotify = (error) => {
+            const deleteAndNotify = async (error) => {
                 this.deleteSubsystem(name, true);
-                return this.iMaintainer.notifyServiceStatus({
+                await this.iMaintainer.notifyServiceStatus({
                     name,
                     status: application.STATE.FAILED,
                     error
                 });
+                if (!this.hasSubsystems()) {
+                    this.exit(1);
+                }
             };
 
             try {
