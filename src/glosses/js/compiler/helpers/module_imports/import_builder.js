@@ -23,7 +23,7 @@ export default class ImportBuilder {
     done() {
         return {
             statements: this._statements,
-            resultName: this._resultName,
+            resultName: this._resultName
         };
     }
 
@@ -38,14 +38,14 @@ export default class ImportBuilder {
         this._statements.push(
             t.expressionStatement(
                 t.callExpression(t.identifier("require"), [
-                    t.stringLiteral(this._importedSource),
+                    t.stringLiteral(this._importedSource)
                 ]),
             ),
         );
         return this;
     }
 
-    namespace(name) {
+    namespace(name = "namespace") {
         name = this._scope.generateUidIdentifier(name);
 
         const statement = this._statements[this._statements.length - 1];
@@ -65,8 +65,8 @@ export default class ImportBuilder {
         return this;
     }
     named(name, importName) {
-        if (importName === "default") {
-            return this.default(name);
+        if (importName === "default") { 
+            return this.default(name); 
         }
 
         name = this._scope.generateUidIdentifier(name);
@@ -108,7 +108,7 @@ export default class ImportBuilder {
         } else if (statement.type === "VariableDeclaration") {
             assert(statement.declarations.length === 1);
             statement.declarations[0].init = t.callExpression(callee, [
-                statement.declarations[0].init,
+                statement.declarations[0].init
             ]);
         } else {
             assert.fail("Unexpected type.");
@@ -130,7 +130,7 @@ export default class ImportBuilder {
                 t.identifier(name),
             );
         } else {
-            assert.fail("Unexpected type:" + statement.type);
+            assert.fail(`Unexpected type:${statement.type}`);
         }
         return this;
     }

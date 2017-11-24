@@ -691,7 +691,6 @@
               "computed": false,
               "id": null,
               "generator": true,
-              "expression": false,
               "async": false,
               "params": [],
               "body": {
@@ -798,7 +797,6 @@
               "computed": false,
               "id": null,
               "generator": true,
-              "expression": false,
               "async": false,
               "params": [],
               "body": {
@@ -940,7 +938,6 @@
               "kind": "method",
               "id": null,
               "generator": false,
-              "expression": false,
               "async": false,
               "params": [],
               "body": {
@@ -1359,7 +1356,6 @@
               "kind": "get",
               "id": null,
               "generator": false,
-              "expression": false,
               "async": false,
               "params": [],
               "body": {
@@ -1466,7 +1462,6 @@
               "kind": "get",
               "id": null,
               "generator": false,
-              "expression": false,
               "async": false,
               "params": [],
               "body": {

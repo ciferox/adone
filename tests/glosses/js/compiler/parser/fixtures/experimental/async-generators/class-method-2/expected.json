@@ -111,7 +111,6 @@
               "kind": "method",
               "id": null,
               "generator": true,
-              "expression": false,
               "async": true,
               "params": [],
               "body": {

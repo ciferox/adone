@@ -90,7 +90,6 @@
               },
               "id": null,
               "generator": false,
-              "expression": true,
               "async": false,
               "params": [],
               "body": {
@@ -207,7 +206,6 @@
                       },
                       "id": null,
                       "generator": false,
-                      "expression": true,
                       "async": false,
                       "params": [
                         {

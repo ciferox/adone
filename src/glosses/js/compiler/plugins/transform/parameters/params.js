@@ -21,13 +21,13 @@ const buildLooseDestructuredDefaultParam = template(`
   let ASSIGNMENT_IDENTIFIER = PARAMETER_NAME === UNDEFINED ? DEFAULT_VALUE : PARAMETER_NAME ;
 `);
 
-const buildArgumentsAccess = template(`
-  let $0 = arguments[$1];
+const buildSafeArgumentsAccess = template(`
+  let $0 = arguments.length > $1 ? arguments[$1] : undefined;
 `);
 
-const isSafeBinding = function (scope, node) {
+const isSafeBinding = (scope, node) => {
     if (!scope.hasOwnBinding(node.name)) {
-        return true; 
+        return true;
     }
     const { kind } = scope.getOwnBinding(node.name);
     return kind === "param" || kind === "local";
@@ -92,8 +92,8 @@ export default function convertFunctionParams(path, loose) {
                 param.replaceWith(paramName);
             }
         } else if (param.isAssignmentPattern()) {
-            if (is.null(firstOptionalIndex)) { 
-                firstOptionalIndex = i; 
+            if (is.null(firstOptionalIndex)) {
+                firstOptionalIndex = i;
             }
 
             const left = param.get("left");
@@ -116,7 +116,10 @@ export default function convertFunctionParams(path, loose) {
             });
             body.push(defNode);
         } else if (!is.null(firstOptionalIndex)) {
-            const defNode = buildArgumentsAccess([param.node, t.numericLiteral(i)]);
+            const defNode = buildSafeArgumentsAccess([
+                param.node,
+                t.numericLiteral(i)
+            ]);
             body.push(defNode);
         } else if (param.isObjectPattern() || param.isArrayPattern()) {
             const uid = path.scope.generateUidIdentifier("ref");
@@ -134,8 +137,8 @@ export default function convertFunctionParams(path, loose) {
         }
     }
 
-    if (body.length === 0) { 
-        return false; 
+    if (body.length === 0) {
+        return false;
     }
 
     // we need to cut off all trailing parameters

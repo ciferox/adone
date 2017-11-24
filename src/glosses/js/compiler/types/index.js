@@ -1,7 +1,6 @@
-const {
-  vendor: { lodash: { clone: loClone, uniq } },
-  util: { toFastProperties }
-} = adone;
+import toFastProperties from "to-fast-properties";
+import loClone from "lodash/clone";
+import uniq from "lodash/uniq";
 
 const t = exports;
 
@@ -76,14 +75,6 @@ export { traverse, traverseFast };
 
 for (const type in t.VISITOR_KEYS) {
   registerType(type);
-}
-
-// Compat helpers so code for Babel 6.x is more likely to work on Babel 7.x.
-export function isRestProperty(...args) {
-  return t.isRestElement(...args);
-}
-export function isSpreadProperty(...args) {
-  return t.isSpreadElement(...args);
 }
 
 /**

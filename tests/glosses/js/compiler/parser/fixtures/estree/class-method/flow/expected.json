@@ -141,8 +141,8 @@
                 },
                 "id": null,
                 "generator": false,
-                "expression": false,
                 "async": false,
+                "expression": false,
                 "params": [
                   {
                     "type": "Identifier",

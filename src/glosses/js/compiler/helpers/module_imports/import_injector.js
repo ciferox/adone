@@ -3,6 +3,7 @@ import isModule from "./is_module";
 
 const {
     assert,
+    is,
     js: { compiler: { types: t } }
 } = adone;
 
@@ -121,11 +122,11 @@ export default class ImportInjector {
         importedInterop: "babel",
         importingInterop: "babel",
         ensureLiveReference: false,
-        ensureNoContext: false,
+        ensureNoContext: false
     };
 
     constructor(path, importedSource, opts) {
-        const programPath = path.find(p => p.isProgram());
+        const programPath = path.find((p) => p.isProgram());
 
         this._programPath = programPath;
         this._programScope = programPath.scope;
@@ -139,7 +140,7 @@ export default class ImportInjector {
     }
 
     addNamed(importName, importedSourceIn, opts) {
-        assert(typeof importName === "string");
+        assert(is.string(importName));
 
         return this._generateImport(
             this._applyDefaults(importedSourceIn, opts),
@@ -163,7 +164,7 @@ export default class ImportInjector {
 
     _applyDefaults(importedSource, opts, isInit = false) {
         const optsList = [];
-        if (typeof importedSource === "string") {
+        if (is.string(importedSource)) {
             optsList.push({ importedSource });
             optsList.push(opts);
         } else {
@@ -174,14 +175,22 @@ export default class ImportInjector {
 
         const newOpts = Object.assign({}, this._defaultOpts);
         for (const opts of optsList) {
-            if (!opts) continue;
-            Object.keys(newOpts).forEach(key => {
-                if (opts[key] !== undefined) newOpts[key] = opts[key];
+            if (!opts) { 
+                continue;
+            }
+            Object.keys(newOpts).forEach((key) => {
+                if (!is.undefined(opts[key])) {
+                    newOpts[key] = opts[key]; 
+                }
             });
 
             if (!isInit) {
-                if (opts.nameHint !== undefined) newOpts.nameHint = opts.nameHint;
-                if (opts.blockHoist !== undefined) newOpts.blockHoist = opts.blockHoist;
+                if (!is.undefined(opts.nameHint)) { 
+                    newOpts.nameHint = opts.nameHint; 
+                }
+                if (!is.undefined(opts.blockHoist)) { 
+                    newOpts.blockHoist = opts.blockHoist; 
+                }
             }
         }
         return newOpts;
@@ -189,26 +198,27 @@ export default class ImportInjector {
 
     _generateImport(opts, importName) {
         const isDefault = importName === "default";
-        const isNamed = !!importName && !isDefault;
-        const isNamespace = importName === null;
+        const isNamed = Boolean(importName) && !isDefault;
+        const isNamespace = is.null(importName);
 
         const {
-      importedSource,
+            importedSource,
             importedType,
             importedInterop,
             importingInterop,
             ensureLiveReference,
             ensureNoContext,
-
-            // Provide a hint for generateUidIdentifier for the local variable name
-            // to use for the import, if the code will generate a simple assignment
-            // to a variable.
-            nameHint = importName,
+            nameHint,
 
             // Not meant for public usage. Allows code that absolutely must control
             // ordering to set a specific hoist value on the import nodes.
-            blockHoist,
-    } = opts;
+            blockHoist
+        } = opts;
+
+        // Provide a hint for generateUidIdentifier for the local variable name
+        // to use for the import, if the code will generate a simple assignment
+        // to a variable.
+        let name = nameHint || importName;
 
         const isMod = isModule(this._programPath, true);
         const isModuleForNode = isMod && importingInterop === "node";
@@ -230,9 +240,9 @@ export default class ImportInjector {
             // import { named } from ''; named
             builder.import();
             if (isNamespace) {
-                builder.namespace("namespace");
+                builder.namespace(nameHint || importedSource);
             } else if (isDefault || isNamed) {
-                builder.named(nameHint, importName);
+                builder.named(name, importName);
             }
         } else if (importedType !== "commonjs") {
             throw new Error(`Unexpected interopType "${importedType}"`);
@@ -241,29 +251,31 @@ export default class ImportInjector {
                 // import _tmp from ''; var namespace = interopRequireWildcard(_tmp); namespace
                 // import _tmp from ''; var def = interopRequireDefault(_tmp).default; def
                 // import _tmp from ''; _tmp.named
+                name = name !== "default" ? name : importedSource;
+                const es6Default = `${importedSource}$es6Default`;
 
                 builder.import();
                 if (isNamespace) {
                     builder
-                        .default("es6Default")
-                        .var(nameHint || "namespace")
+                        .default(es6Default)
+                        .var(name || importedSource)
                         .wildcardInterop();
                 } else if (isDefault) {
                     if (ensureLiveReference) {
                         builder
-                            .default("es6Default")
-                            .var("namespace")
+                            .default(es6Default)
+                            .var(name || importedSource)
                             .defaultInterop()
                             .read("default");
                     } else {
                         builder
-                            .default("es6Default")
-                            .var(nameHint)
+                            .default(es6Default)
+                            .var(name)
                             .defaultInterop()
                             .prop(importName);
                     }
                 } else if (isNamed) {
-                    builder.default("es6Default").read(importName);
+                    builder.default(es6Default).read(importName);
                 }
             } else if (isModuleForBabel) {
                 // import * as namespace from ''; namespace
@@ -271,9 +283,9 @@ export default class ImportInjector {
                 // import { named } from ''; named
                 builder.import();
                 if (isNamespace) {
-                    builder.namespace("namespace");
+                    builder.namespace(name || importedSource);
                 } else if (isDefault || isNamed) {
-                    builder.named(nameHint, importName);
+                    builder.named(name, importName);
                 }
             } else {
                 // var namespace = interopRequireWildcard(require(''));
@@ -281,18 +293,22 @@ export default class ImportInjector {
                 // var named = require('').named; named
                 builder.require();
                 if (isNamespace) {
-                    builder.var("namespace").wildcardInterop();
+                    builder.var(name || importedSource).wildcardInterop();
                 } else if ((isDefault || isNamed) && ensureLiveReference) {
-                    builder.var("namespace").read(importName);
-
-                    if (isDefault) builder.defaultInterop();
+                    if (isDefault) {
+                        name = name !== "default" ? name : importedSource;
+                        builder.var(name).read(importName);
+                        builder.defaultInterop();
+                    } else {
+                        builder.var(importedSource).read(importName);
+                    }
                 } else if (isDefault) {
                     builder
-                        .var(nameHint)
+                        .var(name)
                         .defaultInterop()
                         .prop(importName);
                 } else if (isNamed) {
-                    builder.var(nameHint).prop(importName);
+                    builder.var(name).prop(importName);
                 }
             }
         } else if (importedInterop === "compiled") {
@@ -303,9 +319,9 @@ export default class ImportInjector {
 
                 builder.import();
                 if (isNamespace) {
-                    builder.default("namespace");
+                    builder.default(name || importedSource);
                 } else if (isDefault || isNamed) {
-                    builder.default("namespace").read(importName);
+                    builder.default(importedSource).read(name);
                 }
             } else if (isModuleForBabel) {
                 // import * as namespace from ''; namespace
@@ -316,24 +332,23 @@ export default class ImportInjector {
 
                 builder.import();
                 if (isNamespace) {
-                    builder.namespace("namespace");
+                    builder.namespace(name || importedSource);
                 } else if (isDefault || isNamed) {
-                    builder.named(nameHint, importName);
+                    builder.named(name, importName);
                 }
             } else {
                 // var namespace = require(''); namespace
                 // var namespace = require(''); namespace.default
                 // var namespace = require(''); namespace.named
                 // var named = require('').named;
-
                 builder.require();
                 if (isNamespace) {
-                    builder.var("namespace");
+                    builder.var(name || importedSource);
                 } else if (isDefault || isNamed) {
                     if (ensureLiveReference) {
-                        builder.var("namespace").read(importName);
+                        builder.var(importedSource).read(name);
                     } else {
-                        builder.prop(importName).var(nameHint);
+                        builder.prop(importName).var(name);
                     }
                 }
             }
@@ -346,14 +361,13 @@ export default class ImportInjector {
                 // import namespace from ''; namespace
                 // import def from ''; def;
                 // import namespace from ''; namespace.named
-
                 builder.import();
                 if (isNamespace) {
-                    builder.default("namespace");
+                    builder.default(name || importedSource);
                 } else if (isDefault) {
-                    builder.default(nameHint);
+                    builder.default(name);
                 } else if (isNamed) {
-                    builder.default("namespace").read(importName);
+                    builder.default(importedSource).read(name);
                 }
             } else if (isModuleForBabel) {
                 // import namespace from '';
@@ -365,28 +379,27 @@ export default class ImportInjector {
 
                 builder.import();
                 if (isNamespace) {
-                    builder.default("namespace");
+                    builder.default(name || importedSource);
                 } else if (isDefault) {
-                    builder.default(nameHint);
+                    builder.default(name);
                 } else if (isNamed) {
-                    builder.named(nameHint, importName);
+                    builder.named(name, importName);
                 }
             } else {
                 // var namespace = require(''); namespace
                 // var def = require(''); def
                 // var namespace = require(''); namespace.named
                 // var named = require('').named;
-
                 builder.require();
                 if (isNamespace) {
-                    builder.var("namespace");
+                    builder.var(name || importedSource);
                 } else if (isDefault) {
-                    builder.var(nameHint);
+                    builder.var(name);
                 } else if (isNamed) {
                     if (ensureLiveReference) {
-                        builder.var("namespace").read(importName);
+                        builder.var(importedSource).read(name);
                     } else {
-                        builder.var(nameHint).prop(importName);
+                        builder.var(name).prop(importName);
                     }
                 }
             }
@@ -409,13 +422,13 @@ export default class ImportInjector {
     }
 
     _insertStatements(statements, blockHoist = 3) {
-        statements.forEach(node => {
+        statements.forEach((node) => {
             node._blockHoist = blockHoist;
         });
 
-        const targetPath = this._programPath.get("body").filter(p => {
+        const targetPath = this._programPath.get("body").filter((p) => {
             const val = p.node._blockHoist;
-            return Number.isFinite(val) && val < 4;
+            return is.finite(val) && val < 4;
         })[0];
 
         if (targetPath) {

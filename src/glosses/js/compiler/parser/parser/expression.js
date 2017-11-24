@@ -620,8 +620,12 @@ export default class ExpressionParser extends LValParser {
     node: N.ArrowFunctionExpression,
     call: N.CallExpression,
   ): N.ArrowFunctionExpression {
+    const oldYield = this.state.yieldInPossibleArrowParameters;
+    this.state.yieldInPossibleArrowParameters = null;
     this.expect(tt.arrow);
-    return this.parseArrowExpression(node, call.arguments, true);
+    this.parseArrowExpression(node, call.arguments, true);
+    this.state.yieldInPossibleArrowParameters = oldYield;
+    return node;
   }
 
   // Parse a no-call expression (like argument of `new` or `::` operators).
@@ -715,14 +719,22 @@ export default class ExpressionParser extends LValParser {
           this.next();
           return this.parseFunction(node, false, false, true);
         } else if (canBeArrow && id.name === "async" && this.match(tt.name)) {
+          const oldYield = this.state.yieldInPossibleArrowParameters;
+          this.state.yieldInPossibleArrowParameters = null;
           const params = [this.parseIdentifier()];
           this.expect(tt.arrow);
           // let foo = bar => {};
-          return this.parseArrowExpression(node, params, true);
+          this.parseArrowExpression(node, params, true);
+          this.state.yieldInPossibleArrowParameters = oldYield;
+          return node;
         }
 
         if (canBeArrow && !this.canInsertSemicolon() && this.eat(tt.arrow)) {
-          return this.parseArrowExpression(node, [id]);
+          const oldYield = this.state.yieldInPossibleArrowParameters;
+          this.state.yieldInPossibleArrowParameters = null;
+          this.parseArrowExpression(node, [id]);
+          this.state.yieldInPossibleArrowParameters = oldYield;
+          return node;
         }
 
         return id;
@@ -1468,7 +1480,6 @@ export default class ExpressionParser extends LValParser {
   initFunction(node: N.BodilessFunctionOrMethodBase, isAsync: ?boolean): void {
     node.id = null;
     node.generator = false;
-    node.expression = false;
     node.async = !!isAsync;
   }
 
@@ -1547,11 +1558,10 @@ export default class ExpressionParser extends LValParser {
     );
   }
 
-  isStrictBody(
-    node: { body: N.BlockStatement },
-    isExpression: ?boolean,
-  ): boolean {
-    if (!isExpression && node.body.directives.length) {
+  isStrictBody(node: { body: N.BlockStatement }): boolean {
+    const isBlockStatement = node.body.type === "BlockStatement";
+
+    if (isBlockStatement && node.body.directives.length) {
       for (const directive of node.body.directives) {
         if (directive.value.value === "use strict") {
           return true;
@@ -1583,7 +1593,6 @@ export default class ExpressionParser extends LValParser {
 
     if (isExpression) {
       node.body = this.parseMaybeAssign();
-      node.expression = true;
     } else {
       // Start a new scope with regard to labels and the `inGenerator`
       // flag (restore them to their old value afterwards).
@@ -1594,7 +1603,6 @@ export default class ExpressionParser extends LValParser {
       this.state.inFunction = true;
       this.state.labels = [];
       node.body = this.parseBlock(true);
-      node.expression = false;
       this.state.inFunction = oldInFunc;
       this.state.inGenerator = oldInGen;
       this.state.labels = oldLabels;
@@ -1612,7 +1620,7 @@ export default class ExpressionParser extends LValParser {
     // If this is a strict mode function, verify that argument names
     // are not repeated, and it does not try to bind the words `eval`
     // or `arguments`.
-    const isStrict = this.isStrictBody(node, node.expression);
+    const isStrict = this.isStrictBody(node);
     // Also check for arrow functions
     const checkLVal = this.state.strict || isStrict || isArrowFunction;
 

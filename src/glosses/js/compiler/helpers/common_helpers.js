@@ -1,7 +1,7 @@
 /* eslint max-len: "off" */
 
 const {
-  js: { compiler: { template } }
+    js: { compiler: { template } }
 } = adone;
 
 const helpers = {};
@@ -626,6 +626,12 @@ helpers.temporalRef = defineHelper(`
     } else {
       return val;
     }
+  }
+`);
+
+helpers.readOnlyError = defineHelper(`
+  export default function _readOnlyError(name) {
+    throw new Error("\\"" + name + "\\" is read-only");
   }
 `);
 

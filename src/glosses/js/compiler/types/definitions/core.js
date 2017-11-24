@@ -1,5 +1,4 @@
-/* eslint max-len: "off" */
-
+// @flow
 import * as t from "../index";
 
 import {
@@ -129,7 +128,9 @@ defineType("CallExpression", {
     arguments: {
       validate: chain(
         assertValueType("array"),
-        assertEach(assertNodeType("Expression", "SpreadElement")),
+        assertEach(
+          assertNodeType("Expression", "SpreadElement", "JSXNamespacedName"),
+        ),
       ),
     },
     optional: {
@@ -660,6 +661,7 @@ defineType("RestElement", {
   visitor: ["argument", "typeAnnotation"],
   builder: ["argument"],
   aliases: ["LVal", "PatternLike"],
+  deprecatedAlias: "RestProperty",
   fields: {
     ...patternLikeCommon,
     argument: {
@@ -846,7 +848,7 @@ defineType("WithStatement", {
   aliases: ["Statement"],
   fields: {
     object: {
-      object: assertNodeType("Expression"),
+      validate: assertNodeType("Expression"),
     },
     body: {
       validate: assertNodeType("BlockStatement", "Statement"),

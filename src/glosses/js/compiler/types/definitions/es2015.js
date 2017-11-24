@@ -1,5 +1,4 @@
-/* eslint max-len: "off" */
-
+// @flow
 import defineType, {
   assertNodeType,
   assertValueType,
@@ -396,7 +395,7 @@ export const classMethodOrPropertyCommon = {
       );
       const computed = assertNodeType("Expression");
 
-      return function(node, key, val) {
+      return function(node: Object, key: string, val: any) {
         const validator = node.computed ? computed : normal;
         validator(node, key, val);
       };
@@ -467,6 +466,7 @@ defineType("ObjectPattern", {
 defineType("SpreadElement", {
   visitor: ["argument"],
   aliases: ["UnaryLike"],
+  deprecatedAlias: "SpreadProperty",
   fields: {
     argument: {
       validate: assertNodeType("Expression"),
