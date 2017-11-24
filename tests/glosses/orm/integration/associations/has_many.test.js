@@ -3,7 +3,6 @@ import Support from "../support";
 const { vendor: { lodash: _ } } = adone;
 const Sequelize = adone.orm;
 const { DataTypes } = Sequelize;
-const Promise = Sequelize.Promise;
 const current = Support.sequelize;
 const dialect = Support.getTestDialect();
 
@@ -31,7 +30,7 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
                     User.Tasks = User.hasMany(Task, { as: "tasks" });
 
                     return this.sequelize.sync({ force: true }).then(() => {
-                        return Promise.join(
+                        return Promise.all([
                             User.create({
                                 id: 1,
                                 tasks: [
@@ -53,7 +52,7 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
                             User.create({
                                 id: 3
                             })
-                        );
+                        ]);
                     }).then((users) => {
                         return User.Tasks.get(users).then((result) => {
                             expect(result[users[0].id].length).to.equal(3);
@@ -72,7 +71,7 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
                     User.Tasks = User.hasMany(Task, { as: "tasks" });
 
                     return this.sequelize.sync({ force: true }).then(() => {
-                        return Promise.join(
+                        return Promise.all([
                             User.create({
                                 tasks: [
                                     { title: "b" },
@@ -92,7 +91,7 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
                             }, {
                                 include: [User.Tasks]
                             })
-                        );
+                        ]);
                     }).then((users) => {
                         return User.Tasks.get(users, {
                             limit: 2,
@@ -124,7 +123,7 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
                     Task.SubTasks = Task.hasMany(SubTask, { as: "subtasks" });
 
                     return this.sequelize.sync({ force: true }).then(() => {
-                        return Promise.join(
+                        return Promise.all([
                             User.create({
                                 id: 1,
                                 tasks: [
@@ -178,7 +177,7 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
                             }, {
                                 include: [{ association: User.Tasks, include: [Task.SubTasks] }]
                             })
-                        );
+                        ]);
                     }).then(() => {
                         return User.findAll({
                             include: [{
@@ -243,7 +242,7 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
                     Task.Category = Task.belongsTo(Category, { as: "category", foreignKey: "categoryId" });
 
                     return this.sequelize.sync({ force: true }).then(() => {
-                        return Promise.join(
+                        return Promise.all([
                             User.create({
                                 tasks: [
                                     { title: "b", category: {} },
@@ -263,7 +262,7 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
                             }, {
                                 include: [{ association: User.Tasks, include: [Task.Category] }]
                             })
-                        );
+                        ]);
                     }).then((users) => {
                         return User.Tasks.get(users, {
                             limit: 2,
@@ -314,100 +313,74 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
             });
 
             if (current.dialect.supports.transactions) {
-                it("supports transactions", function () {
-                    let Article;
-                    let Label;
-                    let sequelize;
-                    let article;
-                    let label;
-                    let t;
-                    return Support.prepareTransactionTest(this.sequelize).then((_sequelize) => {
-                        sequelize = _sequelize;
-                        Article = sequelize.define("Article", { title: DataTypes.STRING });
-                        Label = sequelize.define("Label", { text: DataTypes.STRING });
+                it("supports transactions", async function () {
+                    const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                    const Article = sequelize.define("Article", { title: DataTypes.STRING });
+                    const Label = sequelize.define("Label", { text: DataTypes.STRING });
 
-                        Article.hasMany(Label);
+                    Article.hasMany(Label);
 
-                        return sequelize.sync({ force: true });
-                    }).then(() => {
-                        return Promise.all([
-                            Article.create({ title: "foo" }),
-                            Label.create({ text: "bar" })
-                        ]);
-                    }).spread((_article, _label) => {
-                        article = _article;
-                        label = _label;
-                        return sequelize.transaction();
-                    }).then((_t) => {
-                        t = _t;
-                        return article.setLabels([label], { transaction: t });
-                    }).then(() => {
-                        return Article.all({ transaction: t });
-                    }).then((articles) => {
-                        return articles[0].hasLabel(label).then((hasLabel) => {
-                            expect(hasLabel).to.be.false;
-                        });
-                    }).then(() => {
-                        return Article.all({ transaction: t });
-                    }).then((articles) => {
-                        return articles[0].hasLabel(label, { transaction: t }).then((hasLabel) => {
-                            expect(hasLabel).to.be.true;
-                            return t.rollback();
-                        });
-                    });
+                    await sequelize.sync({ force: true });
+                    const [article, label] = await Promise.all([
+                        Article.create({ title: "foo" }),
+                        Label.create({ text: "bar" })
+                    ]);
+                    const t = await sequelize.transaction();
+                    await article.setLabels([label], { transaction: t });
+                    {
+                        const articles = await Article.all({ transaction: t });
+                        expect(await articles[0].hasLabel(label)).that.be.false;
+                    }
+                    {
+                        const articles = await Article.all({ transaction: t });
+                        expect(await articles[0].hasLabel(label, { transaction: t })).to.be.true;
+                    }
+                    await t.rollback();
                 });
             }
 
-            it("does not have any labels assigned to it initially", function () {
-                return Promise.all([
+            it("does not have any labels assigned to it initially", async function () {
+                const [article, label1, label2] = await Promise.all([
                     this.Article.create({ title: "Article" }),
                     this.Label.create({ text: "Awesomeness" }),
                     this.Label.create({ text: "Epicness" })
-                ]).spread((article, label1, label2) => {
-                    return Promise.all([
-                        article.hasLabel(label1),
-                        article.hasLabel(label2)
-                    ]);
-                }).spread((hasLabel1, hasLabel2) => {
-                    expect(hasLabel1).to.be.false;
-                    expect(hasLabel2).to.be.false;
-                });
+                ]);
+                const [hasLabel1, hasLabel2] = await Promise.all([
+                    article.hasLabel(label1),
+                    article.hasLabel(label2)
+                ]);
+                expect(hasLabel1).to.be.false;
+                expect(hasLabel2).to.be.false;
             });
 
-            it("answers true if the label has been assigned", function () {
-                return Promise.all([
+            it("answers true if the label has been assigned", async function () {
+                const [article, label1, label2] = await Promise.all([
                     this.Article.create({ title: "Article" }),
                     this.Label.create({ text: "Awesomeness" }),
                     this.Label.create({ text: "Epicness" })
-                ]).spread((article, label1, label2) => {
-                    return article.addLabel(label1).then(() => {
-                        return Promise.all([
-                            article.hasLabel(label1),
-                            article.hasLabel(label2)
-                        ]);
-                    });
-                }).spread((hasLabel1, hasLabel2) => {
-                    expect(hasLabel1).to.be.true;
-                    expect(hasLabel2).to.be.false;
-                });
+                ]);
+                await article.addLabel(label1);
+                const [hasLabel1, hasLabel2] = await Promise.all([
+                    article.hasLabel(label1),
+                    article.hasLabel(label2)
+                ]);
+                expect(hasLabel1).to.be.true;
+                expect(hasLabel2).to.be.false;
             });
 
-            it("answers correctly if the label has been assigned when passing a primary key instead of an object", function () {
-                return Promise.all([
+            it("answers correctly if the label has been assigned when passing a primary key instead of an object", async function () {
+                const [article, label1, label2] = await Promise.all([
                     this.Article.create({ title: "Article" }),
                     this.Label.create({ text: "Awesomeness" }),
                     this.Label.create({ text: "Epicness" })
-                ]).spread((article, label1, label2) => {
-                    return article.addLabel(label1).then(() => {
-                        return Promise.all([
-                            article.hasLabel(label1.id),
-                            article.hasLabel(label2.id)
-                        ]);
-                    });
-                }).spread((hasLabel1, hasLabel2) => {
-                    expect(hasLabel1).to.be.true;
-                    expect(hasLabel2).to.be.false;
-                });
+                ]);
+                await article.addLabel(label1);
+                const [hasLabel1, hasLabel2] = await Promise.all([
+                    article.hasLabel(label1.id),
+                    article.hasLabel(label2.id)
+                ]);
+                expect(hasLabel1).to.be.true;
+                expect(hasLabel2).to.be.false;
             });
         });
 
@@ -426,297 +399,225 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
             });
 
             if (current.dialect.supports.transactions) {
-                it("supports transactions", function () {
-                    return Support.prepareTransactionTest(this.sequelize).bind({}).then(function (sequelize) {
-                        this.sequelize = sequelize;
-                        this.Article = sequelize.define("Article", { title: DataTypes.STRING });
-                        this.Label = sequelize.define("Label", { text: DataTypes.STRING });
+                it("supports transactions", async function () {
+                    const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                    const Article = sequelize.define("Article", { title: DataTypes.STRING });
+                    const Label = sequelize.define("Label", { text: DataTypes.STRING });
 
-                        this.Article.hasMany(this.Label);
+                    Article.hasMany(Label);
 
-                        return this.sequelize.sync({ force: true });
-                    }).then(function () {
-                        return Promise.all([
-                            this.Article.create({ title: "foo" }),
-                            this.Label.create({ text: "bar" })
-                        ]);
-                    }).spread(function (article, label) {
-                        this.article = article;
-                        this.label = label;
-                        return this.sequelize.transaction();
-                    }).then(function (t) {
-                        this.t = t;
-                        return this.article.setLabels([this.label], { transaction: t });
-                    }).then(function () {
-                        return this.Article.all({ transaction: this.t });
-                    }).then(function (articles) {
-                        return Promise.all([
-                            articles[0].hasLabels([this.label]),
-                            articles[0].hasLabels([this.label], { transaction: this.t })
-                        ]);
-                    }).spread(function (hasLabel1, hasLabel2) {
-                        expect(hasLabel1).to.be.false;
-                        expect(hasLabel2).to.be.true;
+                    await sequelize.sync({ force: true });
+                    const [article, label] = await Promise.all([
+                        Article.create({ title: "foo" }),
+                        Label.create({ text: "bar" })
+                    ]);
+                    const t = await sequelize.transaction();
+                    await article.setLabels([label], { transaction: t });
+                    const articles = await Article.all({ transaction: t });
 
-                        return this.t.rollback();
-                    });
+                    const [hasLabel1, hasLabel2] = await Promise.all([
+                        articles[0].hasLabels([label]),
+                        articles[0].hasLabels([label], { transaction: t })
+                    ]);
+                    expect(hasLabel1).to.be.false;
+                    expect(hasLabel2).to.be.true;
+                    await t.rollback();
                 });
             }
 
-            it("answers false if only some labels have been assigned", function () {
-                return Promise.all([
+            it("answers false if only some labels have been assigned", async function () {
+                const [article, label1, label2] = await Promise.all([
                     this.Article.create({ title: "Article" }),
                     this.Label.create({ text: "Awesomeness" }),
                     this.Label.create({ text: "Epicness" })
-                ]).spread((article, label1, label2) => {
-                    return article.addLabel(label1).then(() => {
-                        return article.hasLabels([label1, label2]);
-                    });
-                }).then((result) => {
-                    expect(result).to.be.false;
-                });
+                ]);
+                await article.addLabel(label1);
+                expect(await article.hasLabels([label1, label2])).to.be.false;
             });
 
-            it("answers false if only some labels have been assigned when passing a primary key instead of an object", function () {
-                return Promise.all([
+            it("answers false if only some labels have been assigned when passing a primary key instead of an object", async function () {
+                const [article, label1, label2] = await Promise.all([
                     this.Article.create({ title: "Article" }),
                     this.Label.create({ text: "Awesomeness" }),
                     this.Label.create({ text: "Epicness" })
-                ]).spread((article, label1, label2) => {
-                    return article.addLabel(label1).then(() => {
-                        return article.hasLabels([label1.id, label2.id]).then((result) => {
-                            expect(result).to.be.false;
-                        });
-                    });
-                });
+                ]);
+                await article.addLabel(label1);
+                expect(await article.hasLabels([label1.id, label2.id])).to.be.false;
             });
 
-            it("answers true if all label have been assigned", function () {
-                return Promise.all([
+            it("answers true if all label have been assigned", async function () {
+                const [article, label1, label2] = await Promise.all([
                     this.Article.create({ title: "Article" }),
                     this.Label.create({ text: "Awesomeness" }),
                     this.Label.create({ text: "Epicness" })
-                ]).spread((article, label1, label2) => {
-                    return article.setLabels([label1, label2]).then(() => {
-                        return article.hasLabels([label1, label2]).then((result) => {
-                            expect(result).to.be.true;
-                        });
-                    });
-                });
+                ]);
+                await article.setLabels([label1, label2]);
+                expect(await article.hasLabels([label1, label2])).to.be.true;
             });
 
-            it("answers true if all label have been assigned when passing a primary key instead of an object", function () {
-                return Promise.all([
+            it("answers true if all label have been assigned when passing a primary key instead of an object", async function () {
+                const [article, label1, label2] = await Promise.all([
                     this.Article.create({ title: "Article" }),
                     this.Label.create({ text: "Awesomeness" }),
                     this.Label.create({ text: "Epicness" })
-                ]).spread((article, label1, label2) => {
-                    return article.setLabels([label1, label2]).then(() => {
-                        return article.hasLabels([label1.id, label2.id]).then((result) => {
-                            expect(result).to.be.true;
-                        });
-                    });
-                });
+                ]);
+                await article.setLabels([label1, label2]);
+                expect(await article.hasLabels([label1.id, label2.id])).to.be.true;
             });
         });
 
         describe("setAssociations", () => {
-
             if (current.dialect.supports.transactions) {
-                it("supports transactions", function () {
-                    return Support.prepareTransactionTest(this.sequelize).bind({}).then(function (sequelize) {
-                        this.Article = sequelize.define("Article", { title: DataTypes.STRING });
-                        this.Label = sequelize.define("Label", { text: DataTypes.STRING });
+                it("supports transactions", async function () {
+                    const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                    const Article = sequelize.define("Article", { title: DataTypes.STRING });
+                    const Label = sequelize.define("Label", { text: DataTypes.STRING });
 
-                        this.Article.hasMany(this.Label);
+                    Article.hasMany(Label);
 
-                        this.sequelize = sequelize;
-                        return sequelize.sync({ force: true });
-                    }).then(function () {
-                        return Promise.all([
-                            this.Article.create({ title: "foo" }),
-                            this.Label.create({ text: "bar" }),
-                            this.sequelize.transaction()
-                        ]);
-                    }).spread(function (article, label, t) {
-                        this.article = article;
-                        this.t = t;
-                        return article.setLabels([label], { transaction: t });
-                    }).then(function () {
-                        return this.Label.findAll({ where: { ArticleId: this.article.id }, transaction: undefined });
-                    }).then(function (labels) {
+                    await sequelize.sync({ force: true });
+
+                    const [article, label, t] = await Promise.all([
+                        Article.create({ title: "foo" }),
+                        Label.create({ text: "bar" }),
+                        sequelize.transaction()
+                    ]);
+                    await article.setLabels([label], { transaction: t });
+                    {
+                        const labels = await Label.findAll({ where: { ArticleId: article.id }, transaction: undefined });
                         expect(labels.length).to.equal(0);
-
-                        return this.Label.findAll({ where: { ArticleId: this.article.id }, transaction: this.t });
-                    }).then(function (labels) {
+                    }
+                    {
+                        const labels = await Label.findAll({ where: { ArticleId: article.id }, transaction: t });
                         expect(labels.length).to.equal(1);
-                        return this.t.rollback();
-                    });
+                    }
+                    await t.rollback();
                 });
             }
 
-            it("clears associations when passing null to the set-method", function () {
+            it("clears associations when passing null to the set-method", async function () {
                 const User = this.sequelize.define("User", { username: DataTypes.STRING });
                 const Task = this.sequelize.define("Task", { title: DataTypes.STRING });
 
                 Task.hasMany(User);
 
-                return this.sequelize.sync({ force: true }).then(() => {
-                    return Promise.all([
-                        User.create({ username: "foo" }),
-                        Task.create({ title: "task" })
-                    ]);
-                }).bind({}).spread(function (user, task) {
-                    this.task = task;
-                    return task.setUsers([user]);
-                }).then(function () {
-                    return this.task.getUsers();
-                }).then(function (users) {
-                    expect(users).to.have.length(1);
-
-                    return this.task.setUsers(null);
-                }).then(function () {
-                    return this.task.getUsers();
-                }).then((users) => {
-                    expect(users).to.have.length(0);
-                });
+                await this.sequelize.sync({ force: true });
+                const [user, task] = await Promise.all([
+                    User.create({ username: "foo" }),
+                    Task.create({ title: "task" })
+                ]);
+                await task.setUsers([user]);
+                const users = await task.getUsers();
+                expect(users).to.have.length(1);
+                await task.setUsers(null);
+                expect(await task.getUsers()).to.be.empty;
             });
 
-            it("supports passing the primary key instead of an object", function () {
+            it("supports passing the primary key instead of an object", async function () {
                 const Article = this.sequelize.define("Article", { title: DataTypes.STRING });
                 const Label = this.sequelize.define("Label", { text: DataTypes.STRING });
 
                 Article.hasMany(Label);
 
-                return this.sequelize.sync({ force: true }).then(() => {
-                    return Promise.all([
-                        Article.create({}),
-                        Label.create({ text: "label one" }),
-                        Label.create({ text: "label two" })
-                    ]);
-                }).bind({}).spread(function (article, label1, label2) {
-                    this.article = article;
-                    this.label1 = label1;
-                    this.label2 = label2;
-                    return article.addLabel(label1.id);
-                }).then(function () {
-                    return this.article.setLabels([this.label2.id]);
-                }).then(function () {
-                    return this.article.getLabels();
-                }).then((labels) => {
-                    expect(labels).to.have.length(1);
-                    expect(labels[0].text).to.equal("label two");
-                });
+                await this.sequelize.sync({ force: true });
+
+                const [article, label1, label2] = await Promise.all([
+                    Article.create({}),
+                    Label.create({ text: "label one" }),
+                    Label.create({ text: "label two" })
+                ]);
+                await article.addLabel(label1.id);
+                await article.setLabels([label2.id]);
+                const labels = await article.getLabels();
+                expect(labels).to.have.length(1);
+                expect(labels[0].text).to.equal("label two");
             });
         });
 
         describe("addAssociations", () => {
             if (current.dialect.supports.transactions) {
-                it("supports transactions", function () {
-                    return Support.prepareTransactionTest(this.sequelize).bind({}).then(function (sequelize) {
-                        this.Article = sequelize.define("Article", { title: DataTypes.STRING });
-                        this.Label = sequelize.define("Label", { text: DataTypes.STRING });
-                        this.Article.hasMany(this.Label);
+                it("supports transactions", async function () {
+                    const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                    const Article = sequelize.define("Article", { title: DataTypes.STRING });
+                    const Label = sequelize.define("Label", { text: DataTypes.STRING });
+                    Article.hasMany(Label);
 
-                        this.sequelize = sequelize;
-                        return sequelize.sync({ force: true });
-                    }).then(function () {
-                        return Promise.all([
-                            this.Article.create({ title: "foo" }),
-                            this.Label.create({ text: "bar" })
-                        ]);
-                    }).spread(function (article, label) {
-                        this.article = article;
-                        this.label = label;
-                        return this.sequelize.transaction();
-                    }).then(function (t) {
-                        this.t = t;
-                        return this.article.addLabel(this.label, { transaction: this.t });
-                    }).then(function () {
-                        return this.Label.findAll({ where: { ArticleId: this.article.id }, transaction: undefined });
-                    }).then(function (labels) {
+                    await sequelize.sync({ force: true });
+
+                    const [article, label] = await Promise.all([
+                        Article.create({ title: "foo" }),
+                        Label.create({ text: "bar" })
+                    ]);
+
+                    const t = await sequelize.transaction();
+                    await article.addLabel(label, { transaction: t });
+                    {
+                        const labels = await Label.findAll({ where: { ArticleId: article.id }, transaction: undefined });
                         expect(labels.length).to.equal(0);
-
-                        return this.Label.findAll({ where: { ArticleId: this.article.id }, transaction: this.t });
-                    }).then(function (labels) {
+                    }
+                    {
+                        const labels = await Label.findAll({ where: { ArticleId: article.id }, transaction: t });
                         expect(labels.length).to.equal(1);
-                        return this.t.rollback();
-                    });
+                    }
+                    await t.rollback();
                 });
             }
 
-            it("supports passing the primary key instead of an object", function () {
+            it("supports passing the primary key instead of an object", async function () {
                 const Article = this.sequelize.define("Article", { title: DataTypes.STRING });
                 const Label = this.sequelize.define("Label", { text: DataTypes.STRING });
 
                 Article.hasMany(Label);
 
-                return this.sequelize.sync({ force: true }).then(() => {
-                    return Promise.all([
-                        Article.create({}),
-                        Label.create({ text: "label one" })
-                    ]);
-                }).bind({}).spread(function (article, label) {
-                    this.article = article;
-                    return article.addLabel(label.id);
-                }).then(function () {
-                    return this.article.getLabels();
-                }).then((labels) => {
-                    expect(labels[0].text).to.equal("label one"); // Make sure that we didn't modify one of the other attributes while building / saving a new instance
-                });
+                await this.sequelize.sync({ force: true });
+
+                const [article, label] = await Promise.all([
+                    Article.create({}),
+                    Label.create({ text: "label one" })
+                ]);
+                await article.addLabel(label.id);
+                const labels = await article.getLabels();
+                expect(labels).to.have.length(1);
+                expect(labels[0].text).to.equal("label one"); // Make sure that we didn't modify one of the other attributes while building / saving a new instance
             });
         });
 
         describe("addMultipleAssociations", () => {
-            it("adds associations without removing the current ones", function () {
+            it("adds associations without removing the current ones", async function () {
                 const User = this.sequelize.define("User", { username: DataTypes.STRING });
                 const Task = this.sequelize.define("Task", { title: DataTypes.STRING });
 
                 Task.hasMany(User);
 
-                return this.sequelize.sync({ force: true }).then(() => {
-                    return User.bulkCreate([
-                        { username: "foo " },
-                        { username: "bar " },
-                        { username: "baz " }
-                    ]);
-                }).bind({}).then(() => {
-                    return Task.create({ title: "task" });
-                }).then(function (task) {
-                    this.task = task;
-                    return User.findAll();
-                }).then(function (users) {
-                    this.users = users;
-                    return this.task.setUsers([users[0]]);
-                }).then(function () {
-                    return this.task.addUsers([this.users[1], this.users[2]]);
-                }).then(function () {
-                    return this.task.getUsers();
-                }).then((users) => {
-                    expect(users).to.have.length(3);
-                });
+                await this.sequelize.sync({ force: true });
+                await User.bulkCreate([
+                    { username: "foo " },
+                    { username: "bar " },
+                    { username: "baz " }
+                ]);
+                const task = await Task.create({ title: "task" });
+                const users = await User.findAll();
+                await task.setUsers([users[0]]);
+                await task.addUsers([users[1], users[2]]);
+                expect(await task.getUsers()).to.have.length(3);
             });
 
-            it("handles decent sized bulk creates", function () {
+            it("handles decent sized bulk creates", async function () {
                 const User = this.sequelize.define("User", { username: DataTypes.STRING, num: DataTypes.INTEGER, status: DataTypes.STRING });
                 const Task = this.sequelize.define("Task", { title: DataTypes.STRING });
 
                 Task.hasMany(User);
 
-                return this.sequelize.sync({ force: true }).then(() => {
-                    const users = _.range(1000).map((i) => ({ username: `user${i}`, num: i, status: "live" }));
-                    return User.bulkCreate(users);
-                }).bind({}).then(() => {
-                    return Task.create({ title: "task" });
-                }).then(function (task) {
-                    this.task = task;
-                    return User.findAll();
-                }).then((users) => {
+                await this.sequelize.sync({ force: true });
+                const users = _.range(1000).map((i) => ({ username: `user${i}`, num: i, status: "live" }));
+                await User.bulkCreate(users);
+                {
+                    const users = await User.findAll();
                     expect(users).to.have.length(1000);
-                });
+                }
             });
         });
-        it("clears associations when passing null to the set-method with omitNull set to true", function () {
+        it("clears associations when passing null to the set-method with omitNull set to true", async function () {
             this.sequelize.options.omitNull = true;
 
             const User = this.sequelize.define("User", { username: DataTypes.STRING });
@@ -724,48 +625,37 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
 
             Task.hasMany(User);
 
-            return this.sequelize.sync({ force: true }).then(() => {
-                return User.create({ username: "foo" });
-            }).bind({}).then(function (user) {
-                this.user = user;
-                return Task.create({ title: "task" });
-            }).then(function (task) {
-                this.task = task;
-                return task.setUsers([this.user]);
-            }).then(function () {
-                return this.task.getUsers();
-            }).then(function (_users) {
-                expect(_users).to.have.length(1);
-
-                return this.task.setUsers(null);
-            }).then(function () {
-                return this.task.getUsers();
-            }).then((_users) => {
-                expect(_users).to.have.length(0);
-            }).finally(() => {
-                this.sequelize.options.omitNull = false;
-            });
+            await this.sequelize.sync({ force: true });
+            const user = await User.create({ username: "foo" });
+            const task = await Task.create({ title: "task" });
+            await task.setUsers([user]);
+            {
+                const users = await task.getUsers();
+                expect(users).to.have.length(1);
+            }
+            await task.setUsers(null);
+            {
+                const users = await task.getUsers();
+                expect(users).to.have.length(0);
+            }
+            this.sequelize.options.omitNull = false;
         });
 
         describe("createAssociations", () => {
-            it("creates a new associated object", function () {
+            it("creates a new associated object", async function () {
                 const Article = this.sequelize.define("Article", { title: DataTypes.STRING });
                 const Label = this.sequelize.define("Label", { text: DataTypes.STRING });
 
                 Article.hasMany(Label);
 
-                return this.sequelize.sync({ force: true }).then(() => {
-                    return Article.create({ title: "foo" });
-                }).then((article) => {
-                    return article.createLabel({ text: "bar" }).return(article);
-                }).then((article) => {
-                    return Label.findAll({ where: { ArticleId: article.id } });
-                }).then((labels) => {
-                    expect(labels.length).to.equal(1);
-                });
+                await this.sequelize.sync({ force: true });
+                const article = await Article.create({ title: "foo" });
+                await article.createLabel({ text: "bar" });
+                const labels = await Label.findAll({ where: { ArticleId: article.id } });
+                expect(labels).to.have.length(1);
             });
 
-            it("creates the object with the association directly", function () {
+            it("creates the object with the association directly", async function () {
                 const s = spy();
 
                 const Article = this.sequelize.define("Article", {
@@ -778,51 +668,43 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
 
                 Article.hasMany(Label);
 
-                return this.sequelize.sync({ force: true }).then(() => {
-                    return Article.create({ title: "foo" });
-                }).bind({}).then(function (article) {
-                    this.article = article;
-                    return article.createLabel({ text: "bar" }, { logging: s });
-                }).then(function (label) {
-                    expect(s.calledOnce).to.be.true;
-                    expect(label.ArticleId).to.equal(this.article.id);
-                });
+                await this.sequelize.sync({ force: true });
+                const article = await Article.create({ title: "foo" });
+                const label = await article.createLabel({ text: "bar" }, { logging: s });
+                expect(s.calledOnce).to.be.true;
+                expect(label.ArticleId).to.equal(article.id);
             });
 
             if (current.dialect.supports.transactions) {
-                it("supports transactions", function () {
-                    return Support.prepareTransactionTest(this.sequelize).bind({}).then(function (sequelize) {
-                        this.sequelize = sequelize;
-                        this.Article = sequelize.define("Article", { title: DataTypes.STRING });
-                        this.Label = sequelize.define("Label", { text: DataTypes.STRING });
+                it("supports transactions", async function () {
+                    const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                    const Article = sequelize.define("Article", { title: DataTypes.STRING });
+                    const Label = sequelize.define("Label", { text: DataTypes.STRING });
 
-                        this.Article.hasMany(this.Label);
+                    Article.hasMany(Label);
 
-                        return sequelize.sync({ force: true });
-                    }).then(function () {
-                        return this.Article.create({ title: "foo" });
-                    }).then(function (article) {
-                        this.article = article;
-                        return this.sequelize.transaction();
-                    }).then(function (t) {
-                        this.t = t;
-                        return this.article.createLabel({ text: "bar" }, { transaction: this.t });
-                    }).then(function () {
-                        return this.Label.findAll();
-                    }).then(function (labels) {
+                    await sequelize.sync({ force: true });
+                    const article = await Article.create({ title: "foo" });
+                    const t = await sequelize.transaction();
+                    await article.createLabel({ text: "bar" }, { transaction: t });
+                    {
+                        const labels = await Label.findAll();
                         expect(labels.length).to.equal(0);
-                        return this.Label.findAll({ where: { ArticleId: this.article.id } });
-                    }).then(function (labels) {
+                    }
+                    {
+                        const labels = await Label.findAll({ where: { ArticleId: article.id } });
                         expect(labels.length).to.equal(0);
-                        return this.Label.findAll({ where: { ArticleId: this.article.id }, transaction: this.t });
-                    }).then(function (labels) {
+                    }
+                    {
+                        const labels = await Label.findAll({ where: { ArticleId: article.id }, transaction: t });
                         expect(labels.length).to.equal(1);
-                        return this.t.rollback();
-                    });
+                    }
+
+                    await t.rollback();
                 });
             }
 
-            it("supports passing the field option", function () {
+            it("supports passing the field option", async function () {
                 const Article = this.sequelize.define("Article", {
                     title: DataTypes.STRING
                 });
@@ -832,24 +714,20 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
 
                 Article.hasMany(Label);
 
-                return this.sequelize.sync({ force: true }).then(() => {
-                    return Article.create();
-                }).then((article) => {
-                    return article.createLabel({
-                        text: "yolo"
-                    }, {
-                        fields: ["text"]
-                    }).return(article);
-                }).then((article) => {
-                    return article.getLabels();
-                }).then((labels) => {
-                    expect(labels.length).to.be.ok;
+                await this.sequelize.sync({ force: true });
+                const article = await Article.create();
+                await article.createLabel({
+                    text: "yolo"
+                }, {
+                    fields: ["text"]
                 });
+                const labels = await article.getLabels();
+                expect(labels.length).to.be.ok;
             });
         });
 
         describe("getting assocations with options", () => {
-            beforeEach(function () {
+            beforeEach(async function () {
                 const self = this;
 
                 this.User = this.sequelize.define("User", { username: DataTypes.STRING });
@@ -857,18 +735,16 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
 
                 this.User.hasMany(self.Task);
 
-                return this.sequelize.sync({ force: true }).then(() => {
-                    return Promise.all([
-                        self.User.create({ username: "John" }),
-                        self.Task.create({ title: "Get rich", active: true }),
-                        self.Task.create({ title: "Die trying", active: false })
-                    ]);
-                }).spread((john, task1, task2) => {
-                    return john.setTasks([task1, task2]);
-                });
+                await this.sequelize.sync({ force: true });
+                const [john, task1, task2] = await Promise.all([
+                    self.User.create({ username: "John" }),
+                    self.Task.create({ title: "Get rich", active: true }),
+                    self.Task.create({ title: "Die trying", active: false })
+                ]);
+                await john.setTasks([task1, task2]);
             });
 
-            it("should treat the where object of associations as a first class citizen", function () {
+            it("should treat the where object of associations as a first class citizen", async function () {
                 const self = this;
                 this.Article = this.sequelize.define("Article", {
                     title: DataTypes.STRING
@@ -880,22 +756,17 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
 
                 this.Article.hasMany(this.Label);
 
-                return this.sequelize.sync({ force: true }).then(() => {
-                    return Promise.all([
-                        self.Article.create({ title: "Article" }),
-                        self.Label.create({ text: "Awesomeness", until: "2014-01-01 01:00:00" }),
-                        self.Label.create({ text: "Epicness", until: "2014-01-03 01:00:00" })
-                    ]);
-                }).bind({}).spread(function (article, label1, label2) {
-                    this.article = article;
-                    return article.setLabels([label1, label2]);
-                }).then(function () {
-                    return this.article.getLabels({ where: { until: { $gt: adone.datetime("2014-01-02").toDate() } } });
-                }).then((labels) => {
-                    expect(labels).to.be.instanceof(Array);
-                    expect(labels).to.have.length(1);
-                    expect(labels[0].text).to.equal("Epicness");
-                });
+                await this.sequelize.sync({ force: true });
+                const [article, label1, label2] = await Promise.all([
+                    self.Article.create({ title: "Article" }),
+                    self.Label.create({ text: "Awesomeness", until: "2014-01-01 01:00:00" }),
+                    self.Label.create({ text: "Epicness", until: "2014-01-03 01:00:00" })
+                ]);
+                await article.setLabels([label1, label2]);
+                const labels = await article.getLabels({ where: { until: { $gt: adone.datetime("2014-01-02").toDate() } } });
+                expect(labels).to.be.an("array");
+                expect(labels).to.have.length(1);
+                expect(labels[0].text).to.equal("Epicness");
             });
 
             it("gets all associated objects when no options are passed", function () {
@@ -916,7 +787,7 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
         });
 
         describe("countAssociations", () => {
-            beforeEach(function () {
+            beforeEach(async function () {
                 const self = this;
 
                 this.User = this.sequelize.define("User", { username: DataTypes.STRING });
@@ -926,16 +797,14 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
                     foreignKey: "userId"
                 });
 
-                return this.sequelize.sync({ force: true }).then(() => {
-                    return Promise.all([
-                        self.User.create({ username: "John" }),
-                        self.Task.create({ title: "Get rich", active: true }),
-                        self.Task.create({ title: "Die trying", active: false })
-                    ]);
-                }).spread((john, task1, task2) => {
-                    self.user = john;
-                    return john.setTasks([task1, task2]);
-                });
+                await this.sequelize.sync({ force: true });
+                const [john, task1, task2] = await await Promise.all([
+                    self.User.create({ username: "John" }),
+                    self.Task.create({ title: "Get rich", active: true }),
+                    self.Task.create({ title: "Die trying", active: false })
+                ]);
+                self.user = john;
+                await john.setTasks([task1, task2]);
             });
 
             it("should count all associations", async function () {
@@ -976,26 +845,21 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
 
     describe("Foreign key constraints", () => {
         describe("1:m", () => {
-            it("sets null by default", function () {
+            it("sets null by default", async function () {
                 const Task = this.sequelize.define("Task", { title: DataTypes.STRING });
                 const User = this.sequelize.define("User", { username: DataTypes.STRING });
 
                 User.hasMany(Task);
 
-                return this.sequelize.sync({ force: true }).then(() => {
-                    return Promise.all([
-                        User.create({ username: "foo" }),
-                        Task.create({ title: "task" })
-                    ]);
-                }).spread((user, task) => {
-                    return user.setTasks([task]).then(() => {
-                        return user.destroy().then(() => {
-                            return task.reload();
-                        });
-                    });
-                }).then((task) => {
-                    expect(task.UserId).to.equal(null);
-                });
+                await this.sequelize.sync({ force: true });
+                const [user, task] = await Promise.all([
+                    User.create({ username: "foo" }),
+                    Task.create({ title: "task" })
+                ]);
+                await user.setTasks([task]);
+                await user.destroy();
+                await task.reload();
+                expect(task.UserId).to.equal(null);
             });
 
             it("sets to CASCADE if allowNull: false", function () {
@@ -1017,164 +881,132 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
                 });
             });
 
-            it("should be possible to remove all constraints", function () {
+            it("should be possible to remove all constraints", async function () {
                 const Task = this.sequelize.define("Task", { title: DataTypes.STRING });
                 const User = this.sequelize.define("User", { username: DataTypes.STRING });
 
                 User.hasMany(Task, { constraints: false });
 
-                return this.sequelize.sync({ force: true }).bind({}).then(() => {
-                    return Promise.all([
-                        User.create({ username: "foo" }),
-                        Task.create({ title: "task" })
-                    ]);
-                }).spread(function (user, task) {
-                    this.user = user;
-                    this.task = task;
-                    return user.setTasks([task]);
-                }).then(function () {
-                    return this.user.destroy();
-                }).then(function () {
-                    return this.task.reload();
-                }).then(function (task) {
-                    expect(task.UserId).to.equal(this.user.id);
-                });
+                await this.sequelize.sync({ force: true });
+                const [user, task] = await Promise.all([
+                    User.create({ username: "foo" }),
+                    Task.create({ title: "task" })
+                ]);
+                await user.setTasks([task]);
+                await user.destroy();
+                await task.reload();
+                expect(task.UserId).to.equal(user.id);
             });
 
-            it("can cascade deletes", function () {
+            it("can cascade deletes", async function () {
                 const Task = this.sequelize.define("Task", { title: DataTypes.STRING });
                 const User = this.sequelize.define("User", { username: DataTypes.STRING });
 
                 User.hasMany(Task, { onDelete: "cascade" });
 
-                return this.sequelize.sync({ force: true }).bind({}).then(() => {
-                    return Promise.all([
-                        User.create({ username: "foo" }),
-                        Task.create({ title: "task" })
-                    ]);
-                }).spread(function (user, task) {
-                    this.user = user;
-                    this.task = task;
-                    return user.setTasks([task]);
-                }).then(function () {
-                    return this.user.destroy();
-                }).then(() => {
-                    return Task.findAll();
-                }).then((tasks) => {
-                    expect(tasks).to.have.length(0);
-                });
+                await this.sequelize.sync({ force: true });
+                const [user, task] = await Promise.all([
+                    User.create({ username: "foo" }),
+                    Task.create({ title: "task" })
+                ]);
+                await user.setTasks([task]);
+                await user.destroy();
+                const tasks = await Task.findAll();
+                expect(tasks).to.have.length(0);
             });
 
             // NOTE: mssql does not support changing an autoincrement primary key
             if (dialect !== "mssql") {
-                it("can cascade updates", function () {
+                it("can cascade updates", async function () {
                     const Task = this.sequelize.define("Task", { title: DataTypes.STRING });
                     const User = this.sequelize.define("User", { username: DataTypes.STRING });
 
                     User.hasMany(Task, { onUpdate: "cascade" });
 
-                    return this.sequelize.sync({ force: true }).then(() => {
-                        return Promise.all([
-                            User.create({ username: "foo" }),
-                            Task.create({ title: "task" })
-                        ]);
-                    }).spread((user, task) => {
-                        return user.setTasks([task]).return(user);
-                    }).then((user) => {
-                        // Changing the id of a DAO requires a little dance since
-                        // the `UPDATE` query generated by `save()` uses `id` in the
-                        // `WHERE` clause
+                    await this.sequelize.sync({ force: true });
+                    const [user, task] = await Promise.all([
+                        User.create({ username: "foo" }),
+                        Task.create({ title: "task" })
+                    ]);
+                    await user.setTasks([task]);
+                    // Changing the id of a DAO requires a little dance since
+                    // the `UPDATE` query generated by `save()` uses `id` in the
+                    // `WHERE` clause
 
-                        const tableName = user.sequelize.getQueryInterface().QueryGenerator.addSchema(user.constructor);
-                        return user.sequelize.getQueryInterface().update(user, tableName, { id: 999 }, { id: user.id });
-                    }).then(() => {
-                        return Task.findAll();
-                    }).then((tasks) => {
-                        expect(tasks).to.have.length(1);
-                        expect(tasks[0].UserId).to.equal(999);
-                    });
+                    const tableName = user.sequelize.getQueryInterface().QueryGenerator.addSchema(user.constructor);
+                    await user.sequelize.getQueryInterface().update(user, tableName, { id: 999 }, { id: user.id });
+                    const tasks = await Task.findAll();
+                    expect(tasks).to.have.length(1);
+                    expect(tasks[0].UserId).to.equal(999);
                 });
             }
 
             if (current.dialect.supports.constraints.restrict) {
-                it("can restrict deletes", function () {
+                it("can restrict deletes", async function () {
                     const self = this;
                     const Task = this.sequelize.define("Task", { title: DataTypes.STRING });
                     const User = this.sequelize.define("User", { username: DataTypes.STRING });
 
                     User.hasMany(Task, { onDelete: "restrict" });
 
-                    return this.sequelize.sync({ force: true }).bind({}).then(() => {
-                        return Promise.all([
-                            User.create({ username: "foo" }),
-                            Task.create({ title: "task" })
-                        ]);
-                    }).spread(function (user, task) {
-                        this.user = user;
-                        this.task = task;
-                        return user.setTasks([task]);
-                    }).then(function () {
-                        return this.user.destroy().catch(self.sequelize.ForeignKeyConstraintError, () => {
-                            // Should fail due to FK violation
-                            return Task.findAll();
-                        });
-                    }).then((tasks) => {
-                        expect(tasks).to.have.length(1);
-                    });
+                    await this.sequelize.sync({ force: true });
+                    const [user, task] = await Promise.all([
+                        User.create({ username: "foo" }),
+                        Task.create({ title: "task" })
+                    ]);
+                    await user.setTasks([task]);
+                    await assert.throws(async () => {
+                        await user.destroy();
+                    }, self.sequelize.ForeignKeyConstraintError);
+                    const tasks = await Task.findAll();
+                    expect(tasks).to.have.length(1);
                 });
 
-                it("can restrict updates", function () {
+                it("can restrict updates", async function () {
                     const self = this;
                     const Task = this.sequelize.define("Task", { title: DataTypes.STRING });
                     const User = this.sequelize.define("User", { username: DataTypes.STRING });
 
                     User.hasMany(Task, { onUpdate: "restrict" });
 
-                    return this.sequelize.sync({ force: true }).then(() => {
-                        return Promise.all([
-                            User.create({ username: "foo" }),
-                            Task.create({ title: "task" })
-                        ]);
-                    }).spread((user, task) => {
-                        return user.setTasks([task]).return(user);
-                    }).then((user) => {
-                        // Changing the id of a DAO requires a little dance since
-                        // the `UPDATE` query generated by `save()` uses `id` in the
-                        // `WHERE` clause
+                    await this.sequelize.sync({ force: true });
+                    const [user, task] = await Promise.all([
+                        User.create({ username: "foo" }),
+                        Task.create({ title: "task" })
+                    ]);
+                    await user.setTasks([task]);
 
-                        const tableName = user.sequelize.getQueryInterface().QueryGenerator.addSchema(user.constructor);
-                        return user.sequelize.getQueryInterface().update(user, tableName, { id: 999 }, { id: user.id })
-                            .catch(self.sequelize.ForeignKeyConstraintError, () => {
-                                // Should fail due to FK violation
-                                return Task.findAll();
-                            });
-                    }).then((tasks) => {
-                        expect(tasks).to.have.length(1);
-                    });
+                    // Changing the id of a DAO requires a little dance since
+                    // the `UPDATE` query generated by `save()` uses `id` in the
+                    // `WHERE` clause
+
+                    const tableName = user.sequelize.getQueryInterface().QueryGenerator.addSchema(user.constructor);
+                    await assert.throws(async () => {
+                        await user.sequelize.getQueryInterface().update(user, tableName, { id: 999 }, { id: user.id });
+                    }, self.sequelize.ForeignKeyConstraintError);
+                    const tasks = await Task.findAll();
+                    expect(tasks).to.have.length(1);
                 });
-
             }
-
         });
     });
 
     describe("Association options", () => {
-        it("can specify data type for autogenerated relational keys", function () {
+        it("can specify data type for autogenerated relational keys", async function () {
             const User = this.sequelize.define("UserXYZ", { username: DataTypes.STRING });
             const dataTypes = [Sequelize.INTEGER, Sequelize.BIGINT, Sequelize.STRING];
             const self = this;
             const Tasks = {};
 
-            return Promise.each(dataTypes, (dataType) => {
+            for (const dataType of dataTypes) {
                 const tableName = `TaskXYZ_${dataType.key}`;
                 Tasks[dataType] = self.sequelize.define(tableName, { title: DataTypes.STRING });
 
                 User.hasMany(Tasks[dataType], { foreignKey: "userId", keyType: dataType, constraints: false });
 
-                return Tasks[dataType].sync({ force: true }).then(() => {
-                    expect(Tasks[dataType].rawAttributes.userId.type).to.be.an.instanceof(dataType);
-                });
-            });
+                await Tasks[dataType].sync({ force: true }); // eslint-disable-line
+                expect(Tasks[dataType].rawAttributes.userId.type).to.be.an.instanceof(dataType);
+            }
         });
 
         it("infers the keyType if none provided", function () {

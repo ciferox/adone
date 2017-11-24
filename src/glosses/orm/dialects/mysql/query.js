@@ -22,7 +22,7 @@ class Query extends AbstractQuery {
         this.checkLoggingOption();
     }
 
-    run(sql) {
+    async run(sql) {
         this.sql = sql;
 
         //do we need benchmark for this query execution
@@ -38,7 +38,7 @@ class Query extends AbstractQuery {
 
         debug(`executing(${this.connection.uuid || "default"}) : ${this.sql}`);
 
-        return new Utils.Promise((resolve, reject) => {
+        let results = await new Promise((resolve, reject) => {
             this.connection.query({ sql: this.sql }, (err, results) => {
                 debug(`executed(${this.connection.uuid || "default"}) : ${this.sql}`);
 
@@ -54,16 +54,13 @@ class Query extends AbstractQuery {
                     resolve(results);
                 }
             }).setMaxListeners(100);
-        })
-            // Log warnings if we've got them.
-            .then((results) => {
-                if (showWarnings && results && results.warningStatus > 0) {
-                    return this.logWarnings(results);
-                }
-                return results;
-            })
-            // Return formatted results...
-            .then((results) => this.formatResults(results));
+        });
+
+        if (showWarnings && results && results.warningStatus > 0) {
+            results = this.logWarnings(results);
+        }
+
+        return this.formatResults(results);
     }
 
     /**
@@ -127,7 +124,6 @@ class Query extends AbstractQuery {
             }
         } else if (this.isShowIndexesQuery()) {
             result = this.handleShowIndexesQuery(data);
-
         } else if (this.isCallQuery()) {
             result = data[0];
         } else if (this.isBulkUpdateQuery() || this.isBulkDeleteQuery() || this.isUpsertQuery()) {
@@ -148,26 +144,23 @@ class Query extends AbstractQuery {
         return result;
     }
 
-    logWarnings(results) {
-        return this.run("SHOW WARNINGS").then((warningResults) => {
-            const warningMessage = `MySQL Warnings (${this.connection.uuid || "default"}): `;
-            const messages = [];
-            for (const _warningRow of warningResults) {
-                for (const _warningResult of _warningRow) {
-                    if (_warningResult.hasOwnProperty("Message")) {
-                        messages.push(_warningResult.Message);
-                    } else {
-                        for (const _objectKey of _warningResult.keys()) {
-                            messages.push([_objectKey, _warningResult[_objectKey]].join(": "));
-                        }
+    async logWarnings(results) {
+        const warningResults = await this.run("SHOW WARNINGS");
+        const warningMessage = `MySQL Warnings (${this.connection.uuid || "default"}): `;
+        const messages = [];
+        for (const _warningRow of warningResults) {
+            for (const _warningResult of _warningRow) {
+                if (_warningResult.hasOwnProperty("Message")) {
+                    messages.push(_warningResult.Message);
+                } else {
+                    for (const _objectKey of _warningResult.keys()) {
+                        messages.push([_objectKey, _warningResult[_objectKey]].join(": "));
                     }
                 }
             }
-
-            this.sequelize.log(warningMessage + messages.join("; "), this.options);
-
-            return results;
-        });
+        }
+        this.sequelize.log(warningMessage + messages.join("; "), this.options);
+        return results;
     }
 
     formatError(err) {

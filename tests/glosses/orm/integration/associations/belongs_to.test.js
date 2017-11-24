@@ -2,7 +2,6 @@ import Support from "../support";
 
 const { DataTypes } = adone.orm;
 const Sequelize = Support.Sequelize;
-const Promise = Sequelize.Promise;
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser("BelongsTo"), () => {
@@ -28,7 +27,7 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
                 Task.User = Task.belongsTo(User, { as: "user" });
 
                 return this.sequelize.sync({ force: true }).then(() => {
-                    return Promise.join(
+                    return Promise.all([
                         Task.create({
                             id: 1,
                             user: { id: 1 }
@@ -44,7 +43,7 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
                         Task.create({
                             id: 3
                         })
-                    );
+                    ]);
                 }).then((tasks) => {
                     return Task.User.get(tasks).then((result) => {
                         expect(result[tasks[0].id].id).to.equal(tasks[0].user.id);
@@ -91,55 +90,41 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
             });
         }
 
-        it("should be able to handle a where object that's a first class citizen.", function () {
-            const User = this.sequelize.define("UserXYZ", { username: Sequelize.STRING, gender: Sequelize.STRING }),
-                Task = this.sequelize.define("TaskXYZ", { title: Sequelize.STRING, status: Sequelize.STRING });
+        it("should be able to handle a where object that's a first class citizen.", async function () {
+            const User = this.sequelize.define("UserXYZ", { username: Sequelize.STRING, gender: Sequelize.STRING });
+            const Task = this.sequelize.define("TaskXYZ", { title: Sequelize.STRING, status: Sequelize.STRING });
 
             Task.belongsTo(User);
 
-            return User.sync({ force: true }).then(() => {
-                // Can't use Promise.all cause of foreign key references
-                return Task.sync({ force: true });
-            }).then(() => {
-                return Promise.all([
-                    User.create({ username: "foo", gender: "male" }),
-                    User.create({ username: "bar", gender: "female" }),
-                    Task.create({ title: "task", status: "inactive" })
-                ]);
-            }).spread((userA, userB, task) => {
-                return task.setUserXYZ(userA).then(() => {
-                    return task.getUserXYZ({ where: { gender: "female" } });
-                });
-            }).then((user) => {
-                expect(user).to.be.null;
-            });
+            await User.sync({ force: true });
+            // Can't use Promise.all cause of foreign key references
+            await Task.sync({ force: true });
+            const [userA, userB, task] = await Promise.all([
+                User.create({ username: "foo", gender: "male" }),
+                User.create({ username: "bar", gender: "female" }),
+                Task.create({ title: "task", status: "inactive" })
+            ]);
+            await task.setUserXYZ(userA);
+            expect(await task.getUserXYZ({ where: { gender: "female" } })).to.be.null;
         });
 
-        it("supports schemas", function () {
-            const User = this.sequelize.define("UserXYZ", { username: Sequelize.STRING, gender: Sequelize.STRING }).schema("archive"),
-                Task = this.sequelize.define("TaskXYZ", { title: Sequelize.STRING, status: Sequelize.STRING }).schema("archive"),
-                self = this;
+        it("supports schemas", async function () {
+            const User = this.sequelize.define("UserXYZ", { username: Sequelize.STRING, gender: Sequelize.STRING }).schema("archive");
+            const Task = this.sequelize.define("TaskXYZ", { title: Sequelize.STRING, status: Sequelize.STRING }).schema("archive");
+            const self = this;
 
             Task.belongsTo(User);
 
-            return self.sequelize.dropAllSchemas().then(() => {
-                return self.sequelize.createSchema("archive");
-            }).then(() => {
-                return User.sync({ force: true });
-            }).then(() => {
-                return Task.sync({ force: true });
-            }).then(() => {
-                return Promise.all([
-                    User.create({ username: "foo", gender: "male" }),
-                    Task.create({ title: "task", status: "inactive" })
-                ]);
-            }).spread((user, task) => {
-                return task.setUserXYZ(user).then(() => {
-                    return task.getUserXYZ();
-                });
-            }).then((user) => {
-                expect(user).to.be.ok;
-            });
+            await self.sequelize.dropAllSchemas();
+            await self.sequelize.createSchema("archive");
+            await User.sync({ force: true });
+            await Task.sync({ force: true });
+            const [user, task] = await Promise.all([
+                User.create({ username: "foo", gender: "male" }),
+                Task.create({ title: "task", status: "inactive" })
+            ]);
+            await task.setUserXYZ(user);
+            expect(await task.getUserXYZ()).to.be.ok;
         });
     });
 
@@ -304,7 +289,7 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
             });
         });
 
-        it("should set the foreign key value without saving when using save: false", function () {
+        it("should set the foreign key value without saving when using save: false", async function () {
             const Comment = this.sequelize.define("comment", {
                 text: DataTypes.STRING
             });
@@ -316,20 +301,18 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
             Post.hasMany(Comment, { foreignKey: "post_id" });
             Comment.belongsTo(Post, { foreignKey: "post_id" });
 
-            return this.sequelize.sync({ force: true }).then(() => {
-                return Promise.join(
-                    Post.create(),
-                    Comment.create()
-                ).spread((post, comment) => {
-                    expect(comment.get("post_id")).not.to.be.ok;
+            await this.sequelize.sync({ force: true });
+            const [post, comment] = await Promise.all([
+                Post.create(),
+                Comment.create()
+            ]);
+            expect(comment.get("post_id")).not.to.be.ok;
 
-                    const setter = comment.setPost(post, { save: false });
+            const setter = comment.setPost(post, { save: false });
 
-                    expect(setter).to.be.undefined;
-                    expect(comment.get("post_id")).to.equal(post.get("id"));
-                    expect(comment.changed("post_id")).to.be.true;
-                });
-            });
+            expect(setter).to.be.undefined;
+            expect(comment.get("post_id")).to.equal(post.get("id"));
+            expect(comment.changed("post_id")).to.be.true;
         });
 
         it("supports setting same association twice", async function () {
@@ -418,9 +401,9 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
             expect(User.rawAttributes.AccountId).to.exist;
         });
 
-        it("should support specifying the field of a foreign key", function () {
-            const User = this.sequelize.define("User", { username: Sequelize.STRING }, { underscored: false }),
-                Account = this.sequelize.define("Account", { title: Sequelize.STRING }, { underscored: false });
+        it("should support specifying the field of a foreign key", async function () {
+            const User = this.sequelize.define("User", { username: Sequelize.STRING }, { underscored: false });
+            const Account = this.sequelize.define("Account", { title: Sequelize.STRING }, { underscored: false });
 
             User.belongsTo(Account, {
                 foreignKey: {
@@ -432,28 +415,23 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
             expect(User.rawAttributes.AccountId).to.exist;
             expect(User.rawAttributes.AccountId.field).to.equal("account_id");
 
-            return Account.sync({ force: true }).then(() => {
-                // Can't use Promise.all cause of foreign key references
-                return User.sync({ force: true });
-            }).then(() => {
-                return Promise.all([
-                    User.create({ username: "foo" }),
-                    Account.create({ title: "pepsico" })
-                ]);
-            }).spread((user, account) => {
-                return user.setAccount(account).then(() => {
-                    return user.getAccount();
-                });
-            }).then((user) => {
-                // the sql query should correctly look at task_id instead of taskId
-                expect(user).to.not.be.null;
-                return User.findOne({
-                    where: { username: "foo" },
-                    include: [Account]
-                });
-            }).then((task) => {
-                expect(task.Account).to.exist;
+            await Account.sync({ force: true });
+            // Can't use Promise.all cause of foreign key references
+            await User.sync({ force: true });
+            const [user, account] = await Promise.all([
+                User.create({ username: "foo" }),
+                Account.create({ title: "pepsico" })
+            ]);
+
+            await user.setAccount(account);
+            const _user = await user.getAccount();
+            // the sql query should correctly look at task_id instead of taskId
+            expect(_user).to.not.be.null;
+            const task = await User.findOne({
+                where: { username: "foo" },
+                include: [Account]
             });
+            expect(task.Account).to.exist;
         });
     });
 

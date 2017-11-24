@@ -1,59 +1,51 @@
 import Support from "../support";
 
-const Sequelize = adone.orm;
-const Promise = Sequelize.Promise;
-
 describe(Support.getTestDialectTeaser("Alias"), () => {
-    it("should uppercase the first letter in alias getter, but not in eager loading", function () {
+    it("should uppercase the first letter in alias getter, but not in eager loading", async function () {
         const User = this.sequelize.define("user", {});
         const Task = this.sequelize.define("task", {});
 
         User.hasMany(Task, { as: "assignments", foreignKey: "userId" });
         Task.belongsTo(User, { as: "owner", foreignKey: "userId" });
 
-        return this.sequelize.sync({ force: true }).then(() => {
-            return User.create({ id: 1 });
-        }).then((user) => {
-            expect(user.getAssignments).to.be.ok;
+        await this.sequelize.sync({ force: true });
+        const user = await User.create({ id: 1 });
+        expect(user.getAssignments).to.be.ok;
 
-            return Task.create({ id: 1, userId: 1 });
-        }).then((task) => {
-            expect(task.getOwner).to.be.ok;
-
-            return Promise.all([
+        const task = await Task.create({ id: 1, userId: 1 });
+        expect(task.getOwner).to.be.ok;
+        {
+            const [user, task] = await Promise.all([
                 User.find({ where: { id: 1 }, include: [{ model: Task, as: "assignments" }] }),
                 Task.find({ where: { id: 1 }, include: [{ model: User, as: "owner" }] })
             ]);
-        }).spread((user, task) => {
             expect(user.assignments).to.be.ok;
             expect(task.owner).to.be.ok;
-        });
+        }
     });
 
-    it("shouldnt touch the passed alias", function () {
+    it("shouldnt touch the passed alias", async function () {
         const User = this.sequelize.define("user", {});
         const Task = this.sequelize.define("task", {});
 
         User.hasMany(Task, { as: "ASSIGNMENTS", foreignKey: "userId" });
         Task.belongsTo(User, { as: "OWNER", foreignKey: "userId" });
 
-        return this.sequelize.sync({ force: true }).then(() => {
-            return User.create({ id: 1 });
-        }).then((user) => {
-            expect(user.getASSIGNMENTS).to.be.ok;
+        await this.sequelize.sync({ force: true });
+        const user = await User.create({ id: 1 });
+        expect(user.getASSIGNMENTS).to.be.ok;
 
-            return Task.create({ id: 1, userId: 1 });
-        }).then((task) => {
-            expect(task.getOWNER).to.be.ok;
+        const task = await Task.create({ id: 1, userId: 1 });
+        expect(task.getOWNER).to.be.ok;
 
-            return Promise.all([
+        {
+            const [user, task] = await Promise.all([
                 User.find({ where: { id: 1 }, include: [{ model: Task, as: "ASSIGNMENTS" }] }),
                 Task.find({ where: { id: 1 }, include: [{ model: User, as: "OWNER" }] })
             ]);
-        }).spread((user, task) => {
             expect(user.ASSIGNMENTS).to.be.ok;
             expect(task.OWNER).to.be.ok;
-        });
+        }
     });
 
     it("should allow me to pass my own plural and singular forms to hasMany", function () {

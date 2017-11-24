@@ -446,7 +446,7 @@ describe("promise", () => {
         });
     });
 
-    describe.only("retry", () => {
+    describe("retry", () => {
         const { retry } = promise;
         let soRejected;
         let soResolved;
@@ -639,6 +639,42 @@ describe("promise", () => {
                     });
                 }, x.Timeout);
             });
+        });
+    });
+
+    describe("props", () => {
+        const { props } = promise;
+
+        it("should return a promise that is fulfilled when all the values are fulfilled", async () => {
+            const obj = await props({
+                a: Promise.resolve(1),
+                b: Promise.resolve(2)
+            });
+
+            expect(obj.a).to.be.equal(1);
+            expect(obj.b).to.be.equal(2);
+        });
+
+        it("should return a new object", async () => {
+            const obj = {
+                a: Promise.resolve(1),
+                b: Promise.resolve(2)
+            };
+            const obj2 = await props(obj);
+            expect(obj2).not.to.be.equal(obj);
+            expect(obj.a).to.be.a("promise");
+            expect(obj.b).to.be.a("promise");
+        });
+
+        it("should throw if something goes wrong", async () => {
+            const obj = {
+                a: Promise.resolve(1),
+                b: Promise.reject(new Error("oops"))
+            };
+
+            await assert.throws(async () => {
+                await props(obj);
+            }, "oops");
         });
     });
 });

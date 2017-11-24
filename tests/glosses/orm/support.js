@@ -35,10 +35,10 @@ const Support = {
         if (dialect === "sqlite") {
             const p = path.join(__dirname, "tmp", "db.sqlite");
 
-            return new Sequelize.Promise((resolve) => {
+            return new Promise((resolve) => {
                 // We cannot promisify exists, since exists does not follow node callback convention - first argument is a boolean, not an error / null
                 if (fs.existsSync(p)) {
-                    resolve(Sequelize.Promise.promisify(fs.unlink)(p));
+                    resolve(Promise.promisify(fs.unlink)(p));
                 } else {
                     resolve();
                 }
@@ -51,14 +51,14 @@ const Support = {
                         callback(_sequelize);
                     });
                 } else {
-                    return _sequelize.sync({ force: true }).return(_sequelize);
+                    return _sequelize.sync({ force: true }).then(() => _sequelize);
                 }
             });
         }
         if (callback) {
             callback(sequelize);
         } else {
-            return Sequelize.Promise.resolve(sequelize);
+            return Promise.resolve(sequelize);
         }
 
     },

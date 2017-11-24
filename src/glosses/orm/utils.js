@@ -10,7 +10,6 @@ const primitives = ["string", "number", "boolean"];
 
 const logger = new Logger();
 
-exports.Promise = Promise;
 exports.debug = logger.debug.bind(logger);
 exports.deprecate = logger.deprecate.bind(logger);
 exports.warn = logger.warn.bind(logger);
@@ -299,7 +298,7 @@ exports.removeCommentsFromFunctionString = removeCommentsFromFunctionString;
 
 function toDefaultValue(value) {
     if (is.function(value)) {
-        const tmp = value();
+        const tmp = is.class(value) ? new value() : value();
         if (tmp instanceof DataTypes.ABSTRACT) {
             return tmp.toSql();
         }

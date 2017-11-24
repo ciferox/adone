@@ -92,7 +92,7 @@ const extensions = {
         return this.notRegex(str, pattern, modifiers);
     },
     contains(str, elem) {
-        return str.indexOf(elem) >= 0 && Boolean(elem);
+        return Boolean(elem) && str.includes(elem);
     },
     notContains(str, elem) {
         return !this.contains(str, elem);
@@ -138,7 +138,7 @@ const extensions = {
 };
 exports.extensions = extensions;
 
-function extendModelValidations(modelInstance) {
+const extendModelValidations = (modelInstance) => {
     const extensions = {
         isImmutable(str, param, field) {
             return modelInstance.isNewRecord || modelInstance.dataValues[field] === modelInstance._previousDataValues[field];
@@ -148,7 +148,7 @@ function extendModelValidations(modelInstance) {
     _.forEach(extensions, (extend, key) => {
         validator[key] = extend;
     });
-}
+};
 exports.extendModelValidations = extendModelValidations;
 
 // Deprecate this.

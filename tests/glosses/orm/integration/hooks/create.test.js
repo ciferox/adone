@@ -2,7 +2,6 @@ import Support from "../support";
 
 const { DataTypes } = adone.orm;
 const Sequelize = Support.Sequelize;
-const Promise = Sequelize.Promise;
 
 describe(Support.getTestDialectTeaser("Hooks"), () => {
     beforeEach(function () {
@@ -92,7 +91,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
             });
         });
 
-        it("should not trigger hooks on parent when using N:M association setters", function () {
+        it("should not trigger hooks on parent when using N:M association setters", async function () {
             const A = this.sequelize.define("A", {
                 name: Sequelize.STRING
             });
@@ -110,16 +109,13 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
             B.belongsToMany(A, { through: "a_b" });
             A.belongsToMany(B, { through: "a_b" });
 
-            return this.sequelize.sync({ force: true }).bind(this).then(function () {
-                return this.sequelize.Promise.all([
-                    A.create({ name: "a" }),
-                    B.create({ name: "b" })
-                ]).spread((a, b) => {
-                    return a.addB(b).then(() => {
-                        expect(hookCalled).to.equal(1);
-                    });
-                });
-            });
+            await this.sequelize.sync({ force: true });
+            const [a, b] = await Promise.all([
+                A.create({ name: "a" }),
+                B.create({ name: "b" })
+            ]);
+            await a.addB(b);
+            expect(hookCalled).to.equal(1);
         });
 
         describe("preserves changes to instance", () => {

@@ -45,7 +45,7 @@ class ConnectionManager extends AbstractConnectionManager {
         parserStore.clear();
     }
 
-    getConnection(options) {
+    async getConnection(options) {
         options = options || {};
         options.uuid = options.uuid || "default";
         options.inMemory = (this.sequelize.options.storage || this.sequelize.options.host || ":memory:") === ":memory:" ? 1 : 0;
@@ -57,7 +57,7 @@ class ConnectionManager extends AbstractConnectionManager {
             return Promise.resolve(this.connections[options.inMemory || options.uuid]);
         }
 
-        return new Promise((resolve, reject) => {
+        const connection = await new Promise((resolve, reject) => {
             this.connections[options.inMemory || options.uuid] = new this.lib.Database(
                 this.sequelize.options.storage || this.sequelize.options.host || ":memory:",
                 options.readWriteMode || this.lib.OPEN_READWRITE | this.lib.OPEN_CREATE, // default mode
@@ -72,17 +72,19 @@ class ConnectionManager extends AbstractConnectionManager {
                     resolve(this.connections[options.inMemory || options.uuid]);
                 }
             );
-        }).tap((connection) => {
-            if (this.sequelize.config.password) {
-                // Make it possible to define and use password for sqlite encryption plugin like sqlcipher
-                connection.run(`PRAGMA KEY=${this.sequelize.escape(this.sequelize.config.password)}`);
-            }
-            if (this.sequelize.options.foreignKeys !== false) {
-                // Make it possible to define and use foreign key constraints unless
-                // explicitly disallowed. It's still opt-in per relation
-                connection.run("PRAGMA FOREIGN_KEYS=ON");
-            }
         });
+
+        if (this.sequelize.config.password) {
+            // Make it possible to define and use password for sqlite encryption plugin like sqlcipher
+            connection.run(`PRAGMA KEY=${this.sequelize.escape(this.sequelize.config.password)}`);
+        }
+        if (this.sequelize.options.foreignKeys !== false) {
+            // Make it possible to define and use foreign key constraints unless
+            // explicitly disallowed. It's still opt-in per relation
+            connection.run("PRAGMA FOREIGN_KEYS=ON");
+        }
+
+        return connection;
     }
 
     releaseConnection(connection, force) {

@@ -10,14 +10,14 @@ describe("[ABSTRACT]", () => {
             const Team = current.define("team", {
                 id: {
                     primaryKey: true,
-                    type: current.Sequelize.STRING(1)
+                    type: new current.Sequelize.STRING(1)
                 }
             });
 
             const Player = current.define("player", {
                 id: {
                     primaryKey: true,
-                    type: current.Sequelize.STRING(1)
+                    type: new current.Sequelize.STRING(1)
                 }
             });
 
@@ -28,7 +28,7 @@ describe("[ABSTRACT]", () => {
                 },
                 id: {
                     primaryKey: true,
-                    type: current.Sequelize.STRING(1)
+                    type: new current.Sequelize.STRING(1)
                 }
             });
 
@@ -96,14 +96,14 @@ describe("[ABSTRACT]", () => {
             const Team = current.define("team", {
                 id: {
                     primaryKey: true,
-                    type: current.Sequelize.STRING(1)
+                    type: new current.Sequelize.STRING(1)
                 }
             });
 
             const Player = current.define("player", {
                 id: {
                     primaryKey: true,
-                    type: current.Sequelize.STRING(1)
+                    type: new current.Sequelize.STRING(1)
                 }
             });
 
@@ -178,14 +178,14 @@ describe("[ABSTRACT]", () => {
                 },
                 id: {
                     primaryKey: true,
-                    type: current.Sequelize.STRING(1)
+                    type: new current.Sequelize.STRING(1)
                 }
             });
 
             const Player = current.define("player", {
                 id: {
                     primaryKey: true,
-                    type: current.Sequelize.STRING(1)
+                    type: new current.Sequelize.STRING(1)
                 }
             });
 
@@ -265,7 +265,7 @@ describe("[ABSTRACT]", () => {
             const Player = current.define("player", {
                 id: {
                     primaryKey: true,
-                    type: current.Sequelize.STRING(1)
+                    type: new current.Sequelize.STRING(1)
                 }
             });
 
@@ -335,7 +335,7 @@ describe("[ABSTRACT]", () => {
             const Team = current.define("team", {
                 id: {
                     primaryKey: true,
-                    type: current.Sequelize.STRING(1)
+                    type: new current.Sequelize.STRING(1)
                 }
             });
 
@@ -399,7 +399,7 @@ describe("[ABSTRACT]", () => {
             const Team = current.define("team", {
                 id: {
                     primaryKey: true,
-                    type: current.Sequelize.STRING(1)
+                    type: new current.Sequelize.STRING(1)
                 }
             });
 
@@ -410,7 +410,7 @@ describe("[ABSTRACT]", () => {
                 },
                 id: {
                     primaryKey: true,
-                    type: current.Sequelize.STRING(1)
+                    type: new current.Sequelize.STRING(1)
                 }
             });
 

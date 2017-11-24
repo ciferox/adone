@@ -165,7 +165,7 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
                     defaultValue: null
                 },
                 isAdmin: DataTypes.BOOLEAN,
-                enumVals: DataTypes.ENUM("hello", "world")
+                enumVals: new DataTypes.ENUM("hello", "world")
             }, { freezeTableName: true });
 
             return Users.sync({ force: true }).then(() => {
@@ -273,24 +273,22 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
 
     // FIXME: These tests should make assertions against the created table using describeTable
     describe("createTable", () => {
-        it("should create a auto increment primary key", function () {
-            return this.queryInterface.createTable("TableWithPK", {
+        it("should create a auto increment primary key", async function () {
+            await this.queryInterface.createTable("TableWithPK", {
                 table_id: {
                     type: DataTypes.INTEGER,
                     primaryKey: true,
                     autoIncrement: true
                 }
-            }).bind(this).then(function () {
-                return this.queryInterface.insert(null, "TableWithPK", {}, { raw: true, returning: true, plain: true }).then((results) => {
-                    const response = _.head(results);
-                    expect(response.table_id || typeof response !== "object" && response).to.be.ok;
-                });
             });
+            const results = await this.queryInterface.insert(null, "TableWithPK", {}, { raw: true, returning: true, plain: true });
+            const response = _.head(results);
+            expect(response.table_id || typeof response !== "object" && response).to.be.ok;
         });
 
         it("should work with enums (1)", function () {
             return this.queryInterface.createTable("SomeTable", {
-                someEnum: DataTypes.ENUM("value1", "value2", "value3")
+                someEnum: new DataTypes.ENUM("value1", "value2", "value3")
             });
         });
 
@@ -313,16 +311,15 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
             });
         });
 
-        it("should work with enums (4)", function () {
-            return this.queryInterface.createSchema("archive").bind(this).then(function () {
-                return this.queryInterface.createTable("SomeTable", {
-                    someEnum: {
-                        type: DataTypes.ENUM,
-                        values: ["value1", "value2", "value3"],
-                        field: "otherName"
-                    }
-                }, { schema: "archive" });
-            });
+        it("should work with enums (4)", async function () {
+            await this.queryInterface.createSchema("archive");
+            await this.queryInterface.createTable("SomeTale", {
+                someEnum: {
+                    type: DataTypes.ENUM,
+                    values: ["value1", "value2", "value3"],
+                    field: "otherName"
+                }
+            }, { schema: "archive" });
         });
 
         it("should work with schemas", function () {
@@ -340,49 +337,42 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
     });
 
     describe("renameColumn", () => {
-        it("rename a simple column", function () {
+        it("rename a simple column", async function () {
             const self = this;
             const Users = self.sequelize.define("_Users", {
                 username: DataTypes.STRING
             }, { freezeTableName: true });
 
-            return Users.sync({ force: true }).then(() => {
-                return self.queryInterface.renameColumn("_Users", "username", "pseudo");
-            }).bind(this).then(function () {
-                return this.queryInterface.describeTable("_Users");
-            }).then((table) => {
-                expect(table).to.have.property("pseudo");
-                expect(table).to.not.have.property("username");
-            });
+            await Users.sync({ force: true });
+            await self.queryInterface.renameColumn("_Users", "username", "pseudo");
+            const table = await this.queryInterface.describeTable("_Users");
+            expect(table).to.have.property("pseudo");
+            expect(table).to.not.have.property("username");
         });
 
-        it("works with schemas", function () {
+        it("works with schemas", async function () {
             const self = this;
-            return self.sequelize.createSchema("archive").then(() => {
-                const Users = self.sequelize.define("User", {
-                    username: DataTypes.STRING
-                }, {
-                    tableName: "Users",
-                    schema: "archive"
-                });
-                return Users.sync({ force: true }).then(() => {
-                    return self.queryInterface.renameColumn({
-                        schema: "archive",
-                        tableName: "Users"
-                    }, "username", "pseudo");
-                });
-            }).bind(this).then(function () {
-                return this.queryInterface.describeTable({
-                    schema: "archive",
-                    tableName: "Users"
-                });
-            }).then((table) => {
-                expect(table).to.have.property("pseudo");
-                expect(table).to.not.have.property("username");
+            await self.sequelize.createSchema("archive");
+            const Users = self.sequelize.define("User", {
+                username: DataTypes.STRING
+            }, {
+                tableName: "Users",
+                schema: "archive"
             });
+            await Users.sync({ force: true });
+            await self.queryInterface.renameColumn({
+                schema: "archive",
+                tableName: "Users"
+            }, "username", "pseudo");
+            const table = await this.queryInterface.describeTable({
+                schema: "archive",
+                tableName: "Users"
+            });
+            expect(table).to.have.property("pseudo");
+            expect(table).to.not.have.property("username");
         });
 
-        it("rename a column non-null without default value", function () {
+        it("rename a column non-null without default value", async function () {
             const self = this;
             const Users = self.sequelize.define("_Users", {
                 username: {
@@ -391,17 +381,14 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
                 }
             }, { freezeTableName: true });
 
-            return Users.sync({ force: true }).then(() => {
-                return self.queryInterface.renameColumn("_Users", "username", "pseudo");
-            }).bind(this).then(function () {
-                return this.queryInterface.describeTable("_Users");
-            }).then((table) => {
-                expect(table).to.have.property("pseudo");
-                expect(table).to.not.have.property("username");
-            });
+            await Users.sync({ force: true });
+            await self.queryInterface.renameColumn("_Users", "username", "pseudo");
+            const table = await this.queryInterface.describeTable("_Users");
+            expect(table).to.have.property("pseudo");
+            expect(table).to.not.have.property("username");
         });
 
-        it("rename a boolean column non-null without default value", function () {
+        it("rename a boolean column non-null without default value", async function () {
             const self = this;
             const Users = self.sequelize.define("_Users", {
                 active: {
@@ -411,17 +398,14 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
                 }
             }, { freezeTableName: true });
 
-            return Users.sync({ force: true }).then(() => {
-                return self.queryInterface.renameColumn("_Users", "active", "enabled");
-            }).bind(this).then(function () {
-                return this.queryInterface.describeTable("_Users");
-            }).then((table) => {
-                expect(table).to.have.property("enabled");
-                expect(table).to.not.have.property("active");
-            });
+            await Users.sync({ force: true });
+            await self.queryInterface.renameColumn("_Users", "active", "enabled");
+            const table = await this.queryInterface.describeTable("_Users");
+            expect(table).to.have.property("enabled");
+            expect(table).to.not.have.property("active");
         });
 
-        it("renames a column primary key autoIncrement column", function () {
+        it("renames a column primary key autoIncrement column", async function () {
             const self = this;
             const Fruits = self.sequelize.define("Fruit", {
                 fruitId: {
@@ -432,14 +416,11 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
                 }
             }, { freezeTableName: true });
 
-            return Fruits.sync({ force: true }).then(() => {
-                return self.queryInterface.renameColumn("Fruit", "fruitId", "fruit_id");
-            }).bind(this).then(function () {
-                return this.queryInterface.describeTable("Fruit");
-            }).then((table) => {
-                expect(table).to.have.property("fruit_id");
-                expect(table).to.not.have.property("fruitId");
-            });
+            await Fruits.sync({ force: true });
+            await self.queryInterface.renameColumn("Fruit", "fruitId", "fruit_id");
+            const table = await this.queryInterface.describeTable("Fruit");
+            expect(table).to.have.property("fruit_id");
+            expect(table).to.not.have.property("fruitId");
         });
 
         it("shows a reasonable error message when column is missing", async function () {
@@ -451,48 +432,44 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
             await Users.sync({ force: true });
 
             await assert.throws(async () => {
-                await self.queryInterface.renameColumn("_Users", "email", "pseudo");;
+                await self.queryInterface.renameColumn("_Users", "email", "pseudo");
             }, "Table _Users doesn't have the column email");
         });
     });
 
     describe("changeColumn", () => {
-        it("should support schemas", function () {
-            return this.sequelize.createSchema("archive").bind(this).then(function () {
-                return this.queryInterface.createTable({
-                    tableName: "users",
-                    schema: "archive"
-                }, {
-                    id: {
-                        type: DataTypes.INTEGER,
-                        primaryKey: true,
-                        autoIncrement: true
-                    },
-                    currency: DataTypes.INTEGER
-                }).bind(this).then(function () {
-                    return this.queryInterface.changeColumn({
-                        tableName: "users",
-                        schema: "archive"
-                    }, "currency", {
-                        type: DataTypes.FLOAT
-                    });
-                }).then(function () {
-                    return this.queryInterface.describeTable({
-                        tableName: "users",
-                        schema: "archive"
-                    });
-                }).then((table) => {
-                    if (dialect === "postgres" || dialect === "postgres-native") {
-                        expect(table.currency.type).to.equal("DOUBLE PRECISION");
-                    } else {
-                        expect(table.currency.type).to.equal("FLOAT");
-                    }
-                });
+        it("should support schemas", async function () {
+            await this.sequelize.createSchema("archive");
+            await this.queryInterface.createTable({
+                tableName: "users",
+                schema: "archive"
+            }, {
+                id: {
+                    type: DataTypes.INTEGER,
+                    primaryKey: true,
+                    autoIncrement: true
+                },
+                currency: DataTypes.INTEGER
             });
+            await this.queryInterface.changeColumn({
+                tableName: "users",
+                schema: "archive"
+            }, "currency", {
+                type: DataTypes.FLOAT
+            });
+            const table = await this.queryInterface.describeTable({
+                tableName: "users",
+                schema: "archive"
+            });
+            if (dialect === "postgres" || dialect === "postgres-native") {
+                expect(table.currency.type).to.equal("DOUBLE PRECISION");
+            } else {
+                expect(table.currency.type).to.equal("FLOAT");
+            }
         });
 
-        it("should change columns", function () {
-            return this.queryInterface.createTable({
+        it("should change columns", async function () {
+            await this.queryInterface.createTable({
                 tableName: "users"
             }, {
                 id: {
@@ -501,54 +478,48 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
                     autoIncrement: true
                 },
                 currency: DataTypes.INTEGER
-            }).bind(this).then(function () {
-                return this.queryInterface.changeColumn("users", "currency", {
-                    type: DataTypes.FLOAT,
-                    allowNull: true
-                });
-            }).then(function () {
-                return this.queryInterface.describeTable({
-                    tableName: "users"
-                });
-            }).then((table) => {
-                if (dialect === "postgres" || dialect === "postgres-native") {
-                    expect(table.currency.type).to.equal("DOUBLE PRECISION");
-                } else {
-                    expect(table.currency.type).to.equal("FLOAT");
-                }
             });
+            await this.queryInterface.changeColumn("users", "currency", {
+                type: DataTypes.FLOAT,
+                allowNull: true
+            });
+            const table = await this.queryInterface.describeTable({
+                tableName: "users"
+            });
+            if (dialect === "postgres" || dialect === "postgres-native") {
+                expect(table.currency.type).to.equal("DOUBLE PRECISION");
+            } else {
+                expect(table.currency.type).to.equal("FLOAT");
+            }
         });
 
         // MSSQL doesn't support using a modified column in a check constraint.
         // https://docs.microsoft.com/en-us/sql/t-sql/statements/alter-table-transact-sql
         if (dialect !== "mssql") {
-            it("should work with enums", function () {
-                return this.queryInterface.createTable({
+            it("should work with enums", async function () {
+                await this.queryInterface.createTable({
                     tableName: "users"
                 }, {
                     firstName: DataTypes.STRING
-                }).bind(this).then(function () {
-                    return this.queryInterface.changeColumn("users", "firstName", {
-                        type: DataTypes.ENUM(["value1", "value2", "value3"])
-                    });
+                });
+                await this.queryInterface.changeColumn("users", "firstName", {
+                    type: new DataTypes.ENUM(["value1", "value2", "value3"])
                 });
             });
 
-            it("should work with enums with schemas", function () {
-                return this.sequelize.createSchema("archive").bind(this).then(function () {
-                    return this.queryInterface.createTable({
-                        tableName: "users",
-                        schema: "archive"
-                    }, {
-                        firstName: DataTypes.STRING
-                    });
-                }).bind(this).then(function () {
-                    return this.queryInterface.changeColumn({
-                        tableName: "users",
-                        schema: "archive"
-                    }, "firstName", {
-                        type: DataTypes.ENUM(["value1", "value2", "value3"])
-                    });
+            it("should work with enums with schemas", async function () {
+                await this.sequelize.createSchema("archive");
+                await this.queryInterface.createTable({
+                    tableName: "users",
+                    schema: "archive"
+                }, {
+                    firstName: DataTypes.STRING
+                });
+                await this.queryInterface.changeColumn({
+                    tableName: "users",
+                    schema: "archive"
+                }, "firstName", {
+                    type: new DataTypes.ENUM(["value1", "value2", "value3"])
                 });
             });
         }
@@ -557,8 +528,8 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
     //SQlite navitely doesnt support ALTER Foreign key
     if (dialect !== "sqlite") {
         describe("should support foreign keys", () => {
-            beforeEach(function () {
-                return this.queryInterface.createTable("users", {
+            beforeEach(async function () {
+                await this.queryInterface.createTable("users", {
                     id: {
                         type: DataTypes.INTEGER,
                         primaryKey: true,
@@ -568,16 +539,14 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
                         type: DataTypes.INTEGER,
                         allowNull: false
                     }
-                })
-                    .bind(this).then(function () {
-                        return this.queryInterface.createTable("level", {
-                            id: {
-                                type: DataTypes.INTEGER,
-                                primaryKey: true,
-                                autoIncrement: true
-                            }
-                        });
-                    });
+                });
+                await this.queryInterface.createTable("level", {
+                    id: {
+                        type: DataTypes.INTEGER,
+                        primaryKey: true,
+                        autoIncrement: true
+                    }
+                });
             });
 
             it("able to change column to foreign key", function () {
@@ -599,44 +568,40 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
     }
 
     describe("addColumn", () => {
-        beforeEach(function () {
-            return this.sequelize.createSchema("archive").bind(this).then(function () {
-                return this.queryInterface.createTable("users", {
-                    id: {
-                        type: DataTypes.INTEGER,
-                        primaryKey: true,
-                        autoIncrement: true
-                    }
-                });
-            });
-        });
-
-        it("should be able to add a foreign key reference", function () {
-            return this.queryInterface.createTable("level", {
+        beforeEach(async function () {
+            await this.sequelize.createSchema("archive");
+            await this.queryInterface.createTable("users", {
                 id: {
                     type: DataTypes.INTEGER,
                     primaryKey: true,
                     autoIncrement: true
                 }
-            }).bind(this).then(function () {
-                return this.queryInterface.addColumn("users", "level_id", {
-                    type: DataTypes.INTEGER,
-                    references: {
-                        model: "level",
-                        key: "id"
-                    },
-                    onUpdate: "cascade",
-                    onDelete: "set null"
-                });
-            }).then(function () {
-                return this.queryInterface.describeTable("users");
-            }).then((table) => {
-                expect(table).to.have.property("level_id");
             });
         });
 
-        it("should work with schemas", function () {
-            return this.queryInterface.createTable({
+        it("should be able to add a foreign key reference", async function () {
+            await this.queryInterface.createTable("level", {
+                id: {
+                    type: DataTypes.INTEGER,
+                    primaryKey: true,
+                    autoIncrement: true
+                }
+            });
+            await this.queryInterface.addColumn("users", "level_id", {
+                type: DataTypes.INTEGER,
+                references: {
+                    model: "level",
+                    key: "id"
+                },
+                onUpdate: "cascade",
+                onDelete: "set null"
+            });
+            const table = await this.queryInterface.describeTable("users");
+            expect(table).to.have.property("level_id");
+        });
+
+        it("should work with schemas", async function () {
+            await this.queryInterface.createTable({
                 tableName: "users",
                 schema: "archive"
             }, {
@@ -645,25 +610,22 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
                     primaryKey: true,
                     autoIncrement: true
                 }
-            }).bind(this).then(function () {
-                return this.queryInterface.addColumn({
-                    tableName: "users",
-                    schema: "archive"
-                }, "level_id", {
-                    type: DataTypes.INTEGER
-                }).bind(this).then(function () {
-                    return this.queryInterface.describeTable({
-                        tableName: "users",
-                        schema: "archive"
-                    });
-                }).then((table) => {
-                    expect(table).to.have.property("level_id");
-                });
             });
+            await this.queryInterface.addColumn({
+                tableName: "users",
+                schema: "archive"
+            }, "level_id", {
+                type: DataTypes.INTEGER
+            });
+            const table = await this.queryInterface.describeTable({
+                tableName: "users",
+                schema: "archive"
+            });
+            expect(table).to.have.property("level_id");
         });
 
         it("should work with enums (1)", function () {
-            return this.queryInterface.addColumn("users", "someEnum", DataTypes.ENUM("value1", "value2", "value3"));
+            return this.queryInterface.addColumn("users", "someEnum", new DataTypes.ENUM("value1", "value2", "value3"));
         });
 
         it("should work with enums (2)", function () {
@@ -705,7 +667,7 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
             });
 
             it("should be able to remove a column with a default value", function () {
-                return this.queryInterface.removeColumn("users", "firstName").bind(this).then(function () {
+                return this.queryInterface.removeColumn("users", "firstName").then(() => {
                     return this.queryInterface.describeTable("users");
                 }).then((table) => {
                     expect(table).to.not.have.property("firstName");
@@ -713,7 +675,7 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
             });
 
             it("should be able to remove a column without default value", function () {
-                return this.queryInterface.removeColumn("users", "lastName").bind(this).then(function () {
+                return this.queryInterface.removeColumn("users", "lastName").then(() => {
                     return this.queryInterface.describeTable("users");
                 }).then((table) => {
                     expect(table).to.not.have.property("lastName");
@@ -721,7 +683,7 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
             });
 
             it("should be able to remove a column with a foreign key constraint", function () {
-                return this.queryInterface.removeColumn("users", "manager").bind(this).then(function () {
+                return this.queryInterface.removeColumn("users", "manager").then(() => {
                     return this.queryInterface.describeTable("users");
                 }).then((table) => {
                     expect(table).to.not.have.property("manager");
@@ -729,12 +691,12 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
             });
 
             it("should be able to remove a column with primaryKey", function () {
-                return this.queryInterface.removeColumn("users", "manager").bind(this).then(function () {
+                return this.queryInterface.removeColumn("users", "manager").then(() => {
                     return this.queryInterface.describeTable("users");
-                }).then(function (table) {
+                }).then((table) => {
                     expect(table).to.not.have.property("manager");
                     return this.queryInterface.removeColumn("users", "id");
-                }).then(function () {
+                }).then(() => {
                     return this.queryInterface.describeTable("users");
                 }).then((table) => {
                     expect(table).to.not.have.property("id");
@@ -747,7 +709,7 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
             // https://docs.microsoft.com/en-us/sql/t-sql/statements/alter-table-transact-sql#arguments
             if (dialect !== "mssql") {
                 it("should be able to remove a column with unique contraint", function () {
-                    return this.queryInterface.removeColumn("users", "email").bind(this).then(function () {
+                    return this.queryInterface.removeColumn("users", "email").then(() => {
                         return this.queryInterface.describeTable("users");
                     }).then((table) => {
                         expect(table).to.not.have.property("email");
@@ -757,29 +719,28 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
         });
 
         describe("(with a schema)", () => {
-            beforeEach(function () {
-                return this.sequelize.createSchema("archive").bind(this).then(function () {
-                    return this.queryInterface.createTable({
-                        tableName: "users",
-                        schema: "archive"
-                    }, {
-                        id: {
-                            type: DataTypes.INTEGER,
-                            primaryKey: true,
-                            autoIncrement: true
-                        },
-                        firstName: {
-                            type: DataTypes.STRING,
-                            defaultValue: "Someone"
-                        },
-                        lastName: {
-                            type: DataTypes.STRING
-                        },
-                        email: {
-                            type: DataTypes.STRING,
-                            unique: true
-                        }
-                    });
+            beforeEach(async function () {
+                await this.sequelize.createSchema("archive");
+                await this.queryInterface.createTable({
+                    tableName: "users",
+                    schema: "archive"
+                }, {
+                    id: {
+                        type: DataTypes.INTEGER,
+                        primaryKey: true,
+                        autoIncrement: true
+                    },
+                    firstName: {
+                        type: DataTypes.STRING,
+                        defaultValue: "Someone"
+                    },
+                    lastName: {
+                        type: DataTypes.STRING
+                    },
+                    email: {
+                        type: DataTypes.STRING,
+                        unique: true
+                    }
                 });
             });
 
@@ -787,8 +748,7 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
                 return this.queryInterface.removeColumn({
                     tableName: "users",
                     schema: "archive"
-                }, "firstName"
-                ).bind(this).then(function () {
+                }, "firstName").then(() => {
                     return this.queryInterface.describeTable({
                         tableName: "users",
                         schema: "archive"
@@ -802,8 +762,7 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
                 return this.queryInterface.removeColumn({
                     tableName: "users",
                     schema: "archive"
-                }, "lastName"
-                ).bind(this).then(function () {
+                }, "lastName").then(() => {
                     return this.queryInterface.describeTable({
                         tableName: "users",
                         schema: "archive"
@@ -817,7 +776,7 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
                 return this.queryInterface.removeColumn({
                     tableName: "users",
                     schema: "archive"
-                }, "id").bind(this).then(function () {
+                }, "id").then(() => {
                     return this.queryInterface.describeTable({
                         tableName: "users",
                         schema: "archive"
@@ -836,7 +795,7 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
                     return this.queryInterface.removeColumn({
                         tableName: "users",
                         schema: "archive"
-                    }, "email").bind(this).then(function () {
+                    }, "email").then(() => {
                         return this.queryInterface.describeTable({
                             tableName: "users",
                             schema: "archive"
@@ -850,81 +809,74 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
     });
 
     describe("describeForeignKeys", () => {
-        beforeEach(function () {
-            return this.queryInterface.createTable("users", {
+        beforeEach(async function () {
+            await this.queryInterface.createTable("users", {
                 id: {
                     type: DataTypes.INTEGER,
                     primaryKey: true,
                     autoIncrement: true
                 }
-            }).bind(this).then(function () {
-                return this.queryInterface.createTable("hosts", {
-                    id: {
-                        type: DataTypes.INTEGER,
-                        primaryKey: true,
-                        autoIncrement: true
-                    },
-                    admin: {
-                        type: DataTypes.INTEGER,
-                        references: {
-                            model: "users",
-                            key: "id"
-                        }
-                    },
-                    operator: {
-                        type: DataTypes.INTEGER,
-                        references: {
-                            model: "users",
-                            key: "id"
-                        },
-                        onUpdate: "cascade"
-                    },
-                    owner: {
-                        type: DataTypes.INTEGER,
-                        references: {
-                            model: "users",
-                            key: "id"
-                        },
-                        onUpdate: "cascade",
-                        onDelete: "set null"
+            });
+            await this.queryInterface.createTable("hosts", {
+                id: {
+                    type: DataTypes.INTEGER,
+                    primaryKey: true,
+                    autoIncrement: true
+                },
+                admin: {
+                    type: DataTypes.INTEGER,
+                    references: {
+                        model: "users",
+                        key: "id"
                     }
-                });
+                },
+                operator: {
+                    type: DataTypes.INTEGER,
+                    references: {
+                        model: "users",
+                        key: "id"
+                    },
+                    onUpdate: "cascade"
+                },
+                owner: {
+                    type: DataTypes.INTEGER,
+                    references: {
+                        model: "users",
+                        key: "id"
+                    },
+                    onUpdate: "cascade",
+                    onDelete: "set null"
+                }
             });
         });
 
-        it("should get a list of foreign keys for the table", function () {
+        it("should get a list of foreign keys for the table", async function () {
             const sql = this.queryInterface.QueryGenerator.getForeignKeysQuery("hosts", this.sequelize.config.database);
             const self = this;
-            return this.sequelize.query(sql, { type: this.sequelize.QueryTypes.FOREIGNKEYS }).then((fks) => {
-                expect(fks).to.have.length(3);
-                const keys = Object.keys(fks[0]),
-                    keys2 = Object.keys(fks[1]),
-                    keys3 = Object.keys(fks[2]);
+            const fks = await this.sequelize.query(sql, { type: this.sequelize.QueryTypes.FOREIGNKEYS });
+            expect(fks).to.have.length(3);
+            const keys = Object.keys(fks[0]);
+            const keys2 = Object.keys(fks[1]);
+            const keys3 = Object.keys(fks[2]);
 
-                if (dialect === "postgres" || dialect === "postgres-native") {
-                    expect(keys).to.have.length(6);
-                    expect(keys2).to.have.length(7);
-                    expect(keys3).to.have.length(7);
-                } else if (dialect === "sqlite") {
-                    expect(keys).to.have.length(8);
-                } else if (dialect === "mysql" || dialect === "mssql") {
-                    expect(keys).to.have.length(1);
-                } else {
-                    console.log(`This test doesn't support ${dialect}`);
-                }
-                return fks;
-            }).then((fks) => {
-                if (dialect === "mysql") {
-                    return self.sequelize.query(
-                        self.queryInterface.QueryGenerator.getForeignKeyQuery("hosts", "admin"),
-                        {}
-                    )
-                        .spread((fk) => {
-                            expect(fks[0]).to.deep.eql(fk[0]);
-                        });
-                }
-
-            });
+            if (dialect === "postgres" || dialect === "postgres-native") {
+                expect(keys).to.have.length(6);
+                expect(keys2).to.have.length(7);
+                expect(keys3).to.have.length(7);
+            } else if (dialect === "sqlite") {
+                expect(keys).to.have.length(8);
+            } else if (dialect === "mysql" || dialect === "mssql") {
+                expect(keys).to.have.length(1);
+            } else {
+                console.log(`This test doesn't support ${dialect}`);
+            }
+            if (dialect === "mysql") {
+                const [fk] = await self.sequelize.query(
+                    self.queryInterface.QueryGenerator.getForeignKeyQuery("hosts", "admin"),
+                    {}
+                );
+                expect(fks[0]).to.deep.eql(fk[0]);
+            }
         });
     });
 

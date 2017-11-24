@@ -2,7 +2,6 @@ import Support from "../support";
 
 
 const { DataTypes } = adone.orm;
-const Promise = Support.Sequelize.Promise;
 
 describe(Support.getTestDialectTeaser("Hooks"), () => {
     beforeEach(function () {
@@ -242,7 +241,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                 return this.User.sync({ force: true });
             });
 
-            it("should run the after/before functions for each item created successfully", function () {
+            it("should run the after/before functions for each item created successfully", async function () {
                 const self = this;
                 const beforeBulk = spy();
                 const afterBulk = spy();
@@ -260,21 +259,19 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                     user.username = `User${user.id}`;
                 });
 
-                return this.User.bulkCreate([
+                await this.User.bulkCreate([
                     { aNumber: 1 }, { aNumber: 1 }, { aNumber: 1 }
-                ]).then(() => {
-                    return self.User.update({ aNumber: 10 }, { where: { aNumber: 1 }, individualHooks: true }).spread((affectedRows, records) => {
-                        records.forEach((record) => {
-                            expect(record.username).to.equal(`User${record.id}`);
-                            expect(record.beforeHookTest).to.be.true;
-                        });
-                        expect(beforeBulk).to.have.been.calledOnce;
-                        expect(afterBulk).to.have.been.calledOnce;
-                    });
+                ]);
+                const [, records] = await self.User.update({ aNumber: 10 }, { where: { aNumber: 1 }, individualHooks: true });
+                records.forEach((record) => {
+                    expect(record.username).to.equal(`User${record.id}`);
+                    expect(record.beforeHookTest).to.be.true;
                 });
+                expect(beforeBulk).to.have.been.calledOnce;
+                expect(afterBulk).to.have.been.calledOnce;
             });
 
-            it("should run the after/before functions for each item created successfully changing some data before updating", function () {
+            it("should run the after/before functions for each item created successfully changing some data before updating", async function () {
                 const self = this;
 
                 this.User.beforeUpdate((user) => {
@@ -284,14 +281,12 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                     }
                 });
 
-                return this.User.bulkCreate([
+                await this.User.bulkCreate([
                     { aNumber: 1 }, { aNumber: 1 }, { aNumber: 1 }
-                ]).then(() => {
-                    return self.User.update({ aNumber: 10 }, { where: { aNumber: 1 }, individualHooks: true }).spread((affectedRows, records) => {
-                        records.forEach((record) => {
-                            expect(record.aNumber).to.equal(10 + (record.id === 1 ? 3 : 0));
-                        });
-                    });
+                ]);
+                const [, records] = await self.User.update({ aNumber: 10 }, { where: { aNumber: 1 }, individualHooks: true });
+                records.forEach((record) => {
+                    expect(record.aNumber).to.equal(10 + (record.id === 1 ? 3 : 0));
                 });
             });
 
@@ -462,13 +457,12 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
     });
 
     describe("#bulkRestore", () => {
-        beforeEach(function () {
-            return this.ParanoidUser.bulkCreate([
+        beforeEach(async function () {
+            await this.ParanoidUser.bulkCreate([
                 { username: "adam", mood: "happy" },
                 { username: "joe", mood: "sad" }
-            ]).bind(this).then(function () {
-                return this.ParanoidUser.destroy({ truncate: true });
-            });
+            ]);
+            await this.ParanoidUser.destroy({ truncate: true });
         });
 
         describe("on success", () => {

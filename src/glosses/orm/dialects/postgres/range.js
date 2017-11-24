@@ -1,6 +1,6 @@
 const { is, vendor: { lodash: _ } } = adone;
 
-function stringifyRangeBound(bound) {
+const stringifyRangeBound = (bound) => {
     if (is.null(bound)) {
         return "";
     } else if (bound === Infinity || bound === -Infinity) {
@@ -8,9 +8,9 @@ function stringifyRangeBound(bound) {
     }
     return JSON.stringify(bound);
 
-}
+};
 
-function parseRangeBound(bound, parseType) {
+const parseRangeBound = (bound, parseType) => {
     if (!bound) {
         return null;
     } else if (bound === "infinity") {
@@ -20,9 +20,9 @@ function parseRangeBound(bound, parseType) {
     }
     return parseType(bound);
 
-}
+};
 
-function stringify(data) {
+const stringify = (data) => {
     if (is.null(data)) {
         return null;
     }
@@ -64,10 +64,10 @@ function stringify(data) {
     const upperBound = stringifyRangeBound(data[1]);
 
     return `${(data.inclusive[0] ? "[" : "(") + lowerBound},${upperBound}${data.inclusive[1] ? "]" : ")"}`;
-}
+};
 exports.stringify = stringify;
 
-function parse(value, parser) {
+const parse = (value, parser) => {
     if (is.null(value)) {
         return null;
     }
@@ -90,5 +90,5 @@ function parse(value, parser) {
     result.inclusive = [value[0] === "[", value[value.length - 1] === "]"];
 
     return result;
-}
+};
 exports.parse = parse;

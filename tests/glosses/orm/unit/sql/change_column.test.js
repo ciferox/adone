@@ -6,7 +6,6 @@ const {
 
 const expectsql = Support.expectsql;
 const current = Support.sequelize;
-const Promise = current.Promise;
 
 
 describe(Support.getTestDialectTeaser("SQL"), { skip: current.dialect.name === "sqlite" }, () => {

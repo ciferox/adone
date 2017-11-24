@@ -74,7 +74,7 @@ class Query extends AbstractQuery {
         return ret;
     }
 
-    run(sql, parameters) {
+    async run(sql, parameters) {
         this.sql = sql;
         const method = this.getDatabaseMethod();
         if (method === "exec") {
@@ -105,11 +105,11 @@ class Query extends AbstractQuery {
                     resolve(new Promise((resolve, reject) => {
                         const query = this;
                         // cannot use arrow function here because the function is bound to the statement
-                        function afterExecute(err, results) {
+                        const afterExecute = (err, results) => {
                             debug(`executed(${query.database.uuid || "default"}) : ${query.sql}`);
 
                             if (benchmark) {
-                                query.sequelize.log("Executed (" + (query.database.uuid || "default") + "): " + query.sql, Date.now() - queryBegin, query.options);
+                                query.sequelize.log(`Executed (${query.database.uuid || "default"}): ${query.sql}`, Date.now() - queryBegin, query.options);
                             }
 
                             if (err) {
@@ -142,10 +142,10 @@ class Query extends AbstractQuery {
                                     }
                                 }
 
-                                if (query.sql.indexOf("sqlite_master") !== -1) {
-                                    if (query.sql.indexOf("SELECT sql FROM sqlite_master WHERE tbl_name") !== -1) {
+                                if (query.sql.includes("sqlite_master")) {
+                                    if (query.sql.includes("SELECT sql FROM sqlite_master WHERE tbl_name")) {
                                         result = results;
-                                        if (result && result[0] && result[0].sql.indexOf("CONSTRAINT") !== -1) {
+                                        if (result && result[0] && result[0].sql.includes("CONSTRAINT")) {
                                             result = query.parseConstraintsFromSql(results[0].sql);
                                         }
                                     } else {
@@ -220,7 +220,7 @@ class Query extends AbstractQuery {
                                         };
 
                                         if (result[_result.name].type === "TINYINT(1)") {
-                                            result[_result.name].defaultValue = { 0: false, "1": true }[result[_result.name].defaultValue];
+                                            result[_result.name].defaultValue = { 0: false, 1: true }[result[_result.name].defaultValue];
                                         }
 
                                         if (is.string(result[_result.name].defaultValue)) {
@@ -247,13 +247,15 @@ class Query extends AbstractQuery {
 
                                 resolve(result);
                             }
-                        }
+                        };
 
                         if (method === "exec") {
                             // exec does not support bind parameter
                             this.database[method](this.sql, afterExecute);
                         } else {
-                            if (!parameters) {parameters = [];}
+                            if (!parameters) {
+                                parameters = [];
+                            }
                             this.database[method](this.sql, parameters, afterExecute);
                         }
                     }));
@@ -275,36 +277,36 @@ class Query extends AbstractQuery {
                     if (!tableNames.length) {
                         return executeSql();
                     }
-                    return Promise.map(tableNames, (tableName) =>
-                        new Promise((resolve) => {
-                            tableName = tableName.replace(/`/g, "");
-                            columnTypes[tableName] = {};
+                    return Promise.all(tableNames.map((tableName) => new Promise((resolve) => {
+                        tableName = tableName.replace(/`/g, "");
+                        columnTypes[tableName] = {};
 
-                            this.database.all(`PRAGMA table_info(\`${  tableName  }\`)`, (err, results) => {
-                                if (!err) {
-                                    for (const result of results) {
-                                        columnTypes[tableName][result.name] = result.type;
-                                    }
+                        this.database.all(`PRAGMA table_info(\`${tableName}\`)`, (err, results) => {
+                            if (!err) {
+                                for (const result of results) {
+                                    columnTypes[tableName][result.name] = result.type;
                                 }
-                                resolve();
-                            });
-                        })
-                    ).then(executeSql);
+                            }
+                            resolve();
+                        });
+                    }))).then(executeSql);
 
                 }
                 return executeSql();
-
             });
         });
     }
 
     parseConstraintsFromSql(sql) {
         let constraints = sql.split("CONSTRAINT ");
-        let referenceTableName, referenceTableKeys, updateAction, deleteAction;
+        let referenceTableName;
+        let referenceTableKeys;
+        let updateAction;
+        let deleteAction;
         constraints.splice(0, 1);
         constraints = constraints.map((constraintSql) => {
             //Parse foreign key snippets
-            if (constraintSql.indexOf("REFERENCES") !== -1) {
+            if (constraintSql.includes("REFERENCES")) {
                 //Parse out the constraint condition form sql string
                 updateAction = constraintSql.match(/ON UPDATE (CASCADE|SET NULL|RESTRICT|NO ACTION|SET DEFAULT){1}/);
                 deleteAction = constraintSql.match(/ON DELETE (CASCADE|SET NULL|RESTRICT|NO ACTION|SET DEFAULT){1}/);
@@ -349,7 +351,7 @@ class Query extends AbstractQuery {
     }
 
     applyParsers(type, value) {
-        if (type.indexOf("(") !== -1) {
+        if (type.includes("(")) {
             // Remove the length part
             type = type.substr(0, type.indexOf("("));
         }
@@ -364,7 +366,6 @@ class Query extends AbstractQuery {
     }
 
     formatError(err) {
-
         switch (err.code) {
             case "SQLITE_CONSTRAINT": {
                 let match = err.message.match(/FOREIGN KEY constraint failed/);
@@ -422,36 +423,39 @@ class Query extends AbstractQuery {
         }
     }
 
-    handleShowIndexesQuery(data) {
-
+    async handleShowIndexesQuery(data) {
         // Sqlite returns indexes so the one that was defined last is returned first. Lets reverse that!
-        return this.sequelize.Promise.map(data.reverse(), (item) => {
+        return Promise.all(data.reverse().map(async (item) => {
             item.fields = [];
             item.primary = false;
             item.unique = Boolean(item.unique);
             item.constraintName = item.name;
-            return this.run(`PRAGMA INDEX_INFO(\`${item.name}\`)`).then((columns) => {
-                for (const column of columns) {
-                    item.fields[column.seqno] = {
-                        attribute: column.name,
-                        length: undefined,
-                        order: undefined
-                    };
-                }
+            const columns = await this.run(`PRAGMA INDEX_INFO(\`${item.name}\`)`);
+            for (const column of columns) {
+                item.fields[column.seqno] = {
+                    attribute: column.name,
+                    length: undefined,
+                    order: undefined
+                };
+            }
 
-                return item;
-            });
-        });
+            return item;
+        }));
     }
 
     getDatabaseMethod() {
         if (this.isUpsertQuery()) {
             return "exec"; // Needed to run multiple queries in one
-        } else if (this.isInsertQuery() || this.isUpdateQuery() || this.isBulkUpdateQuery() || this.sql.toLowerCase().indexOf("CREATE TEMPORARY TABLE".toLowerCase()) !== -1 || this.options.type === QueryTypes.BULKDELETE) {
+        } else if (
+            this.isInsertQuery()
+            || this.isUpdateQuery()
+            || this.isBulkUpdateQuery()
+            || this.sql.toLowerCase().includes("create temporary table")
+            || this.options.type === QueryTypes.BULKDELETE
+        ) {
             return "run";
         }
         return "all";
-
     }
 }
 

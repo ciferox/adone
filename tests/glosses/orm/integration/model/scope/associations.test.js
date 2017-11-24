@@ -2,12 +2,10 @@ import Support from "../../support";
 
 const Sequelize = adone.orm;
 
-const Promise = Sequelize.Promise;
-
 describe(Support.getTestDialectTeaser("Model"), () => {
     describe("scope", () => {
         describe("associations", () => {
-            beforeEach(function () {
+            beforeEach(async function () {
                 const sequelize = this.sequelize;
 
                 this.ScopeMe = this.sequelize.define("ScopeMe", {
@@ -94,22 +92,20 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 this.ScopeMe.belongsTo(this.Company);
                 this.UserAssociation = this.Company.hasMany(this.ScopeMe, { as: "users" });
 
-                return this.sequelize.sync({ force: true }).bind(this).then(function () {
-                    return Promise.all([
-                        this.ScopeMe.create({ id: 1, username: "dan", email: "dan@sequelizejs.com", access_level: 5, other_value: 10, parent_id: 1 }),
-                        this.ScopeMe.create({ id: 2, username: "tobi", email: "tobi@fakeemail.com", access_level: 10, other_value: 11, parent_id: 2 }),
-                        this.ScopeMe.create({ id: 3, username: "tony", email: "tony@sequelizejs.com", access_level: 3, other_value: 7, parent_id: 1 }),
-                        this.ScopeMe.create({ id: 4, username: "fred", email: "fred@foobar.com", access_level: 3, other_value: 7, parent_id: 1 }),
-                        this.ScopeMe.create({ id: 5, username: "bob", email: "bob@foobar.com", access_level: 1, other_value: 9, parent_id: 5 }),
-                        this.Company.create({ id: 1, active: true }),
-                        this.Company.create({ id: 2, active: false })
-                    ]);
-                }).spread((u1, u2, u3, u4, u5, c1, c2) => {
-                    return Promise.all([
-                        c1.setUsers([u1, u2, u3, u4]),
-                        c2.setUsers([u5])
-                    ]);
-                });
+                await this.sequelize.sync({ force: true });
+                const [u1, u2, u3, u4, u5, c1, c2] = await Promise.all([
+                    this.ScopeMe.create({ id: 1, username: "dan", email: "dan@sequelizejs.com", access_level: 5, other_value: 10, parent_id: 1 }),
+                    this.ScopeMe.create({ id: 2, username: "tobi", email: "tobi@fakeemail.com", access_level: 10, other_value: 11, parent_id: 2 }),
+                    this.ScopeMe.create({ id: 3, username: "tony", email: "tony@sequelizejs.com", access_level: 3, other_value: 7, parent_id: 1 }),
+                    this.ScopeMe.create({ id: 4, username: "fred", email: "fred@foobar.com", access_level: 3, other_value: 7, parent_id: 1 }),
+                    this.ScopeMe.create({ id: 5, username: "bob", email: "bob@foobar.com", access_level: 1, other_value: 9, parent_id: 5 }),
+                    this.Company.create({ id: 1, active: true }),
+                    this.Company.create({ id: 2, active: false })
+                ]);
+                await Promise.all([
+                    c1.setUsers([u1, u2, u3, u4]),
+                    c2.setUsers([u5])
+                ]);
             });
 
             describe("include", () => {
@@ -121,40 +117,36 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     });
                 });
 
-                it("should apply default scope when including an associations", function () {
-                    return this.Company.findAll({
+                it("should apply default scope when including an associations", async function () {
+                    const [company] = await this.Company.findAll({
                         include: [this.UserAssociation]
-                    }).get(0).then((company) => {
-                        expect(company.users).to.have.length(2);
                     });
+                    expect(company.users).to.have.length(2);
                 });
 
-                it("should apply default scope when including a model", function () {
-                    return this.Company.findAll({
+                it("should apply default scope when including a model", async function () {
+                    const [company] = await this.Company.findAll({
                         include: [{ model: this.ScopeMe, as: "users" }]
-                    }).get(0).then((company) => {
-                        expect(company.users).to.have.length(2);
                     });
+                    expect(company.users).to.have.length(2);
                 });
 
-                it("should be able to include a scoped model", function () {
-                    return this.Company.findAll({
+                it("should be able to include a scoped model", async function () {
+                    const [company] = await this.Company.findAll({
                         include: [{ model: this.ScopeMe.scope("isTony"), as: "users" }]
-                    }).get(0).then((company) => {
-                        expect(company.users).to.have.length(1);
-                        expect(company.users[0].get("username")).to.equal("tony");
                     });
+                    expect(company.users).to.have.length(1);
+                    expect(company.users[0].get("username")).to.equal("tony");
                 });
             });
 
             describe("get", () => {
-                beforeEach(function () {
-                    return Promise.all([
+                beforeEach(async function () {
+                    const [p, companies] = await Promise.all([
                         this.Project.create(),
                         this.Company.unscoped().findAll()
-                    ]).spread((p, companies) => {
-                        return p.setCompanies(companies);
-                    });
+                    ]);
+                    await p.setCompanies(companies);
                 });
 
                 describe("it should be able to unscope", () => {
@@ -166,17 +158,14 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         });
                     });
 
-                    it("hasOne", function () {
-                        return this.Profile.create({
+                    it("hasOne", async function () {
+                        await this.Profile.create({
                             active: false,
                             userId: 1
-                        }).bind(this).then(function () {
-                            return this.ScopeMe.findById(1);
-                        }).then((user) => {
-                            return user.getProfile({ scope: false });
-                        }).then((profile) => {
-                            expect(profile).to.be.ok;
                         });
+                        const user = await this.ScopeMe.findById(1);
+                        const profile = await user.getProfile({ scope: false });
+                        expect(profile).to.be.ok;
                     });
 
                     it("belongsTo", function () {
@@ -187,12 +176,10 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         });
                     });
 
-                    it("belongsToMany", function () {
-                        return this.Project.findAll().get(0).then((p) => {
-                            return p.getCompanies({ scope: false });
-                        }).then((companies) => {
-                            expect(companies).to.have.length(2);
-                        });
+                    it("belongsToMany", async function () {
+                        const [p] = await this.Project.findAll();
+                        const companies = await p.getCompanies({ scope: false });
+                        expect(companies).to.have.length(2);
                     });
                 });
 
@@ -205,17 +192,14 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         });
                     });
 
-                    it("hasOne", function () {
-                        return this.Profile.create({
+                    it("hasOne", async function () {
+                        await this.Profile.create({
                             active: false,
                             userId: 1
-                        }).bind(this).then(function () {
-                            return this.ScopeMe.findById(1);
-                        }).then((user) => {
-                            return user.getProfile();
-                        }).then((profile) => {
-                            expect(profile).not.to.be.ok;
                         });
+                        const user = await this.ScopeMe.findById(1);
+                        const profile = await user.getProfile();
+                        expect(profile).not.to.be.ok;
                     });
 
                     it("belongsTo", function () {
@@ -226,13 +210,11 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         });
                     });
 
-                    it("belongsToMany", function () {
-                        return this.Project.findAll().get(0).then((p) => {
-                            return p.getCompanies();
-                        }).then((companies) => {
-                            expect(companies).to.have.length(1);
-                            expect(companies[0].get("active")).to.be.ok;
-                        });
+                    it("belongsToMany", async function () {
+                        const [p] = await this.Project.findAll();
+                        const companies = await p.getCompanies();
+                        expect(companies).to.have.length(1);
+                        expect(companies[0].get("active")).to.be.ok;
                     });
                 });
 
@@ -246,17 +228,14 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         });
                     });
 
-                    it("hasOne", function () {
-                        return this.Profile.create({
+                    it("hasOne", async function () {
+                        await this.Profile.create({
                             active: true,
                             userId: 1
-                        }).bind(this).then(function () {
-                            return this.ScopeMe.findById(1);
-                        }).then((user) => {
-                            return user.getProfile({ scope: "notActive" });
-                        }).then((profile) => {
-                            expect(profile).not.to.be.ok;
                         });
+                        const user = await this.ScopeMe.findById(1);
+                        const profile = await user.getProfile({ scope: "notActive" });
+                        expect(profile).not.to.be.ok;
                     });
 
                     it("belongsTo", function () {
@@ -267,27 +246,24 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         });
                     });
 
-                    it("belongsToMany", function () {
-                        return this.Project.findAll().get(0).then((p) => {
-                            return p.getCompanies({ scope: "reversed" });
-                        }).then((companies) => {
-                            expect(companies).to.have.length(2);
-                            expect(companies[0].id).to.equal(2);
-                            expect(companies[1].id).to.equal(1);
-                        });
+                    it("belongsToMany", async function () {
+                        const [p] = await this.Project.findAll();
+                        const companies = await p.getCompanies({ scope: "reversed" });
+                        expect(companies).to.have.length(2);
+                        expect(companies[0].id).to.equal(2);
+                        expect(companies[1].id).to.equal(1);
                     });
                 });
             });
 
             describe("scope with includes", () => {
-                beforeEach(function () {
-                    return Promise.all([
+                beforeEach(async function () {
+                    const [c, p1, p2] = await Promise.all([
                         this.Company.findById(1),
                         this.Project.create({ id: 1, active: true }),
                         this.Project.create({ id: 2, active: false })
-                    ]).spread((c, p1, p2) => {
-                        return c.setProjects([p1, p2]);
-                    });
+                    ]);
+                    await c.setProjects([p1, p2]);
                 });
 
                 it("should scope columns properly", async function () {

@@ -4,7 +4,6 @@ const current = Support.sequelize;
 const {
     DataTypes
 } = adone.orm;
-const Promise = Support.Sequelize.Promise;
 
 describe(Support.getTestDialectTeaser("Model"), () => {
     describe("method findOne", () => {
@@ -20,15 +19,14 @@ describe(Support.getTestDialectTeaser("Model"), () => {
         });
 
         describe("should not add limit when querying on a primary key", () => {
-            it("with id primary key", function () {
+            it("with id primary key", async function () {
                 const Model = current.define("model");
 
-                return Model.findOne({ where: { id: 42 } }).bind(this).then(function () {
-                    expect(this.stub.getCall(0).args[0]).to.be.an("object").not.to.have.property("limit");
-                });
+                await Model.findOne({ where: { id: 42 } });
+                expect(this.stub.getCall(0).args[0]).to.be.an("object").not.to.have.property("limit");
             });
 
-            it("with custom primary key", function () {
+            it("with custom primary key", async function () {
                 const Model = current.define("model", {
                     uid: {
                         type: DataTypes.INTEGER,
@@ -37,12 +35,11 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     }
                 });
 
-                return Model.findOne({ where: { uid: 42 } }).bind(this).then(function () {
-                    expect(this.stub.getCall(0).args[0]).to.be.an("object").not.to.have.property("limit");
-                });
+                await Model.findOne({ where: { uid: 42 } });
+                expect(this.stub.getCall(0).args[0]).to.be.an("object").not.to.have.property("limit");
             });
 
-            it("with blob primary key", function () {
+            it("with blob primary key", async function () {
                 const Model = current.define("model", {
                     id: {
                         type: DataTypes.BLOB,
@@ -51,19 +48,16 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     }
                 });
 
-                return Model.findOne({ where: { id: new Buffer("foo") } }).bind(this).then(function () {
-                    expect(this.stub.getCall(0).args[0]).to.be.an("object").not.to.have.property("limit");
-                });
+                await Model.findOne({ where: { id: Buffer.from("foo") } });
+                expect(this.stub.getCall(0).args[0]).to.be.an("object").not.to.have.property("limit");
             });
         });
 
-        it("should add limit when using { $ gt on the primary key", function () {
+        it("should add limit when using { $ gt on the primary key", async function () {
             const Model = current.define("model");
 
-            return Model.findOne({ where: { id: { $gt: 42 } } }).bind(this).then(function () {
-                expect(this.stub.getCall(0).args[0]).to.be.an("object").to.have.property("limit");
-            });
+            await Model.findOne({ where: { id: { $gt: 42 } } });
+            expect(this.stub.getCall(0).args[0]).to.be.an("object").to.have.property("limit");
         });
-
     });
 });

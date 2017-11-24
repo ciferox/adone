@@ -18,7 +18,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
             before(() => {
                 s = stub(current, "query").returns(
-                    Sequelize.Promise.resolve({
+                    Promise.resolve({
                         _previousDataValues: { id: 3 },
                         dataValues: { id: 1 }
                     })

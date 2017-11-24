@@ -220,6 +220,7 @@ export class AggregateException extends Exception {
         this.name = this.constructor.name;
         Object.defineProperty(this, "_errors", { value: errors });
     }
+
     *[Symbol.iterator]() {
         for (const error of this._errors) {
             yield error;

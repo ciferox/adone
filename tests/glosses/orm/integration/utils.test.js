@@ -252,10 +252,10 @@ describe(Support.getTestDialectTeaser("Utils"), () => {
         });
 
         if (Support.getTestDialect() !== "mssql") {
-            it("accepts condition object (with cast)", function () {
+            it("accepts condition object (with cast)", async function () {
                 const type = Support.getTestDialect() === "mysql" ? "unsigned" : "int";
 
-                return Airplane.findAll({
+                const [airplane] = await Airplane.findAll({
                     attributes: [
                         [this.sequelize.fn("COUNT", "*"), "count"],
                         [Sequelize.fn("SUM", Sequelize.cast({
@@ -270,17 +270,16 @@ describe(Support.getTestDialectTeaser("Utils"), () => {
                             }
                         }, type)), "count-engines-wings"]
                     ]
-                }).spread((airplane) => {
-                    expect(parseInt(airplane.get("count"))).to.equal(3);
-                    expect(parseInt(airplane.get("count-engines"))).to.equal(1);
-                    expect(parseInt(airplane.get("count-engines-wings"))).to.equal(2);
                 });
+                expect(parseInt(airplane.get("count"))).to.equal(3);
+                expect(parseInt(airplane.get("count-engines"))).to.equal(1);
+                expect(parseInt(airplane.get("count-engines-wings"))).to.equal(2);
             });
         }
 
         if (Support.getTestDialect() !== "mssql" && Support.getTestDialect() !== "postgres") {
-            it("accepts condition object (auto casting)", function () {
-                return Airplane.findAll({
+            it("accepts condition object (auto casting)", async function () {
+                const [airplane] = await Airplane.findAll({
                     attributes: [
                         [this.sequelize.fn("COUNT", "*"), "count"],
                         [Sequelize.fn("SUM", {
@@ -295,11 +294,10 @@ describe(Support.getTestDialectTeaser("Utils"), () => {
                             }
                         }), "count-engines-wings"]
                     ]
-                }).spread((airplane) => {
-                    expect(parseInt(airplane.get("count"))).to.equal(3);
-                    expect(parseInt(airplane.get("count-engines"))).to.equal(1);
-                    expect(parseInt(airplane.get("count-engines-wings"))).to.equal(2);
                 });
+                expect(parseInt(airplane.get("count"))).to.equal(3);
+                expect(parseInt(airplane.get("count-engines"))).to.equal(1);
+                expect(parseInt(airplane.get("count-engines-wings"))).to.equal(2);
             });
         }
     });

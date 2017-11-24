@@ -21,7 +21,7 @@ describe(Support.getTestDialectTeaser("Pooling"), { skip: dialect === "sqlite" }
             }
         });
 
-        this.sinon.stub(this.testInstance.connectionManager, "_connect").callsFake(() => new Sequelize.Promise(() => { }));
+        this.sinon.stub(this.testInstance.connectionManager, "_connect").callsFake(() => new Promise(() => { }));
 
         await assert.throws(async () => {
             await this.testInstance.authenticate();

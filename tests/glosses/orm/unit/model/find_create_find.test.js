@@ -2,7 +2,6 @@ import Support from "../../support";
 
 const UniqueConstraintError = adone.orm.UniqueConstraintError;
 const current = Support.sequelize;
-const Promise = Support.Sequelize.Promise;
 
 describe(Support.getTestDialectTeaser("Model"), () => {
     describe("findCreateFind", () => {

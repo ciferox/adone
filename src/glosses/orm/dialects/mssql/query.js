@@ -136,8 +136,13 @@ class Query extends AbstractQuery {
         });
     }
 
-    run(sql, parameters) {
-        return Promise.using(this.connection.lock(), (connection) => this._run(connection, sql, parameters));
+    async run(sql, parameters) {
+        const conn = await this.connection.lock();
+        try {
+            return await this._run(conn, sql, parameters);
+        } finally {
+            this.connection.unlock();
+        }
     }
 
     static formatBindParameters(sql, values, dialect) {

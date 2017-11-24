@@ -83,27 +83,26 @@ class Association {
     constructor(source, target, options) {
         options = options || {};
         /**
-     * @type {Model}
-     */
+         * @type {Model}
+         */
         this.source = source;
+
         /**
-     * @type {Model}
-     */
+         * @type {Model}
+         */
         this.target = target;
         this.options = options;
         this.scope = options.scope;
         this.isSelfAssociation = this.source === this.target;
         this.as = options.as;
         /**
-     * The type of the association. One of `HasMany`, `BelongsTo`, `HasOne`, `BelongsToMany`
-     * @type {string}
-     */
+         * The type of the association. One of `HasMany`, `BelongsTo`, `HasOne`, `BelongsToMany`
+         * @type {string}
+         */
         this.associationType = "";
 
         if (source.hasAlias(options.as)) {
-            throw new AssociationError(`You have used the alias ${options.as} in two separate associations. ` +
-      "Aliased associations must have unique aliases."
-            );
+            throw new AssociationError(`You have used the alias ${options.as} in two separate associations. Aliased associations must have unique aliases.`);
         }
     }
     // Normalize input - may be array or single obj, instance or primary key - convert it to an array of built objects

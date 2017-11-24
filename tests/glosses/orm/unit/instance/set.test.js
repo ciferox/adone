@@ -3,7 +3,6 @@ import Support from "../../support";
 const { is } = adone;
 const { DataTypes } = adone.orm;
 const current = Support.sequelize;
-const Promise = current.Promise;
 
 describe(Support.getTestDialectTeaser("Instance"), () => {
     describe("set", () => {

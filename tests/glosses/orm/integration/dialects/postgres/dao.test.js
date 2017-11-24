@@ -1,7 +1,6 @@
 import Support from "../../support";
 
 const Sequelize = Support.Sequelize;
-const Promise = Sequelize.Promise;
 const dialect = Support.getTestDialect();
 const { DataTypes } = adone.orm;
 
@@ -10,25 +9,25 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
         this.sequelize.options.quoteIdentifiers = true;
         this.User = this.sequelize.define("User", {
             username: DataTypes.STRING,
-            email: { type: DataTypes.ARRAY(DataTypes.TEXT) },
+            email: { type: new DataTypes.ARRAY(DataTypes.TEXT) },
             settings: DataTypes.HSTORE,
             document: { type: DataTypes.HSTORE, defaultValue: { default: "'value'" } },
-            phones: DataTypes.ARRAY(DataTypes.HSTORE),
+            phones: new DataTypes.ARRAY(DataTypes.HSTORE),
             emergency_contact: DataTypes.JSON,
             emergencyContact: DataTypes.JSON,
             friends: {
-                type: DataTypes.ARRAY(DataTypes.JSON),
+                type: new DataTypes.ARRAY(DataTypes.JSON),
                 defaultValue: []
             },
             magic_numbers: {
-                type: DataTypes.ARRAY(DataTypes.INTEGER),
+                type: new DataTypes.ARRAY(DataTypes.INTEGER),
                 defaultValue: []
             },
-            course_period: DataTypes.RANGE(DataTypes.DATE),
-            acceptable_marks: { type: DataTypes.RANGE(DataTypes.DECIMAL), defaultValue: [0.65, 1] },
+            course_period: new DataTypes.RANGE(DataTypes.DATE),
+            acceptable_marks: { type: new DataTypes.RANGE(DataTypes.DECIMAL), defaultValue: [0.65, 1] },
             available_amount: DataTypes.RANGE,
-            holidays: DataTypes.ARRAY(DataTypes.RANGE(DataTypes.DATE)),
-            location: DataTypes.GEOMETRY()
+            holidays: new DataTypes.ARRAY(new DataTypes.RANGE(DataTypes.DATE)),
+            location: new DataTypes.GEOMETRY()
         });
         return this.User.sync({ force: true });
     });
@@ -49,27 +48,25 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
         });
     });
 
-    it("should be able to update a field with type ARRAY(JSON)", function () {
-        return this.User.create({
+    it("should be able to update a field with type ARRAY(JSON)", async function () {
+        const userInstance = await this.User.create({
             username: "bob",
             email: ["myemail@email.com"],
             friends: [{
                 name: "John Smith"
             }]
-        }).then((userInstance) => {
-            expect(userInstance.friends).to.have.length(1);
-            expect(userInstance.friends[0].name).to.equal("John Smith");
+        });
+        expect(userInstance.friends).to.have.length(1);
+        expect(userInstance.friends[0].name).to.equal("John Smith");
 
-            return userInstance.update({
-                friends: [{
-                    name: "John Smythe"
-                }]
-            });
-        }).get("friends")
-            .tap((friends) => {
-                expect(friends).to.have.length(1);
-                expect(friends[0].name).to.equal("John Smythe");
-            });
+        const { friends } = await userInstance.update({
+            friends: [{
+                name: "John Smythe"
+            }]
+        });
+
+        expect(friends).to.have.length(1);
+        expect(friends[0].name).to.equal("John Smythe");
     });
 
     it("should be able to find a record while searching in an array", function () {
@@ -87,7 +84,7 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
 
     describe("json", () => {
         it("should be able to retrieve a row with ->> operator", function () {
-            return this.sequelize.Promise.all([
+            return Promise.all([
                 this.User.create({ username: "swen", emergency_contact: { name: "kate" } }),
                 this.User.create({ username: "anna", emergency_contact: { name: "joe" } })])
                 .then(() => {
@@ -99,7 +96,7 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
         });
 
         it("should be able to query using the nested query language", function () {
-            return this.sequelize.Promise.all([
+            return Promise.all([
                 this.User.create({ username: "swen", emergency_contact: { name: "kate" } }),
                 this.User.create({ username: "anna", emergency_contact: { name: "joe" } })])
                 .then(() => {
@@ -113,7 +110,7 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
         });
 
         it("should be able to query using dot syntax", function () {
-            return this.sequelize.Promise.all([
+            return Promise.all([
                 this.User.create({ username: "swen", emergency_contact: { name: "kate" } }),
                 this.User.create({ username: "anna", emergency_contact: { name: "joe" } })])
                 .then(() => {
@@ -125,7 +122,7 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
         });
 
         it("should be able to query using dot syntax with uppercase name", function () {
-            return this.sequelize.Promise.all([
+            return Promise.all([
                 this.User.create({ username: "swen", emergencyContact: { name: "kate" } }),
                 this.User.create({ username: "anna", emergencyContact: { name: "joe" } })])
                 .then(() => {
@@ -190,11 +187,11 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
                 email: ["myemail@email.com"],
                 settings: { mailing: false, push: "facebook", frequency: 3 }
             }, {
-                    logging(sql) {
-                        const expected = '\'"mailing"=>"false","push"=>"facebook","frequency"=>"3"\',\'"default"=>"\'\'value\'\'"\'';
-                        expect(sql.indexOf(expected)).not.to.equal(-1);
-                    }
-                });
+                logging(sql) {
+                    const expected = '\'"mailing"=>"false","push"=>"facebook","frequency"=>"3"\',\'"default"=>"\'\'value\'\'"\'';
+                    expect(sql.indexOf(expected)).not.to.equal(-1);
+                }
+            });
         });
 
         it("should not rename hstore fields", function () {
@@ -262,7 +259,7 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
     describe("enums", () => {
         it("should be able to ignore enum types that already exist", function () {
             const User = this.sequelize.define("UserEnums", {
-                mood: DataTypes.ENUM("happy", "sad", "meh")
+                mood: new DataTypes.ENUM("happy", "sad", "meh")
             });
 
             return User.sync({ force: true }).then(() => {
@@ -272,7 +269,7 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
 
         it("should be able to create/drop enums multiple times", function () {
             const User = this.sequelize.define("UserEnums", {
-                mood: DataTypes.ENUM("happy", "sad", "meh")
+                mood: new DataTypes.ENUM("happy", "sad", "meh")
             });
 
             return User.sync({ force: true }).then(() => {
@@ -312,12 +309,12 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
 
         it("should be able to add values to enum types", function () {
             let User = this.sequelize.define("UserEnums", {
-                mood: DataTypes.ENUM("happy", "sad", "meh")
+                mood: new DataTypes.ENUM("happy", "sad", "meh")
             });
 
             return User.sync({ force: true }).then(() => {
                 User = this.sequelize.define("UserEnums", {
-                    mood: DataTypes.ENUM("neutral", "happy", "sad", "ecstatic", "meh", "joyful")
+                    mood: new DataTypes.ENUM("neutral", "happy", "sad", "ecstatic", "meh", "joyful")
                 });
 
                 return User.sync();
@@ -399,7 +396,7 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
     describe("timestamps", () => {
         beforeEach(function () {
             this.User = this.sequelize.define("User", {
-                dates: DataTypes.ARRAY(DataTypes.DATE)
+                dates: new DataTypes.ARRAY(DataTypes.DATE)
             });
             return this.User.sync({ force: true });
         });
@@ -408,10 +405,10 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
             return this.User.create({
                 dates: []
             }, {
-                    logging(sql) {
-                        expect(sql.indexOf("TIMESTAMP WITH TIME ZONE")).to.be.greaterThan(0);
-                    }
-                });
+                logging(sql) {
+                    expect(sql.indexOf("TIMESTAMP WITH TIME ZONE")).to.be.greaterThan(0);
+                }
+            });
         });
     });
 
@@ -485,14 +482,21 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
             });
         });
 
-        it("should update hstore correctly and return the affected rows", function () {
-            return this.User.create({ username: "user", email: ["foo@bar.com"], settings: { test: '"value"' } }).then((oldUser) => {
-                // Update the user and check that the returned object's fields have been parsed by the hstore library
-                return this.User.update({ settings: { should: "update", to: "this", first: "place" } }, { where: oldUser.where(), returning: true }).spread((count, users) => {
-                    expect(count).to.equal(1);
-                    expect(users[0].settings).to.deep.equal({ should: "update", to: "this", first: "place" });
-                });
+        it("should update hstore correctly and return the affected rows", async function () {
+            const oldUser = await this.User.create({ username: "user", email: ["foo@bar.com"], settings: { test: '"value"' } });
+            // Update the user and check that the returned object's fields have been parsed by the hstore library
+            const [count, users] = await this.User.update({
+                settings: {
+                    should: "update",
+                    to: "this",
+                    first: "place"
+                }
+            }, {
+                where: oldUser.where(),
+                returning: true
             });
+            expect(count).to.equal(1);
+            expect(users[0].settings).to.deep.equal({ should: "update", to: "this", first: "place" });
         });
 
         it("should read hstore correctly", function () {
@@ -667,26 +671,23 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
             });
         });
 
-        it("should update range correctly and return the affected rows", function () {
+        it("should update range correctly and return the affected rows", async function () {
             const User = this.User;
             const period = [new Date(2015, 1, 1), new Date(2015, 10, 30)];
 
-            return User.create({
+            const oldUser = await User.create({
                 username: "user",
                 email: ["foo@bar.com"],
                 course_period: [new Date(2015, 0, 1), new Date(2015, 11, 31)]
-            }).then((oldUser) => {
-                // Update the user and check that the returned object's fields have been parsed by the range parser
-                return User.update({ course_period: period }, { where: oldUser.where(), returning: true })
-                    .spread((count, users) => {
-                        expect(count).to.equal(1);
-                        expect(users[0].course_period[0] instanceof Date).to.be.ok;
-                        expect(users[0].course_period[1] instanceof Date).to.be.ok;
-                        expect(users[0].course_period[0]).to.equalTime(period[0]); // lower bound
-                        expect(users[0].course_period[1]).to.equalTime(period[1]); // upper bound
-                        expect(users[0].course_period.inclusive).to.deep.equal([true, false]); // inclusive, exclusive
-                    });
             });
+            // Update the user and check that the returned object's fields have been parsed by the range parser
+            const [count, users] = await User.update({ course_period: period }, { where: oldUser.where(), returning: true });
+            expect(count).to.equal(1);
+            expect(users[0].course_period[0] instanceof Date).to.be.ok;
+            expect(users[0].course_period[1] instanceof Date).to.be.ok;
+            expect(users[0].course_period[0]).to.equalTime(period[0]); // lower bound
+            expect(users[0].course_period[1]).to.equalTime(period[1]); // upper bound
+            expect(users[0].course_period.inclusive).to.deep.equal([true, false]); // inclusive, exclusive
         });
 
         it("should read range correctly", function () {
@@ -757,7 +758,7 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
         it("should read range correctly from included models as well", function () {
             const period = [new Date(2016, 0, 1), new Date(2016, 11, 31)];
             const HolidayDate = this.sequelize.define("holidayDate", {
-                period: DataTypes.RANGE(DataTypes.DATE)
+                period: new DataTypes.RANGE(DataTypes.DATE)
             });
 
             this.User.hasMany(HolidayDate);
@@ -794,15 +795,13 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
         });
     });
 
-    it("should update geometry correctly", function () {
+    it("should update geometry correctly", async function () {
         const User = this.User;
         const point1 = { type: "Point", coordinates: [39.807222, -76.984722] };
         const point2 = { type: "Point", coordinates: [39.828333, -77.232222] };
-        return User.create({ username: "user", email: ["foo@bar.com"], location: point1 }).then((oldUser) => {
-            return User.update({ location: point2 }, { where: { username: oldUser.username }, returning: true }).spread((count, updatedUsers) => {
-                expect(updatedUsers[0].location).to.deep.eql(point2);
-            });
-        });
+        const oldUser = await User.create({ username: "user", email: ["foo@bar.com"], location: point1 });
+        const [cound, updatedUsers] = await User.update({ location: point2 }, { where: { username: oldUser.username }, returning: true });
+        expect(updatedUsers[0].location).to.deep.eql(point2);
     });
 
     it("should read geometry correctly", function () {
@@ -825,8 +824,8 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
                 username: DataTypes.STRING,
                 fullName: DataTypes.STRING // Note mixed case
             }, {
-                    quoteIdentifiers: false
-                });
+                quoteIdentifiers: false
+            });
 
             return this.User.sync({ force: true }).then(() => {
                 return this.User
@@ -863,142 +862,126 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
             });
         });
 
-        it("can select nested include", function () {
-            this.sequelize.options.quoteIdentifiers = false;
-            this.sequelize.getQueryInterface().QueryGenerator.options.quoteIdentifiers = false;
+        it("can select nested include", {
+            before() {
+                this.sequelize.options.quoteIdentifiers = false;
+            },
+            after() {
+                this.sequelize.options.quoteIdentifiers = true;
+            }
+        }, async function () {
             this.Professor = this.sequelize.define("Professor", {
                 fullName: DataTypes.STRING
             }, {
-                    quoteIdentifiers: false
-                });
+                quoteIdentifiers: false
+            });
             this.Class = this.sequelize.define("Class", {
                 name: DataTypes.STRING
             }, {
-                    quoteIdentifiers: false
-                });
+                quoteIdentifiers: false
+            });
             this.Student = this.sequelize.define("Student", {
                 fullName: DataTypes.STRING
             }, {
-                    quoteIdentifiers: false
-                });
+                quoteIdentifiers: false
+            });
             this.ClassStudent = this.sequelize.define("ClassStudent", {
             }, {
-                    quoteIdentifiers: false,
-                    tableName: "class_student"
-                });
+                quoteIdentifiers: false,
+                tableName: "class_student"
+            });
             this.Professor.hasMany(this.Class);
             this.Class.belongsTo(this.Professor);
             this.Class.belongsToMany(this.Student, { through: this.ClassStudent });
             this.Student.belongsToMany(this.Class, { through: this.ClassStudent });
-            return this.Professor.sync({ force: true })
-                .then(() => {
-                    return this.Student.sync({ force: true });
-                })
-                .then(() => {
-                    return this.Class.sync({ force: true });
-                })
-                .then(() => {
-                    return this.ClassStudent.sync({ force: true });
-                })
-                .then(() => {
-                    return this.Professor.bulkCreate([
-                        {
-                            id: 1,
-                            fullName: "Albus Dumbledore"
-                        },
-                        {
-                            id: 2,
-                            fullName: "Severus Snape"
-                        }
-                    ]);
-                })
-                .then(() => {
-                    return this.Class.bulkCreate([
-                        {
-                            id: 1,
-                            name: "Transfiguration",
-                            ProfessorId: 1
-                        },
-                        {
-                            id: 2,
-                            name: "Potions",
-                            ProfessorId: 2
-                        },
-                        {
-                            id: 3,
-                            name: "Defence Against the Dark Arts",
-                            ProfessorId: 2
-                        }
-                    ]);
-                })
-                .then(() => {
-                    return this.Student.bulkCreate([
-                        {
-                            id: 1,
-                            fullName: "Harry Potter"
-                        },
-                        {
-                            id: 2,
-                            fullName: "Ron Weasley"
-                        },
-                        {
-                            id: 3,
-                            fullName: "Ginny Weasley"
-                        },
-                        {
-                            id: 4,
-                            fullName: "Hermione Granger"
-                        }
-                    ]);
-                })
-                .then(() => {
-                    return Promise.all([
-                        this.Student.findById(1)
-                            .then((Harry) => {
-                                return Harry.setClasses([1, 2, 3]);
-                            }),
-                        this.Student.findById(2)
-                            .then((Ron) => {
-                                return Ron.setClasses([1, 2]);
-                            }),
-                        this.Student.findById(3)
-                            .then((Ginny) => {
-                                return Ginny.setClasses([2, 3]);
-                            }),
-                        this.Student.findById(4)
-                            .then((Hermione) => {
-                                return Hermione.setClasses([1, 2, 3]);
-                            })
-                    ]);
-                })
-                .then(() => {
-                    return this.Professor.findAll({
+            await this.Professor.sync({ force: true });
+            await this.Student.sync({ force: true });
+            await this.Class.sync({ force: true });
+            await this.ClassStudent.sync({ force: true });
+            await this.Professor.bulkCreate([
+                {
+                    id: 1,
+                    fullName: "Albus Dumbledore"
+                },
+                {
+                    id: 2,
+                    fullName: "Severus Snape"
+                }
+            ]);
+            await this.Class.bulkCreate([
+                {
+                    id: 1,
+                    name: "Transfiguration",
+                    ProfessorId: 1
+                },
+                {
+                    id: 2,
+                    name: "Potions",
+                    ProfessorId: 2
+                },
+                {
+                    id: 3,
+                    name: "Defence Against the Dark Arts",
+                    ProfessorId: 2
+                }
+            ]);
+            await this.Student.bulkCreate([
+                {
+                    id: 1,
+                    fullName: "Harry Potter"
+                },
+                {
+                    id: 2,
+                    fullName: "Ron Weasley"
+                },
+                {
+                    id: 3,
+                    fullName: "Ginny Weasley"
+                },
+                {
+                    id: 4,
+                    fullName: "Hermione Granger"
+                }
+            ]);
+            await Promise.all([
+                this.Student.findById(1)
+                    .then((Harry) => {
+                        return Harry.setClasses([1, 2, 3]);
+                    }),
+                this.Student.findById(2)
+                    .then((Ron) => {
+                        return Ron.setClasses([1, 2]);
+                    }),
+                this.Student.findById(3)
+                    .then((Ginny) => {
+                        return Ginny.setClasses([2, 3]);
+                    }),
+                this.Student.findById(4)
+                    .then((Hermione) => {
+                        return Hermione.setClasses([1, 2, 3]);
+                    })
+            ]);
+            const professors = await this.Professor.findAll({
+                include: [
+                    {
+                        model: this.Class,
                         include: [
                             {
-                                model: this.Class,
-                                include: [
-                                    {
-                                        model: this.Student
-                                    }
-                                ]
+                                model: this.Student
                             }
-                        ],
-                        order: [
-                            ["id"],
-                            [this.Class, "id"],
-                            [this.Class, this.Student, "id"]
                         ]
-                    });
-                })
-                .then((professors) => {
-                    expect(professors.length).to.eql(2);
-                    expect(professors[0].fullName).to.eql("Albus Dumbledore");
-                    expect(professors[0].Classes.length).to.eql(1);
-                    expect(professors[0].Classes[0].Students.length).to.eql(3);
-                })
-                .finally(() => {
-                    this.sequelize.getQueryInterface().QueryGenerator.options.quoteIdentifiers = true;
-                });
+                    }
+                ],
+                order: [
+                    ["id"],
+                    [this.Class, "id"],
+                    [this.Class, this.Student, "id"]
+                ]
+            });
+            expect(professors.length).to.eql(2);
+            expect(professors[0].fullName).to.eql("Albus Dumbledore");
+            expect(professors[0].Classes.length).to.eql(1);
+            expect(professors[0].Classes[0].Students.length).to.eql(3);
         });
     });
 });

@@ -1,6 +1,7 @@
 import Support from "../../support";
 
 const dialect = Support.getTestDialect();
+const { promise } = adone;
 const { DataTypes } = adone.orm;
 
 describe("[MYSQL Specific] Connection Manager", { skip: dialect !== "mysql" }, () => {
@@ -15,7 +16,7 @@ describe("[MYSQL Specific] Connection Manager", { skip: dialect !== "mysql" }, (
             .then((count) => {
                 expect(count).to.equal(1);
                 s();
-                return this.sequelize.Promise.delay(1000);
+                return promise.delay(1000);
             })
             .then(() => User.count())
             .then((count) => {
@@ -35,7 +36,7 @@ describe("[MYSQL Specific] Connection Manager", { skip: dialect !== "mysql" }, (
         return User
             .sync({ force: true })
             .then(() => User.create({ username: "user1" }))
-            .then(() => sequelize.Promise.delay(100))
+            .then(() => promise.delay(100))
             .then(() => {
                 expect(sequelize.connectionManager.pool.size).to.equal(0);
                 //This query will be queued just after the `client.end` is executed and before its callback is called
@@ -103,19 +104,19 @@ describe("[MYSQL Specific] Connection Manager", { skip: dialect !== "mysql" }, (
             });
     });
 
-    it("-FOUND_ROWS can be suppressed to get back legacy behavior", () => {
+    it("-FOUND_ROWS can be suppressed to get back legacy behavior", async () => {
         const sequelize = Support.createSequelizeInstance({ dialectOptions: { flags: "" } });
         const User = sequelize.define("User", { username: DataTypes.STRING });
 
-        return User.sync({ force: true })
-            .then(() => User.create({ id: 1, username: "jozef" }))
-            .then(() => User.update({ username: "jozef" }, {
-                where: {
-                    id: 1
-                }
-            }))
-            // https://github.com/sequelize/sequelize/issues/7184
-            .spread((affectedCount) => expect(affectedCount).to.be.equal(1));
+        await User.sync({ force: true });
+        await User.create({ id: 1, username: "jozef" });
+        const [affectedCount] = await User.update({ username: "jozef" }, {
+            where: {
+                id: 1
+            }
+        });
+        // https://github.com/sequelize/sequelize/issues/7184
+        expect(affectedCount).to.be.equal(1);
     });
 
     it("should work with handleDisconnects", () => {

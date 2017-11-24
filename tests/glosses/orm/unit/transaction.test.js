@@ -6,16 +6,16 @@ const current = Support.sequelize;
 
 describe("Transaction", function () {
     beforeEach(() => {
-        this.stub = stub(current, "query").returns(Sequelize.Promise.resolve({}));
+        this.stub = stub(current, "query").returns(Promise.resolve({}));
 
         this.stubConnection = stub(current.connectionManager, "getConnection")
-            .returns(Sequelize.Promise.resolve({
+            .returns(Promise.resolve({
                 uuid: "ssfdjd-434fd-43dfg23-2d",
                 close() { }
             }));
 
         this.stubRelease = stub(current.connectionManager, "releaseConnection")
-            .returns(Sequelize.Promise.resolve());
+            .returns(Promise.resolve());
     });
 
     afterEach(() => {
@@ -38,7 +38,7 @@ describe("Transaction", function () {
         };
         return current.transaction(() => {
             expect(this.stub.args.map((arg) => arg[0])).to.deep.equal(expectations[dialect] || expectations.all);
-            return Sequelize.Promise.resolve();
+            return Promise.resolve();
         });
     });
 });

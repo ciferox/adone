@@ -62,8 +62,8 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
                 dateField: adone.datetime("2011 10 31", "YYYY MM DD")
             });
         }).then(() => {
-            return User.findAll().get(0);
-        }).then((user) => {
+            return User.findAll();
+        }).then(([user]) => {
             expect(parse).to.have.been.called;
             expect(stringify).to.have.been.called;
 
@@ -95,7 +95,7 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
                 field: value
             });
         }).then(() => {
-            return User.findAll().get(0);
+            return User.findAll();
         }).then(() => {
             expect(parse).to.have.been.called;
             expect(stringify).to.have.been.called;
@@ -280,7 +280,7 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
                 return;
             }
 
-            return new Sequelize.Promise((resolve, reject) => {
+            return new Promise((resolve, reject) => {
                 if (/^postgres/.test(dialect)) {
                     current.query("SELECT PostGIS_Lib_Version();")
                         .then((result) => {
@@ -354,10 +354,10 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
         it("should parse DECIMAL as string", function () {
             const Model = this.sequelize.define("model", {
                 decimal: Sequelize.DECIMAL,
-                decimalPre: Sequelize.DECIMAL(10, 4),
-                decimalWithParser: Sequelize.DECIMAL(32, 15),
-                decimalWithIntParser: Sequelize.DECIMAL(10, 4),
-                decimalWithFloatParser: Sequelize.DECIMAL(10, 8)
+                decimalPre: new Sequelize.DECIMAL(10, 4),
+                decimalWithParser: new Sequelize.DECIMAL(32, 15),
+                decimalWithIntParser: new Sequelize.DECIMAL(10, 4),
+                decimalWithFloatParser: new Sequelize.DECIMAL(10, 8)
             });
 
             const sampleData = {
@@ -413,29 +413,27 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
     }
 
     if (dialect === "postgres") {
-        it("should return Int4 range properly #5747", function () {
+        it("should return Int4 range properly #5747", async function () {
             const Model = this.sequelize.define("M", {
                 interval: {
-                    type: Sequelize.RANGE(Sequelize.INTEGER),
+                    type: new Sequelize.RANGE(Sequelize.INTEGER),
                     allowNull: false,
                     unique: true
                 }
             });
 
-            return Model.sync({ force: true })
-                .then(() => Model.create({ interval: [1, 4] }) )
-                .then(() => Model.findAll() )
-                .spread((m) => {
-                    expect(m.interval[0]).to.be.eql(1);
-                    expect(m.interval[1]).to.be.eql(4);
-                });
+            await Model.sync({ force: true });
+            await Model.create({ interval: [1, 4] });
+            const m = await Model.findAll();
+            expect(m.interval[0]).to.be.eql(1);
+            expect(m.interval[1]).to.be.eql(4);
         });
     }
 
     it("should allow spaces in ENUM", function () {
         const Model = this.sequelize.define("user", {
             name: Sequelize.STRING,
-            type: Sequelize.ENUM(["action", "mecha", "canon", "class s"])
+            type: new Sequelize.ENUM(["action", "mecha", "canon", "class s"])
         });
 
         return Model.sync({ force: true }).then(() => {

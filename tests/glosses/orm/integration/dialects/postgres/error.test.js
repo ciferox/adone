@@ -11,7 +11,7 @@ if (dialect.match(/^postgres/)) {
         const self = this;
         this.Booking = self.sequelize.define("Booking", {
             roomNo: DataTypes.INTEGER,
-            period: DataTypes.RANGE(DataTypes.DATE)
+            period: new DataTypes.RANGE(DataTypes.DATE)
         });
         return self.Booking
             .sync({ force: true })

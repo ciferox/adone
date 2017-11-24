@@ -73,7 +73,7 @@ const Mixin = {
 };
 
 // The logic for hasOne and belongsTo is exactly the same
-function singleLinked(Type) {
+const singleLinked = (Type) => {
     return function (target, options) { // testhint options:none
         if (!target || !target.prototype || !(target.prototype instanceof this.sequelize.Model)) {
             throw new Error(`${this.name}.${Utils.lowercaseFirst(Type.toString())} called with something that's not a subclass of Sequelize.Model`);
@@ -95,7 +95,7 @@ function singleLinked(Type) {
 
         return association;
     };
-}
+};
 
 Mixin.hasOne = singleLinked(HasOne);
 

@@ -3,7 +3,6 @@ import Support from "../support";
 
 const Sequelize = Support.Sequelize;
 const ConnectionManager = Sequelize.dialect.abstract.ConnectionManager;
-const Promise = Sequelize.Promise;
 
 describe("connection manager", () => {
     describe("_connect", () => {

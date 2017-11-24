@@ -3,7 +3,7 @@ const { is, vendor: { lodash: _ } } = adone;
 const dataTypes = require("./data_types");
 const util = require("util");
 
-function escape(val, timeZone, dialect, format) {
+const escape = (val, timeZone, dialect, format) => {
     let prependN = false;
     if (is.nil(val)) {
         return "NULL";
@@ -68,10 +68,10 @@ function escape(val, timeZone, dialect, format) {
         });
     }
     return `${(prependN ? "N'" : "'") + val}'`;
-}
+};
 exports.escape = escape;
 
-function format(sql, values, timeZone, dialect) {
+const format = (sql, values, timeZone, dialect) => {
     values = [].concat(values);
 
     if (!is.string(sql)) {
@@ -84,10 +84,10 @@ function format(sql, values, timeZone, dialect) {
 
         return escape(values.shift(), timeZone, dialect, true);
     });
-}
+};
 exports.format = format;
 
-function formatNamedParameters(sql, values, timeZone, dialect) {
+const formatNamedParameters = (sql, values, timeZone, dialect) => {
     return sql.replace(/\:+(?!\d)(\w+)/g, (value, key) => {
         if (dialect === "postgres" && value.slice(0, 2) === "::") {
             return value;
@@ -99,5 +99,5 @@ function formatNamedParameters(sql, values, timeZone, dialect) {
         throw new Error(`Named parameter "${value}" has no value in the given object.`);
 
     });
-}
+};
 exports.formatNamedParameters = formatNamedParameters;

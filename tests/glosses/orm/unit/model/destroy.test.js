@@ -1,7 +1,6 @@
 import Support from "../../support";
 
 const current = Support.sequelize;
-const Promise = current.Promise;
 const {
     DataTypes
 } = adone.orm;
@@ -29,15 +28,14 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             this.stubDelete.restore();
         });
 
-        it("can detect complexe objects", () => {
+        it("can detect complexe objects", async () => {
             const Where = function () {
                 this.secretValue = "1";
             };
 
-            expect(() => {
-                User.destroy({ where: new Where() });
-            }).to.throw();
-
+            await assert.throws(async () => {
+                await User.destroy({ where: new Where() });
+            });
         });
     });
 });

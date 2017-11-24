@@ -1,17 +1,13 @@
 const { vendor: { lodash: _ } } = adone;
 
-function checkNamingCollision(association) {
+const checkNamingCollision = (association) => {
     if (association.source.rawAttributes.hasOwnProperty(association.as)) {
-        throw new Error(
-            `Naming collision between attribute '${association.as
-            }' and association '${association.as}' on model ${association.source.name
-            }. To remedy this, change either foreignKey or as in your association definition`
-        );
+        throw new Error(`Naming collision between attribute '${association.as}' and association '${association.as}' on model ${association.source.name}. To remedy this, change either foreignKey or as in your association definition`);
     }
-}
+};
 exports.checkNamingCollision = checkNamingCollision;
 
-function addForeignKeyConstraints(newAttribute, source, target, options, key) {
+const addForeignKeyConstraints = (newAttribute, source, target, options, key) => {
     // FK constraints are opt-in: users must either set `foreignKeyConstraints`
     // on the association, or request an `onDelete` or `onUpdate` behaviour
 
@@ -40,7 +36,7 @@ function addForeignKeyConstraints(newAttribute, source, target, options, key) {
             newAttribute.onUpdate = options.onUpdate;
         }
     }
-}
+};
 exports.addForeignKeyConstraints = addForeignKeyConstraints;
 
 /**
@@ -52,11 +48,11 @@ exports.addForeignKeyConstraints = addForeignKeyConstraints;
  * @param {Array} Method names to inject
  * @param {Object} Mapping between model and association method names
  */
-function mixinMethods(association, obj, methods, aliases) {
+const mixinMethods = (association, obj, methods, aliases) => {
     aliases = aliases || {};
 
     for (const method of methods) {
-    // don't override custom methods
+        // don't override custom methods
         if (!obj[association.accessors[method]]) {
             const realMethod = aliases[method] || method;
 
@@ -68,5 +64,5 @@ function mixinMethods(association, obj, methods, aliases) {
             };
         }
     }
-}
+};
 exports.mixinMethods = mixinMethods;

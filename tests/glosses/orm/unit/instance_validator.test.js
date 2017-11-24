@@ -1,7 +1,6 @@
 import Support from "../support";
 
 const InstanceValidator = adone.orm.InstanceValidator;
-const Promise = Support.sequelize.Promise;
 const SequelizeValidationError = adone.orm.ValidationError;
 
 describe(Support.getTestDialectTeaser("InstanceValidator"), function () {

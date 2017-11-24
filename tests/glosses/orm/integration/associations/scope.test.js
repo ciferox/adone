@@ -1,7 +1,7 @@
 import Support from "../support";
 
 const Sequelize = adone.orm;
-const { DataTypes, Promise } = Sequelize;
+const { DataTypes } = Sequelize;
 
 describe(Support.getTestDialectTeaser("associations"), () => {
     describe("scope", () => {
@@ -85,7 +85,7 @@ describe(Support.getTestDialectTeaser("associations"), () => {
             it("should create, find and include associations with scope values", function () {
                 const self = this;
                 return this.sequelize.sync({ force: true }).then(() => {
-                    return Promise.join(
+                    return Promise.all([
                         self.Post.create(),
                         self.Comment.create({
                             title: "I am a comment"
@@ -94,13 +94,13 @@ describe(Support.getTestDialectTeaser("associations"), () => {
                             title: "I am a main comment",
                             isMain: true
                         })
-                    );
-                }).bind(this).spread(function (post) {
+                    ]);
+                }).then(([post]) => {
                     this.post = post;
                     return post.createComment({
                         title: "I am a post comment"
                     });
-                }).then(function (comment) {
+                }).then((comment) => {
                     expect(comment.get("commentable")).to.equal("post");
                     expect(comment.get("isMain")).to.be.false;
                     return this.Post.scope("withMainComment").findById(this.post.get("id"));
@@ -109,23 +109,23 @@ describe(Support.getTestDialectTeaser("associations"), () => {
                     return post.createMainComment({
                         title: "I am a main post comment"
                     });
-                }).then(function (mainComment) {
+                }).then((mainComment) => {
                     this.mainComment = mainComment;
                     expect(mainComment.get("commentable")).to.equal("post");
                     expect(mainComment.get("isMain")).to.be.true;
                     return this.Post.scope("withMainComment").findById(this.post.id);
-                }).then(function (post) {
+                }).then((post) => {
                     expect(post.mainComment.get("id")).to.equal(this.mainComment.get("id"));
                     return post.getMainComment();
-                }).then(function (mainComment) {
+                }).then((mainComment) => {
                     expect(mainComment.get("commentable")).to.equal("post");
                     expect(mainComment.get("isMain")).to.be.true;
                     return this.Comment.create({
                         title: "I am a future main comment"
                     });
-                }).then(function (comment) {
+                }).then((comment) => {
                     return this.post.setMainComment(comment);
-                }).then(function () {
+                }).then(() => {
                     return this.post.getMainComment();
                 }).then((mainComment) => {
                     expect(mainComment.get("commentable")).to.equal("post");
@@ -136,86 +136,86 @@ describe(Support.getTestDialectTeaser("associations"), () => {
         });
 
         describe("1:M", () => {
-            it("should create, find and include associations with scope values", function () {
-                const self = this;
-                return this.sequelize.sync({ force: true }).then(() => {
-                    return Promise.join(
-                        self.Post.create(),
-                        self.Image.create(),
-                        self.Question.create(),
-                        self.Comment.create({
-                            title: "I am a image comment"
-                        }),
-                        self.Comment.create({
-                            title: "I am a question comment"
-                        })
-                    );
-                }).bind(this).spread(function (post, image, question, commentA, commentB) {
-                    this.post = post;
-                    this.image = image;
-                    this.question = question;
-                    return Promise.join(
-                        post.createComment({
-                            title: "I am a post comment"
-                        }),
-                        image.addComment(commentA),
-                        question.setComments([commentB])
-                    );
-                }).then(() => {
-                    return self.Comment.findAll();
-                }).then((comments) => {
-                    comments.forEach((comment) => {
-                        expect(comment.get("commentable")).to.be.ok;
-                    });
-                    expect(comments.map((comment) => {
-                        return comment.get("commentable");
-                    }).sort()).to.deep.equal(["image", "post", "question"]);
-                }).then(function () {
-                    return Promise.join(
-                        this.post.getComments(),
-                        this.image.getComments(),
-                        this.question.getComments()
-                    );
-                }).spread((postComments, imageComments, questionComments) => {
-                    expect(postComments.length).to.equal(1);
-                    expect(postComments[0].get("title")).to.equal("I am a post comment");
-                    expect(imageComments.length).to.equal(1);
-                    expect(imageComments[0].get("title")).to.equal("I am a image comment");
-                    expect(questionComments.length).to.equal(1);
-                    expect(questionComments[0].get("title")).to.equal("I am a question comment");
+            it("should create, find and include associations with scope values", async function () {
+                await this.sequelize.sync({ force: true });
 
-                    return [postComments[0], imageComments[0], questionComments[0]];
-                }).spread((postComment, imageComment, questionComment) => {
-                    return Promise.join(
+                const [post, image, question, commentA, commentB] = await Promise.all([
+                    this.Post.create(),
+                    this.Image.create(),
+                    this.Question.create(),
+                    this.Comment.create({
+                        title: "I am a image comment"
+                    }),
+                    this.Comment.create({
+                        title: "I am a question comment"
+                    })
+                ]);
+
+                await Promise.all([
+                    post.createComment({
+                        title: "I am a post comment"
+                    }),
+                    image.addComment(commentA),
+                    question.setComments([commentB])
+                ]);
+
+                const comments = await this.Comment.findAll();
+
+                comments.forEach((comment) => {
+                    expect(comment.get("commentable")).to.be.ok;
+                });
+                expect(comments.map((comment) => {
+                    return comment.get("commentable");
+                }).sort()).to.deep.equal(["image", "post", "question"]);
+
+                const [postComments, imageComments, questionComments] = await Promise.all([
+                    post.getComments(),
+                    image.getComments(),
+                    question.getComments()
+                ]);
+
+                expect(postComments.length).to.equal(1);
+                expect(postComments[0].get("title")).to.equal("I am a post comment");
+                expect(imageComments.length).to.equal(1);
+                expect(imageComments[0].get("title")).to.equal("I am a image comment");
+                expect(questionComments.length).to.equal(1);
+                expect(questionComments[0].get("title")).to.equal("I am a question comment");
+
+                const [postComment] = postComments;
+                const [imageComment] = imageComments;
+                const [questionComment] = questionComments;
+
+                {
+                    const [post, image, question] = await Promise.all([
                         postComment.getItem(),
                         imageComment.getItem(),
                         questionComment.getItem()
-                    );
-                }).spread((post, image, question) => {
-                    expect(post).to.be.instanceof(self.Post);
-                    expect(image).to.be.instanceof(self.Image);
-                    expect(question).to.be.instanceof(self.Question);
-                }).then(() => {
-                    return Promise.join(
-                        self.Post.find({
-                            include: [self.Comment]
+                    ]);
+                    expect(post).to.be.instanceof(this.Post);
+                    expect(image).to.be.instanceof(this.Image);
+                    expect(question).to.be.instanceof(this.Question);
+                }
+                {
+                    const [post, image, question] = await Promise.all([
+                        this.Post.find({
+                            include: [this.Comment]
                         }),
-                        self.Image.findOne({
-                            include: [self.Comment]
+                        this.Image.findOne({
+                            include: [this.Comment]
                         }),
-                        self.Question.findOne({
-                            include: [self.Comment]
+                        this.Question.findOne({
+                            include: [this.Comment]
                         })
-                    );
-                }).spread((post, image, question) => {
+                    ]);
                     expect(post.comments.length).to.equal(1);
                     expect(post.comments[0].get("title")).to.equal("I am a post comment");
                     expect(image.comments.length).to.equal(1);
                     expect(image.comments[0].get("title")).to.equal("I am a image comment");
                     expect(question.comments.length).to.equal(1);
                     expect(question.comments[0].get("title")).to.equal("I am a question comment");
-                });
+                }
             });
+
             it("should make the same query if called multiple time (#4470)", function () {
                 const self = this;
                 const logs = [];
@@ -258,104 +258,93 @@ describe(Support.getTestDialectTeaser("associations"), () => {
                         this.Post.belongsToMany(this.Tag, { as: "tags", through: this.PostTag, scope: { type: "tag" } });
                     });
 
-                    it("should create, find and include associations with scope values", function () {
+                    it("should create, find and include associations with scope values", async function () {
                         const self = this;
-                        return Promise.join(
+                        await Promise.all([
                             self.Post.sync({ force: true }),
                             self.Tag.sync({ force: true })
-                        ).bind(this).then(() => {
-                            return self.PostTag.sync({ force: true });
-                        }).then(() => {
-                            return Promise.join(
-                                self.Post.create(),
-                                self.Post.create(),
-                                self.Post.create(),
-                                self.Tag.create({ type: "category" }),
-                                self.Tag.create({ type: "category" }),
-                                self.Tag.create({ type: "tag" }),
-                                self.Tag.create({ type: "tag" })
-                            );
-                        }).spread(function (postA, postB, postC, categoryA, categoryB, tagA, tagB) {
-                            this.postA = postA;
-                            this.postB = postB;
-                            this.postC = postC;
+                        ]);
+                        await self.PostTag.sync({ force: true });
+                        const [postA, postB, postC, categoryA, categoryB, tagA, tagB] = await Promise.all([
+                            self.Post.create(),
+                            self.Post.create(),
+                            self.Post.create(),
+                            self.Tag.create({ type: "category" }),
+                            self.Tag.create({ type: "category" }),
+                            self.Tag.create({ type: "tag" }),
+                            self.Tag.create({ type: "tag" })
+                        ]);
+                        await Promise.all([
+                            postA.addCategory(categoryA),
+                            postB.setCategories([categoryB]),
+                            postC.createCategory(),
+                            postA.createTag(),
+                            postB.addTag(tagA),
+                            postC.setTags([tagB])
+                        ]);
+                        const [postACategories, postATags, postBCategories, postBTags, postCCategories, postCTags] = await Promise.all([
+                            postA.getCategories(),
+                            postA.getTags(),
+                            postB.getCategories(),
+                            postB.getTags(),
+                            postC.getCategories(),
+                            postC.getTags()
+                        ]);
+                        expect(postACategories.length).to.equal(1);
+                        expect(postATags.length).to.equal(1);
+                        expect(postBCategories.length).to.equal(1);
+                        expect(postBTags.length).to.equal(1);
+                        expect(postCCategories.length).to.equal(1);
+                        expect(postCTags.length).to.equal(1);
 
-                            return Promise.join(
-                                postA.addCategory(categoryA),
-                                postB.setCategories([categoryB]),
-                                postC.createCategory(),
-                                postA.createTag(),
-                                postB.addTag(tagA),
-                                postC.setTags([tagB])
-                            );
-                        }).then(function () {
-                            return Promise.join(
-                                this.postA.getCategories(),
-                                this.postA.getTags(),
-                                this.postB.getCategories(),
-                                this.postB.getTags(),
-                                this.postC.getCategories(),
-                                this.postC.getTags()
-                            );
-                        }).spread((postACategories, postATags, postBCategories, postBTags, postCCategories, postCTags) => {
-                            expect(postACategories.length).to.equal(1);
-                            expect(postATags.length).to.equal(1);
-                            expect(postBCategories.length).to.equal(1);
-                            expect(postBTags.length).to.equal(1);
-                            expect(postCCategories.length).to.equal(1);
-                            expect(postCTags.length).to.equal(1);
+                        expect(postACategories[0].get("type")).to.equal("category");
+                        expect(postATags[0].get("type")).to.equal("tag");
+                        expect(postBCategories[0].get("type")).to.equal("category");
+                        expect(postBTags[0].get("type")).to.equal("tag");
+                        expect(postCCategories[0].get("type")).to.equal("category");
+                        expect(postCTags[0].get("type")).to.equal("tag");
+                        const [_postA, _postB, _postC] = await Promise.all([
+                            self.Post.findOne({
+                                where: {
+                                    id: postA.get("id")
+                                },
+                                include: [
+                                    { model: self.Tag, as: "tags" },
+                                    { model: self.Tag, as: "categories" }
+                                ]
+                            }),
+                            self.Post.findOne({
+                                where: {
+                                    id: postB.get("id")
+                                },
+                                include: [
+                                    { model: self.Tag, as: "tags" },
+                                    { model: self.Tag, as: "categories" }
+                                ]
+                            }),
+                            self.Post.findOne({
+                                where: {
+                                    id: postC.get("id")
+                                },
+                                include: [
+                                    { model: self.Tag, as: "tags" },
+                                    { model: self.Tag, as: "categories" }
+                                ]
+                            })
+                        ]);
+                        expect(_postA.get("categories").length).to.equal(1);
+                        expect(_postA.get("tags").length).to.equal(1);
+                        expect(_postB.get("categories").length).to.equal(1);
+                        expect(_postB.get("tags").length).to.equal(1);
+                        expect(_postC.get("categories").length).to.equal(1);
+                        expect(_postC.get("tags").length).to.equal(1);
 
-                            expect(postACategories[0].get("type")).to.equal("category");
-                            expect(postATags[0].get("type")).to.equal("tag");
-                            expect(postBCategories[0].get("type")).to.equal("category");
-                            expect(postBTags[0].get("type")).to.equal("tag");
-                            expect(postCCategories[0].get("type")).to.equal("category");
-                            expect(postCTags[0].get("type")).to.equal("tag");
-                        }).then(() => {
-                            return Promise.join(
-                                self.Post.findOne({
-                                    where: {
-                                        id: self.postA.get("id")
-                                    },
-                                    include: [
-                                        { model: self.Tag, as: "tags" },
-                                        { model: self.Tag, as: "categories" }
-                                    ]
-                                }),
-                                self.Post.findOne({
-                                    where: {
-                                        id: self.postB.get("id")
-                                    },
-                                    include: [
-                                        { model: self.Tag, as: "tags" },
-                                        { model: self.Tag, as: "categories" }
-                                    ]
-                                }),
-                                self.Post.findOne({
-                                    where: {
-                                        id: self.postC.get("id")
-                                    },
-                                    include: [
-                                        { model: self.Tag, as: "tags" },
-                                        { model: self.Tag, as: "categories" }
-                                    ]
-                                })
-                            );
-                        }).spread((postA, postB, postC) => {
-                            expect(postA.get("categories").length).to.equal(1);
-                            expect(postA.get("tags").length).to.equal(1);
-                            expect(postB.get("categories").length).to.equal(1);
-                            expect(postB.get("tags").length).to.equal(1);
-                            expect(postC.get("categories").length).to.equal(1);
-                            expect(postC.get("tags").length).to.equal(1);
-
-                            expect(postA.get("categories")[0].get("type")).to.equal("category");
-                            expect(postA.get("tags")[0].get("type")).to.equal("tag");
-                            expect(postB.get("categories")[0].get("type")).to.equal("category");
-                            expect(postB.get("tags")[0].get("type")).to.equal("tag");
-                            expect(postC.get("categories")[0].get("type")).to.equal("category");
-                            expect(postC.get("tags")[0].get("type")).to.equal("tag");
-                        });
+                        expect(_postA.get("categories")[0].get("type")).to.equal("category");
+                        expect(_postA.get("tags")[0].get("type")).to.equal("tag");
+                        expect(_postB.get("categories")[0].get("type")).to.equal("category");
+                        expect(_postB.get("tags")[0].get("type")).to.equal("tag");
+                        expect(_postC.get("categories")[0].get("type")).to.equal("category");
+                        expect(_postC.get("tags")[0].get("type")).to.equal("tag");
                     });
                 });
 
@@ -447,102 +436,95 @@ describe(Support.getTestDialectTeaser("associations"), () => {
                         });
                     });
 
-                    it("should create, find and include associations with scope values", function () {
+                    it("should create, find and include associations with scope values", async function () {
                         const self = this;
-                        return Promise.join(
+                        await Promise.all([
                             this.Post.sync({ force: true }),
                             this.Image.sync({ force: true }),
                             this.Question.sync({ force: true }),
                             this.Tag.sync({ force: true })
-                        ).bind(this).then(function () {
-                            return this.ItemTag.sync({ force: true });
-                        }).then(function () {
-                            return Promise.join(
-                                this.Post.create(),
-                                this.Image.create(),
-                                this.Question.create(),
-                                this.Tag.create({ name: "tagA" }),
-                                this.Tag.create({ name: "tagB" }),
-                                this.Tag.create({ name: "tagC" })
-                            );
-                        }).spread(function (post, image, question, tagA, tagB, tagC) {
-                            this.post = post;
-                            this.image = image;
-                            this.question = question;
-                            return Promise.join(
-                                post.setTags([tagA]).then(() => {
-                                    return Promise.join(
-                                        post.createTag({ name: "postTag" }),
-                                        post.addTag(tagB)
-                                    );
-                                }),
-                                image.setTags([tagB]).then(() => {
-                                    return Promise.join(
-                                        image.createTag({ name: "imageTag" }),
-                                        image.addTag(tagC)
-                                    );
-                                }),
-                                question.setTags([tagC]).then(() => {
-                                    return Promise.join(
-                                        question.createTag({ name: "questionTag" }),
-                                        question.addTag(tagA)
-                                    );
-                                })
-                            );
-                        }).then(function () {
-                            return Promise.join(
-                                this.post.getTags(),
-                                this.image.getTags(),
-                                this.question.getTags()
-                            ).spread((postTags, imageTags, questionTags) => {
-                                expect(postTags.length).to.equal(3);
-                                expect(imageTags.length).to.equal(3);
-                                expect(questionTags.length).to.equal(3);
+                        ]);
+                        await this.ItemTag.sync({ force: true });
+                        const [post, image, question, tagA, tagB, tagC] = await Promise.all([
+                            this.Post.create(),
+                            this.Image.create(),
+                            this.Question.create(),
+                            this.Tag.create({ name: "tagA" }),
+                            this.Tag.create({ name: "tagB" }),
+                            this.Tag.create({ name: "tagC" })
+                        ]);
+                        await Promise.all([
+                            post.setTags([tagA]).then(() => {
+                                return Promise.all([
+                                    post.createTag({ name: "postTag" }),
+                                    post.addTag(tagB)
+                                ]);
+                            }),
+                            image.setTags([tagB]).then(() => {
+                                return Promise.all([
+                                    image.createTag({ name: "imageTag" }),
+                                    image.addTag(tagC)
+                                ]);
+                            }),
+                            question.setTags([tagC]).then(() => {
+                                return Promise.all([
+                                    question.createTag({ name: "questionTag" }),
+                                    question.addTag(tagA)
+                                ]);
+                            })
+                        ]);
 
-                                expect(postTags.map((tag) => {
-                                    return tag.name;
-                                }).sort()).to.deep.equal(["postTag", "tagA", "tagB"]);
+                        const [postTags, imageTags, questionTags] = await Promise.all([
+                            post.getTags(),
+                            image.getTags(),
+                            question.getTags()
+                        ]);
 
-                                expect(imageTags.map((tag) => {
-                                    return tag.name;
-                                }).sort()).to.deep.equal(["imageTag", "tagB", "tagC"]);
+                        expect(postTags.length).to.equal(3);
+                        expect(imageTags.length).to.equal(3);
+                        expect(questionTags.length).to.equal(3);
 
-                                expect(questionTags.map((tag) => {
-                                    return tag.name;
-                                }).sort()).to.deep.equal(["questionTag", "tagA", "tagC"]);
-                            }).then(() => {
-                                return Promise.join(
-                                    self.Post.findOne({
-                                        where: {},
-                                        include: [self.Tag]
-                                    }),
-                                    self.Image.findOne({
-                                        where: {},
-                                        include: [self.Tag]
-                                    }),
-                                    self.Question.findOne({
-                                        where: {},
-                                        include: [self.Tag]
-                                    })
-                                ).spread((post, image, question) => {
-                                    expect(post.tags.length).to.equal(3);
-                                    expect(image.tags.length).to.equal(3);
-                                    expect(question.tags.length).to.equal(3);
+                        expect(postTags.map((tag) => {
+                            return tag.name;
+                        }).sort()).to.deep.equal(["postTag", "tagA", "tagB"]);
 
-                                    expect(post.tags.map((tag) => {
-                                        return tag.name;
-                                    }).sort()).to.deep.equal(["postTag", "tagA", "tagB"]);
+                        expect(imageTags.map((tag) => {
+                            return tag.name;
+                        }).sort()).to.deep.equal(["imageTag", "tagB", "tagC"]);
 
-                                    expect(image.tags.map((tag) => {
-                                        return tag.name;
-                                    }).sort()).to.deep.equal(["imageTag", "tagB", "tagC"]);
+                        expect(questionTags.map((tag) => {
+                            return tag.name;
+                        }).sort()).to.deep.equal(["questionTag", "tagA", "tagC"]);
 
-                                    expect(question.tags.map((tag) => {
-                                        return tag.name;
-                                    }).sort()).to.deep.equal(["questionTag", "tagA", "tagC"]);
-                                });
-                            });
-                        });
+                        const [_post, _image, _question] = await Promise.all([
+                            self.Post.findOne({
+                                where: {},
+                                include: [self.Tag]
+                            }),
+                            self.Image.findOne({
+                                where: {},
+                                include: [self.Tag]
+                            }),
+                            self.Question.findOne({
+                                where: {},
+                                include: [self.Tag]
+                            })
+                        ]);
+                        expect(_post.tags.length).to.equal(3);
+                        expect(_image.tags.length).to.equal(3);
+                        expect(_question.tags.length).to.equal(3);
+
+                        expect(_post.tags.map((tag) => {
+                            return tag.name;
+                        }).sort()).to.deep.equal(["postTag", "tagA", "tagB"]);
+
+                        expect(_image.tags.map((tag) => {
+                            return tag.name;
+                        }).sort()).to.deep.equal(["imageTag", "tagB", "tagC"]);
+
+                        expect(_question.tags.map((tag) => {
+                            return tag.name;
+                        }).sort()).to.deep.equal(["questionTag", "tagA", "tagC"]);
                     });
                 });
             });

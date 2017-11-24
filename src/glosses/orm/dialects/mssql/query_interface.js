@@ -18,47 +18,40 @@
   @param  {Boolean|Function} [options.logging] A function that logs the sql queries, or false for explicitly not logging these queries
  @private
  */
-const removeColumn = function (tableName, attributeName, options) {
+const removeColumn = async function (tableName, attributeName, options) {
     options = Object.assign({ raw: true }, options || {});
 
     const findConstraintSql = this.QueryGenerator.getDefaultConstraintQuery(tableName, attributeName);
-    return this.sequelize.query(findConstraintSql, options)
-        .spread((results) => {
-            if (!results.length) {
-                // No default constraint found -- we can cleanly remove the column
-                return;
-            }
-            const dropConstraintSql = this.QueryGenerator.dropConstraintQuery(tableName, results[0].name);
-            return this.sequelize.query(dropConstraintSql, options);
-        })
-        .then(() => {
-            const findForeignKeySql = this.QueryGenerator.getForeignKeyQuery(tableName, attributeName);
-            return this.sequelize.query(findForeignKeySql, options);
-        })
-        .spread((results) => {
-            if (!results.length) {
-                // No foreign key constraints found, so we can remove the column
-                return;
-            }
-            const dropForeignKeySql = this.QueryGenerator.dropForeignKeyQuery(tableName, results[0].constraint_name);
-            return this.sequelize.query(dropForeignKeySql, options);
-        })
-        .then(() => {
-            //Check if the current column is a primaryKey
-            const primaryKeyConstraintSql = this.QueryGenerator.getPrimaryKeyConstraintQuery(tableName, attributeName);
-            return this.sequelize.query(primaryKeyConstraintSql, options);
-        })
-        .spread((result) => {
-            if (!result.length) {
-                return;
-            }
-            const dropConstraintSql = this.QueryGenerator.dropConstraintQuery(tableName, result[0].constraintName);
-            return this.sequelize.query(dropConstraintSql, options);
-        })
-        .then(() => {
-            const removeSql = this.QueryGenerator.removeColumnQuery(tableName, attributeName);
-            return this.sequelize.query(removeSql, options);
-        });
+    let [results] = await this.sequelize.query(findConstraintSql, options);
+    if (!results.length) {
+        // No default constraint found -- we can cleanly remove the column
+        return;
+    }
+
+    let dropConstraintSql = this.QueryGenerator.dropConstraintQuery(tableName, results[0].name);
+    await this.sequelize.query(dropConstraintSql, options);
+
+    const findForeignKeySql = this.QueryGenerator.getForeignKeyQuery(tableName, attributeName);
+    [results] = await this.sequelize.query(findForeignKeySql, options);
+    if (!results.length) {
+        // No foreign key constraints found, so we can remove the column
+        return;
+    }
+
+    const dropForeignKeySql = this.QueryGenerator.dropForeignKeyQuery(tableName, results[0].constraint_name);
+    await this.sequelize.query(dropForeignKeySql, options);
+    //Check if the current column is a primaryKey
+    const primaryKeyConstraintSql = this.QueryGenerator.getPrimaryKeyConstraintQuery(tableName, attributeName);
+    [results] = await this.sequelize.query(primaryKeyConstraintSql, options);
+    if (!results.length) {
+        return;
+    }
+
+    dropConstraintSql = this.QueryGenerator.dropConstraintQuery(tableName, results[0].constraintName);
+    await this.sequelize.query(dropConstraintSql, options);
+
+    const removeSql = this.QueryGenerator.removeColumnQuery(tableName, attributeName);
+    return this.sequelize.query(removeSql, options);
 };
 
 module.exports = {

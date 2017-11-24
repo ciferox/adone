@@ -1,8 +1,6 @@
 import Support from "../../support";
 
 const Sequelize = adone.orm;
-
-const Promise = Sequelize.Promise;
 const DataTypes = Sequelize.DataTypes;
 const dialect = Support.getTestDialect();
 

@@ -598,7 +598,7 @@ describe(Support.getTestDialectTeaser("InstanceValidator"), () => {
     it("raises an error for array on a STRING(20)", async function () {
         const User = this.sequelize.define("User", {
             email: {
-                type: Sequelize.STRING(20)
+                type: new Sequelize.STRING(20)
             }
         });
 
@@ -640,7 +640,7 @@ describe(Support.getTestDialectTeaser("InstanceValidator"), () => {
     it("raises an error for {} on a STRING(20)", async function () {
         const User = this.sequelize.define("User", {
             email: {
-                type: Sequelize.STRING(20)
+                type: new Sequelize.STRING(20)
             }
         });
 

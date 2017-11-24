@@ -59,14 +59,14 @@ class ConnectionManager extends AbstractConnectionManager {
     }
 
     /**
-   * Connect with MySQL database based on config, Handle any errors in connection
-   * Set the pool handlers on connection.error
-   * Also set proper timezone once conection is connected
-   *
-   * @return Promise<Connection>
-   * @private
-   */
-    connect(config) {
+     * Connect with MySQL database based on config, Handle any errors in connection
+     * Set the pool handlers on connection.error
+     * Also set proper timezone once conection is connected
+     *
+     * @return Promise<Connection>
+     * @private
+     */
+    async connect(config) {
         const connectionConfig = {
             host: config.host,
             port: config.port,
@@ -87,82 +87,83 @@ class ConnectionManager extends AbstractConnectionManager {
             }
         }
 
-        return new Utils.Promise((resolve, reject) => {
-            const connection = this.lib.createConnection(connectionConfig);
+        try {
+            const connection = await new Promise((resolve, reject) => {
+                const connection = this.lib.createConnection(connectionConfig);
 
-            const errorHandler = (e) => {
-                // clean up connect event if there is error
-                connection.removeListener("connect", connectHandler);
+                const errorHandler = (e) => {
+                    // clean up connect event if there is error
+                    connection.removeListener("connect", connectHandler); // eslint-disable-line
 
-                if (config.pool.handleDisconnects) {
-                    debug(`connection error ${e.code}`);
+                    if (config.pool.handleDisconnects) {
+                        debug(`connection error ${e.code}`);
 
-                    if (e.code === "PROTOCOL_CONNECTION_LOST") {
-                        this.pool.destroy(connection)
-                            .catch(/Resource not currently part of this pool/, () => {});
-                        return;
-                    }
-                }
-
-                connection.removeListener("error", errorHandler);
-                reject(e);
-            };
-
-            const connectHandler = () => {
-                if (!config.pool.handleDisconnects) {
-                    // clean up error event if connected
-                    connection.removeListener("error", errorHandler);
-                }
-                resolve(connection);
-            };
-
-            connection.on("error", errorHandler);
-            connection.once("connect", connectHandler);
-        })
-            .tap(() => {
-                debug("connection acquired");
-            })
-            .then((connection) => {
-                return new Utils.Promise((resolve, reject) => {
-                    // set timezone for this connection
-                    // but named timezone are not directly supported in mysql, so get its offset first
-                    let tzOffset = this.sequelize.options.timezone;
-                    tzOffset = /\//.test(tzOffset) ? adone.datetime.tz(tzOffset).format("Z") : tzOffset;
-                    connection.query(`SET time_zone = '${tzOffset}'`, (err) => {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            resolve(connection);
+                        if (e.code === "PROTOCOL_CONNECTION_LOST") {
+                            this.pool.destroy(connection).catch((err) => {
+                                if (/Resource not currently part of this pool/.test(err.message)) {
+                                    return;
+                                }
+                                throw err;
+                            });
+                            return;
                         }
-                    });
-                });
-            })
-            .catch((err) => {
-                switch (err.code) {
-                    case "ECONNREFUSED":
-                        throw new SequelizeErrors.ConnectionRefusedError(err);
-                    case "ER_ACCESS_DENIED_ERROR":
-                        throw new SequelizeErrors.AccessDeniedError(err);
-                    case "ENOTFOUND":
-                        throw new SequelizeErrors.HostNotFoundError(err);
-                    case "EHOSTUNREACH":
-                        throw new SequelizeErrors.HostNotReachableError(err);
-                    case "EINVAL":
-                        throw new SequelizeErrors.InvalidConnectionError(err);
-                    default:
-                        throw new SequelizeErrors.ConnectionError(err);
-                }
+                    }
+
+                    connection.removeListener("error", errorHandler);
+                    reject(e);
+                };
+
+                const connectHandler = () => {
+                    if (!config.pool.handleDisconnects) {
+                        // clean up error event if connected
+                        connection.removeListener("error", errorHandler);
+                    }
+                    resolve(connection);
+                };
+
+                connection.on("error", errorHandler);
+                connection.once("connect", connectHandler);
             });
+            await new Promise((resolve, reject) => {
+                // set timezone for this connection
+                // but named timezone are not directly supported in mysql, so get its offset first
+                let tzOffset = this.sequelize.options.timezone;
+                tzOffset = /\//.test(tzOffset) ? adone.datetime.tz(tzOffset).format("Z") : tzOffset;
+                connection.query(`SET time_zone = '${tzOffset}'`, (err) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve();
+                    }
+                });
+            });
+            return connection;
+        } catch (err) {
+            switch (err.code) {
+                case "ECONNREFUSED":
+                    throw new SequelizeErrors.ConnectionRefusedError(err);
+                case "ER_ACCESS_DENIED_ERROR":
+                    throw new SequelizeErrors.AccessDeniedError(err);
+                case "ENOTFOUND":
+                    throw new SequelizeErrors.HostNotFoundError(err);
+                case "EHOSTUNREACH":
+                    throw new SequelizeErrors.HostNotReachableError(err);
+                case "EINVAL":
+                    throw new SequelizeErrors.InvalidConnectionError(err);
+                default:
+                    throw new SequelizeErrors.ConnectionError(err);
+            }
+        }
     }
 
-    disconnect(connection) {
-    // Dont disconnect connections with CLOSED state
+    async disconnect(connection) {
+        // Dont disconnect connections with CLOSED state
         if (connection._closing) {
             debug("connection tried to disconnect but was already at CLOSED state");
-            return Utils.Promise.resolve();
+            return;
         }
 
-        return new Utils.Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             connection.end((err) => {
                 if (err) {
                     reject(new SequelizeErrors.ConnectionError(err));
@@ -175,12 +176,13 @@ class ConnectionManager extends AbstractConnectionManager {
     }
 
     validate(connection) {
-        return connection && is.null(connection._fatalError) && is.null(connection._protocolError) && !connection._closing &&
-      !connection.stream.destroyed;
+        return connection
+            && is.null(connection._fatalError)
+            && is.null(connection._protocolError)
+            && !connection._closing
+            && !connection.stream.destroyed;
     }
 }
-
-_.extend(ConnectionManager.prototype, AbstractConnectionManager.prototype);
 
 module.exports = ConnectionManager;
 module.exports.ConnectionManager = ConnectionManager;

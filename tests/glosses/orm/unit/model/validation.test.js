@@ -4,7 +4,6 @@ import config from "../../config/config";
 const { is } = adone;
 const Sequelize = Support.Sequelize;
 const current = Support.sequelize;
-const Promise = current.Promise;
 
 
 describe(Support.getTestDialectTeaser("InstanceValidator"), () => {

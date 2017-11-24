@@ -3,7 +3,6 @@ import Config from "../../../config/config";
 
 const { vendor: { lodash: _ } } = adone;
 const { ConnectionManager } = adone.orm.dialect.abstract;
-const { Promise } = adone.orm;
 
 const baseConf = Config[Support.getTestDialect()];
 const poolEntry = {

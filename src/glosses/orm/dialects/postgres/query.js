@@ -51,7 +51,7 @@ class Query extends AbstractQuery {
         return [sql, bindParam];
     }
 
-    run(sql, parameters) {
+    async run(sql, parameters) {
         this.sql = sql;
 
         if (!_.isEmpty(this.options.searchPath)) {
@@ -74,7 +74,11 @@ class Query extends AbstractQuery {
 
         debug(`executing(${this.client.uuid || "default"}) : ${this.sql}`);
 
-        return query.catch((err) => {
+        let queryResult;
+
+        try {
+            queryResult = await query;
+        } catch (err) {
             // set the client so that it will be reaped if the connection resets while executing
             if (err.code === "ECONNRESET") {
                 this.client._invalid = true;
@@ -82,187 +86,182 @@ class Query extends AbstractQuery {
 
             err.sql = sql;
             throw this.formatError(err);
-        })
-            .then((queryResult) => {
-                debug(`executed(${this.client.uuid || "default"}) : ${this.sql}`);
+        }
 
-                if (benchmark) {
-                    this.sequelize.log(`Executed (${this.client.uuid || "default"}): ${this.sql}`, Date.now() - queryBegin, this.options);
+        debug(`executed(${this.client.uuid || "default"}) : ${this.sql}`);
+
+        if (benchmark) {
+            this.sequelize.log(`Executed (${this.client.uuid || "default"}): ${this.sql}`, Date.now() - queryBegin, this.options);
+        }
+
+        const rows = queryResult.rows;
+        const rowCount = queryResult.rowCount;
+        const isTableNameQuery = sql.indexOf("SELECT table_name FROM information_schema.tables") === 0;
+        const isRelNameQuery = sql.indexOf("SELECT relname FROM pg_class WHERE oid IN") === 0;
+
+        if (isRelNameQuery) {
+            return rows.map((row) => ({
+                name: row.relname,
+                tableName: row.relname.split("_")[0]
+            }));
+        } else if (isTableNameQuery) {
+            return rows.map((row) => _.values(row));
+        }
+
+        if (rows[0] && !is.undefined(rows[0].sequelize_caught_exception)) {
+            if (!is.null(rows[0].sequelize_caught_exception)) {
+                throw this.formatError({
+                    code: "23505",
+                    detail: rows[0].sequelize_caught_exception
+                });
+            } else {
+                for (const row of rows) {
+                    delete row.sequelize_caught_exception;
+                }
+            }
+        }
+
+        if (this.isShowIndexesQuery()) {
+            for (const row of rows) {
+                const attributes = /ON .*? (?:USING .*?\s)?\(([^]*)\)/gi.exec(row.definition)[1].split(",");
+
+                // Map column index in table to column name
+                const columns = _.zipObject(
+                    row.column_indexes,
+                    this.sequelize.getQueryInterface().QueryGenerator.fromArray(row.column_names)
+                );
+                delete row.column_indexes;
+                delete row.column_names;
+
+                let field;
+                let attribute;
+
+                // Indkey is the order of attributes in the index, specified by a string of attribute indexes
+                row.fields = row.indkey.split(" ").map((indKey, index) => {
+                    field = columns[indKey];
+                    // for functional indices indKey = 0
+                    if (!field) {
+                        return null;
+                    }
+                    attribute = attributes[index];
+                    return {
+                        attribute: field,
+                        collate: attribute.match(/COLLATE "(.*?)"/) ? /COLLATE "(.*?)"/.exec(attribute)[1] : undefined,
+                        order: attribute.indexOf("DESC") !== -1 ? "DESC" : attribute.indexOf("ASC") !== -1 ? "ASC" : undefined,
+                        length: undefined
+                    };
+                }).filter((n) => !is.null(n));
+                delete row.columns;
+            }
+            return rows;
+        } else if (this.isForeignKeysQuery()) {
+            const result = [];
+            for (const row of rows) {
+                let defParts;
+                if (!is.undefined(row.condef) && (defParts = row.condef.match(/FOREIGN KEY \((.+)\) REFERENCES (.+)\((.+)\)( ON (UPDATE|DELETE) (CASCADE|RESTRICT))?( ON (UPDATE|DELETE) (CASCADE|RESTRICT))?/))) {
+                    row.id = row.constraint_name;
+                    row.table = defParts[2];
+                    row.from = defParts[1];
+                    row.to = defParts[3];
+                    let i;
+                    for (i = 5; i <= 8; i += 3) {
+                        if (/(UPDATE|DELETE)/.test(defParts[i])) {
+                            row[`on_${defParts[i].toLowerCase()}`] = defParts[i + 1];
+                        }
+                    }
+                }
+                result.push(row);
+            }
+            return result;
+        } else if (this.isSelectQuery()) {
+            let result = rows;
+            // Postgres will treat tables as case-insensitive, so fix the case
+            // of the returned values to match attributes
+            if (this.options.raw === false && this.sequelize.options.quoteIdentifiers === false) {
+                const attrsMap = _.reduce(this.model.rawAttributes, (m, v, k) => {
+                    m[k.toLowerCase()] = k;
+                    return m;
+                }, {});
+                result = _.map(rows, (row) => {
+                    return _.mapKeys(row, (value, key) => {
+                        const targetAttr = attrsMap[key];
+                        if (is.string(targetAttr) && targetAttr !== key) {
+                            return targetAttr;
+                        }
+                        return key;
+
+                    });
+                });
+            }
+            return this.handleSelectQuery(result);
+        } else if (QueryTypes.DESCRIBE === this.options.type) {
+            const result = {};
+
+            for (const row of rows) {
+                result[row.Field] = {
+                    type: row.Type.toUpperCase(),
+                    allowNull: row.Null === "YES",
+                    defaultValue: row.Default,
+                    special: row.special ? this.sequelize.getQueryInterface().QueryGenerator.fromArray(row.special) : [],
+                    primaryKey: row.Constraint === "PRIMARY KEY"
+                };
+
+                if (result[row.Field].type === "BOOLEAN") {
+                    result[row.Field].defaultValue = { false: false, true: true }[result[row.Field].defaultValue];
+
+                    if (is.undefined(result[row.Field].defaultValue)) {
+                        result[row.Field].defaultValue = null;
+                    }
                 }
 
-                return queryResult;
-            })
-            .then((queryResult) => {
-                const rows = queryResult.rows;
-                const rowCount = queryResult.rowCount;
-                const isTableNameQuery = sql.indexOf("SELECT table_name FROM information_schema.tables") === 0;
-                const isRelNameQuery = sql.indexOf("SELECT relname FROM pg_class WHERE oid IN") === 0;
+                if (is.string(result[row.Field].defaultValue)) {
+                    result[row.Field].defaultValue = result[row.Field].defaultValue.replace(/'/g, "");
 
-                if (isRelNameQuery) {
-                    return rows.map((row) => ({
-                        name: row.relname,
-                        tableName: row.relname.split("_")[0]
-                    }));
-                } else if (isTableNameQuery) {
-                    return rows.map((row) => _.values(row));
-                }
-
-                if (rows[0] && !is.undefined(rows[0].sequelize_caught_exception)) {
-                    if (!is.null(rows[0].sequelize_caught_exception)) {
-                        throw this.formatError({
-                            code: "23505",
-                            detail: rows[0].sequelize_caught_exception
-                        });
-                    } else {
-                        for (const row of rows) {
-                            delete row.sequelize_caught_exception;
+                    if (result[row.Field].defaultValue.indexOf("::") > -1) {
+                        const split = result[row.Field].defaultValue.split("::");
+                        if (split[1].toLowerCase() !== "regclass)") {
+                            result[row.Field].defaultValue = split[0];
                         }
                     }
                 }
+            }
 
-                if (this.isShowIndexesQuery()) {
-                    for (const row of rows) {
-                        const attributes = /ON .*? (?:USING .*?\s)?\(([^]*)\)/gi.exec(row.definition)[1].split(",");
+            return result;
+        } else if (this.isVersionQuery()) {
+            return rows[0].server_version;
+        } else if (this.isShowOrDescribeQuery()) {
+            return rows;
+        } else if (QueryTypes.BULKUPDATE === this.options.type) {
+            if (!this.options.returning) {
+                return parseInt(rowCount, 10);
+            }
 
-                        // Map column index in table to column name
-                        const columns = _.zipObject(
-                            row.column_indexes,
-                            this.sequelize.getQueryInterface().QueryGenerator.fromArray(row.column_names)
-                        );
-                        delete row.column_indexes;
-                        delete row.column_names;
+            return this.handleSelectQuery(rows);
+        } else if (QueryTypes.BULKDELETE === this.options.type) {
+            return parseInt(rowCount, 10);
+        } else if (this.isUpsertQuery()) {
+            return rows[0].sequelize_upsert;
+        } else if (this.isInsertQuery() || this.isUpdateQuery()) {
+            if (this.instance && this.instance.dataValues) {
+                for (const key in rows[0]) {
+                    if (rows[0].hasOwnProperty(key)) {
+                        const record = rows[0][key];
 
-                        let field;
-                        let attribute;
+                        const attr = _.find(this.model.rawAttributes, (attribute) => attribute.fieldName === key || attribute.field === key);
 
-                        // Indkey is the order of attributes in the index, specified by a string of attribute indexes
-                        row.fields = row.indkey.split(" ").map((indKey, index) => {
-                            field = columns[indKey];
-                            // for functional indices indKey = 0
-                            if (!field) {
-                                return null;
-                            }
-                            attribute = attributes[index];
-                            return {
-                                attribute: field,
-                                collate: attribute.match(/COLLATE "(.*?)"/) ? /COLLATE "(.*?)"/.exec(attribute)[1] : undefined,
-                                order: attribute.indexOf("DESC") !== -1 ? "DESC" : attribute.indexOf("ASC") !== -1 ? "ASC" : undefined,
-                                length: undefined
-                            };
-                        }).filter((n) => !is.null(n));
-                        delete row.columns;
+                        this.instance.dataValues[attr && attr.fieldName || key] = record;
                     }
-                    return rows;
-                } else if (this.isForeignKeysQuery()) {
-                    const result = [];
-                    for (const row of rows) {
-                        let defParts;
-                        if (!is.undefined(row.condef) && (defParts = row.condef.match(/FOREIGN KEY \((.+)\) REFERENCES (.+)\((.+)\)( ON (UPDATE|DELETE) (CASCADE|RESTRICT))?( ON (UPDATE|DELETE) (CASCADE|RESTRICT))?/))) {
-                            row.id = row.constraint_name;
-                            row.table = defParts[2];
-                            row.from = defParts[1];
-                            row.to = defParts[3];
-                            let i;
-                            for (i = 5; i <= 8; i += 3) {
-                                if (/(UPDATE|DELETE)/.test(defParts[i])) {
-                                    row[`on_${defParts[i].toLowerCase()}`] = defParts[i + 1];
-                                }
-                            }
-                        }
-                        result.push(row);
-                    }
-                    return result;
-                } else if (this.isSelectQuery()) {
-                    let result = rows;
-                    // Postgres will treat tables as case-insensitive, so fix the case
-                    // of the returned values to match attributes
-                    if (this.options.raw === false && this.sequelize.options.quoteIdentifiers === false) {
-                        const attrsMap = _.reduce(this.model.rawAttributes, (m, v, k) => {
-                            m[k.toLowerCase()] = k;
-                            return m;
-                        }, {});
-                        result = _.map(rows, (row) => {
-                            return _.mapKeys(row, (value, key) => {
-                                const targetAttr = attrsMap[key];
-                                if (is.string(targetAttr) && targetAttr !== key) {
-                                    return targetAttr;
-                                }
-                                return key;
-
-                            });
-                        });
-                    }
-                    return this.handleSelectQuery(result);
-                } else if (QueryTypes.DESCRIBE === this.options.type) {
-                    const result = {};
-
-                    for (const row of rows) {
-                        result[row.Field] = {
-                            type: row.Type.toUpperCase(),
-                            allowNull: row.Null === "YES",
-                            defaultValue: row.Default,
-                            special: row.special ? this.sequelize.getQueryInterface().QueryGenerator.fromArray(row.special) : [],
-                            primaryKey: row.Constraint === "PRIMARY KEY"
-                        };
-
-                        if (result[row.Field].type === "BOOLEAN") {
-                            result[row.Field].defaultValue = { false: false, true: true }[result[row.Field].defaultValue];
-
-                            if (is.undefined(result[row.Field].defaultValue)) {
-                                result[row.Field].defaultValue = null;
-                            }
-                        }
-
-                        if (is.string(result[row.Field].defaultValue)) {
-                            result[row.Field].defaultValue = result[row.Field].defaultValue.replace(/'/g, "");
-
-                            if (result[row.Field].defaultValue.indexOf("::") > -1) {
-                                const split = result[row.Field].defaultValue.split("::");
-                                if (split[1].toLowerCase() !== "regclass)") {
-                                    result[row.Field].defaultValue = split[0];
-                                }
-                            }
-                        }
-                    }
-
-                    return result;
-                } else if (this.isVersionQuery()) {
-                    return rows[0].server_version;
-                } else if (this.isShowOrDescribeQuery()) {
-                    return rows;
-                } else if (QueryTypes.BULKUPDATE === this.options.type) {
-                    if (!this.options.returning) {
-                        return parseInt(rowCount, 10);
-                    }
-
-                    return this.handleSelectQuery(rows);
-                } else if (QueryTypes.BULKDELETE === this.options.type) {
-                    return parseInt(rowCount, 10);
-                } else if (this.isUpsertQuery()) {
-                    return rows[0].sequelize_upsert;
-                } else if (this.isInsertQuery() || this.isUpdateQuery()) {
-                    if (this.instance && this.instance.dataValues) {
-                        for (const key in rows[0]) {
-                            if (rows[0].hasOwnProperty(key)) {
-                                const record = rows[0][key];
-
-                                const attr = _.find(this.model.rawAttributes, (attribute) => attribute.fieldName === key || attribute.field === key);
-
-                                this.instance.dataValues[attr && attr.fieldName || key] = record;
-                            }
-                        }
-                    }
-
-                    return [
-                        this.instance || rows && (this.options.plain && rows[0] || rows) || undefined,
-                        rowCount
-                    ];
-                } else if (this.isRawQuery()) {
-                    return [rows, queryResult];
                 }
-                return rows;
+            }
 
-            });
+            return [
+                this.instance || rows && (this.options.plain && rows[0] || rows) || undefined,
+                rowCount
+            ];
+        } else if (this.isRawQuery()) {
+            return [rows, queryResult];
+        }
+        return rows;
     }
 
     formatError(err) {
@@ -349,7 +348,7 @@ class Query extends AbstractQuery {
                         parent: err
                     });
                 }
-
+                // TODO: break ??
             default:
                 return new sequelizeErrors.DatabaseError(err);
         }

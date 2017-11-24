@@ -34,19 +34,17 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
 
         if (_.get(current.dialect.supports, "returnValues.returning")) {
-            it("should return the updated record", function () {
-                return this.Account.create({ ownerId: 2 }).then((account) => {
-                    return this.Account.update({ name: "FooBar" }, {
-                        where: {
-                            id: account.get("id")
-                        },
-                        returning: true
-                    }).spread((count, accounts) => {
-                        const firstAcc = accounts[0];
-                        expect(firstAcc.ownerId).to.be.equal(2);
-                        expect(firstAcc.name).to.be.equal("FooBar");
-                    });
+            it("should return the updated record", async function () {
+                const account = await this.Account.create({ ownerId: 2 });
+                const [, accounts] = await this.Account.update({ name: "FooBar" }, {
+                    where: {
+                        id: account.get("id")
+                    },
+                    returning: true
                 });
+                const firstAcc = accounts[0];
+                expect(firstAcc.ownerId).to.be.equal(2);
+                expect(firstAcc.name).to.be.equal("FooBar");
             });
         }
 

@@ -1,6 +1,6 @@
 import Support from "../../support";
 
-const { Promise, DataTypes } = adone.orm;
+const { DataTypes } = adone.orm;
 const dialect = Support.getTestDialect();
 
 describe("[MSSQL Specific] Query Queue", { skip: !/^mssql/.test(dialect) }, () => {

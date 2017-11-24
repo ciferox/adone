@@ -9,7 +9,6 @@ const {
     Op
 } = adone.orm;
 const current = Support.sequelize;
-const Promise = current.Promise;
 
 describe(Support.getTestDialectTeaser("hasMany"), () => {
     describe("optimizations using bulk create, destroy and update", () => {
@@ -38,14 +37,13 @@ describe(Support.getTestDialectTeaser("hasMany"), () => {
             this.update.restore();
         });
 
-        it("uses one update statement for addition", function () {
-            return user.setTasks([task1, task2]).bind(this).then(function () {
-                expect(this.findAll).to.have.been.calledOnce;
-                expect(this.update).to.have.been.calledOnce;
-            });
+        it("uses one update statement for addition", async function () {
+            await user.setTasks([task1, task2]);
+            expect(this.findAll).to.have.been.calledOnce;
+            expect(this.update).to.have.been.calledOnce;
         });
 
-        it("uses one delete from statement", function () {
+        it("uses one delete from statement", async function () {
             this.findAll
                 .onFirstCall().returns(Promise.resolve([]))
                 .onSecondCall().returns(Promise.resolve([
@@ -53,13 +51,11 @@ describe(Support.getTestDialectTeaser("hasMany"), () => {
                     { userId: 42, taskId: 16 }
                 ]));
 
-            return user.setTasks([task1, task2]).bind(this).then(function () {
-                this.update.reset();
-                return user.setTasks(null);
-            }).then(function () {
-                expect(this.findAll).to.have.been.calledTwice;
-                expect(this.update).to.have.been.calledOnce;
-            });
+            await user.setTasks([task1, task2]);
+            this.update.reset();
+            await user.setTasks(null);
+            expect(this.findAll).to.have.been.calledTwice;
+            expect(this.update).to.have.been.calledOnce;
         });
     });
 
@@ -125,7 +121,7 @@ describe(Support.getTestDialectTeaser("hasMany"), () => {
         const idC = Math.random().toString();
         const foreignKey = "user_id";
 
-        it("should fetch associations for a single instance", () => {
+        it("should fetch associations for a single instance", async () => {
             const findAll = stub(Task, "findAll").returns(Promise.resolve([
                 Task.build({}),
                 Task.build({})
@@ -140,15 +136,16 @@ describe(Support.getTestDialectTeaser("hasMany"), () => {
             expect(findAll).to.have.been.calledOnce;
             expect(findAll.firstCall.args[0].where).to.deep.equal(where);
 
-            return actual.then((results) => {
+            try {
+                const results = await actual;
                 expect(results).to.be.an("array");
                 expect(results.length).to.equal(2);
-            }).finally(() => {
+            } finally {
                 findAll.restore();
-            });
+            }
         });
 
-        it("should fetch associations for multiple source instances", () => {
+        it("should fetch associations for multiple source instances", async () => {
             const findAll = stub(Task, "findAll").returns(
                 Promise.resolve([
                     Task.build({
@@ -177,16 +174,17 @@ describe(Support.getTestDialectTeaser("hasMany"), () => {
             expect(findAll.firstCall.args[0].where[foreignKey]).to.have.property(Op.in);
             expect(findAll.firstCall.args[0].where[foreignKey][Op.in]).to.deep.equal([idA, idB, idC]);
 
-            return actual.then((result) => {
+            try {
+                const result = await actual;
                 expect(result).to.be.an("object");
                 expect(Object.keys(result)).to.deep.equal([idA, idB, idC]);
 
                 expect(result[idA].length).to.equal(3);
                 expect(result[idB].length).to.equal(1);
                 expect(result[idC].length).to.equal(0);
-            }).finally(() => {
+            } finally {
                 findAll.restore();
-            });
+            }
         });
     });
 });

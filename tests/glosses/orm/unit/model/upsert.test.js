@@ -1,7 +1,6 @@
 import Support from "../../support";
 
 const current = Support.sequelize;
-const Promise = current.Promise;
 const { DataTypes } = adone.orm;
 
 describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.supports.upserts }, () => {

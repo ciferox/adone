@@ -1,7 +1,6 @@
 import Support from "../../support";
 
 const current = Support.sequelize;
-const Promise = current.Promise;
 const { vendor: { lodash: _ } } = adone;
 const { DataTypes } = adone.orm;
 
@@ -28,31 +27,28 @@ describe(Support.getTestDialectTeaser("Model"), () => {
         });
 
         describe("properly clones input values", () => {
-            it("with default options", function () {
+            it("with default options", async function () {
                 const self = this;
-                return User.update(self.updates, { where: { secretValue: "1" } }).bind(this).then(() => {
-                    expect(self.updates).to.be.deep.eql(self.cloneUpdates);
-                });
+                await User.update(self.updates, { where: { secretValue: "1" } });
+                expect(self.updates).to.be.deep.eql(self.cloneUpdates);
             });
 
-            it("when using fields option", function () {
+            it("when using fields option", async function () {
                 const self = this;
-                return User.update(self.updates, { where: { secretValue: "1" }, fields: ["name"] }).bind(this).then(() => {
-                    expect(self.updates).to.be.deep.eql(self.cloneUpdates);
-                });
+                await User.update(self.updates, { where: { secretValue: "1" }, fields: ["name"] });
+                expect(self.updates).to.be.deep.eql(self.cloneUpdates);
             });
         });
 
-        it("can detect complexe objects", function () {
+        it("can detect complexe objects", async function () {
             const self = this;
             const Where = function () {
                 this.secretValue = "1";
             };
 
-            expect(() => {
-                User.update(self.updates, { where: new Where() });
-            }).to.throw();
-
+            await assert.throws(async () => {
+                await User.update(self.updates, { where: new Where() });
+            });
         });
     });
 });

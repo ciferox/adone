@@ -47,8 +47,8 @@ describe("[SQLITE Specific] DAO", { skip: dialect !== "sqlite" }, () => {
             return this.User.create({
                 dateField: new Date(2010, 10, 10)
             }).then(() => {
-                return this.User.findAll().get(0);
-            }).then((user) => {
+                return this.User.findAll();
+            }).then(([user]) => {
                 expect(user.get("dateField")).to.be.an.instanceof(Date);
                 expect(user.get("dateField")).to.be.deep.equal(new Date(2010, 10, 10));
             });
@@ -62,8 +62,8 @@ describe("[SQLITE Specific] DAO", { skip: dialect !== "sqlite" }, () => {
             }, { include: [this.Project] }).then(() => {
                 return this.User.findAll({
                     include: [this.Project]
-                }).get(0);
-            }).then((user) => {
+                });
+            }).then(([user]) => {
                 expect(user.projects[0].get("dateField")).to.be.an.instanceof(Date);
                 expect(user.projects[0].get("dateField")).to.be.deep.equal(new Date(1990, 5, 5));
             });
@@ -72,7 +72,7 @@ describe("[SQLITE Specific] DAO", { skip: dialect !== "sqlite" }, () => {
 
     describe("json", () => {
         it("should be able to retrieve a row with json_extract function", function () {
-            return this.sequelize.Promise.all([
+            return Promise.all([
                 this.User.create({ username: "swen", emergency_contact: { name: "kate" } }),
                 this.User.create({ username: "anna", emergency_contact: { name: "joe" } })
             ]).then(() => {
@@ -86,7 +86,7 @@ describe("[SQLITE Specific] DAO", { skip: dialect !== "sqlite" }, () => {
         });
 
         it("should be able to retrieve a row by json_type function", function () {
-            return this.sequelize.Promise.all([
+            return Promise.all([
                 this.User.create({ username: "swen", emergency_contact: { name: "kate" } }),
                 this.User.create({ username: "anna", emergency_contact: ["kate", "joe"] })
             ]).then(() => {

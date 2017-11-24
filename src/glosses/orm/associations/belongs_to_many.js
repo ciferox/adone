@@ -101,15 +101,15 @@ class BelongsToMany extends Association {
         );
 
         /*
-    * If self association, this is the target association - Unless we find a pairing association
-    */
+        * If self association, this is the target association - Unless we find a pairing association
+        */
         if (this.isSelfAssociation) {
             this.targetAssociation = this;
         }
 
         /*
-    * Default/generated foreign/other keys
-    */
+        * Default/generated foreign/other keys
+        */
         if (_.isObject(this.options.foreignKey)) {
             this.foreignKeyAttribute = this.options.foreignKey;
             this.foreignKey = this.foreignKeyAttribute.name || this.foreignKeyAttribute.fieldName;
@@ -152,8 +152,8 @@ class BelongsToMany extends Association {
         }
 
         /*
-    * Find paired association (if exists)
-    */
+         * Find paired association (if exists)
+         */
         _.each(this.target.associations, (association) => {
             if (association.associationType !== "BelongsToMany") {
                 return;
@@ -371,15 +371,15 @@ class BelongsToMany extends Association {
     }
 
     /**
-   * Get everything currently associated with this, using an optional where clause.
-   *
-   * @param {Object} [options]
-   * @param {Object} [options.where] An optional where clause to limit the associated models
-   * @param {String|Boolean} [options.scope] Apply a scope on the related model, or remove its default scope by passing false
-   * @param {String} [options.schema] Apply a schema on the related model
-   * @see {@link Model.findAll}  for a full explanation of options
-   * @return {Promise<Array<Model>>}
-   */
+     * Get everything currently associated with this, using an optional where clause.
+     *
+     * @param {Object} [options]
+     * @param {Object} [options.where] An optional where clause to limit the associated models
+     * @param {String|Boolean} [options.scope] Apply a scope on the related model, or remove its default scope by passing false
+     * @param {String} [options.schema] Apply a schema on the related model
+     * @see {@link Model.findAll}  for a full explanation of options
+     * @return {Promise<Array<Model>>}
+     */
     get(instance, options) {
         options = Utils.cloneDeep(options) || {};
 
@@ -440,13 +440,13 @@ class BelongsToMany extends Association {
     }
 
     /**
-   * Count everything currently associated with this, using an optional where clause.
-   *
-   * @param {Object} [options]
-   * @param {Object} [options.where] An optional where clause to limit the associated models
-   * @param {String|Boolean} [options.scope] Apply a scope on the related model, or remove its default scope by passing false
-   * @return {Promise<Integer>}
-   */
+     * Count everything currently associated with this, using an optional where clause.
+     *
+     * @param {Object} [options]
+     * @param {Object} [options.where] An optional where clause to limit the associated models
+     * @param {String|Boolean} [options.scope] Apply a scope on the related model, or remove its default scope by passing false
+     * @return {Promise<Integer>}
+     */
     count(instance, options) {
         const association = this;
         const model = association.target;
@@ -505,15 +505,15 @@ class BelongsToMany extends Association {
     }
 
     /**
-   * Set the associated models by passing an array of instances or their primary keys. Everything that it not in the passed array will be un-associated.
-   *
-   * @param {Array<Model|String|Number>} [newAssociations] An array of persisted instances or primary key of instances to associate with this. Pass `null` or `undefined` to remove all associations.
-   * @param {Object} [options] Options passed to `through.findAll`, `bulkCreate`, `update` and `destroy`
-   * @param {Object} [options.validate] Run validation for the join model
-   * @param {Object} [options.through] Additional attributes for the join table.
-   * @return {Promise}
-   */
-    set(sourceInstance, newAssociatedObjects, options) {
+     * Set the associated models by passing an array of instances or their primary keys. Everything that it not in the passed array will be un-associated.
+     *
+     * @param {Array<Model|String|Number>} [newAssociations] An array of persisted instances or primary key of instances to associate with this. Pass `null` or `undefined` to remove all associations.
+     * @param {Object} [options] Options passed to `through.findAll`, `bulkCreate`, `update` and `destroy`
+     * @param {Object} [options.validate] Run validation for the join model
+     * @param {Object} [options.through] Additional attributes for the join table.
+     * @return {Promise}
+     */
+    async set(sourceInstance, newAssociatedObjects, options) {
         options = options || {};
 
         const association = this;
@@ -532,85 +532,85 @@ class BelongsToMany extends Association {
         where[identifier] = sourceInstance.get(sourceKey);
         where = Object.assign(where, association.through.scope);
 
-        return association.through.model.findAll(_.defaults({ where, raw: true }, options)).then((currentRows) => {
-            const obsoleteAssociations = [];
-            const promises = [];
-            let defaultAttributes = options.through || {};
+        const currentRows = await association.through.model.findAll(_.defaults({ where, raw: true }, options));
 
-            // Don't try to insert the transaction as an attribute in the through table
-            defaultAttributes = _.omit(defaultAttributes, ["transaction", "hooks", "individualHooks", "ignoreDuplicates", "validate", "fields", "logging"]);
+        const obsoleteAssociations = [];
+        const promises = [];
+        let defaultAttributes = options.through || {};
 
-            const unassociatedObjects = newAssociatedObjects.filter((obj) =>
-                !_.find(currentRows, (currentRow) => currentRow[foreignIdentifier] === obj.get(targetKey))
-            );
+        // Don't try to insert the transaction as an attribute in the through table
+        defaultAttributes = _.omit(defaultAttributes, ["transaction", "hooks", "individualHooks", "ignoreDuplicates", "validate", "fields", "logging"]);
 
-            for (const currentRow of currentRows) {
-                const newObj = _.find(newAssociatedObjects, (obj) => currentRow[foreignIdentifier] === obj.get(targetKey));
+        const unassociatedObjects = newAssociatedObjects.filter((obj) =>
+            !_.find(currentRows, (currentRow) => currentRow[foreignIdentifier] === obj.get(targetKey))
+        );
 
-                if (!newObj) {
-                    obsoleteAssociations.push(currentRow);
-                } else {
-                    let throughAttributes = newObj[association.through.model.name];
-                    // Quick-fix for subtle bug when using existing objects that might have the through model attached (not as an attribute object)
-                    if (throughAttributes instanceof association.through.model) {
-                        throughAttributes = {};
-                    }
+        for (const currentRow of currentRows) {
+            const newObj = _.find(newAssociatedObjects, (obj) => currentRow[foreignIdentifier] === obj.get(targetKey));
 
-                    const where = {};
-                    const attributes = _.defaults({}, throughAttributes, defaultAttributes);
+            if (!newObj) {
+                obsoleteAssociations.push(currentRow);
+            } else {
+                let throughAttributes = newObj[association.through.model.name];
+                // Quick-fix for subtle bug when using existing objects that might have the through model attached (not as an attribute object)
+                if (throughAttributes instanceof association.through.model) {
+                    throughAttributes = {};
+                }
 
-                    where[identifier] = sourceInstance.get(sourceKey);
-                    where[foreignIdentifier] = newObj.get(targetKey);
+                const where = {};
+                const attributes = _.defaults({}, throughAttributes, defaultAttributes);
 
-                    if (Object.keys(attributes).length) {
-                        promises.push(association.through.model.update(attributes, _.extend(options, { where })));
-                    }
+                where[identifier] = sourceInstance.get(sourceKey);
+                where[foreignIdentifier] = newObj.get(targetKey);
+
+                if (Object.keys(attributes).length) {
+                    promises.push(association.through.model.update(attributes, _.extend(options, { where })));
                 }
             }
+        }
 
-            if (obsoleteAssociations.length > 0) {
-                let where = {};
-                where[identifier] = sourceInstance.get(sourceKey);
-                where[foreignIdentifier] = obsoleteAssociations.map((obsoleteAssociation) => obsoleteAssociation[foreignIdentifier]);
-                where = Object.assign(where, association.through.scope);
-                promises.push(association.through.model.destroy(_.defaults({ where }, options)));
-            }
+        if (obsoleteAssociations.length > 0) {
+            let where = {};
+            where[identifier] = sourceInstance.get(sourceKey);
+            where[foreignIdentifier] = obsoleteAssociations.map((obsoleteAssociation) => obsoleteAssociation[foreignIdentifier]);
+            where = Object.assign(where, association.through.scope);
+            promises.push(association.through.model.destroy(_.defaults({ where }, options)));
+        }
 
-            if (unassociatedObjects.length > 0) {
-                const bulk = unassociatedObjects.map((unassociatedObject) => {
-                    let attributes = {};
+        if (unassociatedObjects.length > 0) {
+            const bulk = unassociatedObjects.map((unassociatedObject) => {
+                let attributes = {};
 
-                    attributes[identifier] = sourceInstance.get(sourceKey);
-                    attributes[foreignIdentifier] = unassociatedObject.get(targetKey);
+                attributes[identifier] = sourceInstance.get(sourceKey);
+                attributes[foreignIdentifier] = unassociatedObject.get(targetKey);
 
-                    attributes = _.defaults(attributes, unassociatedObject[association.through.model.name], defaultAttributes);
+                attributes = _.defaults(attributes, unassociatedObject[association.through.model.name], defaultAttributes);
 
-                    _.assign(attributes, association.through.scope);
-                    attributes = Object.assign(attributes, association.through.scope);
+                _.assign(attributes, association.through.scope);
+                attributes = Object.assign(attributes, association.through.scope);
 
-                    return attributes;
-                });
+                return attributes;
+            });
 
-                promises.push(association.through.model.bulkCreate(bulk, _.assign({ validate: true }, options)));
-            }
+            promises.push(association.through.model.bulkCreate(bulk, _.assign({ validate: true }, options)));
+        }
 
-            return Utils.Promise.all(promises);
-        });
+        return Promise.all(promises);
     }
 
     /**
-   * Associate one ore several rows with `this`.
-   *
-   * @param {Model[]|Model|string[]|string|number[]|Number} [newAssociation(s)] A single instance or primary key, or a mixed array of persisted instances or primary keys
-   * @param {Object} [options] Options passed to `through.findAll`, `bulkCreate` and `update`
-   * @param {Object} [options.validate] Run validation for the join model.
-   * @param {Object} [options.through] Additional attributes for the join table.
-   * @return {Promise}
-   */
-    add(sourceInstance, newInstances, options) {
-    // If newInstances is null or undefined, no-op
+     * Associate one ore several rows with `this`.
+     *
+     * @param {Model[]|Model|string[]|string|number[]|Number} [newAssociation(s)] A single instance or primary key, or a mixed array of persisted instances or primary keys
+     * @param {Object} [options] Options passed to `through.findAll`, `bulkCreate` and `update`
+     * @param {Object} [options.validate] Run validation for the join model.
+     * @param {Object} [options.through] Additional attributes for the join table.
+     * @return {Promise}
+     */
+    async add(sourceInstance, newInstances, options) {
+        // If newInstances is null or undefined, no-op
         if (!newInstances) {
-            return Utils.Promise.resolve();
+            return;
         }
 
         options = _.clone(options) || {};
@@ -630,67 +630,67 @@ class BelongsToMany extends Association {
 
         _.assign(where, association.through.scope);
 
-        return association.through.model.findAll(_.defaults({ where, raw: true }, options)).then((currentRows) => {
-            const promises = [];
-            const unassociatedObjects = [];
-            const changedAssociations = [];
-            for (const obj of newInstances) {
-                const existingAssociation = _.find(currentRows, (current) => current[foreignIdentifier] === obj.get(targetKey));
+        const currentRows = await association.through.model.findAll(_.defaults({ where, raw: true }, options));
 
-                if (!existingAssociation) {
-                    unassociatedObjects.push(obj);
-                } else {
-                    const throughAttributes = obj[association.through.model.name];
-                    const attributes = _.defaults({}, throughAttributes, defaultAttributes);
+        const promises = [];
+        const unassociatedObjects = [];
+        const changedAssociations = [];
+        for (const obj of newInstances) {
+            const existingAssociation = _.find(currentRows, (current) => current[foreignIdentifier] === obj.get(targetKey));
 
-                    if (_.some(Object.keys(attributes), (attribute) => attributes[attribute] !== existingAssociation[attribute])) {
-                        changedAssociations.push(obj);
-                    }
-                }
-            }
-
-            if (unassociatedObjects.length > 0) {
-                const bulk = unassociatedObjects.map((unassociatedObject) => {
-                    const throughAttributes = unassociatedObject[association.through.model.name];
-                    const attributes = _.defaults({}, throughAttributes, defaultAttributes);
-
-                    attributes[identifier] = sourceInstance.get(sourceKey);
-                    attributes[foreignIdentifier] = unassociatedObject.get(targetKey);
-
-                    _.assign(attributes, association.through.scope);
-
-                    return attributes;
-                });
-
-                promises.push(association.through.model.bulkCreate(bulk, _.assign({ validate: true }, options)));
-            }
-
-            for (const assoc of changedAssociations) {
-                let throughAttributes = assoc[association.through.model.name];
+            if (!existingAssociation) {
+                unassociatedObjects.push(obj);
+            } else {
+                const throughAttributes = obj[association.through.model.name];
                 const attributes = _.defaults({}, throughAttributes, defaultAttributes);
-                const where = {};
-                // Quick-fix for subtle bug when using existing objects that might have the through model attached (not as an attribute object)
-                if (throughAttributes instanceof association.through.model) {
-                    throughAttributes = {};
+
+                if (_.some(Object.keys(attributes), (attribute) => attributes[attribute] !== existingAssociation[attribute])) {
+                    changedAssociations.push(obj);
                 }
+            }
+        }
 
-                where[identifier] = sourceInstance.get(sourceKey);
-                where[foreignIdentifier] = assoc.get(targetKey);
+        if (unassociatedObjects.length > 0) {
+            const bulk = unassociatedObjects.map((unassociatedObject) => {
+                const throughAttributes = unassociatedObject[association.through.model.name];
+                const attributes = _.defaults({}, throughAttributes, defaultAttributes);
 
-                promises.push(association.through.model.update(attributes, _.extend(options, { where })));
+                attributes[identifier] = sourceInstance.get(sourceKey);
+                attributes[foreignIdentifier] = unassociatedObject.get(targetKey);
+
+                _.assign(attributes, association.through.scope);
+
+                return attributes;
+            });
+
+            promises.push(association.through.model.bulkCreate(bulk, _.assign({ validate: true }, options)));
+        }
+
+        for (const assoc of changedAssociations) {
+            let throughAttributes = assoc[association.through.model.name];
+            const attributes = _.defaults({}, throughAttributes, defaultAttributes);
+            const where = {};
+            // Quick-fix for subtle bug when using existing objects that might have the through model attached (not as an attribute object)
+            if (throughAttributes instanceof association.through.model) {
+                throughAttributes = {};
             }
 
-            return Utils.Promise.all(promises);
-        });
+            where[identifier] = sourceInstance.get(sourceKey);
+            where[foreignIdentifier] = assoc.get(targetKey);
+
+            promises.push(association.through.model.update(attributes, _.extend(options, { where })));
+        }
+
+        return Promise.all(promises);
     }
 
     /**
-   * Un-associate one or more instance(s).
-   *
-   * @param {Model|String|Number} [oldAssociated] Can be an Instance or its primary key, or a mixed array of instances and primary keys
-   * @param {Object} [options] Options passed to `through.destroy`
-   * @return {Promise}
-   */
+     * Un-associate one or more instance(s).
+     *
+     * @param {Model|String|Number} [oldAssociated] Can be an Instance or its primary key, or a mixed array of instances and primary keys
+     * @param {Object} [options] Options passed to `through.destroy`
+     * @return {Promise}
+     */
     remove(sourceInstance, oldAssociatedObjects, options) {
         const association = this;
 
@@ -706,14 +706,14 @@ class BelongsToMany extends Association {
     }
 
     /**
-   * Create a new instance of the associated model and associate it with this.
-   *
-   * @param {Object} [values]
-   * @param {Object} [options] Options passed to create and add
-   * @param {Object} [options.through] Additional attributes for the join table
-   * @return {Promise}
-   */
-    create(sourceInstance, values, options) {
+     * Create a new instance of the associated model and associate it with this.
+     *
+     * @param {Object} [values]
+     * @param {Object} [options] Options passed to create and add
+     * @param {Object} [options.through] Additional attributes for the join table
+     * @return {Promise}
+     */
+    async create(sourceInstance, values, options) {
         const association = this;
 
         options = options || {};
@@ -733,9 +733,9 @@ class BelongsToMany extends Association {
         }
 
         // Create the related model instance
-        return association.target.create(values, options).then((newAssociatedObject) =>
-            sourceInstance[association.accessors.add](newAssociatedObject, _.omit(options, ["fields"])).return(newAssociatedObject)
-        );
+        const newAssociatedObject = await association.target.create(values, options);
+        await sourceInstance[association.accessors.add](newAssociatedObject, _.omit(options, ["fields"]));
+        return newAssociatedObject;
     }
 }
 

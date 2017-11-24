@@ -58,26 +58,19 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         });
 
         if (current.dialect.supports.transactions) {
-            it("supports transactions", function () {
-                return Support.prepareTransactionTest(this.sequelize).bind({}).then((sequelize) => {
-                    const User = sequelize.define("User", { username: Support.Sequelize.STRING });
+            it("supports transactions", async function () {
+                const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                const User = sequelize.define("User", { username: Support.Sequelize.STRING });
 
-                    return User.sync({ force: true }).then(() => {
-                        return User.create({ username: "foo" }).then((user) => {
-                            return sequelize.transaction().then((t) => {
-                                return user.update({ username: "bar" }, { transaction: t }).then(() => {
-                                    return User.findAll().then((users1) => {
-                                        return User.findAll({ transaction: t }).then((users2) => {
-                                            expect(users1[0].username).to.equal("foo");
-                                            expect(users2[0].username).to.equal("bar");
-                                            return t.rollback();
-                                        });
-                                    });
-                                });
-                            });
-                        });
-                    });
-                });
+                await User.sync({ force: true });
+                const user = await User.create({ username: "foo" });
+                const t = await sequelize.transaction();
+                await user.update({ username: "bar" }, { transaction: t });
+                const users1 = await User.findAll();
+                const users2 = await User.findAll({ transaction: t });
+                expect(users1[0].username).to.equal("foo");
+                expect(users2[0].username).to.equal("bar");
+                await t.rollback();
             });
         }
 
@@ -140,8 +133,8 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                 name: DataTypes.STRING,
                 bio: DataTypes.TEXT,
                 email: DataTypes.STRING,
-                createdAt: { type: DataTypes.DATE(6), allowNull: false },
-                updatedAt: { type: DataTypes.DATE(6), allowNull: false }
+                createdAt: { type: new DataTypes.DATE(6), allowNull: false },
+                updatedAt: { type: new DataTypes.DATE(6), allowNull: false }
             }, {
                 timestamps: true
             });
@@ -369,34 +362,32 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
             });
         });
 
-        it("doesn't update primary keys or timestamps", function () {
+        it("doesn't update primary keys or timestamps", async function () {
             const User = this.sequelize.define(`User${config.rand()}`, {
                 name: DataTypes.STRING,
                 bio: DataTypes.TEXT,
                 identifier: { type: DataTypes.STRING, primaryKey: true }
             });
 
-            return User.sync({ force: true }).bind(this).then(() => {
-                return User.create({
-                    name: "snafu",
-                    identifier: "identifier"
-                });
-            }).then(function (user) {
-                const oldCreatedAt = user.createdAt;
-                const oldUpdatedAt = user.updatedAt;
-                const oldIdentifier = user.identifier;
-
-                this.clock.tick(1000);
-                return user.update({
-                    name: "foobar",
-                    createdAt: new Date(2000, 1, 1),
-                    identifier: "another identifier"
-                }).then((user) => {
-                    expect(new Date(user.createdAt)).to.be.deep.equal(new Date(oldCreatedAt));
-                    expect(new Date(user.updatedAt)).not.to.be.deep.equal(new Date(oldUpdatedAt));
-                    expect(user.identifier).to.equal(oldIdentifier);
-                });
+            await User.sync({ force: true });
+            const user = await User.create({
+                name: "snafu",
+                identifier: "identifier"
             });
+            const oldCreatedAt = user.createdAt;
+            const oldUpdatedAt = user.updatedAt;
+            const oldIdentifier = user.identifier;
+
+            this.clock.tick(1000);
+
+            await user.update({
+                name: "foobar",
+                createdAt: new Date(2000, 1, 1),
+                identifier: "another identifier"
+            });
+            expect(new Date(user.createdAt)).to.be.deep.equal(new Date(oldCreatedAt));
+            expect(new Date(user.updatedAt)).not.to.be.deep.equal(new Date(oldUpdatedAt));
+            expect(user.identifier).to.equal(oldIdentifier);
         });
 
         it("stores and restores null values", function () {

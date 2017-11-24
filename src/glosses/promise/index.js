@@ -305,3 +305,11 @@ export const retry = async (callback, options) => {
         }
     }
 };
+
+export const props = async (obj) => {
+    const result = {};
+    await Promise.all(Object.keys(obj).map(async (key) => {
+        result[key] = await obj[key];
+    }));
+    return result;
+};

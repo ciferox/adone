@@ -5,7 +5,7 @@ before(() => {
     if (dialect !== "postgres" && dialect !== "postgres-native") {
         return;
     }
-    return Support.sequelize.Promise.all([
+    return Promise.all([
         Support.sequelize.query("CREATE EXTENSION IF NOT EXISTS hstore", { raw: true }),
         Support.sequelize.query("CREATE EXTENSION IF NOT EXISTS btree_gist", { raw: true })
     ]);
@@ -17,12 +17,7 @@ beforeEach(function () {
 });
 
 afterEach(async function () {
-    try {
-        this.sequelize.test.verifyNoRunningQueries();
-    } catch (err) {
-        err.message += ` in ${this.currentTest.fullTitle()}`;
-        throw err;
-    }
+    this.sequelize.test.verifyNoRunningQueries();
 });
 
 module.exports = Support;

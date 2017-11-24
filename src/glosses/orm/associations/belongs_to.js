@@ -106,15 +106,15 @@ class BelongsTo extends Association {
     }
 
     /**
-   * Get the associated instance.
-   *
-   * @param {Object} [options]
-   * @param {String|Boolean} [options.scope] Apply a scope on the related model, or remove its default scope by passing false.
-   * @param {String} [options.schema] Apply a schema on the related model
-   * @see {@link Model.findOne} for a full explanation of options
-   * @return {Promise<Model>}
-   */
-    get(instances, options) {
+     * Get the associated instance.
+     *
+     * @param {Object} [options]
+     * @param {String|Boolean} [options.scope] Apply a scope on the related model, or remove its default scope by passing false.
+     * @param {String} [options.schema] Apply a schema on the related model
+     * @see {@link Model.findOne} for a full explanation of options
+     * @return {Promise<Model>}
+     */
+    async get(instances, options) {
         const association = this;
         const where = {};
         let Target = association.target;
@@ -157,31 +157,30 @@ class BelongsTo extends Association {
             where;
 
         if (instances) {
-            return Target.findAll(options).then((results) => {
-                const result = {};
-                for (const instance of instances) {
-                    result[instance.get(association.foreignKey, { raw: true })] = null;
-                }
+            const results = await Target.findAll(options);
+            const result = {};
+            for (const instance of instances) {
+                result[instance.get(association.foreignKey, { raw: true })] = null;
+            }
 
-                for (const instance of results) {
-                    result[instance.get(association.targetKey, { raw: true })] = instance;
-                }
+            for (const instance of results) {
+                result[instance.get(association.targetKey, { raw: true })] = instance;
+            }
 
-                return result;
-            });
+            return result;
         }
 
         return Target.findOne(options);
     }
 
     /**
-   * Set the associated model.
-   *
-   * @param {Model|String|Number} [newAssociation] An persisted instance or the primary key of an instance to associate with this. Pass `null` or `undefined` to remove the association.
-   * @param {Object} [options] Options passed to `this.save`
-   * @param {Boolean} [options.save=true] Skip saving this after setting the foreign key if false.
-   * @return {Promise}
-   */
+     * Set the associated model.
+     *
+     * @param {Model|String|Number} [newAssociation] An persisted instance or the primary key of an instance to associate with this. Pass `null` or `undefined` to remove the association.
+     * @param {Object} [options] Options passed to `this.save`
+     * @param {Boolean} [options.save=true] Skip saving this after setting the foreign key if false.
+     * @return {Promise}
+     */
     set(sourceInstance, associatedInstance, options) {
         const association = this;
 
@@ -209,14 +208,14 @@ class BelongsTo extends Association {
     }
 
     /**
-   * Create a new instance of the associated model and associate it with this.
-   *
-   * @param {Object} [values]
-   * @param {Object} [options] Options passed to `target.create` and setAssociation.
-   * @see {@link Model#create}  for a full explanation of options
-   * @return {Promise}
-   */
-    create(sourceInstance, values, fieldsOrOptions) {
+     * Create a new instance of the associated model and associate it with this.
+     *
+     * @param {Object} [values]
+     * @param {Object} [options] Options passed to `target.create` and setAssociation.
+     * @see {@link Model#create}  for a full explanation of options
+     * @return {Promise}
+     */
+    async create(sourceInstance, values, fieldsOrOptions) {
         const association = this;
 
         const options = {};
@@ -226,9 +225,9 @@ class BelongsTo extends Association {
         }
         options.logging = (fieldsOrOptions || {}).logging;
 
-        return association.target.create(values, fieldsOrOptions).then((newAssociatedObject) =>
-            sourceInstance[association.accessors.set](newAssociatedObject, options)
-        );
+        const newAssociatedObject = await association.target.create(values, fieldsOrOptions);
+
+        return sourceInstance[association.accessors.set](newAssociatedObject, options);
     }
 }
 

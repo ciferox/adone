@@ -67,7 +67,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
 
             const User = timezoneSequelize.define("user", {
                 date: {
-                    type: DataTypes.DATE(3)
+                    type: new DataTypes.DATE(3)
                 }
             }, {
                 timestamps: false

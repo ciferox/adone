@@ -586,10 +586,10 @@ const QueryGenerator = {
     },
 
     attributesToSQL(attributes, options) {
-        const result = {},
-            existingConstraints = [];
-        let key,
-            attribute;
+        const result = {};
+        const existingConstraints = [];
+        let key;
+        let attribute;
 
         for (key in attributes) {
             attribute = attributes[key];
@@ -780,8 +780,8 @@ const QueryGenerator = {
                 topFragment = `TOP ${options.limit} `;
             }
             if (options.offset) {
-                const offset = options.offset || 0,
-                    isSubQuery = options.hasIncludeWhere || options.hasIncludeRequired || options.hasMultiAssociation;
+                const offset = options.offset || 0;
+                const isSubQuery = options.hasIncludeWhere || options.hasIncludeRequired || options.hasMultiAssociation;
                 let orders = { mainQueryOrder: [] };
                 if (options.order) {
                     orders = this.getQueryOrders(options, model, isSubQuery);
@@ -831,8 +831,8 @@ const QueryGenerator = {
         }
 
         let fragment = "";
-        const offset = options.offset || 0,
-            isSubQuery = options.hasIncludeWhere || options.hasIncludeRequired || options.hasMultiAssociation;
+        const offset = options.offset || 0;
+        const isSubQuery = options.hasIncludeWhere || options.hasIncludeRequired || options.hasMultiAssociation;
 
         let orders = {};
         if (options.order) {
@@ -863,8 +863,8 @@ const QueryGenerator = {
 };
 
 // private methods
-function wrapSingleQuote(identifier) {
+const wrapSingleQuote = (identifier) => {
     return Utils.addTicks(Utils.removeTicks(identifier, "'"), "'");
-}
+};
 
 module.exports = QueryGenerator;

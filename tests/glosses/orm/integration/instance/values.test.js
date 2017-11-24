@@ -103,21 +103,23 @@ describe(Support.getTestDialectTeaser("DAO"), () => {
             });
 
             it("allows use of sequelize.fn and sequelize.col in date and bool fields", function () {
-                const self = this,
-                    User = this.sequelize.define("User", {
-                        d: DataTypes.DATE,
-                        b: DataTypes.BOOLEAN,
-                        always_false: {
-                            type: DataTypes.BOOLEAN,
-                            defaultValue: false
-                        }
-                    }, { timestamps: false });
+                const self = this;
+                const User = this.sequelize.define("User", {
+                    d: DataTypes.DATE,
+                    b: DataTypes.BOOLEAN,
+                    always_false: {
+                        type: DataTypes.BOOLEAN,
+                        defaultValue: false
+                    }
+                }, { timestamps: false });
 
                 return User.sync({ force: true }).then(() => {
                     return User.create({}).then((user) => {
                         // Create the user first to set the proper default values. PG does not support column references in insert,
                         // so we must create a record with the right value for always_false, then reference it in an update
-                        let now = dialect === "sqlite" ? self.sequelize.fn("", self.sequelize.fn("datetime", "now")) : self.sequelize.fn("NOW");
+                        let now = dialect === "sqlite"
+                            ? self.sequelize.fn("", self.sequelize.fn("datetime", "now"))
+                            : self.sequelize.fn("NOW");
                         if (dialect === "mssql") {
                             now = self.sequelize.fn("", self.sequelize.fn("getdate"));
                         }
@@ -131,9 +133,8 @@ describe(Support.getTestDialectTeaser("DAO"), () => {
 
                         return user.save().then(() => {
                             return user.reload().then(() => {
-                                const d = new Date();
-                                d.setUTCMilliseconds(0);
-                                expect(user.d).to.be.deep.equal(d); // ???? sometimes it can be wrong
+                                expect(user.d).to.be.a("date");
+                                expect(user.d.getTime()).to.be.closeTo(new Date().getTime(), 2000);
                                 expect(user.b).to.equal(false);
                             });
                         });

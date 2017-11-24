@@ -61,7 +61,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             beforeEach(function () {
                 this.User = this.sequelize.define("User", {
                     username: DataTypes.STRING,
-                    geometry: DataTypes.GEOMETRY("POINT")
+                    geometry: new DataTypes.GEOMETRY("POINT")
                 });
 
                 return this.User.sync({ force: true });
@@ -97,7 +97,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             beforeEach(function () {
                 this.User = this.sequelize.define("User", {
                     username: DataTypes.STRING,
-                    geometry: DataTypes.GEOMETRY("LINESTRING")
+                    geometry: new DataTypes.GEOMETRY("LINESTRING")
                 });
 
                 return this.User.sync({ force: true });
@@ -133,7 +133,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             beforeEach(function () {
                 this.User = this.sequelize.define("User", {
                     username: DataTypes.STRING,
-                    geometry: DataTypes.GEOMETRY("POLYGON")
+                    geometry: new DataTypes.GEOMETRY("POLYGON")
                 });
 
                 return this.User.sync({ force: true });

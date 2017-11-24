@@ -124,26 +124,19 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         });
 
         if (current.dialect.supports.transactions) {
-            it("supports transactions", function () {
-                return Support.prepareTransactionTest(this.sequelize).bind({}).then((sequelize) => {
-                    const User = sequelize.define("User", { number: Support.Sequelize.INTEGER });
+            it("supports transactions", async function () {
+                const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                const User = sequelize.define("User", { number: Support.Sequelize.INTEGER });
 
-                    return User.sync({ force: true }).then(() => {
-                        return User.create({ number: 1 }).then((user) => {
-                            return sequelize.transaction().then((t) => {
-                                return user.increment("number", { by: 2, transaction: t }).then(() => {
-                                    return User.findAll().then((users1) => {
-                                        return User.findAll({ transaction: t }).then((users2) => {
-                                            expect(users1[0].number).to.equal(1);
-                                            expect(users2[0].number).to.equal(3);
-                                            return t.rollback();
-                                        });
-                                    });
-                                });
-                            });
-                        });
-                    });
-                });
+                await User.sync({ force: true });
+                const user = await User.create({ number: 1 });
+                const t = await sequelize.transaction();
+                await user.increment("number", { by: 2, transaction: t });
+                const users1 = await User.findAll();
+                const users2 = await User.findAll({ transaction: t });
+                expect(users1[0].number).to.equal(1);
+                expect(users2[0].number).to.equal(3);
+                await t.rollback();
             });
         }
 
@@ -222,7 +215,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         it("should still work right with other concurrent increments", function () {
             const self = this;
             return this.User.findById(1).then((user1) => {
-                return self.sequelize.Promise.all([
+                return Promise.all([
                     user1.increment(["aNumber"], { by: 2 }),
                     user1.increment(["aNumber"], { by: 2 }),
                     user1.increment(["aNumber"], { by: 2 })
@@ -291,26 +284,19 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         });
 
         if (current.dialect.supports.transactions) {
-            it("supports transactions", function () {
-                return Support.prepareTransactionTest(this.sequelize).bind({}).then((sequelize) => {
-                    const User = sequelize.define("User", { number: Support.Sequelize.INTEGER });
+            it("supports transactions", async function () {
+                const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                const User = sequelize.define("User", { number: Support.Sequelize.INTEGER });
 
-                    return User.sync({ force: true }).then(() => {
-                        return User.create({ number: 3 }).then((user) => {
-                            return sequelize.transaction().then((t) => {
-                                return user.decrement("number", { by: 2, transaction: t }).then(() => {
-                                    return User.findAll().then((users1) => {
-                                        return User.findAll({ transaction: t }).then((users2) => {
-                                            expect(users1[0].number).to.equal(3);
-                                            expect(users2[0].number).to.equal(1);
-                                            return t.rollback();
-                                        });
-                                    });
-                                });
-                            });
-                        });
-                    });
-                });
+                await User.sync({ force: true });
+                const user = await User.create({ number: 3 });
+                const t = await sequelize.transaction();
+                await user.decrement("number", { by: 2, transaction: t });
+                const users1 = await User.findAll();
+                const users2 = await User.findAll({ transaction: t });
+                expect(users1[0].number).to.equal(3);
+                expect(users2[0].number).to.equal(1);
+                await t.rollback();
             });
         }
 
@@ -378,7 +364,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         it("should still work right with other concurrent increments", function () {
             const self = this;
             return this.User.findById(1).then((user1) => {
-                return self.sequelize.Promise.all([
+                return Promise.all([
                     user1.decrement(["aNumber"], { by: 2 }),
                     user1.decrement(["aNumber"], { by: 2 }),
                     user1.decrement(["aNumber"], { by: 2 })
@@ -405,7 +391,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         it("with negative value", function () {
             const self = this;
             return this.User.findById(1).then((user1) => {
-                return self.sequelize.Promise.all([
+                return Promise.all([
                     user1.decrement("aNumber", { by: -2 }),
                     user1.decrement(["aNumber", "bNumber"], { by: -2 }),
                     user1.decrement({ aNumber: -1, bNumber: -2 })
@@ -452,26 +438,19 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
     describe("reload", () => {
         if (current.dialect.supports.transactions) {
-            it("supports transactions", function () {
-                return Support.prepareTransactionTest(this.sequelize).bind({}).then((sequelize) => {
-                    const User = sequelize.define("User", { username: Support.Sequelize.STRING });
+            it("supports transactions", async function () {
+                const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                const User = sequelize.define("User", { username: Support.Sequelize.STRING });
 
-                    return User.sync({ force: true }).then(() => {
-                        return User.create({ username: "foo" }).then((user) => {
-                            return sequelize.transaction().then((t) => {
-                                return User.update({ username: "bar" }, { where: { username: "foo" }, transaction: t }).then(() => {
-                                    return user.reload().then((user) => {
-                                        expect(user.username).to.equal("foo");
-                                        return user.reload({ transaction: t }).then((user) => {
-                                            expect(user.username).to.equal("bar");
-                                            return t.rollback();
-                                        });
-                                    });
-                                });
-                            });
-                        });
-                    });
-                });
+                await User.sync({ force: true });
+                const user = await User.create({ username: "foo" });
+                const t = await sequelize.transaction();
+                await User.update({ username: "bar" }, { where: { username: "foo" }, transaction: t });
+                await user.reload();
+                expect(user.username).to.equal("foo");
+                await user.reload({ transaction: t });
+                expect(user.username).to.equal("bar");
+                await t.rollback();
             });
         }
 
@@ -501,45 +480,35 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
             });
         });
 
-        it("should support updating a subset of attributes", function () {
-            return this.User.create({
+        it("should support updating a subset of attributes", async function () {
+            const user = await this.User.create({
                 aNumber: 1,
                 bNumber: 1
-            }).bind(this).tap(function (user) {
-                return this.User.update({
-                    bNumber: 2
-                }, {
-                    where: {
-                        id: user.get("id")
-                    }
-                });
-            }).then((user) => {
-                return user.reload({
-                    attributes: ["bNumber"]
-                });
-            }).then((user) => {
-                expect(user.get("aNumber")).to.equal(1);
-                expect(user.get("bNumber")).to.equal(2);
             });
+            await this.User.update({
+                bNumber: 2
+            }, {
+                where: {
+                    id: user.get("id")
+                }
+            });
+            await user.reload({
+                attributes: ["bNumber"]
+            });
+            expect(user.get("aNumber")).to.equal(1);
+            expect(user.get("bNumber")).to.equal(2);
         });
 
-        it("should update read only attributes as well (updatedAt)", function () {
-            return this.User.create({ username: "John Doe" }).bind(this).then(function (originalUser) {
-                this.originallyUpdatedAt = originalUser.updatedAt;
-                this.originalUser = originalUser;
-
-                // Wait for a second, so updatedAt will actually be different
-                this.clock.tick(1000);
-                return this.User.findById(originalUser.id);
-            }).then((updater) => {
-                return updater.updateAttributes({ username: "Doe John" });
-            }).then(function (updatedUser) {
-                this.updatedUser = updatedUser;
-                return this.originalUser.reload();
-            }).then(function () {
-                expect(this.originalUser.updatedAt).to.be.above(this.originallyUpdatedAt);
-                expect(this.updatedUser.updatedAt).to.be.above(this.originallyUpdatedAt);
-            });
+        it("should update read only attributes as well (updatedAt)", async function () {
+            const originalUser = await this.User.create({ username: "John Doe" });
+            const originallyUpdatedAt = originalUser.updatedAt;
+            // Wait for a second, so updatedAt will actually be different
+            this.clock.tick(1000);
+            const updater = await this.User.findById(originalUser.id);
+            const updatedUser = await updater.updateAttributes({ username: "Doe John" });
+            await originalUser.reload();
+            expect(originalUser.updatedAt).to.be.above(originallyUpdatedAt);
+            expect(updatedUser.updatedAt).to.be.above(originallyUpdatedAt);
         });
 
         it("should update the associations as well", function () {
@@ -616,98 +585,82 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
             }, Sequelize.InstanceError, "Instance could not be reloaded because it does not exist anymore (find call returned null)");
         });
 
-        it("should set an association to null after deletion, 1-1", function () {
-            const Shoe = this.sequelize.define("Shoe", { brand: DataTypes.STRING }),
-                Player = this.sequelize.define("Player", { name: DataTypes.STRING });
+        it("should set an association to null after deletion, 1-1", async function () {
+            const Shoe = this.sequelize.define("Shoe", { brand: DataTypes.STRING });
+            const Player = this.sequelize.define("Player", { name: DataTypes.STRING });
 
             Player.hasOne(Shoe);
             Shoe.belongsTo(Player);
 
-            return this.sequelize.sync({ force: true }).then(() => {
-                return Shoe.create({
-                    brand: "the brand",
-                    Player: {
-                        name: "the player"
-                    }
-                }, { include: [Player] });
-            }).then((shoe) => {
-                return Player.findOne({
-                    where: { id: shoe.Player.id },
-                    include: [Shoe]
-                }).then((lePlayer) => {
-                    expect(lePlayer.Shoe).not.to.be.null;
-                    return lePlayer.Shoe.destroy().return(lePlayer);
-                }).then((lePlayer) => {
-                    return lePlayer.reload();
-                }).then((lePlayer) => {
-                    expect(lePlayer.Shoe).to.be.null;
-                });
+            await this.sequelize.sync({ force: true });
+            const shoe = await Shoe.create({
+                brand: "the brand",
+                Player: {
+                    name: "the player"
+                }
+            }, { include: [Player] });
+            const lePlayer = await Player.findOne({
+                where: { id: shoe.Player.id },
+                include: [Shoe]
             });
+            expect(lePlayer.Shoe).not.to.be.null;
+            await lePlayer.Shoe.destroy();
+            await lePlayer.reload();
+            expect(lePlayer.Shoe).to.be.null;
         });
 
-        it("should set an association to empty after all deletion, 1-N", function () {
-            const Team = this.sequelize.define("Team", { name: DataTypes.STRING }),
-                Player = this.sequelize.define("Player", { name: DataTypes.STRING });
+        it("should set an association to empty after all deletion, 1-N", async function () {
+            const Team = this.sequelize.define("Team", { name: DataTypes.STRING });
+            const Player = this.sequelize.define("Player", { name: DataTypes.STRING });
 
             Team.hasMany(Player);
             Player.belongsTo(Team);
 
-            return this.sequelize.sync({ force: true }).then(() => {
-                return Team.create({
-                    name: "the team",
-                    Players: [{
-                        name: "the player1"
-                    }, {
-                        name: "the player2"
-                    }]
-                }, { include: [Player] });
-            }).then((team) => {
-                return Team.findOne({
-                    where: { id: team.id },
-                    include: [Player]
-                }).then((leTeam) => {
-                    expect(leTeam.Players).not.to.be.empty;
-                    return leTeam.Players[1].destroy().then(() => {
-                        return leTeam.Players[0].destroy();
-                    }).return(leTeam);
-                }).then((leTeam) => {
-                    return leTeam.reload();
-                }).then((leTeam) => {
-                    expect(leTeam.Players).to.be.empty;
-                });
+            await this.sequelize.sync({ force: true });
+            const team = await Team.create({
+                name: "the team",
+                Players: [{
+                    name: "the player1"
+                }, {
+                    name: "the player2"
+                }]
+            }, { include: [Player] });
+            const leTeam = await Team.findOne({
+                where: { id: team.id },
+                include: [Player]
             });
+            expect(leTeam.Players).not.to.be.empty;
+            await leTeam.Players[1].destroy();
+            await leTeam.Players[0].destroy();
+            await leTeam.reload();
+            expect(leTeam.Players).to.be.empty;
         });
 
-        it("should update the associations after one element deleted", function () {
-            const Team = this.sequelize.define("Team", { name: DataTypes.STRING }),
-                Player = this.sequelize.define("Player", { name: DataTypes.STRING });
+        it("should update the associations after one element deleted", async function () {
+            const Team = this.sequelize.define("Team", { name: DataTypes.STRING });
+            const Player = this.sequelize.define("Player", { name: DataTypes.STRING });
 
             Team.hasMany(Player);
             Player.belongsTo(Team);
 
 
-            return this.sequelize.sync({ force: true }).then(() => {
-                return Team.create({
-                    name: "the team",
-                    Players: [{
-                        name: "the player1"
-                    }, {
-                        name: "the player2"
-                    }]
-                }, { include: [Player] });
-            }).then((team) => {
-                return Team.findOne({
-                    where: { id: team.id },
-                    include: [Player]
-                }).then((leTeam) => {
-                    expect(leTeam.Players).to.have.length(2);
-                    return leTeam.Players[0].destroy().return(leTeam);
-                }).then((leTeam) => {
-                    return leTeam.reload();
-                }).then((leTeam) => {
-                    expect(leTeam.Players).to.have.length(1);
-                });
+            await this.sequelize.sync({ force: true });
+            const team = await Team.create({
+                name: "the team",
+                Players: [{
+                    name: "the player1"
+                }, {
+                    name: "the player2"
+                }]
+            }, { include: [Player] });
+            const leTeam = await Team.findOne({
+                where: { id: team.id },
+                include: [Player]
             });
+            expect(leTeam.Players).to.have.length(2);
+            await leTeam.Players[0].destroy();
+            await leTeam.reload();
+            expect(leTeam.Players).to.have.length(1);
         });
     });
 
@@ -725,7 +678,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                 expect(user.uuidv4).to.have.length(36);
             });
 
-            it.only("should store a valid uuid in uuidv1 and uuidv4 that conforms to the UUID v1 and v4 specifications", function () {
+            it("should store a valid uuid in uuidv1 and uuidv4 that conforms to the UUID v1 and v4 specifications", function () {
                 const user = this.User.build({ username: "a user" });
                 expect(is.uuid(user.uuidv1, 1)).to.be.true;
                 expect(is.uuid(user.uuidv4, 4)).to.be.true;
@@ -780,79 +733,55 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         });
 
         describe("super user boolean", () => {
-            it("should default to false", function () {
-                return this.User.build({
+            it("should default to false", async function () {
+                await this.User.build({
                     username: "a user"
-                })
-                    .save()
-                    .bind(this)
-                    .then(function () {
-                        return this.User.findOne({
-                            where: {
-                                username: "a user"
-                            }
-                        })
-                            .then((user) => {
-                                expect(user.isSuperUser).to.be.false;
-                            });
-                    });
+                }).save();
+                const user = await this.User.findOne({
+                    where: {
+                        username: "a user"
+                    }
+                });
+                expect(user.isSuperUser).to.be.false;
             });
 
-            it("should override default when given truthy boolean", function () {
-                return this.User.build({
+            it("should override default when given truthy boolean", async function () {
+                await this.User.build({
                     username: "a user",
                     isSuperUser: true
-                })
-                    .save()
-                    .bind(this)
-                    .then(function () {
-                        return this.User.findOne({
-                            where: {
-                                username: "a user"
-                            }
-                        })
-                            .then((user) => {
-                                expect(user.isSuperUser).to.be.true;
-                            });
-                    });
+                }).save();
+                const user = await this.User.findOne({
+                    where: {
+                        username: "a user"
+                    }
+                });
+                expect(user.isSuperUser).to.be.true;
             });
 
-            it('should override default when given truthy boolean-string ("true")', function () {
-                return this.User.build({
+            it('should override default when given truthy boolean-string ("true")', async function () {
+                await this.User.build({
                     username: "a user",
                     isSuperUser: "true"
-                })
-                    .save()
-                    .bind(this)
-                    .then(function () {
-                        return this.User.findOne({
-                            where: {
-                                username: "a user"
-                            }
-                        })
-                            .then((user) => {
-                                expect(user.isSuperUser).to.be.true;
-                            });
-                    });
+                }).save();
+                const user = await this.User.findOne({
+                    where: {
+                        username: "a user"
+                    }
+                });
+                expect(user.isSuperUser).to.be.true;
             });
 
-            it("should override default when given truthy boolean-int (1)", function () {
-                return this.User.build({
+            it("should override default when given truthy boolean-int (1)", async function () {
+                await this.User.build({
                     username: "a user",
                     isSuperUser: 1
-                })
-                    .save()
-                    .bind(this)
-                    .then(function () {
-                        return this.User.findOne({
-                            where: {
-                                username: "a user"
-                            }
-                        })
-                            .then((user) => {
-                                expect(user.isSuperUser).to.be.true;
-                            });
-                    });
+                }).save();
+                const user = await this.User.findOne({
+                    where: {
+                        username: "a user"
+                    }
+                });
+                expect(user.isSuperUser).to.be.true;
             });
 
             it("should throw error when given value of incorrect type", function () {
@@ -892,23 +821,17 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
     describe("save", () => {
         if (current.dialect.supports.transactions) {
-            it("supports transactions", function () {
-                return Support.prepareTransactionTest(this.sequelize).bind({}).then((sequelize) => {
-                    const User = sequelize.define("User", { username: Support.Sequelize.STRING });
-                    return User.sync({ force: true }).then(() => {
-                        return sequelize.transaction().then((t) => {
-                            return User.build({ username: "foo" }).save({ transaction: t }).then(() => {
-                                return User.count().then((count1) => {
-                                    return User.count({ transaction: t }).then((count2) => {
-                                        expect(count1).to.equal(0);
-                                        expect(count2).to.equal(1);
-                                        return t.rollback();
-                                    });
-                                });
-                            });
-                        });
-                    });
-                });
+            it("supports transactions", async function () {
+                const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                const User = sequelize.define("User", { username: Support.Sequelize.STRING });
+                await User.sync({ force: true });
+                const t = await sequelize.transaction();
+                await User.build({ username: "foo" }).save({ transaction: t });
+                const count1 = await User.count();
+                const count2 = await User.count({ transaction: t });
+                expect(count1).to.equal(0);
+                expect(count2).to.equal(1);
+                await t.rollback();
             });
         }
 
@@ -1968,26 +1891,18 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
     describe("destroy", () => {
         if (current.dialect.supports.transactions) {
-            it("supports transactions", function () {
-                return Support.prepareTransactionTest(this.sequelize).bind({}).then((sequelize) => {
-                    const User = sequelize.define("User", { username: Support.Sequelize.STRING });
-
-                    return User.sync({ force: true }).then(() => {
-                        return User.create({ username: "foo" }).then((user) => {
-                            return sequelize.transaction().then((t) => {
-                                return user.destroy({ transaction: t }).then(() => {
-                                    return User.count().then((count1) => {
-                                        return User.count({ transaction: t }).then((count2) => {
-                                            expect(count1).to.equal(1);
-                                            expect(count2).to.equal(0);
-                                            return t.rollback();
-                                        });
-                                    });
-                                });
-                            });
-                        });
-                    });
-                });
+            it("supports transactions", async function () {
+                const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                const User = sequelize.define("User", { username: Support.Sequelize.STRING });
+                await User.sync({ force: true });
+                const user = await User.create({ username: "foo" });
+                const t = await sequelize.transaction();
+                await user.destroy({ transaction: t });
+                const count1 = await User.count();
+                const count2 = await User.count({ transaction: t });
+                expect(count1).to.equal(1);
+                expect(count2).to.equal(0);
+                await t.rollback();
             });
         }
 
@@ -2058,12 +1973,12 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         it("delete a record of multiple primary keys table", function () {
             const MultiPrimary = this.sequelize.define("MultiPrimary", {
                 bilibili: {
-                    type: Support.Sequelize.CHAR(2),
+                    type: new Support.Sequelize.CHAR(2),
                     primaryKey: true
                 },
 
                 guruguru: {
-                    type: Support.Sequelize.CHAR(2),
+                    type: new Support.Sequelize.CHAR(2),
                     primaryKey: true
                 }
             });
@@ -2181,12 +2096,11 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
     });
 
     describe("restore", () => {
-        it("returns an error if the model is not paranoid", function () {
-            return this.User.create({ username: "Peter", secretValue: "42" }).then((user) => {
-                expect(() => {
-                    user.restore();
-                }).to.throw(Error, "Model is not paranoid");
-            });
+        it("returns an error if the model is not paranoid", async function () {
+            const user = await this.User.create({ username: "Peter", secretValue: "42" });
+            await assert.throws(async () => {
+                await user.restore();
+            }, "Model is not paranoid");
         });
 
         it("restores a previously deleted model", function () {

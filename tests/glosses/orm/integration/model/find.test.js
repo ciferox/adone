@@ -3,7 +3,6 @@ import config from "../../config/config";
 
 const { is } = adone;
 const Sequelize = adone.orm;
-const Promise = Sequelize.Promise;
 const dialect = Support.getTestDialect();
 const { DataTypes } = Sequelize;
 const current = Support.sequelize;
@@ -24,29 +23,23 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
     describe("find", () => {
         if (current.dialect.supports.transactions) {
-            it("supports transactions", function () {
-                return Support.prepareTransactionTest(this.sequelize).bind({}).then((sequelize) => {
-                    const User = sequelize.define("User", { username: Sequelize.STRING });
+            it("supports transactions", async function () {
+                const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                const User = sequelize.define("User", { username: Sequelize.STRING });
 
-                    return User.sync({ force: true }).then(() => {
-                        return sequelize.transaction().then((t) => {
-                            return User.create({ username: "foo" }, { transaction: t }).then(() => {
-                                return User.findOne({
-                                    where: { username: "foo" }
-                                }).then((user1) => {
-                                    return User.findOne({
-                                        where: { username: "foo" },
-                                        transaction: t
-                                    }).then((user2) => {
-                                        expect(user1).to.be.null;
-                                        expect(user2).to.not.be.null;
-                                        return t.rollback();
-                                    });
-                                });
-                            });
-                        });
-                    });
+                await User.sync({ force: true });
+                const t = await sequelize.transaction();
+                await User.create({ username: "foo" }, { transaction: t });
+                const user1 = await User.findOne({
+                    where: { username: "foo" }
                 });
+                const user2 = await User.findOne({
+                    where: { username: "foo" },
+                    transaction: t
+                });
+                expect(user1).to.be.null;
+                expect(user2).to.not.be.null;
+                await t.rollback();
             });
         }
 
@@ -248,15 +241,15 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             });
 
             it("always honors ZERO as primary key", function () {
-                const self = this,
-                    permutations = [
-                        0,
-                        "0"
-                    ];
+                const self = this;
+                const permutations = [
+                    0,
+                    "0"
+                ];
                 let count = 0;
 
                 return this.User.bulkCreate([{ username: "jack" }, { username: "jack" }]).then(() => {
-                    return self.sequelize.Promise.map(permutations, (perm) => {
+                    return Promise.all(permutations.map((perm) => {
                         return self.User.findById(perm, {
                             logging(s) {
                                 expect(s.indexOf(0)).not.to.equal(-1);
@@ -265,7 +258,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         }).then((user) => {
                             expect(user).to.be.null;
                         });
-                    });
+                    }));
                 }).then(() => {
                     expect(count).to.be.equal(permutations.length);
                 });
@@ -757,74 +750,68 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     this.Tag = this.sequelize.define("Tag", { name: Sequelize.STRING });
                 });
 
-                it("returns the associated models when using through as string and alias", function () {
+                it("returns the associated models when using through as string and alias", async function () {
                     const self = this;
 
                     this.Product.belongsToMany(this.Tag, { as: "tags", through: "product_tag" });
                     this.Tag.belongsToMany(this.Product, { as: "products", through: "product_tag" });
 
-                    return this.sequelize.sync().then(() => {
-                        return Promise.all([
-                            self.Product.bulkCreate([
-                                { title: "Chair" },
-                                { title: "Desk" },
-                                { title: "Handbag" },
-                                { title: "Dress" },
-                                { title: "Jan" }
-                            ]),
-                            self.Tag.bulkCreate([
-                                { name: "Furniture" },
-                                { name: "Clothing" },
-                                { name: "People" }
-                            ])
-                        ]).then(() => {
-                            return Promise.all([
-                                self.Product.findAll(),
-                                self.Tag.findAll()
-                            ]);
-                        }).spread((products, tags) => {
-                            self.products = products;
-                            self.tags = tags;
-                            return Promise.all([
-                                products[0].setTags([tags[0], tags[1]]),
-                                products[1].addTag(tags[0]),
-                                products[2].addTag(tags[1]),
-                                products[3].setTags([tags[1]]),
-                                products[4].setTags([tags[2]])
-                            ]).then(() => {
-                                return Promise.all([
-                                    self.Tag.findOne({
-                                        where: {
-                                            id: tags[0].id
-                                        },
-                                        include: [
-                                            { model: self.Product, as: "products" }
-                                        ]
-                                    }).then((tag) => {
-                                        expect(tag).to.exist;
-                                        expect(tag.products.length).to.equal(2);
-                                    }),
-                                    tags[1].getProducts().then((products) => {
-                                        expect(products.length).to.equal(3);
-                                    }),
-                                    self.Product.findOne({
-                                        where: {
-                                            id: products[0].id
-                                        },
-                                        include: [
-                                            { model: self.Tag, as: "tags" }
-                                        ]
-                                    }).then((product) => {
-                                        expect(product).to.exist;
-                                        expect(product.tags.length).to.equal(2);
-                                    }),
-                                    products[1].getTags().then((tags) => {
-                                        expect(tags.length).to.equal(1);
-                                    })
-                                ]);
-                            });
-                        });
-                    });
+                    await this.sequelize.sync();
+                    await Promise.all([
+                        self.Product.bulkCreate([
+                            { title: "Chair" },
+                            { title: "Desk" },
+                            { title: "Handbag" },
+                            { title: "Dress" },
+                            { title: "Jan" }
+                        ]),
+                        self.Tag.bulkCreate([
+                            { name: "Furniture" },
+                            { name: "Clothing" },
+                            { name: "People" }
+                        ])
+                    ]);
+                    const [products, tags] = await Promise.all([
+                        self.Product.findAll(),
+                        self.Tag.findAll()
+                    ]);
+                    await Promise.all([
+                        products[0].setTags([tags[0], tags[1]]),
+                        products[1].addTag(tags[0]),
+                        products[2].addTag(tags[1]),
+                        products[3].setTags([tags[1]]),
+                        products[4].setTags([tags[2]])
+                    ]);
+                    await Promise.all([
+                        self.Tag.findOne({
+                            where: {
+                                id: tags[0].id
+                            },
+                            include: [
+                                { model: self.Product, as: "products" }
+                            ]
+                        }).then((tag) => {
+                            expect(tag).to.exist;
+                            expect(tag.products.length).to.equal(2);
+                        }),
+                        tags[1].getProducts().then((products) => {
+                            expect(products.length).to.equal(3);
+                        }),
+                        self.Product.findOne({
+                            where: {
+                                id: products[0].id
+                            },
+                            include: [
+                                { model: self.Tag, as: "tags" }
+                            ]
+                        }).then((product) => {
+                            expect(product).to.exist;
+                            expect(product.tags.length).to.equal(2);
+                        }),
+                        products[1].getTags().then((tags) => {
+                            expect(tags.length).to.equal(1);
+                        })
+                    ]);
                 });
 
                 it("returns the associated models when using through as model and alias", async function () {
@@ -960,7 +947,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
             it("works from model options", async () => {
                 const Model = current.define("Test", {
-                    username: Sequelize.STRING(100)
+                    username: new Sequelize.STRING(100)
                 }, {
                     rejectOnEmpty: true
                 });
@@ -977,7 +964,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
             it("resolve null when disabled", async () => {
                 const Model = current.define("Test", {
-                    username: Sequelize.STRING(100)
+                    username: new Sequelize.STRING(100)
                 });
 
                 await Model.sync({ force: true });

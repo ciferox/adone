@@ -13,7 +13,6 @@ const {
 } = adone.orm;
 
 const current = Support.sequelize;
-const Promise = current.Promise;
 
 describe(Support.getTestDialectTeaser("belongsToMany"), () => {
     it("should not inherit scopes from parent to join table", () => {
@@ -174,14 +173,13 @@ describe(Support.getTestDialectTeaser("belongsToMany"), () => {
             this.destroy.restore();
         });
 
-        it("uses one insert into statement", function () {
-            return user.setTasks([task1, task2]).bind(this).then(function () {
-                expect(this.findAll).to.have.been.calledOnce;
-                expect(this.bulkCreate).to.have.been.calledOnce;
-            });
+        it("uses one insert into statement", async function () {
+            await user.setTasks([task1, task2]);
+            expect(this.findAll).to.have.been.calledOnce;
+            expect(this.bulkCreate).to.have.been.calledOnce;
         });
 
-        it("uses one delete from statement", function () {
+        it("uses one delete from statement", async function () {
             this.findAll
                 .onFirstCall().returns(Promise.resolve([]))
                 .onSecondCall().returns(Promise.resolve([
@@ -189,12 +187,10 @@ describe(Support.getTestDialectTeaser("belongsToMany"), () => {
                     { userId: 42, taskId: 16 }
                 ]));
 
-            return user.setTasks([task1, task2]).bind(this).then(() => {
-                return user.setTasks(null);
-            }).then(function () {
-                expect(this.findAll).to.have.been.calledTwice;
-                expect(this.destroy).to.have.been.calledOnce;
-            });
+            await user.setTasks([task1, task2]);
+            await user.setTasks(null);
+            expect(this.findAll).to.have.been.calledTwice;
+            expect(this.destroy).to.have.been.calledOnce;
         });
     });
 

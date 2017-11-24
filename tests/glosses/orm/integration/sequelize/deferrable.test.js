@@ -8,7 +8,7 @@ const Sequelize = adone.orm;
 describe(Support.getTestDialectTeaser("Sequelize"), { skip: !Support.sequelize.dialect.supports.deferrableConstraints }, () => {
     describe("Deferrable", () => {
         beforeEach(function () {
-            this.run = function (deferrable, options) {
+            this.run = async function (deferrable, options) {
                 options = options || {};
 
                 const taskTableName = options.taskTableName || `tasks_${config.rand()}`;
@@ -36,21 +36,14 @@ describe(Support.getTestDialectTeaser("Sequelize"), { skip: !Support.sequelize.d
                     }
                 );
 
-                return User.sync({ force: true }).bind(this).then(() => {
-                    return Task.sync({ force: true });
-                }).then(function () {
-                    return this.sequelize.transaction(transactionOptions, (t) => {
-                        return Task
-                            .create({ title: "a task", user_id: -1 }, { transaction: t })
-                            .then((task) => {
-                                return [task, User.create({}, { transaction: t })];
-                            })
-                            .spread((task, user) => {
-                                task.user_id = user.id;
-                                return task.save({ transaction: t });
-                            });
-                    });
-                });
+                await User.sync({ force: true });
+                await Task.sync({ force: true });
+                const t = await this.sequelize.transaction(transactionOptions);
+                const task = await Task.create({ title: "a task", user_id: -1 }, { transaction: t })
+                const user = await User.create({}, { transaction: t });
+                task.user_id = user.id;
+                await task.save({ transaction: t });
+                // commit?
             };
         });
 

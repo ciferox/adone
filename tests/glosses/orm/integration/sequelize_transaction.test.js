@@ -1,7 +1,6 @@
 import Support from "./support";
-
+const { promise } = adone;
 const {
-    Promise,
     Transaction
 } = adone.orm;
 
@@ -46,47 +45,38 @@ describe(Support.getTestDialectTeaser("Sequelize#transaction"), { skip: !current
         });
 
         if (Support.getTestDialect() !== "sqlite") {
-            it("works for long running transactions", function () {
-                return Support.prepareTransactionTest(this.sequelize).bind(this).then(function (sequelize) {
-                    this.sequelize = sequelize;
+            it("works for long running transactions", async function () {
+                this.sequelize = await Support.prepareTransactionTest(this.sequelize);
 
-                    this.User = sequelize.define("User", {
-                        name: Support.Sequelize.STRING
-                    }, { timestamps: false });
+                this.User = this.sequelize.define("User", {
+                    name: Support.Sequelize.STRING
+                }, { timestamps: false });
 
-                    return sequelize.sync({ force: true });
-                }).then(function () {
-                    return this.sequelize.transaction();
-                }).then(function (t) {
-                    let query = "select sleep(2);";
+                await this.sequelize.sync({ force: true });
+                const t = await this.sequelize.transaction();
+                let query = "select sleep(2);";
 
-                    switch (Support.getTestDialect()) {
-                        case "postgres":
-                            query = "select pg_sleep(2);";
-                            break;
-                        case "sqlite":
-                            query = "select sqlite3_sleep(2000);";
-                            break;
-                        case "mssql":
-                            query = "WAITFOR DELAY '00:00:02';";
-                            break;
-                        default:
-                            break;
-                    }
+                switch (Support.getTestDialect()) {
+                    case "postgres":
+                        query = "select pg_sleep(2);";
+                        break;
+                    case "sqlite":
+                        query = "select sqlite3_sleep(2000);";
+                        break;
+                    case "mssql":
+                        query = "WAITFOR DELAY '00:00:02';";
+                        break;
+                    default:
+                        break;
+                }
 
-                    return this.sequelize.query(query, { transaction: t }).bind(this).then(function () {
-                        return this.User.create({ name: "foo" });
-                    }).then(function () {
-                        return this.sequelize.query(query, { transaction: t });
-                    }).then(() => {
-                        return t.commit();
-                    });
-                }).then(function () {
-                    return this.User.all();
-                }).then((users) => {
-                    expect(users.length).to.equal(1);
-                    expect(users[0].name).to.equal("foo");
-                });
+                await this.sequelize.query(query, { transaction: t });
+                await this.User.create({ name: "foo" });
+                await this.sequelize.query(query, { transaction: t });
+                await t.commit();
+                const users = await this.User.all();
+                expect(users.length).to.equal(1);
+                expect(users[0].name).to.equal("foo");
             });
         }
     });
@@ -106,7 +96,7 @@ describe(Support.getTestDialectTeaser("Sequelize#transaction"), { skip: !current
                         return Test
                             .create({ name: "Peter" }, { transaction })
                             .then(() => {
-                                return Promise.delay(1000).then(() => {
+                                return promise.delay(1000).then(() => {
                                     return transaction
                                         .commit()
                                         .then(() => {
@@ -152,7 +142,7 @@ describe(Support.getTestDialectTeaser("Sequelize#transaction"), { skip: !current
                                     expect(err).to.be.ok;
                                     return t2.rollback();
                                 }),
-                                Promise.delay(100).then(() => {
+                                promise.delay(100).then(() => {
                                     return t1.commit();
                                 })
                             ]);

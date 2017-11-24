@@ -41,24 +41,20 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 });
             });
 
-            it("should apply defaultScope", function () {
-                return this.ScopeMe.destroy({ where: {} }).bind(this).then(function () {
-                    return this.ScopeMe.unscoped().findAll();
-                }).then((users) => {
-                    expect(users).to.have.length(2);
-                    expect(users[0].get("username")).to.equal("tony");
-                    expect(users[1].get("username")).to.equal("fred");
-                });
+            it("should apply defaultScope", async function () {
+                await this.ScopeMe.destroy({ where: {} });
+                const users = await this.ScopeMe.unscoped().findAll();
+                expect(users).to.have.length(2);
+                expect(users[0].get("username")).to.equal("tony");
+                expect(users[1].get("username")).to.equal("fred");
             });
 
-            it("should be able to override default scope", function () {
-                return this.ScopeMe.destroy({ where: { access_level: { lt: 5 } } }).bind(this).then(function () {
-                    return this.ScopeMe.unscoped().findAll();
-                }).then((users) => {
-                    expect(users).to.have.length(2);
-                    expect(users[0].get("username")).to.equal("tobi");
-                    expect(users[1].get("username")).to.equal("dan");
-                });
+            it("should be able to override default scope", async function () {
+                await this.ScopeMe.destroy({ where: { access_level: { lt: 5 } } });
+                const users = await this.ScopeMe.unscoped().findAll();
+                expect(users).to.have.length(2);
+                expect(users[0].get("username")).to.equal("tobi");
+                expect(users[1].get("username")).to.equal("dan");
             });
 
             it("should be able to unscope destroy", async function () {
@@ -66,24 +62,20 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 expect(await this.ScopeMe.unscoped().findAll()).to.have.length(0);
             });
 
-            it("should be able to apply other scopes", function () {
-                return this.ScopeMe.scope("lowAccess").destroy({ where: {} }).bind(this).then(function () {
-                    return this.ScopeMe.unscoped().findAll();
-                }).then((users) => {
-                    expect(users).to.have.length(1);
-                    expect(users[0].get("username")).to.equal("tobi");
-                });
+            it("should be able to apply other scopes", async function () {
+                await this.ScopeMe.scope("lowAccess").destroy({ where: {} });
+                const users = await this.ScopeMe.unscoped().findAll();
+                expect(users).to.have.length(1);
+                expect(users[0].get("username")).to.equal("tobi");
             });
 
-            it("should be able to merge scopes with where", function () {
-                return this.ScopeMe.scope("lowAccess").destroy({ where: { username: "dan" } }).bind(this).then(function () {
-                    return this.ScopeMe.unscoped().findAll();
-                }).then((users) => {
-                    expect(users).to.have.length(3);
-                    expect(users[0].get("username")).to.equal("tony");
-                    expect(users[1].get("username")).to.equal("tobi");
-                    expect(users[2].get("username")).to.equal("fred");
-                });
+            it("should be able to merge scopes with where", async function () {
+                await this.ScopeMe.scope("lowAccess").destroy({ where: { username: "dan" } });
+                const users = await this.ScopeMe.unscoped().findAll();
+                expect(users).to.have.length(3);
+                expect(users[0].get("username")).to.equal("tony");
+                expect(users[1].get("username")).to.equal("tobi");
+                expect(users[2].get("username")).to.equal("fred");
             });
         });
     });

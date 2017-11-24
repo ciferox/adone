@@ -59,29 +59,30 @@ class ConnectionManager {
     }
 
     /**
-   * Handler which executes on process exit or connection manager shutdown
-   *
-   * @private
-   * @return {Promise}
-   */
-    _onProcessExit() {
+     * Handler which executes on process exit or connection manager shutdown
+     *
+     * @private
+     * @return {Promise}
+     */
+    async _onProcessExit() {
         if (!this.pool) {
-            return Promise.resolve();
+            return;
         }
 
-        return this.pool.drain().then(() => {
-            debug("connection drain due to process exit");
-            return this.pool.clear();
-        });
+        await this.pool.drain();
+
+        debug("connection drain due to process exit");
+
+        await this.pool.clear();
     }
 
     /**
-   * Drain the pool and close it permanently
-   *
-   * @return {Promise}
-   */
+     * Drain the pool and close it permanently
+     *
+     * @return {Promise}
+     */
     close() {
-    // Remove the listener, so all references to this instance can be garbage collected.
+        // Remove the listener, so all references to this instance can be garbage collected.
         process.removeListener("exit", this._onProcessExit);
 
         // Mark close of pool
@@ -93,9 +94,9 @@ class ConnectionManager {
     }
 
     /**
-   * Initialize connection pool. By default pool autostart is set to false, so no connection will be
-   * be created unless `pool.acquire` is called.
-   */
+     * Initialize connection pool. By default pool autostart is set to false, so no connection will be
+     * be created unless `pool.acquire` is called.
+     */
     initPools() {
         const config = this.config;
 
@@ -107,14 +108,10 @@ class ConnectionManager {
                         return Promise.resolve();
                     }
 
-                    return this._disconnect(mayBeConnection)
-                        .tap(() => {
-                            debug("connection destroy");
-                        });
+                    return this._disconnect(mayBeConnection);
                 },
                 validate: config.pool.validate
             }, {
-                Promise: config.pool.Promise,
                 testOnBorrow: true,
                 returnToHead: true,
                 autostart: false,
@@ -168,39 +165,34 @@ class ConnectionManager {
                     return Promise.resolve();
                 }
 
-                return this.pool[mayBeConnection.queryType].destroy(mayBeConnection)
-                    .tap(() => {
-                        debug("connection destroy");
-                    });
+                return this.pool[mayBeConnection.queryType].destroy(mayBeConnection);
             },
             clear: () => {
-                return Promise.join(
+                return Promise.all([
                     this.pool.read.clear(),
                     this.pool.write.clear()
-                ).tap(() => {
-                    debug("all connection clear");
-                });
+                ]);
             },
             drain: () => {
-                return Promise.join(
+                return Promise.all([
                     this.pool.write.drain(),
                     this.pool.read.drain()
-                );
+                ]);
             },
             read: util.pool.create({
                 create: () => {
                     const nextRead = reads++ % config.replication.read.length; // round robin config
                     return this
                         ._connect(config.replication.read[nextRead])
-                        .tap((connection) => {
+                        .then((connection) => {
                             connection.queryType = "read";
+                            return connection;
                         })
                         .catch((err) => err);
                 },
                 destroy: (connection) => this._disconnect(connection),
                 validate: config.pool.validate
             }, {
-                Promise: config.pool.Promise,
                 testOnBorrow: true,
                 returnToHead: true,
                 autostart: false,
@@ -211,18 +203,18 @@ class ConnectionManager {
                 evictionRunIntervalMillis: config.pool.evict
             }),
             write: util.pool.create({
-                create: () => {
+                create: async () => {
                     return this
                         ._connect(config.replication.write)
-                        .tap((connection) => {
+                        .then((connection) => {
                             connection.queryType = "write";
+                            return connection;
                         })
                         .catch((err) => err);
                 },
                 destroy: (connection) => this._disconnect(connection),
                 validate: config.pool.validate
             }, {
-                Promise: config.pool.Promise,
                 testOnBorrow: true,
                 returnToHead: true,
                 autostart: false,
@@ -238,17 +230,17 @@ class ConnectionManager {
     }
 
     /**
-   * Get connection from pool. It sets database version if it's not already set.
-   * Call pool.acquire to get a connection
-   *
-   * @param {Object}   [options]                 Pool options
-   * @param {Integer}  [options.priority]        Set priority for this call. Read more at https://github.com/coopernurse/node-pool#priority-queueing
-   * @param {String}   [options.type]            Set which replica to use. Available options are `read` and `write`
-   * @param {Boolean}  [options.useMaster=false] Force master or write replica to get connection from
-   *
-   * @return {Promise<Connection>}
-   */
-    getConnection(options) {
+     * Get connection from pool. It sets database version if it's not already set.
+     * Call pool.acquire to get a connection
+     *
+     * @param {Object}   [options]                 Pool options
+     * @param {Integer}  [options.priority]        Set priority for this call. Read more at https://github.com/coopernurse/node-pool#priority-queueing
+     * @param {String}   [options.type]            Set which replica to use. Available options are `read` and `write`
+     * @param {Boolean}  [options.useMaster=false] Force master or write replica to get connection from
+     *
+     * @return {Promise<Connection>}
+     */
+    async getConnection(options) {
         options = options || {};
 
         let promise;
@@ -279,81 +271,85 @@ class ConnectionManager {
             promise = Promise.resolve();
         }
 
-        return promise.then(() => {
-            return this.pool.acquire(options.priority, options.type, options.useMaster)
-                .then((mayBeConnection) => this._determineConnection(mayBeConnection))
-                .tap(() => {
-                    debug("connection acquired");
-                });
-        });
+        await promise;
+
+        const mayBeConnection = await this.pool.acquire(options.priority, options.type, options.useMaster);
+
+        return this._determineConnection(mayBeConnection);
     }
 
     /**
-   * Release a pooled connection so it can be utilized by other connection requests
-   *
-   * @param {Connection} connection
-   *
-   * @return {Promise}
-   */
-    releaseConnection(connection) {
-        return this.pool.release(connection)
-            .tap(() => {
-                debug("connection released");
-            })
-            .catch(/Resource not currently part of this pool/, () => {});
+     * Release a pooled connection so it can be utilized by other connection requests
+     *
+     * @param {Connection} connection
+     *
+     * @return {Promise}
+     */
+    async releaseConnection(connection) {
+        try {
+            await this.pool.release(connection);
+        } catch (err) {
+            if (!/Resource not currently part of this pool/.test(err.message)) {
+                throw err;
+            }
+        }
     }
 
     /**
-   * Check if something acquired by pool is indeed a connection but not an Error instance
-   * Why we need to do this https://github.com/sequelize/sequelize/pull/8330
-   *
-   * @param {Object|Error} mayBeConnection Object which can be either connection or error
-   *
-   * @retun {Promise<Connection>}
-   */
-    _determineConnection(mayBeConnection) {
+     * Check if something acquired by pool is indeed a connection but not an Error instance
+     * Why we need to do this https://github.com/sequelize/sequelize/pull/8330
+     *
+     * @param {Object|Error} mayBeConnection Object which can be either connection or error
+     *
+     * @retun {Promise<Connection>}
+     */
+    async _determineConnection(mayBeConnection) {
         if (mayBeConnection instanceof Error) {
-            return Promise.resolve(this.pool.destroy(mayBeConnection))
-                .catch(/Resource not currently part of this pool/, () => {})
-                .then(() => {
-                    throw mayBeConnection;
-                });
+            try {
+                await this.pool.destroy(mayBeConnection);
+            } catch (err) {
+                if (!/Resource not currently part of this pool/.test(err.message)) {
+                    throw err;
+                }
+            }
+            throw mayBeConnection;
         }
 
-        return Promise.resolve(mayBeConnection);
+        return mayBeConnection;
     }
 
     /**
-   * Call dialect library to get connection
-   *
-   * @param {*} config Connection config
-   * @private
-   * @return {Promise<Connection>}
-   */
-    _connect(config) {
-        return this.sequelize.runHooks("beforeConnect", config)
-            .then(() => this.dialect.connectionManager.connect(config))
-            .then((connection) => this.sequelize.runHooks("afterConnect", connection, config).return(connection));
+     * Call dialect library to get connection
+     *
+     * @param {*} config Connection config
+     * @private
+     * @return {Promise<Connection>}
+     */
+    async _connect(config) {
+        await this.sequelize.runHooks("beforeConnect", config);
+        const connection = await this.dialect.connectionManager.connect(config);
+        await this.sequelize.runHooks("afterConnect", connection, config);
+        return connection;
     }
 
     /**
-   * Call dialect library to disconnect a connection
-   *
-   * @param {Connection} connection
-   * @private
-   * @return {Promise}
-   */
+     * Call dialect library to disconnect a connection
+     *
+     * @param {Connection} connection
+     * @private
+     * @return {Promise}
+     */
     _disconnect(connection) {
         return this.dialect.connectionManager.disconnect(connection);
     }
 
     /**
-   * Determine if a connection is still valid or not
-   *
-   * @param {Connection} connection
-   *
-   * @return {Boolean}
-   */
+     * Determine if a connection is still valid or not
+     *
+     * @param {Connection} connection
+     *
+     * @return {Boolean}
+     */
     _validate(connection) {
         if (!this.dialect.connectionManager.validate) {
             return true;

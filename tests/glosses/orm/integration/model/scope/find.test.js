@@ -86,34 +86,34 @@ describe(Support.getTestDialectTeaser("Model"), () => {
         });
 
         describe("should not overwrite", () => {
-            it("default scope with values from previous finds", function () {
-                return this.ScopeMe.findAll({ where: { other_value: 10 } }).bind(this).then(function (users) {
+            it("default scope with values from previous finds", async function () {
+                {
+                    const users = await this.ScopeMe.findAll({ where: { other_value: 10 } });
                     expect(users).to.have.length(1);
-
-                    return this.ScopeMe.findAll();
-                }).then((users) => {
+                }
+                {
+                    const users = await this.ScopeMe.findAll();
                     // This should not have other_value: 10
                     expect(users).to.have.length(2);
-                });
-
+                }
             });
 
-            it("other scopes with values from previous finds", function () {
-                return this.ScopeMe.scope("highValue").findAll({ where: { access_level: 10 } }).bind(this).then(function (users) {
+            it("other scopes with values from previous finds", async function () {
+                {
+                    const users = await this.ScopeMe.scope("highValue").findAll({ where: { access_level: 10 } });
                     expect(users).to.have.length(1);
-
-                    return this.ScopeMe.scope("highValue").findAll();
-                }).then((users) => {
+                }
+                {
+                    const users = await this.ScopeMe.scope("highValue").findAll();
                     // This should not have other_value: 10
                     expect(users).to.have.length(2);
-                });
+                }
             });
         });
 
-        it("should have no problem performing findOrCreate", function () {
-            return this.ScopeMe.findOrCreate({ where: { username: "fake" } }).spread((user) => {
-                expect(user.username).to.equal("fake");
-            });
+        it("should have no problem performing findOrCreate", async function () {
+            const [user] = await this.ScopeMe.findOrCreate({ where: { username: "fake" } });
+            expect(user.username).to.equal("fake");
         });
     });
 });

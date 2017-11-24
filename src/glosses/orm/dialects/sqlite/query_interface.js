@@ -26,18 +26,21 @@ const UnknownConstraintError = require("../../errors").UnknownConstraintError;
   @since 1.6.0
   @private
  */
-function removeColumn(tableName, attributeName, options) {
+const removeColumn = async function (tableName, attributeName, options) {
     options = options || {};
 
-    return this.describeTable(tableName, options).then((fields) => {
-        delete fields[attributeName];
+    const fields = await this.describeTable(tableName, options);
+    delete fields[attributeName];
 
-        const sql = this.QueryGenerator.removeColumnQuery(tableName, fields);
-        const subQueries = sql.split(";").filter((q) => q !== "");
+    const sql = this.QueryGenerator.removeColumnQuery(tableName, fields);
+    const subQueries = sql.split(";").filter((q) => q !== "");
 
-        return Promise.each(subQueries, (subQuery) => this.sequelize.query(`${subQuery};`, _.assign({ raw: true }, options)));
-    });
-}
+    const res = [];
+    for (const subQuery of subQueries) {
+        res.push(await this.sequelize.query(`${subQuery};`, _.assign({ raw: true }, options))); // eslint-disable-line
+    }
+    return res;
+};
 exports.removeColumn = removeColumn;
 
 /**
@@ -56,19 +59,23 @@ exports.removeColumn = removeColumn;
   @since 1.6.0
   @private
  */
-function changeColumn(tableName, attributes, options) {
+const changeColumn = async function (tableName, attributes, options) {
     const attributeName = Object.keys(attributes)[0];
     options = options || {};
 
-    return this.describeTable(tableName, options).then((fields) => {
-        fields[attributeName] = attributes[attributeName];
+    const fields = await this.describeTable(tableName, options);
 
-        const sql = this.QueryGenerator.removeColumnQuery(tableName, fields);
-        const subQueries = sql.split(";").filter((q) => q !== "");
+    fields[attributeName] = attributes[attributeName];
 
-        return Promise.each(subQueries, (subQuery) => this.sequelize.query(`${subQuery};`, _.assign({ raw: true }, options)));
-    });
-}
+    const sql = this.QueryGenerator.removeColumnQuery(tableName, fields);
+    const subQueries = sql.split(";").filter((q) => q !== "");
+
+    const res = [];
+    for (const subQuery of subQueries) {
+        res.push(await this.sequelize.query(`${subQuery};`, _.assign({ raw: true }, options))); // eslint-disable-line
+    }
+    return res;
+};
 exports.changeColumn = changeColumn;
 
 /**
@@ -88,79 +95,83 @@ exports.changeColumn = changeColumn;
   @since 1.6.0
   @private
  */
-function renameColumn(tableName, attrNameBefore, attrNameAfter, options) {
+const renameColumn = async function (tableName, attrNameBefore, attrNameAfter, options) {
     options = options || {};
 
-    return this.describeTable(tableName, options).then((fields) => {
-        fields[attrNameAfter] = _.clone(fields[attrNameBefore]);
-        delete fields[attrNameBefore];
+    const fields = await this.describeTable(tableName, options);
 
-        const sql = this.QueryGenerator.renameColumnQuery(tableName, attrNameBefore, attrNameAfter, fields);
-        const subQueries = sql.split(";").filter((q) => q !== "");
+    fields[attrNameAfter] = _.clone(fields[attrNameBefore]);
+    delete fields[attrNameBefore];
 
-        return Promise.each(subQueries, (subQuery) => this.sequelize.query(`${subQuery};`, _.assign({ raw: true }, options)));
-    });
-}
+    const sql = this.QueryGenerator.renameColumnQuery(tableName, attrNameBefore, attrNameAfter, fields);
+    const subQueries = sql.split(";").filter((q) => q !== "");
+
+    const res = [];
+    for (const subQuery of subQueries) {
+        res.push(await this.sequelize.query(`${subQuery};`, _.assign({ raw: true }, options))); // eslint-disable-line
+    }
+    return res;
+};
 exports.renameColumn = renameColumn;
 
-function removeConstraint(tableName, constraintName, options) {
+const removeConstraint = async function (tableName, constraintName, options) {
     let createTableSql;
 
-    return this.showConstraint(tableName, constraintName)
-        .then((constraints) => {
-            const constraint = constraints[0];
+    const [constraint] = await this.showConstraint(tableName, constraintName);
 
-            if (constraint) {
-                createTableSql = constraint.sql;
-                constraint.constraintName = this.QueryGenerator.quoteIdentifier(constraint.constraintName);
-                let constraintSnippet = `, CONSTRAINT ${constraint.constraintName} ${constraint.constraintType} ${constraint.constraintCondition}`;
+    if (!constraint) {
+        throw new UnknownConstraintError(`Constraint ${constraintName} on table ${tableName} does not exist`);
+    }
 
-                if (constraint.constraintType === "FOREIGN KEY") {
-                    const referenceTableName = this.QueryGenerator.quoteTable(constraint.referenceTableName);
-                    constraint.referenceTableKeys = constraint.referenceTableKeys.map((columnName) => this.QueryGenerator.quoteIdentifier(columnName));
-                    const referenceTableKeys = constraint.referenceTableKeys.join(", ");
-                    constraintSnippet += ` REFERENCES ${referenceTableName} (${referenceTableKeys})`;
-                    constraintSnippet += ` ON UPDATE ${constraint.updateAction}`;
-                    constraintSnippet += ` ON DELETE ${constraint.deleteAction}`;
-                }
+    createTableSql = constraint.sql;
+    constraint.constraintName = this.QueryGenerator.quoteIdentifier(constraint.constraintName);
+    let constraintSnippet = `, CONSTRAINT ${constraint.constraintName} ${constraint.constraintType} ${constraint.constraintCondition}`;
 
-                createTableSql = createTableSql.replace(constraintSnippet, "");
-                createTableSql += ";";
+    if (constraint.constraintType === "FOREIGN KEY") {
+        const referenceTableName = this.QueryGenerator.quoteTable(constraint.referenceTableName);
+        constraint.referenceTableKeys = constraint.referenceTableKeys.map((columnName) => this.QueryGenerator.quoteIdentifier(columnName));
+        const referenceTableKeys = constraint.referenceTableKeys.join(", ");
+        constraintSnippet += ` REFERENCES ${referenceTableName} (${referenceTableKeys})`;
+        constraintSnippet += ` ON UPDATE ${constraint.updateAction}`;
+        constraintSnippet += ` ON DELETE ${constraint.deleteAction}`;
+    }
 
-                return this.describeTable(tableName, options);
-            }
-            throw new UnknownConstraintError(`Constraint ${constraintName} on table ${tableName} does not exist`);
+    createTableSql = createTableSql.replace(constraintSnippet, "");
+    createTableSql += ";";
 
-        })
-        .then((fields) => {
-            const sql = this.QueryGenerator._alterConstraintQuery(tableName, fields, createTableSql);
-            const subQueries = sql.split(";").filter((q) => q !== "");
+    const fields = await this.describeTable(tableName, options);
+    const sql = this.QueryGenerator._alterConstraintQuery(tableName, fields, createTableSql);
+    const subQueries = sql.split(";").filter((q) => q !== "");
 
-            return Promise.each(subQueries, (subQuery) => this.sequelize.query(`${subQuery};`, _.assign({ raw: true }, options)));
-        });
-}
+    const res = [];
+    for (const subQuery of subQueries) {
+        res.push(await this.sequelize.query(`${subQuery};`, _.assign({ raw: true }, options))); // eslint-disable-line
+    }
+    return res;
+};
 exports.removeConstraint = removeConstraint;
 
-function addConstraint(tableName, options) {
+const addConstraint = async function (tableName, options) {
     const constraintSnippet = this.QueryGenerator.getConstraintSnippet(tableName, options);
     const describeCreateTableSql = this.QueryGenerator.describeCreateTableQuery(tableName);
-    let createTableSql;
 
-    return this.sequelize.query(describeCreateTableSql, options)
-        .then((constraints) => {
-            const sql = constraints[0].sql;
-            const index = sql.length - 1;
-            //Replace ending ')' with constraint snippet - Simulates String.replaceAt
-            //http://stackoverflow.com/questions/1431094
-            createTableSql = `${sql.substr(0, index)}, ${constraintSnippet})${sql.substr(index + 1)};`;
+    const constraints = await this.sequelize.query(describeCreateTableSql, options);
 
-            return this.describeTable(tableName, options);
-        })
-        .then((fields) => {
-            const sql = this.QueryGenerator._alterConstraintQuery(tableName, fields, createTableSql);
-            const subQueries = sql.split(";").filter((q) => q !== "");
+    let sql = constraints[0].sql;
+    const index = sql.length - 1;
+    //Replace ending ')' with constraint snippet - Simulates String.replaceAt
+    //http://stackoverflow.com/questions/1431094
+    const createTableSql = `${sql.substr(0, index)}, ${constraintSnippet})${sql.substr(index + 1)};`;
 
-            return Promise.each(subQueries, (subQuery) => this.sequelize.query(`${subQuery};`, _.assign({ raw: true }, options)));
-        });
-}
+    const fields = await this.describeTable(tableName, options);
+
+    sql = this.QueryGenerator._alterConstraintQuery(tableName, fields, createTableSql);
+    const subQueries = sql.split(";").filter((q) => q !== "");
+
+    const res = [];
+    for (const subQuery of subQueries) {
+        res.push(await this.sequelize.query(`${subQuery};`, _.assign({ raw: true }, options))); // eslint-disable-line
+    }
+    return res;
+};
 exports.addConstraint = addConstraint;

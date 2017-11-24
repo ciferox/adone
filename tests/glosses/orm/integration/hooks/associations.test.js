@@ -2,7 +2,6 @@ import Support from "../support";
 
 const { DataTypes } = adone.orm;
 const dialect = Support.getTestDialect();
-const Promise = Support.Sequelize.Promise;
 
 describe(Support.getTestDialectTeaser("Hooks"), () => {
     beforeEach(function () {
@@ -698,13 +697,13 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                     });
 
                     describe("#remove", () => {
-                        it("with no errors", function () {
-                            let beforeProject = false,
-                                afterProject = false,
-                                beforeTask = false,
-                                afterTask = false,
-                                beforeMiniTask = false,
-                                afterMiniTask = false;
+                        it("with no errors", async function () {
+                            let beforeProject = false;
+                            let afterProject = false;
+                            let beforeTask = false;
+                            let afterTask = false;
+                            let beforeMiniTask = false;
+                            let afterMiniTask = false;
 
                             this.Projects.beforeCreate(() => {
                                 beforeProject = true;
@@ -736,31 +735,27 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                                 return Promise.resolve();
                             });
 
-                            return this.sequelize.Promise.all([
+                            const [project, minitask] = await Promise.all([
                                 this.Projects.create({ title: "New Project" }),
                                 this.MiniTasks.create({ mini_title: "New MiniTask" })
-                            ]).bind(this).spread((project, minitask) => {
-                                return project.addMiniTask(minitask);
-                            }).then((project) => {
-                                return project.destroy();
-                            }).then(() => {
-                                expect(beforeProject).to.be.true;
-                                expect(afterProject).to.be.true;
-                                expect(beforeTask).to.be.false;
-                                expect(afterTask).to.be.false;
-                                expect(beforeMiniTask).to.be.true;
-                                expect(afterMiniTask).to.be.true;
-                            });
-
+                            ]);
+                            await project.addMiniTask(minitask);
+                            await project.destroy();
+                            expect(beforeProject).to.be.true;
+                            expect(afterProject).to.be.true;
+                            expect(beforeTask).to.be.false;
+                            expect(afterTask).to.be.false;
+                            expect(beforeMiniTask).to.be.true;
+                            expect(afterMiniTask).to.be.true;
                         });
 
-                        it("with errors", function () {
-                            let beforeProject = false,
-                                afterProject = false,
-                                beforeTask = false,
-                                afterTask = false,
-                                beforeMiniTask = false,
-                                afterMiniTask = false;
+                        it("with errors", async function () {
+                            let beforeProject = false;
+                            let afterProject = false;
+                            let beforeTask = false;
+                            let afterTask = false;
+                            let beforeMiniTask = false;
+                            let afterMiniTask = false;
 
                             this.Projects.beforeCreate(() => {
                                 beforeProject = true;
@@ -792,21 +787,20 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                                 return Promise.resolve();
                             });
 
-                            return this.sequelize.Promise.all([
+                            const [project, minitask] = await Promise.all([
                                 this.Projects.create({ title: "New Project" }),
                                 this.MiniTasks.create({ mini_title: "New MiniTask" })
-                            ]).bind(this).spread((project, minitask) => {
-                                return project.addMiniTask(minitask);
-                            }).then((project) => {
-                                return project.destroy();
-                            }).catch(() => {
-                                expect(beforeProject).to.be.true;
-                                expect(afterProject).to.be.true;
-                                expect(beforeTask).to.be.false;
-                                expect(afterTask).to.be.false;
-                                expect(beforeMiniTask).to.be.true;
-                                expect(afterMiniTask).to.be.false;
-                            });
+                            ]);
+                            await project.addMiniTask(minitask);
+                            await assert.throws(async () => {
+                                await project.destroy();
+                            }, "Whoops!");
+                            expect(beforeProject).to.be.true;
+                            expect(afterProject).to.be.true;
+                            expect(beforeTask).to.be.false;
+                            expect(afterTask).to.be.false;
+                            expect(beforeMiniTask).to.be.true;
+                            expect(afterMiniTask).to.be.false;
                         });
                     });
                 });
@@ -840,13 +834,13 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                     });
 
                     describe("#remove", () => {
-                        it("with no errors", function () {
-                            let beforeProject = false,
-                                afterProject = false,
-                                beforeTask = false,
-                                afterTask = false,
-                                beforeMiniTask = false,
-                                afterMiniTask = false;
+                        it("with no errors", async function () {
+                            let beforeProject = false;
+                            let afterProject = false;
+                            let beforeTask = false;
+                            let afterTask = false;
+                            let beforeMiniTask = false;
+                            let afterMiniTask = false;
 
                             this.Projects.beforeCreate(() => {
                                 beforeProject = true;
@@ -878,25 +872,22 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                                 return Promise.resolve();
                             });
 
-                            return this.sequelize.Promise.all([
+                            const [project, task, minitask] = await Promise.all([
                                 this.Projects.create({ title: "New Project" }),
                                 this.Tasks.create({ title: "New Task" }),
                                 this.MiniTasks.create({ mini_title: "New MiniTask" })
-                            ]).bind(this).spread(function (project, task, minitask) {
-                                return this.sequelize.Promise.all([
-                                    task.addMiniTask(minitask),
-                                    project.addTask(task)
-                                ]).return(project);
-                            }).then((project) => {
-                                return project.destroy();
-                            }).then(() => {
-                                expect(beforeProject).to.be.true;
-                                expect(afterProject).to.be.true;
-                                expect(beforeTask).to.be.true;
-                                expect(afterTask).to.be.true;
-                                expect(beforeMiniTask).to.be.true;
-                                expect(afterMiniTask).to.be.true;
-                            });
+                            ]);
+                            await Promise.all([
+                                task.addMiniTask(minitask),
+                                project.addTask(task)
+                            ]);
+                            await project.destroy();
+                            expect(beforeProject).to.be.true;
+                            expect(afterProject).to.be.true;
+                            expect(beforeTask).to.be.true;
+                            expect(afterTask).to.be.true;
+                            expect(beforeMiniTask).to.be.true;
+                            expect(afterMiniTask).to.be.true;
                         });
 
                         it("with errors", async function () {
@@ -933,13 +924,13 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                                 afterMiniTask = true;
                             });
 
-                            const [project, task, minitask] = await this.sequelize.Promise.all([
+                            const [project, task, minitask] = await Promise.all([
                                 this.Projects.create({ title: "New Project" }),
                                 this.Tasks.create({ title: "New Task" }),
                                 this.MiniTasks.create({ mini_title: "New MiniTask" })
                             ]);
 
-                            await this.sequelize.Promise.all([
+                            await Promise.all([
                                 task.addMiniTask(minitask),
                                 project.addTask(task)
                             ]);

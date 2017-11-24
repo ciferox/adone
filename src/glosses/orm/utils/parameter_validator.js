@@ -3,12 +3,13 @@ const { is, vendor: { lodash: _ } } = adone;
 const util = require("util");
 const Utils = require("../utils");
 
-function validateDeprecation(value, expectation, options) {
+const validateDeprecation = (value, expectation, options) => {
     if (!options.deprecated) {
         return;
     }
 
-    const valid = value instanceof options.deprecated || Object.prototype.toString.call(value) === Object.prototype.toString.call(options.deprecated.call());
+    const valid = value instanceof options.deprecated
+        || Object.prototype.toString.call(value) === Object.prototype.toString.call(options.deprecated.call());
 
     if (valid) {
         const message = `${util.inspect(value)} should not be of type "${options.deprecated.name}"`;
@@ -16,9 +17,9 @@ function validateDeprecation(value, expectation, options) {
     }
 
     return valid;
-}
+};
 
-function validate(value, expectation) {
+const validate = (value, expectation) => {
     // the second part of this check is a workaround to deal with an issue that occurs in node-webkit when
     // using object literals.  https://github.com/sequelize/sequelize/issues/2685
     if (value instanceof expectation || Object.prototype.toString.call(value) === Object.prototype.toString.call(expectation.call())) {
@@ -26,9 +27,9 @@ function validate(value, expectation) {
     }
 
     throw new Error(`The parameter (value: ${value}) is no ${expectation.name}`);
-}
+};
 
-function check(value, expectation, options) {
+const check = (value, expectation, options) => {
     options = _.extend({
         deprecated: false,
         index: null,
@@ -48,10 +49,8 @@ function check(value, expectation, options) {
         throw new Error("No expectation has been passed.");
     }
 
-    return false
-        || validateDeprecation(value, expectation, options)
-        || validate(value, expectation, options);
-}
+    return validateDeprecation(value, expectation, options) || validate(value, expectation, options);
+};
 
 module.exports = check;
 module.exports.check = check;

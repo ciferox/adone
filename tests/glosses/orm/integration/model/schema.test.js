@@ -2,7 +2,6 @@ import Support from "../support";
 
 const { DataTypes } = adone.orm;
 const current = Support.sequelize;
-const Promise = current.Promise;
 const SCHEMA_ONE = "schema_one";
 const SCHEMA_TWO = "schema_two";
 

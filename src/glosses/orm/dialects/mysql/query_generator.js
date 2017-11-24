@@ -4,6 +4,9 @@ const AbstractQueryGenerator = require("../abstract/query_generator");
 const util = require("util");
 const Op = require("../../operators");
 
+// private methods
+const wrapSingleQuote = (identifier) => Utils.addTicks(identifier, "'");
+
 const QueryGenerator = {
     __proto__: AbstractQueryGenerator,
     dialect: "mysql",
@@ -519,9 +522,5 @@ const QueryGenerator = {
     }
 };
 
-// private methods
-function wrapSingleQuote(identifier) {
-    return Utils.addTicks(identifier, "'");
-}
 
 module.exports = QueryGenerator;

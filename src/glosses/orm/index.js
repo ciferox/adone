@@ -1,7 +1,6 @@
 const { is, promise, vendor: { lodash: _ } } = adone;
 const url = require("url");
 const Path = require("path");
-const clsBluebird = require("cls-bluebird");
 const Utils = require("./utils");
 const Model = require("./model");
 const DataTypes = require("./data_types");
@@ -415,94 +414,90 @@ class Sequelize {
      * @see {@link Model.build} for more information about instance option.
      */
 
-    query(sql, options) {
+    async query(sql, options) {
         let bindParameters;
 
-        return Promise.try(() => {
-            options = _.assign({}, this.options.query, options);
+        options = _.assign({}, this.options.query, options);
 
-            if (options.instance && !options.model) {
-                options.model = options.instance.constructor;
-            }
+        if (options.instance && !options.model) {
+            options.model = options.instance.constructor;
+        }
 
-            // map raw fields to model attributes
-            if (options.mapToModel) {
-                options.fieldMap = _.get(options, "model.fieldAttributeMap", {});
-            }
+        // map raw fields to model attributes
+        if (options.mapToModel) {
+            options.fieldMap = _.get(options, "model.fieldAttributeMap", {});
+        }
 
-            if (is.object(sql)) {
-                if (!is.undefined(sql.values)) {
-                    if (!is.undefined(options.replacements)) {
-                        throw new Error("Both `sql.values` and `options.replacements` cannot be set at the same time");
-                    }
-                    options.replacements = sql.values;
+        if (is.object(sql)) {
+            if (!is.undefined(sql.values)) {
+                if (!is.undefined(options.replacements)) {
+                    throw new Error("Both `sql.values` and `options.replacements` cannot be set at the same time");
                 }
+                options.replacements = sql.values;
+            }
 
-                if (!is.undefined(sql.bind)) {
-                    if (!is.undefined(options.bind)) {
-                        throw new Error("Both `sql.bind` and `options.bind` cannot be set at the same time");
-                    }
-                    options.bind = sql.bind;
+            if (!is.undefined(sql.bind)) {
+                if (!is.undefined(options.bind)) {
+                    throw new Error("Both `sql.bind` and `options.bind` cannot be set at the same time");
                 }
-
-                if (!is.undefined(sql.query)) {
-                    sql = sql.query;
-                }
+                options.bind = sql.bind;
             }
 
-            sql = sql.trim();
-
-            if (!options.instance && !options.model) {
-                options.raw = true;
+            if (!is.undefined(sql.query)) {
+                sql = sql.query;
             }
+        }
 
-            if (options.replacements && options.bind) {
-                throw new Error("Both `replacements` and `bind` cannot be set at the same time");
+        sql = sql.trim();
+
+        if (!options.instance && !options.model) {
+            options.raw = true;
+        }
+
+        if (options.replacements && options.bind) {
+            throw new Error("Both `replacements` and `bind` cannot be set at the same time");
+        }
+
+        if (options.replacements) {
+            if (is.array(options.replacements)) {
+                sql = Utils.format([sql].concat(options.replacements), this.options.dialect);
+            } else {
+                sql = Utils.formatNamedParameters(sql, options.replacements, this.options.dialect);
             }
+        }
 
-            if (options.replacements) {
-                if (is.array(options.replacements)) {
-                    sql = Utils.format([sql].concat(options.replacements), this.options.dialect);
-                } else {
-                    sql = Utils.formatNamedParameters(sql, options.replacements, this.options.dialect);
-                }
+        if (options.bind) {
+            const bindSql = this.dialect.Query.formatBindParameters(sql, options.bind, this.options.dialect);
+            sql = bindSql[0];
+            bindParameters = bindSql[1];
+        }
+
+        options = _.defaults(options, {
+            logging: this.options.hasOwnProperty("logging") ? this.options.logging : console.log,
+            searchPath: this.options.hasOwnProperty("searchPath") ? this.options.searchPath : "DEFAULT"
+        });
+
+        if (!options.type) {
+            if (options.model || options.nest || options.plain) {
+                options.type = QueryTypes.SELECT;
+            } else {
+                options.type = QueryTypes.RAW;
             }
+        }
 
-            if (options.bind) {
-                const bindSql = this.dialect.Query.formatBindParameters(sql, options.bind, this.options.dialect);
-                sql = bindSql[0];
-                bindParameters = bindSql[1];
-            }
+        if (options.transaction && options.transaction.finished) {
+            const error = new Error(`${options.transaction.finished} has been called on this transaction(${options.transaction.id}), you can no longer use it. (The rejected query is attached as the 'sql' property of this error)`);
+            error.sql = sql;
+            throw error;
+        }
 
-            options = _.defaults(options, {
-                logging: this.options.hasOwnProperty("logging") ? this.options.logging : console.log,
-                searchPath: this.options.hasOwnProperty("searchPath") ? this.options.searchPath : "DEFAULT"
-            });
-
-            if (is.undefined(options.transaction) && Sequelize._cls) {
-                options.transaction = Sequelize._cls.get("transaction");
-            }
-
-            if (!options.type) {
-                if (options.model || options.nest || options.plain) {
-                    options.type = QueryTypes.SELECT;
-                } else {
-                    options.type = QueryTypes.RAW;
-                }
-            }
-
-            if (options.transaction && options.transaction.finished) {
-                const error = new Error(`${options.transaction.finished} has been called on this transaction(${options.transaction.id}), you can no longer use it. (The rejected query is attached as the 'sql' property of this error)`);
-                error.sql = sql;
-                return Promise.reject(error);
-            }
-
+        try {
             if (this.test._trackRunningQueries) {
                 this.test._runningQueries++;
             }
 
-            //if dialect doesn't support search_path or dialect option
-            //to prepend searchPath is not true delete the searchPath option
+            // if dialect doesn't support search_path or dialect option
+            // to prepend searchPath is not true delete the searchPath option
             if (!this.dialect.supports.searchPath || !this.options.dialectOptions || !this.options.dialectOptions.prependSearchPath ||
                 options.supportsSearchPath === false) {
                 delete options.searchPath;
@@ -511,21 +506,25 @@ class Sequelize {
                 //then set to DEFAULT if none is provided
                 options.searchPath = "DEFAULT";
             }
-            return options.transaction ? options.transaction.connection : this.connectionManager.getConnection(options);
-        }).then((connection) => {
+            const connection = await (options.transaction
+                ? options.transaction.connection
+                : this.connectionManager.getConnection(options));
+
             const query = new this.dialect.Query(connection, this, options);
             const retryOptions = _.extend(this.options.retry, options.retry || {});
 
-            return promise.finally(promise.retry(() => query.run(sql, bindParameters), retryOptions), () => {
+            try {
+                return await promise.retry(() => query.run(sql, bindParameters), retryOptions);
+            } finally {
                 if (!options.transaction) {
-                    return this.connectionManager.releaseConnection(connection);
+                    await this.connectionManager.releaseConnection(connection);
                 }
-            });
-        }).finally(() => {
+            }
+        } finally {
             if (this.test._trackRunningQueries) {
                 this.test._runningQueries--;
             }
-        });
+        }
     }
 
     /**
@@ -558,9 +557,7 @@ class Sequelize {
         options.type = "SET";
 
         // Generate SQL Query
-        const query =
-            `SET ${
-            _.map(variables, (v, k) => `@${k} := ${is.string(v) ? `"${v}"` : v}`).join(", ")}`;
+        const query = `SET ${_.map(variables, (v, k) => `@${k} := ${is.string(v) ? `"${v}"` : v}`).join(", ")}`;
 
         return this.query(query, options);
     }
@@ -644,44 +641,46 @@ class Sequelize {
      * @param {Boolean} [options.alter=false] Alters tables to fit models. Not recommended for production use. Deletes data in columns that were removed or had their type changed in the model.
      * @return {Promise}
      */
-    sync(options) {
+    async sync(options) {
         options = _.clone(options) || {};
         options.hooks = is.undefined(options.hooks) ? true : Boolean(options.hooks);
         options = _.defaults(options, this.options.sync, this.options);
 
         if (options.match) {
             if (!options.match.test(this.config.database)) {
-                return Promise.reject(new Error(`Database "${this.config.database}" does not match sync match parameter "${options.match}"`));
+                throw new Error(`Database "${this.config.database}" does not match sync match parameter "${options.match}"`);
             }
         }
 
-        return Promise.try(() => {
-            if (options.hooks) {
-                return this.runHooks("beforeBulkSync", options);
-            }
-        }).then(() => {
-            if (options.force) {
-                return this.drop(options);
-            }
-        }).then(() => {
-            const models = [];
+        if (options.hooks) {
+            await this.runHooks("beforeBulkSync", options);
+        }
 
-            // Topologically sort by foreign key constraints to give us an appropriate
-            // creation order
-            this.modelManager.forEachModel((model) => {
-                if (model) {
-                    models.push(model);
-                } else {
-                    // DB should throw an SQL error if referencing inexistant table
-                }
-            });
+        if (options.force) {
+            await this.drop(options);
+        }
 
-            return Promise.each(models, (model) => model.sync(options));
-        }).then(() => {
-            if (options.hooks) {
-                return this.runHooks("afterBulkSync", options);
+        const models = [];
+
+        // Topologically sort by foreign key constraints to give us an appropriate
+        // creation order
+        this.modelManager.forEachModel((model) => {
+            if (model) {
+                models.push(model);
+            } else {
+                // DB should throw an SQL error if referencing inexistant table
             }
-        }).return(this);
+        });
+
+        for (const model of models) {
+            await model.sync(options); // eslint-disable-line
+        }
+
+        if (options.hooks) {
+            await this.runHooks("afterBulkSync", options);
+        }
+
+        return this;
     }
 
     /**
@@ -695,7 +694,7 @@ class Sequelize {
      *
      * @see {@link Model.truncate} for more information
      */
-    truncate(options) {
+    async truncate(options) {
         const models = [];
 
         this.modelManager.forEachModel((model) => {
@@ -704,13 +703,13 @@ class Sequelize {
             }
         }, { reverse: false });
 
-        const truncateModel = (model) => model.truncate(options);
-
         if (options && options.cascade) {
-            return Promise.each(models, truncateModel);
+            for (const model of models) {
+                await model.truncate(options); // eslint-disable-line
+            }
+        } else {
+            await Promise.all(models.map((model) => model.truncate(options)));
         }
-        return Promise.map(models, truncateModel);
-
     }
 
     /**
@@ -721,7 +720,7 @@ class Sequelize {
      * @param {Boolean|function} options.logging A function that logs sql queries, or false for no logging
      * @return {Promise}
      */
-    drop(options) {
+    async drop(options) {
         const models = [];
 
         this.modelManager.forEachModel((model) => {
@@ -730,7 +729,9 @@ class Sequelize {
             }
         }, { reverse: false });
 
-        return Promise.each(models, (model) => model.drop(options));
+        for (const model of models) {
+            await model.drop(options); // eslint-disable-line
+        }
     }
 
     /**
@@ -739,8 +740,8 @@ class Sequelize {
      * @error 'Invalid credentials' if the authentication failed (even if the database did not respond at all...)
      * @return {Promise}
      */
-    authenticate(options) {
-        return this.query("SELECT 1+1 AS result", _.assign({ raw: true, plain: true }, options)).return();
+    async authenticate(options) {
+        await this.query("SELECT 1+1 AS result", _.assign({ raw: true, plain: true }, options));
     }
 
     databaseVersion(options) {
@@ -850,7 +851,6 @@ class Sequelize {
 
     /**
      * Creates an object representing nested where conditions for postgres/sqlite/mysql json data-type.
-     * @see {@link Model#findAll}
      *
      * @method json
      * @param {String|Object} conditions A hash containing strings/numbers or other nested hash, a string using dot notation or a string using postgres/sqlite/mysql json syntax.
@@ -870,8 +870,6 @@ class Sequelize {
      *
      * For string attributes, use the regular `{ where: { attr: something }}` syntax. If you don't want your string to be escaped, use `sequelize.literal`.
      *
-     * @see {@link Model.findAll}
-     *
      * @param {Object} attr The attribute, which can be either an attribute object from `Model.rawAttributes` or a sequelize object, for example an instance of `sequelize.fn`. For simple string attributes, use the POJO syntax
      * @param {string} [comparator='=']
      * @param {String|Object} logic The condition. Can be both a simply type, or a further condition (`or`, `and`, `.literal` etc.)
@@ -883,41 +881,9 @@ class Sequelize {
     }
 
     /**
-     * Start a transaction. When using transactions, you should pass the transaction in the options argument in order for the query to happen under that transaction
-     *
-     * ```js
-     * sequelize.transaction().then(transaction => {
-     *   return User.find(..., {transaction})
-     *     .then(user => user.updateAttributes(..., {transaction}))
-     *     .then(() => transaction.commit())
-     *     .catch(() => transaction.rollback());
-     * })
-     * ```
-     *
-     * A syntax for automatically committing or rolling back based on the promise chain resolution is also supported:
-     *
-     * ```js
-     * sequelize.transaction(transaction => { // Note that we use a callback rather than a promise.then()
-     *   return User.find(..., {transaction})
-     *     .then(user => user.updateAttributes(..., {transaction}))
-     * }).then(() => {
-     *   // Committed
-     * }).catch(err => {
-     *   // Rolled back
-     *   console.error(err);
-     * });
-     * ```
-     *
-     * If you have [CLS](https://github.com/othiym23/node-continuation-local-storage) enabled, the transaction will automatically be passed to any query that runs within the callback.
-     * To enable CLS, add it do your project, create a namespace and set it on the sequelize constructor:
-     *
-     * ```js
-     * const cls = require('continuation-local-storage');
-     * const ns = cls.createNamespace('....');
-     * const Sequelize = require('sequelize');
-     * Sequelize.useCLS(ns);
-     * ```
-     * Note, that CLS is enabled for all sequelize instances, and all instances will share the same namespace
+     * Start a transaction.
+     * When using transactions, you should pass the transaction in the options argument in order for the query to happen
+     * under that transaction
      *
      * @see {@link Transaction}
      * @param {Object}   [options={}]
@@ -928,7 +894,7 @@ class Sequelize {
      * @param {Function} [autoCallback] The callback is called with the transaction object, and should return a promise. If the promise is resolved, the transaction commits; if the promise rejects, the transaction rolls back
      * @return {Promise}
      */
-    transaction(options, autoCallback) {
+    async transaction(options, autoCallback) {
         if (is.function(options)) {
             autoCallback = options;
             options = undefined;
@@ -937,82 +903,24 @@ class Sequelize {
         const transaction = new Transaction(this, options);
 
         if (!autoCallback) {
-            return transaction.prepareEnvironment(false).return(transaction);
+            await transaction.prepareEnvironment(false);
+            return transaction;
         }
 
         // autoCallback provided
-        return Sequelize._clsRun(() => {
-            return transaction.prepareEnvironment()
-                .then(() => autoCallback(transaction))
-                .tap(() => transaction.commit())
-                .catch((err) => {
-                    // Rollback transaction if not already finished (commit, rollback, etc)
-                    // and reject with original error (ignore any error in rollback)
-                    return Promise.try(() => {
-                        if (!transaction.finished) {
-                            return transaction.rollback().catch(() => { });
-                        }
-                    }).throw(err);
-                });
-        });
-    }
-
-    /**
-     * Use CLS with Sequelize.
-     * CLS namespace provided is stored as `Sequelize._cls`
-     * and bluebird Promise is patched to use the namespace, using `cls-bluebird` module.
-     *
-     * @param {Object}   ns   CLS namespace
-     * @returns {Object}      Sequelize constructor
-     */
-    static useCLS(ns) {
-        // check `ns` is valid CLS namespace
-        if (!ns || typeof ns !== "object" || !is.function(ns.bind) || !is.function(ns.run)) {
-            throw new Error("Must provide CLS namespace");
+        try {
+            await transaction.prepareEnvironment();
+            const res = await autoCallback(transaction);
+            await transaction.commit();
+            return res;
+        } catch (err) {
+            // Rollback transaction if not already finished (commit, rollback, etc)
+            // and reject with original error (ignore any error in rollback)
+            if (!transaction.finished) {
+                await transaction.rollback().catch(adone.noop);
+            }
+            throw err;
         }
-
-        // save namespace as `Sequelize._cls`
-        this._cls = ns;
-
-        // patch bluebird to bind all promise callbacks to CLS namespace
-        clsBluebird(ns, Promise);
-
-        // return Sequelize for chaining
-        return this;
-    }
-
-    /**
-     * Run function in CLS context.
-     * If no CLS context in use, just runs the function normally
-     *
-     * @private
-     * @param {Function} fn Function to run
-     * @returns {*} Return value of function
-     */
-    static _clsRun(fn) {
-        const ns = Sequelize._cls;
-        if (!ns) {
-            return fn();
-        }
-
-        let res;
-        ns.run((context) => res = fn(context));
-        return res;
-    }
-
-    /*
-     * Getter/setter for `Sequelize.cls`
-     * To maintain backward compatibility with Sequelize v3.x
-     * Calling the
-     */
-    static get cls() {
-        Utils.deprecate("Sequelize.cls is deprecated and will be removed in a future version. Keep track of the CLS namespace you use in your own code.");
-        return this._cls;
-    }
-
-    static set cls(ns) {
-        Utils.deprecate("Sequelize.cls should not be set directly. Use Sequelize.useCLS().");
-        this.useCLS(ns);
     }
 
     log() {
@@ -1138,11 +1046,6 @@ Sequelize.prototype.Sequelize = Sequelize;
  * @private
  */
 Sequelize.prototype.Utils = Sequelize.Utils = Utils;
-
-/**
- * A handy reference to the bluebird Promise class
- */
-Sequelize.prototype.Promise = Sequelize.Promise = Promise;
 
 /**
  * Available query types for use with `sequelize.query`

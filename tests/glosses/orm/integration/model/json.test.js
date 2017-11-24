@@ -1,7 +1,6 @@
 import Support from "../support";
 
 const Sequelize = adone.orm;
-const Promise = Sequelize.Promise;
 const DataTypes = Sequelize.DataTypes;
 const current = Support.sequelize;
 
@@ -205,7 +204,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
             describe("find", () => {
                 it("should be possible to query a nested value", function () {
-                    return Promise.join(
+                    return Promise.all([
                         this.Event.create({
                             data: {
                                 name: {
@@ -224,7 +223,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                                 employment: "Housewife"
                             }
                         })
-                    ).then(() => {
+                    ]).then(() => {
                         return this.Event.findAll({
                             where: {
                                 data: {
@@ -250,14 +249,14 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     const now = adone.datetime().milliseconds(0).toDate();
                     const before = adone.datetime().milliseconds(0).subtract(1, "day").toDate();
                     const after = adone.datetime().milliseconds(0).add(1, "day").toDate();
-                    return Promise.join(
+                    return Promise.all([
                         this.Event.create({
                             json: {
                                 user: "Homer",
                                 lastLogin: now
                             }
                         })
-                    ).then(() => {
+                    ]).then(() => {
                         return this.Event.findAll({
                             where: {
                                 json: {
@@ -293,14 +292,14 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 });
 
                 it("should be possible to query a boolean with array operators", function () {
-                    return Promise.join(
+                    return Promise.all([
                         this.Event.create({
                             json: {
                                 user: "Homer",
                                 active: true
                             }
                         })
-                    ).then(() => {
+                    ]).then(() => {
                         return this.Event.findAll({
                             where: {
                                 json: {
@@ -336,7 +335,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 });
 
                 it("should be possible to query a nested integer value", function () {
-                    return Promise.join(
+                    return Promise.all([
                         this.Event.create({
                             data: {
                                 name: {
@@ -355,7 +354,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                                 age: 37
                             }
                         })
-                    ).then(() => {
+                    ]).then(() => {
                         return this.Event.findAll({
                             where: {
                                 data: {
@@ -380,7 +379,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 });
 
                 it("should be possible to query a nested null value", function () {
-                    return Promise.join(
+                    return Promise.all([
                         this.Event.create({
                             data: {
                                 name: {
@@ -399,7 +398,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                                 employment: null
                             }
                         })
-                    ).then(() => {
+                    ]).then(() => {
                         return this.Event.findAll({
                             where: {
                                 data: {
@@ -429,7 +428,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                             employment: "Nuclear Safety Inspector"
                         }
                     }).then(() => {
-                        return Promise.join(
+                        return Promise.all([
                             this.Event.create({
                                 data: {
                                     name: {
@@ -448,7 +447,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                                     employment: "None"
                                 }
                             })
-                        );
+                        ]);
                     }).then(() => {
                         return this.Event.findAll({
                             where: {
@@ -496,7 +495,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                             employment: "Nuclear Safety Inspector"
                         }
                     }).then(() => {
-                        return Promise.join(
+                        return Promise.all([
                             this.Event.create({
                                 data: {
                                     name: {
@@ -515,7 +514,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                                     employment: "None"
                                 }
                             })
-                        );
+                        ]);
                     }).then(() => {
                         return this.Event.findAll({
                             where: {
@@ -569,7 +568,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         }
                     };
 
-                    await Promise.join(
+                    await Promise.all([
                         this.Event.create({
                             data: {
                                 name: {
@@ -597,7 +596,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                                 employment: "CTO"
                             }
                         })
-                    );
+                    ]);
                     expect(await this.Event.findAll(conditionSearch)).to.have.length(2);
                     await this.Event.destroy(conditionSearch);
                     expect(await this.Event.findAll(conditionSearch)).to.have.length(0);
@@ -661,8 +660,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     });
                 });
 
-                it("should query an instance with JSONB data and order while trying to inject", function () {
-                    return this.Event.create({
+                it("should query an instance with JSONB data and order while trying to inject", async function () {
+                    await this.Event.create({
                         data: {
                             name: {
                                 first: "Homer",
@@ -670,68 +669,67 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                             },
                             employment: "Nuclear Safety Inspector"
                         }
-                    }).then(() => {
-                        return Promise.join(
-                            this.Event.create({
-                                data: {
-                                    name: {
-                                        first: "Marge",
-                                        last: "Simpson"
-                                    },
-                                    employment: "Housewife"
-                                }
-                            }),
-                            this.Event.create({
-                                data: {
-                                    name: {
-                                        first: "Bart",
-                                        last: "Simpson"
-                                    },
-                                    employment: "None"
-                                }
-                            })
-                        );
-                    }).then(() => {
-                        if (current.options.dialect === "sqlite") {
-                            return this.Event.findAll({
-                                where: {
-                                    data: {
-                                        name: {
-                                            last: "Simpson"
-                                        }
-                                    }
-                                },
-                                order: [
-                                    ["data.name.first}'); INSERT INJECTION HERE! SELECT ('"]
-                                ]
-                            }).then((events) => {
-                                expect(events).to.be.ok;
-                                expect(events[0].get("data")).to.eql({
-                                    name: {
-                                        first: "Homer",
-                                        last: "Simpson"
-                                    },
-                                    employment: "Nuclear Safety Inspector"
-                                });
-                            });
-                        } else if (current.options.dialect === "postgres") {
-                            return expect(this.Event.findAll({
-                                where: {
-                                    data: {
-                                        name: {
-                                            last: "Simpson"
-                                        }
-                                    }
-                                },
-                                order: [
-                                    ["data.name.first}'); INSERT INJECTION HERE! SELECT ('"]
-                                ]
-                            })).to.eventually.be.rejectedWith(Error);
-                        }
                     });
+                    await Promise.all([
+                        this.Event.create({
+                            data: {
+                                name: {
+                                    first: "Marge",
+                                    last: "Simpson"
+                                },
+                                employment: "Housewife"
+                            }
+                        }),
+                        this.Event.create({
+                            data: {
+                                name: {
+                                    first: "Bart",
+                                    last: "Simpson"
+                                },
+                                employment: "None"
+                            }
+                        })
+                    ]);
+                    if (current.options.dialect === "sqlite") {
+                        return this.Event.findAll({
+                            where: {
+                                data: {
+                                    name: {
+                                        last: "Simpson"
+                                    }
+                                }
+                            },
+                            order: [
+                                ["data.name.first}'); INSERT INJECTION HERE! SELECT ('"]
+                            ]
+                        }).then((events) => {
+                            expect(events).to.be.ok;
+                            expect(events[0].get("data")).to.eql({
+                                name: {
+                                    first: "Homer",
+                                    last: "Simpson"
+                                },
+                                employment: "Nuclear Safety Inspector"
+                            });
+                        });
+                    } else if (current.options.dialect === "postgres") {
+                        await assert.throws(async () => {
+                            await this.Event.findAll({
+                                where: {
+                                    data: {
+                                        name: {
+                                            last: "Simpson"
+                                        }
+                                    }
+                                },
+                                order: [
+                                    ["data.name.first}'); INSERT INJECTION HERE! SELECT ('"]
+                                ]
+                            });
+                        });
+                    }
                 });
             });
         });
     }
-
 });

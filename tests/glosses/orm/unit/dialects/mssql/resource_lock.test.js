@@ -1,8 +1,8 @@
+const { promise } = adone;
 const {
     dialect: {
         mssql: { ResourceLock }
-    },
-    Promise
+    }
 } = adone.orm;
 
 describe("[MSSQL Specific] ResourceLock", () => {
@@ -16,43 +16,27 @@ describe("[MSSQL Specific] ResourceLock", () => {
         };
 
         return Promise.all([
-            Promise.using(lock.lock(), (resource) => {
+            lock.lock().then((resource) => {
                 validateResource(resource);
                 assert.equal(last, 0);
                 last = 1;
 
-                return Promise.delay(15);
-            }),
-            Promise.using(lock.lock(), (resource) => {
+                return promise.delay(15);
+            }).then(() => lock.unlock()),
+            lock.lock().then(() => lock.unlock()),
+            lock.lock().then((resource) => {
                 validateResource(resource);
                 assert.equal(last, 1);
                 last = 2;
+                return lock.unlock();
             }),
-            Promise.using(lock.lock(), (resource) => {
+            lock.lock().then((resource) => {
                 validateResource(resource);
                 assert.equal(last, 2);
                 last = 3;
 
-                return Promise.delay(5);
-            })
-        ]);
-    });
-
-    it("should still return resource after failure", () => {
-        const expected = {};
-        const lock = new ResourceLock(expected);
-
-        const validateResource = (actual) => {
-            assert.equal(actual, expected);
-        };
-
-        return Promise.all([
-            Promise.using(lock.lock(), (resource) => {
-                validateResource(resource);
-
-                throw new Error("unexpected error");
-            }).catch(() => { }),
-            Promise.using(lock.lock(), validateResource)
+                return promise.delay(5);
+            }).then(() => lock.unlock())
         ]);
     });
 

@@ -4,7 +4,6 @@ const { vendor: { lodash: _ } } = adone;
 const Sequelize = adone.orm;
 const { DataTypes } = Sequelize;
 const current = Support.sequelize;
-const Promise = Sequelize.Promise;
 
 describe(Support.getTestDialectTeaser("Include"), { skip: !current.dialect.supports.groupedLimit }, () => {
     describe("separate", () => {
@@ -16,7 +15,7 @@ describe(Support.getTestDialectTeaser("Include"), { skip: !current.dialect.suppo
             User.Tasks = User.hasMany(Task, { as: "tasks" });
 
             return this.sequelize.sync({ force: true }).then(() => {
-                return Promise.join(
+                return Promise.all([
                     User.create({
                         id: 1,
                         tasks: [
@@ -35,7 +34,7 @@ describe(Support.getTestDialectTeaser("Include"), { skip: !current.dialect.suppo
                     }, {
                         include: [User.Tasks]
                     })
-                ).then(() => {
+                ]).then(() => {
                     return User.findAll({
                         include: [
                             { association: User.Tasks, separate: true }
@@ -129,7 +128,7 @@ describe(Support.getTestDialectTeaser("Include"), { skip: !current.dialect.suppo
             User.Tasks = User.hasMany(Task, { as: "tasks", foreignKey: "userId" });
 
             return this.sequelize.sync({ force: true }).then(() => {
-                return Promise.join(
+                return Promise.all([
                     User.create({
                         id: 1,
                         tasks: [
@@ -151,7 +150,7 @@ describe(Support.getTestDialectTeaser("Include"), { skip: !current.dialect.suppo
                     }, {
                         include: [User.Tasks]
                     })
-                ).then(() => {
+                ]).then(() => {
                     return User.findAll({
                         include: [
                             { association: User.Tasks, limit: 2 }
@@ -181,7 +180,7 @@ describe(Support.getTestDialectTeaser("Include"), { skip: !current.dialect.suppo
             Company.Tasks = Company.hasMany(Task, { as: "tasks" });
 
             return this.sequelize.sync({ force: true }).then(() => {
-                return Promise.join(
+                return Promise.all([
                     User.create({
                         id: 1,
                         company: {
@@ -208,7 +207,7 @@ describe(Support.getTestDialectTeaser("Include"), { skip: !current.dialect.suppo
                             { association: User.Company, include: [Company.Tasks] }
                         ]
                     })
-                ).then(() => {
+                ]).then(() => {
                     return User.findAll({
                         include: [
                             {
@@ -244,7 +243,7 @@ describe(Support.getTestDialectTeaser("Include"), { skip: !current.dialect.suppo
             Task.Project = Task.belongsTo(Project, { as: "project" });
 
             return this.sequelize.sync({ force: true }).then(() => {
-                return Promise.join(
+                return Promise.all([
                     Company.create({
                         id: 1,
                         users: [
@@ -269,7 +268,7 @@ describe(Support.getTestDialectTeaser("Include"), { skip: !current.dialect.suppo
                             }
                         ]
                     })
-                ).then(() => {
+                ]).then(() => {
                     return Company.findAll({
                         include: [
                             {
@@ -305,7 +304,7 @@ describe(Support.getTestDialectTeaser("Include"), { skip: !current.dialect.suppo
             Project.Tasks = Project.hasMany(Task, { as: "tasks" });
 
             return this.sequelize.sync({ force: true }).then(() => {
-                return Promise.join(
+                return Promise.all([
                     User.create({
                         id: 1,
                         projects: [
@@ -345,7 +344,7 @@ describe(Support.getTestDialectTeaser("Include"), { skip: !current.dialect.suppo
                             { association: User.Projects, include: [Project.Tasks] }
                         ]
                     })
-                ).then(() => {
+                ]).then(() => {
                     return User.findAll({
                         include: [
                             {
@@ -397,7 +396,7 @@ describe(Support.getTestDialectTeaser("Include"), { skip: !current.dialect.suppo
             return this.sequelize.dropAllSchemas().then(() => {
                 return this.sequelize.createSchema("archive").then(() => {
                     return this.sequelize.sync({ force: true }).then(() => {
-                        return Promise.join(
+                        return Promise.all([
                             User.create({
                                 id: 1,
                                 tasks: [
@@ -419,7 +418,7 @@ describe(Support.getTestDialectTeaser("Include"), { skip: !current.dialect.suppo
                             }, {
                                 include: [User.Tasks]
                             })
-                        );
+                        ]);
                     }).then(() => {
                         return User.findAll({
                             include: [{ model: Task, limit: 2, as: "tasks", order: [["id", "ASC"]] }],

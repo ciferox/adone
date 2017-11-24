@@ -49,7 +49,7 @@ class ConnectionManager extends AbstractConnectionManager {
         }
     }
 
-    connect(config) {
+    async connect(config) {
         config.user = config.username;
         const connectionConfig = _.pick(config, [
             "user", "password", "host", "database", "port"
@@ -80,7 +80,7 @@ class ConnectionManager extends AbstractConnectionManager {
                 ]));
         }
 
-        return new Promise((resolve, reject) => {
+        const connection = await new Promise((resolve, reject) => {
             const connection = new this.lib.Client(connectionConfig);
             let responded = false;
 
@@ -127,49 +127,53 @@ class ConnectionManager extends AbstractConnectionManager {
                 debug(`connection error ${err.code}`);
                 connection._invalid = true;
             });
-        }).tap((connection) => {
-            // Disable escape characters in strings, see https://github.com/sequelize/sequelize/issues/3545
-            let query = "";
-
-            if (this.sequelize.options.databaseVersion !== 0 && adone.semver.gte(this.sequelize.options.databaseVersion, "8.2.0")) {
-                query += "SET standard_conforming_strings=on;";
-            }
-
-            if (!this.sequelize.config.keepDefaultTimezone) {
-                const isZone = Boolean(adone.datetime.tz.zone(this.sequelize.options.timezone));
-                if (isZone) {
-                    query += `SET client_min_messages TO warning; SET TIME ZONE '${this.sequelize.options.timezone}';`;
-                } else {
-                    query += `SET client_min_messages TO warning; SET TIME ZONE INTERVAL '${this.sequelize.options.timezone}' HOUR TO MINUTE;`;
-                }
-            }
-
-            // oids for hstore and geometry are dynamic - so select them at connection time
-            const supportedVersion = this.sequelize.options.databaseVersion !== 0 && adone.semver.gte(this.sequelize.options.databaseVersion, "8.3.0");
-            if (dataTypes.HSTORE.types.postgres.oids.length === 0 && supportedVersion) {
-                query += "SELECT typname, oid, typarray FROM pg_type WHERE typtype = 'b' AND typname IN ('hstore', 'geometry', 'geography')";
-            }
-
-            return new Promise((resolve, reject) => connection.query(query, (error, result) => error ? reject(error) : resolve(result))).then((results) => {
-                const result = is.array(results) ? results.pop() : results;
-
-                for (const row of result.rows) {
-                    let type;
-                    if (row.typname === "geometry") {
-                        type = dataTypes.postgres.GEOMETRY;
-                    } else if (row.typname === "hstore") {
-                        type = dataTypes.postgres.HSTORE;
-                    } else if (row.typname === "geography") {
-                        type = dataTypes.postgres.GEOGRAPHY;
-                    }
-
-                    type.types.postgres.oids.push(row.oid);
-                    type.types.postgres.array_oids.push(row.typarray);
-
-                    this._refreshTypeParser(type);
-                }
-            });
         });
+
+        // Disable escape characters in strings, see https://github.com/sequelize/sequelize/issues/3545
+        let query = "";
+
+        if (this.sequelize.options.databaseVersion !== 0 && adone.semver.gte(this.sequelize.options.databaseVersion, "8.2.0")) {
+            query += "SET standard_conforming_strings=on;";
+        }
+
+        if (!this.sequelize.config.keepDefaultTimezone) {
+            const isZone = Boolean(adone.datetime.tz.zone(this.sequelize.options.timezone));
+            if (isZone) {
+                query += `SET client_min_messages TO warning; SET TIME ZONE '${this.sequelize.options.timezone}';`;
+            } else {
+                query += `SET client_min_messages TO warning; SET TIME ZONE INTERVAL '${this.sequelize.options.timezone}' HOUR TO MINUTE;`;
+            }
+        }
+
+        // oids for hstore and geometry are dynamic - so select them at connection time
+        const supportedVersion = this.sequelize.options.databaseVersion !== 0 && adone.semver.gte(this.sequelize.options.databaseVersion, "8.3.0");
+        if (dataTypes.HSTORE.types.postgres.oids.length === 0 && supportedVersion) {
+            query += "SELECT typname, oid, typarray FROM pg_type WHERE typtype = 'b' AND typname IN ('hstore', 'geometry', 'geography')";
+        }
+
+        const results = await new Promise((resolve, reject) => {
+            connection.query(query, (error, result) => error ? reject(error) : resolve(result));
+        });
+
+        const result = is.array(results) ? results.pop() : results;
+
+        for (const row of result.rows) {
+            let type;
+            if (row.typname === "geometry") {
+                type = dataTypes.postgres.GEOMETRY;
+            } else if (row.typname === "hstore") {
+                type = dataTypes.postgres.HSTORE;
+            } else if (row.typname === "geography") {
+                type = dataTypes.postgres.GEOGRAPHY;
+            }
+
+            type.types.postgres.oids.push(row.oid);
+            type.types.postgres.array_oids.push(row.typarray);
+
+            this._refreshTypeParser(type);
+        }
+
+        return connection;
     }
 
     disconnect(connection) {

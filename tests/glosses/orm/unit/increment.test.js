@@ -15,14 +15,16 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 count: Sequelize.BIGINT
             });
 
-            it("should reject if options are missing", () => {
-                return expect(() => Model.increment(["id", "count"]))
-                    .to.throw("Missing where attribute in the options parameter");
+            it("should reject if options are missing", async () => {
+                await assert.throws(async () => {
+                    await Model.increment(["id", "count"]);
+                }, "Missing where attribute in the options parameter");
             });
 
-            it("should reject if options.where are missing", () => {
-                return expect(() => Model.increment(["id", "count"], { by: 10 }))
-                    .to.throw("Missing where attribute in the options parameter");
+            it("should reject if options.where are missing", async () => {
+                await assert.throws(async () => {
+                    await Model.increment(["id", "count"], { by: 10 });
+                }, "Missing where attribute in the options parameter");
             });
         });
     });

@@ -5,7 +5,6 @@ const { vendor: { lodash: _ } } = adone;
 const Sequelize = Support.Sequelize;
 const DataTypes = Sequelize.DataTypes;
 const current = Support.sequelize;
-const Promise = current.Promise;
 
 describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.supports["UNION ALL"] }, () => {
     describe("findAll", () => {
@@ -18,7 +17,7 @@ describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.support
                 this.clock.uninstall();
             });
 
-            beforeEach(function () {
+            beforeEach(async function () {
                 this.User = this.sequelize.define("user", {
                     age: Sequelize.INTEGER
                 });
@@ -42,24 +41,21 @@ describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.support
 
                 this.User.Tasks = this.User.hasMany(this.Task);
 
-                return this.sequelize.sync({ force: true }).then(() => {
-                    return Promise.join(
-                        this.User.bulkCreate([{ age: -5 }, { age: 45 }, { age: 7 }, { age: -9 }, { age: 8 }, { age: 15 }, { age: -9 }]),
-                        this.Project.bulkCreate([{}, {}]),
-                        this.Task.bulkCreate([{}, {}])
-                    );
-                })
-                    .then(() => [this.User.findAll(), this.Project.findAll(), this.Task.findAll()])
-                    .spread((users, projects, tasks) => {
-                        this.projects = projects;
-                        return Promise.join(
-                            projects[0].setMembers(users.slice(0, 4)),
-                            projects[1].setMembers(users.slice(2)),
-                            projects[0].setParanoidMembers(users.slice(0, 4)),
-                            projects[1].setParanoidMembers(users.slice(2)),
-                            users[2].setTasks(tasks)
-                        );
-                    });
+                await this.sequelize.sync({ force: true });
+                await Promise.all([
+                    this.User.bulkCreate([{ age: -5 }, { age: 45 }, { age: 7 }, { age: -9 }, { age: 8 }, { age: 15 }, { age: -9 }]),
+                    this.Project.bulkCreate([{}, {}]),
+                    this.Task.bulkCreate([{}, {}])
+                ]);
+                const [users, projects, tasks] = await Promise.all([this.User.findAll(), this.Project.findAll(), this.Task.findAll()]);
+                this.projects = projects;
+                await Promise.all([
+                    projects[0].setMembers(users.slice(0, 4)),
+                    projects[1].setMembers(users.slice(2)),
+                    projects[0].setParanoidMembers(users.slice(0, 4)),
+                    projects[1].setParanoidMembers(users.slice(2)),
+                    users[2].setTasks(tasks)
+                ]);
             });
 
             describe("on: belongsToMany", () => {
@@ -168,16 +164,16 @@ describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.support
                         include: [this.User.Tasks]
                     }).then((users) => {
                         /*
-            project1 - 1, 3, 4
-            project2 - 3, 5, 7
-           */
+                            project1 - 1, 3, 4
+                            project2 - 3, 5, 7
+                        */
                         expect(users).to.have.length(5);
                         expect(users.map((u) => u.get("id"))).to.deep.equal([1, 3, 5, 7, 4]);
 
-                        return Sequelize.Promise.join(
+                        return Promise.all([
                             this.projects[0].setParanoidMembers(users.slice(0, 2)),
                             this.projects[1].setParanoidMembers(users.slice(4))
-                        );
+                        ]);
                     }).then(() => {
                         return this.User.findAll({
                             attributes: ["id"],
@@ -204,26 +200,23 @@ describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.support
             });
 
             describe("on: hasMany", () => {
-                beforeEach(function () {
+                beforeEach(async function () {
                     this.User = this.sequelize.define("user");
                     this.Task = this.sequelize.define("task");
                     this.User.Tasks = this.User.hasMany(this.Task);
 
-                    return this.sequelize.sync({ force: true }).then(() => {
-                        return Promise.join(
-                            this.User.bulkCreate([{}, {}, {}]),
-                            this.Task.bulkCreate([{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }, { id: 6 }])
-                        );
-                    })
-                        .then(() => [this.User.findAll(), this.Task.findAll()])
-                        .spread((users, tasks) => {
-                            this.users = users;
-                            return Promise.join(
-                                users[0].setTasks(tasks[0]),
-                                users[1].setTasks(tasks.slice(1, 4)),
-                                users[2].setTasks(tasks.slice(4))
-                            );
-                        });
+                    await this.sequelize.sync({ force: true });
+                    await Promise.all([
+                        this.User.bulkCreate([{}, {}, {}]),
+                        this.Task.bulkCreate([{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }, { id: 6 }])
+                    ]);
+                    const [users, tasks] = await Promise.all([this.User.findAll(), this.Task.findAll()]);
+                    this.users = users;
+                    return Promise.all([
+                        users[0].setTasks(tasks[0]),
+                        users[1].setTasks(tasks.slice(1, 4)),
+                        users[2].setTasks(tasks.slice(4))
+                    ]);
                 });
 
                 it("Applies limit and order correctly", function () {

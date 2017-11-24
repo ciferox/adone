@@ -52,8 +52,8 @@ class HasMany extends Association {
         }
 
         /*
-    * Foreign key setup
-    */
+        * Foreign key setup
+        */
         if (_.isObject(this.options.foreignKey)) {
             this.foreignKeyAttribute = this.options.foreignKey;
             this.foreignKey = this.foreignKeyAttribute.name || this.foreignKeyAttribute.fieldName;
@@ -151,16 +151,16 @@ class HasMany extends Association {
     }
 
     /**
-   * Get everything currently associated with this, using an optional where clause.
-   *
-   * @param {Object} [options]
-   * @param {Object} [options.where] An optional where clause to limit the associated models
-   * @param {String|Boolean} [options.scope] Apply a scope on the related model, or remove its default scope by passing false
-   * @param {String} [options.schema] Apply a schema on the related model
-   * @see {@link Model.findAll}  for a full explanation of options
-   * @return {Promise<Array<Model>>}
-   */
-    get(instances, options) {
+     * Get everything currently associated with this, using an optional where clause.
+     *
+     * @param {Object} [options]
+     * @param {Object} [options.where] An optional where clause to limit the associated models
+     * @param {String|Boolean} [options.scope] Apply a scope on the related model, or remove its default scope by passing false
+     * @param {String} [options.schema] Apply a schema on the related model
+     * @see {@link Model.findAll}  for a full explanation of options
+     * @return {Promise<Array<Model>>}
+     */
+    async get(instances, options) {
         const association = this;
         const where = {};
         let Model = association.target;
@@ -217,33 +217,33 @@ class HasMany extends Association {
         }
 
 
-        return Model.findAll(options).then((results) => {
-            if (instance) {
-                return results;
-            }
+        const results = await Model.findAll(options);
 
-            const result = {};
-            for (const instance of instances) {
-                result[instance.get(association.sourceKey, { raw: true })] = [];
-            }
+        if (instance) {
+            return results;
+        }
 
-            for (const instance of results) {
-                result[instance.get(association.foreignKey, { raw: true })].push(instance);
-            }
+        const result = {};
+        for (const instance of instances) {
+            result[instance.get(association.sourceKey, { raw: true })] = [];
+        }
 
-            return result;
-        });
+        for (const instance of results) {
+            result[instance.get(association.foreignKey, { raw: true })].push(instance);
+        }
+
+        return result;
     }
 
     /**
-   * Count everything currently associated with this, using an optional where clause.
-   *
-   * @param {Object} [options]
-   * @param {Object} [options.where] An optional where clause to limit the associated models
-   * @param {String|Boolean} [options.scope] Apply a scope on the related model, or remove its default scope by passing false
-   * @return {Promise<Integer>}
-   */
-    count(instance, options) {
+     * Count everything currently associated with this, using an optional where clause.
+     *
+     * @param {Object} [options]
+     * @param {Object} [options.where] An optional where clause to limit the associated models
+     * @param {String|Boolean} [options.scope] Apply a scope on the related model, or remove its default scope by passing false
+     * @return {Promise<Integer>}
+     */
+    async count(instance, options) {
         const association = this;
         const model = association.target;
         const sequelize = model.sequelize;
@@ -255,17 +255,19 @@ class HasMany extends Association {
         options.raw = true;
         options.plain = true;
 
-        return association.get(instance, options).then((result) => parseInt(result.count, 10));
+        const result = await association.get(instance, options);
+
+        return parseInt(result.count, 10);
     }
 
     /**
-   * Check if one or more rows are associated with `this`.
-   *
-   * @param {Model[]|Model|string[]|String|number[]|Number} [instance(s)]
-   * @param {Object} [options] Options passed to getAssociations
-   * @return {Promise}
-   */
-    has(sourceInstance, targetInstances, options) {
+     * Check if one or more rows are associated with `this`.
+     *
+     * @param {Model[]|Model|string[]|String|number[]|Number} [instance(s)]
+     * @param {Object} [options] Options passed to getAssociations
+     * @return {Promise}
+     */
+    async has(sourceInstance, targetInstances, options) {
         const association = this;
         const where = {};
 
@@ -295,18 +297,20 @@ class HasMany extends Association {
             ]
         };
 
-        return association.get(sourceInstance, options).then((associatedObjects) => associatedObjects.length === targetInstances.length);
+        const associatedObjects = await association.get(sourceInstance, options);
+
+        return associatedObjects.length === targetInstances.length;
     }
 
     /**
-   * Set the associated models by passing an array of persisted instances or their primary keys. Everything that is not in the passed array will be un-associated
-   *
-   * @param {Array<Model|String|Number>} [newAssociations] An array of persisted instances or primary key of instances to associate with this. Pass `null` or `undefined` to remove all associations.
-   * @param {Object} [options] Options passed to `target.findAll` and `update`.
-   * @param {Object} [options.validate] Run validation for the join model
-   * @return {Promise}
-   */
-    set(sourceInstance, targetInstances, options) {
+     * Set the associated models by passing an array of persisted instances or their primary keys. Everything that is not in the passed array will be un-associated
+     *
+     * @param {Array<Model|String|Number>} [newAssociations] An array of persisted instances or primary key of instances to associate with this. Pass `null` or `undefined` to remove all associations.
+     * @param {Object} [options] Options passed to `target.findAll` and `update`.
+     * @param {Object} [options.validate] Run validation for the join model
+     * @return {Promise}
+     */
+    async set(sourceInstance, targetInstances, options) {
         const association = this;
 
         if (is.null(targetInstances)) {
@@ -315,73 +319,74 @@ class HasMany extends Association {
             targetInstances = association.toInstanceArray(targetInstances);
         }
 
-        return association.get(sourceInstance, _.defaults({ scope: false, raw: true }, options)).then((oldAssociations) => {
-            const promises = [];
-            const obsoleteAssociations = oldAssociations.filter((old) =>
-                !_.find(targetInstances, (obj) =>
-                    obj[association.target.primaryKeyAttribute] === old[association.target.primaryKeyAttribute]
-                )
+        const oldAssociations = await association.get(sourceInstance, _.defaults({ scope: false, raw: true }, options));
+        const promises = [];
+        const obsoleteAssociations = oldAssociations.filter((old) =>
+            !_.find(targetInstances, (obj) =>
+                obj[association.target.primaryKeyAttribute] === old[association.target.primaryKeyAttribute]
+            )
+        );
+        const unassociatedObjects = targetInstances.filter((obj) =>
+            !_.find(oldAssociations, (old) =>
+                obj[association.target.primaryKeyAttribute] === old[association.target.primaryKeyAttribute]
+            )
+        );
+        let updateWhere;
+        let update;
+
+        if (obsoleteAssociations.length > 0) {
+            update = {};
+            update[association.foreignKey] = null;
+
+            updateWhere = {};
+
+            updateWhere[association.target.primaryKeyAttribute] = obsoleteAssociations.map((associatedObject) =>
+                associatedObject[association.target.primaryKeyAttribute]
             );
-            const unassociatedObjects = targetInstances.filter((obj) =>
-                !_.find(oldAssociations, (old) =>
-                    obj[association.target.primaryKeyAttribute] === old[association.target.primaryKeyAttribute]
-                )
+
+            promises.push(association.target.unscoped().update(
+                update,
+                _.defaults({
+                    where: updateWhere
+                }, options)
+            ));
+        }
+
+        if (unassociatedObjects.length > 0) {
+            updateWhere = {};
+
+            update = {};
+            update[association.foreignKey] = sourceInstance.get(association.sourceKey);
+
+            _.assign(update, association.scope);
+            updateWhere[association.target.primaryKeyAttribute] = unassociatedObjects.map((unassociatedObject) =>
+                unassociatedObject[association.target.primaryKeyAttribute]
             );
-            let updateWhere;
-            let update;
 
-            if (obsoleteAssociations.length > 0) {
-                update = {};
-                update[association.foreignKey] = null;
+            promises.push(association.target.unscoped().update(
+                update,
+                _.defaults({
+                    where: updateWhere
+                }, options)
+            ));
+        }
 
-                updateWhere = {};
+        await Promise.all(promises);
 
-                updateWhere[association.target.primaryKeyAttribute] = obsoleteAssociations.map((associatedObject) =>
-                    associatedObject[association.target.primaryKeyAttribute]
-                );
-
-                promises.push(association.target.unscoped().update(
-                    update,
-                    _.defaults({
-                        where: updateWhere
-                    }, options)
-                ));
-            }
-
-            if (unassociatedObjects.length > 0) {
-                updateWhere = {};
-
-                update = {};
-                update[association.foreignKey] = sourceInstance.get(association.sourceKey);
-
-                _.assign(update, association.scope);
-                updateWhere[association.target.primaryKeyAttribute] = unassociatedObjects.map((unassociatedObject) =>
-                    unassociatedObject[association.target.primaryKeyAttribute]
-                );
-
-                promises.push(association.target.unscoped().update(
-                    update,
-                    _.defaults({
-                        where: updateWhere
-                    }, options)
-                ));
-            }
-
-            return Utils.Promise.all(promises).return(sourceInstance);
-        });
+        return sourceInstance;
     }
 
     /**
-   * Associate one or more target rows with `this`. This method accepts a Model / string / number to associate a single row,
-   * or a mixed array of Model / string / numbers to associate multiple rows.
-   *
-   * @param {Model[]|Model|string[]|string|number[]|number} [newAssociation(s)]
-   * @param {Object} [options] Options passed to `target.update`.
-   * @return {Promise}
-   */
-    add(sourceInstance, targetInstances, options) {
+     * Associate one or more target rows with `this`. This method accepts a Model / string / number to associate a single row,
+     * or a mixed array of Model / string / numbers to associate multiple rows.
+     *
+     * @param {Model[]|Model|string[]|string|number[]|number} [newAssociation(s)]
+     * @param {Object} [options] Options passed to `target.update`.
+     * @return {Promise}
+     */
+    async add(sourceInstance, targetInstances, options) {
         if (!targetInstances) {
-            return Utils.Promise.resolve();
+            return;
         }
 
         const association = this;
@@ -399,17 +404,18 @@ class HasMany extends Association {
             unassociatedObject.get(association.target.primaryKeyAttribute)
         );
 
-        return association.target.unscoped().update(update, _.defaults({ where }, options)).return(sourceInstance);
+        await association.target.unscoped().update(update, _.defaults({ where }, options));
+        return sourceInstance;
     }
 
     /**
-   * Un-associate one or several target rows.
-   *
-   * @param {Model[]|Model|String[]|string|Number[]|number} [oldAssociatedInstance(s)]
-   * @param {Object} [options] Options passed to `target.update`
-   * @return {Promise}
-   */
-    remove(sourceInstance, targetInstances, options) {
+     * Un-associate one or several target rows.
+     *
+     * @param {Model[]|Model|String[]|string|Number[]|number} [oldAssociatedInstance(s)]
+     * @param {Object} [options] Options passed to `target.update`
+     * @return {Promise}
+     */
+    async remove(sourceInstance, targetInstances, options) {
         const association = this;
         const update = {};
         const where = {};
@@ -424,16 +430,17 @@ class HasMany extends Association {
             targetInstance.get(association.target.primaryKeyAttribute)
         );
 
-        return association.target.unscoped().update(update, _.defaults({ where }, options)).return(this);
+        await association.target.unscoped().update(update, _.defaults({ where }, options));
+        return this;
     }
 
     /**
-   * Create a new instance of the associated model and associate it with this.
-   *
-   * @param {Object} [values]
-   * @param {Object} [options] Options passed to `target.create`.
-   * @return {Promise}
-   */
+     * Create a new instance of the associated model and associate it with this.
+     *
+     * @param {Object} [values]
+     * @param {Object} [options] Options passed to `target.create`.
+     * @return {Promise}
+     */
     create(sourceInstance, values, options) {
         const association = this;
 

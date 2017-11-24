@@ -1,7 +1,6 @@
 import Support from "../support";
 
 const { DataTypes } = adone.orm;
-const Promise = Support.Sequelize.Promise;
 
 describe(Support.getTestDialectTeaser("Include"), () => {
     before(function () {
@@ -14,9 +13,9 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
     describe("findAndCountAll", () => {
         it("should be able to include two required models with a limit. Result rows should match limit.", function () {
-            const Project = this.sequelize.define("Project", { id: { type: DataTypes.INTEGER, primaryKey: true }, name: DataTypes.STRING(40) });
-            const Task = this.sequelize.define("Task", { name: DataTypes.STRING(40), fk: DataTypes.INTEGER });
-            const Employee = this.sequelize.define("Employee", { name: DataTypes.STRING(40), fk: DataTypes.INTEGER });
+            const Project = this.sequelize.define("Project", { id: { type: DataTypes.INTEGER, primaryKey: true }, name: new DataTypes.STRING(40) });
+            const Task = this.sequelize.define("Task", { name: new DataTypes.STRING(40), fk: DataTypes.INTEGER });
+            const Employee = this.sequelize.define("Employee", { name: new DataTypes.STRING(40), fk: DataTypes.INTEGER });
 
             Project.hasMany(Task, { foreignKey: "fk", constraints: false });
             Project.hasMany(Employee, { foreignKey: "fk", constraints: false });
@@ -27,7 +26,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
             // Sync them
             return this.sequelize.sync({ force: true }).then(() => {
                 // Create an enviroment
-                return Promise.join(
+                return Promise.all([
                     Project.bulkCreate([
                         { id: 1, name: "No tasks" },
                         { id: 2, name: "No tasks no employees" },
@@ -48,7 +47,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                         { name: "Jane John Doe", fk: 5 },
                         { name: "John Jane Doe", fk: 6 }
                     ])
-                ).then(() => {
+                ]).then(() => {
                     //Find all projects with tasks and employees
                     const availableProjects = 3;
                     const limit = 2;
@@ -69,15 +68,15 @@ describe(Support.getTestDialectTeaser("Include"), () => {
             });
         });
         it("should be able to include a required model. Result rows should match count", function () {
-            const User = this.sequelize.define("User", { name: DataTypes.STRING(40) }, { paranoid: true }),
-                SomeConnection = this.sequelize.define("SomeConnection", {
-                    m: DataTypes.STRING(40),
-                    fk: DataTypes.INTEGER,
-                    u: DataTypes.INTEGER
-                }, { paranoid: true }),
-                A = this.sequelize.define("A", { name: DataTypes.STRING(40) }, { paranoid: true }),
-                B = this.sequelize.define("B", { name: DataTypes.STRING(40) }, { paranoid: true }),
-                C = this.sequelize.define("C", { name: DataTypes.STRING(40) }, { paranoid: true });
+            const User = this.sequelize.define("User", { name: new DataTypes.STRING(40) }, { paranoid: true });
+            const SomeConnection = this.sequelize.define("SomeConnection", {
+                m: new DataTypes.STRING(40),
+                fk: DataTypes.INTEGER,
+                u: DataTypes.INTEGER
+            }, { paranoid: true });
+            const A = this.sequelize.define("A", { name: new DataTypes.STRING(40) }, { paranoid: true });
+            const B = this.sequelize.define("B", { name: new DataTypes.STRING(40) }, { paranoid: true });
+            const C = this.sequelize.define("C", { name: new DataTypes.STRING(40) }, { paranoid: true });
 
             const self = this;
 
@@ -97,7 +96,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
             return this.sequelize.sync({ force: true }).then(() => {
                 // Create an enviroment
 
-                return Promise.join(
+                return Promise.all([
                     User.bulkCreate([
                         { name: "Youtube" },
                         { name: "Facebook" },
@@ -145,13 +144,15 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                     C.bulkCreate([
                         { name: "because we only want A" }
                     ])
-                ).then(() => {
+                ]).then(() => {
                     // Delete some of conns to prove the concept
-                    return SomeConnection.destroy({ where: {
-                        m: "A",
-                        u: 1,
-                        fk: [1, 2]
-                    } }).then(() => {
+                    return SomeConnection.destroy({
+                        where: {
+                            m: "A",
+                            u: 1,
+                            fk: [1, 2]
+                        }
+                    }).then(() => {
                         self.clock.tick(1000);
                         // Last and most important queries ( we connected 4, but deleted 2, witch means we must get 2 only )
                         return A.findAndCountAll({
@@ -208,45 +209,37 @@ describe(Support.getTestDialectTeaser("Include"), () => {
             });
         });
 
-        it("should return the correct count and rows when using a required belongsTo and a limit", function () {
-            const s = this.sequelize,
-                Foo = s.define("Foo", {}),
-                Bar = s.define("Bar", {});
+        it("should return the correct count and rows when using a required belongsTo and a limit", async function () {
+            const s = this.sequelize;
+            const Foo = s.define("Foo", {});
+            const Bar = s.define("Bar", {});
 
             Foo.hasMany(Bar);
             Bar.belongsTo(Foo);
 
-            return s.sync({ force: true }).then(() => {
-                // Make five instances of Foo
-                return Foo.bulkCreate([{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }]);
-            }).then(() => {
-                // Make four instances of Bar, related to the last four instances of Foo
-                return Bar.bulkCreate([{ FooId: 2 }, { FooId: 3 }, { FooId: 4 }, { FooId: 5 }]);
-            }).then(() => {
-                // Query for the first two instances of Foo which have related Bars
-                return Foo.findAndCountAll({
-                    include: [{ model: Bar, required: true }],
-                    limit: 2
-                }).tap(() => {
-                    return Foo.findAll({
-                        include: [{ model: Bar, required: true }],
-                        limit: 2
-                    }).then((items) => {
-                        expect(items.length).to.equal(2);
-                    });
-                });
-            }).then((result) => {
-                expect(result.count).to.equal(4);
-
-                // The first two of those should be returned due to the limit (Foo
-                // instances 2 and 3)
-                expect(result.rows.length).to.equal(2);
+            await s.sync({ force: true });
+            // Make five instances of Foo
+            await Foo.bulkCreate([{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }]);
+            // Make four instances of Bar, related to the last four instances of Foo
+            await Bar.bulkCreate([{ FooId: 2 }, { FooId: 3 }, { FooId: 4 }, { FooId: 5 }]);
+            // Query for the first two instances of Foo which have related Bars
+            const result = await Foo.findAndCountAll({
+                include: [{ model: Bar, required: true }],
+                limit: 2
             });
+            expect(result.count).to.equal(4);
+            // The first two of those should be returned due to the limit (Foo
+            // instances 2 and 3)
+            expect(result.rows.length).to.equal(2);
+            expect(await Foo.findAll({
+                include: [{ model: Bar, required: true }],
+                limit: 2
+            })).to.have.length(2);
         });
 
         it("should return the correct count and rows when using a required belongsTo with a where condition and a limit", function () {
-            const Foo = this.sequelize.define("Foo", {}),
-                Bar = this.sequelize.define("Bar", { m: DataTypes.STRING(40) });
+            const Foo = this.sequelize.define("Foo", {});
+            const Bar = this.sequelize.define("Bar", { m: new DataTypes.STRING(40) });
 
             Foo.hasMany(Bar);
             Bar.belongsTo(Foo);
@@ -384,9 +377,11 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                         {
                             model: Project,
                             required: true,
-                            where: { name: {
-                                $in: ["naam-satya", "guru-satya"]
-                            } }
+                            where: {
+                                name: {
+                                    $in: ["naam-satya", "guru-satya"]
+                                }
+                            }
                         }
                     ]
                 });

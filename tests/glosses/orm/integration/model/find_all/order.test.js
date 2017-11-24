@@ -8,15 +8,14 @@ describe(Support.getTestDialectTeaser("Model"), () => {
     describe("findAll", () => {
         describe("order", () => {
             describe("Sequelize.literal()", () => {
-                beforeEach(function () {
+                beforeEach(async function () {
                     this.User = this.sequelize.define("User", {
                         email: DataTypes.STRING
                     });
 
-                    return this.User.sync({ force: true }).bind(this).then(function () {
-                        return this.User.create({
-                            email: "test@sequelizejs.com"
-                        });
+                    await this.User.sync({ force: true });
+                    await this.User.create({
+                        email: "test@sequelizejs.com"
                     });
                 });
 

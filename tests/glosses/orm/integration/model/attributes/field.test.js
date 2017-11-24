@@ -1,7 +1,6 @@
 import Support from "../../support";
 
 const Sequelize = adone.orm;
-const Promise = Sequelize.Promise;
 const DataTypes = Sequelize.DataTypes;
 
 const dialect = Support.getTestDialect();
@@ -197,13 +196,12 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     });
                 });
 
-                it("should support Model.destroy()", function () {
-                    return this.User.create().bind(this).then(function (user) {
-                        return this.User.destroy({
-                            where: {
-                                id: user.get("id")
-                            }
-                        });
+                it("should support Model.destroy()", async function () {
+                    const user = await this.User.create();
+                    await this.User.destroy({
+                        where: {
+                            id: user.get("id")
+                        }
                     });
                 });
             });
@@ -337,7 +335,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     },
                     title: {
                         allowNull: false,
-                        type: Sequelize.STRING(255),
+                        type: new Sequelize.STRING(255),
                         field: "test_title"
                     }
                 }, {
@@ -550,25 +548,23 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 });
             });
 
-            it("should work with a belongsTo association getter", function () {
+            it("should work with a belongsTo association getter", async function () {
                 const userId = Math.floor(Math.random() * 100000);
-                return Promise.join(
+                const [user, task] = await Promise.all([
                     this.User.create({
                         id: userId
                     }),
                     this.Task.create({
                         user_id: userId
                     })
-                ).spread((user, task) => {
-                    return [user, task.getUser()];
-                }).spread((userA, userB) => {
-                    expect(userA.get("id")).to.equal(userB.get("id"));
-                    expect(userA.get("id")).to.equal(userId);
-                    expect(userB.get("id")).to.equal(userId);
-                });
+                ]);
+                const userA = await task.getUser();
+                expect(user.get("id")).to.equal(userA.get("id"));
+                expect(user.get("id")).to.equal(userId);
+                expect(userA.get("id")).to.equal(userId);
             });
 
-            it("should work with paranoid instance.destroy()", function () {
+            it("should work with paranoid instance.destroy()", async function () {
                 const User = this.sequelize.define("User", {
                     deletedAt: {
                         type: DataTypes.DATE,
@@ -579,21 +575,12 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     paranoid: true
                 });
 
-                return User.sync({ force: true })
-                    .bind(this)
-                    .then(() => {
-                        return User.create();
-                    })
-                    .then((user) => {
-                        return user.destroy();
-                    })
-                    .then(function () {
-                        this.clock.tick(1000);
-                        return User.findAll();
-                    })
-                    .then((users) => {
-                        expect(users.length).to.equal(0);
-                    });
+                await User.sync({ force: true })
+                const user = await User.create();
+                await user.destroy();
+                this.clock.tick(1000);
+                const users = await User.findAll();
+                expect(users.length).to.equal(0);
             });
 
             it("should work with paranoid Model.destroy()", function () {

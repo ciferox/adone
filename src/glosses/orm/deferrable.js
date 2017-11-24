@@ -38,7 +38,56 @@ const util = require("util");
  * @property SET_DEFERRED
  * @property SET_IMMEDIATE
  */
-const Deferrable = module.exports = {
+
+class ABSTRACT {
+    toString(...args) {
+        return this.toSql(...args);
+    }
+}
+
+
+class INITIALLY_DEFERRED extends ABSTRACT {
+    toSql() {
+        return "DEFERRABLE INITIALLY DEFERRED";
+    }
+}
+
+
+class INITIALLY_IMMEDIATE extends ABSTRACT {
+    toSql() {
+        return "DEFERRABLE INITIALLY IMMEDIATE";
+    }
+}
+
+class NOT extends ABSTRACT {
+    toSql() {
+        return "NOT DEFERRABLE";
+    }
+}
+
+class SET_DEFERRED extends ABSTRACT {
+    constructor(constraints) {
+        super();
+        this.constraints = constraints;
+    }
+
+    toSql(queryGenerator) {
+        return queryGenerator.setDeferredQuery(this.constraints);
+    }
+}
+
+class SET_IMMEDIATE extends ABSTRACT {
+    constructor(constraints) {
+        super();
+        this.constraints = constraints;
+    }
+
+    toSql(queryGenerator) {
+        return queryGenerator.setImmediateQuery(this.constraints);
+    }
+}
+
+module.exports = {
     INITIALLY_DEFERRED,
     INITIALLY_IMMEDIATE,
     NOT,
@@ -46,76 +95,13 @@ const Deferrable = module.exports = {
     SET_IMMEDIATE
 };
 
-function ABSTRACT() { }
 
-ABSTRACT.prototype.toString = function () {
-    return this.toSql.apply(this, arguments);
-};
+// for what???
+// Object.keys(Deferrable).forEach((key) => {
+//     const DeferrableType = Deferrable[key];
 
-function INITIALLY_DEFERRED() {
-    if (!(this instanceof INITIALLY_DEFERRED)) {
-        return new INITIALLY_DEFERRED();
-    }
-}
-util.inherits(INITIALLY_DEFERRED, ABSTRACT);
-
-INITIALLY_DEFERRED.prototype.toSql = function () {
-    return "DEFERRABLE INITIALLY DEFERRED";
-};
-
-function INITIALLY_IMMEDIATE() {
-    if (!(this instanceof INITIALLY_IMMEDIATE)) {
-        return new INITIALLY_IMMEDIATE();
-    }
-}
-util.inherits(INITIALLY_IMMEDIATE, ABSTRACT);
-
-INITIALLY_IMMEDIATE.prototype.toSql = function () {
-    return "DEFERRABLE INITIALLY IMMEDIATE";
-};
-
-function NOT() {
-    if (!(this instanceof NOT)) {
-        return new NOT();
-    }
-}
-util.inherits(NOT, ABSTRACT);
-
-NOT.prototype.toSql = function () {
-    return "NOT DEFERRABLE";
-};
-
-function SET_DEFERRED(constraints) {
-    if (!(this instanceof SET_DEFERRED)) {
-        return new SET_DEFERRED(constraints);
-    }
-
-    this.constraints = constraints;
-}
-util.inherits(SET_DEFERRED, ABSTRACT);
-
-SET_DEFERRED.prototype.toSql = function (queryGenerator) {
-    return queryGenerator.setDeferredQuery(this.constraints);
-};
-
-function SET_IMMEDIATE(constraints) {
-    if (!(this instanceof SET_IMMEDIATE)) {
-        return new SET_IMMEDIATE(constraints);
-    }
-
-    this.constraints = constraints;
-}
-util.inherits(SET_IMMEDIATE, ABSTRACT);
-
-SET_IMMEDIATE.prototype.toSql = function (queryGenerator) {
-    return queryGenerator.setImmediateQuery(this.constraints);
-};
-
-Object.keys(Deferrable).forEach((key) => {
-    const DeferrableType = Deferrable[key];
-
-    DeferrableType.toString = function () {
-        const instance = new DeferrableType();
-        return instance.toString.apply(instance, arguments);
-    };
-});
+//     DeferrableType.toString = function (...args) {
+//         const instance = new DeferrableType();
+//         return instance.toString.apply(instance, args);
+//     };
+// });

@@ -2,7 +2,6 @@ import Support from "../support";
 
 const { vendor: { lodash: _ } } = adone;
 const current = Support.sequelize;
-const Promise = current.Promise;
 
 describe(Support.getTestDialectTeaser("Hooks"), () => {
     beforeEach(function () {
@@ -156,19 +155,18 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                 });
             });
 
-            it("runs the global hook when no hook is passed", function () {
+            it("runs the global hook when no hook is passed", async function () {
                 const Model = this.sequelize.define("M", {}, {
                     hooks: {
                         beforeUpdate: _.noop // Just to make sure we can define other hooks without overwriting the global one
                     }
                 });
 
-                return Model.runHooks("beforeCreate").bind(this).then(function () {
-                    expect(this.beforeCreate).to.have.been.calledOnce;
-                });
+                await Model.runHooks("beforeCreate");
+                expect(this.beforeCreate).to.have.been.calledOnce;
             });
 
-            it("does not run the global hook when the model specifies its own hook", function () {
+            it("does not run the global hook when the model specifies its own hook", async function () {
                 const localHook = spy();
                 const Model = this.sequelize.define("M", {}, {
                     hooks: {
@@ -176,40 +174,37 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                     }
                 });
 
-                return Model.runHooks("beforeCreate").bind(this).then(function () {
-                    expect(this.beforeCreate).not.to.have.been.called;
-                    expect(localHook).to.have.been.calledOnce;
-                });
+                await Model.runHooks("beforeCreate");
+                expect(this.beforeCreate).not.to.have.been.called;
+                expect(localHook).to.have.been.calledOnce;
             });
         });
     });
 
     describe("#removeHook", () => {
-        it("should remove hook", function () {
+        it("should remove hook", async function () {
             const hook1 = spy();
             const hook2 = spy();
 
             this.Model.addHook("beforeCreate", "myHook", hook1);
             this.Model.beforeCreate("myHook2", hook2);
 
-            return this.Model.runHooks("beforeCreate").bind(this).then(function () {
-                expect(hook1).to.have.been.calledOnce;
-                expect(hook2).to.have.been.calledOnce;
+            await this.Model.runHooks("beforeCreate");
+            expect(hook1).to.have.been.calledOnce;
+            expect(hook2).to.have.been.calledOnce;
 
-                hook1.reset();
-                hook2.reset();
+            hook1.reset();
+            hook2.reset();
 
-                this.Model.removeHook("beforeCreate", "myHook");
-                this.Model.removeHook("beforeCreate", "myHook2");
+            this.Model.removeHook("beforeCreate", "myHook");
+            this.Model.removeHook("beforeCreate", "myHook2");
 
-                return this.Model.runHooks("beforeCreate");
-            }).then(() => {
-                expect(hook1).not.to.have.been.called;
-                expect(hook2).not.to.have.been.called;
-            });
+            await this.Model.runHooks("beforeCreate");
+            expect(hook1).not.to.have.been.called;
+            expect(hook2).not.to.have.been.called;
         });
 
-        it("should not remove other hooks", function () {
+        it("should not remove other hooks", async function () {
             const hook1 = spy();
             const hook2 = spy();
             const hook3 = spy();
@@ -220,26 +215,25 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
             this.Model.beforeCreate("myHook2", hook3);
             this.Model.beforeCreate(hook4);
 
-            return this.Model.runHooks("beforeCreate").bind(this).then(function () {
-                expect(hook1).to.have.been.calledOnce;
-                expect(hook2).to.have.been.calledOnce;
-                expect(hook3).to.have.been.calledOnce;
-                expect(hook4).to.have.been.calledOnce;
+            await this.Model.runHooks("beforeCreate");
+            expect(hook1).to.have.been.calledOnce;
+            expect(hook2).to.have.been.calledOnce;
+            expect(hook3).to.have.been.calledOnce;
+            expect(hook4).to.have.been.calledOnce;
 
-                hook1.reset();
-                hook2.reset();
-                hook3.reset();
-                hook4.reset();
+            hook1.reset();
+            hook2.reset();
+            hook3.reset();
+            hook4.reset();
 
-                this.Model.removeHook("beforeCreate", "myHook");
+            this.Model.removeHook("beforeCreate", "myHook");
 
-                return this.Model.runHooks("beforeCreate");
-            }).then(() => {
-                expect(hook1).to.have.been.calledOnce;
-                expect(hook2).not.to.have.been.called;
-                expect(hook3).to.have.been.calledOnce;
-                expect(hook4).to.have.been.calledOnce;
-            });
+            await this.Model.runHooks("beforeCreate");
+
+            expect(hook1).to.have.been.calledOnce;
+            expect(hook2).not.to.have.been.called;
+            expect(hook3).to.have.been.calledOnce;
+            expect(hook4).to.have.been.calledOnce;
         });
     });
 
@@ -277,10 +271,10 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                 this.Model.beforeDelete(this.beforeDelete);
                 this.Model.afterDelete(this.afterDelete);
 
-                return Promise.join(
+                return Promise.all([
                     this.Model.runHooks("beforeDestroy"),
                     this.Model.runHooks("afterDestroy")
-                );
+                ]);
             });
         });
 
@@ -289,10 +283,10 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                 this.Model.hook("beforeDelete", this.beforeDelete);
                 this.Model.hook("afterDelete", this.afterDelete);
 
-                return Promise.join(
+                return Promise.all([
                     this.Model.runHooks("beforeDestroy"),
                     this.Model.runHooks("afterDestroy")
-                );
+                ]);
             });
         });
     });
@@ -302,7 +296,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
             const self = this;
 
             this.Model.beforeBulkCreate(() => {
-                return self.sequelize.Promise.resolve();
+                return Promise.resolve();
             });
 
             await this.Model.runHooks("beforeBulkCreate");

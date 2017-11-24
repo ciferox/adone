@@ -1,6 +1,5 @@
 const { is, vendor: { lodash: _ } } = adone;
 const wkx = adone.util.terraformer.WKX;
-const inherits = require("../../utils/inherits");
 
 module.exports = (BaseTypes) => {
     BaseTypes.ABSTRACT.prototype.dialectTypes = "https://dev.mysql.com/doc/refman/5.7/en/data-types.html";
@@ -33,170 +32,127 @@ module.exports = (BaseTypes) => {
     BaseTypes.GEOMETRY.types.mysql = ["GEOMETRY"];
     BaseTypes.JSON.types.mysql = ["JSON"];
 
-    function BLOB(length) {
-        if (!(this instanceof BLOB)) {
-            return new BLOB(length);
+    class BLOB extends BaseTypes.BLOB {
+        static parse(value, options, next) {
+            const data = next();
+
+            if (is.buffer(data) && data.length === 0) {
+                return null;
+            }
+
+            return data;
         }
-        BaseTypes.BLOB.apply(this, arguments);
     }
-    inherits(BLOB, BaseTypes.BLOB);
 
-    BLOB.parse = function (value, options, next) {
-        const data = next();
+    class DECIMAL extends BaseTypes.DECIMAL {
+        toSql() {
+            let definition = super.toSql();
 
-        if (is.buffer(data) && data.length === 0) {
-            return null;
+            if (this._unsigned) {
+                definition += " UNSIGNED";
+            }
+
+            if (this._zerofill) {
+                definition += " ZEROFILL";
+            }
+
+            return definition;
         }
-
-        return data;
-    };
-
-    function DECIMAL(precision, scale) {
-        if (!(this instanceof DECIMAL)) {
-            return new DECIMAL(precision, scale);
-        }
-        BaseTypes.DECIMAL.apply(this, arguments);
     }
-    inherits(DECIMAL, BaseTypes.DECIMAL);
 
-    DECIMAL.prototype.toSql = function toSql() {
-        let definition = BaseTypes.DECIMAL.prototype.toSql.apply(this);
-
-        if (this._unsigned) {
-            definition += " UNSIGNED";
+    class DATE extends BaseTypes.DATE {
+        toSql() {
+            return `DATETIME${this._length ? `(${this._length})` : ""}`;
         }
 
-        if (this._zerofill) {
-            definition += " ZEROFILL";
+        _stringify(date, options) {
+            date = BaseTypes.DATE.prototype._applyTimezone(date, options);
+            // Fractional DATETIMEs only supported on MySQL 5.6.4+
+            if (this._length) {
+                return date.format("YYYY-MM-DD HH:mm:ss.SSS");
+            }
+
+            return date.format("YYYY-MM-DD HH:mm:ss");
         }
 
-        return definition;
-    };
+        static parse(value, options) {
+            value = value.string();
 
-    function DATE(length) {
-        if (!(this instanceof DATE)) {
-            return new DATE(length);
-        }
-        BaseTypes.DATE.apply(this, arguments);
-    }
-    inherits(DATE, BaseTypes.DATE);
+            if (is.null(value)) {
+                return value;
+            }
 
-    DATE.prototype.toSql = function toSql() {
-        return `DATETIME${this._length ? `(${this._length})` : ""}`;
-    };
+            if (adone.datetime.tz.zone(options.timezone)) {
+                value = adone.datetime.tz(value, options.timezone).toDate();
+            } else {
+                value = new Date(`${value} ${options.timezone}`);
+            }
 
-    DATE.prototype._stringify = function _stringify(date, options) {
-        date = BaseTypes.DATE.prototype._applyTimezone(date, options);
-        // Fractional DATETIMEs only supported on MySQL 5.6.4+
-        if (this._length) {
-            return date.format("YYYY-MM-DD HH:mm:ss.SSS");
-        }
-
-        return date.format("YYYY-MM-DD HH:mm:ss");
-    };
-
-    DATE.parse = function parse(value, options) {
-        value = value.string();
-
-        if (is.null(value)) {
             return value;
         }
-
-        if (adone.datetime.tz.zone(options.timezone)) {
-            value = adone.datetime.tz(value, options.timezone).toDate();
-        } else {
-            value = new Date(`${value} ${options.timezone}`);
-        }
-
-        return value;
-    };
-
-    function DATEONLY() {
-        if (!(this instanceof DATEONLY)) {
-            return new DATEONLY();
-        }
-        BaseTypes.DATEONLY.apply(this, arguments);
     }
-    inherits(DATEONLY, BaseTypes.DATEONLY);
 
-    DATEONLY.parse = function parse(value) {
-        return value.string();
-    };
-
-    function UUID() {
-        if (!(this instanceof UUID)) {
-            return new UUID();
+    class DATEONLY extends BaseTypes.DATEONLY {
+        static parse(value) {
+            return value.string();
         }
-        BaseTypes.UUID.apply(this, arguments);
     }
-    inherits(UUID, BaseTypes.UUID);
 
-    UUID.prototype.toSql = function toSql() {
-        return "CHAR(36) BINARY";
-    };
+    class UUID extends BaseTypes.UUID {
+        toSql() {
+            return "CHAR(36) BINARY";
+        }
+    }
 
 
     const SUPPORTED_GEOMETRY_TYPES = ["POINT", "LINESTRING", "POLYGON"];
 
-    function GEOMETRY(type, srid) {
-        if (!(this instanceof GEOMETRY)) {
-            return new GEOMETRY(type, srid);
+    class GEOMETRY extends BaseTypes.GEOMETRY {
+        constructor(type, srid) {
+            super(type, srid);
+            if (_.isEmpty(this.type)) {
+                this.sqlType = this.key;
+            } else if (_.includes(SUPPORTED_GEOMETRY_TYPES, this.type)) {
+                this.sqlType = this.type;
+            } else {
+                throw new Error(`Supported geometry types are: ${SUPPORTED_GEOMETRY_TYPES.join(", ")}`);
+            }
         }
-        BaseTypes.GEOMETRY.apply(this, arguments);
 
-        if (_.isEmpty(this.type)) {
-            this.sqlType = this.key;
-        } else if (_.includes(SUPPORTED_GEOMETRY_TYPES, this.type)) {
-            this.sqlType = this.type;
-        } else {
-            throw new Error(`Supported geometry types are: ${SUPPORTED_GEOMETRY_TYPES.join(", ")}`);
+        parse(value) {
+            return this.constructor.parse(value);
+        }
+
+        static parse(value) {
+            value = value.buffer();
+
+            // Empty buffer, MySQL doesn't support POINT EMPTY
+            // check, https://dev.mysql.com/worklog/task/?id=2381
+            if (value.length === 0) {
+                return null;
+            }
+
+            // For some reason, discard the first 4 bytes
+            value = value.slice(4);
+            return wkx.Geometry.parse(value).toGeoJSON();
+        }
+
+        toSql() {
+            return this.sqlType;
         }
     }
-    inherits(GEOMETRY, BaseTypes.GEOMETRY);
 
-    GEOMETRY.parse = GEOMETRY.prototype.parse = function parse(value) {
-        value = value.buffer();
-
-        // Empty buffer, MySQL doesn't support POINT EMPTY
-        // check, https://dev.mysql.com/worklog/task/?id=2381
-        if (value.length === 0) {
-            return null;
+    class ENUM extends BaseTypes.ENUM {
+        toSql(options) {
+            return `ENUM(${_.map(this.values, (value) => options.escape(value)).join(", ")})`;
         }
-
-        // For some reason, discard the first 4 bytes
-        value = value.slice(4);
-        return wkx.Geometry.parse(value).toGeoJSON();
-    };
-
-    GEOMETRY.prototype.toSql = function toSql() {
-        return this.sqlType;
-    };
-
-    function ENUM() {
-        if (!(this instanceof ENUM)) {
-            const obj = Object.create(ENUM.prototype);
-            ENUM.apply(obj, arguments);
-            return obj;
-        }
-        BaseTypes.ENUM.apply(this, arguments);
     }
-    inherits(ENUM, BaseTypes.ENUM);
 
-    ENUM.prototype.toSql = function toSql(options) {
-        return `ENUM(${_.map(this.values, (value) => options.escape(value)).join(", ")})`;
-    };
-
-    function JSONTYPE() {
-        if (!(this instanceof JSONTYPE)) {
-            return new JSONTYPE();
+    class JSONTYPE extends BaseTypes.JSON {
+        _stringify(value, options) {
+            return options.operation === "where" && is.string(value) ? value : JSON.stringify(value);
         }
-        BaseTypes.JSON.apply(this, arguments);
     }
-    inherits(JSONTYPE, BaseTypes.JSON);
-
-    JSONTYPE.prototype._stringify = function _stringify(value, options) {
-        return options.operation === "where" && is.string(value) ? value : JSON.stringify(value);
-    };
 
     const exports = {
         ENUM,

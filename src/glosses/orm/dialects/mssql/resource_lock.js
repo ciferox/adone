@@ -1,23 +1,22 @@
-const Promise = require("../../promise");
+class ResourceLock {
+    constructor(resource) {
+        this.resource = resource;
+        this.q = new adone.collection.AsyncQueue();
+        this.q.push(null);
+    }
 
-function ResourceLock(resource) {
-    this.resource = resource;
-    this.previous = Promise.resolve(resource);
+    unwrap() {
+        return this.resource;
+    }
+
+    unlock() {
+        this.q.push(null);
+    }
+
+    async lock() {
+        await this.q.pop();
+        return this.resource;
+    }
 }
-
-ResourceLock.prototype.unwrap = function () {
-    return this.resource;
-};
-
-ResourceLock.prototype.lock = function () {
-    const lock = this.previous;
-    let resolve;
-
-    this.previous = new Promise((r) => {
-        resolve = r;
-    });
-
-    return lock.disposer(resolve);
-};
 
 module.exports = ResourceLock;

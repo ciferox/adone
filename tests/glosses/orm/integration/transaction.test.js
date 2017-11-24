@@ -1,8 +1,8 @@
 import Support from "./support";
 
 const dialect = Support.getTestDialect();
+const { promise } = adone;
 const {
-    Promise,
     Transaction
 } = adone.orm;
 const current = Support.sequelize;
@@ -77,7 +77,7 @@ describe(Support.getTestDialectTeaser("Transaction"), { skip: !current.dialect.s
             expect(t.finished).to.be.equal("rollback");
         });
 
-        it("do not rollback if already committed", { skip: dialect !== "postgres" }, function () {
+        it("do not rollback if already committed", { skip: dialect !== "postgres" }, async function () {
             const SumSumSum = this.sequelize.define("transaction", {
                 value: {
                     type: Support.Sequelize.DECIMAL(10, 3),
@@ -93,18 +93,18 @@ describe(Support.getTestDialectTeaser("Transaction"), { skip: !current.dialect.s
                 });
             };
             // Attention: this test is a bit racy. If you find a nicer way to test this: go ahead
-            return SumSumSum.sync({ force: true }).then(() => {
-                return expect(Promise.join(transTest(80), transTest(80), transTest(80))).to.eventually.be.rejectedWith("could not serialize access due to read/write dependencies among transactions");
-            }).delay(100).then(() => {
-                if (self.sequelize.test.$runningQueries !== 0) {
-                    return self.sequelize.Promise.delay(200);
-                }
-                return void 0;
-            }).then(() => {
-                if (self.sequelize.test.$runningQueries !== 0) {
-                    return self.sequelize.Promise.delay(500);
-                }
-            });
+            await SumSumSum.sync({ force: true });
+            await assert.throws(async () => {
+                await Promise.all([transTest(80), transTest(80), transTest(80)]);
+            }, 'could not serialize access due to read/write dependencies among transactions"');
+            await promise.delay(100);
+            // ...
+            if (self.sequelize.test.$runningQueries !== 0) {
+                await promise.delay(200);
+            }
+            if (self.sequelize.test.$runningQueries !== 0) {
+                await promise.delay(500);
+            }
         });
     });
 
@@ -187,36 +187,32 @@ describe(Support.getTestDialectTeaser("Transaction"), { skip: !current.dialect.s
         }, "Transaction cannot be rolled back because it has been finished with state: rollback");
     });
 
-    it("works even if a transaction: null option is passed", function () {
+    it("works even if a transaction: null option is passed", async function () {
         this.sinon.spy(this.sequelize, "query");
 
-        return this.sequelize.transaction({
+        const t = await this.sequelize.transaction({
             transaction: null
-        }).bind(this).then(function (t) {
-            return t.commit().bind(this).then(function () {
-                expect(this.sequelize.query.callCount).to.be.greaterThan(0);
-
-                for (let i = 0; i < this.sequelize.query.callCount; i++) {
-                    expect(this.sequelize.query.getCall(i).args[1].transaction).to.equal(t);
-                }
-            });
         });
+        await t.commit();
+        expect(this.sequelize.query.callCount).to.be.greaterThan(0);
+
+        for (let i = 0; i < this.sequelize.query.callCount; i++) {
+            expect(this.sequelize.query.getCall(i).args[1].transaction).to.equal(t);
+        }
     });
 
-    it("works even if a transaction: undefined option is passed", function () {
+    it("works even if a transaction: undefined option is passed", async function () {
         this.sinon.spy(this.sequelize, "query");
 
-        return this.sequelize.transaction({
+        const t = await this.sequelize.transaction({
             transaction: undefined
-        }).bind(this).then(function (t) {
-            return t.commit().bind(this).then(function () {
-                expect(this.sequelize.query.callCount).to.be.greaterThan(0);
-
-                for (let i = 0; i < this.sequelize.query.callCount; i++) {
-                    expect(this.sequelize.query.getCall(i).args[1].transaction).to.equal(t);
-                }
-            });
         });
+        await t.commit();
+        expect(this.sequelize.query.callCount).to.be.greaterThan(0);
+
+        for (let i = 0; i < this.sequelize.query.callCount; i++) {
+            expect(this.sequelize.query.getCall(i).args[1].transaction).to.equal(t);
+        }
     });
 
     if (dialect === "sqlite") {
@@ -251,69 +247,54 @@ describe(Support.getTestDialectTeaser("Transaction"), { skip: !current.dialect.s
 
     if (current.dialect.supports.transactionOptions.type) {
         describe("transaction types", () => {
-            it("should support default transaction type DEFERRED", function () {
-                return this.sequelize.transaction({
-                }).bind(this).then(function (t) {
-                    return t.rollback().bind(this).then(() => {
-                        expect(t.options.type).to.equal("DEFERRED");
-                    });
-                });
+            it("should support default transaction type DEFERRED", async function () {
+                const t = await this.sequelize.transaction({});
+                await t.rollback();
+                expect(t.options.type).to.equal("DEFERRED");
             });
 
             Object.keys(Transaction.TYPES).forEach((key) => {
-                it(`should allow specification of ${key} type`, function () {
-                    return this.sequelize.transaction({
+                it(`should allow specification of ${key} type`, async function () {
+                    const t = await this.sequelize.transaction({
                         type: key
-                    }).bind(this).then(function (t) {
-                        return t.rollback().bind(this).then(() => {
-                            expect(t.options.type).to.equal(Transaction.TYPES[key]);
-                        });
                     });
+                    await t.rollback();
+                    expect(t.options.type).to.equal(Transaction.TYPES[key]);
                 });
             });
-
         });
-
     }
 
     if (dialect === "sqlite") {
-        it("automatically retries on SQLITE_BUSY failure", function () {
-            return Support.prepareTransactionTest(this.sequelize).bind({}).then((sequelize) => {
-                const User = sequelize.define("User", { username: Support.Sequelize.STRING });
-                return User.sync({ force: true }).then(() => {
-                    const newTransactionFunc = function () {
-                        return sequelize.transaction({ type: Support.Sequelize.Transaction.TYPES.EXCLUSIVE }).then((t) => {
-                            return User.create({}, { transaction: t }).then(() => {
-                                return t.commit();
-                            });
-                        });
-                    };
-                    return Promise.join(newTransactionFunc(), newTransactionFunc()).then(() => {
-                        return User.findAll().then((users) => {
-                            expect(users.length).to.equal(2);
-                        });
-                    });
-                });
-            });
+        it("automatically retries on SQLITE_BUSY failure", async function () {
+            const sequelize = await Support.prepareTransactionTest(this.sequelize);
+            const User = sequelize.define("User", { username: Support.Sequelize.STRING });
+            await User.sync({ force: true });
+            const newTransactionFunc = async () => {
+                const t = await sequelize.transaction({ type: Support.Sequelize.Transaction.TYPES.EXCLUSIVE });
+                await User.create({}, { transaction: t });
+                await t.commit();
+            };
+
+            await Promise.all([newTransactionFunc(), newTransactionFunc()]);
+            const users = await User.findAll();
+            expect(users.length).to.equal(2);
         });
 
-        it("fails with SQLITE_BUSY when retry.match is changed", function () {
-            return Support.prepareTransactionTest(this.sequelize).bind({}).then((sequelize) => {
-                const User = sequelize.define("User", { id: { type: Support.Sequelize.INTEGER, primaryKey: true }, username: Support.Sequelize.STRING });
-                return User.sync({ force: true }).then(() => {
-                    const newTransactionFunc = function () {
-                        return sequelize.transaction({ type: Support.Sequelize.Transaction.TYPES.EXCLUSIVE, retry: { match: ["NO_MATCH"] } }).then((t) => {
-                            // introduce delay to force the busy state race condition to fail
-                            return Promise.delay(1000).then(() => {
-                                return User.create({ id: null, username: `test ${t.id}` }, { transaction: t }).then(() => {
-                                    return t.commit();
-                                });
-                            });
-                        });
-                    };
-                    return expect(Promise.join(newTransactionFunc(), newTransactionFunc())).to.be.rejectedWith("SQLITE_BUSY: database is locked");
-                });
-            });
+        it("fails with SQLITE_BUSY when retry.match is changed", async function () {
+            const sequelize = await Support.prepareTransactionTest(this.sequelize);
+            const User = sequelize.define("User", { id: { type: Support.Sequelize.INTEGER, primaryKey: true }, username: Support.Sequelize.STRING });
+            await User.sync({ force: true });
+            const newTransactionFunc = async () => {
+                const t = await sequelize.transaction({ type: Support.Sequelize.Transaction.TYPES.EXCLUSIVE, retry: { match: ["NO_MATCH"] } });
+                // introduce delay to force the busy state race condition to fail
+                await promise.delay(1000);
+                await User.create({ id: null, username: `test ${t.id}` }, { transaction: t });
+                await t.commit();
+            };
+            await assert.throws(async () => {
+                await Promise.all([newTransactionFunc(), newTransactionFunc()]);
+            }, "SQLITE_BUSY: database is locked");
         });
 
     }
@@ -342,7 +323,7 @@ describe(Support.getTestDialectTeaser("Transaction"), { skip: !current.dialect.s
                         return self.sequelize.transaction({
                             isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED
                         }).then((t2) => {
-                            return Promise.join(
+                            return Promise.all([
                                 User.find({
                                     where: {
                                         username: "jan"
@@ -362,18 +343,18 @@ describe(Support.getTestDialectTeaser("Transaction"), { skip: !current.dialect.s
                                     transaction: t1
                                 }).then(() => {
                                     t1Spy();
-                                    return Promise.delay(2000).then(() => {
+                                    return promise.delay(2000).then(() => {
                                         return t1.commit();
                                     });
                                 })
-                            );
+                            ]);
                         });
                     });
                 });
             });
         });
 
-        it("fail locking with outer joins", function () {
+        it("fail locking with outer joins", async function () {
             const User = this.sequelize.define("User", { username: Support.Sequelize.STRING });
             const Task = this.sequelize.define("Task", { title: Support.Sequelize.STRING, active: Support.Sequelize.BOOLEAN });
             const self = this;
@@ -381,45 +362,40 @@ describe(Support.getTestDialectTeaser("Transaction"), { skip: !current.dialect.s
             User.belongsToMany(Task, { through: "UserTasks" });
             Task.belongsToMany(User, { through: "UserTasks" });
 
-            return this.sequelize.sync({ force: true }).then(() => {
-                return Promise.join(
-                    User.create({ username: "John" }),
-                    Task.create({ title: "Get rich", active: false }),
-                    (john, task1) => {
-                        return john.setTasks([task1]);
-                    })
-                    .then(() => {
-                        return self.sequelize.transaction((t1) => {
-
-                            if (current.dialect.supports.lockOuterJoinFailure) {
-
-                                return expect(User.find({
-                                    where: {
-                                        username: "John"
-                                    },
-                                    include: [Task],
-                                    lock: t1.LOCK.UPDATE,
-                                    transaction: t1
-                                })).to.be.rejectedWith("FOR UPDATE cannot be applied to the nullable side of an outer join");
-
-                            }
-
-                            return User.find({
-                                where: {
-                                    username: "John"
-                                },
-                                include: [Task],
-                                lock: t1.LOCK.UPDATE,
-                                transaction: t1
-                            });
-
+            await this.sequelize.sync({ force: true });
+            const [john, task1] = await Promise.all([
+                User.create({ username: "John" }),
+                Task.create({ title: "Get rich", active: false })
+            ]);
+            await john.setTasks([task1]);
+            await self.sequelize.transaction(async (t1) => {
+                if (current.dialect.supports.lockOuterJoinFailure) {
+                    await assert.throws(async () => {
+                        await User.find({
+                            where: {
+                                username: "John"
+                            },
+                            include: [Task],
+                            lock: t1.LOCK.UPDATE,
+                            transaction: t1
                         });
+                    }, "FOR UPDATE cannot be applied to the nullable side of an outer join");
+                } else {
+                    await User.find({
+                        where: {
+                            username: "John"
+                        },
+                        include: [Task],
+                        lock: t1.LOCK.UPDATE,
+                        transaction: t1
                     });
+                }
+
             });
         });
 
         if (current.dialect.supports.lockOf) {
-            it("supports for update of table", function () {
+            it("supports for update of table", async function () {
                 const User = this.sequelize.define("User", { username: Support.Sequelize.STRING }, { tableName: "Person" });
                 const Task = this.sequelize.define("Task", { title: Support.Sequelize.STRING, active: Support.Sequelize.BOOLEAN });
                 const self = this;
@@ -427,46 +403,38 @@ describe(Support.getTestDialectTeaser("Transaction"), { skip: !current.dialect.s
                 User.belongsToMany(Task, { through: "UserTasks" });
                 Task.belongsToMany(User, { through: "UserTasks" });
 
-                return this.sequelize.sync({ force: true }).then(() => {
-                    return Promise.join(
-                        User.create({ username: "John" }),
-                        Task.create({ title: "Get rich", active: false }),
-                        Task.create({ title: "Die trying", active: false }),
-                        (john, task1) => {
-                            return john.setTasks([task1]);
-                        })
-                        .then(() => {
-                            return self.sequelize.transaction((t1) => {
-                                return User.find({
-                                    where: {
-                                        username: "John"
-                                    },
-                                    include: [Task],
-                                    lock: {
-                                        level: t1.LOCK.UPDATE,
-                                        of: User
-                                    },
-                                    transaction: t1
-                                }).then((t1John) => {
-                                    // should not be blocked by the lock of the other transaction
-                                    return self.sequelize.transaction((t2) => {
-                                        return Task.update({
-                                            active: true
-                                        }, {
-                                            where: {
-                                                active: false
-                                            },
-                                            transaction: t2
-                                        });
-                                    }).then(() => {
-                                        return t1John.save({
-                                            transaction: t1
-                                        });
-                                    });
-                                });
-                            });
-                        });
+                await this.sequelize.sync({ force: true });
+
+                const [john, task1] = await Promise.all([
+                    User.create({ username: "John" }),
+                    Task.create({ title: "Get rich", active: false }),
+                    Task.create({ title: "Die trying", active: false })
+                ]);
+                await john.setTasks([task1]);
+
+                const t1 = await self.sequelize.transaction();
+                const t1John = await User.find({
+                    where: {
+                        username: "John"
+                    },
+                    include: [Task],
+                    lock: {
+                        level: t1.LOCK.UPDATE,
+                        of: User
+                    },
+                    transaction: t1
                 });
+                // should not be blocked by the lock of the other transaction
+                const t2 = await self.sequelize.transaction();
+                await Task.update({
+                    active: true
+                }, {
+                    where: {
+                        active: false
+                    },
+                    transaction: t2
+                });
+                await t1John.save({ transaction: t1 });
             });
         }
 
@@ -492,7 +460,7 @@ describe(Support.getTestDialectTeaser("Transaction"), { skip: !current.dialect.s
                             transaction: t1
                         }).then((t1Jan) => {
                             return self.sequelize.transaction().then((t2) => {
-                                return Promise.join(
+                                return Promise.all([
                                     User.find({
                                         where: {
                                             username: "jan"
@@ -508,13 +476,13 @@ describe(Support.getTestDialectTeaser("Transaction"), { skip: !current.dialect.s
                                     }, {
                                         transaction: t1
                                     }).then(() => {
-                                        return Promise.delay(2000).then(() => {
+                                        return promise.delay(2000).then(() => {
                                             t1Spy();
                                             expect(t1Spy).to.have.been.calledAfter(t2Spy);
                                             return t1.commit();
                                         });
                                     })
-                                );
+                                ]);
                             });
                         });
                     });
@@ -546,7 +514,7 @@ describe(Support.getTestDialectTeaser("Transaction"), { skip: !current.dialect.s
                         return self.sequelize.transaction({
                             isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED
                         }).then((t2) => {
-                            return Promise.join(
+                            return Promise.all([
                                 User.find({
                                     where: {
                                         username: "jan"
@@ -572,12 +540,12 @@ describe(Support.getTestDialectTeaser("Transaction"), { skip: !current.dialect.s
                                 }, {
                                     transaction: t1
                                 }).then(() => {
-                                    return Promise.delay(2000).then(() => {
+                                    return promise.delay(2000).then(() => {
                                         t1Spy();
                                         return t1.commit();
                                     });
                                 })
-                            );
+                            ]);
                         });
                     });
                 });

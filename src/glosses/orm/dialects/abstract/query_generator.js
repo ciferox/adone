@@ -237,20 +237,21 @@ const QueryGenerator = {
         }
 
         for (const attrValueHash of attrValueHashes) {
-            tuples.push("(" + allAttributes.map((key) => {
+            tuples.push(`(${allAttributes.map((key) => {
                 if (this._dialect.supports.bulkDefault && serials[key] === true) {
                     return attrValueHash[key] || "DEFAULT";
                 }
                 return this.escape(attrValueHash[key], rawAttributes[key], { context: "INSERT" });
-            }).join(",") + ")");
+            }).join(",")})`);
         }
 
         if (this._dialect.supports.updateOnDuplicate && options.updateOnDuplicate) {
-            onDuplicateKeyUpdate += " ON DUPLICATE KEY UPDATE " + options.updateOnDuplicate.map((attr) => {
+            const t = options.updateOnDuplicate.map((attr) => {
                 const field = rawAttributes && rawAttributes[attr] && rawAttributes[attr].field || attr;
                 const key = this.quoteIdentifier(field);
-                return `${key  }=VALUES(${  key  })`;
+                return `${key}=VALUES(${key})`;
             }).join(",");
+            onDuplicateKeyUpdate += ` ON DUPLICATE KEY UPDATE ${t}`;
         }
 
         const replacements = {
@@ -291,7 +292,7 @@ const QueryGenerator = {
 
         if (this._dialect.supports["LIMIT ON UPDATE"] && options.limit) {
             if (this.dialect !== "mssql") {
-                query += " LIMIT " + this.escape(options.limit) + " ";
+                query += ` LIMIT ${this.escape(options.limit)} `;
             }
         }
 
@@ -314,8 +315,8 @@ const QueryGenerator = {
                                 outputColumns += ",";
                             }
 
-                            tmpColumns += `${this.quoteIdentifier(attribute.field)  } ${  attribute.type.toSql()}`;
-                            outputColumns += "INSERTED." + this.quoteIdentifier(attribute.field);
+                            tmpColumns += `${this.quoteIdentifier(attribute.field)} ${attribute.type.toSql()}`;
+                            outputColumns += `INSERTED.${this.quoteIdentifier(attribute.field)}`;
                         }
                     }
 
@@ -324,7 +325,7 @@ const QueryGenerator = {
                     };
 
                     tmpTable = _.template(tmpTable, this._templateSettings)(replacement).trim();
-                    outputFragment = " OUTPUT " + outputColumns + " into @tmp";
+                    outputFragment = ` OUTPUT ${outputColumns} into @tmp`;
                     selectFromTmp = ";select * from @tmp";
 
                     query += selectFromTmp;
@@ -354,7 +355,7 @@ const QueryGenerator = {
             }
 
             const value = attrValueHash[key];
-            values.push(`${this.quoteIdentifier(key)  }=${  this.escape(value, modelAttributeMap && modelAttributeMap[key] || undefined, { context: 'UPDATE' })}`);
+            values.push(`${this.quoteIdentifier(key)}=${this.escape(value, modelAttributeMap && modelAttributeMap[key] || undefined, { context: "UPDATE" })}`);
         }
 
         const replacements = {
@@ -402,13 +403,13 @@ const QueryGenerator = {
 
         for (const key in attrValueHash) {
             const value = attrValueHash[key];
-            values.push(`${this.quoteIdentifier(key)  }=${  this.quoteIdentifier(key)  }${operator  } ${  this.escape(value)}`);
+            values.push(`${this.quoteIdentifier(key)}=${this.quoteIdentifier(key)}${operator} ${this.escape(value)}`);
         }
 
         attributes = attributes || {};
         for (const key in attributes) {
             const value = attributes[key];
-            values.push(`${this.quoteIdentifier(key)  }=${  this.escape(value)}`);
+            values.push(`${this.quoteIdentifier(key)}=${this.escape(value)}`);
         }
 
         const replacements = {
@@ -430,7 +431,7 @@ const QueryGenerator = {
         return _.map(indexes, (index) => {
             if (!index.hasOwnProperty("name")) {
                 const onlyAttributeNames = index.fields.map((field) => is.string(field) ? field : field.name || field.attribute);
-                index.name = Utils.underscore(`${rawTablename  }_${  onlyAttributeNames.join('_')}`);
+                index.name = Utils.underscore(`${rawTablename}_${onlyAttributeNames.join("_")}`);
             }
 
             return index;
@@ -485,33 +486,33 @@ const QueryGenerator = {
                 return this.quoteIdentifier(field);
             } else if (field instanceof Utils.SequelizeMethod) {
                 return this.handleSequelizeMethod(field);
-            } else {
-                let result = "";
-
-                if (field.attribute) {
-                    field.name = field.attribute;
-                }
-
-                if (!field.name) {
-                    throw new Error("The following index field has no name: " + util.inspect(field));
-                }
-
-                result += this.quoteIdentifier(field.name);
-
-                if (this._dialect.supports.index.collate && field.collate) {
-                    result += " COLLATE " + this.quoteIdentifier(field.collate);
-                }
-
-                if (this._dialect.supports.index.length && field.length) {
-                    result += "(" + field.length + ")";
-                }
-
-                if (field.order) {
-                    result += " " + field.order;
-                }
-
-                return result;
             }
+            let result = "";
+
+            if (field.attribute) {
+                field.name = field.attribute;
+            }
+
+            if (!field.name) {
+                throw new Error(`The following index field has no name: ${util.inspect(field)}`);
+            }
+
+            result += this.quoteIdentifier(field.name);
+
+            if (this._dialect.supports.index.collate && field.collate) {
+                result += ` COLLATE ${this.quoteIdentifier(field.collate)}`;
+            }
+
+            if (this._dialect.supports.index.length && field.length) {
+                result += `(${field.length})`;
+            }
+
+            if (field.order) {
+                result += ` ${field.order}`;
+            }
+
+            return result;
+
         });
 
         if (!options.name) {
@@ -554,11 +555,11 @@ const QueryGenerator = {
             options.type, "INDEX",
             !this._dialect.supports.indexViaAlter ? concurrently : undefined,
             this.quoteIdentifiers(options.name),
-            this._dialect.supports.index.using === 1 && options.using ? "USING " + options.using : "",
-            !this._dialect.supports.indexViaAlter ? "ON " + tableName : undefined,
-            this._dialect.supports.index.using === 2 && options.using ? "USING " + options.using : "",
-            "(" + fieldsSql.join(", ") + (options.operator ? " " + options.operator : "") + ")",
-            this._dialect.supports.index.parser && options.parser ? "WITH PARSER " + options.parser : undefined,
+            this._dialect.supports.index.using === 1 && options.using ? `USING ${options.using}` : "",
+            !this._dialect.supports.indexViaAlter ? `ON ${tableName}` : undefined,
+            this._dialect.supports.index.using === 2 && options.using ? `USING ${options.using}` : "",
+            `(${fieldsSql.join(", ")}${options.operator ? ` ${options.operator}` : ""})`,
+            this._dialect.supports.index.parser && options.parser ? `WITH PARSER ${options.parser}` : undefined,
             this._dialect.supports.index.where && options.where ? options.where : undefined
         );
 
@@ -586,20 +587,20 @@ const QueryGenerator = {
                 return this.quoteIdentifier(field);
             } else if (field._isSequelizeMethod) {
                 return this.handleSequelizeMethod(field);
-            } else {
-                let result = "";
-
-                if (field.attribute) {
-                    field.name = field.attribute;
-                }
-
-                if (!field.name) {
-                    throw new Error("The following index field has no name: " + field);
-                }
-
-                result += this.quoteIdentifier(field.name);
-                return result;
             }
+            let result = "";
+
+            if (field.attribute) {
+                field.name = field.attribute;
+            }
+
+            if (!field.name) {
+                throw new Error(`The following index field has no name: ${field}`);
+            }
+
+            result += this.quoteIdentifier(field.name);
+            return result;
+
         });
 
         const fieldsSqlQuotedString = fieldsSql.join(", ");
@@ -666,7 +667,7 @@ const QueryGenerator = {
         if (_.isObject(param)) {
             if (this._dialect.supports.schemas) {
                 if (param.schema) {
-                    table += `${this.quoteIdentifier(param.schema)  }.`;
+                    table += `${this.quoteIdentifier(param.schema)}.`;
                 }
 
                 table += this.quoteIdentifier(param.tableName);
@@ -685,7 +686,7 @@ const QueryGenerator = {
         }
 
         if (as) {
-            table += " AS " + this.quoteIdentifier(as);
+            table += ` AS ${this.quoteIdentifier(as)}`;
         }
         return table;
     },
@@ -791,7 +792,7 @@ const QueryGenerator = {
 
                     // see if this is an order
                     if (index > 0 && orderIndex !== -1) {
-                        item = this.sequelize.literal(" " + validOrderOptions[orderIndex]);
+                        item = this.sequelize.literal(` ${validOrderOptions[orderIndex]}`);
                     } else if (previousModel && previousModel.prototype instanceof Model) {
                         // only go down this path if we have preivous model and check only once
                         if (!is.undefined(previousModel.associations) && previousModel.associations[item]) {
@@ -808,7 +809,7 @@ const QueryGenerator = {
 
                             if (previousModel.rawAttributes[itemSplit[0]].type instanceof DataTypes.JSON) {
                                 // just quote identifiers for now
-                                const identifier = this.quoteIdentifiers(`${previousModel.name  }.${  previousModel.rawAttributes[itemSplit[0]].field}`);
+                                const identifier = this.quoteIdentifiers(`${previousModel.name}.${previousModel.rawAttributes[itemSplit[0]].field}`);
 
                                 // get path
                                 const path = itemSplit.slice(1);
@@ -845,9 +846,9 @@ const QueryGenerator = {
             let sql = "";
 
             if (i > 0) {
-                sql += `${this.quoteIdentifier(tableNames.join(connector))  }.`;
+                sql += `${this.quoteIdentifier(tableNames.join(connector))}.`;
             } else if (is.string(collection[0]) && parent) {
-                sql += `${this.quoteIdentifier(parent.name)  }.`;
+                sql += `${this.quoteIdentifier(parent.name)}.`;
             }
 
             // loop through everything past i and append to the sql
@@ -857,14 +858,14 @@ const QueryGenerator = {
 
             return sql;
         } else if (collection._modelAttribute) {
-            return `${this.quoteTable(collection.Model.name)  }.${  this.quoteIdentifier(collection.fieldName)}`;
+            return `${this.quoteTable(collection.Model.name)}.${this.quoteIdentifier(collection.fieldName)}`;
         } else if (collection instanceof Utils.SequelizeMethod) {
             return this.handleSequelizeMethod(collection);
         } else if (_.isPlainObject(collection) && collection.raw) {
             // simple objects with raw is no longer supported
             throw new Error('The `{raw: "..."}` syntax is no longer supported.  Use `sequelize.literal` instead.');
         } else {
-            throw new Error("Unknown structure passed to order / group: " + util.inspect(collection));
+            throw new Error(`Unknown structure passed to order / group: ${util.inspect(collection)}`);
         }
     },
 
@@ -873,11 +874,11 @@ const QueryGenerator = {
      @private
     */
     quoteIdentifiers(identifiers) {
-        if (identifiers.indexOf('.') !== -1) {
-            identifiers = identifiers.split('.');
-            return this.quoteIdentifier(identifiers.slice(0, identifiers.length - 1).join('.')) + '.' + this.quoteIdentifier(identifiers[identifiers.length - 1]);
+        if (identifiers.indexOf(".") !== -1) {
+            identifiers = identifiers.split(".");
+            return `${this.quoteIdentifier(identifiers.slice(0, identifiers.length - 1).join("."))}.${this.quoteIdentifier(identifiers[identifiers.length - 1])}`;
         }
-            return this.quoteIdentifier(identifiers);
+        return this.quoteIdentifier(identifiers);
 
     },
 
@@ -888,33 +889,33 @@ const QueryGenerator = {
     escape(value, field, options) {
         options = options || {};
 
-        if (value !== null && value !== undefined) {
+        if (!is.nil(value)) {
             if (value instanceof Utils.SequelizeMethod) {
                 return this.handleSequelizeMethod(value);
             }
-                if (field && field.type) {
-                    if (this.typeValidation && field.type.validate && value) {
-                        if (options.isList && Array.isArray(value)) {
-                            for (const item of value) {
-                                field.type.validate(item, options);
-                            }
-                        } else {
-                            field.type.validate(value, options);
+            if (field && field.type) {
+                if (this.typeValidation && field.type.validate && value) {
+                    if (options.isList && is.array(value)) {
+                        for (const item of value) {
+                            field.type.validate(item, options);
                         }
-                    }
-
-                    if (field.type.stringify) {
-                        // Users shouldn't have to worry about these args - just give them a function that takes a single arg
-                        const simpleEscape = _.partialRight(SqlString.escape, this.options.timezone, this.dialect);
-
-                        value = field.type.stringify(value, { escape: simpleEscape, field, timezone: this.options.timezone, operation: options.operation });
-
-                        if (field.type.escape === false) {
-                            // The data-type already did the required escaping
-                            return value;
-                        }
+                    } else {
+                        field.type.validate(value, options);
                     }
                 }
+
+                if (field.type.stringify) {
+                    // Users shouldn't have to worry about these args - just give them a function that takes a single arg
+                    const simpleEscape = _.partialRight(SqlString.escape, this.options.timezone, this.dialect);
+
+                    value = field.type.stringify(value, { escape: simpleEscape, field, timezone: this.options.timezone, operation: options.operation });
+
+                    if (field.type.escape === false) {
+                        // The data-type already did the required escaping
+                        return value;
+                    }
+                }
+            }
 
         }
 
@@ -987,7 +988,7 @@ const QueryGenerator = {
         if (subQuery || options.groupedLimit) {
             // We need primary keys
             attributes.subQuery = attributes.main;
-            attributes.main = [`${mainTable.as || mainTable.quotedName  }.*`];
+            attributes.main = [`${mainTable.as || mainTable.quotedName}.*`];
         }
 
         if (options.include) {
@@ -1081,7 +1082,7 @@ const QueryGenerator = {
 
                 // Caching the base query and splicing the where part into it is consistently > twice
                 // as fast than generating from scratch each time for values.length >= 5
-                const baseQuery = "(" + this.selectQuery(
+                const baseQuery = `(${this.selectQuery(
                     tableName,
                     {
                         attributes: options.attributes,
@@ -1092,11 +1093,11 @@ const QueryGenerator = {
                         model
                     },
                     model
-                ).replace(/;$/, "") + ")";
+                ).replace(/;$/, "")})`;
                 const placeHolder = this.whereItemQuery(Op.placeholder, true, { model });
                 const splicePos = baseQuery.indexOf(placeHolder);
 
-                mainQueryItems.push(this.selectFromTableFragment(options, mainTable.model, attributes.main, "(" +
+                mainQueryItems.push(this.selectFromTableFragment(options, mainTable.model, attributes.main, `(${
                     options.groupedLimit.values.map((value) => {
                         let groupWhere;
                         if (whereKey) {
@@ -1114,7 +1115,7 @@ const QueryGenerator = {
                     }).join(
                         this._dialect.supports["UNION ALL"] ? " UNION ALL " : " UNION "
                     )
-                    + ")", mainTable.as));
+                })`, mainTable.as));
             } else {
                 mainQueryItems.push(this.selectFromTableFragment(options, mainTable.model, attributes.main, mainTable.quotedName, mainTable.as));
             }
@@ -1127,9 +1128,9 @@ const QueryGenerator = {
             options.where = this.getWhereConditions(options.where, mainTable.as || tableName, model, options);
             if (options.where) {
                 if (subQuery) {
-                    subQueryItems.push(" WHERE " + options.where);
+                    subQueryItems.push(` WHERE ${options.where}`);
                 } else {
-                    mainQueryItems.push(" WHERE " + options.where);
+                    mainQueryItems.push(` WHERE ${options.where}`);
                     // Walk the main query to update all selects
                     _.each(mainQueryItems, (value, key) => {
                         if (value.match(/^SELECT/)) {
@@ -1144,9 +1145,9 @@ const QueryGenerator = {
         if (options.group) {
             options.group = is.array(options.group) ? options.group.map((t) => this.quote(t, model)).join(", ") : this.quote(options.group, model);
             if (subQuery) {
-                subQueryItems.push(" GROUP BY " + options.group);
+                subQueryItems.push(` GROUP BY ${options.group}`);
             } else {
-                mainQueryItems.push(" GROUP BY " + options.group);
+                mainQueryItems.push(` GROUP BY ${options.group}`);
             }
         }
 
@@ -1154,9 +1155,9 @@ const QueryGenerator = {
         if (options.hasOwnProperty("having")) {
             options.having = this.getWhereConditions(options.having, tableName, model, options, false);
             if (subQuery) {
-                subQueryItems.push(" HAVING " + options.having);
+                subQueryItems.push(` HAVING ${options.having}`);
             } else {
-                mainQueryItems.push(" HAVING " + options.having);
+                mainQueryItems.push(` HAVING ${options.having}`);
             }
         }
 
@@ -1164,10 +1165,10 @@ const QueryGenerator = {
         if (options.order) {
             const orders = this.getQueryOrders(options, model, subQuery);
             if (orders.mainQueryOrder.length) {
-                mainQueryItems.push(" ORDER BY " + orders.mainQueryOrder.join(", "));
+                mainQueryItems.push(` ORDER BY ${orders.mainQueryOrder.join(", ")}`);
             }
             if (orders.subQueryOrder.length) {
-                subQueryItems.push(" ORDER BY " + orders.subQueryOrder.join(", "));
+                subQueryItems.push(` ORDER BY ${orders.subQueryOrder.join(", ")}`);
             }
         }
 
@@ -1193,14 +1194,14 @@ const QueryGenerator = {
                 lock = options.lock.level;
             }
             if (this._dialect.supports.lockKey && (lock === "KEY SHARE" || lock === "NO KEY UPDATE")) {
-                query += " FOR " + lock;
+                query += ` FOR ${lock}`;
             } else if (lock === "SHARE") {
-                query += " " + this._dialect.supports.forShare;
+                query += ` ${this._dialect.supports.forShare}`;
             } else {
                 query += " FOR UPDATE";
             }
             if (this._dialect.supports.lockOf && options.lock.of && options.lock.of.prototype instanceof Model) {
-                query += " OF " + this.quoteTable(options.lock.of.name);
+                query += ` OF ${this.quoteTable(options.lock.of.name)}`;
             }
         }
 
@@ -1216,7 +1217,7 @@ const QueryGenerator = {
             }
             if (is.array(attr)) {
                 if (attr.length !== 2) {
-                    throw new Error(`${JSON.stringify(attr)  } is not a valid attribute definition. Please use the following format: ['attribute definition', 'alias']`);
+                    throw new Error(`${JSON.stringify(attr)} is not a valid attribute definition. Please use the following format: ['attribute definition', 'alias']`);
                 }
                 attr = attr.slice();
 
@@ -1231,7 +1232,7 @@ const QueryGenerator = {
                 attr = attr.indexOf(Utils.TICK_CHAR) < 0 && attr.indexOf('"') < 0 ? this.quoteIdentifiers(attr) : attr;
             }
             if (options.include && attr.indexOf(".") === -1 && addTable) {
-                attr = `${mainTableAs  }.${  attr}`;
+                attr = `${mainTableAs}.${attr}`;
             }
 
             return attr;
@@ -1347,7 +1348,7 @@ const QueryGenerator = {
                 ].join(" "));
 
                 if (_.isPlainObject(topLevelInfo.options.where)) {
-                    topLevelInfo.options.where["__" + includeAs.internalAs] = subQueryWhere;
+                    topLevelInfo.options.where[`__${includeAs.internalAs}`] = subQueryWhere;
                 } else {
                     topLevelInfo.options.where = { [Op.and]: [topLevelInfo.options.where, subQueryWhere] };
                 }
@@ -1451,8 +1452,11 @@ const QueryGenerator = {
             }
         }
 
-        if (!asLeft) {asLeft = parent.as || parent.model.name;}
-        else {asRight = `${asLeft}->${asRight}`;}
+        if (!asLeft) {
+            asLeft = parent.as || parent.model.name;
+        } else {
+            asRight = `${asLeft}->${asRight}`;
+        }
 
         let joinOn = `${this.quoteTable(asLeft)}.${this.quoteIdentifier(fieldLeft)}`;
 
@@ -1505,9 +1509,9 @@ const QueryGenerator = {
         const throughAs = `${includeAs.internalAs}->${through.as}`;
         const externalThroughAs = `${includeAs.externalAs}.${through.as}`;
         const throughAttributes = through.attributes.map((attr) =>
-            `${this.quoteIdentifier(throughAs)  }.${  this.quoteIdentifier(Array.isArray(attr) ? attr[0] : attr)
-             } AS ${
-             this.quoteIdentifier(externalThroughAs + '.' + (Array.isArray(attr) ? attr[1] : attr))}`
+            `${this.quoteIdentifier(throughAs)}.${this.quoteIdentifier(is.array(attr) ? attr[0] : attr)
+            } AS ${
+                this.quoteIdentifier(`${externalThroughAs}.${is.array(attr) ? attr[1] : attr}`)}`
         );
         const association = include.association;
         const parentIsTop = !include.parent.association && include.parent.model.name === topLevelInfo.options.model.name;
@@ -1621,8 +1625,8 @@ const QueryGenerator = {
                         where: {
                             [Op.and]: [
                                 this.sequelize.asIs([
-                                    `${this.quoteTable(topParent.model.name)  }.${  this.quoteIdentifier(topParent.model.primaryKeyField)}`,
-                                    `${this.quoteIdentifier(topInclude.through.model.name)  }.${  this.quoteIdentifier(topInclude.association.identifierField)}`
+                                    `${this.quoteTable(topParent.model.name)}.${this.quoteIdentifier(topParent.model.primaryKeyField)}`,
+                                    `${this.quoteIdentifier(topInclude.through.model.name)}.${this.quoteIdentifier(topInclude.association.identifierField)}`
                                 ].join(" = ")),
                                 topInclude.through.where
                             ]
@@ -1633,8 +1637,8 @@ const QueryGenerator = {
                 } else {
                     const isBelongsTo = topInclude.association.associationType === "BelongsTo";
                     const join = [
-                        `${this.quoteTable(topParent.model.name)  }.${  this.quoteIdentifier(isBelongsTo ? topInclude.association.identifierField : topParent.model.primaryKeyAttributes[0])}`,
-                        `${this.quoteIdentifier(topInclude.model.name)  }.${  this.quoteIdentifier(isBelongsTo ? topInclude.model.primaryKeyAttributes[0] : topInclude.association.identifierField)}`
+                        `${this.quoteTable(topParent.model.name)}.${this.quoteIdentifier(isBelongsTo ? topInclude.association.identifierField : topParent.model.primaryKeyAttributes[0])}`,
+                        `${this.quoteIdentifier(topInclude.model.name)}.${this.quoteIdentifier(isBelongsTo ? topInclude.model.primaryKeyAttributes[0] : topInclude.association.identifierField)}`
                     ].join(" = ");
                     query = this.selectQuery(topInclude.model.tableName, {
                         attributes: [topInclude.model.primaryKeyAttributes[0]],
@@ -1646,7 +1650,7 @@ const QueryGenerator = {
                         includeIgnoreAttributes: false
                     }, topInclude.model);
                 }
-                topLevelInfo.options.where["__" + throughAs] = this.sequelize.asIs([
+                topLevelInfo.options.where[`__${throughAs}`] = this.sequelize.asIs([
                     "(",
                     query.replace(/\;$/, ""),
                     ")",
@@ -1701,10 +1705,10 @@ const QueryGenerator = {
     },
 
     selectFromTableFragment(options, model, attributes, tables, mainTableAs) {
-        let fragment = "SELECT " + attributes.join(", ") + " FROM " + tables;
+        let fragment = `SELECT ${attributes.join(", ")} FROM ${tables}`;
 
         if (mainTableAs) {
-            fragment += " AS " + mainTableAs;
+            fragment += ` AS ${mainTableAs}`;
         }
 
         return fragment;
@@ -1724,11 +1728,11 @@ const QueryGenerator = {
         }
 
         // no query when value is not explicitly set
-        if (is.undefined(value) || is.null(value)) {
+        if (is.nil(value)) {
             return;
         }
 
-        return "SET autocommit = " + (value ? 1 : 0) + ";";
+        return `SET autocommit = ${value ? 1 : 0};`;
     },
 
     /**
@@ -1744,7 +1748,7 @@ const QueryGenerator = {
             return;
         }
 
-        return "SET SESSION TRANSACTION ISOLATION LEVEL " + value + ";";
+        return `SET SESSION TRANSACTION ISOLATION LEVEL ${value};`;
     },
 
     generateTransactionId() {
@@ -1762,7 +1766,7 @@ const QueryGenerator = {
     startTransactionQuery(transaction) {
         if (transaction.parent) {
             // force quoting of savepoint identifiers for postgres
-            return "SAVEPOINT " + this.quoteIdentifier(transaction.name, true) + ";";
+            return `SAVEPOINT ${this.quoteIdentifier(transaction.name, true)};`;
         }
 
         return "START TRANSACTION;";
@@ -1808,7 +1812,7 @@ const QueryGenerator = {
     rollbackTransactionQuery(transaction) {
         if (transaction.parent) {
             // force quoting of savepoint identifiers for postgres
-            return "ROLLBACK TO SAVEPOINT " + this.quoteIdentifier(transaction.name, true) + ";";
+            return `ROLLBACK TO SAVEPOINT ${this.quoteIdentifier(transaction.name, true)};`;
         }
 
         return "ROLLBACK;";
@@ -1850,13 +1854,13 @@ const QueryGenerator = {
             if (smth.attribute instanceof Utils.SequelizeMethod) {
                 key = this.getWhereConditions(smth.attribute, tableName, factory, options, prepend);
             } else {
-                key = `${this.quoteTable(smth.attribute.Model.name)  }.${  this.quoteIdentifier(smth.attribute.field || smth.attribute.fieldName)}`;
+                key = `${this.quoteTable(smth.attribute.Model.name)}.${this.quoteIdentifier(smth.attribute.field || smth.attribute.fieldName)}`;
             }
 
             if (value && value instanceof Utils.SequelizeMethod) {
                 value = this.getWhereConditions(value, tableName, factory, options, prepend);
 
-                result = value === "NULL" ? `${key  } IS NULL` : [key, value].join(smth.comparator);
+                result = value === "NULL" ? `${key} IS NULL` : [key, value].join(smth.comparator);
             } else if (_.isPlainObject(value)) {
                 result = this.whereItemQuery(smth.attribute, value, {
                     model: factory
@@ -1868,7 +1872,7 @@ const QueryGenerator = {
                     value = this.escape(value);
                 }
 
-                result = value === "NULL" ? `${key  } IS NULL` : [key, value].join(" " + smth.comparator + " ");
+                result = value === "NULL" ? `${key} IS NULL` : [key, value].join(` ${smth.comparator} `);
             }
         } else if (smth instanceof Utils.Literal) {
             result = smth.val;
@@ -1881,17 +1885,17 @@ const QueryGenerator = {
                 result = this.escape(smth.val);
             }
 
-            result = "CAST(" + result + " AS " + smth.type.toUpperCase() + ")";
+            result = `CAST(${result} AS ${smth.type.toUpperCase()})`;
         } else if (smth instanceof Utils.Fn) {
-            result = `${smth.fn  }(${  smth.args.map(arg => {
+            result = `${smth.fn}(${smth.args.map((arg) => {
                 if (arg instanceof Utils.SequelizeMethod) {
                     return this.handleSequelizeMethod(arg, tableName, factory, options, prepend);
                 } else if (_.isPlainObject(arg)) {
                     return this.whereItemsQuery(arg);
-                } else {
-                    return this.escape(arg);
                 }
-            }).join(', ')  })`;
+                return this.escape(arg);
+
+            }).join(", ")})`;
         } else if (smth instanceof Utils.Col) {
             if (is.array(smth.col)) {
                 if (!factory) {
@@ -1911,15 +1915,14 @@ const QueryGenerator = {
     whereQuery(where, options) {
         const query = this.whereItemsQuery(where, options);
         if (query && query.length) {
-            return "WHERE " + query;
+            return `WHERE ${query}`;
         }
         return "";
     },
 
     whereItemsQuery(where, options, binding) {
         if (
-            is.null(where) ||
-            is.undefined(where) ||
+            is.nil(where) ||
             Utils.getComplexSize(where) === 0
         ) {
             // NO OP
@@ -1933,7 +1936,9 @@ const QueryGenerator = {
         const items = [];
 
         binding = binding || "AND";
-        if (binding.substr(0, 1) !== " ") {binding = ' ' + binding + ' ';}
+        if (binding.substr(0, 1) !== " ") {
+            binding = ` ${binding} `;
+        }
 
         if (_.isPlainObject(where)) {
             Utils.getComplexKeys(where).forEach((prop) => {
@@ -1997,8 +2002,8 @@ const QueryGenerator = {
 
     whereItemQuery(key, value, options) {
         options = options || {};
-        if (key && typeof key === 'string' && key.indexOf('.') !== -1 && options.model) {
-            const keyParts = key.split('.');
+        if (key && is.string(key) && key.indexOf(".") !== -1 && options.model) {
+            const keyParts = key.split(".");
             if (options.model.rawAttributes[keyParts[0]] && options.model.rawAttributes[keyParts[0]].type instanceof DataTypes.JSON) {
                 const tmp = {};
                 const field = options.model.rawAttributes[keyParts[0]];
@@ -2011,15 +2016,15 @@ const QueryGenerator = {
         const fieldType = field && field.type || options.type;
 
         const isPlainObject = _.isPlainObject(value);
-        const isArray = !isPlainObject && Array.isArray(value);
+        const isArray = !isPlainObject && is.array(value);
         key = this.OperatorsAliasMap && this.OperatorsAliasMap[key] || key;
         if (isPlainObject) {
             value = this._replaceAliases(value);
         }
         const valueKeys = isPlainObject && Utils.getComplexKeys(value);
 
-        if (key === undefined) {
-            if (typeof value === 'string') {
+        if (is.undefined(key)) {
+            if (is.string(value)) {
                 return value;
             }
 
@@ -2029,19 +2034,19 @@ const QueryGenerator = {
         }
 
         if (!value) {
-            return this._joinKeyValue(key, this.escape(value, field), value === null ? this.OperatorMap[Op.is] : this.OperatorMap[Op.eq], options.prefix);
+            return this._joinKeyValue(key, this.escape(value, field), is.null(value) ? this.OperatorMap[Op.is] : this.OperatorMap[Op.eq], options.prefix);
         }
 
-        if (value instanceof Utils.SequelizeMethod && !(key !== undefined && value instanceof Utils.Fn)) {
+        if (value instanceof Utils.SequelizeMethod && !(!is.undefined(key) && value instanceof Utils.Fn)) {
             return this.handleSequelizeMethod(value);
         }
 
         // Convert where: [] to Op.and if possible, else treat as literal/replacements
-        if (key === undefined && isArray) {
+        if (is.undefined(key) && isArray) {
             if (Utils.canTreatArrayAsAnd(value)) {
                 key = Op.and;
             } else {
-                throw new Error('Support for literal replacements in the `where` object has been removed.');
+                throw new Error("Support for literal replacements in the `where` object has been removed.");
             }
         }
 
@@ -2077,7 +2082,7 @@ const QueryGenerator = {
             if (this.OperatorMap[valueKeys[0]]) {
                 return this._whereParseSingleValueObject(key, field, valueKeys[0], value[valueKeys[0]], options);
             }
-                return this._whereParseSingleValueObject(key, field, this.OperatorMap[Op.eq], value, options);
+            return this._whereParseSingleValueObject(key, field, this.OperatorMap[Op.eq], value, options);
 
         }
 
@@ -2136,7 +2141,7 @@ const QueryGenerator = {
             value = value.map((item) => {
                 let itemQuery = this.whereItemsQuery(item, options, this.OperatorMap[Op.and]);
                 if (itemQuery && itemQuery.length && (is.array(item) || _.isPlainObject(item)) && Utils.getComplexSize(item) > 1) {
-                    itemQuery = "(" + itemQuery + ")";
+                    itemQuery = `(${itemQuery})`;
                 }
                 return itemQuery;
             }).filter((item) => item && item.length);
@@ -2151,7 +2156,7 @@ const QueryGenerator = {
             return "0 = 1";
         }
 
-        return value ? `${outerBinding  }(${  value  })` : undefined;
+        return value ? `${outerBinding}(${value})` : undefined;
     },
 
     _whereBind(binding, key, value, options) {
@@ -2166,7 +2171,7 @@ const QueryGenerator = {
 
         value = value.filter((item) => item && item.length);
 
-        return value.length ? "(" + value.join(binding) + ")" : undefined;
+        return value.length ? `(${value.join(binding)})` : undefined;
     },
 
     _whereJSON(key, value, options) {
@@ -2191,7 +2196,7 @@ const QueryGenerator = {
         });
 
         const result = items.join(this.OperatorMap[Op.and]);
-        return items.length > 1 ? "(" + result + ")" : result;
+        return items.length > 1 ? `(${result})` : result;
     },
 
 
@@ -2236,14 +2241,14 @@ const QueryGenerator = {
     },
 
     _getJsonCast(value) {
-        if (typeof value === 'number') {
-            return 'double precision';
+        if (is.number(value)) {
+            return "double precision";
         }
         if (value instanceof Date) {
-            return 'timestamptz';
+            return "timestamptz";
         }
-        if (typeof value === 'boolean') {
-            return 'boolean';
+        if (is.boolean(value)) {
+            return "boolean";
         }
 
     },
@@ -2256,7 +2261,7 @@ const QueryGenerator = {
             throw new Error(`${key} and ${value} has no comperator`);
         }
         key = this._getSafeKey(key, prefix);
-        return [key, value].join(" " + comparator + " ");
+        return [key, value].join(` ${comparator} `);
     },
 
     _getSafeKey(key, prefix) {
@@ -2432,7 +2437,9 @@ const QueryGenerator = {
         } else if (is.buffer(smth)) {
             result = this.escape(smth);
         } else if (is.array(smth)) {
-            if (smth.length === 0 || smth.length > 0 && smth[0].length === 0) {return '1=1';}
+            if (smth.length === 0 || smth.length > 0 && smth[0].length === 0) {
+                return "1=1";
+            }
             if (Utils.canTreatArrayAsAnd(smth)) {
                 const _smth = { [Op.and]: smth };
                 result = this.getWhereConditions(_smth, tableName, factory, options, prepend);

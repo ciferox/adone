@@ -1,7 +1,6 @@
 import Support from "../../support";
 
 const Sequelize = adone.orm;
-const Promise = Sequelize.Promise;
 
 describe(Support.getTestDialectTeaser("Model"), () => {
     describe("scope", () => {

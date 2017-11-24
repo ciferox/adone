@@ -60,9 +60,10 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 expect(this.warnOnInvalidOptionsStub.calledOnce).to.equal(true);
             });
 
-            it("Throws an error when the attributes option is formatted incorrectly", () => {
-                const errorFunction = Model.findAll.bind(Model, { attributes: "name" });
-                expect(errorFunction).to.throw(errors.QueryError);
+            it("Throws an error when the attributes option is formatted incorrectly", async () => {
+                await assert.throws(async () => {
+                    await Model.findAll({ attributes: "name" });
+                });
             });
         });
 

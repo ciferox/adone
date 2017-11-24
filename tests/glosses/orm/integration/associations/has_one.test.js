@@ -1,7 +1,6 @@
 import Support from "../support";
 
 const Sequelize = adone.orm;
-const Promise = Sequelize.Promise;
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser("HasOne"), () => {
@@ -27,7 +26,7 @@ describe(Support.getTestDialectTeaser("HasOne"), () => {
                 Player.User = Player.hasOne(User, { as: "user" });
 
                 return this.sequelize.sync({ force: true }).then(() => {
-                    return Promise.join(
+                    return Promise.all([
                         Player.create({
                             id: 1,
                             user: {}
@@ -43,7 +42,7 @@ describe(Support.getTestDialectTeaser("HasOne"), () => {
                         Player.create({
                             id: 3
                         })
-                    );
+                    ]);
                 }).then((players) => {
                     return Player.User.get(players).then((result) => {
                         expect(result[players[0].id].id).to.equal(players[0].user.id);
@@ -238,36 +237,30 @@ describe(Support.getTestDialectTeaser("HasOne"), () => {
             });
         });
 
-        it("supports updating with a primary key instead of an object", function () {
+        it("supports updating with a primary key instead of an object", async function () {
             const User = this.sequelize.define("UserXYZ", { username: Sequelize.STRING });
             const Task = this.sequelize.define("TaskXYZ", { title: Sequelize.STRING });
 
             User.hasOne(Task);
 
-            return this.sequelize.sync({ force: true }).then(() => {
-                return Promise.all([
-                    User.create({ id: 1, username: "foo" }),
-                    Task.create({ id: 20, title: "bar" })
-                ]);
-            })
-                .spread((user, task) => {
-                    return user.setTaskXYZ(task.id)
-                        .then(() => user.getTaskXYZ())
-                        .then((task) => {
-                            expect(task).not.to.be.null;
-                            return Promise.all([
-                                user,
-                                Task.create({ id: 2, title: "bar2" })
-                            ]);
-                        });
-                })
-                .spread((user, task2) => {
-                    return user.setTaskXYZ(task2.id)
-                        .then(() => user.getTaskXYZ())
-                        .then((task) => {
-                            expect(task).not.to.be.null;
-                        });
-                });
+            await this.sequelize.sync({ force: true });
+            const [user, task] = await Promise.all([
+                User.create({ id: 1, username: "foo" }),
+                Task.create({ id: 20, title: "bar" })
+            ]);
+            await user.setTaskXYZ(task.id);
+            {
+                const task = await user.getTaskXYZ();
+                expect(task).not.to.be.null;
+                expect(task.id).to.be.equal(20);
+            }
+            const task2 = await Task.create({ id: 2, title: "bar2" });
+            await user.setTaskXYZ(task2.id);
+            {
+                const task = await user.getTaskXYZ();
+                expect(task).not.to.be.null;
+                expect(task.id).to.be.equal(2);
+            }
         });
 
         it("supports setting same association twice", async function () {
@@ -358,7 +351,7 @@ describe(Support.getTestDialectTeaser("HasOne"), () => {
             expect(User.rawAttributes.AccountId).to.exist;
         });
 
-        it("should support specifying the field of a foreign key", function () {
+        it("should support specifying the field of a foreign key", async function () {
             const User = this.sequelize.define("UserXYZ", { username: Sequelize.STRING, gender: Sequelize.STRING });
             const Task = this.sequelize.define("TaskXYZ", { title: Sequelize.STRING, status: Sequelize.STRING });
 
@@ -371,28 +364,26 @@ describe(Support.getTestDialectTeaser("HasOne"), () => {
 
             expect(User.rawAttributes.taskId).to.exist;
             expect(User.rawAttributes.taskId.field).to.equal("task_id");
-            return Task.sync({ force: true }).then(() => {
-                // Can't use Promise.all cause of foreign key references
-                return User.sync({ force: true });
-            }).then(() => {
-                return Promise.all([
-                    User.create({ username: "foo", gender: "male" }),
-                    Task.create({ title: "task", status: "inactive" })
-                ]);
-            }).spread((user, task) => {
-                return task.setUserXYZ(user).then(() => {
-                    return task.getUserXYZ();
-                });
-            }).then((user) => {
+            await Task.sync({ force: true });
+            // Can't use Promise.all cause of foreign key references
+            await User.sync({ force: true });
+            const [user, task] = await Promise.all([
+                User.create({ username: "foo", gender: "male" }),
+                Task.create({ title: "task", status: "inactive" })
+            ]);
+            await task.setUserXYZ(user);
+            {
+                const user = await task.getUserXYZ();
                 // the sql query should correctly look at task_id instead of taskId
                 expect(user).to.not.be.null;
-                return Task.findOne({
+            }
+            {
+                const task = await Task.findOne({
                     where: { title: "task" },
                     include: [User]
                 });
-            }).then((task) => {
                 expect(task.UserXYZ).to.exist;
-            });
+            }
         });
     });
 
@@ -602,22 +593,21 @@ describe(Support.getTestDialectTeaser("HasOne"), () => {
     });
 
     describe("Association options", () => {
-        it("can specify data type for autogenerated relational keys", function () {
+        it("can specify data type for autogenerated relational keys", async function () {
             const User = this.sequelize.define("UserXYZ", { username: Sequelize.STRING });
             const dataTypes = [Sequelize.INTEGER, Sequelize.BIGINT, Sequelize.STRING];
             const self = this;
             const Tasks = {};
 
-            return Promise.map(dataTypes, (dataType) => {
+            await Promise.all(dataTypes.map(async (dataType) => {
                 const tableName = `TaskXYZ_${dataType.key}`;
                 Tasks[dataType] = self.sequelize.define(tableName, { title: Sequelize.STRING });
 
                 User.hasOne(Tasks[dataType], { foreignKey: "userId", keyType: dataType, constraints: false });
 
-                return Tasks[dataType].sync({ force: true }).then(() => {
-                    expect(Tasks[dataType].rawAttributes.userId.type).to.be.an.instanceof(dataType);
-                });
-            });
+                await Tasks[dataType].sync({ force: true });
+                expect(Tasks[dataType].rawAttributes.userId.type).to.be.an.instanceof(dataType);
+            }));
         });
 
         describe("allows the user to provide an attribute definition object as foreignKey", () => {

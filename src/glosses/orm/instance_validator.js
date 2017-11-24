@@ -1,10 +1,12 @@
-const { is, vendor: { lodash: _ } } = adone;
+const { is, vendor: { lodash: _ }, promise } = adone;
 const validator = require("./utils/validator_extras").validator;
 const extendModelValidations = require("./utils/validator_extras").extendModelValidations;
 const Utils = require("./utils");
 const sequelizeError = require("./errors");
 const Promise = require("./promise");
 const DataTypes = require("./data_types");
+
+const reflectPromise = (promise) => promise.then(() => ({ rejected: false }), (error) => ({ rejected: true, error }));
 
 /**
  * The Main Instance Validator.
@@ -15,7 +17,6 @@ const DataTypes = require("./data_types");
  * @private
  */
 class InstanceValidator {
-
     constructor(modelInstance, options) {
         options = _.clone(options) || {};
 
@@ -69,7 +70,7 @@ class InstanceValidator {
         this.inProgress = true;
 
         return Promise.all(
-            [this._builtinValidators(), this._customValidators()].map((promise) => promise.reflect())
+            [this._builtinValidators(), this._customValidators()].map(reflectPromise)
         ).then(() => {
             if (this.errors.length) {
                 throw new sequelizeError.ValidationError(null, this.errors);
@@ -101,18 +102,21 @@ class InstanceValidator {
      * @return {Promise}
      * @private
      */
-    _validateAndRunHooks() {
+    async _validateAndRunHooks() {
         const runHooks = this.modelInstance.constructor.runHooks.bind(this.modelInstance.constructor);
-        return runHooks("beforeValidate", this.modelInstance, this.options)
-            .then(() =>
-                this._validate()
-                    .catch((error) => runHooks("validationFailed", this.modelInstance, this.options, error)
-                        .then((newError) => {
-                            throw newError || error;
-                        }))
-            )
-            .then(() => runHooks("afterValidate", this.modelInstance, this.options))
-            .return(this.modelInstance);
+
+        await runHooks("beforeValidate", this.modelInstance, this.options);
+
+        try {
+            await this._validate();
+        } catch (err) {
+            const newErr = await runHooks("validationFailed", this.modelInstance, this.options, err);
+            throw newErr || err;
+        }
+
+        await runHooks("afterValidate", this.modelInstance, this.options);
+
+        return this.modelInstance;
     }
 
     /**
@@ -125,7 +129,7 @@ class InstanceValidator {
         // promisify all attribute invocations
         const validators = [];
         _.forIn(this.modelInstance.rawAttributes, (rawAttribute, field) => {
-            if (this.options.skip.indexOf(field) >= 0) {
+            if (this.options.skip.includes(field)) {
                 return;
             }
 
@@ -137,7 +141,7 @@ class InstanceValidator {
             }
 
             if (this.modelInstance.validators.hasOwnProperty(field)) {
-                validators.push(this._builtinAttrValidate.call(this, value, field).reflect());
+                validators.push(reflectPromise(this._builtinAttrValidate(value, field)));
             }
         });
 
@@ -153,16 +157,10 @@ class InstanceValidator {
     _customValidators() {
         const validators = [];
         _.each(this.modelInstance._modelOptions.validate, (validator, validatorType) => {
-            if (this.options.skip.indexOf(validatorType) >= 0) {
+            if (this.options.skip.includes(validatorType)) {
                 return;
             }
-
-            const valprom = this._invokeCustomValidator(validator, validatorType)
-                // errors are handled in settling, stub this
-                .catch(() => { })
-                .reflect();
-
-            validators.push(valprom);
+            validators.push(reflectPromise(this._invokeCustomValidator(validator, validatorType)));
         });
 
         return Promise.all(validators);
@@ -177,41 +175,40 @@ class InstanceValidator {
      *   auto populates error on this.error local object.
      * @private
      */
-    _builtinAttrValidate(value, field) {
+    async _builtinAttrValidate(value, field) {
         // check if value is null (if null not allowed the Schema pass will capture it)
         if (is.nil(value)) {
-            return Promise.resolve();
+            return;
         }
 
         // Promisify each validator
         const validators = [];
         _.forIn(this.modelInstance.validators[field], (test, validatorType) => {
-
-            if (["isUrl", "isURL", "isEmail"].indexOf(validatorType) !== -1) {
-                // Preserve backwards compat. Validator.js now expects the second param to isURL and isEmail to be an object
-                if (typeof test === "object" && !is.null(test) && test.msg) {
-                    test = {
-                        msg: test.msg
-                    };
-                } else if (test === true) {
-                    test = {};
-                }
+            switch (validatorType) {
+                case "isURL":
+                case "isUrl":
+                case "isEmail":
+                    if (is.object(test) && test.msg) {
+                        test = {
+                            msg: test.msg
+                        };
+                    } else if (test === true) {
+                        test = {};
+                    }
+                    break;
             }
 
             // Check for custom validator.
             if (is.function(test)) {
-                return validators.push(this._invokeCustomValidator(test, validatorType, true, value, field).reflect());
+                return validators.push(reflectPromise(this._invokeCustomValidator(test, validatorType, true, value, field)));
             }
 
-            const validatorPromise = this._invokeBuiltinValidator(value, test, validatorType, field);
-            // errors are handled in settling, stub this
-            validatorPromise.catch(() => { });
-            validators.push(validatorPromise.reflect());
+            validators.push(reflectPromise(this._invokeBuiltinValidator(value, test, validatorType, field)));
         });
 
-        return Promise
-            .all(validators)
-            .then((results) => this._handleReflectedResult(field, value, results));
+        const results = await Promise.all(validators);
+
+        return this._handleReflectedResult(field, value, results);
     }
 
     /**
@@ -224,7 +221,7 @@ class InstanceValidator {
      * @return {Promise} A promise.
      * @private
      */
-    _invokeCustomValidator(validator, validatorType, optAttrDefined, optValue, optField) {
+    async _invokeCustomValidator(validator, validatorType, optAttrDefined, optValue, optField) {
         let validatorFunction = null; // the validation function to call
         let isAsync = false;
 
@@ -244,17 +241,22 @@ class InstanceValidator {
 
         if (isAsync) {
             if (optAttrDefined) {
-                validatorFunction = Promise.promisify(validator.bind(this.modelInstance, invokeArgs));
+                validatorFunction = promise.promisify(validator.bind(this.modelInstance, invokeArgs));
             } else {
-                validatorFunction = Promise.promisify(validator.bind(this.modelInstance));
+                validatorFunction = promise.promisify(validator.bind(this.modelInstance));
             }
-            return validatorFunction()
-                .catch((e) => this._pushError(false, errorKey, e, optValue, validatorType));
+            try {
+                return await validatorFunction();
+            } catch (err) {
+                this._pushError(false, errorKey, err, optValue, validatorType);
+                return;
+            }
         }
-        return Promise
-            .try(() => validator.call(this.modelInstance, invokeArgs))
-            .catch((e) => this._pushError(false, errorKey, e, optValue, validatorType));
-
+        try {
+            return await validator.call(this.modelInstance, invokeArgs);
+        } catch (err) {
+            this._pushError(false, errorKey, err, optValue, validatorType);
+        }
     }
 
     /**
@@ -267,21 +269,19 @@ class InstanceValidator {
      * @return {Object} An object with specific keys to invoke the validator.
      * @private
      */
-    _invokeBuiltinValidator(value, test, validatorType, field) {
-        return Promise.try(() => {
-            // Cast value as string to pass new Validator.js string requirement
-            const valueString = String(value);
-            // check if Validator knows that kind of validation test
-            if (!is.function(validator[validatorType])) {
-                throw new Error(`Invalid validator function: ${validatorType}`);
-            }
+    async _invokeBuiltinValidator(value, test, validatorType, field) {
+        // Cast value as string to pass new Validator.js string requirement
+        const valueString = String(value);
+        // check if Validator knows that kind of validation test
+        if (!is.function(validator[validatorType])) {
+            throw new Error(`Invalid validator function: ${validatorType}`);
+        }
 
-            const validatorArgs = this._extractValidatorArgs(test, validatorType, field);
+        const validatorArgs = this._extractValidatorArgs(test, validatorType, field);
 
-            if (!validator[validatorType].apply(validator, [valueString].concat(validatorArgs))) {
-                throw Object.assign(new Error(test.msg || `Validation ${validatorType} on ${field} failed`), { validatorName: validatorType, validatorArgs });
-            }
-        });
+        if (!validator[validatorType].apply(validator, [valueString].concat(validatorArgs))) {
+            throw Object.assign(new Error(test.msg || `Validation ${validatorType} on ${field} failed`), { validatorName: validatorType, validatorArgs });
+        }
     }
 
     /**
@@ -360,8 +360,8 @@ class InstanceValidator {
      */
     _handleReflectedResult(field, value, promiseInspections) {
         for (const promiseInspection of promiseInspections) {
-            if (promiseInspection.isRejected()) {
-                const rejection = promiseInspection.error();
+            if (promiseInspection.rejected) {
+                const rejection = promiseInspection.error;
                 const isBuiltIn = Boolean(rejection.validatorName);
 
                 this._pushError(isBuiltIn, field, rejection, value, rejection.validatorName, rejection.validatorArgs);

@@ -620,7 +620,7 @@ class Model {
                 includes.splice(index, 1);
                 index--;
 
-                this._expandIncludeAllElement.call(this, includes, include);
+                this._expandIncludeAllElement(includes, include);
             }
         }
 
@@ -1113,78 +1113,77 @@ class Model {
      * @see {@link Sequelize#sync} for options
      * @return {Promise<this>}
      */
-    static sync(options) {
+    static async sync(options) {
         options = _.extend({}, this.options, options);
         options.hooks = is.undefined(options.hooks) ? true : Boolean(options.hooks);
 
         const attributes = this.tableAttributes;
 
-        return Promise.try(() => {
-            if (options.hooks) {
-                return this.runHooks("beforeSync", options);
-            }
-        }).then(() => {
-            if (options.force) {
-                return this.drop(options);
-            }
-        })
-            .then(() => this.QueryInterface.createTable(this.getTableName(options), attributes, options, this))
-            .then(() => {
-                if (options.alter) {
-                    return this.QueryInterface.describeTable(this.getTableName(options))
-                        .then((columns) => {
-                            const changes = []; // array of promises to run
-                            _.each(attributes, (columnDesc, columnName) => {
-                                if (!columns[columnName]) {
-                                    changes.push(() => this.QueryInterface.addColumn(this.getTableName(options), columnName, attributes[columnName]));
-                                }
-                            });
-                            _.each(columns, (columnDesc, columnName) => {
-                                if (!attributes[columnName]) {
-                                    changes.push(() => this.QueryInterface.removeColumn(this.getTableName(options), columnName, options));
-                                } else if (!attributes[columnName].primaryKey) {
-                                    changes.push(() => this.QueryInterface.changeColumn(this.getTableName(options), columnName, attributes[columnName]));
-                                }
-                            });
-                            return changes.reduce((p, fn) => p.then(fn), Promise.resolve());
-                        });
-                }
-            })
-            .then(() => this.QueryInterface.showIndex(this.getTableName(options), options))
-            .then((indexes) => {
-                // Assign an auto-generated name to indexes which are not named by the user
-                this.options.indexes = this.QueryInterface.nameIndexes(this.options.indexes, this.tableName);
+        if (options.hooks) {
+            await this.runHooks("beforeSync", options);
+        }
 
-                indexes = _.filter(this.options.indexes, (item1) =>
-                    !_.some(indexes, (item2) => item1.name === item2.name)
-                ).sort((index1, index2) => {
-                    if (this.sequelize.options.dialect === "postgres") {
-                        // move concurrent indexes to the bottom to avoid weird deadlocks
-                        if (index1.concurrently === true) {
-                            return 1;
-                        }
-                        if (index2.concurrently === true) {
-                            return -1;
-                        }
-                    }
+        if (options.force) {
+            await this.drop(options);
+        }
 
-                    return 0;
+        await this.QueryInterface.createTable(this.getTableName(options), attributes, options, this);
+
+        if (options.alter) {
+            return this.QueryInterface.describeTable(this.getTableName(options))
+                .then((columns) => {
+                    const changes = []; // array of promises to run
+                    _.each(attributes, (columnDesc, columnName) => {
+                        if (!columns[columnName]) {
+                            changes.push(() => this.QueryInterface.addColumn(this.getTableName(options), columnName, attributes[columnName]));
+                        }
+                    });
+                    _.each(columns, (columnDesc, columnName) => {
+                        if (!attributes[columnName]) {
+                            changes.push(() => this.QueryInterface.removeColumn(this.getTableName(options), columnName, options));
+                        } else if (!attributes[columnName].primaryKey) {
+                            changes.push(() => this.QueryInterface.changeColumn(this.getTableName(options), columnName, attributes[columnName]));
+                        }
+                    });
+                    return changes.reduce((p, fn) => p.then(fn), Promise.resolve());
                 });
+        }
 
-                return Promise.map(indexes, (index) => this.QueryInterface.addIndex(
-                    this.getTableName(options),
-                    _.assign({
-                        logging: options.logging,
-                        benchmark: options.benchmark,
-                        transaction: options.transaction
-                    }, index),
-                    this.tableName
-                ));
-            }).then(() => {
-                if (options.hooks) {
-                    return this.runHooks("afterSync", options);
+        let indexes = await this.QueryInterface.showIndex(this.getTableName(options), options);
+        // Assign an auto-generated name to indexes which are not named by the user
+        this.options.indexes = this.QueryInterface.nameIndexes(this.options.indexes, this.tableName);
+
+        indexes = _.filter(this.options.indexes, (item1) =>
+            !_.some(indexes, (item2) => item1.name === item2.name)
+        ).sort((index1, index2) => {
+            if (this.sequelize.options.dialect === "postgres") {
+                // move concurrent indexes to the bottom to avoid weird deadlocks
+                if (index1.concurrently === true) {
+                    return 1;
                 }
-            }).return(this);
+                if (index2.concurrently === true) {
+                    return -1;
+                }
+            }
+
+            return 0;
+        });
+
+        await Promise.all(indexes.map((index) => this.QueryInterface.addIndex(
+            this.getTableName(options),
+            _.assign({
+                logging: options.logging,
+                benchmark: options.benchmark,
+                transaction: options.transaction
+            }, index),
+            this.tableName
+        )));
+
+        if (options.hooks) {
+            await this.runHooks("afterSync", options);
+        }
+
+        return this;
     }
 
     /**
@@ -1502,7 +1501,7 @@ class Model {
      * @link   {@link Sequelize.query}
      * @return {Promise<Array<Model>>}
      */
-    static findAll(options) {
+    static async findAll(options) {
         if (!is.undefined(options) && !_.isPlainObject(options)) {
             throw new sequelizeErrors.QueryError("The argument passed to findAll must be an options object, use findById if you wish to pass a single primary key value");
         }
@@ -1516,7 +1515,6 @@ class Model {
         this.warnOnInvalidOptions(options, Object.keys(this.rawAttributes));
 
         const tableNames = {};
-        let originalOptions;
 
         tableNames[this.getTableName(options)] = true;
         options = Utils.cloneDeep(options);
@@ -1526,71 +1524,68 @@ class Model {
         // set rejectOnEmpty option from model config
         options.rejectOnEmpty = options.rejectOnEmpty || this.options.rejectOnEmpty;
 
-        return Promise.try(() => {
-            this._injectScope(options);
+        this._injectScope(options);
 
-            if (options.hooks) {
-                return this.runHooks("beforeFind", options);
-            }
-        }).then(() => {
-            this._conformOptions(options, this);
-            this._expandIncludeAll(options);
+        if (options.hooks) {
+            await this.runHooks("beforeFind", options);
+        }
 
-            if (options.hooks) {
-                return this.runHooks("beforeFindAfterExpandIncludeAll", options);
-            }
-        }).then(() => {
-            if (options.include) {
-                options.hasJoin = true;
+        this._conformOptions(options, this);
+        this._expandIncludeAll(options);
 
-                this._validateIncludedElements(options, tableNames);
+        if (options.hooks) {
+            await this.runHooks("beforeFindAfterExpandIncludeAll", options);
+        }
 
-                // If we're not raw, we have to make sure we include the primary key for deduplication
-                if (options.attributes && !options.raw && this.primaryKeyAttribute && options.attributes.indexOf(this.primaryKeyAttribute) === -1) {
-                    options.originalAttributes = options.attributes;
-                    if (!options.group || !options.hasSingleAssociation || options.hasMultiAssociation) {
-                        options.attributes = [this.primaryKeyAttribute].concat(options.attributes);
-                    }
+        if (options.include) {
+            options.hasJoin = true;
+
+            this._validateIncludedElements(options, tableNames);
+
+            // If we're not raw, we have to make sure we include the primary key for deduplication
+            if (options.attributes && !options.raw && this.primaryKeyAttribute && options.attributes.indexOf(this.primaryKeyAttribute) === -1) {
+                options.originalAttributes = options.attributes;
+                if (!options.group || !options.hasSingleAssociation || options.hasMultiAssociation) {
+                    options.attributes = [this.primaryKeyAttribute].concat(options.attributes);
                 }
             }
+        }
 
-            if (!options.attributes) {
-                options.attributes = Object.keys(this.tableAttributes);
+        if (!options.attributes) {
+            options.attributes = Object.keys(this.tableAttributes);
+        }
+
+        // whereCollection is used for non-primary key updates
+        this.options.whereCollection = options.where || null;
+
+        Utils.mapFinderOptions(options, this);
+
+        options = this._paranoidClause(this, options);
+
+        if (options.hooks) {
+            await this.runHooks("beforeFindAfterOptions", options);
+        }
+
+        const originalOptions = Utils.cloneDeep(options);
+        options.tableNames = Object.keys(tableNames);
+        const results = await this.QueryInterface.select(this, this.getTableName(options), options);
+
+        if (options.hooks) {
+            await this.runHooks("afterFind", results, options);
+        }
+
+        //rejectOnEmpty mode
+        if (_.isEmpty(results) && options.rejectOnEmpty) {
+            if (is.function(options.rejectOnEmpty)) {
+                throw new options.rejectOnEmpty();
+            } else if (typeof options.rejectOnEmpty === "object") {
+                throw options.rejectOnEmpty;
+            } else {
+                throw new sequelizeErrors.EmptyResultError();
             }
+        }
 
-            // whereCollection is used for non-primary key updates
-            this.options.whereCollection = options.where || null;
-
-            Utils.mapFinderOptions(options, this);
-
-            options = this._paranoidClause(this, options);
-
-            if (options.hooks) {
-                return this.runHooks("beforeFindAfterOptions", options);
-            }
-        }).then(() => {
-            originalOptions = Utils.cloneDeep(options);
-            options.tableNames = Object.keys(tableNames);
-            return this.QueryInterface.select(this, this.getTableName(options), options);
-        }).tap((results) => {
-            if (options.hooks) {
-                return this.runHooks("afterFind", results, options);
-            }
-        }).then((results) => {
-
-            //rejectOnEmpty mode
-            if (_.isEmpty(results) && options.rejectOnEmpty) {
-                if (is.function(options.rejectOnEmpty)) {
-                    throw new options.rejectOnEmpty();
-                } else if (typeof options.rejectOnEmpty === "object") {
-                    throw options.rejectOnEmpty;
-                } else {
-                    throw new sequelizeErrors.EmptyResultError();
-                }
-            }
-
-            return Model._findSeparate(results, originalOptions);
-        });
+        return Model._findSeparate(results, originalOptions);
     }
 
     static warnOnInvalidOptions(options, validColumnNames) {
@@ -1613,9 +1608,9 @@ class Model {
         }
     }
 
-    static _findSeparate(results, options) {
+    static async _findSeparate(results, options) {
         if (!options.include || options.raw || !results) {
-            return Promise.resolve(results);
+            return results;
         }
 
         const original = results;
@@ -1627,7 +1622,7 @@ class Model {
             return original;
         }
 
-        return Promise.map(options.include, (include) => {
+        await Promise.all(options.include.map(async (include) => {
             if (!include.separate) {
                 return Model._findSeparate(
                     results.reduce((memo, result) => {
@@ -1656,22 +1651,23 @@ class Model {
                 );
             }
 
-            return include.association.get(results, _.assign(
+            const map = await include.association.get(results, _.assign(
                 {},
                 _.omit(options, "include", "attributes", "order", "where", "limit", "plain"),
                 _.omit(include, "parent", "association", "as")
-            )).then((map) => {
-                for (const result of results) {
-                    result.set(
-                        include.association.as,
-                        map[result.get(include.association.source.primaryKeyAttribute)],
-                        {
-                            raw: true
-                        }
-                    );
-                }
-            });
-        }).return(original);
+            ));
+            for (const result of results) {
+                result.set(
+                    include.association.as,
+                    map[result.get(include.association.source.primaryKeyAttribute)],
+                    {
+                        raw: true
+                    }
+                );
+            }
+        }));
+
+        return original;
     }
 
     /**
@@ -1687,10 +1683,10 @@ class Model {
      * @see {@link Model.findAll}           for a full explanation of options
      * @return {Promise<Model>}
      */
-    static findById(param, options) {
+    static async findById(param, options) {
         // return Promise resolved with null if no arguments are passed
         if ([null, undefined].indexOf(param) !== -1) {
-            return Promise.resolve(null);
+            return null;
         }
 
         options = Utils.cloneDeep(options) || {};
@@ -1718,7 +1714,7 @@ class Model {
      * @see {@link Model.findAll}           for an explanation of options
      * @return {Promise<Model>}
      */
-    static findOne(options) {
+    static async findOne(options) {
         if (!is.undefined(options) && !_.isPlainObject(options)) {
             throw new Error("The argument passed to findOne must be an options object, use findById if you wish to pass a single primary key value");
         }
@@ -1813,32 +1809,30 @@ class Model {
      *
      * @return {Promise<Integer>}
      */
-    static count(options) {
-        return Promise.try(() => {
-            options = _.defaults(Utils.cloneDeep(options), { hooks: true });
-            if (options.hooks) {
-                return this.runHooks("beforeCount", options);
-            }
-        }).then(() => {
-            let col = options.col || "*";
-            if (options.include) {
-                col = `${this.name}.${options.col || this.primaryKeyField}`;
-            }
+    static async count(options) {
+        options = _.defaults(Utils.cloneDeep(options), { hooks: true });
+        if (options.hooks) {
+            await this.runHooks("beforeCount", options);
+        }
 
-            Utils.mapOptionFieldNames(options, this);
+        let col = options.col || "*";
+        if (options.include) {
+            col = `${this.name}.${options.col || this.primaryKeyField}`;
+        }
 
-            options.plain = !options.group;
-            options.dataType = new DataTypes.INTEGER();
-            options.includeIgnoreAttributes = false;
+        Utils.mapOptionFieldNames(options, this);
 
-            // No limit, offset or order for the options max be given to count()
-            // Set them to null to prevent scopes setting those values
-            options.limit = null;
-            options.offset = null;
-            options.order = null;
+        options.plain = !options.group;
+        options.dataType = new DataTypes.INTEGER();
+        options.includeIgnoreAttributes = false;
 
-            return this.aggregate(col, "count", options);
-        });
+        // No limit, offset or order for the options max be given to count()
+        // Set them to null to prevent scopes setting those values
+        options.limit = null;
+        options.offset = null;
+        options.order = null;
+
+        return this.aggregate(col, "count", options);
     }
 
     /**
@@ -1875,7 +1869,7 @@ class Model {
      * @see {@link Model.findAll} for a specification of find and query options
      * @return {Promise<{count: Integer, rows: Model[]}>}
      */
-    static findAndCount(options) {
+    static async findAndCount(options) {
         if (!is.undefined(options) && !_.isPlainObject(options)) {
             throw new Error("The argument passed to findAndCount must be an options object, use findById if you wish to pass a single primary key value");
         }
@@ -1885,21 +1879,22 @@ class Model {
             countOptions.attributes = undefined;
         }
 
-        const countQuery = this.count(countOptions);
-        const findQuery = this.findAll(options);
 
-        return countQuery.then((count) => {
-            if (count === 0) {
-                return {
-                    count: 0,
-                    rows: []
-                };
-            }
-            return findQuery.then((results) => ({
-                count: count || 0,
-                rows: results
-            }));
-        });
+        const count = await this.count(countOptions);
+
+        if (count === 0) {
+            return {
+                count: 0,
+                rows: []
+            };
+        }
+
+        const results = await this.findAll(options);
+
+        return {
+            count: count || 0,
+            rows: results
+        };
     }
 
     /**
@@ -2032,7 +2027,7 @@ class Model {
      *
      * @return {Promise<Model,initialized>}
      */
-    static findOrBuild(options) {
+    static async findOrBuild(options) {
         if (!options || !options.where || arguments.length > 1) {
             throw new Error(
                 "Missing where attribute in the options parameter passed to findOrInitialize. " +
@@ -2042,20 +2037,17 @@ class Model {
 
         let values;
 
-        return this.find(options).then((instance) => {
-            if (is.null(instance)) {
-                values = _.clone(options.defaults) || {};
-                if (_.isPlainObject(options.where)) {
-                    values = _.defaults(values, options.where);
-                }
-
-                instance = this.build(values);
-
-                return Promise.resolve([instance, true]);
+        const instance = await this.find(options);
+        if (is.null(instance)) {
+            values = _.clone(options.defaults) || {};
+            if (_.isPlainObject(options.where)) {
+                values = _.defaults(values, options.where);
             }
 
-            return Promise.resolve([instance, false]);
-        });
+            return [this.build(values), true];
+        }
+
+        return [instance, false];
     }
 
     /**
@@ -2073,7 +2065,7 @@ class Model {
      * @see {@link Model.findAll} for a full specification of find and options
      * @return {Promise<Model,created>}
      */
-    static findOrCreate(options) {
+    static async findOrCreate(options) {
         if (!options || !options.where || arguments.length > 1) {
             throw new Error(
                 "Missing where attribute in the options parameter passed to findOrCreate. " +
@@ -2083,24 +2075,18 @@ class Model {
 
         options = _.assign({}, options);
 
-        if (is.undefined(options.transaction) && this.sequelize.constructor._cls) {
-            const t = this.sequelize.constructor._cls.get("transaction");
-            if (t) {
-                options.transaction = t;
-            }
-        }
-
         const internalTransaction = !options.transaction;
         let values;
-        let transaction;
 
         // Create a transaction or a savepoint, depending on whether a transaction was passed in
-        return this.sequelize.transaction(options).then((t) => {
-            transaction = t;
-            options.transaction = t;
+        const transaction = await this.sequelize.transaction(options);
 
-            return this.findOne(_.defaults({ transaction }, options));
-        }).then((instance) => {
+        options.transaction = transaction;
+
+
+        try {
+            let instance = await this.findOne(_.defaults({ transaction }, options));
+
             if (!is.null(instance)) {
                 return [instance, false];
             }
@@ -2111,15 +2097,14 @@ class Model {
             }
 
             options.exception = true;
-
-            return this.create(values, options).then((instance) => {
-                if (is.null(instance.get(this.primaryKeyAttribute, { raw: true }))) {
-                    // If the query returned an empty result for the primary key, we know that this was actually a unique constraint violation
-                    throw new this.sequelize.UniqueConstraintError();
-                }
-
-                return [instance, true];
-            }).catch(this.sequelize.UniqueConstraintError, (err) => {
+            instance = await this.create(values, options);
+            if (is.null(instance.get(this.primaryKeyAttribute, { raw: true }))) {
+                // If the query returned an empty result for the primary key, we know that this was actually a unique constraint violation
+                throw new this.sequelize.UniqueConstraintError();
+            }
+            return [instance, true];
+        } catch (err) {
+            if (err instanceof this.sequelize.UniqueConstraintError) {
                 const flattenedWhere = Utils.flattenObjectDeep(options.where);
                 const flattenedWhereKeys = _.map(_.keys(flattenedWhere), (name) => _.last(_.split(name, ".")));
                 const whereFields = flattenedWhereKeys.map((name) => _.get(this.rawAttributes, `${name}.field`, name));
@@ -2139,25 +2124,24 @@ class Model {
                         }
                     });
                 }
-
                 // Someone must have created a matching instance inside the same transaction since we last did a find. Let's find it!
-                return this.findOne(_.defaults({
+                const instance = await this.findOne(_.defaults({
                     transaction: internalTransaction ? null : transaction
-                }, options)).then((instance) => {
-                    // Sanity check, ideally we caught this at the defaultFeilds/err.fields check
-                    // But if we didn't and instance is null, we will throw
-                    if (is.null(instance)) {
-                        throw err;
-                    }
-                    return [instance, false];
-                });
-            });
-        }).finally(() => {
+                }, options));
+                // Sanity check, ideally we caught this at the defaultFeilds/err.fields check
+                // But if we didn't and instance is null, we will throw
+                if (is.null(instance)) {
+                    throw err;
+                }
+                return [instance, false];
+            }
+            throw err;
+        } finally {
             if (internalTransaction && transaction) {
                 // If we created a transaction internally (and not just a savepoint), we should clean it up
-                return transaction.commit();
+                await transaction.commit();
             }
-        });
+        }
     }
 
     /**
@@ -2170,7 +2154,7 @@ class Model {
      * @see {@link Model.findAll} for a full specification of find and options
      * @return {Promise<Model,created>}
      */
-    static findCreateFind(options) {
+    static async findCreateFind(options) {
         if (!options || !options.where) {
             throw new Error(
                 "Missing where attribute in the options parameter passed to findOrCreate."
@@ -2182,16 +2166,22 @@ class Model {
             values = _.defaults(values, options.where);
         }
 
+        const result = await this.findOne(options);
 
-        return this.findOne(options).then((result) => {
-            if (result) {
+        if (result) {
+            return [result, false];
+        }
+
+        try {
+            const result = await this.create(values, options);
+            return [result, true];
+        } catch (err) {
+            if (err instanceof this.sequelize.UniqueConstraintError) {
+                const result = await this.findOne(options);
                 return [result, false];
             }
-
-            return this.create(values, options)
-                .then((result) => [result, true])
-                .catch(this.sequelize.UniqueConstraintError, () => this.findOne(options).then((result) => [result, false]));
-        });
+            throw err;
+        }
     }
 
     /**
@@ -2219,7 +2209,7 @@ class Model {
      *
      * @return {Promise<created>} Returns a boolean indicating whether the row was created or updated.
      */
-    static upsert(values, options) {
+    static async upsert(values, options) {
         options = _.extend({
             hooks: true
         }, Utils.cloneDeep(options || {}));
@@ -2234,42 +2224,42 @@ class Model {
             options.fields = Object.keys(instance._changed);
         }
 
-        return instance.validate(options).then(() => {
-            // Map field names
-            const updatedDataValues = _.pick(instance.dataValues, Object.keys(instance._changed));
-            const insertValues = Utils.mapValueFieldNames(instance.dataValues, instance.attributes, this);
-            const updateValues = Utils.mapValueFieldNames(updatedDataValues, options.fields, this);
-            const now = Utils.now(this.sequelize.options.dialect);
+        await instance.validate(options);
 
-            // Attach createdAt
-            if (createdAtAttr && !updateValues[createdAtAttr]) {
-                const field = this.rawAttributes[createdAtAttr].field || createdAtAttr;
-                insertValues[field] = this._getDefaultTimestamp(createdAtAttr) || now;
-            }
-            if (updatedAtAttr && !insertValues[updatedAtAttr]) {
-                const field = this.rawAttributes[updatedAtAttr].field || updatedAtAttr;
-                insertValues[field] = updateValues[field] = this._getDefaultTimestamp(updatedAtAttr) || now;
-            }
+        // Map field names
+        const updatedDataValues = _.pick(instance.dataValues, Object.keys(instance._changed));
+        const insertValues = Utils.mapValueFieldNames(instance.dataValues, instance.attributes, this);
+        const updateValues = Utils.mapValueFieldNames(updatedDataValues, options.fields, this);
+        const now = Utils.now(this.sequelize.options.dialect);
 
-            // Build adds a null value for the primary key, if none was given by the user.
-            // We need to remove that because of some Postgres technicalities.
-            if (!hadPrimary && this.primaryKeyAttribute && !this.rawAttributes[this.primaryKeyAttribute].defaultValue) {
-                delete insertValues[this.primaryKeyField];
-                delete updateValues[this.primaryKeyField];
-            }
+        // Attach createdAt
+        if (createdAtAttr && !updateValues[createdAtAttr]) {
+            const field = this.rawAttributes[createdAtAttr].field || createdAtAttr;
+            insertValues[field] = this._getDefaultTimestamp(createdAtAttr) || now;
+        }
+        if (updatedAtAttr && !insertValues[updatedAtAttr]) {
+            const field = this.rawAttributes[updatedAtAttr].field || updatedAtAttr;
+            insertValues[field] = updateValues[field] = this._getDefaultTimestamp(updatedAtAttr) || now;
+        }
 
-            return Promise.try(() => {
-                if (options.hooks) {
-                    return this.runHooks("beforeUpsert", values, options);
-                }
-            }).then(() => {
-                return this.QueryInterface.upsert(this.getTableName(options), insertValues, updateValues, instance.where(), this, options);
-            }).tap((result) => {
-                if (options.hooks) {
-                    return this.runHooks("afterUpsert", result, options);
-                }
-            });
-        });
+        // Build adds a null value for the primary key, if none was given by the user.
+        // We need to remove that because of some Postgres technicalities.
+        if (!hadPrimary && this.primaryKeyAttribute && !this.rawAttributes[this.primaryKeyAttribute].defaultValue) {
+            delete insertValues[this.primaryKeyField];
+            delete updateValues[this.primaryKeyField];
+        }
+
+        if (options.hooks) {
+            await this.runHooks("beforeUpsert", values, options);
+        }
+
+        const result = await this.QueryInterface.upsert(this.getTableName(options), insertValues, updateValues, instance.where(), this, options);
+
+        if (options.hooks) {
+            await this.runHooks("afterUpsert", result, options);
+        }
+
+        return result;
     }
 
     /**
@@ -2297,9 +2287,9 @@ class Model {
      *
      * @return {Promise<Array<Model>>}
      */
-    static bulkCreate(records, options) {
+    static async bulkCreate(records, options) {
         if (!records.length) {
-            return Promise.resolve([]);
+            return [];
         }
 
         options = _.extend({
@@ -2313,10 +2303,10 @@ class Model {
 
         const dialect = this.sequelize.options.dialect;
         if (options.ignoreDuplicates && ["postgres", "mssql"].indexOf(dialect) !== -1) {
-            return Promise.reject(new Error(`${dialect} does not support the 'ignoreDuplicates' option.`));
+            throw new Error(`${dialect} does not support the 'ignoreDuplicates' option.`);
         }
         if (options.updateOnDuplicate && dialect !== "mysql") {
-            return Promise.reject(new Error(`${dialect} does not support the 'updateOnDuplicate' option.`));
+            throw new Error(`${dialect} does not support the 'updateOnDuplicate' option.`);
         }
 
         if (options.updateOnDuplicate) {
@@ -2336,61 +2326,60 @@ class Model {
 
         let instances = records.map((values) => this.build(values, { isNewRecord: true }));
 
-        return Promise.try(() => {
-            // Run before hook
-            if (options.hooks) {
-                return this.runHooks("beforeBulkCreate", instances, options);
-            }
-        }).then(() => {
-            // Validate
-            if (options.validate) {
-                const errors = new Promise.AggregateError();
-                const validateOptions = _.clone(options);
-                validateOptions.hooks = options.individualHooks;
+        // Run before hook
+        if (options.hooks) {
+            await this.runHooks("beforeBulkCreate", instances, options);
+        }
 
-                return Promise.map(instances, (instance) =>
-                    instance.validate(validateOptions).catch((err) => {
-                        errors.push({ record: instance, errors: err });
-                    })
-                ).then(() => {
-                    delete options.skip;
-                    if (errors.length) {
-                        throw errors;
-                    }
+        // Validate
+        if (options.validate) {
+            // const errors = new Promise.AggregateError();
+            const errors = [];
+            const validateOptions = _.clone(options);
+            validateOptions.hooks = options.individualHooks;
+
+            await Promise.all(instances.map((instance) => {
+                return instance.validate(validateOptions).catch((err) => {
+                    err.record = instance;
+                    errors.push(err);
                 });
+            }));
+
+            delete options.skip;
+            if (errors.length) {
+                throw new adone.x.AggregateException(errors);
             }
-        }).then(() => {
-            for (const instance of instances) {
-                const values = instance.dataValues;
+        }
 
-                // set createdAt/updatedAt attributes
-                if (createdAtAttr && !values[createdAtAttr]) {
-                    values[createdAtAttr] = now;
-                    options.fields.indexOf(createdAtAttr) === -1 && options.fields.push(createdAtAttr);
-                }
-                if (updatedAtAttr && !values[updatedAtAttr]) {
-                    values[updatedAtAttr] = now;
-                    options.fields.indexOf(updatedAtAttr) === -1 && options.fields.push(updatedAtAttr);
-                }
+        for (const instance of instances) {
+            const values = instance.dataValues;
 
-                instance.dataValues = Utils.mapValueFieldNames(values, options.fields, this);
+            // set createdAt/updatedAt attributes
+            if (createdAtAttr && !values[createdAtAttr]) {
+                values[createdAtAttr] = now;
+                options.fields.indexOf(createdAtAttr) === -1 && options.fields.push(createdAtAttr);
+            }
+            if (updatedAtAttr && !values[updatedAtAttr]) {
+                values[updatedAtAttr] = now;
+                options.fields.indexOf(updatedAtAttr) === -1 && options.fields.push(updatedAtAttr);
             }
 
-            if (options.individualHooks) {
-                // Create each instance individually
-                return Promise.map(instances, (instance) => {
-                    const individualOptions = _.clone(options);
-                    delete individualOptions.fields;
-                    delete individualOptions.individualHooks;
-                    delete individualOptions.ignoreDuplicates;
-                    individualOptions.validate = false;
-                    individualOptions.hooks = true;
+            instance.dataValues = Utils.mapValueFieldNames(values, options.fields, this);
+        }
 
-                    return instance.save(individualOptions);
-                }).then((_instances) => {
-                    instances = _instances;
-                });
-            }
+        if (options.individualHooks) {
+            // Create each instance individually
+            instances = await Promise.all(instances.map((instance) => {
+                const individualOptions = _.clone(options);
+                delete individualOptions.fields;
+                delete individualOptions.individualHooks;
+                delete individualOptions.ignoreDuplicates;
+                individualOptions.validate = false;
+                individualOptions.hooks = true;
+
+                return instance.save(individualOptions);
+            }));
+        } else {
             // Create all in one query
             // Recreate records from instances to represent any changes made in hooks or validation
             records = instances.map((instance) => {
@@ -2403,36 +2392,34 @@ class Model {
                 attributes[this.rawAttributes[attr].field] = this.rawAttributes[attr];
             }
 
-            return this.QueryInterface.bulkInsert(this.getTableName(options), records, options, attributes).then((results) => {
-                if (is.array(results)) {
-                    results.forEach((result, i) => {
-                        instances[i] && instances[i].set(this.primaryKeyAttribute, result[this.primaryKeyField], { raw: true });
-                    });
-                }
-                return results;
-            });
-
-        }).then(() => {
-
-            // map fields back to attributes
-            instances.forEach((instance) => {
-                for (const attr in this.rawAttributes) {
-                    if (this.rawAttributes[attr].field &&
-                        !is.undefined(instance.dataValues[this.rawAttributes[attr].field]) &&
-                        this.rawAttributes[attr].field !== attr
-                    ) {
-                        instance.set(attr, instance.dataValues[this.rawAttributes[attr].field]);
-                        delete instance.dataValues[this.rawAttributes[attr].field];
-                    }
-                }
-                instance.isNewRecord = false;
-            });
-
-            // Run after hook
-            if (options.hooks) {
-                return this.runHooks("afterBulkCreate", instances, options);
+            const results = await this.QueryInterface.bulkInsert(this.getTableName(options), records, options, attributes);
+            if (is.array(results)) {
+                results.forEach((result, i) => {
+                    instances[i] && instances[i].set(this.primaryKeyAttribute, result[this.primaryKeyField], { raw: true });
+                });
             }
-        }).then(() => instances);
+        }
+
+        // map fields back to attributes
+        instances.forEach((instance) => {
+            for (const attr in this.rawAttributes) {
+                if (this.rawAttributes[attr].field &&
+                    !is.undefined(instance.dataValues[this.rawAttributes[attr].field]) &&
+                    this.rawAttributes[attr].field !== attr
+                ) {
+                    instance.set(attr, instance.dataValues[this.rawAttributes[attr].field]);
+                    delete instance.dataValues[this.rawAttributes[attr].field];
+                }
+            }
+            instance.isNewRecord = false;
+        });
+
+        // Run after hook
+        if (options.hooks) {
+            await this.runHooks("afterBulkCreate", instances, options);
+        }
+
+        return instances;
     }
 
     /**
@@ -2472,7 +2459,7 @@ class Model {
      * @param  {Boolean}      [options.benchmark=false]       Pass query execution time in milliseconds as second argument to logging function (options.logging).
      * @return {Promise<Integer>} The number of destroyed rows
      */
-    static destroy(options) {
+    static async destroy(options) {
         let instances;
 
         if (!options || !(options.where || options.truncate)) {
@@ -2498,49 +2485,47 @@ class Model {
         Utils.mapOptionFieldNames(options, this);
         options.model = this;
 
-        return Promise.try(() => {
-            // Run before hook
-            if (options.hooks) {
-                return this.runHooks("beforeBulkDestroy", options);
-            }
-        }).then(() => {
-            // Get daos and run beforeDestroy hook on each record individually
-            if (options.individualHooks) {
-                return this.findAll({ where: options.where, transaction: options.transaction, logging: options.logging, benchmark: options.benchmark })
-                    .map((instance) => this.runHooks("beforeDestroy", instance, options).then(() => instance))
-                    .then((_instances) => {
-                        instances = _instances;
-                    });
-            }
-        }).then(() => {
-            // Run delete query (or update if paranoid)
-            if (this._timestampAttributes.deletedAt && !options.force) {
-                // Set query type appropriately when running soft delete
-                options.type = QueryTypes.BULKUPDATE;
+        // Run before hook
+        if (options.hooks) {
+            await this.runHooks("beforeBulkDestroy", options);
+        }
 
-                const attrValueHash = {};
-                const deletedAtAttribute = this.rawAttributes[this._timestampAttributes.deletedAt];
-                const field = this.rawAttributes[this._timestampAttributes.deletedAt].field;
-                const where = {};
+        // Get daos and run beforeDestroy hook on each record individually
+        if (options.individualHooks) {
+            instances = await this.findAll({ where: options.where, transaction: options.transaction, logging: options.logging, benchmark: options.benchmark });
+            await Promise.all(instances.map((instance) => this.runHooks("beforeDestroy", instance, options)));
+        }
 
-                where[field] = deletedAtAttribute.hasOwnProperty("defaultValue") ? deletedAtAttribute.defaultValue : null;
+        // Run delete query (or update if paranoid)
+        let result;
+        if (this._timestampAttributes.deletedAt && !options.force) {
+            // Set query type appropriately when running soft delete
+            options.type = QueryTypes.BULKUPDATE;
 
-                attrValueHash[field] = Utils.now(this.sequelize.options.dialect);
-                return this.QueryInterface.bulkUpdate(this.getTableName(options), attrValueHash, _.defaults(where, options.where), options, this.rawAttributes);
-            }
-            return this.QueryInterface.bulkDelete(this.getTableName(options), options.where, options, this);
+            const attrValueHash = {};
+            const deletedAtAttribute = this.rawAttributes[this._timestampAttributes.deletedAt];
+            const field = this.rawAttributes[this._timestampAttributes.deletedAt].field;
+            const where = {};
 
-        }).tap(() => {
-            // Run afterDestroy hook on each record individually
-            if (options.individualHooks) {
-                return Promise.map(instances, (instance) => this.runHooks("afterDestroy", instance, options));
-            }
-        }).tap(() => {
-            // Run after hook
-            if (options.hooks) {
-                return this.runHooks("afterBulkDestroy", options);
-            }
-        });
+            where[field] = deletedAtAttribute.hasOwnProperty("defaultValue") ? deletedAtAttribute.defaultValue : null;
+
+            attrValueHash[field] = Utils.now(this.sequelize.options.dialect);
+            result = await this.QueryInterface.bulkUpdate(this.getTableName(options), attrValueHash, _.defaults(where, options.where), options, this.rawAttributes);
+        } else {
+            result = await this.QueryInterface.bulkDelete(this.getTableName(options), options.where, options, this);
+        }
+
+        // Run afterDestroy hook on each record individually
+        if (options.individualHooks) {
+            await Promise.all(instances.map((instance) => this.runHooks("afterDestroy", instance, options)));
+        }
+
+        // Run after hook
+        if (options.hooks) {
+            await this.runHooks("afterBulkDestroy", options);
+        }
+
+        return result;
     }
 
     /**
@@ -2557,7 +2542,7 @@ class Model {
      *
      * @return {Promise<undefined>}
      */
-    static restore(options) {
+    static async restore(options) {
         if (!this._timestampAttributes.deletedAt) {
             throw new Error("Model is not paranoid");
         }
@@ -2574,41 +2559,38 @@ class Model {
 
         Utils.mapOptionFieldNames(options, this);
 
-        return Promise.try(() => {
-            // Run before hook
-            if (options.hooks) {
-                return this.runHooks("beforeBulkRestore", options);
-            }
-        }).then(() => {
-            // Get daos and run beforeRestore hook on each record individually
-            if (options.individualHooks) {
-                return this.findAll({ where: options.where, transaction: options.transaction, logging: options.logging, benchmark: options.benchmark, paranoid: false })
-                    .map((instance) => this.runHooks("beforeRestore", instance, options).then(() => instance))
-                    .then((_instances) => {
-                        instances = _instances;
-                    });
-            }
-        }).then(() => {
-            // Run undelete query
-            const attrValueHash = {};
-            const deletedAtCol = this._timestampAttributes.deletedAt;
-            const deletedAtAttribute = this.rawAttributes[deletedAtCol];
-            const deletedAtDefaultValue = deletedAtAttribute.hasOwnProperty("defaultValue") ? deletedAtAttribute.defaultValue : null;
+        // Run before hook
+        if (options.hooks) {
+            await this.runHooks("beforeBulkRestore", options);
+        }
 
-            attrValueHash[deletedAtAttribute.field || deletedAtCol] = deletedAtDefaultValue;
-            options.omitNull = false;
-            return this.QueryInterface.bulkUpdate(this.getTableName(options), attrValueHash, options.where, options, this._timestampAttributes.deletedAt);
-        }).tap(() => {
-            // Run afterDestroy hook on each record individually
-            if (options.individualHooks) {
-                return Promise.map(instances, (instance) => this.runHooks("afterRestore", instance, options));
-            }
-        }).tap(() => {
-            // Run after hook
-            if (options.hooks) {
-                return this.runHooks("afterBulkRestore", options);
-            }
-        });
+        // Get daos and run beforeRestore hook on each record individually
+        if (options.individualHooks) {
+            instances = await this.findAll({ where: options.where, transaction: options.transaction, logging: options.logging, benchmark: options.benchmark, paranoid: false });
+            await Promise.all(instances.map((instance) => this.runHooks("beforeRestore", instance, options)));
+        }
+
+        // Run undelete query
+        const attrValueHash = {};
+        const deletedAtCol = this._timestampAttributes.deletedAt;
+        const deletedAtAttribute = this.rawAttributes[deletedAtCol];
+        const deletedAtDefaultValue = deletedAtAttribute.hasOwnProperty("defaultValue") ? deletedAtAttribute.defaultValue : null;
+
+        attrValueHash[deletedAtAttribute.field || deletedAtCol] = deletedAtDefaultValue;
+        options.omitNull = false;
+        const result = await this.QueryInterface.bulkUpdate(this.getTableName(options), attrValueHash, options.where, options, this._timestampAttributes.deletedAt);
+
+        // Run afterDestroy hook on each record individually
+        if (options.individualHooks) {
+            await Promise.all(instances.map((instance) => this.runHooks("afterRestore", instance, options)));
+        }
+
+        // Run after hook
+        if (options.hooks) {
+            await this.runHooks("afterBulkRestore", options);
+        }
+
+        return result;
     }
 
     /**
@@ -2632,7 +2614,7 @@ class Model {
      *
      * @return {Promise<Array<affectedCount,affectedRows>>}
      */
-    static update(values, options) {
+    static async update(values, options) {
         this._optionsMustContainWhere(options);
 
         options = Utils.cloneDeep(options);
@@ -2676,147 +2658,131 @@ class Model {
         let instances;
         let valuesUse;
 
-        return Promise.try(() => {
-            // Validate
-            if (options.validate) {
-                const build = this.build(values);
-                build.set(this._timestampAttributes.updatedAt, values[this._timestampAttributes.updatedAt], { raw: true });
+        // Validate
+        if (options.validate) {
+            const build = this.build(values);
+            build.set(this._timestampAttributes.updatedAt, values[this._timestampAttributes.updatedAt], { raw: true });
 
-                if (options.sideEffects) {
-                    values = _.assign(values, _.pick(build.get(), build.changed()));
-                    options.fields = _.union(options.fields, Object.keys(values));
-                }
-
-                // We want to skip validations for all other fields
-                options.skip = _.difference(Object.keys(this.rawAttributes), Object.keys(values));
-                return build.validate(options).then((attributes) => {
-                    options.skip = undefined;
-                    if (attributes && attributes.dataValues) {
-                        values = _.pick(attributes.dataValues, Object.keys(values));
-                    }
-                });
+            if (options.sideEffects) {
+                values = _.assign(values, _.pick(build.get(), build.changed()));
+                options.fields = _.union(options.fields, Object.keys(values));
             }
-            return null;
-        }).then(() => {
-            // Run before hook
-            if (options.hooks) {
-                options.attributes = values;
-                return this.runHooks("beforeBulkUpdate", options).then(() => {
-                    values = options.attributes;
-                    delete options.attributes;
-                });
+
+            // We want to skip validations for all other fields
+            options.skip = _.difference(Object.keys(this.rawAttributes), Object.keys(values));
+            const attributes = await build.validate(options);
+            options.skip = undefined;
+            if (attributes && attributes.dataValues) {
+                values = _.pick(attributes.dataValues, Object.keys(values));
             }
-            return null;
-        }).then(() => {
-            valuesUse = values;
+        }
 
-            // Get instances and run beforeUpdate hook on each record individually
-            if (options.individualHooks) {
-                return this.findAll({ where: options.where, transaction: options.transaction, logging: options.logging, benchmark: options.benchmark }).then((_instances) => {
-                    instances = _instances;
-                    if (!instances.length) {
-                        return [];
-                    }
+        // Run before hook
+        if (options.hooks) {
+            options.attributes = values;
+            await this.runHooks("beforeBulkUpdate", options);
+            values = options.attributes;
+            delete options.attributes;
+        }
 
-                    // Run beforeUpdate hooks on each record and check whether beforeUpdate hook changes values uniformly
-                    // i.e. whether they change values for each record in the same way
-                    let changedValues;
-                    let different = false;
+        valuesUse = values;
 
-                    return Promise.map(instances, (instance) => {
-                        // Record updates in instances dataValues
-                        _.extend(instance.dataValues, values);
-                        // Set the changed fields on the instance
-                        _.forIn(valuesUse, (newValue, attr) => {
-                            if (newValue !== instance._previousDataValues[attr]) {
-                                instance.setDataValue(attr, newValue);
-                            }
-                        });
+        // Get instances and run beforeUpdate hook on each record individually
+        let results;
+        if (options.individualHooks) {
+            instances = await this.findAll({ where: options.where, transaction: options.transaction, logging: options.logging, benchmark: options.benchmark });
+            if (!instances.length) {
+                results = [];
+            } else {
+                // Run beforeUpdate hooks on each record and check whether beforeUpdate hook changes values uniformly
+                // i.e. whether they change values for each record in the same way
+                let changedValues;
+                let different = false;
 
-                        // Run beforeUpdate hook
-                        return this.runHooks("beforeUpdate", instance, options).then(() => {
-                            if (!different) {
-                                const thisChangedValues = {};
-                                _.forIn(instance.dataValues, (newValue, attr) => {
-                                    if (newValue !== instance._previousDataValues[attr]) {
-                                        thisChangedValues[attr] = newValue;
-                                    }
-                                });
-
-                                if (!changedValues) {
-                                    changedValues = thisChangedValues;
-                                } else {
-                                    different = !_.isEqual(changedValues, thisChangedValues);
-                                }
-                            }
-
-                            return instance;
-                        });
-                    }).then((_instances) => {
-                        instances = _instances;
-
-                        if (!different) {
-                            const keys = Object.keys(changedValues);
-                            // Hooks do not change values or change them uniformly
-                            if (keys.length) {
-                                // Hooks change values - record changes in valuesUse so they are executed
-                                valuesUse = changedValues;
-                                options.fields = _.union(options.fields, keys);
-                            }
-                            return;
+                instances = await Promise.all(instances.map(async (instance) => {
+                    // Record updates in instances dataValues
+                    _.extend(instance.dataValues, values);
+                    // Set the changed fields on the instance
+                    _.forIn(valuesUse, (newValue, attr) => {
+                        if (newValue !== instance._previousDataValues[attr]) {
+                            instance.setDataValue(attr, newValue);
                         }
-                        // Hooks change values in a different way for each record
-                        // Do not run original query but save each record individually
-                        return Promise.map(instances, (instance) => {
-                            const individualOptions = _.clone(options);
-                            delete individualOptions.individualHooks;
-                            individualOptions.hooks = false;
-                            individualOptions.validate = false;
+                    });
 
-                            return instance.save(individualOptions);
-                        }).tap((_instances) => {
-                            instances = _instances;
+                    // Run beforeUpdate hook
+                    await this.runHooks("beforeUpdate", instance, options);
+                    if (!different) {
+                        const thisChangedValues = {};
+                        _.forIn(instance.dataValues, (newValue, attr) => {
+                            if (newValue !== instance._previousDataValues[attr]) {
+                                thisChangedValues[attr] = newValue;
+                            }
                         });
 
-                    });
-                });
-            }
-        }).then((results) => {
-            if (results) {
-                // Update already done row-by-row - exit
-                return [results.length, results];
-            }
+                        if (!changedValues) {
+                            changedValues = thisChangedValues;
+                        } else {
+                            different = !_.isEqual(changedValues, thisChangedValues);
+                        }
+                    }
 
+                    return instance;
+                }));
+
+                if (!different) {
+                    const keys = Object.keys(changedValues);
+                    // Hooks do not change values or change them uniformly
+                    if (keys.length) {
+                        // Hooks change values - record changes in valuesUse so they are executed
+                        valuesUse = changedValues;
+                        options.fields = _.union(options.fields, keys);
+                    }
+                } else {
+                    // Hooks change values in a different way for each record
+                    // Do not run original query but save each record individually
+                    results = instances = await Promise.all(instances.map((instance) => {
+                        const individualOptions = _.clone(options);
+                        delete individualOptions.individualHooks;
+                        individualOptions.hooks = false;
+                        individualOptions.validate = false;
+
+                        return instance.save(individualOptions);
+                    }));
+                }
+            }
+        }
+
+        if (!results) {
             valuesUse = Utils.mapValueFieldNames(valuesUse, options.fields, this);
             options = Utils.mapOptionFieldNames(options, this);
             options.hasTrigger = this.options ? this.options.hasTrigger : false;
 
             // Run query to update all rows
-            return this.QueryInterface.bulkUpdate(this.getTableName(options), valuesUse, options.where, options, this.tableAttributes).then((affectedRows) => {
-                if (options.returning) {
-                    instances = affectedRows;
-                    return [affectedRows.length, affectedRows];
-                }
+            const affectedRows = await this.QueryInterface.bulkUpdate(this.getTableName(options), valuesUse, options.where, options, this.tableAttributes);
+            if (options.returning) {
+                instances = affectedRows;
+                results = [affectedRows.length, affectedRows];
+            } else {
+                results = [affectedRows];
+            }
+        } else {
+            // Update already done row-by-row - exit
+            results = [results.length, results];
+        }
 
-                return [affectedRows];
-            });
-        }).tap((result) => {
-            if (options.individualHooks) {
-                return Promise.map(instances, (instance) => {
-                    return this.runHooks("afterUpdate", instance, options);
-                }).then(() => {
-                    result[1] = instances;
-                });
-            }
-        }).tap(() => {
-            // Run after hook
-            if (options.hooks) {
-                options.attributes = values;
-                return this.runHooks("afterBulkUpdate", options).then(() => {
-                    delete options.attributes;
-                });
-            }
-        });
+        if (options.individualHooks) {
+            await Promise.all(instances.map((instance) => this.runHooks("afterUpdate", instance, options)));
+            results[1] = instances;
+        }
+
+        // Run after hook
+        if (options.hooks) {
+            options.attributes = values;
+            await this.runHooks("afterBulkUpdate", options);
+            delete options.attributes;
+        }
+
+        return results;
     }
 
     /**
@@ -2920,7 +2886,7 @@ class Model {
     *
     * @return {Promise<this>}
     */
-    static increment(fields, options) {
+    static async increment(fields, options) {
         options = options || {};
         this._injectScope(options);
         this._optionsMustContainWhere(options);
@@ -2965,20 +2931,20 @@ class Model {
             }
         }
 
-        let promise;
+
+        let affectedRows;
         if (!options.increment) {
-            promise = this.sequelize.getQueryInterface().decrement(this, this.getTableName(options), values, where, options);
+            affectedRows = await this.sequelize.getQueryInterface().decrement(this, this.getTableName(options), values, where, options);
         } else {
-            promise = this.sequelize.getQueryInterface().increment(this, this.getTableName(options), values, where, options);
+            affectedRows = await this.sequelize.getQueryInterface().increment(this, this.getTableName(options), values, where, options);
         }
 
-        return promise.then((affectedRows) => {
-            if (options.returning) {
-                return [affectedRows, affectedRows.length];
-            }
 
-            return [affectedRows];
-        });
+        if (options.returning) {
+            return [affectedRows, affectedRows.length];
+        }
+
+        return [affectedRows];
     }
 
     static _optionsMustContainWhere(options) {
@@ -3337,14 +3303,14 @@ class Model {
                 // Set when the value has changed and not raw
                 if (
                     !options.raw &&
-                        (
-                            // True when sequelize method
-                            value instanceof Utils.SequelizeMethod ||
-                            // Check for data type type comparators
-                            !(value instanceof Utils.SequelizeMethod) && this.constructor._dataTypeChanges[key] && this.constructor._dataTypeChanges[key].call(this, value, originalValue, options) ||
-                            // Check default
-                            !this.constructor._dataTypeChanges[key] && (!Utils.isPrimitive(value) && !is.null(value) || value !== originalValue)
-                        )
+                    (
+                        // True when sequelize method
+                        value instanceof Utils.SequelizeMethod ||
+                        // Check for data type type comparators
+                        !(value instanceof Utils.SequelizeMethod) && this.constructor._dataTypeChanges[key] && this.constructor._dataTypeChanges[key].call(this, value, originalValue, options) ||
+                        // Check default
+                        !this.constructor._dataTypeChanges[key] && (!Utils.isPrimitive(value) && !is.null(value) || value !== originalValue)
+                    )
                 ) {
                     this._previousDataValues[key] = originalValue;
                     this.changed(key, true);
@@ -3461,7 +3427,7 @@ class Model {
      * @param  {Boolean}    [options.returning] Append RETURNING * to get back auto generated values (Postgres only)
      * @return {Promise<this|Errors.ValidationError>}
      */
-    save(options) {
+    async save(options) {
         if (arguments.length > 1) {
             throw new Error("The second argument was removed in favor of the options object.");
         }
@@ -3536,63 +3502,55 @@ class Model {
             this.dataValues[createdAtAttr] = this.constructor._getDefaultTimestamp(createdAtAttr) || now;
         }
 
-        return Promise.try(() => {
-            // Validate
-            if (options.validate) {
-                return this.validate(options);
-            }
-        }).then(() => {
-            // Run before hook
-            if (options.hooks) {
-                const beforeHookValues = _.pick(this.dataValues, options.fields);
-                let ignoreChanged = _.difference(this.changed(), options.fields); // In case of update where it's only supposed to update the passed values and the hook values
-                let hookChanged;
-                let afterHookValues;
+        // Validate
+        if (options.validate) {
+            await this.validate(options);
+        }
 
-                if (updatedAtAttr && options.fields.indexOf(updatedAtAttr) !== -1) {
-                    ignoreChanged = _.without(ignoreChanged, updatedAtAttr);
+        // Run before hook
+        if (options.hooks) {
+            const beforeHookValues = _.pick(this.dataValues, options.fields);
+            let ignoreChanged = _.difference(this.changed(), options.fields); // In case of update where it's only supposed to update the passed values and the hook values
+            let hookChanged;
+            let afterHookValues;
+
+            if (updatedAtAttr && options.fields.indexOf(updatedAtAttr) !== -1) {
+                ignoreChanged = _.without(ignoreChanged, updatedAtAttr);
+            }
+
+            await this.constructor.runHooks(`before${hook}`, this, options);
+            if (options.defaultFields && !this.isNewRecord) {
+                afterHookValues = _.pick(this.dataValues, _.difference(this.changed(), ignoreChanged));
+
+                hookChanged = [];
+                for (const key of Object.keys(afterHookValues)) {
+                    if (afterHookValues[key] !== beforeHookValues[key]) {
+                        hookChanged.push(key);
+                    }
                 }
 
-                return this.constructor.runHooks(`before${hook}`, this, options)
-                    .then(() => {
-                        if (options.defaultFields && !this.isNewRecord) {
-                            afterHookValues = _.pick(this.dataValues, _.difference(this.changed(), ignoreChanged));
-
-                            hookChanged = [];
-                            for (const key of Object.keys(afterHookValues)) {
-                                if (afterHookValues[key] !== beforeHookValues[key]) {
-                                    hookChanged.push(key);
-                                }
-                            }
-
-                            options.fields = _.uniq(options.fields.concat(hookChanged));
-                        }
-
-                        if (hookChanged) {
-                            if (options.validate) {
-                                // Validate again
-
-                                options.skip = _.difference(Object.keys(this.constructor.rawAttributes), hookChanged);
-                                return this.validate(options).then(() => {
-                                    delete options.skip;
-                                });
-                            }
-                        }
-                    });
-            }
-        }).then(() => {
-            if (!options.fields.length) {
-                return this;
-            }
-            if (!this.isNewRecord) {
-                return this;
-            }
-            if (!this._options.include || !this._options.include.length) {
-                return this;
+                options.fields = _.uniq(options.fields.concat(hookChanged));
             }
 
+            if (hookChanged) {
+                if (options.validate) {
+                    // Validate again
+
+                    options.skip = _.difference(Object.keys(this.constructor.rawAttributes), hookChanged);
+                    await this.validate(options);
+                    delete options.skip;
+                }
+            }
+        }
+
+        if (
+            options.fields.length
+            && this.isNewRecord
+            && this._options.include
+            && this._options.include.length
+        ) {
             // Nested creation for BelongsTo relations
-            return Promise.map(this._options.include.filter((include) => include.association instanceof BelongsTo), (include) => {
+            await Promise.all(this._options.include.filter((include) => include.association instanceof BelongsTo).map((include) => {
                 const instance = this.get(include.as);
                 if (!instance) {
                     return Promise.resolve();
@@ -3607,131 +3565,119 @@ class Model {
                     }).value();
 
                 return instance.save(includeOptions).then(() => this[include.association.accessors.set](instance, { save: false, logging: options.logging }));
-            });
-        }).then(() => {
-            const realFields = options.fields.filter((field) => !this.constructor._isVirtualAttribute(field));
-            if (!realFields.length) {
-                return this;
+            }));
+        }
+
+        const realFields = options.fields.filter((field) => !this.constructor._isVirtualAttribute(field));
+        if (!realFields.length) {
+            return this;
+        }
+        if (!this.changed() && !this.isNewRecord) {
+            return this;
+        }
+
+        const versionFieldName = _.get(this.constructor.rawAttributes[versionAttr], "field") || versionAttr;
+        let values = Utils.mapValueFieldNames(this.dataValues, options.fields, this.constructor);
+        let query = null;
+        let args = [];
+        let where;
+
+        if (this.isNewRecord) {
+            query = "insert";
+            args = [this, this.constructor.getTableName(options), values, options];
+        } else {
+            where = this.where(true);
+            where = Utils.mapValueFieldNames(where, Object.keys(where), this.constructor);
+            if (versionAttr) {
+                values[versionFieldName] += 1;
             }
-            if (!this.changed() && !this.isNewRecord) {
-                return this;
-            }
+            query = "update";
+            args = [this, this.constructor.getTableName(options), values, where, options];
+        }
 
-            const versionFieldName = _.get(this.constructor.rawAttributes[versionAttr], "field") || versionAttr;
-            let values = Utils.mapValueFieldNames(this.dataValues, options.fields, this.constructor);
-            let query = null;
-            let args = [];
-            let where;
+        const results = await this.sequelize.getQueryInterface()[query].apply(this.sequelize.getQueryInterface(), args);
+        const result = _.head(results);
+        const rowsUpdated = results[1];
 
-            if (this.isNewRecord) {
-                query = "insert";
-                args = [this, this.constructor.getTableName(options), values, options];
-            } else {
-                where = this.where(true);
-                where = Utils.mapValueFieldNames(where, Object.keys(where), this.constructor);
-                if (versionAttr) {
-                    values[versionFieldName] += 1;
-                }
-                query = "update";
-                args = [this, this.constructor.getTableName(options), values, where, options];
-            }
-
-            return this.sequelize.getQueryInterface()[query].apply(this.sequelize.getQueryInterface(), args)
-                .then((results) => {
-                    const result = _.head(results);
-                    const rowsUpdated = results[1];
-
-                    if (versionAttr) {
-                        // Check to see that a row was updated, otherwise it's an optimistic locking error.
-                        if (rowsUpdated < 1) {
-                            throw new sequelizeErrors.OptimisticLockError({
-                                modelName: this.constructor.name,
-                                values,
-                                where
-                            });
-                        } else {
-                            result.dataValues[versionAttr] = values[versionFieldName];
-                        }
-                    }
-
-                    // Transfer database generated values (defaults, autoincrement, etc)
-                    for (const attr of Object.keys(this.constructor.rawAttributes)) {
-                        if (this.constructor.rawAttributes[attr].field &&
-                            !is.undefined(values[this.constructor.rawAttributes[attr].field]) &&
-                            this.constructor.rawAttributes[attr].field !== attr
-                        ) {
-                            values[attr] = values[this.constructor.rawAttributes[attr].field];
-                            delete values[this.constructor.rawAttributes[attr].field];
-                        }
-                    }
-                    values = _.extend(values, result.dataValues);
-
-                    result.dataValues = _.extend(result.dataValues, values);
-                    return result;
-                })
-                .tap(() => {
-                    if (!wasNewRecord) {
-                        return this;
-                    }
-                    if (!this._options.include || !this._options.include.length) {
-                        return this;
-                    }
-
-                    // Nested creation for HasOne/HasMany/BelongsToMany relations
-                    return Promise.map(this._options.include.filter((include) => !(include.association instanceof BelongsTo)), (include) => {
-                        let instances = this.get(include.as);
-
-                        if (!instances) {
-                            return Promise.resolve();
-                        }
-                        if (!is.array(instances)) {
-                            instances = [instances];
-                        }
-                        if (!instances.length) {
-                            return Promise.resolve();
-                        }
-
-                        const includeOptions = _(Utils.cloneDeep(include))
-                            .omit(["association"])
-                            .defaults({
-                                transaction: options.transaction,
-                                logging: options.logging,
-                                parentRecord: this
-                            }).value();
-
-                        // Instances will be updated in place so we can safely treat HasOne like a HasMany
-                        return Promise.map(instances, (instance) => {
-                            if (include.association instanceof BelongsToMany) {
-                                return instance.save(includeOptions).then(() => {
-                                    const values = {};
-                                    values[include.association.foreignKey] = this.get(this.constructor.primaryKeyAttribute, { raw: true });
-                                    values[include.association.otherKey] = instance.get(instance.constructor.primaryKeyAttribute, { raw: true });
-                                    // Include values defined in the scope of the association
-                                    _.assign(values, include.association.through.scope);
-                                    return include.association.throughModel.create(values, includeOptions);
-                                });
-                            }
-                            instance.set(include.association.foreignKey, this.get(include.association.sourceKey || this.constructor.primaryKeyAttribute, { raw: true }));
-                            return instance.save(includeOptions);
-
-                        });
-                    });
-                })
-                .tap((result) => {
-                    // Run after hook
-                    if (options.hooks) {
-                        return this.constructor.runHooks(`after${hook}`, result, options);
-                    }
-                })
-                .then((result) => {
-                    for (const field of options.fields) {
-                        result._previousDataValues[field] = result.dataValues[field];
-                        this.changed(field, false);
-                    }
-                    this.isNewRecord = false;
-                    return result;
+        if (versionAttr) {
+            // Check to see that a row was updated, otherwise it's an optimistic locking error.
+            if (rowsUpdated < 1) {
+                throw new sequelizeErrors.OptimisticLockError({
+                    modelName: this.constructor.name,
+                    values,
+                    where
                 });
-        });
+            } else {
+                result.dataValues[versionAttr] = values[versionFieldName];
+            }
+        }
+
+        // Transfer database generated values (defaults, autoincrement, etc)
+        for (const attr of Object.keys(this.constructor.rawAttributes)) {
+            if (this.constructor.rawAttributes[attr].field &&
+                !is.undefined(values[this.constructor.rawAttributes[attr].field]) &&
+                this.constructor.rawAttributes[attr].field !== attr
+            ) {
+                values[attr] = values[this.constructor.rawAttributes[attr].field];
+                delete values[this.constructor.rawAttributes[attr].field];
+            }
+        }
+        values = _.extend(values, result.dataValues);
+
+        result.dataValues = _.extend(result.dataValues, values);
+
+        if (wasNewRecord && this._options.include && this._options.include.length) {
+            // Nested creation for HasOne/HasMany/BelongsToMany relations
+            await Promise.all(this._options.include.filter((include) => !(include.association instanceof BelongsTo)).map(async (include) => {
+                let instances = this.get(include.as);
+
+                if (!instances) {
+                    return;
+                }
+                if (!is.array(instances)) {
+                    instances = [instances];
+                }
+                if (!instances.length) {
+                    return;
+                }
+
+                const includeOptions = _(Utils.cloneDeep(include))
+                    .omit(["association"])
+                    .defaults({
+                        transaction: options.transaction,
+                        logging: options.logging,
+                        parentRecord: this
+                    }).value();
+
+                // Instances will be updated in place so we can safely treat HasOne like a HasMany
+                await Promise.all(instances.map(async (instance) => {
+                    if (include.association instanceof BelongsToMany) {
+                        await instance.save(includeOptions);
+                        const values = {};
+                        values[include.association.foreignKey] = this.get(this.constructor.primaryKeyAttribute, { raw: true });
+                        values[include.association.otherKey] = instance.get(instance.constructor.primaryKeyAttribute, { raw: true });
+                        // Include values defined in the scope of the association
+                        _.assign(values, include.association.through.scope);
+                        return include.association.throughModel.create(values, includeOptions);
+                    }
+                    instance.set(include.association.foreignKey, this.get(include.association.sourceKey || this.constructor.primaryKeyAttribute, { raw: true }));
+                    return instance.save(includeOptions);
+
+                }));
+            }));
+        }
+
+        // Run after hook
+        if (options.hooks) {
+            await this.constructor.runHooks(`after${hook}`, result, options);
+        }
+
+        for (const field of options.fields) {
+            result._previousDataValues[field] = result.dataValues[field];
+            this.changed(field, false);
+        }
+        this.isNewRecord = false;
+        return result;
     }
 
     /**
@@ -3745,30 +3691,26 @@ class Model {
     *
     * @return {Promise<this>}
     */
-    reload(options) {
+    async reload(options) {
         options = _.defaults({}, options, {
             where: this.where(),
             include: this._options.include || null
         });
 
-        return this.constructor.findOne(options)
-            .tap((reload) => {
-                if (!reload) {
-                    throw new sequelizeErrors.InstanceError(
-                        "Instance could not be reloaded because it does not exist anymore (find call returned null)"
-                    );
-                }
-            })
-            .then((reload) => {
-                // update the internal options of the instance
-                this._options = reload._options;
-                // re-set instance values
-                this.set(reload.dataValues, {
-                    raw: true,
-                    reset: true && !options.attributes
-                });
-                return this;
-            });
+        const reload = await this.constructor.findOne(options);
+        if (!reload) {
+            throw new sequelizeErrors.InstanceError(
+                "Instance could not be reloaded because it does not exist anymore (find call returned null)"
+            );
+        }
+        // update the internal options of the instance
+        this._options = reload._options;
+        // re-set instance values
+        this.set(reload.dataValues, {
+            raw: true,
+            reset: true && !options.attributes
+        });
+        return this;
     }
 
     /**
@@ -3834,53 +3776,53 @@ class Model {
      *
      * @return {Promise<undefined>}
      */
-
-    destroy(options) {
+    async destroy(options) {
         options = _.extend({
             hooks: true,
             force: false
         }, options);
 
-        return Promise.try(() => {
-            // Run before hook
-            if (options.hooks) {
-                return this.constructor.runHooks("beforeDestroy", this, options);
-            }
-        }).then(() => {
-            const where = this.where(true);
+        // Run before hook
+        if (options.hooks) {
+            await this.constructor.runHooks("beforeDestroy", this, options);
+        }
 
-            if (this.constructor._timestampAttributes.deletedAt && options.force === false) {
-                const attribute = this.constructor.rawAttributes[this.constructor._timestampAttributes.deletedAt];
-                const field = attribute.field || this.constructor._timestampAttributes.deletedAt;
-                const values = {};
+        const where = this.where(true);
 
-                values[field] = new Date();
-                where[field] = attribute.hasOwnProperty("defaultValue") ? attribute.defaultValue : null;
+        let result;
 
-                this.setDataValue(field, values[field]);
+        if (this.constructor._timestampAttributes.deletedAt && options.force === false) {
+            const attribute = this.constructor.rawAttributes[this.constructor._timestampAttributes.deletedAt];
+            const field = attribute.field || this.constructor._timestampAttributes.deletedAt;
+            const values = {};
 
-                return this.sequelize.getQueryInterface().update(
-                    this, this.constructor.getTableName(options), values, where, _.defaults({ hooks: false, model: this.constructor }, options)
-                ).then((results) => {
-                    const rowsUpdated = results[1];
-                    if (this.constructor._versionAttribute && rowsUpdated < 1) {
-                        throw new sequelizeErrors.OptimisticLockError({
-                            modelName: this.constructor.name,
-                            values,
-                            where
-                        });
-                    }
-                    return _.head(results);
+            values[field] = new Date();
+            where[field] = attribute.hasOwnProperty("defaultValue") ? attribute.defaultValue : null;
+
+            this.setDataValue(field, values[field]);
+
+            const results = await this.sequelize.getQueryInterface().update(
+                this, this.constructor.getTableName(options), values, where, _.defaults({ hooks: false, model: this.constructor }, options)
+            );
+            const rowsUpdated = results[1];
+            if (this.constructor._versionAttribute && rowsUpdated < 1) {
+                throw new sequelizeErrors.OptimisticLockError({
+                    modelName: this.constructor.name,
+                    values,
+                    where
                 });
             }
-            return this.sequelize.getQueryInterface().delete(this, this.constructor.getTableName(options), where, _.assign({ type: QueryTypes.DELETE, limit: null }, options));
+            result = _.head(results);
+        } else {
+            result = await this.sequelize.getQueryInterface().delete(this, this.constructor.getTableName(options), where, _.assign({ type: QueryTypes.DELETE, limit: null }, options));
+        }
 
-        }).tap(() => {
-            // Run after hook
-            if (options.hooks) {
-                return this.constructor.runHooks("afterDestroy", this, options);
-            }
-        });
+        // Run after hook
+        if (options.hooks) {
+            await this.constructor.runHooks("afterDestroy", this, options);
+        }
+
+        return result;
     }
 
     /**
@@ -3924,7 +3866,7 @@ class Model {
      *
      * @return {Promise<undefined>}
      */
-    restore(options) {
+    async restore(options) {
         if (!this.constructor._timestampAttributes.deletedAt) {
             throw new Error("Model is not paranoid");
         }
@@ -3934,24 +3876,24 @@ class Model {
             force: false
         }, options);
 
-        return Promise.try(() => {
-            // Run before hook
-            if (options.hooks) {
-                return this.constructor.runHooks("beforeRestore", this, options);
-            }
-        }).then(() => {
-            const deletedAtCol = this.constructor._timestampAttributes.deletedAt;
-            const deletedAtAttribute = this.constructor.rawAttributes[deletedAtCol];
-            const deletedAtDefaultValue = deletedAtAttribute.hasOwnProperty("defaultValue") ? deletedAtAttribute.defaultValue : null;
+        // Run before hook
+        if (options.hooks) {
+            await this.constructor.runHooks("beforeRestore", this, options);
+        }
 
-            this.setDataValue(deletedAtCol, deletedAtDefaultValue);
-            return this.save(_.extend({}, options, { hooks: false, omitNull: false }));
-        }).tap(() => {
-            // Run after hook
-            if (options.hooks) {
-                return this.constructor.runHooks("afterRestore", this, options);
-            }
-        });
+        const deletedAtCol = this.constructor._timestampAttributes.deletedAt;
+        const deletedAtAttribute = this.constructor.rawAttributes[deletedAtCol];
+        const deletedAtDefaultValue = deletedAtAttribute.hasOwnProperty("defaultValue") ? deletedAtAttribute.defaultValue : null;
+
+        this.setDataValue(deletedAtCol, deletedAtDefaultValue);
+        const result = await this.save(_.extend({}, options, { hooks: false, omitNull: false }));
+
+        // Run after hook
+        if (options.hooks) {
+            await this.constructor.runHooks("afterRestore", this, options);
+        }
+
+        return result;
     }
 
     /**
@@ -3980,14 +3922,16 @@ class Model {
     * @return {Promise<this>}
     * @since 4.0.0
     */
-    increment(fields, options) {
+    async increment(fields, options) {
         const identifier = this.where();
 
         options = Utils.cloneDeep(options);
         options.where = _.extend({}, options.where, identifier);
         options.instance = this;
 
-        return this.constructor.increment(fields, options).return(this);
+        await this.constructor.increment(fields, options);
+
+        return this;
     }
 
     /**

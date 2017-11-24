@@ -5,13 +5,12 @@ const {
 } = adone.orm;
 
 const current = Support.sequelize;
-const Promise = current.Promise;
 
 describe(Support.getTestDialectTeaser("Model"), () => {
     describe("bulkCreate", () => {
         const Model = current.define("model", {
             accountId: {
-                type: DataTypes.INTEGER(11).UNSIGNED,
+                type: new DataTypes.INTEGER(11).UNSIGNED,
                 allowNull: false,
                 field: "account_id"
             }
@@ -28,14 +27,13 @@ describe(Support.getTestDialectTeaser("Model"), () => {
         });
 
         describe("validations", () => {
-            it("should not fail for renamed fields", function () {
-                return Model.bulkCreate([
+            it("should not fail for renamed fields", async function () {
+                await Model.bulkCreate([
                     { accountId: 42 }
-                ], { validate: true }).bind(this).then(function () {
-                    expect(this.stub.getCall(0).args[1]).to.deep.equal([
-                        { account_id: 42, id: null }
-                    ]);
-                });
+                ], { validate: true });
+                expect(this.stub.getCall(0).args[1]).to.deep.equal([
+                    { account_id: 42, id: null }
+                ]);
             });
         });
     });

@@ -34,66 +34,54 @@ module.exports = (BaseTypes) => {
         array_oids: [1183]
     };
 
-    function DATEONLY() {
-        if (!(this instanceof DATEONLY)) {
-            return new DATEONLY();
-        }
-        BaseTypes.DATEONLY.apply(this, arguments);
-    }
-    inherits(DATEONLY, BaseTypes.DATEONLY);
-
-    DATEONLY.parse = function parse(value) {
-        if (value === "infinity") {
-            value = Infinity;
-        } else if (value === "-infinity") {
-            value = -Infinity;
-        }
-
-        return value;
-    };
-
-    DATEONLY.prototype._stringify = function _stringify(value, options) {
-        if (value === Infinity) {
-            return "Infinity";
-        } else if (value === -Infinity) {
-            return "-Infinity";
-        }
-
-        return BaseTypes.DATEONLY.prototype._stringify.call(this, value, options);
-    };
-
-    DATEONLY.prototype._sanitize = function _sanitize(value, options) {
-        if ((!options || options && !options.raw) && value !== Infinity && value !== -Infinity) {
-            if (_.isString(value)) {
-                if (_.toLower(value) === "infinity") {
-                    return Infinity;
-                } else if (_.toLower(value) === "-infinity") {
-                    return -Infinity;
-                }
+    class DATEONLY extends BaseTypes.DATEONLY {
+        static parse(value) {
+            if (value === "infinity") {
+                value = Infinity;
+            } else if (value === "-infinity") {
+                value = -Infinity;
             }
 
-            return BaseTypes.DATEONLY.prototype._sanitize.call(this, value);
+            return value;
         }
 
-        return value;
-    };
+        _stringify(value, options) {
+            if (value === Infinity) {
+                return "Infinity";
+            } else if (value === -Infinity) {
+                return "-Infinity";
+            }
+
+            return super._stringify(value, options);
+        }
+
+        _sanitize(value, options) {
+            if ((!options || options && !options.raw) && value !== Infinity && value !== -Infinity) {
+                if (_.isString(value)) {
+                    if (_.toLower(value) === "infinity") {
+                        return Infinity;
+                    } else if (_.toLower(value) === "-infinity") {
+                        return -Infinity;
+                    }
+                }
+
+                return super._sanitize(value);
+            }
+
+            return value;
+        }
+    }
 
     BaseTypes.DATEONLY.types.postgres = {
         oids: [1082],
         array_oids: [1182]
     };
 
-    function DECIMAL(precision, scale) {
-        if (!(this instanceof DECIMAL)) {
-            return new DECIMAL(precision, scale);
+    class DECIMAL extends BaseTypes.DECIMAL {
+        static parse(value) {
+            return value;
         }
-        BaseTypes.DECIMAL.apply(this, arguments);
     }
-    inherits(DECIMAL, BaseTypes.DECIMAL);
-
-    DECIMAL.parse = function parse(value) {
-        return value;
-    };
 
     // numeric
     BaseTypes.DECIMAL.types.postgres = {
@@ -101,98 +89,75 @@ module.exports = (BaseTypes) => {
         array_oids: [1231]
     };
 
-    function STRING(length, binary) {
-        if (!(this instanceof STRING)) {
-            return new STRING(length, binary);
+    class STRING extends BaseTypes.STRING {
+        toSql() {
+            if (this._binary) {
+                return "BYTEA";
+            }
+            return super.toSql(this);
         }
-        BaseTypes.STRING.apply(this, arguments);
     }
-    inherits(STRING, BaseTypes.STRING);
-
-    STRING.prototype.toSql = function toSql() {
-        if (this._binary) {
-            return "BYTEA";
-        }
-        return BaseTypes.STRING.prototype.toSql.call(this);
-    };
 
     BaseTypes.STRING.types.postgres = {
         oids: [1043],
         array_oids: [1015]
     };
 
-    function TEXT(length) {
-        if (!(this instanceof TEXT)) {
-            return new TEXT(length);
+    class TEXT extends BaseTypes.TEXT {
+        toSql() {
+            if (this._length) {
+                warn("PostgreSQL does not support TEXT with options. Plain `TEXT` will be used instead.");
+                this._length = undefined;
+            }
+            return "TEXT";
         }
-        BaseTypes.TEXT.apply(this, arguments);
     }
-    inherits(TEXT, BaseTypes.TEXT);
-
-    TEXT.prototype.toSql = function toSql() {
-        if (this._length) {
-            warn("PostgreSQL does not support TEXT with options. Plain `TEXT` will be used instead.");
-            this._length = undefined;
-        }
-        return "TEXT";
-    };
 
     BaseTypes.TEXT.types.postgres = {
         oids: [25],
         array_oids: [1009]
     };
 
-    function CHAR(length, binary) {
-        if (!(this instanceof CHAR)) {
-            return new CHAR(length, binary);
+    class CHAR extends BaseTypes.CHAR {
+        toSql() {
+            if (this._binary) {
+                return "BYTEA";
+            }
+            return super.toSql();
         }
-        BaseTypes.CHAR.apply(this, arguments);
     }
-    inherits(CHAR, BaseTypes.CHAR);
-
-    CHAR.prototype.toSql = function toSql() {
-        if (this._binary) {
-            return "BYTEA";
-        }
-        return BaseTypes.CHAR.prototype.toSql.call(this);
-    };
 
     BaseTypes.CHAR.types.postgres = {
         oids: [18, 1042],
         array_oids: [1002, 1014]
     };
 
-    function BOOLEAN() {
-        if (!(this instanceof BOOLEAN)) {
-            return new BOOLEAN();
+    class BOOLEAN extends BaseTypes.BOOLEAN {
+        toSql() {
+            return "BOOLEAN";
         }
-        BaseTypes.BOOLEAN.apply(this, arguments);
+
+        _sanitize(value) {
+            if (!is.nil(value)) {
+                if (is.buffer(value) && value.length === 1) {
+                    // Bit fields are returned as buffers
+                    value = value[0];
+                }
+
+                if (_.isString(value)) {
+                    // Only take action on valid boolean strings.
+                    value = value === "true" || value === "t" ? true : value === "false" || value === "f" ? false : value;
+
+                } else if (_.isNumber(value)) {
+                    // Only take action on valid boolean integers.
+                    value = value === 1 ? true : value === 0 ? false : value;
+                }
+            }
+
+            return value;
+        }
     }
-    inherits(BOOLEAN, BaseTypes.BOOLEAN);
 
-    BOOLEAN.prototype.toSql = function toSql() {
-        return "BOOLEAN";
-    };
-
-    BOOLEAN.prototype._sanitize = function _sanitize(value) {
-        if (!is.nil(value)) {
-            if (is.buffer(value) && value.length === 1) {
-                // Bit fields are returned as buffers
-                value = value[0];
-            }
-
-            if (_.isString(value)) {
-                // Only take action on valid boolean strings.
-                value = value === "true" || value === "t" ? true : value === "false" || value === "f" ? false : value;
-
-            } else if (_.isNumber(value)) {
-                // Only take action on valid boolean integers.
-                value = value === 1 ? true : value === 0 ? false : value;
-            }
-        }
-
-        return value;
-    };
     BOOLEAN.parse = BOOLEAN.prototype._sanitize;
 
     BaseTypes.BOOLEAN.types.postgres = {
@@ -200,73 +165,64 @@ module.exports = (BaseTypes) => {
         array_oids: [1000]
     };
 
-    function DATE(length) {
-        if (!(this instanceof DATE)) {
-            return new DATE(length);
-        }
-        BaseTypes.DATE.apply(this, arguments);
-    }
-    inherits(DATE, BaseTypes.DATE);
-
-    DATE.prototype.toSql = function toSql() {
-        return "TIMESTAMP WITH TIME ZONE";
-    };
-
-    DATE.prototype.validate = function validate(value) {
-        if (value !== Infinity && value !== -Infinity) {
-            return BaseTypes.DATE.prototype.validate.call(this, value);
+    class DATE extends BaseTypes.DATE {
+        toSql() {
+            return "TIMESTAMP WITH TIME ZONE";
         }
 
-        return true;
-    };
-
-    DATE.prototype._stringify = function _stringify(value, options) {
-        if (value === Infinity) {
-            return "Infinity";
-        } else if (value === -Infinity) {
-            return "-Infinity";
-        }
-
-        return BaseTypes.DATE.prototype._stringify.call(this, value, options);
-    };
-
-    DATE.prototype._sanitize = function _sanitize(value, options) {
-        if ((!options || options && !options.raw) && !(value instanceof Date) && Boolean(value) && value !== Infinity && value !== -Infinity) {
-            if (_.isString(value)) {
-                if (_.toLower(value) === "infinity") {
-                    return Infinity;
-                } else if (_.toLower(value) === "-infinity") {
-                    return -Infinity;
-                }
+        validate(value) {
+            if (value !== Infinity && value !== -Infinity) {
+                return super.validate(value);
             }
 
-            return new Date(value);
+            return true;
         }
 
-        return value;
-    };
+        _stringify(value, options) {
+            if (value === Infinity) {
+                return "Infinity";
+            } else if (value === -Infinity) {
+                return "-Infinity";
+            }
+
+            return super._stringify(value, options);
+        }
+
+        _sanitize(value, options) {
+            if ((!options || options && !options.raw) && !(value instanceof Date) && Boolean(value) && value !== Infinity && value !== -Infinity) {
+                if (_.isString(value)) {
+                    if (_.toLower(value) === "infinity") {
+                        return Infinity;
+                    } else if (_.toLower(value) === "-infinity") {
+                        return -Infinity;
+                    }
+                }
+
+                return new Date(value);
+            }
+
+            return value;
+        }
+    }
 
     BaseTypes.DATE.types.postgres = {
         oids: [1184],
         array_oids: [1185]
     };
 
-    function SMALLINT(length) {
-        if (!(this instanceof SMALLINT)) {
-            return new SMALLINT(length);
-        }
-        BaseTypes.SMALLINT.apply(this, arguments);
-
-        // POSTGRES does not support any parameters for bigint
-        if (this._length || this.options.length || this._unsigned || this._zerofill) {
-            warn("PostgreSQL does not support SMALLINT with options. Plain `SMALLINT` will be used instead.");
-            this._length = undefined;
-            this.options.length = undefined;
-            this._unsigned = undefined;
-            this._zerofill = undefined;
+    class SMALLINT extends BaseTypes.SMALLINT {
+        constructor(length) {
+            super(length);
+            // POSTGRES does not support any parameters for bigint
+            if (this._length || this.options.length || this._unsigned || this._zerofill) {
+                warn("PostgreSQL does not support SMALLINT with options. Plain `SMALLINT` will be used instead.");
+                this._length = undefined;
+                this.options.length = undefined;
+                this._unsigned = undefined;
+                this._zerofill = undefined;
+            }
         }
     }
-    inherits(SMALLINT, BaseTypes.SMALLINT);
 
     // int2
     BaseTypes.SMALLINT.types.postgres = {
@@ -274,26 +230,23 @@ module.exports = (BaseTypes) => {
         array_oids: [1005]
     };
 
-    function INTEGER(length) {
-        if (!(this instanceof INTEGER)) {
-            return new INTEGER(length);
+    class INTEGER extends BaseTypes.INTEGER {
+        constructor(length) {
+            super(length);
+            // POSTGRES does not support any parameters for integer
+            if (this._length || this.options.length || this._unsigned || this._zerofill) {
+                warn("PostgreSQL does not support INTEGER with options. Plain `INTEGER` will be used instead.");
+                this._length = undefined;
+                this.options.length = undefined;
+                this._unsigned = undefined;
+                this._zerofill = undefined;
+            }
         }
-        BaseTypes.INTEGER.apply(this, arguments);
 
-        // POSTGRES does not support any parameters for integer
-        if (this._length || this.options.length || this._unsigned || this._zerofill) {
-            warn("PostgreSQL does not support INTEGER with options. Plain `INTEGER` will be used instead.");
-            this._length = undefined;
-            this.options.length = undefined;
-            this._unsigned = undefined;
-            this._zerofill = undefined;
+        static parse(value) {
+            return parseInt(value, 10);
         }
     }
-    inherits(INTEGER, BaseTypes.INTEGER);
-
-    INTEGER.parse = function parse(value) {
-        return parseInt(value, 10);
-    };
 
     // int4
     BaseTypes.INTEGER.types.postgres = {
@@ -301,22 +254,19 @@ module.exports = (BaseTypes) => {
         array_oids: [1007]
     };
 
-    function BIGINT(length) {
-        if (!(this instanceof BIGINT)) {
-            return new BIGINT(length);
-        }
-        BaseTypes.BIGINT.apply(this, arguments);
-
-        // POSTGRES does not support any parameters for bigint
-        if (this._length || this.options.length || this._unsigned || this._zerofill) {
-            warn("PostgreSQL does not support BIGINT with options. Plain `BIGINT` will be used instead.");
-            this._length = undefined;
-            this.options.length = undefined;
-            this._unsigned = undefined;
-            this._zerofill = undefined;
+    class BIGINT extends BaseTypes.BIGINT {
+        constructor(length) {
+            super(length);
+            // POSTGRES does not support any parameters for bigint
+            if (this._length || this.options.length || this._unsigned || this._zerofill) {
+                warn("PostgreSQL does not support BIGINT with options. Plain `BIGINT` will be used instead.");
+                this._length = undefined;
+                this.options.length = undefined;
+                this._unsigned = undefined;
+                this._zerofill = undefined;
+            }
         }
     }
-    inherits(BIGINT, BaseTypes.BIGINT);
 
     // int8
     BaseTypes.BIGINT.types.postgres = {
@@ -324,22 +274,19 @@ module.exports = (BaseTypes) => {
         array_oids: [1016]
     };
 
-    function REAL(length, decimals) {
-        if (!(this instanceof REAL)) {
-            return new REAL(length, decimals);
-        }
-        BaseTypes.REAL.apply(this, arguments);
-
-        // POSTGRES does not support any parameters for real
-        if (this._length || this.options.length || this._unsigned || this._zerofill) {
-            warn("PostgreSQL does not support REAL with options. Plain `REAL` will be used instead.");
-            this._length = undefined;
-            this.options.length = undefined;
-            this._unsigned = undefined;
-            this._zerofill = undefined;
+    class REAL extends BaseTypes.REAL {
+        constructor(length, decimals) {
+            super(length, decimals);
+            // POSTGRES does not support any parameters for real
+            if (this._length || this.options.length || this._unsigned || this._zerofill) {
+                warn("PostgreSQL does not support REAL with options. Plain `REAL` will be used instead.");
+                this._length = undefined;
+                this.options.length = undefined;
+                this._unsigned = undefined;
+                this._zerofill = undefined;
+            }
         }
     }
-    inherits(REAL, BaseTypes.REAL);
 
     // float4
     BaseTypes.REAL.types.postgres = {
@@ -347,22 +294,19 @@ module.exports = (BaseTypes) => {
         array_oids: [1021]
     };
 
-    function DOUBLE(length, decimals) {
-        if (!(this instanceof DOUBLE)) {
-            return new DOUBLE(length, decimals);
-        }
-        BaseTypes.DOUBLE.apply(this, arguments);
-
-        // POSTGRES does not support any parameters for double
-        if (this._length || this.options.length || this._unsigned || this._zerofill) {
-            warn("PostgreSQL does not support DOUBLE with options. Plain `DOUBLE` will be used instead.");
-            this._length = undefined;
-            this.options.length = undefined;
-            this._unsigned = undefined;
-            this._zerofill = undefined;
+    class DOUBLE extends BaseTypes.DOUBLE {
+        constructor(length, decimals) {
+            super(length, decimals);
+            // POSTGRES does not support any parameters for double
+            if (this._length || this.options.length || this._unsigned || this._zerofill) {
+                warn("PostgreSQL does not support DOUBLE with options. Plain `DOUBLE` will be used instead.");
+                this._length = undefined;
+                this.options.length = undefined;
+                this._unsigned = undefined;
+                this._zerofill = undefined;
+            }
         }
     }
-    inherits(DOUBLE, BaseTypes.DOUBLE);
 
     // float8
     BaseTypes.DOUBLE.types.postgres = {
@@ -370,180 +314,189 @@ module.exports = (BaseTypes) => {
         array_oids: [1022]
     };
 
-    function FLOAT(length, decimals) {
-        if (!(this instanceof FLOAT)) {
-            return new FLOAT(length, decimals);
-        }
-        BaseTypes.FLOAT.apply(this, arguments);
-
-        // POSTGRES does only support lengths as parameter.
-        // Values between 1-24 result in REAL
-        // Values between 25-53 result in DOUBLE PRECISION
-        // If decimals are provided remove these and print a warning
-        if (this._decimals) {
-            warn("PostgreSQL does not support FLOAT with decimals. Plain `FLOAT` will be used instead.");
-            this._length = undefined;
-            this.options.length = undefined;
-            this._decimals = undefined;
-        }
-        if (this._unsigned) {
-            warn("PostgreSQL does not support FLOAT unsigned. `UNSIGNED` was removed.");
-            this._unsigned = undefined;
-        }
-        if (this._zerofill) {
-            warn("PostgreSQL does not support FLOAT zerofill. `ZEROFILL` was removed.");
-            this._zerofill = undefined;
+    class FLOAT extends BaseTypes.FLOAT {
+        constructor(length, decimals) {
+            super(length, decimals);
+            // POSTGRES does only support lengths as parameter.
+            // Values between 1-24 result in REAL
+            // Values between 25-53 result in DOUBLE PRECISION
+            // If decimals are provided remove these and print a warning
+            if (this._decimals) {
+                warn("PostgreSQL does not support FLOAT with decimals. Plain `FLOAT` will be used instead.");
+                this._length = undefined;
+                this.options.length = undefined;
+                this._decimals = undefined;
+            }
+            if (this._unsigned) {
+                warn("PostgreSQL does not support FLOAT unsigned. `UNSIGNED` was removed.");
+                this._unsigned = undefined;
+            }
+            if (this._zerofill) {
+                warn("PostgreSQL does not support FLOAT zerofill. `ZEROFILL` was removed.");
+                this._zerofill = undefined;
+            }
         }
     }
-    inherits(FLOAT, BaseTypes.FLOAT);
+
     delete FLOAT.parse; // Float has no separate type in PG
 
-    function BLOB(length) {
-        if (!(this instanceof BLOB)) {
-            return new BLOB(length);
+    class BLOB extends BaseTypes.BLOB {
+        toSql() {
+            if (this._length) {
+                warn("PostgreSQL does not support BLOB (BYTEA) with options. Plain `BYTEA` will be used instead.");
+                this._length = undefined;
+            }
+            return "BYTEA";
         }
-        BaseTypes.BLOB.apply(this, arguments);
+
+        _hexify(hex) {
+            // bytea hex format http://www.postgresql.org/docs/current/static/datatype-binary.html
+            return `E'\\\\x${hex}'`;
+        }
     }
-    inherits(BLOB, BaseTypes.BLOB);
-
-    BLOB.prototype.toSql = function toSql() {
-        if (this._length) {
-            warn("PostgreSQL does not support BLOB (BYTEA) with options. Plain `BYTEA` will be used instead.");
-            this._length = undefined;
-        }
-        return "BYTEA";
-    };
-
-    BLOB.prototype._hexify = function _hexify(hex) {
-        // bytea hex format http://www.postgresql.org/docs/current/static/datatype-binary.html
-        return `E'\\\\x${hex}'`;
-    };
 
     BaseTypes.BLOB.types.postgres = {
         oids: [17],
         array_oids: [1001]
     };
 
-    function GEOMETRY(type, srid) {
-        if (!(this instanceof GEOMETRY)) {
-            return new GEOMETRY(type, srid);
-        }
-        BaseTypes.GEOMETRY.apply(this, arguments);
-    }
-    inherits(GEOMETRY, BaseTypes.GEOMETRY);
+    class GEOMETRY extends BaseTypes.GEOMETRY {
+        toSql() {
+            let result = this.key;
 
-    GEOMETRY.prototype.toSql = function toSql() {
-        let result = this.key;
+            if (this.type) {
+                result += `(${this.type}`;
 
-        if (this.type) {
-            result += `(${this.type}`;
+                if (this.srid) {
+                    result += `,${this.srid}`;
+                }
 
-            if (this.srid) {
-                result += `,${this.srid}`;
+                result += ")";
             }
 
-            result += ")";
+            return result;
         }
 
-        return result;
-    };
+        parse(value) {
+            return this.constructor.parse(value);
+        }
+
+        static parse(value) {
+            const b = Buffer.from(value, "hex");
+            return wkx.Geometry.parse(b).toGeoJSON();
+        }
+
+        _stringify(value, options) {
+            return `ST_GeomFromGeoJSON(${options.escape(JSON.stringify(value))})`;
+        }
+    }
 
     BaseTypes.GEOMETRY.types.postgres = {
         oids: [],
         array_oids: []
     };
 
-    GEOMETRY.parse = GEOMETRY.prototype.parse = function parse(value) {
-        const b = new Buffer(value, "hex");
-        return wkx.Geometry.parse(b).toGeoJSON();
-    };
+    class GEOGRAPHY extends BaseTypes.GEOGRAPHY {
+        toSql() {
+            let result = "GEOGRAPHY";
 
-    GEOMETRY.prototype._stringify = function _stringify(value, options) {
-        return `ST_GeomFromGeoJSON(${options.escape(JSON.stringify(value))})`;
-    };
+            if (this.type) {
+                result += `(${this.type}`;
 
-    function GEOGRAPHY(type, srid) {
-        if (!(this instanceof GEOGRAPHY)) {
-            return new GEOGRAPHY(type, srid);
-        }
-        BaseTypes.GEOGRAPHY.apply(this, arguments);
-    }
-    inherits(GEOGRAPHY, BaseTypes.GEOGRAPHY);
+                if (this.srid) {
+                    result += `,${this.srid}`;
+                }
 
-    GEOGRAPHY.prototype.toSql = function toSql() {
-        let result = "GEOGRAPHY";
-
-        if (this.type) {
-            result += `(${this.type}`;
-
-            if (this.srid) {
-                result += `,${this.srid}`;
+                result += ")";
             }
 
-            result += ")";
+            return result;
         }
 
-        return result;
-    };
+        parse(value) {
+            return this.constructor.parse(value);
+        }
+
+        static parse(value) {
+            const b = Buffer.from(value, "hex");
+            return wkx.Geometry.parse(b).toGeoJSON();
+        }
+
+        _stringify(value, options) {
+            return `ST_GeomFromGeoJSON(${options.escape(JSON.stringify(value))})`;
+        }
+    }
 
     BaseTypes.GEOGRAPHY.types.postgres = {
         oids: [],
         array_oids: []
     };
 
-    GEOGRAPHY.parse = GEOGRAPHY.prototype.parse = function parse(value) {
-        const b = new Buffer(value, "hex");
-        return wkx.Geometry.parse(b).toGeoJSON();
-    };
-
-    GEOGRAPHY.prototype._stringify = function _stringify(value, options) {
-        return `ST_GeomFromGeoJSON(${options.escape(JSON.stringify(value))})`;
-    };
-
     let hstore;
-    function HSTORE() {
-        if (!(this instanceof HSTORE)) {
-            return new HSTORE();
+    class HSTORE extends BaseTypes.HSTORE {
+        constructor() {
+            super();
+            if (!hstore) {
+                // All datatype files are loaded at import - make sure we don't load the hstore parser before a hstore is instantiated
+                hstore = require("./hstore");
+            }
         }
-        BaseTypes.HSTORE.apply(this, arguments);
 
-        if (!hstore) {
-            // All datatype files are loaded at import - make sure we don't load the hstore parser before a hstore is instantiated
-            hstore = require("./hstore");
+        static parse(value) {
+            if (!hstore) {
+                // All datatype files are loaded at import - make sure we don't load the hstore parser before a hstore is instantiated
+                hstore = require("./hstore");
+            }
+            return hstore.parse(value);
+        }
+
+        _stringify(value) {
+            if (!hstore) {
+                // All datatype files are loaded at import - make sure we don't load the hstore parser before a hstore is instantiated
+                hstore = require("./hstore");
+            }
+            return `'${hstore.stringify(value)}'`;
         }
     }
-    inherits(HSTORE, BaseTypes.HSTORE);
-
-    HSTORE.parse = function parse(value) {
-        if (!hstore) {
-            // All datatype files are loaded at import - make sure we don't load the hstore parser before a hstore is instantiated
-            hstore = require("./hstore");
-        }
-        return hstore.parse(value);
-    };
 
     HSTORE.prototype.escape = false;
-    HSTORE.prototype._stringify = function _stringify(value) {
-        if (!hstore) {
-            // All datatype files are loaded at import - make sure we don't load the hstore parser before a hstore is instantiated
-            hstore = require("./hstore");
-        }
-        return `'${hstore.stringify(value)}'`;
-    };
 
     BaseTypes.HSTORE.types.postgres = {
         oids: [],
         array_oids: []
     };
 
-    function RANGE(subtype) {
-        if (!(this instanceof RANGE)) {
-            return new RANGE(subtype);
-        }
-        BaseTypes.RANGE.apply(this, arguments);
-    }
-    inherits(RANGE, BaseTypes.RANGE);
+    const range = require("./range");
+    class RANGE extends BaseTypes.RANGE {
+        static parse(value, oid, getTypeParser) {
+            const parser = getTypeParser(RANGE.oid_map[oid]);
 
+            return range.parse(value, parser);
+        }
+
+        _stringify(values, options) {
+            if (!is.array(values)) {
+                return `'${this.options.subtype.stringify(values, options)}'::${
+                    this.toCastType()}`;
+            }
+            const valuesStringified = values.map((value) => {
+                if (_.includes([null, -Infinity, Infinity], value)) {
+                    // Pass through "unbounded" bounds unchanged
+                    return value;
+                } else if (this.options.subtype.stringify) {
+                    return this.options.subtype.stringify(value, options);
+                }
+                return options.escape(value);
+
+            });
+
+            // Array.map does not preserve extra array properties
+            valuesStringified.inclusive = values.inclusive;
+
+            return `'${range.stringify(valuesStringified)}'`;
+        }
+    }
+    RANGE.prototype.escape = false;
     RANGE.oid_map = {
         3904: 23, // int4
         3905: 23,
@@ -557,36 +510,6 @@ module.exports = (BaseTypes) => {
         3913: 1082,
         3926: 20, // int8
         3927: 20
-    };
-
-    const range = require("./range");
-    RANGE.parse = function parse(value, oid, getTypeParser) {
-        const parser = getTypeParser(RANGE.oid_map[oid]);
-
-        return range.parse(value, parser);
-    };
-
-    RANGE.prototype.escape = false;
-    RANGE.prototype._stringify = function _stringify(values, options) {
-        if (!is.array(values)) {
-            return `'${this.options.subtype.stringify(values, options)}'::${
-                this.toCastType()}`;
-        }
-        const valuesStringified = values.map((value) => {
-            if (_.includes([null, -Infinity, Infinity], value)) {
-                // Pass through "unbounded" bounds unchanged
-                return value;
-            } else if (this.options.subtype.stringify) {
-                return this.options.subtype.stringify(value, options);
-            }
-            return options.escape(value);
-
-        });
-
-        // Array.map does not preserve extra array properties
-        valuesStringified.inclusive = values.inclusive;
-
-        return `'${range.stringify(valuesStringified)}'`;
     };
 
     BaseTypes.RANGE.types.postgres = {
