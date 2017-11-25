@@ -1,7 +1,6 @@
 import Support from "./support";
 
 const dialect = Support.getTestDialect();
-const Sequelize = adone.orm;
 
 describe(Support.getTestDialectTeaser("Timezone"), {
     skip: dialect === "sqlite" // Sqlite does not support setting timezone
@@ -25,8 +24,8 @@ describe(Support.getTestDialectTeaser("Timezone"), {
 
         const query = `SELECT ${now} as now`;
         const [now1, now2] = await Promise.all([
-            this.sequelize.query(query, { type: this.sequelize.QueryTypes.SELECT }),
-            this.sequelizeWithTimezone.query(query, { type: this.sequelize.QueryTypes.SELECT })
+            this.sequelize.query(query, { type: this.sequelize.queryType.SELECT }),
+            this.sequelizeWithTimezone.query(query, { type: this.sequelize.queryType.SELECT })
         ]);
         const elapsedQueryTime = Date.now() - startQueryTime + 1001;
         expect(now1[0].now.getTime()).to.be.closeTo(now2[0].now.getTime(), elapsedQueryTime);

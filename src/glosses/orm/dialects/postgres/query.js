@@ -1,12 +1,24 @@
-const { is, vendor: { lodash: _ } } = adone;
-const Utils = require("../../utils");
-const debug = Utils.getLogger().debugContext("sql:pg");
-const AbstractQuery = require("../abstract/query");
-const QueryTypes = require("../../query_types");
-const Promise = require("../../promise");
-const sequelizeErrors = require("../../errors.js");
+const {
+    is,
+    vendor: { lodash: _ },
+    orm
+} = adone;
+const debug = orm.util.getLogger().debugContext("sql:pg");
 
-class Query extends AbstractQuery {
+const {
+    queryTypes,
+    x
+} = orm;
+
+const {
+    dialect: {
+        abstract: {
+            Query: AbstractQuery
+        }
+    }
+} = adone.private(orm);
+
+export default class Query extends AbstractQuery {
     constructor(client, sequelize, options) {
         super();
         this.client = client;
@@ -24,7 +36,6 @@ class Query extends AbstractQuery {
 
     /**
      * rewrite query with parameters
-     * @private
      */
     static formatBindParameters(sql, values, dialect) {
         let bindParam = [];
@@ -194,7 +205,7 @@ class Query extends AbstractQuery {
                 });
             }
             return this.handleSelectQuery(result);
-        } else if (QueryTypes.DESCRIBE === this.options.type) {
+        } else if (queryTypes.DESCRIBE === this.options.type) {
             const result = {};
 
             for (const row of rows) {
@@ -231,13 +242,13 @@ class Query extends AbstractQuery {
             return rows[0].server_version;
         } else if (this.isShowOrDescribeQuery()) {
             return rows;
-        } else if (QueryTypes.BULKUPDATE === this.options.type) {
+        } else if (queryTypes.BULKUPDATE === this.options.type) {
             if (!this.options.returning) {
                 return parseInt(rowCount, 10);
             }
 
             return this.handleSelectQuery(rows);
-        } else if (QueryTypes.BULKDELETE === this.options.type) {
+        } else if (queryTypes.BULKDELETE === this.options.type) {
             return parseInt(rowCount, 10);
         } else if (this.isUpsertQuery()) {
             return rows[0].sequelize_upsert;
@@ -283,7 +294,7 @@ class Query extends AbstractQuery {
                 table = errMessage.match(/on table \"(.+?)\"/);
                 table = table ? table[1] : undefined;
 
-                return new sequelizeErrors.ForeignKeyConstraintError({ message: errMessage, fields: null, index, table, parent: err });
+                return new x.ForeignKeyConstraintError({ message: errMessage, fields: null, index, table, parent: err });
             case "23505":
                 // there are multiple different formats of error messages for this error code
                 // this regex should check at least two
@@ -293,7 +304,7 @@ class Query extends AbstractQuery {
                     message = "Validation error";
 
                     _.forOwn(fields, (value, field) => {
-                        errors.push(new sequelizeErrors.ValidationErrorItem(
+                        errors.push(new x.ValidationErrorItem(
                             this.getUniqueConstraintErrorMessage(field),
                             "unique violation", // sequelizeErrors.ValidationErrorItem.Origins.DB,
                             field,
@@ -312,10 +323,10 @@ class Query extends AbstractQuery {
                         });
                     }
 
-                    return new sequelizeErrors.UniqueConstraintError({ message, errors, parent: err, fields });
+                    return new x.UniqueConstraintError({ message, errors, parent: err, fields });
                 }
 
-                return new sequelizeErrors.UniqueConstraintError({
+                return new x.UniqueConstraintError({
                     message: errMessage,
                     parent: err
                 });
@@ -328,7 +339,7 @@ class Query extends AbstractQuery {
                 }
                 message = "Exclusion constraint error";
 
-                return new sequelizeErrors.ExclusionConstraintError({
+                return new x.ExclusionConstraintError({
                     message,
                     constraint: err.constraint,
                     fields,
@@ -340,7 +351,7 @@ class Query extends AbstractQuery {
                 if (err.sql && /CONSTRAINT/gi.test(err.sql)) {
                     message = "Unknown constraint error";
 
-                    throw new sequelizeErrors.UnknownConstraintError({
+                    throw new x.UnknownConstraintError({
                         message,
                         constraint: err.constraint,
                         fields,
@@ -348,9 +359,9 @@ class Query extends AbstractQuery {
                         parent: err
                     });
                 }
-                // TODO: break ??
+                // fixme: break ??
             default:
-                return new sequelizeErrors.DatabaseError(err);
+                return new x.DatabaseError(err);
         }
     }
 
@@ -362,8 +373,3 @@ class Query extends AbstractQuery {
         return "id";
     }
 }
-
-
-module.exports = Query;
-module.exports.Query = Query;
-module.exports.default = Query;

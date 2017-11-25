@@ -1,7 +1,11 @@
-
-const { is, vendor: { lodash: _ } } = adone;
-const util = require("util");
-const Utils = require("../utils");
+const {
+    is,
+    vendor: { lodash: _ },
+    std: {
+        util: stdUtil
+    },
+    orm
+} = adone;
 
 const validateDeprecation = (value, expectation, options) => {
     if (!options.deprecated) {
@@ -12,8 +16,8 @@ const validateDeprecation = (value, expectation, options) => {
         || Object.prototype.toString.call(value) === Object.prototype.toString.call(options.deprecated.call());
 
     if (valid) {
-        const message = `${util.inspect(value)} should not be of type "${options.deprecated.name}"`;
-        Utils.deprecate(options.deprecationWarning || message);
+        const message = `${stdUtil.inspect(value)} should not be of type "${options.deprecated.name}"`;
+        orm.util.deprecate(options.deprecationWarning || message);
     }
 
     return valid;
@@ -29,7 +33,7 @@ const validate = (value, expectation) => {
     throw new Error(`The parameter (value: ${value}) is no ${expectation.name}`);
 };
 
-const check = (value, expectation, options) => {
+export default function check(value, expectation, options) {
     options = _.extend({
         deprecated: false,
         index: null,
@@ -50,8 +54,4 @@ const check = (value, expectation, options) => {
     }
 
     return validateDeprecation(value, expectation, options) || validate(value, expectation, options);
-};
-
-module.exports = check;
-module.exports.check = check;
-module.exports.default = check;
+}

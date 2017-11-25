@@ -2,10 +2,8 @@ import Support from "../../support";
 
 const { is } = adone;
 
-const {
-    DataTypes
-} = adone.orm;
-
+const { orm } = adone;
+const { type } = orm;
 const util = require("util");
 const expectsql = Support.expectsql;
 const current = Support.sequelize;
@@ -464,7 +462,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                         $contains: [2, 5]
                     }, {
                         field: {
-                            type: DataTypes.ARRAY(DataTypes.INTEGER)
+                            type: type.ARRAY(type.INTEGER)
                         }
                     }, {
                         postgres: '"muscles" @> ARRAY[2,5]::INTEGER[]'
@@ -502,7 +500,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                         $any: [2, 5]
                     }, {
                         field: {
-                            type: DataTypes.ARRAY(DataTypes.INTEGER)
+                            type: type.ARRAY(type.INTEGER)
                         }
                     }, {
                         postgres: '"userId" = ANY (ARRAY[2,5]::INTEGER[])'
@@ -523,7 +521,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                             }
                         }, {
                             field: {
-                                type: DataTypes.ARRAY(DataTypes.INTEGER)
+                                type: type.ARRAY(type.INTEGER)
                             }
                         }, {
                             postgres: '"userId" = ANY (VALUES (2), (5))'
@@ -542,7 +540,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                         $all: [2, 5]
                     }, {
                         field: {
-                            type: DataTypes.ARRAY(DataTypes.INTEGER)
+                            type: type.ARRAY(type.INTEGER)
                         }
                     }, {
                         postgres: '"userId" = ALL (ARRAY[2,5]::INTEGER[])'
@@ -563,7 +561,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                             }
                         }, {
                             field: {
-                                type: DataTypes.ARRAY(DataTypes.INTEGER)
+                                type: type.ARRAY(type.INTEGER)
                             }
                         }, {
                             postgres: '"userId" = ALL (VALUES (2), (5))'
@@ -646,7 +644,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     $contains: new Date(Date.UTC(2000, 1, 1))
                 }, {
                     field: {
-                        type: new DataTypes.postgres.RANGE(DataTypes.DATE)
+                        type: new type.postgres.RANGE(type.DATE)
                     },
                     prefix: "Timeline"
                 }, {
@@ -657,7 +655,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     $contains: [new Date(Date.UTC(2000, 1, 1)), new Date(Date.UTC(2000, 2, 1))]
                 }, {
                     field: {
-                        type: new DataTypes.postgres.RANGE(DataTypes.DATE)
+                        type: new type.postgres.RANGE(type.DATE)
                     },
                     prefix: "Timeline"
                 }, {
@@ -668,7 +666,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     $contained: [new Date(Date.UTC(2000, 1, 1)), new Date(Date.UTC(2000, 2, 1))]
                 }, {
                     field: {
-                        type: new DataTypes.postgres.RANGE(DataTypes.DATE)
+                        type: new type.postgres.RANGE(type.DATE)
                     },
                     prefix: "Timeline"
                 }, {
@@ -679,7 +677,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     $contains: [new Date(Date.UTC(2000, 1, 1)), null]
                 }, {
                     field: {
-                        type: new DataTypes.postgres.RANGE(DataTypes.DATE)
+                        type: new type.postgres.RANGE(type.DATE)
                     },
                     prefix: "Timeline"
                 }, {
@@ -690,7 +688,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     $contains: [-Infinity, Infinity]
                 }, {
                     field: {
-                        type: new DataTypes.postgres.RANGE(DataTypes.DATE)
+                        type: new type.postgres.RANGE(type.DATE)
                     },
                     prefix: "Timeline"
                 }, {
@@ -701,7 +699,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     $overlap: [1, 4]
                 }, {
                     field: {
-                        type: new DataTypes.postgres.RANGE()
+                        type: new type.postgres.RANGE()
                     },
                     prefix: "Room"
                 }, {
@@ -712,7 +710,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     $adjacent: [1, 4]
                 }, {
                     field: {
-                        type: new DataTypes.postgres.RANGE()
+                        type: new type.postgres.RANGE()
                     },
                     prefix: "Room"
                 }, {
@@ -723,7 +721,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     $strictLeft: [1, 4]
                 }, {
                     field: {
-                        type: new DataTypes.postgres.RANGE()
+                        type: new type.postgres.RANGE()
                     },
                     prefix: "Room"
                 }, {
@@ -734,7 +732,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     $strictRight: [1, 4]
                 }, {
                     field: {
-                        type: new DataTypes.postgres.RANGE()
+                        type: new type.postgres.RANGE()
                     },
                     prefix: "Room"
                 }, {
@@ -745,7 +743,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     $noExtendRight: [1, 4]
                 }, {
                     field: {
-                        type: new DataTypes.postgres.RANGE()
+                        type: new type.postgres.RANGE()
                     },
                     prefix: "Room"
                 }, {
@@ -756,7 +754,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     $noExtendLeft: [1, 4]
                 }, {
                     field: {
-                        type: new DataTypes.postgres.RANGE()
+                        type: new type.postgres.RANGE()
                     },
                     prefix: "Room"
                 }, {
@@ -790,7 +788,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     }
                 }, {
                     field: {
-                        type: new DataTypes.JSONB()
+                        type: new type.JSONB()
                     },
                     prefix: "User"
                 }, {
@@ -805,7 +803,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     }
                 }, {
                     field: {
-                        type: new DataTypes.JSONB()
+                        type: new type.JSONB()
                     }
                 }, {
                     mysql: "CAST((`data`->>'$.nested') AS DECIMAL) IN (1, 2)",
@@ -819,7 +817,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     }
                 }, {
                     field: {
-                        type: new DataTypes.JSONB()
+                        type: new type.JSONB()
                     }
                 }, {
                     mysql: "CAST((`data`->>'$.nested') AS DECIMAL) BETWEEN 1 AND 2",
@@ -836,7 +834,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     }
                 }, {
                     field: {
-                        type: new DataTypes.JSONB()
+                        type: new type.JSONB()
                     },
                     prefix: current.literal(sql.quoteTable.call(current.dialect.QueryGenerator, { tableName: "User" }))
                 }, {
@@ -854,7 +852,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     }
                 }, {
                     field: {
-                        type: new DataTypes.JSONB()
+                        type: new type.JSONB()
                     },
                     prefix: "User"
                 }, {
@@ -868,7 +866,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     name: "Product"
                 }, {
                     field: {
-                        type: new DataTypes.JSONB()
+                        type: new type.JSONB()
                     }
                 }, {
                     mysql: "(CAST((`data`->>'$.price') AS DECIMAL) = 5 AND (`data`->>'$.name') = 'Product')",
@@ -880,7 +878,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     model: {
                         rawAttributes: {
                             data: {
-                                type: new DataTypes.JSONB()
+                                type: new type.JSONB()
                             }
                         }
                     }
@@ -894,7 +892,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     model: {
                         rawAttributes: {
                             data: {
-                                type: new DataTypes.JSON()
+                                type: new type.JSON()
                             }
                         }
                     }
@@ -910,7 +908,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     model: {
                         rawAttributes: {
                             data: {
-                                type: new DataTypes.JSONB()
+                                type: new type.JSONB()
                             }
                         }
                     }
@@ -928,7 +926,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     }
                 }, {
                     field: {
-                        type: new DataTypes.JSONB()
+                        type: new type.JSONB()
                     }
                 }, {
                     mysql: "CAST((`data`->>'$.nested.attribute') AS DECIMAL) > 2",
@@ -944,7 +942,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     }
                 }, {
                     field: {
-                        type: new DataTypes.JSONB()
+                        type: new type.JSONB()
                     }
                 }, {
                     mysql: "CAST((`data`->>'$.nested.attribute') AS DECIMAL) > 2",
@@ -961,7 +959,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     }
                 }, {
                     field: {
-                        type: new DataTypes.JSONB()
+                        type: new type.JSONB()
                     }
                 }, {
                     mysql: `CAST((\`data\`->>'$.nested.attribute') AS DATETIME) > ${sql.escape(dt)}`,
@@ -975,7 +973,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     }
                 }, {
                     field: {
-                        type: new DataTypes.JSONB()
+                        type: new type.JSONB()
                     }
                 }, {
                     mysql: "(`data`->>'$.nested.attribute') = 'true'",
@@ -989,7 +987,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                             metaData: {
                                 field: "meta_data",
                                 fieldName: "metaData",
-                                type: new DataTypes.JSONB()
+                                type: new type.JSONB()
                             }
                         }
                     }
@@ -1009,7 +1007,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     }
                 }, {
                     field: {
-                        type: new DataTypes.JSONB()
+                        type: new type.JSONB()
                     }
                 }, {
                     default: '[data] @> \'{"company":"Magnafone"}\''

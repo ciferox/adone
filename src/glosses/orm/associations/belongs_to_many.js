@@ -1,64 +1,28 @@
-const { is, vendor: { lodash: _ } } = adone;
-const Utils = require("./../utils");
-const Helpers = require("./helpers");
-const Association = require("./base");
-const BelongsTo = require("./belongs_to");
-const HasMany = require("./has_many");
-const HasOne = require("./has_one");
-const AssociationError = require("../errors").AssociationError;
-const Op = require("../operators");
+const {
+    is,
+    vendor: { lodash: _ },
+    orm
+} = adone;
+
+const {
+    util,
+    x,
+    operator
+} = orm;
+
+const {
+    association
+} = adone.private(orm);
 
 /**
  * Many-to-many association with a join table.
- *
- * When the join table has additional attributes, these can be passed in the options object:
- *
- * ```js
- * UserProject = sequelize.define('user_project', {
- *   role: Sequelize.STRING
- * });
- * User.belongsToMany(Project, { through: UserProject });
- * Project.belongsToMany(User, { through: UserProject });
- * // through is required!
- *
- * user.addProject(project, { through: { role: 'manager' }});
- * ```
- *
- * All methods allow you to pass either a persisted instance, its primary key, or a mixture:
- *
- * ```js
- * Project.create({ id: 11 }).then(function (project) {
- *   user.addProjects([project, 12]);
- * });
- * ```
- *
- * If you want to set several target instances, but with different attributes you have to set the attributes on the instance, using a property with the name of the through model:
- *
- * ```js
- * p1.UserProjects = {
- *   started: true
- * }
- * user.setProjects([p1, p2], { through: { started: false }}) // The default value is false, but p1 overrides that.
- * ```
- *
- * Similarly, when fetching through a join table with custom attributes, these attributes will be available as an object with the name of the through model.
- * ```js
- * user.getProjects().then(function (projects) {
-   *   let p1 = projects[0]
-   *   p1.UserProjects.started // Is this project started yet?
-   * })
- * ```
- *
- * In the API reference below, add the name of the association to the method, e.g. for `User.belongsToMany(Project)` the getter will be `user.getProjects()`.
- *
- * @see {@link Model.belongsToMany}
  */
-class BelongsToMany extends Association {
+export default class BelongsToMany extends association.Base {
     constructor(source, target, options) {
         super(source, target, options);
 
         if (is.undefined(this.options.through) || this.options.through === true || is.null(this.options.through)) {
-            throw new AssociationError("belongsToMany must be given a through option, either a string or a model");
+            throw new x.AssociationError("belongsToMany must be given a through option, either a string or a model");
         }
 
         if (!this.options.through.model) {
@@ -75,7 +39,7 @@ class BelongsToMany extends Association {
         this.doubleLinked = false;
 
         if (!this.as && this.isSelfAssociation) {
-            throw new AssociationError("'as' must be defined for many-to-many self-associations");
+            throw new x.AssociationError("'as' must be defined for many-to-many self-associations");
         }
 
         if (this.as) {
@@ -87,7 +51,7 @@ class BelongsToMany extends Association {
             } else {
                 this.options.name = {
                     plural: this.as,
-                    singular: Utils.singularize(this.as)
+                    singular: util.singularize(this.as)
                 };
             }
         } else {
@@ -95,21 +59,21 @@ class BelongsToMany extends Association {
             this.options.name = this.target.options.name;
         }
 
-        this.combinedTableName = Utils.combineTableNames(
+        this.combinedTableName = util.combineTableNames(
             this.source.tableName,
             this.isSelfAssociation ? this.as || this.target.tableName : this.target.tableName
         );
 
         /*
-        * If self association, this is the target association - Unless we find a pairing association
-        */
+         * If self association, this is the target association - Unless we find a pairing association
+         */
         if (this.isSelfAssociation) {
             this.targetAssociation = this;
         }
 
         /*
-        * Default/generated foreign/other keys
-        */
+         * Default/generated foreign/other keys
+         */
         if (_.isObject(this.options.foreignKey)) {
             this.foreignKeyAttribute = this.options.foreignKey;
             this.foreignKey = this.foreignKeyAttribute.name || this.foreignKeyAttribute.fieldName;
@@ -119,9 +83,9 @@ class BelongsToMany extends Association {
             }
 
             this.foreignKeyAttribute = {};
-            this.foreignKey = this.options.foreignKey || Utils.camelizeIf(
+            this.foreignKey = this.options.foreignKey || util.camelizeIf(
                 [
-                    Utils.underscoredIf(this.source.options.name.singular, this.source.options.underscored),
+                    util.underscoredIf(this.source.options.name.singular, this.source.options.underscored),
                     this.source.primaryKeyAttribute
                 ].join("_"),
                 !this.source.options.underscored
@@ -137,11 +101,11 @@ class BelongsToMany extends Association {
             }
 
             this.otherKeyAttribute = {};
-            this.otherKey = this.options.otherKey || Utils.camelizeIf(
+            this.otherKey = this.options.otherKey || util.camelizeIf(
                 [
-                    Utils.underscoredIf(
+                    util.underscoredIf(
                         this.isSelfAssociation ?
-                            Utils.singularize(this.as) :
+                            util.singularize(this.as) :
                             this.target.options.name.singular,
                         this.target.options.underscored
                     ),
@@ -209,8 +173,8 @@ class BelongsToMany extends Association {
         this.associationAccessor = this.as;
 
         // Get singular and plural names, trying to uppercase the first letter, unless the model forbids it
-        const plural = Utils.uppercaseFirst(this.options.name.plural);
-        const singular = Utils.uppercaseFirst(this.options.name.singular);
+        const plural = util.uppercaseFirst(this.options.name.plural);
+        const singular = util.uppercaseFirst(this.options.name.singular);
 
         this.accessors = {
             get: `get${plural}`,
@@ -226,8 +190,6 @@ class BelongsToMany extends Association {
         };
     }
 
-    // the id is in the target table
-    // or in an extra table which connects two tables
     injectAttributes() {
 
         this.identifier = this.foreignKey;
@@ -320,40 +282,40 @@ class BelongsToMany extends Association {
 
         this.through.model.refreshAttributes();
 
-        this.toSource = new BelongsTo(this.through.model, this.source, {
+        this.toSource = new association.BelongsTo(this.through.model, this.source, {
             foreignKey: this.foreignKey
         });
-        this.manyFromSource = new HasMany(this.source, this.through.model, {
+        this.manyFromSource = new association.HasMany(this.source, this.through.model, {
             foreignKey: this.foreignKey
         });
-        this.oneFromSource = new HasOne(this.source, this.through.model, {
+        this.oneFromSource = new association.HasOne(this.source, this.through.model, {
             foreignKey: this.foreignKey,
             as: this.through.model.name
         });
 
-        this.toTarget = new BelongsTo(this.through.model, this.target, {
+        this.toTarget = new association.BelongsTo(this.through.model, this.target, {
             foreignKey: this.otherKey
         });
-        this.manyFromTarget = new HasMany(this.target, this.through.model, {
+        this.manyFromTarget = new association.HasMany(this.target, this.through.model, {
             foreignKey: this.otherKey
         });
-        this.oneFromTarget = new HasOne(this.target, this.through.model, {
+        this.oneFromTarget = new association.HasOne(this.target, this.through.model, {
             foreignKey: this.otherKey,
             as: this.through.model.name
         });
 
         if (this.paired && this.paired.otherKeyDefault) {
-            this.paired.toTarget = new BelongsTo(this.paired.through.model, this.paired.target, {
+            this.paired.toTarget = new association.BelongsTo(this.paired.through.model, this.paired.target, {
                 foreignKey: this.paired.otherKey
             });
 
-            this.paired.oneFromTarget = new HasOne(this.paired.target, this.paired.through.model, {
+            this.paired.oneFromTarget = new association.HasOne(this.paired.target, this.paired.through.model, {
                 foreignKey: this.paired.otherKey,
                 as: this.paired.through.model.name
             });
         }
 
-        Helpers.checkNamingCollision(this);
+        util.checkNamingCollision(this);
 
         return this;
     }
@@ -367,21 +329,20 @@ class BelongsToMany extends Association {
             removeMultiple: "remove"
         };
 
-        Helpers.mixinMethods(this, obj, methods, aliases);
+        util.mixinMethods(this, obj, methods, aliases);
     }
 
     /**
      * Get everything currently associated with this, using an optional where clause.
      *
-     * @param {Object} [options]
-     * @param {Object} [options.where] An optional where clause to limit the associated models
-     * @param {String|Boolean} [options.scope] Apply a scope on the related model, or remove its default scope by passing false
-     * @param {String} [options.schema] Apply a schema on the related model
-     * @see {@link Model.findAll}  for a full explanation of options
+     * @param {object} [options]
+     * @param {object} [options.where] An optional where clause to limit the associated models
+     * @param {string|boolean} [options.scope] Apply a scope on the related model, or remove its default scope by passing false
+     * @param {string} [options.schema] Apply a schema on the related model
      * @return {Promise<Array<Model>>}
      */
     get(instance, options) {
-        options = Utils.cloneDeep(options) || {};
+        options = util.cloneDeep(options) || {};
 
         const association = this;
         const through = association.through;
@@ -393,7 +354,7 @@ class BelongsToMany extends Association {
         }
 
         options.where = {
-            [Op.and]: [
+            [operator.and]: [
                 scopeWhere,
                 options.where
             ]
@@ -410,7 +371,7 @@ class BelongsToMany extends Association {
             //If a user pass a where on the options through options, make an "and" with the current throughWhere
             if (options.through && options.through.where) {
                 throughWhere = {
-                    [Op.and]: [throughWhere, options.through.where]
+                    [operator.and]: [throughWhere, options.through.where]
                 };
             }
 
@@ -452,7 +413,7 @@ class BelongsToMany extends Association {
         const model = association.target;
         const sequelize = model.sequelize;
 
-        options = Utils.cloneDeep(options);
+        options = util.cloneDeep(options);
         options.attributes = [
             [sequelize.fn("COUNT", sequelize.col([association.target.name, model.primaryKeyField].join("."))), "count"]
         ];
@@ -484,7 +445,7 @@ class BelongsToMany extends Association {
             scope: false
         });
 
-        where[Op.or] = instances.map((instance) => {
+        where[operator.or] = instances.map((instance) => {
             if (instance instanceof association.target) {
                 return instance.where();
             }
@@ -495,7 +456,7 @@ class BelongsToMany extends Association {
         });
 
         options.where = {
-            [Op.and]: [
+            [operator.and]: [
                 where,
                 options.where
             ]
@@ -738,7 +699,3 @@ class BelongsToMany extends Association {
         return newAssociatedObject;
     }
 }
-
-module.exports = BelongsToMany;
-module.exports.BelongsToMany = BelongsToMany;
-module.exports.default = BelongsToMany;

@@ -1,7 +1,8 @@
 import Support from "../../support";
 
 const dialect = Support.getTestDialect();
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 describe("[MYSQL Specific] Errors", { skip: dialect !== "mysql" }, () => {
 
@@ -16,9 +17,9 @@ describe("[MYSQL Specific] Errors", { skip: dialect !== "mysql" }, () => {
 
     describe("ForeignKeyConstraintError", () => {
         beforeEach(function () {
-            this.Task = this.sequelize.define("task", { title: DataTypes.STRING });
-            this.User = this.sequelize.define("user", { username: DataTypes.STRING });
-            this.UserTasks = this.sequelize.define("tasksusers", { userId: DataTypes.INTEGER, taskId: DataTypes.INTEGER });
+            this.Task = this.sequelize.define("task", { title: type.STRING });
+            this.User = this.sequelize.define("user", { username: type.STRING });
+            this.UserTasks = this.sequelize.define("tasksusers", { userId: type.INTEGER, taskId: type.INTEGER });
 
             this.User.belongsToMany(this.Task, { onDelete: "RESTRICT", through: "tasksusers" });
             this.Task.belongsToMany(this.User, { onDelete: "RESTRICT", through: "tasksusers" });

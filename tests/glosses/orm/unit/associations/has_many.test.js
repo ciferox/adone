@@ -1,19 +1,20 @@
 import Support from "../../support";
 
 const { vendor: { lodash: _ } } = adone;
+const { orm } = adone;
+const { type } = orm;
+const { operator } = orm;
 const {
-    DataTypes,
     association: {
         HasMany
-    },
-    Op
-} = adone.orm;
+    }
+} = adone.private(orm);
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser("hasMany"), () => {
     describe("optimizations using bulk create, destroy and update", () => {
-        const User = current.define("User", { username: DataTypes.STRING });
-        const Task = current.define("Task", { title: DataTypes.STRING });
+        const User = current.define("User", { username: type.STRING });
+        const Task = current.define("Task", { title: type.STRING });
 
         User.hasMany(Task);
 
@@ -171,8 +172,8 @@ describe(Support.getTestDialectTeaser("hasMany"), () => {
 
             expect(findAll).to.have.been.calledOnce;
             expect(findAll.firstCall.args[0].where).to.have.property(foreignKey);
-            expect(findAll.firstCall.args[0].where[foreignKey]).to.have.property(Op.in);
-            expect(findAll.firstCall.args[0].where[foreignKey][Op.in]).to.deep.equal([idA, idB, idC]);
+            expect(findAll.firstCall.args[0].where[foreignKey]).to.have.property(operator.in);
+            expect(findAll.firstCall.args[0].where[foreignKey][operator.in]).to.deep.equal([idA, idB, idC]);
 
             try {
                 const result = await actual;

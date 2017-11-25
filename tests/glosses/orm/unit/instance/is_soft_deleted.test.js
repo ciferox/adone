@@ -1,27 +1,27 @@
 import Support from "../../support";
 
 const current = Support.sequelize;
-const { DataTypes } = adone.orm;
-const Sequelize = Support.Sequelize;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("Instance"), () => {
     describe("isSoftDeleted", () => {
         beforeEach(function () {
             const User = current.define("User", {
-                name: DataTypes.STRING,
-                birthdate: DataTypes.DATE,
-                meta: DataTypes.JSON,
+                name: type.STRING,
+                birthdate: type.DATE,
+                meta: type.JSON,
                 deletedAt: {
-                    type: Sequelize.DATE
+                    type: type.DATE
                 }
             });
 
             const ParanoidUser = current.define("User", {
-                name: DataTypes.STRING,
-                birthdate: DataTypes.DATE,
-                meta: DataTypes.JSON,
+                name: type.STRING,
+                birthdate: type.DATE,
+                meta: type.JSON,
                 deletedAt: {
-                    type: Sequelize.DATE
+                    type: type.DATE
                 }
             }, {
                 paranoid: true

@@ -1,14 +1,33 @@
-const { is, vendor: { lodash: _ } } = adone;
-const Utils = require("../../utils");
-const DataTypes = require("../../data_types");
-const AbstractQueryGenerator = require("../abstract/query_generator");
-const randomBytes = require("crypto").randomBytes;
+const {
+    is,
+    vendor: { lodash: _ },
+    orm,
+    std: {
+        crypto: { randomBytes }
+    }
+} = adone;
 
-const Op = require("../../operators");
+const {
+    util,
+    type,
+    operator
+} = orm;
 
-/* istanbul ignore next */
+const {
+    dialect: {
+        abstract: {
+            QueryGenerator: AbstractQueryGenerator
+        }
+    }
+} = adone.private(orm);
+
 const throwMethodUndefined = function (methodName) {
     throw new Error(`The method "${methodName}" is not defined! Please add it to your sql dialect.`);
+};
+
+// private methods
+const wrapSingleQuote = (identifier) => {
+    return util.addTicks(util.removeTicks(identifier, "'"), "'");
 };
 
 const QueryGenerator = {
@@ -379,7 +398,7 @@ const QueryGenerator = {
         });
 
         //Filter NULL Clauses
-        const clauses = where[Op.or].filter((clause) => {
+        const clauses = where[operator.or].filter((clause) => {
             let valid = true;
             /*
              * Exclude NULL Composite PK/UK. Partial Composite clauses should also be excluded as it doesn't guarantee a single row
@@ -494,7 +513,7 @@ const QueryGenerator = {
         let indexName = indexNameOrAttributes;
 
         if (!is.string(indexName)) {
-            indexName = Utils.underscore(`${tableName}_${indexNameOrAttributes.join("_")}`);
+            indexName = util.underscore(`${tableName}_${indexNameOrAttributes.join("_")}`);
         }
 
         const values = {
@@ -525,7 +544,7 @@ const QueryGenerator = {
 
         let template;
 
-        if (attribute.type instanceof DataTypes.ENUM) {
+        if (attribute.type instanceof type.ENUM) {
             if (attribute.type.values && !attribute.values) {
                 attribute.values = attribute.type.values;
             }
@@ -542,7 +561,7 @@ const QueryGenerator = {
 
         if (attribute.allowNull === false) {
             template += " NOT NULL";
-        } else if (!attribute.primaryKey && !Utils.defaultValueSchemable(attribute.defaultValue)) {
+        } else if (!attribute.primaryKey && !util.defaultValueSchemable(attribute.defaultValue)) {
             template += " NULL";
         }
 
@@ -552,7 +571,7 @@ const QueryGenerator = {
 
         // Blobs/texts cannot have a defaultValue
         if (attribute.type !== "TEXT" && attribute.type._binary !== true &&
-            Utils.defaultValueSchemable(attribute.defaultValue)) {
+            util.defaultValueSchemable(attribute.defaultValue)) {
             template += ` DEFAULT ${this.escape(attribute.defaultValue)}`;
         }
 
@@ -862,9 +881,4 @@ const QueryGenerator = {
     }
 };
 
-// private methods
-const wrapSingleQuote = (identifier) => {
-    return Utils.addTicks(Utils.removeTicks(identifier, "'"), "'");
-};
-
-module.exports = QueryGenerator;
+export default QueryGenerator;

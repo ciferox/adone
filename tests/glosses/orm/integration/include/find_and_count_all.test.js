@@ -1,6 +1,7 @@
 import Support from "../support";
 
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("Include"), () => {
     before(function () {
@@ -13,9 +14,9 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
     describe("findAndCountAll", () => {
         it("should be able to include two required models with a limit. Result rows should match limit.", function () {
-            const Project = this.sequelize.define("Project", { id: { type: DataTypes.INTEGER, primaryKey: true }, name: new DataTypes.STRING(40) });
-            const Task = this.sequelize.define("Task", { name: new DataTypes.STRING(40), fk: DataTypes.INTEGER });
-            const Employee = this.sequelize.define("Employee", { name: new DataTypes.STRING(40), fk: DataTypes.INTEGER });
+            const Project = this.sequelize.define("Project", { id: { type: type.INTEGER, primaryKey: true }, name: new type.STRING(40) });
+            const Task = this.sequelize.define("Task", { name: new type.STRING(40), fk: type.INTEGER });
+            const Employee = this.sequelize.define("Employee", { name: new type.STRING(40), fk: type.INTEGER });
 
             Project.hasMany(Task, { foreignKey: "fk", constraints: false });
             Project.hasMany(Employee, { foreignKey: "fk", constraints: false });
@@ -68,15 +69,15 @@ describe(Support.getTestDialectTeaser("Include"), () => {
             });
         });
         it("should be able to include a required model. Result rows should match count", function () {
-            const User = this.sequelize.define("User", { name: new DataTypes.STRING(40) }, { paranoid: true });
+            const User = this.sequelize.define("User", { name: new type.STRING(40) }, { paranoid: true });
             const SomeConnection = this.sequelize.define("SomeConnection", {
-                m: new DataTypes.STRING(40),
-                fk: DataTypes.INTEGER,
-                u: DataTypes.INTEGER
+                m: new type.STRING(40),
+                fk: type.INTEGER,
+                u: type.INTEGER
             }, { paranoid: true });
-            const A = this.sequelize.define("A", { name: new DataTypes.STRING(40) }, { paranoid: true });
-            const B = this.sequelize.define("B", { name: new DataTypes.STRING(40) }, { paranoid: true });
-            const C = this.sequelize.define("C", { name: new DataTypes.STRING(40) }, { paranoid: true });
+            const A = this.sequelize.define("A", { name: new type.STRING(40) }, { paranoid: true });
+            const B = this.sequelize.define("B", { name: new type.STRING(40) }, { paranoid: true });
+            const C = this.sequelize.define("C", { name: new type.STRING(40) }, { paranoid: true });
 
             const self = this;
 
@@ -175,13 +176,13 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
         it("should count on a where and not use an uneeded include", function () {
             const Project = this.sequelize.define("Project", {
-                id: { type: DataTypes.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
-                project_name: { type: DataTypes.STRING }
+                id: { type: type.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
+                project_name: { type: type.STRING }
             });
 
             const User = this.sequelize.define("User", {
-                id: { type: DataTypes.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
-                user_name: { type: DataTypes.STRING }
+                id: { type: type.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
+                user_name: { type: type.STRING }
             });
 
             User.hasMany(Project);
@@ -239,7 +240,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
         it("should return the correct count and rows when using a required belongsTo with a where condition and a limit", function () {
             const Foo = this.sequelize.define("Foo", {});
-            const Bar = this.sequelize.define("Bar", { m: new DataTypes.STRING(40) });
+            const Bar = this.sequelize.define("Bar", { m: new type.STRING(40) });
 
             Foo.hasMany(Bar);
             Bar.belongsTo(Foo);
@@ -267,27 +268,27 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
         it("should correctly filter, limit and sort when multiple includes and types of associations are present.", function () {
             const TaskTag = this.sequelize.define("TaskTag", {
-                id: { type: DataTypes.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
-                name: { type: DataTypes.STRING }
+                id: { type: type.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
+                name: { type: type.STRING }
             });
 
             const Tag = this.sequelize.define("Tag", {
-                id: { type: DataTypes.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
-                name: { type: DataTypes.STRING }
+                id: { type: type.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
+                name: { type: type.STRING }
             });
 
             const Task = this.sequelize.define("Task", {
-                id: { type: DataTypes.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
-                name: { type: DataTypes.STRING }
+                id: { type: type.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
+                name: { type: type.STRING }
             });
             const Project = this.sequelize.define("Project", {
-                id: { type: DataTypes.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
-                m: { type: DataTypes.STRING }
+                id: { type: type.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
+                m: { type: type.STRING }
             });
 
             const User = this.sequelize.define("User", {
-                id: { type: DataTypes.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
-                name: { type: DataTypes.STRING }
+                id: { type: type.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
+                name: { type: type.STRING }
             });
 
             Project.belongsTo(User);
@@ -341,14 +342,14 @@ describe(Support.getTestDialectTeaser("Include"), () => {
         it("should properly work with sequelize.function", function () {
             const sequelize = this.sequelize;
             const User = this.sequelize.define("User", {
-                id: { type: DataTypes.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
-                first_name: { type: DataTypes.STRING },
-                last_name: { type: DataTypes.STRING }
+                id: { type: type.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
+                first_name: { type: type.STRING },
+                last_name: { type: type.STRING }
             });
 
             const Project = this.sequelize.define("Project", {
-                id: { type: DataTypes.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
-                name: { type: DataTypes.STRING }
+                id: { type: type.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
+                name: { type: type.STRING }
             });
 
             User.hasMany(Project);

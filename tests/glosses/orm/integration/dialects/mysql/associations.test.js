@@ -1,14 +1,15 @@
 import Support from "../../support";
 
 const dialect = Support.getTestDialect();
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 describe("[MYSQL Specific] Associations", { skip: dialect !== "mysql" }, () => {
     describe("many-to-many", () => {
         describe("where tables have the same prefix", () => {
             it("should create a table wp_table1wp_table2s", function () {
-                const Table2 = this.sequelize.define("wp_table2", { foo: DataTypes.STRING });
-                const Table1 = this.sequelize.define("wp_table1", { foo: DataTypes.STRING });
+                const Table2 = this.sequelize.define("wp_table2", { foo: type.STRING });
+                const Table1 = this.sequelize.define("wp_table1", { foo: type.STRING });
                 const self = this;
 
                 Table1.belongsToMany(Table2, { through: "wp_table1swp_table2s" });
@@ -23,8 +24,8 @@ describe("[MYSQL Specific] Associations", { skip: dialect !== "mysql" }, () => {
 
         describe("when join table name is specified", () => {
             beforeEach(function () {
-                const Table2 = this.sequelize.define("ms_table1", { foo: DataTypes.STRING });
-                const Table1 = this.sequelize.define("ms_table2", { foo: DataTypes.STRING });
+                const Table2 = this.sequelize.define("ms_table1", { foo: type.STRING });
+                const Table1 = this.sequelize.define("ms_table2", { foo: type.STRING });
 
                 Table1.belongsToMany(Table2, { through: "table1_to_table2" });
                 Table2.belongsToMany(Table1, { through: "table1_to_table2" });
@@ -43,8 +44,8 @@ describe("[MYSQL Specific] Associations", { skip: dialect !== "mysql" }, () => {
     describe("HasMany", () => {
         beforeEach(function () {
             //prevent periods from occurring in the table name since they are used to delimit (table.column)
-            this.User = this.sequelize.define(`User${Math.ceil(Math.random() * 10000000)}`, { name: DataTypes.STRING });
-            this.Task = this.sequelize.define(`Task${Math.ceil(Math.random() * 10000000)}`, { name: DataTypes.STRING });
+            this.User = this.sequelize.define(`User${Math.ceil(Math.random() * 10000000)}`, { name: type.STRING });
+            this.Task = this.sequelize.define(`Task${Math.ceil(Math.random() * 10000000)}`, { name: type.STRING });
             this.users = null;
             this.tasks = null;
 

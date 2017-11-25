@@ -1,21 +1,17 @@
 import Support from "../support";
 
-const {
-    orm: {
-        DataTypes,
-        Utils
-    }
-} = adone;
+const { orm } = adone;
+const { type } = orm;
 
 const tedious = require("tedious");
 const tediousIsolationLevel = tedious.ISOLATION_LEVEL;
 
-describe(Support.getTestDialectTeaser("Utils"), () => {
+describe(Support.getTestDialectTeaser("util"), () => {
     describe("merge", () => {
         it("does not clone sequelize models", () => {
             const User = Support.sequelize.define("user");
-            const merged = Utils.merge({}, { include: [{ model: User }] });
-            const merged2 = Utils.merge({}, { user: User });
+            const merged = orm.util.merge({}, { include: [{ model: User }] });
+            const merged2 = orm.util.merge({}, { user: User });
 
             expect(merged.include[0].model).to.equal(User);
             expect(merged2.user).to.equal(User);
@@ -24,38 +20,38 @@ describe(Support.getTestDialectTeaser("Utils"), () => {
 
     describe("toDefaultValue", () => {
         it("return plain data types", () => {
-            expect(Utils.toDefaultValue(DataTypes.UUIDV4)).to.equal("UUIDV4");
+            expect(orm.util.toDefaultValue(type.UUIDV4)).to.equal("UUIDV4");
         });
         it("return uuid v1", () => {
-            expect(/^[a-z0-9-]{36}$/.test(Utils.toDefaultValue(new DataTypes.UUIDV1()))).to.be.equal(true);
+            expect(/^[a-z0-9-]{36}$/.test(orm.util.toDefaultValue(new type.UUIDV1()))).to.be.equal(true);
         });
         it("return uuid v4", () => {
-            expect(/^[a-z0-9-]{36}/.test(Utils.toDefaultValue(new DataTypes.UUIDV4()))).to.be.equal(true);
+            expect(/^[a-z0-9-]{36}/.test(orm.util.toDefaultValue(new type.UUIDV4()))).to.be.equal(true);
         });
         it("return now", () => {
-            expect(Object.prototype.toString.call(Utils.toDefaultValue(new DataTypes.NOW()))).to.be.equal("[object Date]");
+            expect(Object.prototype.toString.call(orm.util.toDefaultValue(new type.NOW()))).to.be.equal("[object Date]");
         });
         it("return plain string", () => {
-            expect(Utils.toDefaultValue("Test")).to.equal("Test");
+            expect(orm.util.toDefaultValue("Test")).to.equal("Test");
         });
         it("return plain object", () => {
-            assert.deepEqual({}, Utils.toDefaultValue({}));
+            assert.deepEqual({}, orm.util.toDefaultValue({}));
         });
     });
 
     describe("mapFinderOptions", () => {
         it("virtual attribute dependencies", () => {
-            expect(Utils.mapFinderOptions({
+            expect(orm.util.mapFinderOptions({
                 attributes: [
                     "active"
                 ]
             }, Support.sequelize.define("User", {
                 createdAt: {
-                    type: DataTypes.DATE,
+                    type: type.DATE,
                     field: "created_at"
                 },
                 active: {
-                    type: new DataTypes.VIRTUAL(DataTypes.BOOLEAN, ["createdAt"])
+                    type: new type.VIRTUAL(type.BOOLEAN, ["createdAt"])
                 }
             })).attributes).to.eql([
                 [
@@ -68,17 +64,17 @@ describe(Support.getTestDialectTeaser("Utils"), () => {
         it("multiple calls", () => {
             const Model = Support.sequelize.define("User", {
                 createdAt: {
-                    type: DataTypes.DATE,
+                    type: type.DATE,
                     field: "created_at"
                 },
                 active: {
-                    type: new DataTypes.VIRTUAL(DataTypes.BOOLEAN, ["createdAt"])
+                    type: new type.VIRTUAL(type.BOOLEAN, ["createdAt"])
                 }
             });
 
             expect(
-                Utils.mapFinderOptions(
-                    Utils.mapFinderOptions({
+                orm.util.mapFinderOptions(
+                    orm.util.mapFinderOptions({
                         attributes: [
                             "active"
                         ]
@@ -96,18 +92,18 @@ describe(Support.getTestDialectTeaser("Utils"), () => {
 
     describe("mapOptionFieldNames", () => {
         it("plain where", () => {
-            expect(Utils.mapOptionFieldNames({
+            expect(orm.util.mapOptionFieldNames({
                 where: {
                     firstName: "Paul",
                     lastName: "Atreides"
                 }
             }, Support.sequelize.define("User", {
                 firstName: {
-                    type: DataTypes.STRING,
+                    type: type.STRING,
                     field: "first_name"
                 },
                 lastName: {
-                    type: DataTypes.STRING,
+                    type: type.STRING,
                     field: "last_name"
                 }
             }))).to.eql({
@@ -119,7 +115,7 @@ describe(Support.getTestDialectTeaser("Utils"), () => {
         });
 
         it("$or where", () => {
-            expect(Utils.mapOptionFieldNames({
+            expect(orm.util.mapOptionFieldNames({
                 where: {
                     $or: {
                         firstName: "Paul",
@@ -128,11 +124,11 @@ describe(Support.getTestDialectTeaser("Utils"), () => {
                 }
             }, Support.sequelize.define("User", {
                 firstName: {
-                    type: DataTypes.STRING,
+                    type: type.STRING,
                     field: "first_name"
                 },
                 lastName: {
-                    type: DataTypes.STRING,
+                    type: type.STRING,
                     field: "last_name"
                 }
             }))).to.eql({
@@ -146,7 +142,7 @@ describe(Support.getTestDialectTeaser("Utils"), () => {
         });
 
         it("$or[] where", () => {
-            expect(Utils.mapOptionFieldNames({
+            expect(orm.util.mapOptionFieldNames({
                 where: {
                     $or: [
                         { firstName: "Paul" },
@@ -155,11 +151,11 @@ describe(Support.getTestDialectTeaser("Utils"), () => {
                 }
             }, Support.sequelize.define("User", {
                 firstName: {
-                    type: DataTypes.STRING,
+                    type: type.STRING,
                     field: "first_name"
                 },
                 lastName: {
-                    type: DataTypes.STRING,
+                    type: type.STRING,
                     field: "last_name"
                 }
             }))).to.eql({
@@ -173,7 +169,7 @@ describe(Support.getTestDialectTeaser("Utils"), () => {
         });
 
         it("$and where", () => {
-            expect(Utils.mapOptionFieldNames({
+            expect(orm.util.mapOptionFieldNames({
                 where: {
                     $and: {
                         firstName: "Paul",
@@ -182,11 +178,11 @@ describe(Support.getTestDialectTeaser("Utils"), () => {
                 }
             }, Support.sequelize.define("User", {
                 firstName: {
-                    type: DataTypes.STRING,
+                    type: type.STRING,
                     field: "first_name"
                 },
                 lastName: {
-                    type: DataTypes.STRING,
+                    type: type.STRING,
                     field: "last_name"
                 }
             }))).to.eql({
@@ -204,7 +200,7 @@ describe(Support.getTestDialectTeaser("Utils"), () => {
         it('stack trace starts after call to Util.stack()', function this_here_test() { // eslint-disable-line
             // We need a named function to be able to capture its trace
             const c = function () {
-                return Utils.stack();
+                return orm.util.stack();
             };
 
             const b = function () {
@@ -244,7 +240,7 @@ describe(Support.getTestDialectTeaser("Utils"), () => {
     });
 
     describe("Logger", () => {
-        const logger = Utils.getLogger();
+        const logger = orm.util.getLogger();
 
         it("deprecate", () => {
             expect(logger.deprecate).to.be.a("function");
@@ -273,27 +269,27 @@ describe(Support.getTestDialectTeaser("Utils"), () => {
     if (Support.getTestDialect() === "mssql") {
         describe("mapIsolationLevelStringToTedious", () => {
             it("READ_UNCOMMITTED", () => {
-                expect(Utils.mapIsolationLevelStringToTedious("READ_UNCOMMITTED", tedious)).to.equal(tediousIsolationLevel.READ_UNCOMMITTED);
+                expect(orm.util.mapIsolationLevelStringToTedious("READ_UNCOMMITTED", tedious)).to.equal(tediousIsolationLevel.READ_UNCOMMITTED);
             });
 
             it("READ_COMMITTED", () => {
-                expect(Utils.mapIsolationLevelStringToTedious("READ_COMMITTED", tedious)).to.equal(tediousIsolationLevel.READ_COMMITTED);
+                expect(orm.util.mapIsolationLevelStringToTedious("READ_COMMITTED", tedious)).to.equal(tediousIsolationLevel.READ_COMMITTED);
             });
 
             it("REPEATABLE_READ", () => {
-                expect(Utils.mapIsolationLevelStringToTedious("REPEATABLE_READ", tedious)).to.equal(tediousIsolationLevel.REPEATABLE_READ);
+                expect(orm.util.mapIsolationLevelStringToTedious("REPEATABLE_READ", tedious)).to.equal(tediousIsolationLevel.REPEATABLE_READ);
             });
 
             it("SERIALIZABLE", () => {
-                expect(Utils.mapIsolationLevelStringToTedious("SERIALIZABLE", tedious)).to.equal(tediousIsolationLevel.SERIALIZABLE);
+                expect(orm.util.mapIsolationLevelStringToTedious("SERIALIZABLE", tedious)).to.equal(tediousIsolationLevel.SERIALIZABLE);
             });
 
             it("SNAPSHOT", () => {
-                expect(Utils.mapIsolationLevelStringToTedious("SNAPSHOT", tedious)).to.equal(tediousIsolationLevel.SNAPSHOT);
+                expect(orm.util.mapIsolationLevelStringToTedious("SNAPSHOT", tedious)).to.equal(tediousIsolationLevel.SNAPSHOT);
             });
 
             it("should throw error if tedious lib is not passed as a parameter", () => {
-                expect(Utils.mapIsolationLevelStringToTedious.bind(Utils, "SNAPSHOT")).to.throw("An instance of tedious lib should be passed to this function");
+                expect(orm.util.mapIsolationLevelStringToTedious("SNAPSHOT")).to.throw("An instance of tedious lib should be passed to this function");
             });
         });
     }

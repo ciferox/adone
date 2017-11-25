@@ -1,25 +1,25 @@
 import Support from "../support";
 
-
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("Hooks"), () => {
     beforeEach(function () {
         this.User = this.sequelize.define("User", {
             username: {
-                type: DataTypes.STRING,
+                type: type.STRING,
                 allowNull: false
             },
             mood: {
-                type: DataTypes.ENUM,
+                type: type.ENUM,
                 values: ["happy", "sad", "neutral"]
             }
         });
 
         this.ParanoidUser = this.sequelize.define("ParanoidUser", {
-            username: DataTypes.STRING,
+            username: type.STRING,
             mood: {
-                type: DataTypes.ENUM,
+                type: type.ENUM,
                 values: ["happy", "sad", "neutral"]
             }
         }, {
@@ -81,15 +81,15 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
             beforeEach(function () {
                 this.User = this.sequelize.define("User", {
                     username: {
-                        type: DataTypes.STRING,
+                        type: type.STRING,
                         defaultValue: ""
                     },
                     beforeHookTest: {
-                        type: DataTypes.BOOLEAN,
+                        type: type.BOOLEAN,
                         defaultValue: false
                     },
                     aNumber: {
-                        type: DataTypes.INTEGER,
+                        type: type.INTEGER,
                         defaultValue: 0
                     }
                 });
@@ -225,15 +225,15 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
             beforeEach(function () {
                 this.User = this.sequelize.define("User", {
                     username: {
-                        type: DataTypes.STRING,
+                        type: type.STRING,
                         defaultValue: ""
                     },
                     beforeHookTest: {
-                        type: DataTypes.BOOLEAN,
+                        type: type.BOOLEAN,
                         defaultValue: false
                     },
                     aNumber: {
-                        type: DataTypes.INTEGER,
+                        type: type.INTEGER,
                         defaultValue: 0
                     }
                 });
@@ -361,15 +361,15 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
             beforeEach(function () {
                 this.User = this.sequelize.define("User", {
                     username: {
-                        type: DataTypes.STRING,
+                        type: type.STRING,
                         defaultValue: ""
                     },
                     beforeHookTest: {
-                        type: DataTypes.BOOLEAN,
+                        type: type.BOOLEAN,
                         defaultValue: false
                     },
                     aNumber: {
-                        type: DataTypes.INTEGER,
+                        type: type.INTEGER,
                         defaultValue: 0
                     }
                 });
@@ -506,7 +506,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
             beforeEach(function () {
                 this.ParanoidUser = this.sequelize.define("ParanoidUser", {
                     aNumber: {
-                        type: DataTypes.INTEGER,
+                        type: type.INTEGER,
                         defaultValue: 0
                     }
                 }, {

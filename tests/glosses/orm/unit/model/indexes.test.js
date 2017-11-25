@@ -1,15 +1,14 @@
 import Support from "../../support";
 const current = Support.sequelize;
-const {
-    DataTypes
-} = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("Model"), () => {
     describe("indexes", () => {
         it("should automatically set a gin index for JSONB indexes", () => {
             const Model = current.define("event", {
                 eventData: {
-                    type: DataTypes.JSONB,
+                    type: type.JSONB,
                     index: true,
                     field: "data"
                 }
@@ -39,7 +38,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
         it("should not set rawAttributes when indexes are defined via options", () => {
             const User = current.define("User", {
-                username: DataTypes.STRING
+                username: type.STRING
             }, {
                 indexes: [{
                     unique: true,
@@ -52,8 +51,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
         it("should not set rawAttributes when composite unique indexes are defined via options", () => {
             const User = current.define("User", {
-                name: DataTypes.STRING,
-                address: DataTypes.STRING
+                name: type.STRING,
+                address: type.STRING
             }, {
                 indexes: [{
                     unique: "users_name_address",

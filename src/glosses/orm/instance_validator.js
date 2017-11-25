@@ -1,10 +1,22 @@
-const { is, vendor: { lodash: _ }, promise } = adone;
-const validator = require("./utils/validator_extras").validator;
-const extendModelValidations = require("./utils/validator_extras").extendModelValidations;
-const Utils = require("./utils");
-const sequelizeError = require("./errors");
-const Promise = require("./promise");
-const DataTypes = require("./data_types");
+const {
+    is,
+    vendor: { lodash: _ },
+    promise,
+    orm
+} = adone;
+
+const {
+    util,
+    x,
+    type
+} = orm;
+
+const {
+    Validator: {
+        validator,
+        extendModelValidations
+    }
+} = util;
 
 const reflectPromise = (promise) => promise.then(() => ({ rejected: false }), (error) => ({ rejected: true, error }));
 
@@ -16,7 +28,7 @@ const reflectPromise = (promise) => promise.then(() => ({ rejected: false }), (e
  * @constructor
  * @private
  */
-class InstanceValidator {
+export default class InstanceValidator {
     constructor(modelInstance, options) {
         options = _.clone(options) || {};
 
@@ -73,7 +85,7 @@ class InstanceValidator {
             [this._builtinValidators(), this._customValidators()].map(reflectPromise)
         ).then(() => {
             if (this.errors.length) {
-                throw new sequelizeError.ValidationError(null, this.errors);
+                throw new x.ValidationError(null, this.errors);
             }
         });
     }
@@ -323,7 +335,7 @@ class InstanceValidator {
             const validators = this.modelInstance.validators[field];
             const errMsg = _.get(validators, "notNull.msg", `${this.modelInstance.constructor.name}.${field} cannot be null`);
 
-            this.errors.push(new sequelizeError.ValidationErrorItem(
+            this.errors.push(new x.ValidationErrorItem(
                 errMsg,
                 "notNull Violation", // sequelizeError.ValidationErrorItem.Origins.CORE,
                 field,
@@ -333,9 +345,9 @@ class InstanceValidator {
             ));
         }
 
-        if (rawAttribute.type === DataTypes.STRING || rawAttribute.type instanceof DataTypes.STRING || rawAttribute.type === DataTypes.TEXT || rawAttribute.type instanceof DataTypes.TEXT) {
-            if (is.array(value) || _.isObject(value) && !(value instanceof Utils.SequelizeMethod) && !is.buffer(value)) {
-                this.errors.push(new sequelizeError.ValidationErrorItem(
+        if (rawAttribute.type === type.STRING || rawAttribute.type instanceof type.STRING || rawAttribute.type === type.TEXT || rawAttribute.type instanceof type.TEXT) {
+            if (is.array(value) || _.isObject(value) && !(value instanceof util.SequelizeMethod) && !is.buffer(value)) {
+                this.errors.push(new x.ValidationErrorItem(
                     `${field} cannot be an array or an object`,
                     "string violation", // sequelizeError.ValidationErrorItem.Origins.CORE,
                     field,
@@ -383,7 +395,7 @@ class InstanceValidator {
      */
     _pushError(isBuiltin, errorKey, rawError, value, fnName, fnArgs) {
         const message = rawError.message || rawError || "Validation error";
-        const error = new sequelizeError.ValidationErrorItem(
+        const error = new x.ValidationErrorItem(
             message,
             "Validation error", // sequelizeError.ValidationErrorItem.Origins.FUNCTION,
             errorKey,
@@ -404,7 +416,3 @@ class InstanceValidator {
  * @private
  */
 InstanceValidator.RAW_KEY_NAME = "__raw";
-
-module.exports = InstanceValidator;
-module.exports.InstanceValidator = InstanceValidator;
-module.exports.default = InstanceValidator;

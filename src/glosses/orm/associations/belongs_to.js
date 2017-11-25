@@ -1,19 +1,23 @@
-const { is, vendor: { lodash: _ } } = adone;
-const Utils = require("./../utils");
-const Helpers = require("./helpers");
-const Transaction = require("../transaction");
-const Association = require("./base");
-const Op = require("../operators");
+const {
+    is,
+    vendor: { lodash: _ },
+    orm
+} = adone;
 
+const {
+    util,
+    Transaction,
+    operator
+} = orm;
+
+const {
+    association
+} = adone.private(orm);
 
 /**
  * One-to-one association
- *
- * In the API reference below, add the name of the association to the method, e.g. for `User.belongsTo(Project)` the getter will be `user.getProject()`.
- *
- * @see {@link Model.belongsTo}
  */
-class BelongsTo extends Association {
+export default class BelongsTo extends association.Base {
     constructor(source, target, options) {
         super(source, target, options);
 
@@ -39,9 +43,9 @@ class BelongsTo extends Association {
         }
 
         if (!this.foreignKey) {
-            this.foreignKey = Utils.camelizeIf(
+            this.foreignKey = util.camelizeIf(
                 [
-                    Utils.underscoredIf(this.as, this.source.options.underscored),
+                    util.underscoredIf(this.as, this.source.options.underscored),
                     this.target.primaryKeyAttribute
                 ].join("_"),
                 !this.source.options.underscored
@@ -63,7 +67,7 @@ class BelongsTo extends Association {
         this.options.useHooks = options.useHooks;
 
         // Get singular name, trying to uppercase the first letter, unless the model forbids it
-        const singular = Utils.uppercaseFirst(this.options.name.singular);
+        const singular = util.uppercaseFirst(this.options.name.singular);
 
         this.accessors = {
             get: `get${singular}`,
@@ -72,7 +76,6 @@ class BelongsTo extends Association {
         };
     }
 
-    // the id is in the source table
     injectAttributes() {
         const newAttributes = {};
 
@@ -87,14 +90,14 @@ class BelongsTo extends Association {
             this.options.onUpdate = this.options.onUpdate || "CASCADE";
         }
 
-        Helpers.addForeignKeyConstraints(newAttributes[this.foreignKey], this.target, this.source, this.options, this.targetKeyField);
-        Utils.mergeDefaults(this.source.rawAttributes, newAttributes);
+        util.addForeignKeyConstraints(newAttributes[this.foreignKey], this.target, this.source, this.options, this.targetKeyField);
+        util.mergeDefaults(this.source.rawAttributes, newAttributes);
 
         this.identifierField = this.source.rawAttributes[this.foreignKey].field || this.foreignKey;
 
         this.source.refreshAttributes();
 
-        Helpers.checkNamingCollision(this);
+        util.checkNamingCollision(this);
 
         return this;
     }
@@ -102,7 +105,7 @@ class BelongsTo extends Association {
     mixin(obj) {
         const methods = ["get", "set", "create"];
 
-        Helpers.mixinMethods(this, obj, methods);
+        util.mixinMethods(this, obj, methods);
     }
 
     /**
@@ -111,7 +114,6 @@ class BelongsTo extends Association {
      * @param {Object} [options]
      * @param {String|Boolean} [options.scope] Apply a scope on the related model, or remove its default scope by passing false.
      * @param {String} [options.schema] Apply a schema on the related model
-     * @see {@link Model.findOne} for a full explanation of options
      * @return {Promise<Model>}
      */
     async get(instances, options) {
@@ -120,7 +122,7 @@ class BelongsTo extends Association {
         let Target = association.target;
         let instance;
 
-        options = Utils.cloneDeep(options);
+        options = util.cloneDeep(options);
 
         if (options.hasOwnProperty("scope")) {
             if (!options.scope) {
@@ -141,7 +143,7 @@ class BelongsTo extends Association {
 
         if (instances) {
             where[association.targetKey] = {
-                [Op.in]: instances.map((instance) => instance.get(association.foreignKey))
+                [operator.in]: instances.map((instance) => instance.get(association.foreignKey))
             };
         } else {
             if (association.targetKeyIsPrimary && !options.where) {
@@ -153,7 +155,7 @@ class BelongsTo extends Association {
         }
 
         options.where = options.where ?
-            { [Op.and]: [where, options.where] } :
+            { [operator.and]: [where, options.where] } :
             where;
 
         if (instances) {
@@ -212,7 +214,6 @@ class BelongsTo extends Association {
      *
      * @param {Object} [values]
      * @param {Object} [options] Options passed to `target.create` and setAssociation.
-     * @see {@link Model#create}  for a full explanation of options
      * @return {Promise}
      */
     async create(sourceInstance, values, fieldsOrOptions) {
@@ -230,7 +231,3 @@ class BelongsTo extends Association {
         return sourceInstance[association.accessors.set](newAssociatedObject, options);
     }
 }
-
-module.exports = BelongsTo;
-module.exports.BelongsTo = BelongsTo;
-module.exports.default = BelongsTo;

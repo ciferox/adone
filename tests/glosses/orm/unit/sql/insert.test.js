@@ -1,9 +1,7 @@
 import Support from "../../support";
 
-const {
-    DataTypes
-} = adone.orm;
-
+const { orm } = adone;
+const { type } = orm;
 const expectsql = Support.expectsql;
 const current = Support.sequelize;
 const sql = current.dialect.QueryGenerator;
@@ -15,7 +13,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
         it("with temp table for trigger", () => {
             const User = Support.sequelize.define("user", {
                 username: {
-                    type: DataTypes.STRING,
+                    type: type.STRING,
                     field: "user_name"
                 }
             }, {
@@ -45,7 +43,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
 
             const User = timezoneSequelize.define("user", {
                 date: {
-                    type: DataTypes.DATE
+                    type: type.DATE
                 }
             }, {
                 timestamps: false
@@ -67,7 +65,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
 
             const User = timezoneSequelize.define("user", {
                 date: {
-                    type: new DataTypes.DATE(3)
+                    type: new type.DATE(3)
                 }
             }, {
                 timestamps: false
@@ -92,19 +90,19 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
 
             const User = Support.sequelize.define("user", {
                 username: {
-                    type: DataTypes.STRING,
+                    type: type.STRING,
                     field: "user_name"
                 },
                 password: {
-                    type: DataTypes.STRING,
+                    type: type.STRING,
                     field: "pass_word"
                 },
                 createdAt: {
-                    type: DataTypes.DATE,
+                    type: type.DATE,
                     field: "created_at"
                 },
                 updatedAt: {
-                    type: DataTypes.DATE,
+                    type: type.DATE,
                     field: "updated_at"
                 }
             }, {

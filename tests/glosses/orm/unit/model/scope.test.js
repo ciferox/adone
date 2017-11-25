@@ -1,6 +1,8 @@
 import Support from "../../support";
 
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
+const { Model } = adone.private(orm);
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser("Model"), () => {
@@ -75,8 +77,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
     describe(".scope", () => {
         describe("attribute exclude / include", () => {
             const User = current.define("user", {
-                password: DataTypes.STRING,
-                name: DataTypes.STRING
+                password: type.STRING,
+                name: type.STRING
             }, {
                 defaultScope: {
                     attributes: {
@@ -322,7 +324,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 limit: 9
             };
 
-            current.Model._injectScope.call({
+            Model._injectScope.call({
                 _scope: scope
             }, options);
 
@@ -346,7 +348,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
             const options = {};
 
-            current.Model._injectScope.call({
+            Model._injectScope.call({
                 _scope: scope
             }, options);
 
@@ -363,7 +365,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 include: [{ model: Project, where: { something: true } }]
             };
 
-            current.Model._injectScope.call({
+            Model._injectScope.call({
                 _scope: scope
             }, options);
 
@@ -380,7 +382,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 include: [{ model: User, as: "otherUser" }]
             };
 
-            current.Model._injectScope.call({
+            Model._injectScope.call({
                 _scope: scope
             }, options);
 
@@ -402,7 +404,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 ]
             };
 
-            current.Model._injectScope.call({
+            Model._injectScope.call({
                 _scope: scope
             }, options);
 
@@ -425,7 +427,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     ]
                 };
 
-                current.Model._injectScope.call({
+                Model._injectScope.call({
                     _scope: scope
                 }, options);
 
@@ -448,7 +450,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     ]
                 };
 
-                current.Model._injectScope.call({
+                Model._injectScope.call({
                     _scope: scope
                 }, options);
 

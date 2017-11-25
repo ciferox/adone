@@ -1,7 +1,8 @@
 import Support from "../../support";
 
 const current = Support.sequelize;
-const Sequelize = Support.Sequelize;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("Instance"), () => {
     describe("increment", () => {
@@ -10,7 +11,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
             let instance;
             const Model = current.define("User", {
                 id: {
-                    type: Sequelize.BIGINT,
+                    type: type.BIGINT,
                     primaryKey: true,
                     autoIncrement: true
                 }

@@ -1,16 +1,22 @@
-const { vendor: { lodash: _ } } = adone;
-const AbstractDialect = require("../abstract");
-const ConnectionManager = require("./connection_manager");
-const Query = require("./query");
-const QueryGenerator = require("./query_generator");
-const DataTypes = require("../../data_types").postgres;
+import dataTypes from "./data_types";
 
-class PostgresDialect extends AbstractDialect {
+const {
+    vendor: { lodash: _ },
+    orm
+} = adone;
+
+const {
+    dialect: {
+        abstract: AbstractDialect
+    }
+} = adone.private(orm);
+
+export default class PostgresDialect extends AbstractDialect {
     constructor(sequelize) {
         super();
         this.sequelize = sequelize;
-        this.connectionManager = new ConnectionManager(this, sequelize);
-        this.QueryGenerator = _.extend({}, QueryGenerator, {
+        this.connectionManager = new PostgresDialect.ConnectionManager(this, sequelize);
+        this.QueryGenerator = _.extend({}, PostgresDialect.QueryGenerator, {
             options: sequelize.options,
             _dialect: this,
             sequelize
@@ -51,20 +57,19 @@ PostgresDialect.prototype.supports = _.merge(_.cloneDeep(AbstractDialect.prototy
     searchPath: true
 });
 
-ConnectionManager.prototype.defaultVersion = "9.4.0";
-PostgresDialect.prototype.Query = Query;
-PostgresDialect.prototype.DataTypes = DataTypes;
+PostgresDialect.prototype.DataTypes = dataTypes(orm.type);
 PostgresDialect.prototype.name = "postgres";
 PostgresDialect.prototype.TICK_CHAR = '"';
 PostgresDialect.prototype.TICK_CHAR_LEFT = PostgresDialect.prototype.TICK_CHAR;
 PostgresDialect.prototype.TICK_CHAR_RIGHT = PostgresDialect.prototype.TICK_CHAR;
 
-module.exports = PostgresDialect;
-module.exports.default = PostgresDialect;
-module.exports.PostgresDialect = PostgresDialect;
-
 adone.lazify({
     QueryGenerator: "./query_generator",
     hstore: "./hstore",
-    range: "./range"
+    range: "./range",
+    Query: "./query"
 }, PostgresDialect, require);
+
+adone.lazify({
+    Query: () => PostgresDialect.Query
+}, PostgresDialect.prototype);

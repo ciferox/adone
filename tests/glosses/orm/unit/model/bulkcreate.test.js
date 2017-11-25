@@ -1,8 +1,7 @@
 import Support from "../../support";
 
-const {
-    DataTypes
-} = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 const current = Support.sequelize;
 
@@ -10,7 +9,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
     describe("bulkCreate", () => {
         const Model = current.define("model", {
             accountId: {
-                type: new DataTypes.INTEGER(11).UNSIGNED,
+                type: new type.INTEGER(11).UNSIGNED,
                 allowNull: false,
                 field: "account_id"
             }

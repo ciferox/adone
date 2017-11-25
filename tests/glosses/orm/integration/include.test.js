@@ -1,8 +1,8 @@
 import Support from "./support";
 
 const { vendor: { lodash: _ }, promise } = adone;
-const Sequelize = adone.orm;
-const { DataTypes } = Sequelize;
+const { orm } = adone;
+const { type } = orm;
 const dialect = Support.getTestDialect();
 
 const sortById = function (a, b) {
@@ -45,7 +45,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
         });
 
         it("should support a belongsTo association reference with a where", function () {
-            const Company = this.sequelize.define("Company", { name: DataTypes.STRING });
+            const Company = this.sequelize.define("Company", { name: type.STRING });
             const User = this.sequelize.define("User", {});
             const Employer = User.belongsTo(Company, { as: "Employer", foreignKey: "employerId" });
 
@@ -147,7 +147,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
         it("should support a hasMany association reference with a where condition", async function () {
             const User = this.sequelize.define("user", {});
-            const Task = this.sequelize.define("task", { title: DataTypes.STRING });
+            const Task = this.sequelize.define("task", { title: type.STRING });
             const Tasks = User.hasMany(Task);
 
             Task.belongsTo(User);
@@ -380,10 +380,10 @@ describe(Support.getTestDialectTeaser("Include"), () => {
         it("should support a simple nested hasMany <-> hasMany include", async function () {
             const User = this.sequelize.define("User", {});
             const Product = this.sequelize.define("Product", {
-                title: DataTypes.STRING
+                title: type.STRING
             });
             const Tag = this.sequelize.define("Tag", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
 
             User.hasMany(Product);
@@ -444,28 +444,28 @@ describe(Support.getTestDialectTeaser("Include"), () => {
         it("should support an include with multiple different association types", async function () {
             const User = this.sequelize.define("User", {});
             const Product = this.sequelize.define("Product", {
-                title: DataTypes.STRING
+                title: type.STRING
             });
             const Tag = this.sequelize.define("Tag", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
             const Price = this.sequelize.define("Price", {
-                value: DataTypes.FLOAT
+                value: type.FLOAT
             });
             const Group = this.sequelize.define("Group", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
             const GroupMember = this.sequelize.define("GroupMember", {
 
             });
             const Rank = this.sequelize.define("Rank", {
-                name: DataTypes.STRING,
+                name: type.STRING,
                 canInvite: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     defaultValue: 0
                 },
                 canRemove: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     defaultValue: 0
                 }
             });
@@ -561,12 +561,12 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
         it("should support specifying attributes", function () {
             const Project = this.sequelize.define("Project", {
-                title: Sequelize.STRING
+                title: type.STRING
             });
 
             const Task = this.sequelize.define("Task", {
-                title: Sequelize.STRING,
-                description: Sequelize.TEXT
+                title: type.STRING,
+                description: type.TEXT
             });
 
             Project.hasMany(Task);
@@ -595,11 +595,11 @@ describe(Support.getTestDialectTeaser("Include"), () => {
             });
         });
 
-        it("should support Sequelize.literal and renaming of attributes in included model attributes", function () {
+        it("should support orm.util.literal and renaming of attributes in included model attributes", function () {
             const Post = this.sequelize.define("Post", {});
             const PostComment = this.sequelize.define("PostComment", {
-                someProperty: Sequelize.VIRTUAL, // Since we specify the AS part as a part of the literal string, not with sequelize syntax, we have to tell sequelize about the field
-                comment_title: Sequelize.STRING
+                someProperty: type.VIRTUAL, // Since we specify the AS part as a part of the literal string, not with sequelize syntax, we have to tell sequelize about the field
+                comment_title: type.STRING
             });
 
             Post.hasMany(PostComment);
@@ -614,13 +614,13 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                 let findAttributes;
                 if (dialect === "mssql") {
                     findAttributes = [
-                        Sequelize.literal('CAST(CASE WHEN EXISTS(SELECT 1) THEN 1 ELSE 0 END AS BIT) AS "PostComments.someProperty"'),
-                        [Sequelize.literal("CAST(CASE WHEN EXISTS(SELECT 1) THEN 1 ELSE 0 END AS BIT)"), "someProperty2"]
+                        orm.util.literal('CAST(CASE WHEN EXISTS(SELECT 1) THEN 1 ELSE 0 END AS BIT) AS "PostComments.someProperty"'),
+                        [orm.util.literal("CAST(CASE WHEN EXISTS(SELECT 1) THEN 1 ELSE 0 END AS BIT)"), "someProperty2"]
                     ];
                 } else {
                     findAttributes = [
-                        Sequelize.literal('EXISTS(SELECT 1) AS "PostComments.someProperty"'),
-                        [Sequelize.literal("EXISTS(SELECT 1)"), "someProperty2"]
+                        orm.util.literal('EXISTS(SELECT 1) AS "PostComments.someProperty"'),
+                        [orm.util.literal("EXISTS(SELECT 1)"), "someProperty2"]
                     ];
                 }
                 findAttributes.push(["comment_title", "commentTitle"]);
@@ -642,7 +642,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
         it("should support self associated hasMany (with through) include", async function () {
             const Group = this.sequelize.define("Group", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
 
             Group.belongsToMany(Group, { through: "groups_outsourcing_companies", as: "OutsourcingCompanies" });
@@ -667,10 +667,10 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
         it("should support including date fields, with the correct timeszone", async function () {
             const User = this.sequelize.define("user", {
-                dateField: Sequelize.DATE
+                dateField: type.DATE
             }, { timestamps: false });
             const Group = this.sequelize.define("group", {
-                dateField: Sequelize.DATE
+                dateField: type.DATE
             }, { timestamps: false });
 
             User.belongsToMany(Group, { through: "group_user" });
@@ -694,13 +694,13 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
         it("should support include when retrieving associated objects", async function () {
             const User = this.sequelize.define("user", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
             const Group = this.sequelize.define("group", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
             const UserGroup = this.sequelize.define("user_group", {
-                vip: DataTypes.INTEGER
+                vip: type.INTEGER
             });
 
             User.hasMany(Group);
@@ -735,7 +735,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
     const createUsersAndItems = async function () {
         const User = this.sequelize.define("User", {});
-        const Item = this.sequelize.define("Item", { test: DataTypes.STRING });
+        const Item = this.sequelize.define("Item", { test: type.STRING });
 
         User.hasOne(Item);
         Item.belongsTo(User);
@@ -771,7 +771,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
         it("should support Sequelize.and()", function () {
             return this.User.findAll({
                 include: [
-                    { model: this.Item, where: Sequelize.and({ test: "def" }) }
+                    { model: this.Item, where: orm.util.and({ test: "def" }) }
                 ]
             }).then((result) => {
                 expect(result.length).to.eql(1);
@@ -783,7 +783,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
             expect(await this.User.findAll({
                 include: [
                     {
-                        model: this.Item, where: Sequelize.or({
+                        model: this.Item, where: orm.util.or({
                             test: "def"
                         }, {
                             test: "abc"
@@ -837,9 +837,9 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
     describe("nested includes", () => {
         beforeEach(function () {
-            const Employee = this.sequelize.define("Employee", { name: DataTypes.STRING });
-            const Team = this.sequelize.define("Team", { name: DataTypes.STRING });
-            const Clearence = this.sequelize.define("Clearence", { level: DataTypes.INTEGER });
+            const Employee = this.sequelize.define("Employee", { name: type.STRING });
+            const Team = this.sequelize.define("Team", { name: type.STRING });
+            const Clearence = this.sequelize.define("Clearence", { level: type.INTEGER });
 
             Team.Members = Team.hasMany(Employee, { as: "members" });
             Employee.Clearence = Employee.hasOne(Clearence, { as: "clearence" });

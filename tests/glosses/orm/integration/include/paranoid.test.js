@@ -1,16 +1,16 @@
 import Support from "../support";
 
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("Paranoid"), () => {
 
     beforeEach(function ( ) {
         const S = this.sequelize;
-        const DT = DataTypes;
-        const A = this.A = S.define("A", { name: DT.STRING }, { paranoid: true });
-        const B = this.B = S.define("B", { name: DT.STRING }, { paranoid: true });
-        const C = this.C = S.define("C", { name: DT.STRING }, { paranoid: true });
-        const D = this.D = S.define("D", { name: DT.STRING }, { paranoid: true });
+        const A = this.A = S.define("A", { name: type.STRING }, { paranoid: true });
+        const B = this.B = S.define("B", { name: type.STRING }, { paranoid: true });
+        const C = this.C = S.define("C", { name: type.STRING }, { paranoid: true });
+        const D = this.D = S.define("D", { name: type.STRING }, { paranoid: true });
 
         A.belongsTo(B);
         A.belongsToMany(D, { through: "a_d" });
@@ -38,7 +38,7 @@ describe(Support.getTestDialectTeaser("Paranoid"), () => {
     it("paranoid with timestamps: false should be ignored / not crash", function () {
         const S = this.sequelize;
         const Test = S.define("Test", {
-            name: DataTypes.STRING
+            name: type.STRING
         }, {
             timestamps: false,
             paranoid: true
@@ -85,13 +85,13 @@ describe(Support.getTestDialectTeaser("Paranoid"), () => {
 
     it("should not load paranoid, destroyed instances, with a non-paranoid parent", async function () {
         const X = this.sequelize.define("x", {
-            name: DataTypes.STRING
+            name: type.STRING
         }, {
             paranoid: false
         });
 
         const Y = this.sequelize.define("y", {
-            name: DataTypes.STRING
+            name: type.STRING
         }, {
             timestamps: true,
             paranoid: true

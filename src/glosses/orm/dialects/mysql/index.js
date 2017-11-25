@@ -1,16 +1,22 @@
-const { vendor: { lodash: _ } } = adone;
-const AbstractDialect = require("../abstract");
-const ConnectionManager = require("./connection_manager");
-const Query = require("./query");
-const QueryGenerator = require("./query_generator");
-const DataTypes = require("../../data_types").mysql;
+import defineDataTypes from "./data_types";
 
-class MysqlDialect extends AbstractDialect {
+const {
+    vendor: { lodash: _ },
+    orm
+} = adone;
+
+const {
+    dialect: {
+        abstract: AbstractDialect
+    }
+} = adone.private(orm);
+
+export default class MysqlDialect extends AbstractDialect {
     constructor(sequelize) {
         super();
         this.sequelize = sequelize;
-        this.connectionManager = new ConnectionManager(this, sequelize);
-        this.QueryGenerator = _.extend({}, QueryGenerator, {
+        this.connectionManager = new MysqlDialect.ConnectionManager(this, sequelize);
+        this.QueryGenerator = _.extend({}, MysqlDialect.QueryGenerator, {
             options: sequelize.options,
             _dialect: this,
             sequelize
@@ -44,17 +50,19 @@ MysqlDialect.prototype.supports = _.merge(_.cloneDeep(AbstractDialect.prototype.
     REGEXP: true
 });
 
-ConnectionManager.prototype.defaultVersion = "5.6.0";
-MysqlDialect.prototype.Query = Query;
-MysqlDialect.prototype.QueryGenerator = QueryGenerator;
-MysqlDialect.prototype.DataTypes = DataTypes;
+MysqlDialect.prototype.DataTypes = defineDataTypes(orm.type);
 MysqlDialect.prototype.name = "mysql";
 MysqlDialect.prototype.TICK_CHAR = "`";
 MysqlDialect.prototype.TICK_CHAR_LEFT = MysqlDialect.prototype.TICK_CHAR;
 MysqlDialect.prototype.TICK_CHAR_RIGHT = MysqlDialect.prototype.TICK_CHAR;
 
-module.exports = MysqlDialect;
+adone.lazify({
+    QueryGenerator: "./query_generator",
+    ConnectionManager: "./connection_manager",
+    Query: "./query",
+    QueryInterface: "./query_interface"
+}, MysqlDialect, require);
 
 adone.lazify({
-    QueryGenerator: "./query_generator"
-}, MysqlDialect, require);
+    Query: () => MysqlDialect.Query
+}, MysqlDialect.prototype);

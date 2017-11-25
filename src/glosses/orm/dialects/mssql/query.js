@@ -1,13 +1,30 @@
-const { is, vendor: { lodash: _ } } = adone;
-const Utils = require("../../utils");
-const debug = Utils.getLogger().debugContext("sql:mssql");
-const Promise = require("../../promise");
-const AbstractQuery = require("../abstract/query");
-const sequelizeErrors = require("../../errors.js");
-const parserStore = require("../parser_store")("mssql");
-const TYPES = require("tedious").TYPES;
+const {
+    is,
+    vendor: { lodash: _ },
+    orm
+} = adone;
 
-class Query extends AbstractQuery {
+const {
+    util,
+    x
+} = orm;
+
+const {
+    dialect: {
+        abstract: {
+            Query: AbstractQuery
+        }
+    }
+} = adone.private(orm);
+
+const lazy = adone.lazify({
+    TYPES: () => require("tedious").TYPES // TODO
+});
+
+const debug = util.getLogger().debugContext("sql:mssql");
+const parserStore = util.parserStore("mssql");
+
+export default class Query extends AbstractQuery {
     constructor(connection, sequelize, options) {
         super();
         this.connection = connection;
@@ -28,6 +45,7 @@ class Query extends AbstractQuery {
     }
 
     getSQLTypeFromJsType(value) {
+        const { TYPES } = lazy;
         const paramType = { type: TYPES.VarChar, typeOptions: {} };
         paramType.type = TYPES.NVarChar;
         if (is.number(value)) {
@@ -65,7 +83,7 @@ class Query extends AbstractQuery {
                     } else {
                         resolve(this.formatResults());
                     }
-                }, this.options.transaction.name, Utils.mapIsolationLevelStringToTedious(this.options.isolationLevel, connection.lib));
+                }, this.options.transaction.name, util.mapIsolationLevelStringToTedious(this.options.isolationLevel, connection.lib));
             } else if (_.startsWith(this.sql, "COMMIT TRANSACTION")) {
                 connection.commitTransaction((err) => {
                     if (err) {
@@ -169,19 +187,7 @@ class Query extends AbstractQuery {
     /**
      * High level function that handles the results of a query execution.
      *
-     *
-     * Example:
-     *  query.formatResults([
-     *    {
-     *      id: 1,              // this is from the main table
-     *      attr2: 'snafu',     // this is from the main table
-     *      Tasks.id: 1,        // this is from the associated table
-     *      Tasks.title: 'task' // this is from the associated table
-     *    }
-     *  ])
-     *
      * @param {Array} data - The result of the query execution.
-     * @private
      */
     formatResults(data, rowCount) {
         let result = this.instance;
@@ -294,7 +300,7 @@ class Query extends AbstractQuery {
 
             const errors = [];
             _.forOwn(fields, (value, field) => {
-                errors.push(new sequelizeErrors.ValidationErrorItem(
+                errors.push(new x.ValidationErrorItem(
                     this.getUniqueConstraintErrorMessage(field),
                     "unique violation", // sequelizeErrors.ValidationErrorItem.Origins.DB,
                     field,
@@ -304,7 +310,7 @@ class Query extends AbstractQuery {
                 ));
             });
 
-            return new sequelizeErrors.UniqueConstraintError({ message, errors, parent: err, fields });
+            return new x.UniqueConstraintError({ message, errors, parent: err, fields });
         }
 
         match = err.message.match(/Failed on step '(.*)'.Could not create constraint. See previous errors./) ||
@@ -313,7 +319,7 @@ class Query extends AbstractQuery {
             err.message.match(/The MERGE statement conflicted with the FOREIGN KEY constraint "(.*)". The conflict occurred in database "(.*)", table "(.*)", column '(.*)'./) ||
             err.message.match(/The UPDATE statement conflicted with the FOREIGN KEY constraint "(.*)". The conflict occurred in database "(.*)", table "(.*)", column '(.*)'./);
         if (match && match.length > 0) {
-            return new sequelizeErrors.ForeignKeyConstraintError({
+            return new x.ForeignKeyConstraintError({
                 fields: null,
                 index: match[1],
                 parent: err
@@ -323,10 +329,10 @@ class Query extends AbstractQuery {
         match = err.message.match(/Could not drop constraint. See previous errors./);
 
         if (match && match.length > 0) {
-            return new sequelizeErrors.UnknownConstraintError(match[1]);
+            return new x.UnknownConstraintError(match[1]);
         }
 
-        return new sequelizeErrors.DatabaseError(err);
+        return new x.DatabaseError(err);
     }
 
     isShowOrDescribeQuery() {
@@ -399,7 +405,3 @@ class Query extends AbstractQuery {
         }
     }
 }
-
-module.exports = Query;
-module.exports.Query = Query;
-module.exports.default = Query;

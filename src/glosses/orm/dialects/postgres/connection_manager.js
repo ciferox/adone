@@ -1,12 +1,25 @@
-const { is, vendor: { lodash: _ } } = adone;
-const AbstractConnectionManager = require("../abstract/connection_manager");
-const Utils = require("../../utils");
-const debug = Utils.getLogger().debugContext("connection:pg");
-const Promise = require("../../promise");
-const sequelizeErrors = require("../../errors");
-const dataTypes = require("../../data_types");
+const {
+    is,
+    vendor: { lodash: _ },
+    orm
+} = adone;
 
-class ConnectionManager extends AbstractConnectionManager {
+const {
+    x,
+    type
+} = orm;
+
+const {
+    dialect: {
+        abstract: {
+            ConnectionManager: AbstractConnectionManager
+        }
+    }
+} = adone.private(orm);
+
+const debug = orm.util.getLogger().debugContext("connection:pg");
+
+export default class ConnectionManager extends AbstractConnectionManager {
     constructor(dialect, sequelize) {
         super(dialect, sequelize);
 
@@ -17,7 +30,7 @@ class ConnectionManager extends AbstractConnectionManager {
             if (sequelize.config.dialectModulePath) {
                 pgLib = require(sequelize.config.dialectModulePath);
             } else {
-                pgLib = require("pg");
+                pgLib = require("pg"); // TODO
             }
             this.lib = sequelize.config.native ? pgLib.native : pgLib;
         } catch (err) {
@@ -27,7 +40,7 @@ class ConnectionManager extends AbstractConnectionManager {
             throw err;
         }
 
-        this.refreshTypeParser(dataTypes.postgres);
+        this.refreshTypeParser(type.postgres);
     }
 
     // Expose this as a method so that the parsing may be updated when the user has added additional, custom types
@@ -89,23 +102,23 @@ class ConnectionManager extends AbstractConnectionManager {
                     if (err.code) {
                         switch (err.code) {
                             case "ECONNREFUSED":
-                                reject(new sequelizeErrors.ConnectionRefusedError(err));
+                                reject(new x.ConnectionRefusedError(err));
                                 break;
                             case "ENOTFOUND":
-                                reject(new sequelizeErrors.HostNotFoundError(err));
+                                reject(new x.HostNotFoundError(err));
                                 break;
                             case "EHOSTUNREACH":
-                                reject(new sequelizeErrors.HostNotReachableError(err));
+                                reject(new x.HostNotReachableError(err));
                                 break;
                             case "EINVAL":
-                                reject(new sequelizeErrors.InvalidConnectionError(err));
+                                reject(new x.InvalidConnectionError(err));
                                 break;
                             default:
-                                reject(new sequelizeErrors.ConnectionError(err));
+                                reject(new x.ConnectionError(err));
                                 break;
                         }
                     } else {
-                        reject(new sequelizeErrors.ConnectionError(err));
+                        reject(new x.ConnectionError(err));
                     }
                     return;
                 }
@@ -118,7 +131,7 @@ class ConnectionManager extends AbstractConnectionManager {
             connection.on("end", () => {
                 debug("connection timeout");
                 if (!responded) {
-                    reject(new sequelizeErrors.ConnectionTimedOutError(new Error("Connection timed out")));
+                    reject(new x.ConnectionTimedOutError(new Error("Connection timed out")));
                 }
             });
 
@@ -147,7 +160,7 @@ class ConnectionManager extends AbstractConnectionManager {
 
         // oids for hstore and geometry are dynamic - so select them at connection time
         const supportedVersion = this.sequelize.options.databaseVersion !== 0 && adone.semver.gte(this.sequelize.options.databaseVersion, "8.3.0");
-        if (dataTypes.HSTORE.types.postgres.oids.length === 0 && supportedVersion) {
+        if (type.HSTORE.types.postgres.oids.length === 0 && supportedVersion) {
             query += "SELECT typname, oid, typarray FROM pg_type WHERE typtype = 'b' AND typname IN ('hstore', 'geometry', 'geography')";
         }
 
@@ -160,11 +173,11 @@ class ConnectionManager extends AbstractConnectionManager {
         for (const row of result.rows) {
             let type;
             if (row.typname === "geometry") {
-                type = dataTypes.postgres.GEOMETRY;
+                type = type.postgres.GEOMETRY;
             } else if (row.typname === "hstore") {
-                type = dataTypes.postgres.HSTORE;
+                type = type.postgres.HSTORE;
             } else if (row.typname === "geography") {
-                type = dataTypes.postgres.GEOGRAPHY;
+                type = type.postgres.GEOGRAPHY;
             }
 
             type.types.postgres.oids.push(row.oid);
@@ -188,8 +201,4 @@ class ConnectionManager extends AbstractConnectionManager {
     }
 }
 
-_.extend(ConnectionManager.prototype, AbstractConnectionManager.prototype);
-
-module.exports = ConnectionManager;
-module.exports.ConnectionManager = ConnectionManager;
-module.exports.default = ConnectionManager;
+ConnectionManager.prototype.defaultVersion = "9.4.0";

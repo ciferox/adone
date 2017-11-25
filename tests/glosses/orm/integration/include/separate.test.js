@@ -1,8 +1,8 @@
 import Support from "../support";
 
 const { vendor: { lodash: _ } } = adone;
-const Sequelize = adone.orm;
-const { DataTypes } = Sequelize;
+const { orm } = adone;
+const { type } = orm;
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser("Include"), { skip: !current.dialect.supports.groupedLimit }, () => {
@@ -60,7 +60,7 @@ describe(Support.getTestDialectTeaser("Include"), { skip: !current.dialect.suppo
 
         it("should work even if the id was not included", function () {
             const User = this.sequelize.define("User", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
             const Task = this.sequelize.define("Task", {});
             const sqlSpy = spy();
@@ -119,7 +119,7 @@ describe(Support.getTestDialectTeaser("Include"), { skip: !current.dialect.suppo
             const User = this.sequelize.define("User", {});
             const Task = this.sequelize.define("Task", {
                 userId: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     field: "user_id"
                 }
             });
@@ -387,8 +387,8 @@ describe(Support.getTestDialectTeaser("Include"), { skip: !current.dialect.suppo
         it("should work with two schema models in a hasMany association", function () {
             const User = this.sequelize.define("User", {}, { schema: "archive" }),
                 Task = this.sequelize.define("Task", {
-                    id: { type: DataTypes.INTEGER, primaryKey: true },
-                    title: DataTypes.STRING
+                    id: { type: type.INTEGER, primaryKey: true },
+                    title: type.STRING
                 }, { schema: "archive" });
 
             User.Tasks = User.hasMany(Task, { as: "tasks" });

@@ -2,15 +2,20 @@ import Support from "../../support";
 
 const { vendor: { lodash: _ } } = adone;
 
+const { orm } = adone;
+const { type } = orm;
+
 const {
-    DataTypes,
+    x: { AssociationError }
+} = orm;
+
+const {
     association: {
         BelongsTo,
         HasMany,
         HasOne
-    },
-    AssociationError
-} = adone.orm;
+    }
+} = adone.private(orm);
 
 const current = Support.sequelize;
 
@@ -144,8 +149,8 @@ describe(Support.getTestDialectTeaser("belongsToMany"), () => {
     });
 
     describe("optimizations using bulk create, destroy and update", () => {
-        const User = current.define("User", { username: DataTypes.STRING });
-        const Task = current.define("Task", { title: DataTypes.STRING });
+        const User = current.define("User", { username: type.STRING });
+        const Task = current.define("Task", { title: type.STRING });
         const UserTasks = current.define("UserTasks", {});
 
         User.belongsToMany(Task, { through: UserTasks });
@@ -218,7 +223,7 @@ describe(Support.getTestDialectTeaser("belongsToMany"), () => {
             const UserPlace = this.sequelize.define("UserPlace", {
                 id: {
                     primaryKey: true,
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     autoIncrement: true
                 }
             }, { timestamps: false });
@@ -242,18 +247,18 @@ describe(Support.getTestDialectTeaser("belongsToMany"), () => {
     describe("pseudo associations", () => {
         it("should setup belongsTo relations to source and target from join model with defined foreign/other keys", function () {
             const Product = this.sequelize.define("Product", {
-                title: DataTypes.STRING
+                title: type.STRING
             });
             const Tag = this.sequelize.define("Tag", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
             const ProductTag = this.sequelize.define("ProductTag", {
                 id: {
                     primaryKey: true,
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     autoIncrement: true
                 },
-                priority: DataTypes.INTEGER
+                priority: type.INTEGER
             }, {
                 timestamps: false
             });
@@ -279,18 +284,18 @@ describe(Support.getTestDialectTeaser("belongsToMany"), () => {
 
         it("should setup hasOne relations to source and target from join model with defined foreign/other keys", function () {
             const Product = this.sequelize.define("Product", {
-                title: DataTypes.STRING
+                title: type.STRING
             });
             const Tag = this.sequelize.define("Tag", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
             const ProductTag = this.sequelize.define("ProductTag", {
                 id: {
                     primaryKey: true,
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     autoIncrement: true
                 },
-                priority: DataTypes.INTEGER
+                priority: type.INTEGER
             }, {
                 timestamps: false
             });
@@ -316,18 +321,18 @@ describe(Support.getTestDialectTeaser("belongsToMany"), () => {
 
         it("should setup hasOne relations to source and target from join model with defined foreign/other keys", function () {
             const Product = this.sequelize.define("Product", {
-                title: DataTypes.STRING
+                title: type.STRING
             });
             const Tag = this.sequelize.define("Tag", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
             const ProductTag = this.sequelize.define("ProductTag", {
                 id: {
                     primaryKey: true,
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     autoIncrement: true
                 },
-                priority: DataTypes.INTEGER
+                priority: type.INTEGER
             }, {
                 timestamps: false
             });
@@ -353,18 +358,18 @@ describe(Support.getTestDialectTeaser("belongsToMany"), () => {
 
         it("should setup belongsTo relations to source and target from join model with only foreign keys defined", function () {
             const Product = this.sequelize.define("Product", {
-                title: DataTypes.STRING
+                title: type.STRING
             });
             const Tag = this.sequelize.define("Tag", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
             const ProductTag = this.sequelize.define("ProductTag", {
                 id: {
                     primaryKey: true,
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     autoIncrement: true
                 },
-                priority: DataTypes.INTEGER
+                priority: type.INTEGER
             }, {
                 timestamps: false
             });
@@ -390,18 +395,18 @@ describe(Support.getTestDialectTeaser("belongsToMany"), () => {
 
         it("should setup hasOne relations to source and target from join model with only foreign keys defined", function () {
             const Product = this.sequelize.define("Product", {
-                title: DataTypes.STRING
+                title: type.STRING
             });
             const Tag = this.sequelize.define("Tag", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
             const ProductTag = this.sequelize.define("ProductTag", {
                 id: {
                     primaryKey: true,
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     autoIncrement: true
                 },
-                priority: DataTypes.INTEGER
+                priority: type.INTEGER
             }, {
                 timestamps: false
             });
@@ -427,18 +432,18 @@ describe(Support.getTestDialectTeaser("belongsToMany"), () => {
 
         it("should setup belongsTo relations to source and target from join model with no foreign keys defined", function () {
             const Product = this.sequelize.define("Product", {
-                title: DataTypes.STRING
+                title: type.STRING
             });
             const Tag = this.sequelize.define("Tag", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
             const ProductTag = this.sequelize.define("ProductTag", {
                 id: {
                     primaryKey: true,
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     autoIncrement: true
                 },
-                priority: DataTypes.INTEGER
+                priority: type.INTEGER
             }, {
                 timestamps: false
             });
@@ -512,7 +517,7 @@ describe(Support.getTestDialectTeaser("belongsToMany"), () => {
             const User = current.define("user", {});
             const UserFollowers = current.define("userFollowers", {
                 id: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     primaryKey: true,
                     autoIncrement: true
                 }

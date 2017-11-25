@@ -3,11 +3,11 @@ import Support from "../../support";
 const { vendor: { lodash: _ } } = adone;
 const { DataTypes } = adone.orm;
 const dialect = Support.getTestDialect();
-const range = adone.orm.dialect.postgres.range;
 
 if (dialect.match(/^postgres/)) {
     // Don't try to load pg until we know we're running on postgres.
     const pg = require("pg");
+    const range = adone.private(adone.orm.dialect).postgres.range;
 
     describe("[POSTGRES Specific] range datatype", () => {
         describe("stringify", () => {

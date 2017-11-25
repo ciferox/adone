@@ -1,13 +1,22 @@
-const { is, vendor: { lodash: _ } } = adone;
-const Utils = require("./../utils");
-const HasOne = require("./has_one");
-const HasMany = require("./has_many");
-const BelongsToMany = require("./belongs_to_many");
-const BelongsTo = require("./belongs_to");
+const {
+    is,
+    vendor: { lodash: _ },
+    orm
+} = adone;
+
+const {
+    util
+} = orm;
+
+const __ = adone.private(orm);
+
+const {
+    association: Association
+} = __;
 
 const Mixin = {
     hasMany(target, options) { // testhint options:none
-        if (!target || !target.prototype || !(target.prototype instanceof this.sequelize.Model)) {
+        if (!target || !target.prototype || !(target.prototype instanceof __.Model)) {
             throw new Error(`${this.name}.hasMany called with something that's not a subclass of Sequelize.Model`);
         }
 
@@ -21,7 +30,7 @@ const Mixin = {
         options = _.extend(options, _.omit(source.options, ["hooks"]));
 
         // the id is in the foreign table or in a connecting table
-        const association = new HasMany(source, target, options);
+        const association = new Association.HasMany(source, target, options);
         source.associations[association.associationAccessor] = association;
 
         association.injectAttributes();
@@ -31,7 +40,7 @@ const Mixin = {
     },
 
     belongsToMany(targetModel, options) { // testhint options:none
-        if (!targetModel || !targetModel.prototype || !(targetModel.prototype instanceof this.sequelize.Model)) {
+        if (!targetModel || !targetModel.prototype || !(targetModel.prototype instanceof __.Model)) {
             throw new Error(`${this.name}.belongsToMany called with something that's not a subclass of Sequelize.Model`);
         }
 
@@ -45,7 +54,7 @@ const Mixin = {
         options = _.extend(options, _.omit(sourceModel.options, ["hooks", "timestamps", "scopes", "defaultScope"]));
 
         // the id is in the foreign table or in a connecting table
-        const association = new BelongsToMany(sourceModel, targetModel, options);
+        const association = new Association.BelongsToMany(sourceModel, targetModel, options);
         sourceModel.associations[association.associationAccessor] = association;
 
         association.injectAttributes();
@@ -75,8 +84,8 @@ const Mixin = {
 // The logic for hasOne and belongsTo is exactly the same
 const singleLinked = (Type) => {
     return function (target, options) { // testhint options:none
-        if (!target || !target.prototype || !(target.prototype instanceof this.sequelize.Model)) {
-            throw new Error(`${this.name}.${Utils.lowercaseFirst(Type.toString())} called with something that's not a subclass of Sequelize.Model`);
+        if (!target || !target.prototype || !(target.prototype instanceof __.Model)) {
+            throw new Error(`${this.name}.${util.lowercaseFirst(Type.toString())} called with something that's not a subclass of Sequelize.Model`);
         }
 
         const source = this;
@@ -97,10 +106,8 @@ const singleLinked = (Type) => {
     };
 };
 
-Mixin.hasOne = singleLinked(HasOne);
+Mixin.hasOne = singleLinked(Association.HasOne);
 
-Mixin.belongsTo = singleLinked(BelongsTo);
+Mixin.belongsTo = singleLinked(Association.BelongsTo);
 
-module.exports = Mixin;
-module.exports.Mixin = Mixin;
-module.exports.default = Mixin;
+export default Mixin;

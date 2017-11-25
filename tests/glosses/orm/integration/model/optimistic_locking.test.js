@@ -1,6 +1,7 @@
 import Support from "../support";
 
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("Model"), () => {
     describe("optimistic locking", () => {
@@ -8,7 +9,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
         beforeEach(function () {
             Account = this.sequelize.define("Account", {
                 number: {
-                    type: DataTypes.INTEGER
+                    type: type.INTEGER
                 }
             }, {
                 version: true
@@ -53,7 +54,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
             await assert.throws(async () => {
                 await accountB.save();
-            }, Support.Sequelize.OptimisticLockError);
+            }, orm.x.OptimisticLockError);
         });
 
         it("increment() also increments the version", () => {

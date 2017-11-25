@@ -1,17 +1,16 @@
 import Support from "../../support";
 
 const current = Support.sequelize;
-const {
-    DataTypes
-} = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 const { vendor: { lodash: _ } } = adone;
 
 describe(Support.getTestDialectTeaser("Model"), () => {
 
     describe("method destroy", () => {
         const User = current.define("User", {
-            name: DataTypes.STRING,
-            secretValue: DataTypes.INTEGER
+            name: type.STRING,
+            secretValue: type.INTEGER
         });
 
         beforeEach(function () {

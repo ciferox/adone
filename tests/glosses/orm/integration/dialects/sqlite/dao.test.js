@@ -2,22 +2,23 @@ import Support from "../../support";
 
 const Sequelize = Support.Sequelize;
 const dialect = Support.getTestDialect();
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 describe("[SQLITE Specific] DAO", { skip: dialect !== "sqlite" }, () => {
     beforeEach(function () {
         this.User = this.sequelize.define("User", {
-            username: DataTypes.STRING,
-            emergency_contact: DataTypes.JSON,
-            emergencyContact: DataTypes.JSON,
+            username: type.STRING,
+            emergency_contact: type.JSON,
+            emergencyContact: type.JSON,
             dateField: {
-                type: DataTypes.DATE,
+                type: type.DATE,
                 field: "date_field"
             }
         });
         this.Project = this.sequelize.define("project", {
             dateField: {
-                type: DataTypes.DATE,
+                type: type.DATE,
                 field: "date_field"
             }
         });

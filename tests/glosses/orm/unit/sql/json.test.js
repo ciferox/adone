@@ -1,11 +1,8 @@
 import Support from "../../support";
 
-const {
-    DataTypes
-} = adone.orm;
-
+const { orm } = adone;
+const { type } = orm;
 const expectsql = Support.expectsql;
-const Sequelize = Support.Sequelize;
 const current = Support.sequelize;
 const sql = current.dialect.QueryGenerator;
 
@@ -15,38 +12,38 @@ if (current.dialect.supports.JSON) {
         describe("JSON", () => {
             describe("escape", () => {
                 it("plain string", () => {
-                    expectsql(sql.escape("string", { type: new DataTypes.JSON() }), {
+                    expectsql(sql.escape("string", { type: new type.JSON() }), {
                         default: '\'"string"\'',
                         mysql: '\'\\"string\\"\''
                     });
                 });
 
                 it("plain int", () => {
-                    expectsql(sql.escape(0, { type: new DataTypes.JSON() }), {
+                    expectsql(sql.escape(0, { type: new type.JSON() }), {
                         default: "'0'"
                     });
-                    expectsql(sql.escape(123, { type: new DataTypes.JSON() }), {
+                    expectsql(sql.escape(123, { type: new type.JSON() }), {
                         default: "'123'"
                     });
                 });
 
                 it("boolean", () => {
-                    expectsql(sql.escape(true, { type: new DataTypes.JSON() }), {
+                    expectsql(sql.escape(true, { type: new type.JSON() }), {
                         default: "'true'"
                     });
-                    expectsql(sql.escape(false, { type: new DataTypes.JSON() }), {
+                    expectsql(sql.escape(false, { type: new type.JSON() }), {
                         default: "'false'"
                     });
                 });
 
                 it("NULL", () => {
-                    expectsql(sql.escape(null, { type: new DataTypes.JSON() }), {
+                    expectsql(sql.escape(null, { type: new type.JSON() }), {
                         default: "NULL"
                     });
                 });
 
                 it("nested object", () => {
-                    expectsql(sql.escape({ some: "nested", more: { nested: true }, answer: 42 }, { type: new DataTypes.JSON() }), {
+                    expectsql(sql.escape({ some: "nested", more: { nested: true }, answer: 42 }, { type: new type.JSON() }), {
                         default: '\'{"some":"nested","more":{"nested":true},"answer":42}\'',
                         mysql: '\'{\\"some\\":\\"nested\\",\\"more\\":{\\"nested\\":true},\\"answer\\":42}\''
                     });
@@ -58,7 +55,7 @@ if (current.dialect.supports.JSON) {
                             { some: "nested", more: { nested: true }, answer: 42 },
                             43,
                             "joe"
-                        ], { type: DataTypes.ARRAY(DataTypes.JSON) }), {
+                        ], { type: new type.ARRAY(type.JSON) }), {
                             postgres: 'ARRAY[\'{"some":"nested","more":{"nested":true},"answer":42}\',\'43\',\'"joe"\']::JSON[]'
                         });
                     });
@@ -69,7 +66,7 @@ if (current.dialect.supports.JSON) {
                                 { some: "nested", more: { nested: true }, answer: 42 },
                                 43,
                                 "joe"
-                            ], { type: DataTypes.ARRAY(DataTypes.JSONB) }), {
+                            ], { type: new type.ARRAY(type.JSONB) }), {
                                 postgres: 'ARRAY[\'{"some":"nested","more":{"nested":true},"answer":42}\',\'43\',\'"joe"\']::JSONB[]'
                             });
                         });
@@ -79,7 +76,7 @@ if (current.dialect.supports.JSON) {
 
             describe("path extraction", () => {
                 it("condition object", () => {
-                    expectsql(sql.whereItemQuery(undefined, Sequelize.json({ id: 1 })), {
+                    expectsql(sql.whereItemQuery(undefined, orm.util.json({ id: 1 })), {
                         postgres: '("id"#>>\'{}\') = \'1\'',
                         sqlite: "json_extract(`id`, '$') = '1'",
                         mysql: "`id`->>'$.' = '1'"
@@ -87,7 +84,7 @@ if (current.dialect.supports.JSON) {
                 });
 
                 it("nested condition object", () => {
-                    expectsql(sql.whereItemQuery(undefined, Sequelize.json({ profile: { id: 1 } })), {
+                    expectsql(sql.whereItemQuery(undefined, orm.util.json({ profile: { id: 1 } })), {
                         postgres: '("profile"#>>\'{id}\') = \'1\'',
                         sqlite: "json_extract(`profile`, '$.id') = '1'",
                         mysql: "`profile`->>'$.id' = '1'"
@@ -95,7 +92,7 @@ if (current.dialect.supports.JSON) {
                 });
 
                 it("multiple condition object", () => {
-                    expectsql(sql.whereItemQuery(undefined, Sequelize.json({ property: { value: 1 }, another: { value: "string" } })), {
+                    expectsql(sql.whereItemQuery(undefined, orm.util.json({ property: { value: 1 }, another: { value: "string" } })), {
                         postgres: '("property"#>>\'{value}\') = \'1\' AND ("another"#>>\'{value}\') = \'string\'',
                         sqlite: "json_extract(`property`, '$.value') = '1' AND json_extract(`another`, '$.value') = 'string'",
                         mysql: "`property`->>'$.value' = '1' and `another`->>'$.value' = 'string'"
@@ -103,7 +100,7 @@ if (current.dialect.supports.JSON) {
                 });
 
                 it("dot notation", () => {
-                    expectsql(sql.whereItemQuery(Sequelize.json("profile.id"), "1"), {
+                    expectsql(sql.whereItemQuery(orm.util.json("profile.id"), "1"), {
                         postgres: '("profile"#>>\'{id}\') = \'1\'',
                         sqlite: "json_extract(`profile`, '$.id') = '1'",
                         mysql: "`profile`->>'$.id' = '1'"
@@ -111,7 +108,7 @@ if (current.dialect.supports.JSON) {
                 });
 
                 it('column named "json"', () => {
-                    expectsql(sql.whereItemQuery(Sequelize.json("json"), "{}"), {
+                    expectsql(sql.whereItemQuery(orm.util.json("json"), "{}"), {
                         postgres: '("json"#>>\'{}\') = \'{}\'',
                         sqlite: "json_extract(`json`, '$') = '{}'",
                         mysql: "`json`->>'$.' = '{}'"
@@ -122,38 +119,38 @@ if (current.dialect.supports.JSON) {
             describe("raw json query", () => {
                 if (current.dialect.name === "postgres") {
                     it("#>> operator", () => {
-                        expectsql(sql.whereItemQuery(Sequelize.json('("data"#>>\'{id}\')'), "id"), {
+                        expectsql(sql.whereItemQuery(orm.util.json('("data"#>>\'{id}\')'), "id"), {
                             postgres: '("data"#>>\'{id}\') = \'id\''
                         });
                     });
                 }
 
                 it("json function", () => {
-                    expectsql(sql.handleSequelizeMethod(Sequelize.json('json(\'{"profile":{"name":"david"}}\')')), {
+                    expectsql(sql.handleSequelizeMethod(orm.util.json('json(\'{"profile":{"name":"david"}}\')')), {
                         default: 'json(\'{"profile":{"name":"david"}}\')'
                     });
                 });
 
                 it("nested json functions", () => {
-                    expectsql(sql.handleSequelizeMethod(Sequelize.json('json_extract(json_object(\'{"profile":null}\'), "profile")')), {
+                    expectsql(sql.handleSequelizeMethod(orm.util.json('json_extract(json_object(\'{"profile":null}\'), "profile")')), {
                         default: 'json_extract(json_object(\'{"profile":null}\'), "profile")'
                     });
                 });
 
                 it("escaped string argument", () => {
-                    expectsql(sql.handleSequelizeMethod(Sequelize.json('json(\'{"quote":{"single":"\'\'","double":""""},"parenthesis":"())("}\')')), {
+                    expectsql(sql.handleSequelizeMethod(orm.util.json('json(\'{"quote":{"single":"\'\'","double":""""},"parenthesis":"())("}\')')), {
                         default: 'json(\'{"quote":{"single":"\'\'","double":""""},"parenthesis":"())("}\')'
                     });
                 });
 
                 it("unbalnced statement", () => {
-                    expect(() => sql.handleSequelizeMethod(Sequelize.json("json())"))).to.throw();
-                    expect(() => sql.handleSequelizeMethod(Sequelize.json("json_extract(json()"))).to.throw();
+                    expect(() => sql.handleSequelizeMethod(orm.util.json("json())"))).to.throw();
+                    expect(() => sql.handleSequelizeMethod(orm.util.json("json_extract(json()"))).to.throw();
                 });
 
                 it("separator injection", () => {
-                    expect(() => sql.handleSequelizeMethod(Sequelize.json("json(; DELETE YOLO INJECTIONS; -- )"))).to.throw();
-                    expect(() => sql.handleSequelizeMethod(Sequelize.json("json(); DELETE YOLO INJECTIONS; -- "))).to.throw();
+                    expect(() => sql.handleSequelizeMethod(orm.util.json("json(; DELETE YOLO INJECTIONS; -- )"))).to.throw();
+                    expect(() => sql.handleSequelizeMethod(orm.util.json("json(); DELETE YOLO INJECTIONS; -- "))).to.throw();
                 });
             });
         });

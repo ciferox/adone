@@ -1,8 +1,7 @@
 import Support from "../support";
 
 const { vendor: { lodash: _ } } = adone;
-const Sequelize = adone.orm;
-const { DataTypes } = Sequelize;
+const { type, Transaction } = adone.orm;
 const current = Support.sequelize;
 const dialect = Support.getTestDialect();
 
@@ -11,8 +10,8 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
         beforeEach(async function () {
             const self = this;
 
-            this.User = this.sequelize.define("User", { username: DataTypes.STRING });
-            this.Task = this.sequelize.define("Task", { title: DataTypes.STRING, active: DataTypes.BOOLEAN });
+            this.User = this.sequelize.define("User", { username: type.STRING });
+            this.Task = this.sequelize.define("Task", { title: type.STRING, active: type.BOOLEAN });
 
             this.User.belongsToMany(this.Task, { through: "UserTasks" });
             this.Task.belongsToMany(this.User, { through: "UserTasks" });
@@ -31,8 +30,8 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
         if (current.dialect.supports.transactions) {
             it("supports transactions", async function () {
                 const sequelize = await Support.prepareTransactionTest(this.sequelize);
-                const Article = sequelize.define("Article", { title: DataTypes.STRING });
-                const Label = sequelize.define("Label", { text: DataTypes.STRING });
+                const Article = sequelize.define("Article", { title: type.STRING });
+                const Label = sequelize.define("Label", { text: type.STRING });
 
                 Article.belongsToMany(Label, { through: "ArticleLabels" });
                 Label.belongsToMany(Article, { through: "ArticleLabels" });
@@ -143,7 +142,7 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
         });
 
         it("get associated objects with an eager load with conditions but not required", function () {
-            const Label = this.sequelize.define("Label", { title: DataTypes.STRING, isActive: DataTypes.BOOLEAN });
+            const Label = this.sequelize.define("Label", { title: type.STRING, isActive: type.BOOLEAN });
             const Task = this.Task;
             const User = this.User;
 
@@ -169,15 +168,15 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
         it("should support schemas", async function () {
             const self = this;
             const AcmeUser = self.sequelize.define("User", {
-                username: DataTypes.STRING
+                username: type.STRING
             }).schema("acme", "_");
             const AcmeProject = self.sequelize.define("Project", {
-                title: DataTypes.STRING,
-                active: DataTypes.BOOLEAN
+                title: type.STRING,
+                active: type.BOOLEAN
             }).schema("acme", "_");
             const AcmeProjectUsers = self.sequelize.define("ProjectUsers", {
-                status: DataTypes.STRING,
-                data: DataTypes.INTEGER
+                status: type.STRING,
+                data: type.INTEGER
             }).schema("acme", "_");
 
             AcmeUser.belongsToMany(AcmeProject, { through: AcmeProjectUsers });
@@ -204,9 +203,9 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
         it("supports custom primary keys and foreign keys", async function () {
             const User = this.sequelize.define("User", {
                 id_user: {
-                    type: DataTypes.UUID,
+                    type: type.UUID,
                     primaryKey: true,
-                    defaultValue: DataTypes.UUIDV4,
+                    defaultValue: type.UUIDV4,
                     allowNull: false
                 }
             }, {
@@ -215,10 +214,10 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
 
             const Group = this.sequelize.define("Group", {
                 id_group: {
-                    type: DataTypes.UUID,
+                    type: type.UUID,
                     allowNull: false,
                     primaryKey: true,
-                    defaultValue: DataTypes.UUIDV4
+                    defaultValue: type.UUIDV4
                 }
             }, {
                 tableName: "tbl_group"
@@ -250,10 +249,10 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
         it("supports primary key attributes with different field names", async function () {
             const User = this.sequelize.define("User", {
                 id: {
-                    type: DataTypes.UUID,
+                    type: type.UUID,
                     allowNull: false,
                     primaryKey: true,
-                    defaultValue: DataTypes.UUIDV4,
+                    defaultValue: type.UUIDV4,
                     field: "user_id"
                 }
             }, {
@@ -262,10 +261,10 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
 
             const Group = this.sequelize.define("Group", {
                 id: {
-                    type: DataTypes.UUID,
+                    type: type.UUID,
                     allowNull: false,
                     primaryKey: true,
-                    defaultValue: DataTypes.UUIDV4,
+                    defaultValue: type.UUIDV4,
                     field: "group_id"
                 }
             }, {
@@ -301,10 +300,10 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
         it("supports primary key attributes with different field names where parent include is required", async function () {
             const User = this.sequelize.define("User", {
                 id: {
-                    type: DataTypes.UUID,
+                    type: type.UUID,
                     allowNull: false,
                     primaryKey: true,
-                    defaultValue: DataTypes.UUIDV4,
+                    defaultValue: type.UUIDV4,
                     field: "user_id"
                 }
             }, {
@@ -313,10 +312,10 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
 
             const Company = this.sequelize.define("Company", {
                 id: {
-                    type: DataTypes.UUID,
+                    type: type.UUID,
                     allowNull: false,
                     primaryKey: true,
-                    defaultValue: DataTypes.UUIDV4,
+                    defaultValue: type.UUIDV4,
                     field: "company_id"
                 }
             }, {
@@ -325,10 +324,10 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
 
             const Group = this.sequelize.define("Group", {
                 id: {
-                    type: DataTypes.UUID,
+                    type: type.UUID,
                     allowNull: false,
                     primaryKey: true,
-                    defaultValue: DataTypes.UUIDV4,
+                    defaultValue: type.UUIDV4,
                     field: "group_id"
                 }
             }, {
@@ -388,20 +387,20 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
             const self = this;
 
             this.User = this.sequelize.define("User", {
-                username: DataTypes.STRING
+                username: type.STRING
             });
             this.Task = this.sequelize.define("Task", {
-                title: DataTypes.STRING,
-                active: DataTypes.BOOLEAN
+                title: type.STRING,
+                active: type.BOOLEAN
             });
             this.UserTask = this.sequelize.define("UserTask", {
                 id: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     primaryKey: true,
                     autoIncrement: true
                 },
                 started: {
-                    type: DataTypes.BOOLEAN,
+                    type: type.BOOLEAN,
                     defaultValue: false
                 }
             });
@@ -475,8 +474,8 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
 
     describe("setAssociations", () => {
         it("clears associations when passing null to the set-method", async function () {
-            const User = this.sequelize.define("User", { username: DataTypes.STRING });
-            const Task = this.sequelize.define("Task", { title: DataTypes.STRING });
+            const User = this.sequelize.define("User", { username: type.STRING });
+            const Task = this.sequelize.define("Task", { title: type.STRING });
 
             User.belongsToMany(Task, { through: "UserTasks" });
             Task.belongsToMany(User, { through: "UserTasks" });
@@ -495,8 +494,8 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
         });
 
         it("should be able to set twice with custom primary keys", async function () {
-            const User = this.sequelize.define("User", { uid: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true }, username: DataTypes.STRING });
-            const Task = this.sequelize.define("Task", { tid: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true }, title: DataTypes.STRING });
+            const User = this.sequelize.define("User", { uid: { type: type.INTEGER, primaryKey: true, autoIncrement: true }, username: type.STRING });
+            const Task = this.sequelize.define("Task", { tid: { type: type.INTEGER, primaryKey: true, autoIncrement: true }, title: type.STRING });
 
             User.belongsToMany(Task, { through: "UserTasks" });
             Task.belongsToMany(User, { through: "UserTasks" });
@@ -515,12 +514,12 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
 
         it("joins an association with custom primary keys", async function () {
             const Group = this.sequelize.define("group", {
-                group_id: { type: DataTypes.INTEGER, primaryKey: true },
-                name: new DataTypes.STRING(64)
+                group_id: { type: type.INTEGER, primaryKey: true },
+                name: new type.STRING(64)
             });
             const Member = this.sequelize.define("member", {
-                member_id: { type: DataTypes.INTEGER, primaryKey: true },
-                email: new DataTypes.STRING(64)
+                member_id: { type: type.INTEGER, primaryKey: true },
+                email: new type.STRING(64)
             });
 
             Group.belongsToMany(Member, { through: "group_members", foreignKey: "group_id", otherKey: "member_id" });
@@ -540,8 +539,8 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
         });
 
         it("supports passing the primary key instead of an object", async function () {
-            const User = this.sequelize.define("User", { username: DataTypes.STRING });
-            const Task = this.sequelize.define("Task", { title: DataTypes.STRING });
+            const User = this.sequelize.define("User", { username: type.STRING });
+            const Task = this.sequelize.define("Task", { title: type.STRING });
 
             User.belongsToMany(Task, { through: "UserTasks" });
             Task.belongsToMany(User, { through: "UserTasks" });
@@ -562,22 +561,22 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
         it("using scope to set associations", async function () {
             const self = this;
             const ItemTag = self.sequelize.define("ItemTag", {
-                id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-                tag_id: { type: DataTypes.INTEGER, unique: false },
-                taggable: { type: DataTypes.STRING },
-                taggable_id: { type: DataTypes.INTEGER, unique: false }
+                id: { type: type.INTEGER, primaryKey: true, autoIncrement: true },
+                tag_id: { type: type.INTEGER, unique: false },
+                taggable: { type: type.STRING },
+                taggable_id: { type: type.INTEGER, unique: false }
             });
             const Tag = self.sequelize.define("Tag", {
-                id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-                name: DataTypes.STRING
+                id: { type: type.INTEGER, primaryKey: true, autoIncrement: true },
+                name: type.STRING
             });
             const Comment = self.sequelize.define("Comment", {
-                id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-                name: DataTypes.STRING
+                id: { type: type.INTEGER, primaryKey: true, autoIncrement: true },
+                name: type.STRING
             });
             const Post = self.sequelize.define("Post", {
-                id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-                name: DataTypes.STRING
+                id: { type: type.INTEGER, primaryKey: true, autoIncrement: true },
+                name: type.STRING
             });
 
             Post.belongsToMany(Tag, {
@@ -609,22 +608,22 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
         it("updating association via set associations with scope", async function () {
             const self = this;
             const ItemTag = this.sequelize.define("ItemTag", {
-                id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-                tag_id: { type: DataTypes.INTEGER, unique: false },
-                taggable: { type: DataTypes.STRING },
-                taggable_id: { type: DataTypes.INTEGER, unique: false }
+                id: { type: type.INTEGER, primaryKey: true, autoIncrement: true },
+                tag_id: { type: type.INTEGER, unique: false },
+                taggable: { type: type.STRING },
+                taggable_id: { type: type.INTEGER, unique: false }
             });
             const Tag = this.sequelize.define("Tag", {
-                id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-                name: DataTypes.STRING
+                id: { type: type.INTEGER, primaryKey: true, autoIncrement: true },
+                name: type.STRING
             });
             const Comment = this.sequelize.define("Comment", {
-                id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-                name: DataTypes.STRING
+                id: { type: type.INTEGER, primaryKey: true, autoIncrement: true },
+                name: type.STRING
             });
             const Post = this.sequelize.define("Post", {
-                id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-                name: DataTypes.STRING
+                id: { type: type.INTEGER, primaryKey: true, autoIncrement: true },
+                name: type.STRING
             });
 
             Post.belongsToMany(Tag, {
@@ -658,8 +657,8 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
 
     describe("createAssociations", () => {
         it("creates a new associated object", async function () {
-            const User = this.sequelize.define("User", { username: DataTypes.STRING });
-            const Task = this.sequelize.define("Task", { title: DataTypes.STRING });
+            const User = this.sequelize.define("User", { username: type.STRING });
+            const Task = this.sequelize.define("Task", { title: type.STRING });
 
             User.belongsToMany(Task, { through: "UserTasks" });
             Task.belongsToMany(User, { through: "UserTasks" });
@@ -676,8 +675,8 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
         if (current.dialect.supports.transactions) {
             it("supports transactions", async function () {
                 const sequelize = await Support.prepareTransactionTest(this.sequelize);
-                const User = sequelize.define("User", { username: DataTypes.STRING });
-                const Task = sequelize.define("Task", { title: DataTypes.STRING });
+                const User = sequelize.define("User", { username: type.STRING });
+                const Task = sequelize.define("Task", { title: type.STRING });
 
                 User.belongsToMany(Task, { through: "UserTasks" });
                 Task.belongsToMany(User, { through: "UserTasks" });
@@ -700,7 +699,7 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
             const User = this.sequelize.define("user", {});
             const Group = this.sequelize.define("group", {});
             const UserGroups = this.sequelize.define("user_groups", {
-                isAdmin: Sequelize.BOOLEAN
+                isAdmin: type.BOOLEAN
             });
 
             User.belongsToMany(Group, { through: UserGroups });
@@ -723,8 +722,8 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
         });
 
         it("supports using the field parameter", async function () {
-            const User = this.sequelize.define("User", { username: DataTypes.STRING });
-            const Task = this.sequelize.define("Task", { title: DataTypes.STRING });
+            const User = this.sequelize.define("User", { username: type.STRING });
+            const Task = this.sequelize.define("Task", { title: type.STRING });
 
             User.belongsToMany(Task, { through: "UserTasks" });
             Task.belongsToMany(User, { through: "UserTasks" });
@@ -740,8 +739,8 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
 
     describe("addAssociations", () => {
         it("supports both single instance and array", async function () {
-            const User = this.sequelize.define("User", { username: DataTypes.STRING });
-            const Task = this.sequelize.define("Task", { title: DataTypes.STRING });
+            const User = this.sequelize.define("User", { username: type.STRING });
+            const Task = this.sequelize.define("Task", { title: type.STRING });
 
             User.belongsToMany(Task, { through: "UserTasks" });
             Task.belongsToMany(User, { through: "UserTasks" });
@@ -769,8 +768,8 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
         if (current.dialect.supports.transactions) {
             it("supports transactions", async function () {
                 const sequelize = await Support.prepareTransactionTest(this.sequelize);
-                const User = sequelize.define("User", { username: DataTypes.STRING });
-                const Task = sequelize.define("Task", { title: DataTypes.STRING });
+                const User = sequelize.define("User", { username: type.STRING });
+                const Task = sequelize.define("Task", { title: type.STRING });
 
                 User.belongsToMany(Task, { through: "UserTasks" });
                 Task.belongsToMany(User, { through: "UserTasks" });
@@ -789,11 +788,11 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
 
             it("supports transactions when updating a through model", async function () {
                 const sequelize = await Support.prepareTransactionTest(this.sequelize);
-                const User = sequelize.define("User", { username: DataTypes.STRING });
-                const Task = sequelize.define("Task", { title: DataTypes.STRING });
+                const User = sequelize.define("User", { username: type.STRING });
+                const Task = sequelize.define("Task", { title: type.STRING });
 
                 const UserTask = sequelize.define("UserTask", {
-                    status: Sequelize.STRING
+                    status: type.STRING
                 });
 
                 User.belongsToMany(Task, { through: UserTask });
@@ -802,7 +801,7 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
                 const [user, task, t] = await Promise.all([
                     User.create({ username: "foo" }),
                     Task.create({ title: "task" }),
-                    sequelize.transaction({ isolationLevel: Sequelize.Transaction.ISOLATION_LEVELS.READ_COMMITTED })
+                    sequelize.transaction({ isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED })
                 ]);
                 await task.addUser(user, { through: { status: "pending" } }); // Create without transaction, so the old value is accesible from outside the transaction
                 await task.addUser(user, { transaction: t, through: { status: "completed" } }); // Add an already exisiting user in a transaction, updating a value in the join table
@@ -817,8 +816,8 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
         }
 
         it("supports passing the primary key instead of an object", async function () {
-            const User = this.sequelize.define("User", { username: DataTypes.STRING });
-            const Task = this.sequelize.define("Task", { title: DataTypes.STRING });
+            const User = this.sequelize.define("User", { username: type.STRING });
+            const Task = this.sequelize.define("Task", { title: type.STRING });
 
             User.belongsToMany(Task, { through: "UserTasks" });
             Task.belongsToMany(User, { through: "UserTasks" });
@@ -837,7 +836,7 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
         it("should not pass indexes to the join table", function () {
             const User = this.sequelize.define(
                 "User",
-                { username: DataTypes.STRING },
+                { username: type.STRING },
                 {
                     indexes: [
                         {
@@ -850,7 +849,7 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
                 });
             const Task = this.sequelize.define(
                 "Task",
-                { title: DataTypes.STRING },
+                { title: type.STRING },
                 {
                     indexes: [
                         {
@@ -869,8 +868,8 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
 
     describe("addMultipleAssociations", () => {
         it("supports both single instance and array", async function () {
-            const User = this.sequelize.define("User", { username: DataTypes.STRING });
-            const Task = this.sequelize.define("Task", { title: DataTypes.STRING });
+            const User = this.sequelize.define("User", { username: type.STRING });
+            const Task = this.sequelize.define("Task", { title: type.STRING });
 
             User.belongsToMany(Task, { through: "UserTasks" });
             Task.belongsToMany(User, { through: "UserTasks" });
@@ -896,8 +895,8 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
         });
 
         it("adds associations without removing the current ones", async function () {
-            const User = this.sequelize.define("User", { username: DataTypes.STRING });
-            const Task = this.sequelize.define("Task", { title: DataTypes.STRING });
+            const User = this.sequelize.define("User", { username: type.STRING });
+            const Task = this.sequelize.define("Task", { title: type.STRING });
 
             User.belongsToMany(Task, { through: "UserTasks" });
             Task.belongsToMany(User, { through: "UserTasks" });
@@ -928,16 +927,16 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
     describe("through model validations", () => {
         beforeEach(async function () {
             const Project = this.sequelize.define("Project", {
-                name: Sequelize.STRING
+                name: type.STRING
             });
 
             const Employee = this.sequelize.define("Employee", {
-                name: Sequelize.STRING
+                name: type.STRING
             });
 
             const Participation = this.sequelize.define("Participation", {
                 role: {
-                    type: Sequelize.STRING,
+                    type: type.STRING,
                     allowNull: false,
                     validate: {
                         len: {
@@ -979,8 +978,8 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
 
     describe("optimizations using bulk create, destroy and update", () => {
         beforeEach(function () {
-            this.User = this.sequelize.define("User", { username: DataTypes.STRING }, { timestamps: false });
-            this.Task = this.sequelize.define("Task", { title: DataTypes.STRING }, { timestamps: false });
+            this.User = this.sequelize.define("User", { username: type.STRING }, { timestamps: false });
+            this.Task = this.sequelize.define("Task", { title: type.STRING }, { timestamps: false });
 
             this.User.belongsToMany(this.Task, { through: "UserTasks" });
             this.Task.belongsToMany(this.User, { through: "UserTasks" });
@@ -1021,11 +1020,11 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
     describe("join table creation", () => {
         beforeEach(function () {
             this.User = this.sequelize.define("User",
-                { username: DataTypes.STRING },
+                { username: type.STRING },
                 { tableName: "users" }
             );
             this.Task = this.sequelize.define("Task",
-                { title: DataTypes.STRING },
+                { title: type.STRING },
                 { tableName: "tasks" }
             );
 
@@ -1039,18 +1038,18 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
             const Beacons = this.sequelize.define("Beacon", {
                 id: {
                     primaryKey: true,
-                    type: DataTypes.UUID,
-                    defaultValue: DataTypes.UUIDV4
+                    type: type.UUID,
+                    defaultValue: type.UUIDV4
                 },
                 name: {
-                    type: DataTypes.STRING
+                    type: type.STRING
                 }
             });
 
             // Usar not to clash with the beforEach definition
             const Users = this.sequelize.define("Usar", {
                 name: {
-                    type: DataTypes.STRING
+                    type: type.STRING
                 }
             });
 
@@ -1125,7 +1124,7 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
         it("should infer otherKey from paired BTM relationship with a through model defined", function () {
             const User = this.sequelize.define("User", {});
             const Place = this.sequelize.define("User", {});
-            const UserPlace = this.sequelize.define("UserPlace", { id: { primaryKey: true, type: DataTypes.INTEGER, autoIncrement: true } }, { timestamps: false });
+            const UserPlace = this.sequelize.define("UserPlace", { id: { primaryKey: true, type: type.INTEGER, autoIncrement: true } }, { timestamps: false });
 
             const Places = User.belongsToMany(Place, { through: UserPlace, foreignKey: "user_id" });
             const Users = Place.belongsToMany(User, { through: UserPlace, foreignKey: "place_id" });
@@ -1142,9 +1141,9 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
 
     describe("foreign key with fields specified", () => {
         beforeEach(function () {
-            this.User = this.sequelize.define("User", { name: DataTypes.STRING });
-            this.Project = this.sequelize.define("Project", { name: DataTypes.STRING });
-            this.Puppy = this.sequelize.define("Puppy", { breed: DataTypes.STRING });
+            this.User = this.sequelize.define("User", { name: type.STRING });
+            this.Project = this.sequelize.define("Project", { name: type.STRING });
+            this.Puppy = this.sequelize.define("Puppy", { breed: type.STRING });
 
             // doubly linked has many
             this.User.belongsToMany(this.Project, {
@@ -1231,7 +1230,7 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
 
         it("should be able to handle nested includes properly", async function () {
             const self = this;
-            this.Group = this.sequelize.define("Group", { groupName: DataTypes.STRING });
+            this.Group = this.sequelize.define("Group", { groupName: type.STRING });
 
             this.Group.belongsToMany(this.User, {
                 through: "group_users",
@@ -1297,11 +1296,11 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
     describe("primary key handling for join table", () => {
         beforeEach(function () {
             this.User = this.sequelize.define("User",
-                { username: DataTypes.STRING },
+                { username: type.STRING },
                 { tableName: "users" }
             );
             this.Task = this.sequelize.define("Task",
-                { title: DataTypes.STRING },
+                { title: type.STRING },
                 { tableName: "tasks" }
             );
         });
@@ -1320,14 +1319,14 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
 
             this.UserTasks = this.sequelize.define("usertasks", {
                 id: {
-                    type: Sequelize.INTEGER,
+                    type: type.INTEGER,
                     autoincrement: true,
                     primaryKey: true
                 }
             });
             this.UserTasks2 = this.sequelize.define("usertasks2", {
                 userTasksId: {
-                    type: Sequelize.INTEGER,
+                    type: type.INTEGER,
                     autoincrement: true,
                     primaryKey: true
                 }
@@ -1352,10 +1351,10 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
             beforeEach(function () {
                 const self = this;
 
-                return self.sequelize.queryInterface.createTable("users", { id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true }, username: DataTypes.STRING, createdAt: DataTypes.DATE, updatedAt: DataTypes.DATE }).then(() => {
-                    return self.sequelize.queryInterface.createTable("tasks", { id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true }, title: DataTypes.STRING, createdAt: DataTypes.DATE, updatedAt: DataTypes.DATE });
+                return self.sequelize.queryInterface.createTable("users", { id: { type: type.INTEGER, primaryKey: true, autoIncrement: true }, username: type.STRING, createdAt: type.DATE, updatedAt: type.DATE }).then(() => {
+                    return self.sequelize.queryInterface.createTable("tasks", { id: { type: type.INTEGER, primaryKey: true, autoIncrement: true }, title: type.STRING, createdAt: type.DATE, updatedAt: type.DATE });
                 }).then(() => {
-                    return self.sequelize.queryInterface.createTable("users_tasks", { TaskId: DataTypes.INTEGER, UserId: DataTypes.INTEGER, createdAt: DataTypes.DATE, updatedAt: DataTypes.DATE });
+                    return self.sequelize.queryInterface.createTable("users_tasks", { TaskId: type.INTEGER, UserId: type.INTEGER, createdAt: type.DATE, updatedAt: type.DATE });
                 });
             });
 
@@ -1382,8 +1381,8 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
             this.User = this.sequelize.define("User", {});
             this.Project = this.sequelize.define("Project", {});
             this.UserProjects = this.sequelize.define("UserProjects", {
-                status: DataTypes.STRING,
-                data: DataTypes.INTEGER
+                status: type.STRING,
+                data: type.INTEGER
             });
 
             this.User.belongsToMany(this.Project, { through: this.UserProjects });
@@ -1468,7 +1467,7 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
                 it("should be able to add twice (second call result in UPDATE call) with custom primary keys and without any attributes (and timestamps off) on the through model", async function () {
                     const Worker = this.sequelize.define("Worker", {
                         id: {
-                            type: DataTypes.INTEGER,
+                            type: type.INTEGER,
                             allowNull: false,
                             primaryKey: true,
                             autoIncrement: true
@@ -1476,7 +1475,7 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
                     }, { timestamps: false });
                     const Task = this.sequelize.define("Task", {
                         id: {
-                            type: DataTypes.INTEGER,
+                            type: type.INTEGER,
                             allowNull: false,
                             primaryKey: true,
                             autoIncrement: true
@@ -1484,7 +1483,7 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
                     }, { timestamps: false });
                     const WorkerTasks = this.sequelize.define("WorkerTasks", {
                         id: {
-                            type: DataTypes.INTEGER,
+                            type: type.INTEGER,
                             allowNull: false,
                             primaryKey: true,
                             autoIncrement: true
@@ -1618,8 +1617,8 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
 
     describe("belongsTo and hasMany at once", () => {
         beforeEach(function () {
-            this.A = this.sequelize.define("a", { name: Sequelize.STRING });
-            this.B = this.sequelize.define("b", { name: Sequelize.STRING });
+            this.A = this.sequelize.define("a", { name: type.STRING });
+            this.B = this.sequelize.define("b", { name: type.STRING });
         });
 
         describe("source belongs to target", () => {
@@ -1756,8 +1755,8 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
 
     describe("multiple hasMany", () => {
         beforeEach(function () {
-            this.User = this.sequelize.define("user", { name: Sequelize.STRING });
-            this.Project = this.sequelize.define("project", { projectName: Sequelize.STRING });
+            this.User = this.sequelize.define("user", { name: type.STRING });
+            this.Project = this.sequelize.define("project", { projectName: type.STRING });
         });
 
         describe("project has owners and users and owners and users have projects", () => {
@@ -1796,9 +1795,9 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
 
     describe("Foreign key constraints", () => {
         beforeEach(function () {
-            this.Task = this.sequelize.define("task", { title: DataTypes.STRING });
-            this.User = this.sequelize.define("user", { username: DataTypes.STRING });
-            this.UserTasks = this.sequelize.define("tasksusers", { userId: DataTypes.INTEGER, taskId: DataTypes.INTEGER });
+            this.Task = this.sequelize.define("task", { title: type.STRING });
+            this.User = this.sequelize.define("user", { username: type.STRING });
+            this.UserTasks = this.sequelize.define("tasksusers", { userId: type.INTEGER, taskId: type.INTEGER });
         });
 
         it("can cascade deletes both ways by default", async function () {
@@ -1936,7 +1935,7 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
                 const Project = this.sequelize.define("project", {});
                 const User = this.sequelize.define("user", {
                     uid: {
-                        type: Sequelize.INTEGER,
+                        type: type.INTEGER,
                         primaryKey: true
                     }
                 });
@@ -1951,7 +1950,7 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
 
         it("should throw an error if foreignKey and as result in a name clash", function () {
             const User = this.sequelize.define("user", {
-                user: Sequelize.INTEGER
+                user: type.INTEGER
             });
 
             expect(User.belongsToMany.bind(User, User, { as: "user", through: "UserUser" })).to
@@ -1962,7 +1961,7 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
     describe("selfAssociations", () => {
         it("should work with self reference", function () {
             const User = this.sequelize.define("User", {
-                name: new Sequelize.STRING(100)
+                name: new type.STRING(100)
             });
             const Follow = this.sequelize.define("Follow");
             const self = this;
@@ -1989,7 +1988,7 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
 
         it("should work with custom self reference", function () {
             const User = this.sequelize.define("User", {
-                name: new Sequelize.STRING(100)
+                name: new type.STRING(100)
             });
             const UserFollowers = this.sequelize.define("UserFollower");
             const self = this;

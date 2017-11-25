@@ -1,24 +1,25 @@
 import Support from "../support";
 
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("Hooks"), () => {
     beforeEach(function () {
         this.User = this.sequelize.define("User", {
             username: {
-                type: DataTypes.STRING,
+                type: type.STRING,
                 allowNull: false
             },
             mood: {
-                type: DataTypes.ENUM,
+                type: type.ENUM,
                 values: ["happy", "sad", "neutral"]
             }
         });
 
         this.ParanoidUser = this.sequelize.define("ParanoidUser", {
-            username: DataTypes.STRING,
+            username: type.STRING,
             mood: {
-                type: DataTypes.ENUM,
+                type: type.ENUM,
                 values: ["happy", "sad", "neutral"]
             }
         }, {

@@ -2,13 +2,14 @@ import Support from "../../support";
 
 const current = Support.sequelize;
 const { vendor: { lodash: _ } } = adone;
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("Model"), () => {
     describe("removeAttribute", () => {
         it("should support removing the primary key", () => {
             const Model = current.define("m", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
 
             expect(Model.primaryKeyAttribute).not.to.be.undefined;
@@ -22,7 +23,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
         it("should not add undefined attribute after removing primary key", () => {
             const Model = current.define("m", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
 
             Model.removeAttribute("id");

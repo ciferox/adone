@@ -1,19 +1,15 @@
-const { is, vendor: { lodash: _ } } = adone;
-const wkx = adone.util.terraformer.WKX;
-const inherits = require("../../utils/inherits");
+const {
+    is,
+    vendor: { lodash: _ },
+    util
+} = adone;
 
-module.exports = (BaseTypes) => {
+export default function definePostgresTypes(BaseTypes) {
     const warn = BaseTypes.ABSTRACT.warn.bind(undefined, "http://www.postgresql.org/docs/9.4/static/datatype.html");
 
     /**
-     * types:
-     * {
-     *   oids: [oid],
-     *   array_oids: [oid]
-     * }
      * @see oid here https://github.com/lib/pq/blob/master/oid/types.go
      */
-
     BaseTypes.UUID.types.postgres = {
         oids: [2950],
         array_oids: [2951]
@@ -383,7 +379,7 @@ module.exports = (BaseTypes) => {
 
         static parse(value) {
             const b = Buffer.from(value, "hex");
-            return wkx.Geometry.parse(b).toGeoJSON();
+            return util.terraformer.WKX.Geometry.parse(b).toGeoJSON();
         }
 
         _stringify(value, options) {
@@ -419,7 +415,7 @@ module.exports = (BaseTypes) => {
 
         static parse(value) {
             const b = Buffer.from(value, "hex");
-            return wkx.Geometry.parse(b).toGeoJSON();
+            return util.terraformer.WKX.Geometry.parse(b).toGeoJSON();
         }
 
         _stringify(value, options) {
@@ -537,7 +533,7 @@ module.exports = (BaseTypes) => {
         return str;
     };
 
-    const exports = {
+    const types = {
         DECIMAL,
         BLOB,
         STRING,
@@ -558,7 +554,7 @@ module.exports = (BaseTypes) => {
         RANGE
     };
 
-    _.forIn(exports, (DataType, key) => {
+    _.forIn(types, (DataType, key) => {
         if (!DataType.key) {
             DataType.key = key;
         }
@@ -567,5 +563,7 @@ module.exports = (BaseTypes) => {
         }
     });
 
-    return exports;
-};
+    BaseTypes.postgres = types;
+
+    return types;
+}

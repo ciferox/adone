@@ -2,8 +2,8 @@ import Support from "../support";
 import config from "../../config/config";
 
 const { vendor: { lodash: _ } } = adone;
-const Sequelize = adone.orm;
-
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("Sequelize"), { skip: !Support.sequelize.dialect.supports.deferrableConstraints }, () => {
     describe("Deferrable", () => {
@@ -16,15 +16,15 @@ describe(Support.getTestDialectTeaser("Sequelize"), { skip: !Support.sequelize.d
                 const userTableName = `users_${config.rand()}`;
 
                 const User = this.sequelize.define(
-                    "User", { name: Sequelize.STRING }, { tableName: userTableName }
+                    "User", { name: type.STRING }, { tableName: userTableName }
                 );
 
                 const Task = this.sequelize.define(
                     "Task", {
-                        title: Sequelize.STRING,
+                        title: type.STRING,
                         user_id: {
                             allowNull: false,
-                            type: Sequelize.INTEGER,
+                            type: type.INTEGER,
                             references: {
                                 model: userTableName,
                                 key: "id",
@@ -51,7 +51,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), { skip: !Support.sequelize.d
             it("does not allow the violation of the foreign key constraint", async function () {
                 await assert.throws(async () => {
                     await this.run(Sequelize.Deferrable.NOT);
-                }, Sequelize.ForeignKeyConstraintError);
+                }, orm.x.ForeignKeyConstraintError);
             });
         });
 
@@ -70,7 +70,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), { skip: !Support.sequelize.d
                     await this.run(Sequelize.Deferrable.INITIALLY_IMMEDIATE, {
                         deferrable: undefined
                     });
-                }, Sequelize.ForeignKeyConstraintError);
+                }, orm.x.ForeignKeyConstraintError);
             });
 
             it("allows the violation of the foreign key constraint if the transaction deferres only the foreign key constraint", function () {

@@ -1,14 +1,26 @@
-const AbstractConnectionManager = require("../abstract/connection_manager");
-const ResourceLock = require("./resource_lock");
-const Promise = require("../../promise");
-const Utils = require("../../utils");
-const debug = Utils.getLogger().debugContext("connection:mssql");
-const debugTedious = Utils.getLogger().debugContext("connection:mssql:tedious");
-const sequelizeErrors = require("../../errors");
-const parserStore = require("../parser_store")("mssql");
-const { vendor: { lodash: _ } } = adone;
+const {
+    orm,
+    vendor: { lodash: _ }
+} = adone;
 
-class ConnectionManager extends AbstractConnectionManager {
+const {
+    dialect: {
+        abstract: {
+            ConnectionManager: AbstractConnectionManager
+        },
+        mssql: dialect
+    }
+} = adone.private(orm);
+
+const {
+    x
+} = orm;
+
+const debug = orm.util.getLogger().debugContext("connection:mssql");
+const debugTedious = orm.util.getLogger().debugContext("connection:mssql:tedious");
+const parserStore = orm.util.parserStore("mssql");
+
+export default class ConnectionManager extends AbstractConnectionManager {
     constructor(dialect, sequelize) {
         super(dialect, sequelize);
 
@@ -18,7 +30,7 @@ class ConnectionManager extends AbstractConnectionManager {
             if (sequelize.config.dialectModulePath) {
                 this.lib = require(sequelize.config.dialectModulePath);
             } else {
-                this.lib = require("tedious");
+                this.lib = require("tedious"); // TODO
             }
         } catch (err) {
             if (err.code === "MODULE_NOT_FOUND") {
@@ -66,7 +78,7 @@ class ConnectionManager extends AbstractConnectionManager {
             }
 
             const connection = new this.lib.Connection(connectionConfig);
-            const connectionLock = new ResourceLock(connection);
+            const connectionLock = new dialect.ResourceLock(connection);
             connection.lib = this.lib;
 
             connection.on("connect", (err) => {
@@ -77,35 +89,35 @@ class ConnectionManager extends AbstractConnectionManager {
                 }
 
                 if (!err.code) {
-                    reject(new sequelizeErrors.ConnectionError(err));
+                    reject(new x.ConnectionError(err));
                     return;
                 }
 
                 switch (err.code) {
                     case "ESOCKET":
                         if (_.includes(err.message, "connect EHOSTUNREACH")) {
-                            reject(new sequelizeErrors.HostNotReachableError(err));
+                            reject(new x.HostNotReachableError(err));
                         } else if (_.includes(err.message, "connect ENETUNREACH")) {
-                            reject(new sequelizeErrors.HostNotReachableError(err));
+                            reject(new x.HostNotReachableError(err));
                         } else if (_.includes(err.message, "connect EADDRNOTAVAIL")) {
-                            reject(new sequelizeErrors.HostNotReachableError(err));
+                            reject(new x.HostNotReachableError(err));
                         } else if (_.includes(err.message, "getaddrinfo ENOTFOUND")) {
-                            reject(new sequelizeErrors.HostNotFoundError(err));
+                            reject(new x.HostNotFoundError(err));
                         } else if (_.includes(err.message, "connect ECONNREFUSED")) {
-                            reject(new sequelizeErrors.ConnectionRefusedError(err));
+                            reject(new x.ConnectionRefusedError(err));
                         } else {
-                            reject(new sequelizeErrors.ConnectionError(err));
+                            reject(new x.ConnectionError(err));
                         }
                         break;
                     case "ER_ACCESS_DENIED_ERROR":
                     case "ELOGIN":
-                        reject(new sequelizeErrors.AccessDeniedError(err));
+                        reject(new x.AccessDeniedError(err));
                         break;
                     case "EINVAL":
-                        reject(new sequelizeErrors.InvalidConnectionError(err));
+                        reject(new x.InvalidConnectionError(err));
                         break;
                     default:
-                        reject(new sequelizeErrors.ConnectionError(err));
+                        reject(new x.ConnectionError(err));
                         break;
                 }
             });
@@ -148,7 +160,4 @@ class ConnectionManager extends AbstractConnectionManager {
         return connection && connection.loggedIn;
     }
 }
-
-module.exports = ConnectionManager;
-module.exports.ConnectionManager = ConnectionManager;
-module.exports.default = ConnectionManager;
+ConnectionManager.prototype.defaultVersion = "12.0.2000"; // SQL Server 2014 Express

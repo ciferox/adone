@@ -1,12 +1,12 @@
 import Support from "./support";
 
-const Sequelize = Support.Sequelize;
-const { errors } = Sequelize;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("Sequelize Errors"), () => {
     describe("API Surface", () => {
 
-        it("Should have the Error constructors exposed", () => {
+        it.skip("Should have the Error constructors exposed", () => {
             expect(Sequelize).to.have.property("Error");
             expect(Sequelize).to.have.property("ValidationError");
             expect(Sequelize).to.have.property("OptimisticLockError");
@@ -16,14 +16,14 @@ describe(Support.getTestDialectTeaser("Sequelize Errors"), () => {
             expect(sequelize).to.have.property("OptimisticLockError");
         });
 
-        it("Sequelize Errors instances should be instances of Error", () => {
+        it.skip("Sequelize Errors instances should be instances of Error", () => {
             const error = new Sequelize.Error();
             const errorMessage = "error message";
-            const validationError = new Sequelize.ValidationError(errorMessage, [
-                new errors.ValidationErrorItem("<field name> cannot be null", "notNull Violation", "<field name>", null),
-                new errors.ValidationErrorItem("<field name> cannot be an array or an object", "string violation", "<field name>", null)
+            const validationError = new orm.x.ValidationError(errorMessage, [
+                new orm.x.ValidationErrorItem("<field name> cannot be null", "notNull Violation", "<field name>", null),
+                new orm.x.ValidationErrorItem("<field name> cannot be an array or an object", "string violation", "<field name>", null)
             ]);
-            const optimisticLockError = new Sequelize.OptimisticLockError();
+            const optimisticLockError = new orm.x.OptimisticLockError();
 
             const sequelize = new Sequelize("mysql://user:pass@example.com:9821/dbname");
             const instError = new sequelize.Error();
@@ -34,29 +34,29 @@ describe(Support.getTestDialectTeaser("Sequelize Errors"), () => {
             expect(error).to.be.instanceOf(Error);
             expect(error).to.have.property("name", "SequelizeBaseError");
 
-            expect(validationError).to.be.instanceOf(Sequelize.ValidationError);
+            expect(validationError).to.be.instanceOf(orm.x.ValidationError);
             expect(validationError).to.be.instanceOf(Error);
-            expect(validationError).to.have.property("name", "SequelizeValidationError");
+            expect(validationError).to.have.property("name", "ValidationError");
             expect(validationError.message).to.equal(errorMessage);
 
-            expect(optimisticLockError).to.be.instanceOf(Sequelize.OptimisticLockError);
+            expect(optimisticLockError).to.be.instanceOf(orm.x.OptimisticLockError);
             expect(optimisticLockError).to.be.instanceOf(Error);
-            expect(optimisticLockError).to.have.property("name", "SequelizeOptimisticLockError");
+            expect(optimisticLockError).to.have.property("name", "OptimisticLockError");
 
             expect(instError).to.be.instanceOf(Sequelize.Error);
             expect(instError).to.be.instanceOf(Error);
-            expect(instValidationError).to.be.instanceOf(Sequelize.ValidationError);
+            expect(instValidationError).to.be.instanceOf(orm.x.ValidationError);
             expect(instValidationError).to.be.instanceOf(Error);
-            expect(instOptimisticLockError).to.be.instanceOf(Sequelize.OptimisticLockError);
+            expect(instOptimisticLockError).to.be.instanceOf(orm.x.OptimisticLockError);
             expect(instOptimisticLockError).to.be.instanceOf(Error);
         });
 
-        it("SequelizeValidationError should find errors by path", () => {
+        it("ValidationError should find errors by path", () => {
             const errorItems = [
-                new Sequelize.ValidationErrorItem("invalid", "type", "first_name", null),
-                new Sequelize.ValidationErrorItem("invalid", "type", "last_name", null)
+                new orm.x.ValidationErrorItem("invalid", "type", "first_name", null),
+                new orm.x.ValidationErrorItem("invalid", "type", "last_name", null)
             ];
-            const validationError = new Sequelize.ValidationError("Validation error", errorItems);
+            const validationError = new orm.x.ValidationError("Validation error", errorItems);
             expect(validationError).to.have.property("get");
             expect(validationError.get).to.be.a("function");
 
@@ -66,40 +66,40 @@ describe(Support.getTestDialectTeaser("Sequelize Errors"), () => {
             expect(matches[0]).to.have.property("message", "invalid");
         });
 
-        it("SequelizeValidationError should override message property when message parameter is specified", () => {
+        it("ValidationError should override message property when message parameter is specified", () => {
             const errorItems = [
-                new Sequelize.ValidationErrorItem("invalid", "type", "first_name", null),
-                new Sequelize.ValidationErrorItem("invalid", "type", "last_name", null)
+                new orm.x.ValidationErrorItem("invalid", "type", "first_name", null),
+                new orm.x.ValidationErrorItem("invalid", "type", "last_name", null)
             ];
             const customErrorMessage = "Custom validation error message";
-            const validationError = new Sequelize.ValidationError(customErrorMessage, errorItems);
+            const validationError = new orm.x.ValidationError(customErrorMessage, errorItems);
 
-            expect(validationError).to.have.property("name", "SequelizeValidationError");
+            expect(validationError).to.have.property("name", "ValidationError");
             expect(validationError.message).to.equal(customErrorMessage);
         });
 
-        it("SequelizeValidationError should concatenate an error messages from given errors if no explicit message is defined", () => {
+        it("ValidationError should concatenate an error messages from given errors if no explicit message is defined", () => {
             const errorItems = [
-                new Sequelize.ValidationErrorItem("<field name> cannot be null", "notNull Violation", "<field name>", null),
-                new Sequelize.ValidationErrorItem("<field name> cannot be an array or an object", "string violation", "<field name>", null)
+                new orm.x.ValidationErrorItem("<field name> cannot be null", "notNull Violation", "<field name>", null),
+                new orm.x.ValidationErrorItem("<field name> cannot be an array or an object", "string violation", "<field name>", null)
             ];
-            const validationError = new Sequelize.ValidationError(null, errorItems);
+            const validationError = new orm.x.ValidationError(null, errorItems);
 
-            expect(validationError).to.have.property("name", "SequelizeValidationError");
+            expect(validationError).to.have.property("name", "ValidationError");
             expect(validationError.message).to.match(/notNull Violation: <field name> cannot be null,\nstring violation: <field name> cannot be an array or an object/);
         });
 
-        it("SequelizeValidationErrorItem does not require instance & validator constructor parameters", () => {
-            const error = new Sequelize.ValidationErrorItem("error!", null, "myfield");
+        it("ValidationErrorItem does not require instance & validator constructor parameters", () => {
+            const error = new orm.x.ValidationErrorItem("error!", null, "myfield");
 
-            expect(error).to.be.instanceOf(Sequelize.ValidationErrorItem);
+            expect(error).to.be.instanceOf(orm.x.ValidationErrorItem);
         });
 
-        it("SequelizeValidationErrorItem should have instance, key & validator properties when given to constructor", () => {
+        it("ValidationErrorItem should have instance, key & validator properties when given to constructor", () => {
             const inst = { foo: "bar" };
             const vargs = [4];
 
-            const error = new Sequelize.ValidationErrorItem("error!", "FUNCTION", "foo", "bar", inst, "klen", "len", vargs);
+            const error = new orm.x.ValidationErrorItem("error!", "FUNCTION", "foo", "bar", inst, "klen", "len", vargs);
 
             expect(error).to.have.property("instance");
             expect(error.instance).to.equal(inst);
@@ -109,8 +109,8 @@ describe(Support.getTestDialectTeaser("Sequelize Errors"), () => {
             expect(error).to.have.property("validatorArgs", vargs);
         });
 
-        it("SequelizeValidationErrorItem.getValidatorKey() should return a string", () => {
-            const error = new Sequelize.ValidationErrorItem("error!", "FUNCTION", "foo", "bar", null, "klen", "len", [4]);
+        it("ValidationErrorItem.getValidatorKey() should return a string", () => {
+            const error = new orm.x.ValidationErrorItem("error!", "FUNCTION", "foo", "bar", null, "klen", "len", [4]);
 
             expect(error).to.have.property("getValidatorKey");
             expect(error.getValidatorKey).to.be.a("function");
@@ -121,7 +121,7 @@ describe(Support.getTestDialectTeaser("Sequelize Errors"), () => {
             expect(error.getValidatorKey(1, ":")).to.equal("function:klen");
             expect(error.getValidatorKey(true, "-:-")).to.equal("function-:-klen");
 
-            const empty = new Sequelize.ValidationErrorItem("error!", "FUNCTION", "foo", "bar");
+            const empty = new orm.x.ValidationErrorItem("error!", "FUNCTION", "foo", "bar");
 
             expect(empty.getValidatorKey()).to.equal("");
             expect(empty.getValidatorKey(false)).to.equal("");
@@ -130,8 +130,8 @@ describe(Support.getTestDialectTeaser("Sequelize Errors"), () => {
             expect(empty.getValidatorKey(true, "-:-")).to.equal("");
         });
 
-        it("SequelizeValidationErrorItem.getValidatorKey() should throw if namespace separator is invalid (only if NS is used & available)", () => {
-            const error = new Sequelize.ValidationErrorItem("error!", "FUNCTION", "foo", "bar", null, "klen", "len", [4]);
+        it("ValidationErrorItem.getValidatorKey() should throw if namespace separator is invalid (only if NS is used & available)", () => {
+            const error = new orm.x.ValidationErrorItem("error!", "FUNCTION", "foo", "bar", null, "klen", "len", [4]);
 
             expect(() => error.getValidatorKey(false, {})).to.not.throw();
             expect(() => error.getValidatorKey(false, [])).to.not.throw();
@@ -150,7 +150,7 @@ describe(Support.getTestDialectTeaser("Sequelize Errors"), () => {
             expect(() => error.getValidatorKey(true, true)).to.throw(Error);
         });
 
-        it('SequelizeValidationErrorItem should map deprecated "type" values to new "origin" values', () => {
+        it('ValidationErrorItem should map deprecated "type" values to new "origin" values', () => {
             const data = {
                 "notNull Violation": "CORE",
                 "string violation": "CORE",
@@ -159,15 +159,15 @@ describe(Support.getTestDialectTeaser("Sequelize Errors"), () => {
             };
 
             Object.keys(data).forEach((k) => {
-                const error = new Sequelize.ValidationErrorItem("error!", k, "foo", null);
+                const error = new orm.x.ValidationErrorItem("error!", k, "foo", null);
 
                 expect(error).to.have.property("origin", data[k]);
                 expect(error).to.have.property("type", k);
             });
         });
 
-        it("SequelizeValidationErrorItem.Origins is valid", () => {
-            const ORIGINS = errors.ValidationErrorItem.Origins;
+        it("ValidationErrorItem.Origins is valid", () => {
+            const ORIGINS = orm.x.ValidationErrorItem.Origins;
 
             expect(ORIGINS).to.have.property("CORE", "CORE");
             expect(ORIGINS).to.have.property("DB", "DB");
@@ -175,83 +175,83 @@ describe(Support.getTestDialectTeaser("Sequelize Errors"), () => {
 
         });
 
-        it("SequelizeDatabaseError should keep original message", () => {
+        it("DatabaseError should keep original message", () => {
             const orig = new Error("original database error message");
-            const databaseError = new Sequelize.DatabaseError(orig);
+            const databaseError = new orm.x.DatabaseError(orig);
 
             expect(databaseError).to.have.property("parent");
             expect(databaseError).to.have.property("original");
-            expect(databaseError.name).to.equal("SequelizeDatabaseError");
+            expect(databaseError.name).to.equal("DatabaseError");
             expect(databaseError.message).to.equal("original database error message");
         });
 
         it("ConnectionError should keep original message", () => {
             const orig = new Error("original connection error message");
-            const connectionError = new Sequelize.ConnectionError(orig);
+            const connectionError = new orm.x.ConnectionError(orig);
 
             expect(connectionError).to.have.property("parent");
             expect(connectionError).to.have.property("original");
-            expect(connectionError.name).to.equal("SequelizeConnectionError");
+            expect(connectionError.name).to.equal("ConnectionError");
             expect(connectionError.message).to.equal("original connection error message");
         });
 
         it("ConnectionRefusedError should keep original message", () => {
             const orig = new Error("original connection error message");
-            const connectionError = new Sequelize.ConnectionRefusedError(orig);
+            const connectionError = new orm.x.ConnectionRefusedError(orig);
 
             expect(connectionError).to.have.property("parent");
             expect(connectionError).to.have.property("original");
-            expect(connectionError.name).to.equal("SequelizeConnectionRefusedError");
+            expect(connectionError.name).to.equal("ConnectionRefusedError");
             expect(connectionError.message).to.equal("original connection error message");
         });
 
         it("AccessDeniedError should keep original message", () => {
             const orig = new Error("original connection error message");
-            const connectionError = new Sequelize.AccessDeniedError(orig);
+            const connectionError = new orm.x.AccessDeniedError(orig);
 
             expect(connectionError).to.have.property("parent");
             expect(connectionError).to.have.property("original");
-            expect(connectionError.name).to.equal("SequelizeAccessDeniedError");
+            expect(connectionError.name).to.equal("AccessDeniedError");
             expect(connectionError.message).to.equal("original connection error message");
         });
 
         it("HostNotFoundError should keep original message", () => {
             const orig = new Error("original connection error message");
-            const connectionError = new Sequelize.HostNotFoundError(orig);
+            const connectionError = new orm.x.HostNotFoundError(orig);
 
             expect(connectionError).to.have.property("parent");
             expect(connectionError).to.have.property("original");
-            expect(connectionError.name).to.equal("SequelizeHostNotFoundError");
+            expect(connectionError.name).to.equal("HostNotFoundError");
             expect(connectionError.message).to.equal("original connection error message");
         });
 
         it("HostNotReachableError should keep original message", () => {
             const orig = new Error("original connection error message");
-            const connectionError = new Sequelize.HostNotReachableError(orig);
+            const connectionError = new orm.x.HostNotReachableError(orig);
 
             expect(connectionError).to.have.property("parent");
             expect(connectionError).to.have.property("original");
-            expect(connectionError.name).to.equal("SequelizeHostNotReachableError");
+            expect(connectionError.name).to.equal("HostNotReachableError");
             expect(connectionError.message).to.equal("original connection error message");
         });
 
         it("InvalidConnectionError should keep original message", () => {
             const orig = new Error("original connection error message");
-            const connectionError = new Sequelize.InvalidConnectionError(orig);
+            const connectionError = new orm.x.InvalidConnectionError(orig);
 
             expect(connectionError).to.have.property("parent");
             expect(connectionError).to.have.property("original");
-            expect(connectionError.name).to.equal("SequelizeInvalidConnectionError");
+            expect(connectionError.name).to.equal("InvalidConnectionError");
             expect(connectionError.message).to.equal("original connection error message");
         });
 
         it("ConnectionTimedOutError should keep original message", () => {
             const orig = new Error("original connection error message");
-            const connectionError = new Sequelize.ConnectionTimedOutError(orig);
+            const connectionError = new orm.x.ConnectionTimedOutError(orig);
 
             expect(connectionError).to.have.property("parent");
             expect(connectionError).to.have.property("original");
-            expect(connectionError.name).to.equal("SequelizeConnectionTimedOutError");
+            expect(connectionError.name).to.equal("ConnectionTimedOutError");
             expect(connectionError.message).to.equal("original connection error message");
         });
     });
@@ -260,11 +260,11 @@ describe(Support.getTestDialectTeaser("Sequelize Errors"), () => {
         [
             {
                 type: "UniqueConstraintError",
-                exception: Sequelize.UniqueConstraintError
+                exception: orm.x.UniqueConstraintError
             },
             {
                 type: "ValidationError",
-                exception: Sequelize.ValidationError
+                exception: orm.x.ValidationError
             }
         ].forEach((constraintTest) => {
 
@@ -272,11 +272,11 @@ describe(Support.getTestDialectTeaser("Sequelize Errors"), () => {
                 const s = spy();
                 const User = this.sequelize.define("user", {
                     first_name: {
-                        type: Sequelize.STRING,
+                        type: type.STRING,
                         unique: "unique_name"
                     },
                     last_name: {
-                        type: Sequelize.STRING,
+                        type: type.STRING,
                         unique: "unique_name"
                     }
                 });
@@ -297,7 +297,7 @@ describe(Support.getTestDialectTeaser("Sequelize Errors"), () => {
             const s = spy();
             const User = this.sequelize.define("user", {
                 name: {
-                    type: Sequelize.STRING,
+                    type: type.STRING,
                     unique: "unique \n unique"
                 }
             });
@@ -318,7 +318,7 @@ describe(Support.getTestDialectTeaser("Sequelize Errors"), () => {
         it("Works when unique keys are not defined in sequelize", async function () {
             let User = this.sequelize.define("user", {
                 name: {
-                    type: Sequelize.STRING,
+                    type: type.STRING,
                     unique: "unique \n unique"
                 }
             }, { timestamps: false });
@@ -326,7 +326,7 @@ describe(Support.getTestDialectTeaser("Sequelize Errors"), () => {
             await this.sequelize.sync({ force: true });
             // Now let's pretend the index was created by someone else, and sequelize doesn't know about it
             User = this.sequelize.define("user", {
-                name: Sequelize.STRING
+                name: type.STRING
             }, { timestamps: false });
 
             await User.create({ name: "jan" });
@@ -345,7 +345,7 @@ describe(Support.getTestDialectTeaser("Sequelize Errors"), () => {
         it("adds parent and sql properties", async function () {
             const User = this.sequelize.define("user", {
                 name: {
-                    type: Sequelize.STRING,
+                    type: type.STRING,
                     unique: "unique"
                 }
             }, { timestamps: false });

@@ -1,7 +1,10 @@
-const { is, vendor: { lodash: _ } } = adone;
-const wkx = adone.util.terraformer.WKX;
+const {
+    is,
+    vendor: { lodash: _ },
+    util
+} = adone;
 
-module.exports = (BaseTypes) => {
+export default function defineMysqlTypes(BaseTypes) {
     BaseTypes.ABSTRACT.prototype.dialectTypes = "https://dev.mysql.com/doc/refman/5.7/en/data-types.html";
 
     /**
@@ -134,7 +137,7 @@ module.exports = (BaseTypes) => {
 
             // For some reason, discard the first 4 bytes
             value = value.slice(4);
-            return wkx.Geometry.parse(value).toGeoJSON();
+            return util.terraformer.WKX.Geometry.parse(value).toGeoJSON();
         }
 
         toSql() {
@@ -154,7 +157,7 @@ module.exports = (BaseTypes) => {
         }
     }
 
-    const exports = {
+    const types = {
         ENUM,
         DATE,
         DATEONLY,
@@ -165,7 +168,7 @@ module.exports = (BaseTypes) => {
         JSON: JSONTYPE
     };
 
-    _.forIn(exports, (DataType, key) => {
+    _.forIn(types, (DataType, key) => {
         if (!DataType.key) {
             DataType.key = key;
         }
@@ -176,5 +179,7 @@ module.exports = (BaseTypes) => {
         }
     });
 
-    return exports;
-};
+    BaseTypes.mysql = types;
+
+    return types;
+}

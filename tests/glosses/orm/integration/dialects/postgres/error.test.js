@@ -1,8 +1,8 @@
 import Support from "../../support";
 
 const { vendor: { lodash: _ } } = adone;
-const { DataTypes } = adone.orm;
-const Sequelize = Support.Sequelize;
+const { orm } = adone;
+const { type } = orm;
 const dialect = Support.getTestDialect();
 
 if (dialect.match(/^postgres/)) {
@@ -10,8 +10,8 @@ if (dialect.match(/^postgres/)) {
     beforeEach(function () {
         const self = this;
         this.Booking = self.sequelize.define("Booking", {
-            roomNo: DataTypes.INTEGER,
-            period: new DataTypes.RANGE(DataTypes.DATE)
+            roomNo: type.INTEGER,
+            period: new type.RANGE(type.DATE)
         });
         return self.Booking
             .sync({ force: true })
@@ -30,7 +30,7 @@ if (dialect.match(/^postgres/)) {
                 table: "table_name",
                 parent: new Error("Test error")
             };
-            const err = new Sequelize.ExclusionConstraintError(errDetails);
+            const err = new orm.x.ExclusionConstraintError(errDetails);
 
             _.each(errDetails, (value, key) => {
                 expect(value).to.be.deep.equal(err[key]);
@@ -54,7 +54,7 @@ if (dialect.match(/^postgres/)) {
                     guestName: "Frequent Visitor",
                     period: [new Date(2015, 0, 2), new Date(2015, 0, 5)]
                 });
-            }, Sequelize.ExclusionConstraintError);
+            }, orm.x.ExclusionConstraintError);
         });
     });
 }

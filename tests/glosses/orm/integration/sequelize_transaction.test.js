@@ -1,7 +1,9 @@
 import Support from "./support";
 const { promise } = adone;
+
 const {
-    Transaction
+    Transaction,
+    type
 } = adone.orm;
 
 const current = Support.sequelize;
@@ -49,7 +51,7 @@ describe(Support.getTestDialectTeaser("Sequelize#transaction"), { skip: !current
                 this.sequelize = await Support.prepareTransactionTest(this.sequelize);
 
                 this.User = this.sequelize.define("User", {
-                    name: Support.Sequelize.STRING
+                    name: type.STRING
                 }, { timestamps: false });
 
                 await this.sequelize.sync({ force: true });
@@ -85,8 +87,8 @@ describe(Support.getTestDialectTeaser("Sequelize#transaction"), { skip: !current
         it("works with promise syntax", function () {
             return Support.prepareTransactionTest(this.sequelize).then((sequelize) => {
                 const Test = sequelize.define("Test", {
-                    id: { type: Support.Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
-                    name: { type: Support.Sequelize.STRING }
+                    id: { type: type.INTEGER, primaryKey: true, autoIncrement: true },
+                    name: { type: type.STRING }
                 });
 
                 return sequelize.sync({ force: true }).then(() => {
@@ -122,7 +124,7 @@ describe(Support.getTestDialectTeaser("Sequelize#transaction"), { skip: !current
                     self.sequelize = sequelize;
 
                     self.Model = sequelize.define("Model", {
-                        name: { type: Support.Sequelize.STRING, unique: true }
+                        name: { type: type.STRING, unique: true }
                     }, {
                         timestamps: false
                     });

@@ -72,20 +72,20 @@ describe("[POSTGRES Specific] Data Types", { skip: dialect !== "postgres" }, () 
 
             const date = new Date();
             const User = this.sequelize.define("User", {
-                username: this.sequelize.Sequelize.STRING,
+                username: this.sequelize.type.STRING,
                 beforeTime: {
-                    type: this.sequelize.Sequelize.DATE,
+                    type: this.sequelize.type.DATE,
                     defaultValue: -Infinity
                 },
                 sometime: {
-                    type: this.sequelize.Sequelize.DATE,
+                    type: this.sequelize.type.DATE,
                     defaultValue: this.sequelize.fn("NOW")
                 },
                 anotherTime: {
-                    type: this.sequelize.Sequelize.DATE
+                    type: this.sequelize.type.DATE
                 },
                 afterTime: {
-                    type: this.sequelize.Sequelize.DATE,
+                    type: this.sequelize.type.DATE,
                     defaultValue: Infinity
                 }
             }, {
@@ -159,20 +159,20 @@ describe("[POSTGRES Specific] Data Types", { skip: dialect !== "postgres" }, () 
 
             const date = new Date();
             const User = this.sequelize.define("User", {
-                username: this.sequelize.Sequelize.STRING,
+                username: this.sequelize.type.STRING,
                 beforeTime: {
-                    type: this.sequelize.Sequelize.DATEONLY,
+                    type: this.sequelize.type.DATEONLY,
                     defaultValue: -Infinity
                 },
                 sometime: {
-                    type: this.sequelize.Sequelize.DATEONLY,
+                    type: this.sequelize.type.DATEONLY,
                     defaultValue: this.sequelize.fn("NOW")
                 },
                 anotherTime: {
-                    type: this.sequelize.Sequelize.DATEONLY
+                    type: this.sequelize.type.DATEONLY
                 },
                 afterTime: {
-                    type: this.sequelize.Sequelize.DATEONLY,
+                    type: this.sequelize.type.DATEONLY,
                     defaultValue: Infinity
                 }
             }, {

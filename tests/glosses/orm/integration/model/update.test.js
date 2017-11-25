@@ -1,7 +1,8 @@
 import Support from "../support";
 
 const { vendor: { lodash: _ } } = adone;
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser("Model"), () => {
@@ -9,12 +10,12 @@ describe(Support.getTestDialectTeaser("Model"), () => {
         beforeEach(function () {
             this.Account = this.sequelize.define("Account", {
                 ownerId: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     allowNull: false,
                     field: "owner_id"
                 },
                 name: {
-                    type: DataTypes.STRING
+                    type: type.STRING
                 }
             });
             return this.Account.sync({ force: true });

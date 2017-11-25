@@ -1,6 +1,7 @@
 import Support from "../../support";
 
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser("Instance"), () => {
@@ -8,23 +9,23 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         it("should populate NOW default values", () => {
             const Model = current.define("Model", {
                 created_time: {
-                    type: DataTypes.DATE,
+                    type: type.DATE,
                     allowNull: true,
-                    defaultValue: DataTypes.NOW
+                    defaultValue: type.NOW
                 },
                 updated_time: {
-                    type: DataTypes.DATE,
+                    type: type.DATE,
                     allowNull: true,
-                    defaultValue: DataTypes.NOW
+                    defaultValue: type.NOW
                 },
                 ip: {
-                    type: DataTypes.STRING,
+                    type: type.STRING,
                     validate: {
                         isIP: true
                     }
                 },
                 ip2: {
-                    type: DataTypes.STRING,
+                    type: type.STRING,
                     validate: {
                         isIP: {
                             msg: "test"
@@ -48,10 +49,10 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         it("should populate explicitly undefined UUID primary keys", () => {
             const Model = current.define("Model", {
                 id: {
-                    type: DataTypes.UUID,
+                    type: type.UUID,
                     primaryKey: true,
                     allowNull: false,
-                    defaultValue: DataTypes.UUIDV4
+                    defaultValue: type.UUIDV4
                 }
             });
             const instance = Model.build({
@@ -65,11 +66,11 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         it("should populate undefined columns with default value", () => {
             const Model = current.define("Model", {
                 number1: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     defaultValue: 1
                 },
                 number2: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     defaultValue: 2
                 }
             });
@@ -86,7 +87,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         it("should clone the default values", () => {
             const Model = current.define("Model", {
                 data: {
-                    type: DataTypes.JSONB,
+                    type: type.JSONB,
                     defaultValue: { foo: "bar" }
                 }
             });

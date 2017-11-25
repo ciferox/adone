@@ -1,15 +1,16 @@
 import Support from "../../support";
 
 const current = Support.sequelize;
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.supports.upserts }, () => {
     describe("method upsert", function () {
         const self = this;
         const User = current.define("User", {
-            name: DataTypes.STRING,
+            name: type.STRING,
             virtualValue: {
-                type: DataTypes.VIRTUAL,
+                type: type.VIRTUAL,
                 set(val) {
                     return this.value = val;
                 },
@@ -17,19 +18,19 @@ describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.support
                     return this.value;
                 }
             },
-            value: DataTypes.STRING,
+            value: type.STRING,
             secretValue: {
-                type: DataTypes.INTEGER,
+                type: type.INTEGER,
                 allowNull: false
             },
             createdAt: {
-                type: DataTypes.DATE,
+                type: type.DATE,
                 field: "created_at"
             }
         });
 
         const UserNoTime = current.define("UserNoTime", {
-            name: DataTypes.STRING
+            name: type.STRING
         }, {
             timestamps: false
         });

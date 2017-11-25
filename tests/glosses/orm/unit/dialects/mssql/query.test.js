@@ -1,6 +1,6 @@
 import Support from "../../../support";
 
-const { Query } = adone.orm.dialect.mssql;
+const { Query } = adone.private(adone.orm).dialect.mssql;
 const sequelize = Support.sequelize;
 const tedious = require("tedious");
 const tediousIsolationLevel = tedious.ISOLATION_LEVEL;

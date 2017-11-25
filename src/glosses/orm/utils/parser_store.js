@@ -1,7 +1,6 @@
-
 const stores = new Map();
 
-module.exports = (dialect) => {
+export default function getParserStore(dialect) {
 
     if (!stores.has(dialect)) {
         stores.set(dialect, new Map());
@@ -20,4 +19,4 @@ module.exports = (dialect) => {
             return stores.get(dialect).get(type);
         }
     };
-};
+}

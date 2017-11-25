@@ -1,7 +1,7 @@
 import Support from "../../support";
 
-const Sequelize = adone.orm;
-
+const { orm } = adone;
+const { type } = orm;
 const dialect = Support.getTestDialect();
 
 describe(Support.getTestDialectTeaser("Model"), () => {
@@ -10,9 +10,9 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             describe("VIRTUAL", () => {
                 beforeEach(function () {
                     this.User = this.sequelize.define("user", {
-                        storage: Sequelize.STRING,
+                        storage: type.STRING,
                         field1: {
-                            type: Sequelize.VIRTUAL,
+                            type: type.VIRTUAL,
                             set(val) {
                                 this.setDataValue("storage", val);
                                 this.setDataValue("field1", val);
@@ -22,13 +22,13 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                             }
                         },
                         field2: {
-                            type: Sequelize.VIRTUAL,
+                            type: type.VIRTUAL,
                             get() {
                                 return 42;
                             }
                         },
                         virtualWithDefault: {
-                            type: Sequelize.VIRTUAL,
+                            type: type.VIRTUAL,
                             defaultValue: "cake"
                         }
                     }, { timestamps: false });
@@ -88,9 +88,9 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
                 it("should allow me to store selected values", function () {
                     const Post = this.sequelize.define("Post", {
-                        text: Sequelize.TEXT,
+                        text: type.TEXT,
                         someBoolean: {
-                            type: Sequelize.VIRTUAL
+                            type: type.VIRTUAL
                         }
                     });
 
@@ -102,7 +102,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                             boolQuery = 'CAST(CASE WHEN EXISTS(SELECT 1) THEN 1 ELSE 0 END AS BIT) AS "someBoolean"';
                         }
 
-                        return Post.find({ attributes: ["id", "text", Sequelize.literal(boolQuery)] });
+                        return Post.find({ attributes: ["id", "text", orm.util.literal(boolQuery)] });
                     }).then((post) => {
                         expect(post.get("someBoolean")).to.be.ok;
                         expect(post.get().someBoolean).to.be.ok;

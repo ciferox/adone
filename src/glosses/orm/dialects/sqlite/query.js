@@ -1,14 +1,27 @@
-const { is, vendor: { lodash: _ } } = adone;
-const Utils = require("../../utils");
-const debug = Utils.getLogger().debugContext("sql:sqlite");
-const Promise = require("../../promise");
-const AbstractQuery = require("../abstract/query");
-const QueryTypes = require("../../query_types");
-const sequelizeErrors = require("../../errors.js");
-const parserStore = require("../parser_store")("sqlite");
+const {
+    is,
+    vendor: { lodash: _ },
+    orm
+} = adone;
 
-class Query extends AbstractQuery {
+const {
+    util,
+    queryType,
+    x
+} = orm;
 
+const {
+    dialect: {
+        abstract: {
+            Query: AbstractQuery
+        }
+    }
+} = adone.private(orm);
+
+const debug = util.getLogger().debugContext("sql:sqlite");
+const parserStore = util.parserStore("sqlite");
+
+export default class Query extends AbstractQuery {
     constructor(database, sequelize, options) {
         super();
         this.database = database;
@@ -233,13 +246,13 @@ class Query extends AbstractQuery {
                                     result = results;
                                 } else if (query.sql.indexOf("PRAGMA foreign_key_list") !== -1) {
                                     result = results;
-                                } else if ([QueryTypes.BULKUPDATE, QueryTypes.BULKDELETE].indexOf(query.options.type) !== -1) {
+                                } else if ([queryType.BULKUPDATE, queryType.BULKDELETE].indexOf(query.options.type) !== -1) {
                                     result = metaData.changes;
-                                } else if (query.options.type === QueryTypes.UPSERT) {
+                                } else if (query.options.type === queryType.UPSERT) {
                                     result = undefined;
-                                } else if (query.options.type === QueryTypes.VERSION) {
+                                } else if (query.options.type === queryType.VERSION) {
                                     result = results[0].version;
-                                } else if (query.options.type === QueryTypes.RAW) {
+                                } else if (query.options.type === queryType.RAW) {
                                     result = [results, metaData];
                                 } else if (query.isUpdateQuery() || query.isInsertQuery()) {
                                     result = [result, metaData.changes];
@@ -321,10 +334,10 @@ class Query extends AbstractQuery {
 
                 const referencesRegex = /REFERENCES.+\((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*\)/;
                 const referenceConditions = constraintSql.match(referencesRegex)[0].split(" ");
-                referenceTableName = Utils.removeTicks(referenceConditions[1]);
+                referenceTableName = util.removeTicks(referenceConditions[1]);
                 let columnNames = referenceConditions[2];
                 columnNames = columnNames.replace(/\(|\)/g, "").split(", ");
-                referenceTableKeys = columnNames.map((column) => Utils.removeTicks(column));
+                referenceTableKeys = columnNames.map((column) => util.removeTicks(column));
             }
 
             const constraintCondition = constraintSql.match(/\((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*\)/)[0];
@@ -336,7 +349,7 @@ class Query extends AbstractQuery {
             }
 
             return {
-                constraintName: Utils.removeTicks(constraint[0]),
+                constraintName: util.removeTicks(constraint[0]),
                 constraintType: constraint[1],
                 updateAction,
                 deleteAction,
@@ -370,7 +383,7 @@ class Query extends AbstractQuery {
             case "SQLITE_CONSTRAINT": {
                 let match = err.message.match(/FOREIGN KEY constraint failed/);
                 if (!is.null(match)) {
-                    return new sequelizeErrors.ForeignKeyConstraintError({
+                    return new x.ForeignKeyConstraintError({
                         parent: err
                     });
                 }
@@ -394,7 +407,7 @@ class Query extends AbstractQuery {
                 let message = "Validation error";
 
                 for (const field of fields) {
-                    errors.push(new sequelizeErrors.ValidationErrorItem(
+                    errors.push(new x.ValidationErrorItem(
                         this.getUniqueConstraintErrorMessage(field),
                         "unique violation", // sequelizeErrors.ValidationErrorItem.Origins.DB,
                         field,
@@ -413,13 +426,13 @@ class Query extends AbstractQuery {
                     });
                 }
 
-                return new sequelizeErrors.UniqueConstraintError({ message, errors, parent: err, fields });
+                return new x.UniqueConstraintError({ message, errors, parent: err, fields });
             }
             case "SQLITE_BUSY":
-                return new sequelizeErrors.TimeoutError(err);
+                return new x.TimeoutError(err);
 
             default:
-                return new sequelizeErrors.DatabaseError(err);
+                return new x.DatabaseError(err);
         }
     }
 
@@ -451,14 +464,10 @@ class Query extends AbstractQuery {
             || this.isUpdateQuery()
             || this.isBulkUpdateQuery()
             || this.sql.toLowerCase().includes("create temporary table")
-            || this.options.type === QueryTypes.BULKDELETE
+            || this.options.type === queryType.BULKDELETE
         ) {
             return "run";
         }
         return "all";
     }
 }
-
-module.exports = Query;
-module.exports.Query = Query;
-module.exports.default = Query;

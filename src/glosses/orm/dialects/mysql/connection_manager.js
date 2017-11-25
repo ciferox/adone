@@ -1,9 +1,21 @@
-const { is, vendor: { lodash: _ } } = adone;
-const AbstractConnectionManager = require("../abstract/connection_manager");
-const SequelizeErrors = require("../../errors");
-const Utils = require("../../utils");
-const DataTypes = require("../../data_types").mysql;
-const debug = Utils.getLogger().debugContext("connection:mysql");
+const {
+    is,
+    orm
+} = adone;
+
+const {
+    dialect: {
+        abstract: {
+            ConnectionManager: AbstractConnectionManager
+        }
+    }
+} = adone.private(orm);
+
+const {
+    x
+} = orm;
+
+const debug = orm.util.getLogger().debugContext("connection:mysql");
 const parserMap = new Map();
 
 /**
@@ -11,14 +23,8 @@ const parserMap = new Map();
  *
  * Get connections, validate and disconnect them.
  * AbstractConnectionManager pooling use it to handle MySQL specific connections
- * Use https://github.com/sidorares/node-mysql2 to connect with MySQL server
- *
- * @extends AbstractConnectionManager
- * @return Class<ConnectionManager>
- * @private
  */
-
-class ConnectionManager extends AbstractConnectionManager {
+export default class ConnectionManager extends AbstractConnectionManager {
     constructor(dialect, sequelize) {
         super(dialect, sequelize);
 
@@ -37,7 +43,7 @@ class ConnectionManager extends AbstractConnectionManager {
             throw err;
         }
 
-        this.refreshTypeParser(DataTypes);
+        this.refreshTypeParser(orm.type.mysql);
     }
 
     // Update parsing when the user has added additional, custom types
@@ -64,7 +70,6 @@ class ConnectionManager extends AbstractConnectionManager {
      * Also set proper timezone once conection is connected
      *
      * @return Promise<Connection>
-     * @private
      */
     async connect(config) {
         const connectionConfig = {
@@ -141,17 +146,17 @@ class ConnectionManager extends AbstractConnectionManager {
         } catch (err) {
             switch (err.code) {
                 case "ECONNREFUSED":
-                    throw new SequelizeErrors.ConnectionRefusedError(err);
+                    throw new x.ConnectionRefusedError(err);
                 case "ER_ACCESS_DENIED_ERROR":
-                    throw new SequelizeErrors.AccessDeniedError(err);
+                    throw new x.AccessDeniedError(err);
                 case "ENOTFOUND":
-                    throw new SequelizeErrors.HostNotFoundError(err);
+                    throw new x.HostNotFoundError(err);
                 case "EHOSTUNREACH":
-                    throw new SequelizeErrors.HostNotReachableError(err);
+                    throw new x.HostNotReachableError(err);
                 case "EINVAL":
-                    throw new SequelizeErrors.InvalidConnectionError(err);
+                    throw new x.InvalidConnectionError(err);
                 default:
-                    throw new SequelizeErrors.ConnectionError(err);
+                    throw new x.ConnectionError(err);
             }
         }
     }
@@ -166,7 +171,7 @@ class ConnectionManager extends AbstractConnectionManager {
         return new Promise((resolve, reject) => {
             connection.end((err) => {
                 if (err) {
-                    reject(new SequelizeErrors.ConnectionError(err));
+                    reject(new x.ConnectionError(err));
                 } else {
                     debug("connection disconnected");
                     resolve();
@@ -183,7 +188,4 @@ class ConnectionManager extends AbstractConnectionManager {
             && !connection.stream.destroyed;
     }
 }
-
-module.exports = ConnectionManager;
-module.exports.ConnectionManager = ConnectionManager;
-module.exports.default = ConnectionManager;
+ConnectionManager.prototype.defaultVersion = "5.6.0";

@@ -1,8 +1,8 @@
 import Support from "../support";
 import config from "../../config/config";
 
-const Sequelize = adone.orm;
-const { DataTypes } = Sequelize;
+const { orm } = adone;
+const { type } = orm;
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser("Instance"), () => {
@@ -16,26 +16,26 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
     describe("update", () => {
         beforeEach(function () {
             this.User = this.sequelize.define("User", {
-                username: { type: DataTypes.STRING },
-                uuidv1: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV1 },
-                uuidv4: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4 },
-                touchedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
-                aNumber: { type: DataTypes.INTEGER },
-                bNumber: { type: DataTypes.INTEGER },
-                aDate: { type: DataTypes.DATE },
+                username: { type: type.STRING },
+                uuidv1: { type: type.UUID, defaultValue: type.UUIDV1 },
+                uuidv4: { type: type.UUID, defaultValue: type.UUIDV4 },
+                touchedAt: { type: type.DATE, defaultValue: type.NOW },
+                aNumber: { type: type.INTEGER },
+                bNumber: { type: type.INTEGER },
+                aDate: { type: type.DATE },
 
                 validateTest: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     allowNull: true,
                     validate: { isInt: true }
                 },
                 validateCustom: {
-                    type: DataTypes.STRING,
+                    type: type.STRING,
                     allowNull: true,
                     validate: { len: { msg: "Length failed.", args: [1, 20] } }
                 },
                 validateSideEffect: {
-                    type: DataTypes.VIRTUAL,
+                    type: type.VIRTUAL,
                     allowNull: true,
                     validate: { isInt: true },
                     set(val) {
@@ -44,13 +44,13 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                     }
                 },
                 validateSideAffected: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     allowNull: true,
                     validate: { isInt: true }
                 },
 
                 dateAllowNullTrue: {
-                    type: DataTypes.DATE,
+                    type: type.DATE,
                     allowNull: true
                 }
             });
@@ -60,7 +60,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         if (current.dialect.supports.transactions) {
             it("supports transactions", async function () {
                 const sequelize = await Support.prepareTransactionTest(this.sequelize);
-                const User = sequelize.define("User", { username: Support.Sequelize.STRING });
+                const User = sequelize.define("User", { username: type.STRING });
 
                 await User.sync({ force: true });
                 const user = await User.create({ username: "foo" });
@@ -76,9 +76,9 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
         it("should update fields that are not specified on create", function () {
             const User = this.sequelize.define(`User${config.rand()}`, {
-                name: DataTypes.STRING,
-                bio: DataTypes.TEXT,
-                email: DataTypes.STRING
+                name: type.STRING,
+                bio: type.TEXT,
+                email: type.STRING
             });
 
             return User.sync({ force: true }).then(() => {
@@ -101,9 +101,9 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
         it("should succeed in updating when values are unchanged (without timestamps)", function () {
             const User = this.sequelize.define(`User${config.rand()}`, {
-                name: DataTypes.STRING,
-                bio: DataTypes.TEXT,
-                email: DataTypes.STRING
+                name: type.STRING,
+                bio: type.TEXT,
+                email: type.STRING
             }, {
                 timestamps: false
             });
@@ -130,11 +130,11 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
         it("should update timestamps with milliseconds", function () {
             const User = this.sequelize.define(`User${config.rand()}`, {
-                name: DataTypes.STRING,
-                bio: DataTypes.TEXT,
-                email: DataTypes.STRING,
-                createdAt: { type: new DataTypes.DATE(6), allowNull: false },
-                updatedAt: { type: new DataTypes.DATE(6), allowNull: false }
+                name: type.STRING,
+                bio: type.TEXT,
+                email: type.STRING,
+                createdAt: { type: new type.DATE(6), allowNull: false },
+                updatedAt: { type: new type.DATE(6), allowNull: false }
             }, {
                 timestamps: true
             });
@@ -190,9 +190,9 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         describe("hooks", () => {
             it("should update attributes added in hooks when default fields are used", function () {
                 const User = this.sequelize.define(`User${config.rand()}`, {
-                    name: DataTypes.STRING,
-                    bio: DataTypes.TEXT,
-                    email: DataTypes.STRING
+                    name: type.STRING,
+                    bio: type.TEXT,
+                    email: type.STRING
                 });
 
                 User.beforeUpdate((instance) => {
@@ -221,9 +221,9 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
             it("should update attributes changed in hooks when default fields are used", function () {
                 const User = this.sequelize.define(`User${config.rand()}`, {
-                    name: DataTypes.STRING,
-                    bio: DataTypes.TEXT,
-                    email: DataTypes.STRING
+                    name: type.STRING,
+                    bio: type.TEXT,
+                    email: type.STRING
                 });
 
                 User.beforeUpdate((instance) => {
@@ -253,10 +253,10 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
             it("should validate attributes added in hooks when default fields are used", async function () {
                 const User = this.sequelize.define(`User${config.rand()}`, {
-                    name: DataTypes.STRING,
-                    bio: DataTypes.TEXT,
+                    name: type.STRING,
+                    bio: type.TEXT,
                     email: {
-                        type: DataTypes.STRING,
+                        type: type.STRING,
                         validate: {
                             isEmail: true
                         }
@@ -277,7 +277,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                     await user.update({
                         name: "B"
                     });
-                }, Sequelize.ValidationError);
+                }, orm.x.ValidationError);
 
                 const user2 = await User.findOne({});
                 expect(user2.get("email")).to.equal("valid.email@gmail.com");
@@ -285,10 +285,10 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
             it("should validate attributes changed in hooks when default fields are used", async function () {
                 const User = this.sequelize.define(`User${config.rand()}`, {
-                    name: DataTypes.STRING,
-                    bio: DataTypes.TEXT,
+                    name: type.STRING,
+                    bio: type.TEXT,
                     email: {
-                        type: DataTypes.STRING,
+                        type: type.STRING,
                         validate: {
                             isEmail: true
                         }
@@ -311,7 +311,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                         name: "B",
                         email: "still.valid.email@gmail.com"
                     });
-                }, Sequelize.ValidationError);
+                }, orm.x.ValidationError);
 
                 const user2 = await User.findOne({});
                 expect(user2.get("email")).to.equal("valid.email@gmail.com");
@@ -320,9 +320,9 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
         it("should not set attributes that are not specified by fields", function () {
             const User = this.sequelize.define(`User${config.rand()}`, {
-                name: DataTypes.STRING,
-                bio: DataTypes.TEXT,
-                email: DataTypes.STRING
+                name: type.STRING,
+                bio: type.TEXT,
+                email: type.STRING
             });
 
             return User.sync({ force: true }).then(() => {
@@ -364,9 +364,9 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
         it("doesn't update primary keys or timestamps", async function () {
             const User = this.sequelize.define(`User${config.rand()}`, {
-                name: DataTypes.STRING,
-                bio: DataTypes.TEXT,
-                identifier: { type: DataTypes.STRING, primaryKey: true }
+                name: type.STRING,
+                bio: type.TEXT,
+                identifier: { type: type.STRING, primaryKey: true }
             });
 
             await User.sync({ force: true });
@@ -392,9 +392,9 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
         it("stores and restores null values", function () {
             const Download = this.sequelize.define("download", {
-                startedAt: DataTypes.DATE,
-                canceledAt: DataTypes.DATE,
-                finishedAt: DataTypes.DATE
+                startedAt: type.DATE,
+                canceledAt: type.DATE,
+                finishedAt: type.DATE
             });
 
             return Download.sync().then(() => {

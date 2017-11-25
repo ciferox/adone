@@ -1,8 +1,7 @@
 import Support from "../../support";
 
-const {
-    DataTypes
-} = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 const expectsql = Support.expectsql;
 const current = Support.sequelize;
@@ -12,7 +11,7 @@ const { vendor: { lodash: _ } } = adone;
 describe(Support.getTestDialectTeaser("SQL"), () => {
     describe("createTable", () => {
         const FooUser = current.define("user", {
-            mood: new DataTypes.ENUM("happy", "sad")
+            mood: new type.ENUM("happy", "sad")
         }, {
             schema: "foo",
             timestamps: false

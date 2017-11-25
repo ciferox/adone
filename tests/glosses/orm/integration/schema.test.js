@@ -1,8 +1,7 @@
 import Support from "./support";
 
-const {
-    DataTypes
-} = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("Schema"), () => {
     beforeEach(function () {
@@ -15,7 +14,7 @@ describe(Support.getTestDialectTeaser("Schema"), () => {
 
     beforeEach(function () {
         this.User = this.sequelize.define("User", {
-            aNumber: { type: DataTypes.INTEGER }
+            aNumber: { type: type.INTEGER }
         }, {
             schema: "testschema"
         });

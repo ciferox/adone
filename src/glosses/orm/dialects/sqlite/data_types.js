@@ -1,6 +1,9 @@
-const { is, vendor: { lodash: _ } } = adone;
+const {
+    is,
+    vendor: { lodash: _ }
+} = adone;
 
-module.exports = (BaseTypes) => {
+export default function defineSqliteTypes(BaseTypes) {
     const warn = BaseTypes.ABSTRACT.warn.bind(undefined, "https://www.sqlite.org/datatype3.html");
 
     /**
@@ -172,7 +175,7 @@ module.exports = (BaseTypes) => {
         }
     }
 
-    const exports = {
+    const types = {
         DATE,
         DATEONLY,
         STRING,
@@ -191,7 +194,7 @@ module.exports = (BaseTypes) => {
         JSON: JSONTYPE
     };
 
-    _.forIn(exports, (DataType, key) => {
+    _.forIn(types, (DataType, key) => {
         if (!DataType.key) {
             DataType.key = key;
         }
@@ -202,6 +205,8 @@ module.exports = (BaseTypes) => {
         }
     });
 
-    return exports;
+    BaseTypes.sqlite = types;
 
-};
+    return types;
+
+}

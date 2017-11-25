@@ -1,18 +1,22 @@
-const { is, vendor: { lodash: _ } } = adone;
-const Utils = require("./../utils");
-const Helpers = require("./helpers");
-const Association = require("./base");
-const Op = require("../operators");
+const {
+    is,
+    vendor: { lodash: _ },
+    orm
+} = adone;
+
+const {
+    util,
+    operator
+} = orm;
+
+const {
+    association
+} = adone.private(orm);
 
 /**
  * One-to-many association
- *
- * In the API reference below, add the name of the association to the method, e.g. for `User.hasMany(Project)` the getter will be `user.getProjects()`.
- * If the association is aliased, use the alias instead, e.g. `User.hasMany(Project, { as: 'jobs' })` will be `user.getJobs()`.
- *
- * @see {@link Model.hasMany}
  */
-class HasMany extends Association {
+export default class HasMany extends association.Base {
     constructor(source, target, options) {
         super(source, target, options);
 
@@ -43,7 +47,7 @@ class HasMany extends Association {
             } else {
                 this.options.name = {
                     plural: this.as,
-                    singular: Utils.singularize(this.as)
+                    singular: util.singularize(this.as)
                 };
             }
         } else {
@@ -62,9 +66,9 @@ class HasMany extends Association {
         }
 
         if (!this.foreignKey) {
-            this.foreignKey = Utils.camelizeIf(
+            this.foreignKey = util.camelizeIf(
                 [
-                    Utils.underscoredIf(this.source.options.name.singular, this.source.options.underscored),
+                    util.underscoredIf(this.source.options.name.singular, this.source.options.underscored),
                     this.source.primaryKeyAttribute
                 ].join("_"),
                 !this.source.options.underscored
@@ -92,8 +96,8 @@ class HasMany extends Association {
         this.associationAccessor = this.as;
 
         // Get singular and plural names, trying to uppercase the first letter, unless the model forbids it
-        const plural = Utils.uppercaseFirst(this.options.name.plural);
-        const singular = Utils.uppercaseFirst(this.options.name.singular);
+        const plural = util.uppercaseFirst(this.options.name.plural);
+        const singular = util.uppercaseFirst(this.options.name.singular);
 
         this.accessors = {
             get: `get${plural}`,
@@ -109,8 +113,6 @@ class HasMany extends Association {
         };
     }
 
-    // the id is in the target table
-    // or in an extra table which connects two tables
     injectAttributes() {
         const newAttributes = {};
         const constraintOptions = _.clone(this.options); // Create a new options object for use with addForeignKeyConstraints, to avoid polluting this.options in case it is later used for a n:m
@@ -124,8 +126,8 @@ class HasMany extends Association {
             constraintOptions.onDelete = constraintOptions.onDelete || (target.allowNull ? "SET NULL" : "CASCADE");
             constraintOptions.onUpdate = constraintOptions.onUpdate || "CASCADE";
         }
-        Helpers.addForeignKeyConstraints(newAttributes[this.foreignKey], this.source, this.target, constraintOptions, this.sourceKeyField);
-        Utils.mergeDefaults(this.target.rawAttributes, newAttributes);
+        util.addForeignKeyConstraints(newAttributes[this.foreignKey], this.source, this.target, constraintOptions, this.sourceKeyField);
+        util.mergeDefaults(this.target.rawAttributes, newAttributes);
 
         this.identifierField = this.target.rawAttributes[this.foreignKey].field || this.foreignKey;
         this.foreignKeyField = this.target.rawAttributes[this.foreignKey].field || this.foreignKey;
@@ -133,7 +135,7 @@ class HasMany extends Association {
         this.target.refreshAttributes();
         this.source.refreshAttributes();
 
-        Helpers.checkNamingCollision(this);
+        util.checkNamingCollision(this);
 
         return this;
     }
@@ -147,7 +149,7 @@ class HasMany extends Association {
             removeMultiple: "remove"
         };
 
-        Helpers.mixinMethods(this, obj, methods, aliases);
+        util.mixinMethods(this, obj, methods, aliases);
     }
 
     /**
@@ -157,7 +159,6 @@ class HasMany extends Association {
      * @param {Object} [options.where] An optional where clause to limit the associated models
      * @param {String|Boolean} [options.scope] Apply a scope on the related model, or remove its default scope by passing false
      * @param {String} [options.schema] Apply a schema on the related model
-     * @see {@link Model.findAll}  for a full explanation of options
      * @return {Promise<Array<Model>>}
      */
     async get(instances, options) {
@@ -172,7 +173,7 @@ class HasMany extends Association {
             instances = undefined;
         }
 
-        options = Utils.cloneDeep(options) || {};
+        options = util.cloneDeep(options) || {};
 
         if (association.scope) {
             _.assign(where, association.scope);
@@ -191,7 +192,7 @@ class HasMany extends Association {
                 delete options.limit;
             } else {
                 where[association.foreignKey] = {
-                    [Op.in]: values
+                    [operator.in]: values
                 };
                 delete options.groupedLimit;
             }
@@ -201,7 +202,7 @@ class HasMany extends Association {
 
 
         options.where = options.where ?
-            { [Op.and]: [where, options.where] } :
+            { [operator.and]: [where, options.where] } :
             where;
 
         if (options.hasOwnProperty("scope")) {
@@ -248,7 +249,7 @@ class HasMany extends Association {
         const model = association.target;
         const sequelize = model.sequelize;
 
-        options = Utils.cloneDeep(options);
+        options = util.cloneDeep(options);
         options.attributes = [
             [sequelize.fn("COUNT", sequelize.col(model.primaryKeyField)), "count"]
         ];
@@ -280,7 +281,7 @@ class HasMany extends Association {
             raw: true
         });
 
-        where[Op.or] = targetInstances.map((instance) => {
+        where[operator.or] = targetInstances.map((instance) => {
             if (instance instanceof association.target) {
                 return instance.where();
             }
@@ -291,7 +292,7 @@ class HasMany extends Association {
         });
 
         options.where = {
-            [Op.and]: [
+            [operator.and]: [
                 where,
                 options.where
             ]
@@ -472,7 +473,3 @@ class HasMany extends Association {
         return association.target.create(values, options);
     }
 }
-
-module.exports = HasMany;
-module.exports.HasMany = HasMany;
-module.exports.default = HasMany;

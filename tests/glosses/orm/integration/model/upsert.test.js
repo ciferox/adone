@@ -1,7 +1,7 @@
 import Support from "../support";
 
-const Sequelize = adone.orm;
-const { DataTypes } = Sequelize;
+const { orm } = adone;
+const { type } = orm;
 const dialect = Support.getTestDialect();
 const current = Support.sequelize;
 
@@ -12,32 +12,32 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
     beforeEach(function () {
         this.User = this.sequelize.define("user", {
-            username: DataTypes.STRING,
+            username: type.STRING,
             foo: {
                 unique: "foobar",
-                type: DataTypes.STRING
+                type: type.STRING
             },
             bar: {
                 unique: "foobar",
-                type: DataTypes.INTEGER
+                type: type.INTEGER
             },
             baz: {
-                type: DataTypes.STRING,
+                type: type.STRING,
                 field: "zab",
                 defaultValue: "BAZ_DEFAULT_VALUE"
             },
-            blob: DataTypes.BLOB
+            blob: type.BLOB
         });
 
         this.ModelWithFieldPK = this.sequelize.define("ModelWithFieldPK", {
             userId: {
                 field: "user_id",
-                type: Sequelize.INTEGER,
+                type: type.INTEGER,
                 autoIncrement: true,
                 primaryKey: true
             },
             foo: {
-                type: DataTypes.STRING,
+                type: type.STRING,
                 unique: true
             }
         });
@@ -111,12 +111,12 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         primaryKey: true,
                         allowNull: false,
                         unique: true,
-                        type: Sequelize.UUID,
-                        defaultValue: Sequelize.UUIDV4
+                        type: type.UUID,
+                        defaultValue: type.UUIDV4
                     },
 
                     name: {
-                        type: Sequelize.STRING
+                        type: type.STRING
                     }
                 });
 
@@ -128,14 +128,14 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             it("works with upsert on a composite primary key", async function () {
                 const User = this.sequelize.define("user", {
                     a: {
-                        type: Sequelize.STRING,
+                        type: type.STRING,
                         primaryKey: true
                     },
                     b: {
-                        type: Sequelize.STRING,
+                        type: type.STRING,
                         primaryKey: true
                     },
-                    username: DataTypes.STRING
+                    username: type.STRING
                 });
 
                 await User.sync({ force: true });
@@ -177,7 +177,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             it("supports validations", async function () {
                 const User = this.sequelize.define("user", {
                     email: {
-                        type: Sequelize.STRING,
+                        type: type.STRING,
                         validate: {
                             isEmail: true
                         }
@@ -349,15 +349,15 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             it("Works when two separate uniqueKeys are passed", async function () {
                 const User = this.sequelize.define("User", {
                     username: {
-                        type: Sequelize.STRING,
+                        type: type.STRING,
                         unique: true
                     },
                     email: {
-                        type: Sequelize.STRING,
+                        type: type.STRING,
                         unique: true
                     },
                     city: {
-                        type: Sequelize.STRING
+                        type: type.STRING
                     }
                 });
                 await User.sync({ force: true });
@@ -389,9 +389,9 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
             it("works when indexes are created via indexes array", function () {
                 const User = this.sequelize.define("User", {
-                    username: Sequelize.STRING,
-                    email: Sequelize.STRING,
-                    city: Sequelize.STRING
+                    username: type.STRING,
+                    email: type.STRING,
+                    city: type.STRING
                 }, {
                     indexes: [{
                         unique: true,
@@ -428,9 +428,9 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
             it("works when composite indexes are created via indexes array", () => {
                 const User = current.define("User", {
-                    name: DataTypes.STRING,
-                    address: DataTypes.STRING,
-                    city: DataTypes.STRING
+                    name: type.STRING,
+                    address: type.STRING,
+                    city: type.STRING
                 }, {
                     indexes: [{
                         unique: "users_name_address",
@@ -466,23 +466,23 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 it("Should throw foreignKey violation for MERGE statement as ForeignKeyConstraintError", async function () {
                     const User = this.sequelize.define("User", {
                         username: {
-                            type: DataTypes.STRING,
+                            type: type.STRING,
                             primaryKey: true
                         }
                     });
                     const Posts = this.sequelize.define("Posts", {
                         title: {
-                            type: DataTypes.STRING,
+                            type: type.STRING,
                             primaryKey: true
                         },
-                        username: DataTypes.STRING
+                        username: type.STRING
                     });
                     Posts.belongsTo(User, { foreignKey: "username" });
                     await this.sequelize.sync({ force: true });
                     await User.create({ username: "user1" });
                     await assert.throws(async () => {
                         await Posts.upsert({ title: "Title", username: "user2" });
-                    }, Sequelize.ForeignKeyConstraintError);
+                    }, orm.x.ForeignKeyConstraintError);
                 });
             }
 
@@ -490,12 +490,12 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 it("works when deletedAt is Infinity and part of primary key", function () {
                     const User = this.sequelize.define("User", {
                         name: {
-                            type: DataTypes.STRING,
+                            type: type.STRING,
                             primaryKey: true
                         },
-                        address: DataTypes.STRING,
+                        address: type.STRING,
                         deletedAt: {
-                            type: DataTypes.DATE,
+                            type: type.DATE,
                             primaryKey: true,
                             allowNull: false,
                             defaultValue: Infinity

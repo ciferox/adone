@@ -1,6 +1,7 @@
 import Support from "./support";
 
-const Sequelize = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.supports.tmpTableTrigger }, () => {
@@ -21,7 +22,7 @@ describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.support
         beforeEach(async function () {
             User = this.sequelize.define("user", {
                 username: {
-                    type: Sequelize.STRING,
+                    type: type.STRING,
                     field: "user_name"
                 }
             }, {

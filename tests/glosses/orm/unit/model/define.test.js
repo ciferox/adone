@@ -1,8 +1,7 @@
 import Support from "../../support";
 
-const {
-    DataTypes
-} = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 const current = Support.sequelize;
 
@@ -29,14 +28,14 @@ describe(Support.getTestDialectTeaser("Model"), () => {
         it("should throw when id is added but not marked as PK", () => {
             expect(() => {
                 current.define("foo", {
-                    id: DataTypes.INTEGER
+                    id: type.INTEGER
                 });
             }).to.throw("A column called 'id' was added to the attributes of 'foos' but not marked with 'primaryKey: true'");
 
             expect(() => {
                 current.define("bar", {
                     id: {
-                        type: DataTypes.INTEGER
+                        type: type.INTEGER
                     }
                 });
             }).to.throw("A column called 'id' was added to the attributes of 'bars' but not marked with 'primaryKey: true'");
@@ -45,15 +44,15 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             expect(() => {
                 current.define("baz", {
                     foo: {
-                        type: DataTypes.STRING,
+                        type: type.STRING,
                         unique: null
                     },
                     bar: {
-                        type: DataTypes.STRING,
+                        type: type.STRING,
                         unique: undefined
                     },
                     bop: {
-                        type: DataTypes.DATE
+                        type: type.DATE
                     }
                 });
             }).not.to.throw();

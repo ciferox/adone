@@ -1,21 +1,21 @@
 import Support from "../../support";
 
 const current = Support.sequelize;
-const {
-    DataTypes
-} = adone.orm;
+const { orm } = adone;
+const { type } = orm;
+const __ = adone.private(orm);
 
 describe(Support.getTestDialectTeaser("Model"), () => {
     describe("method findOne", () => {
         before(function () {
-            this.oldFindAll = current.Model.findAll;
+            this.oldFindAll = __.Model.findAll;
         });
         after(function () {
-            current.Model.findAll = this.oldFindAll;
+            __.Model.findAll = this.oldFindAll;
         });
 
         beforeEach(function () {
-            this.stub = current.Model.findAll = stub().returns(Promise.resolve());
+            this.stub = __.Model.findAll = stub().returns(Promise.resolve());
         });
 
         describe("should not add limit when querying on a primary key", () => {
@@ -29,7 +29,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             it("with custom primary key", async function () {
                 const Model = current.define("model", {
                     uid: {
-                        type: DataTypes.INTEGER,
+                        type: type.INTEGER,
                         primaryKey: true,
                         autoIncrement: true
                     }
@@ -42,7 +42,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             it("with blob primary key", async function () {
                 const Model = current.define("model", {
                     id: {
-                        type: DataTypes.BLOB,
+                        type: type.BLOB,
                         primaryKey: true,
                         autoIncrement: true
                     }

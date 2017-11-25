@@ -6,9 +6,11 @@
  * @private
  */
 
-const { vendor: { lodash: _ } } = adone;
+const {
+    vendor: { lodash: _ }
+} = adone;
 
-class Logger {
+export default class Logger {
     constructor(config) {
 
         this.config = _.extend({
@@ -39,5 +41,3 @@ class Logger {
         return adone.noop; // TODO
     }
 }
-
-module.exports = Logger;

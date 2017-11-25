@@ -1,4 +1,7 @@
-const { is, vendor: { lodash: _ } } = adone;
+const {
+    is,
+    vendor: { lodash: _ }
+} = adone;
 
 const stringifyRangeBound = (bound) => {
     if (is.null(bound)) {
@@ -22,7 +25,7 @@ const parseRangeBound = (bound, parseType) => {
 
 };
 
-const stringify = (data) => {
+export const stringify = (data) => {
     if (is.null(data)) {
         return null;
     }
@@ -65,9 +68,8 @@ const stringify = (data) => {
 
     return `${(data.inclusive[0] ? "[" : "(") + lowerBound},${upperBound}${data.inclusive[1] ? "]" : ")"}`;
 };
-exports.stringify = stringify;
 
-const parse = (value, parser) => {
+export const parse = (value, parser) => {
     if (is.null(value)) {
         return null;
     }
@@ -91,4 +93,3 @@ const parse = (value, parser) => {
 
     return result;
 };
-exports.parse = parse;

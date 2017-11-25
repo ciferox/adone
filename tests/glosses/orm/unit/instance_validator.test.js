@@ -1,13 +1,15 @@
 import Support from "../support";
 
-const InstanceValidator = adone.orm.InstanceValidator;
-const SequelizeValidationError = adone.orm.ValidationError;
+const InstanceValidator = adone.private(adone.orm).InstanceValidator;
+const ValidationError = adone.orm.x.ValidationError;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("InstanceValidator"), function () {
     beforeEach(() => {
         this.User = Support.sequelize.define("user", {
             fails: {
-                type: Support.Sequelize.BOOLEAN,
+                type: type.BOOLEAN,
                 validate: {
                     isNotTrue(value) {
                         if (value) {
@@ -59,13 +61,13 @@ describe(Support.getTestDialectTeaser("InstanceValidator"), function () {
             const err = await assert.throws(async () => {
                 await instanceValidator.validate();
             });
-            expect(err).to.be.instanceof(SequelizeValidationError);
+            expect(err).to.be.instanceof(ValidationError);
         });
 
         it("has a useful default error message for not null validation failures", async () => {
             const User = Support.sequelize.define("user", {
                 name: {
-                    type: Support.Sequelize.STRING,
+                    type: type.STRING,
                     allowNull: false
                 }
             });
@@ -76,7 +78,7 @@ describe(Support.getTestDialectTeaser("InstanceValidator"), function () {
                 await instanceValidator.validate();
             }, /user\.name cannot be null/);
 
-            expect(err).to.be.instanceof(SequelizeValidationError);
+            expect(err).to.be.instanceof(ValidationError);
         });
     });
 
@@ -144,7 +146,7 @@ describe(Support.getTestDialectTeaser("InstanceValidator"), function () {
             it("should not replace the validation error in validationFailed hook by default", async () => {
                 const failingInstanceValidator = new InstanceValidator(this.User.build());
                 stub(failingInstanceValidator, "_validate").callsFake(() => {
-                    return Promise.reject(new SequelizeValidationError());
+                    return Promise.reject(new ValidationError());
                 });
                 const validationFailedHook = stub().returns(Promise.resolve());
                 this.User.validationFailed(validationFailedHook);
@@ -152,13 +154,13 @@ describe(Support.getTestDialectTeaser("InstanceValidator"), function () {
                 const err = await assert.throws(async () => {
                     await failingInstanceValidator._validateAndRunHooks();
                 });
-                expect(err.name).to.be.equal("SequelizeValidationError");
+                expect(err.name).to.be.equal("ValidationError");
             });
 
             it("should replace the validation error if validationFailed hook creates a new error", async () => {
                 const failingInstanceValidator = new InstanceValidator(this.User.build());
                 stub(failingInstanceValidator, "_validate").callsFake(() => {
-                    return Promise.reject(new SequelizeValidationError());
+                    return Promise.reject(new ValidationError());
                 });
                 const validationFailedHook = stub().throws(new Error("validation failed hook error"));
                 this.User.validationFailed(validationFailedHook);

@@ -1,16 +1,16 @@
 import Support from "../../../support";
 
-const { Op } = adone.orm;
+const { operator } = adone.orm;
 const getAbstractQueryGenerator = Support.getAbstractQueryGenerator;
 
 describe("QueryGenerator", () => {
     describe("whereItemQuery", () => {
         it("should generate correct query for Symbol operators", function () {
             const QG = getAbstractQueryGenerator(this.sequelize);
-            expect(QG.whereItemQuery(Op.or, [{ test: { [Op.gt]: 5 } }, { test: { [Op.lt]: 3 } }, { test: { [Op.in]: [4] } }]))
+            expect(QG.whereItemQuery(operator.or, [{ test: { [operator.gt]: 5 } }, { test: { [operator.lt]: 3 } }, { test: { [operator.in]: [4] } }]))
                 .to.be.equal("(test > 5 OR test < 3 OR test IN (4))");
 
-            expect(QG.whereItemQuery(Op.and, [{ test: { [Op.between]: [2, 5] } }, { test: { [Op.ne]: 3 } }, { test: { [Op.not]: 4 } }]))
+            expect(QG.whereItemQuery(operator.and, [{ test: { [operator.between]: [2, 5] } }, { test: { [operator.ne]: 3 } }, { test: { [operator.not]: 4 } }]))
                 .to.be.equal("(test BETWEEN 2 AND 5 AND test != 3 AND test != 4)");
         });
 
@@ -41,23 +41,23 @@ describe("QueryGenerator", () => {
         it("should parse set aliases strings as operators", function () {
             const QG = getAbstractQueryGenerator(this.sequelize);
             const aliases = {
-                OR: Op.or,
-                "!": Op.not,
-                "^^": Op.gt
+                OR: operator.or,
+                "!": operator.not,
+                "^^": operator.gt
             };
 
             QG.setOperatorsAliases(aliases);
 
-            expect(QG.whereItemQuery("OR", [{ test: { "^^": 5 } }, { test: { "!": 3 } }, { test: { [Op.in]: [4] } }]))
+            expect(QG.whereItemQuery("OR", [{ test: { "^^": 5 } }, { test: { "!": 3 } }, { test: { [operator.in]: [4] } }]))
                 .to.be.equal("(test > 5 OR test != 3 OR test IN (4))");
 
-            expect(QG.whereItemQuery(Op.and, [{ test: { [Op.between]: [2, 5] } }, { test: { "!": 3 } }, { test: { "^^": 4 } }]))
+            expect(QG.whereItemQuery(operator.and, [{ test: { [operator.between]: [2, 5] } }, { test: { "!": 3 } }, { test: { "^^": 4 } }]))
                 .to.be.equal("(test BETWEEN 2 AND 5 AND test != 3 AND test > 4)");
 
-            expect(() => QG.whereItemQuery("OR", [{ test: { "^^": 5 } }, { test: { $not: 3 } }, { test: { [Op.in]: [4] } }]))
+            expect(() => QG.whereItemQuery("OR", [{ test: { "^^": 5 } }, { test: { $not: 3 } }, { test: { [operator.in]: [4] } }]))
                 .to.throw("Invalid value { '$not': 3 }");
 
-            expect(() => QG.whereItemQuery("OR", [{ test: { $gt: 5 } }, { test: { "!": 3 } }, { test: { [Op.in]: [4] } }]))
+            expect(() => QG.whereItemQuery("OR", [{ test: { $gt: 5 } }, { test: { "!": 3 } }, { test: { [operator.in]: [4] } }]))
                 .to.throw("Invalid value { '$gt': 5 }");
 
             expect(() => QG.whereItemQuery("$or", [{ test: 5 }, { test: 3 }]))

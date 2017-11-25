@@ -1,12 +1,23 @@
-const AbstractConnectionManager = require("../abstract/connection_manager");
-const Promise = require("../../promise");
-const Utils = require("../../utils");
-const debug = Utils.getLogger().debugContext("connection:sqlite");
-const dataTypes = require("../../data_types").sqlite;
-const sequelizeErrors = require("../../errors");
-const parserStore = require("../parser_store")("sqlite");
+const {
+    orm
+} = adone;
 
-class ConnectionManager extends AbstractConnectionManager {
+const {
+    x
+} = orm;
+
+const {
+    dialect: {
+        abstract: {
+            ConnectionManager: AbstractConnectionManager
+        }
+    }
+} = adone.private(orm);
+
+const debug = orm.util.getLogger().debugContext("connection:sqlite");
+const parserStore = orm.util.parserStore("sqlite");
+
+export default class ConnectionManager extends AbstractConnectionManager {
     constructor(dialect, sequelize) {
         super(dialect, sequelize);
         this.sequelize = sequelize;
@@ -24,7 +35,7 @@ class ConnectionManager extends AbstractConnectionManager {
             if (sequelize.config.dialectModulePath) {
                 this.lib = require(sequelize.config.dialectModulePath).verbose();
             } else {
-                this.lib = require("sqlite3").verbose();
+                this.lib = require("sqlite3").verbose(); // TODO
             }
         } catch (err) {
             if (err.code === "MODULE_NOT_FOUND") {
@@ -33,7 +44,7 @@ class ConnectionManager extends AbstractConnectionManager {
             throw err;
         }
 
-        this.refreshTypeParser(dataTypes);
+        this.refreshTypeParser(orm.type.sqlite);
     }
 
     // Expose this as a method so that the parsing may be updated when the user has added additional, custom types
@@ -64,9 +75,9 @@ class ConnectionManager extends AbstractConnectionManager {
                 (err) => {
                     if (err) {
                         if (err.code === "SQLITE_CANTOPEN") {
-                            return reject(new sequelizeErrors.ConnectionError(err));
+                            return reject(new x.ConnectionError(err));
                         }
-                        return reject(new sequelizeErrors.ConnectionError(err));
+                        return reject(new x.ConnectionError(err));
                     }
                     debug(`connection acquired ${options.uuid}`);
                     resolve(this.connections[options.inMemory || options.uuid]);
@@ -99,8 +110,4 @@ class ConnectionManager extends AbstractConnectionManager {
         }
     }
 }
-
-
-module.exports = ConnectionManager;
-module.exports.ConnectionManager = ConnectionManager;
-module.exports.default = ConnectionManager;
+ConnectionManager.prototype.defaultVersion = "3.8.0";

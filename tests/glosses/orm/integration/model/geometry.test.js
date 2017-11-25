@@ -1,6 +1,7 @@
 import Support from "../support";
 
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 const dialect = Support.getTestDialect();
 
 const current = Support.sequelize;
@@ -10,8 +11,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
         describe("GEOMETRY", () => {
             beforeEach(function () {
                 this.User = this.sequelize.define("User", {
-                    username: DataTypes.STRING,
-                    geometry: DataTypes.GEOMETRY
+                    username: type.STRING,
+                    geometry: type.GEOMETRY
                 });
 
                 return this.User.sync({ force: true });
@@ -19,7 +20,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
             it("works with aliases fields", function () {
                 const Pub = this.sequelize.define("Pub", {
-                    location: { field: "coordinates", type: DataTypes.GEOMETRY }
+                    location: { field: "coordinates", type: type.GEOMETRY }
                 });
                 const point = { type: "Point", coordinates: [39.807222, -76.984722] };
 
@@ -60,8 +61,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
         describe("GEOMETRY(POINT)", () => {
             beforeEach(function () {
                 this.User = this.sequelize.define("User", {
-                    username: DataTypes.STRING,
-                    geometry: new DataTypes.GEOMETRY("POINT")
+                    username: type.STRING,
+                    geometry: new type.GEOMETRY("POINT")
                 });
 
                 return this.User.sync({ force: true });
@@ -96,8 +97,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
         describe("GEOMETRY(LINESTRING)", () => {
             beforeEach(function () {
                 this.User = this.sequelize.define("User", {
-                    username: DataTypes.STRING,
-                    geometry: new DataTypes.GEOMETRY("LINESTRING")
+                    username: type.STRING,
+                    geometry: new type.GEOMETRY("LINESTRING")
                 });
 
                 return this.User.sync({ force: true });
@@ -132,8 +133,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
         describe("GEOMETRY(POLYGON)", () => {
             beforeEach(function () {
                 this.User = this.sequelize.define("User", {
-                    username: DataTypes.STRING,
-                    geometry: new DataTypes.GEOMETRY("POLYGON")
+                    username: type.STRING,
+                    geometry: new type.GEOMETRY("POLYGON")
                 });
 
                 return this.User.sync({ force: true });
@@ -175,7 +176,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
         describe("sql injection attacks", () => {
             beforeEach(function () {
                 this.Model = this.sequelize.define("Model", {
-                    location: DataTypes.GEOMETRY
+                    location: type.GEOMETRY
                 });
                 return this.sequelize.sync({ force: true });
             });

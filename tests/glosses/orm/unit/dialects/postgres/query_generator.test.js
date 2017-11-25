@@ -1,12 +1,17 @@
 import Support from "../../../support";
 
+const { orm } = adone;
+
 const {
     dialect: {
         postgres: { QueryGenerator }
-    },
-    Op: Operators,
-    DataTypes
-} = adone.orm;
+    }
+} = adone.private(orm);
+
+const {
+    operator,
+    type
+} = orm;
 
 const { vendor: { lodash: _ } } = adone;
 const dialect = Support.getTestDialect();
@@ -135,11 +140,11 @@ describe("[POSTGRES Specific] QueryGenerator", { skip: !/^postgres/.test(dialect
                 expectation: 'CREATE TABLE IF NOT EXISTS \"myTable\" (\"title\" VARCHAR(255), \"name\" VARCHAR(255));'
             },
             {
-                arguments: ["myTable", { data: current.normalizeDataType(DataTypes.BLOB).toSql() }],
+                arguments: ["myTable", { data: current.normalizeDataType(type.BLOB).toSql() }],
                 expectation: 'CREATE TABLE IF NOT EXISTS \"myTable\" (\"data\" BYTEA);'
             },
             {
-                arguments: ["myTable", { data: current.normalizeDataType(new DataTypes.BLOB("long")).toSql() }],
+                arguments: ["myTable", { data: current.normalizeDataType(new type.BLOB("long")).toSql() }],
                 expectation: 'CREATE TABLE IF NOT EXISTS \"myTable\" (\"data\" BYTEA);'
             },
             {
@@ -956,7 +961,7 @@ describe("[POSTGRES Specific] QueryGenerator", { skip: !/^postgres/.test(dialect
                     QueryGenerator.options = _.assign(context.options, { timezone: "+00:00" });
                     QueryGenerator._dialect = this.sequelize.dialect;
                     QueryGenerator.sequelize = this.sequelize;
-                    QueryGenerator.setOperatorsAliases(Operators.LegacyAliases);
+                    QueryGenerator.setOperatorsAliases(operator.LegacyAliases);
                     const conditions = QueryGenerator[suiteTitle].apply(QueryGenerator, test.arguments);
                     expect(conditions).to.deep.equal(test.expectation);
                 });

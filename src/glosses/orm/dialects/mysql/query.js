@@ -1,10 +1,23 @@
-const Utils = require("../../utils");
-const debug = Utils.getLogger().debugContext("sql:mysql");
-const AbstractQuery = require("../abstract/query");
-const sequelizeErrors = require("../../errors.js");
-const { vendor: { lodash: _ } } = adone;
+const {
+    vendor: { lodash: _ },
+    orm
+} = adone;
 
-class Query extends AbstractQuery {
+const debug = orm.util.getLogger().debugContext("sql:mysql");
+
+const {
+    x
+} = orm;
+
+const {
+    dialect: {
+        abstract: {
+            Query: AbstractQuery
+        }
+    }
+} = adone.private(orm);
+
+export default class Query extends AbstractQuery {
     constructor(connection, sequelize, options) {
         super();
         this.connection = connection;
@@ -66,19 +79,7 @@ class Query extends AbstractQuery {
     /**
      * High level function that handles the results of a query execution.
      *
-     *
-     * Example:
-     *  query.formatResults([
-     *    {
-     *      id: 1,              // this is from the main table
-     *      attr2: 'snafu',     // this is from the main table
-     *      Tasks.id: 1,        // this is from the associated table
-     *      Tasks.title: 'task' // this is from the associated table
-     *    }
-     *  ])
-     *
      * @param {Array} data - The result of the query execution.
-     * @private
      */
     formatResults(data) {
         let result = this.instance;
@@ -186,7 +187,7 @@ class Query extends AbstractQuery {
 
                 const errors = [];
                 _.forOwn(fields, (value, field) => {
-                    errors.push(new sequelizeErrors.ValidationErrorItem(
+                    errors.push(new x.ValidationErrorItem(
                         this.getUniqueConstraintErrorMessage(field),
                         "unique violation", // sequelizeErrors.ValidationErrorItem.Origins.DB,
                         field,
@@ -196,7 +197,7 @@ class Query extends AbstractQuery {
                     ));
                 });
 
-                return new sequelizeErrors.UniqueConstraintError({ message, errors, parent: err, fields });
+                return new x.UniqueConstraintError({ message, errors, parent: err, fields });
             }
 
             case 1451:
@@ -206,7 +207,7 @@ class Query extends AbstractQuery {
                 const quoteChar = match ? match[1] : "`";
                 const fields = match ? match[3].split(new RegExp(`${quoteChar}, *${quoteChar}`)) : undefined;
 
-                return new sequelizeErrors.ForeignKeyConstraintError({
+                return new x.ForeignKeyConstraintError({
                     reltype: String(errCode) === "1451" ? "parent" : "child",
                     table: match ? match[4] : undefined,
                     fields,
@@ -217,7 +218,7 @@ class Query extends AbstractQuery {
             }
 
             default:
-                return new sequelizeErrors.DatabaseError(err);
+                return new x.DatabaseError(err);
         }
     }
 
@@ -249,7 +250,3 @@ class Query extends AbstractQuery {
         }));
     }
 }
-
-module.exports = Query;
-module.exports.Query = Query;
-module.exports.default = Query;

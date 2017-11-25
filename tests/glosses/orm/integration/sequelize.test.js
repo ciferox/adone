@@ -1,12 +1,8 @@
 import Support from "./support";
 import config from "../config/config";
-const Sequelize = adone.orm;
 const { is } = adone;
-const {
-    DataTypes,
-    Transaction,
-    Utils
-} = Sequelize;
+const { orm } = adone;
+const { type, Transaction } = orm;
 
 const { vendor: { lodash: _ } } = adone;
 const dialect = Support.getTestDialect();
@@ -26,7 +22,7 @@ const qq = function (str) {
 describe(Support.getTestDialectTeaser("Sequelize"), () => {
     describe("constructor", () => {
         afterEach(() => {
-            Utils.deprecate.restore && Utils.deprecate.restore();
+            orm.util.deprecate.restore && orm.util.deprecate.restore();
         });
 
         if (dialect !== "sqlite") {
@@ -45,7 +41,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
         it("should pass the global options correctly", () => {
             const sequelize = Support.createSequelizeInstance({ logging: false, define: { underscored: true } });
-            const DAO = sequelize.define("dao", { name: DataTypes.STRING });
+            const DAO = sequelize.define("dao", { name: type.STRING });
 
             expect(DAO.options.underscored).to.be.ok;
         });
@@ -58,13 +54,13 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
 
         it("should log deprecated warning if operators aliases were not set", () => {
-            stub(Utils, "deprecate");
+            stub(orm.util, "deprecate");
             Support.createSequelizeInstance();
-            expect(Utils.deprecate.calledOnce).to.be.true;
-            expect(Utils.deprecate.args[0][0]).to.be.equal("String based operators are now deprecated. Please use Symbol based operators for better security, read more at http://docs.sequelizejs.com/manual/tutorial/querying.html#operators");
-            Utils.deprecate.reset();
+            expect(orm.util.deprecate.calledOnce).to.be.true;
+            expect(orm.util.deprecate.args[0][0]).to.be.equal("String based operators are now deprecated. Please use Symbol based operators for better security, read more at http://docs.sequelizejs.com/manual/tutorial/querying.html#operators");
+            orm.util.deprecate.reset();
             Support.createSequelizeInstance({ operatorsAliases: {} });
-            expect(Utils.deprecate.called).to.be.false;
+            expect(orm.util.deprecate.called).to.be.false;
         });
 
         it("should set operators aliases on dialect QueryGenerator", () => {
@@ -79,13 +75,13 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
         if (dialect === "sqlite") {
             it("should work with connection strings (1)", () => {
-        const sequelize = new Sequelize('sqlite://test.sqlite'); // eslint-disable-line
+        const sequelize = orm.create('sqlite://test.sqlite'); // eslint-disable-line
             });
             it("should work with connection strings (2)", () => {
-        const sequelize = new Sequelize('sqlite://test.sqlite/'); // eslint-disable-line
+        const sequelize = orm.create('sqlite://test.sqlite/'); // eslint-disable-line
             });
             it("should work with connection strings (3)", () => {
-        const sequelize = new Sequelize('sqlite://test.sqlite/lol?reconnect=true'); // eslint-disable-line
+        const sequelize = orm.create('sqlite://test.sqlite/lol?reconnect=true'); // eslint-disable-line
             });
         }
 
@@ -94,12 +90,12 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
             it("should work with connection strings (postgres protocol)", () => {
                 const connectionUri = getConnectionUri(_.extend(config[dialect], { protocol: "postgres" }));
                 // postgres://...
-        const sequelize = new Sequelize(connectionUri); // eslint-disable-line
+        const sequelize = orm.create(connectionUri); // eslint-disable-line
             });
             it("should work with connection strings (postgresql protocol)", () => {
                 const connectionUri = getConnectionUri(_.extend(config[dialect], { protocol: "postgresql" }));
                 // postgresql://...
-        const sequelize = new Sequelize(connectionUri); // eslint-disable-line
+        const sequelize = orm.create(connectionUri); // eslint-disable-line
             });
         }
     });
@@ -115,7 +111,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
             describe("with an invalid connection", () => {
                 beforeEach(function () {
                     const options = _.extend({}, this.sequelize.options, { port: "99999" });
-                    this.sequelizeWithInvalidConnection = new Sequelize("wat", "trololo", "wow", options);
+                    this.sequelizeWithInvalidConnection = orm.create("wat", "trololo", "wow", options);
                 });
 
                 it("triggers the error event", function () {
@@ -134,7 +130,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                         .catch((err) => {
                             expect(
                                 err instanceof RangeError ||
-                err instanceof Sequelize.ConnectionError
+                err instanceof orm.x.ConnectionError
                             ).to.be.ok;
                         });
                 });
@@ -156,7 +152,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
             describe("with invalid credentials", () => {
                 beforeEach(function () {
-                    this.sequelizeWithInvalidCredentials = new Sequelize("localhost", "wtf", "lol", this.sequelize.options);
+                    this.sequelizeWithInvalidCredentials = orm.create("localhost", "wtf", "lol", this.sequelize.options);
                 });
 
                 it("triggers the error event", function () {
@@ -173,12 +169,12 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                         .sequelizeWithInvalidCredentials
                         .authenticate()
                         .catch((err) => {
-                            expect(err).to.be.instanceof(Sequelize.Error);
+                            expect(err).to.be.instanceof(orm.x.ORMException);
                         });
                 });
 
                 it("triggers the error event when using replication", () => {
-                    return new Sequelize("sequelize", null, null, {
+                    return orm.create("sequelize", null, null, {
                         dialect,
                         replication: {
                             read: {
@@ -215,7 +211,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
         it("returns true if the dao was defined before", function () {
             this.sequelize.define("Project", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
             expect(this.sequelize.isDefined("Project")).to.be.true;
         });
@@ -231,7 +227,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
         it("returns the dao factory defined by daoName", function () {
             const project = this.sequelize.define("Project", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
 
             expect(this.sequelize.model("Project")).to.equal(project);
@@ -247,9 +243,9 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
         beforeEach(function () {
             this.User = this.sequelize.define("User", {
-                username: DataTypes.STRING,
+                username: type.STRING,
                 emailAddress: {
-                    type: DataTypes.STRING,
+                    type: type.STRING,
                     field: "email_address"
                 }
             });
@@ -485,7 +481,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                 query: "select ? as number, ? as date,? as string,? as boolean,? as buffer",
                 values: [number, date, string, boolean, buffer]
             }, {
-                type: this.sequelize.QueryTypes.SELECT,
+                type: this.sequelize.queryType.SELECT,
                 logging(s) {
                     logSql = s;
                 }
@@ -517,7 +513,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                     return "select ? as foo, ? as bar";
                 }
             }
-            return this.sequelize.query(new SQLStatement(), { type: this.sequelize.QueryTypes.SELECT, logging: (s) => logSql = s } ).then((result) => {
+            return this.sequelize.query(new SQLStatement(), { type: this.sequelize.queryType.SELECT, logging: (s) => logSql = s } ).then((result) => {
                 expect(result).to.deep.equal([{ foo: 1, bar: 2 }]);
                 expect(logSql.indexOf("?")).to.equal(-1);
             });
@@ -525,7 +521,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
         it("uses properties `query` and `values` if query is tagged", function () {
             let logSql;
-            return this.sequelize.query({ query: "select ? as foo, ? as bar", values: [1, 2] }, { type: this.sequelize.QueryTypes.SELECT, logging(s) {
+            return this.sequelize.query({ query: "select ? as foo, ? as bar", values: [1, 2] }, { type: this.sequelize.queryType.SELECT, logging(s) {
                 logSql = s;
             } }).then((result) => {
                 expect(result).to.deep.equal([{ foo: 1, bar: 2 }]);
@@ -536,7 +532,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
         it("uses properties `query` and `bind` if query is tagged", function () {
             const typeCast = dialect === "postgres" ? "::int" : "";
             let logSql;
-            return this.sequelize.query({ query: `select $1${typeCast} as foo, $2${typeCast} as bar`, bind: [1, 2] }, { type: this.sequelize.QueryTypes.SELECT, logging(s) {
+            return this.sequelize.query({ query: `select $1${typeCast} as foo, $2${typeCast} as bar`, bind: [1, 2] }, { type: this.sequelize.queryType.SELECT, logging(s) {
                 logSql = s;
             } }).then((result) => {
                 expect(result).to.deep.equal([{ foo: 1, bar: 2 }]);
@@ -552,7 +548,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
         it("dot separated attributes when doing a raw query without nest", async function () {
             const tickChar = dialect === "postgres" || dialect === "mssql" ? '"' : "`";
-            const sql = `select 1 as ${Sequelize.Utils.addTicks("foo.bar.baz", tickChar)}`;
+            const sql = `select 1 as ${orm.util.addTicks("foo.bar.baz", tickChar)}`;
 
             const [res] = await this.sequelize.query(sql, { raw: true, nest: false });
 
@@ -561,7 +557,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
         it("destructs dot separated attributes when doing a raw query using nest", function () {
             const tickChar = dialect === "postgres" || dialect === "mssql" ? '"' : "`";
-            const sql = `select 1 as ${Sequelize.Utils.addTicks("foo.bar.baz", tickChar)}`;
+            const sql = `select 1 as ${orm.util.addTicks("foo.bar.baz", tickChar)}`;
 
             return this.sequelize.query(sql, { raw: true, nest: true }).then((result) => {
                 expect(result).to.deep.equal([{ foo: { bar: { baz: 1 } } }]);
@@ -569,7 +565,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
         });
 
         it("replaces token with the passed array", async function () {
-            const res = await this.sequelize.query("select ? as foo, ? as bar", { type: this.sequelize.QueryTypes.SELECT, replacements: [1, 2] });
+            const res = await this.sequelize.query("select ? as foo, ? as bar", { type: this.sequelize.queryType.SELECT, replacements: [1, 2] });
             expect(res).to.deep.equal([{ foo: 1, bar: 2 }]);
         });
 
@@ -627,7 +623,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
         it("binds token with the passed array", function () {
             const typeCast = dialect === "postgres" ? "::int" : "";
             let logSql;
-            return this.sequelize.query(`select $1${typeCast} as foo, $2${typeCast} as bar`, { type: this.sequelize.QueryTypes.SELECT, bind: [1, 2], logging(s) {
+            return this.sequelize.query(`select $1${typeCast} as foo, $2${typeCast} as bar`, { type: this.sequelize.queryType.SELECT, bind: [1, 2], logging(s) {
                 logSql = s;
             } }).then((result) => {
                 expect(result).to.deep.equal([{ foo: 1, bar: 2 }]);
@@ -790,7 +786,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
         if (Support.getTestDialect() === "sqlite") {
             it("binds array parameters for upsert are replaced. $$ unescapes only once", function () {
                 let logSql;
-                return this.sequelize.query("select $1 as foo, $2 as bar, '$$$$' as baz", { type: this.sequelize.QueryTypes.UPSERT, bind: [1, 2], logging(s) {
+                return this.sequelize.query("select $1 as foo, $2 as bar, '$$$$' as baz", { type: this.sequelize.queryType.UPSERT, bind: [1, 2], logging(s) {
                     logSql = s;
                 } }).then(() => {
                     // sqlite.exec does not return a result
@@ -801,7 +797,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
             it("binds named parameters for upsert are replaced. $$ unescapes only once", function () {
                 let logSql;
-                return this.sequelize.query("select $one as foo, $two as bar, '$$$$' as baz", { type: this.sequelize.QueryTypes.UPSERT, bind: { one: 1, two: 2 }, logging(s) {
+                return this.sequelize.query("select $one as foo, $two as bar, '$$$$' as baz", { type: this.sequelize.queryType.UPSERT, bind: { one: 1, two: 2 }, logging(s) {
                     logSql = s;
                 } }).then(() => {
                     // sqlite.exec does not return a result
@@ -905,43 +901,43 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
     describe("define", () => {
         it("adds a new dao to the dao manager", function () {
             const count = this.sequelize.modelManager.all.length;
-            this.sequelize.define("foo", { title: DataTypes.STRING });
+            this.sequelize.define("foo", { title: type.STRING });
             expect(this.sequelize.modelManager.all.length).to.equal(count + 1);
         });
 
         it("adds a new dao to sequelize.models", function () {
             expect(this.sequelize.models.bar).to.equal(undefined);
-            const Bar = this.sequelize.define("bar", { title: DataTypes.STRING });
+            const Bar = this.sequelize.define("bar", { title: type.STRING });
             expect(this.sequelize.models.bar).to.equal(Bar);
         });
 
         it("overwrites global options", () => {
             const sequelize = Support.createSequelizeInstance({ define: { collate: "utf8_general_ci" } });
-            const DAO = sequelize.define("foo", { bar: DataTypes.STRING }, { collate: "utf8_bin" });
+            const DAO = sequelize.define("foo", { bar: type.STRING }, { collate: "utf8_bin" });
             expect(DAO.options.collate).to.equal("utf8_bin");
         });
 
         it("overwrites global rowFormat options", () => {
             const sequelize = Support.createSequelizeInstance({ define: { rowFormat: "compact" } });
-            const DAO = sequelize.define("foo", { bar: DataTypes.STRING }, { rowFormat: "default" });
+            const DAO = sequelize.define("foo", { bar: type.STRING }, { rowFormat: "default" });
             expect(DAO.options.rowFormat).to.equal("default");
         });
 
         it("inherits global collate option", () => {
             const sequelize = Support.createSequelizeInstance({ define: { collate: "utf8_general_ci" } });
-            const DAO = sequelize.define("foo", { bar: DataTypes.STRING });
+            const DAO = sequelize.define("foo", { bar: type.STRING });
             expect(DAO.options.collate).to.equal("utf8_general_ci");
         });
 
         it("inherits global rowFormat option", () => {
             const sequelize = Support.createSequelizeInstance({ define: { rowFormat: "default" } });
-            const DAO = sequelize.define("foo", { bar: DataTypes.STRING });
+            const DAO = sequelize.define("foo", { bar: type.STRING });
             expect(DAO.options.rowFormat).to.equal("default");
         });
 
         it("uses the passed tableName", function () {
             const self = this;
-            const Photo = this.sequelize.define("Foto", { name: DataTypes.STRING }, { tableName: "photos" });
+            const Photo = this.sequelize.define("Foto", { name: type.STRING }, { tableName: "photos" });
             return Photo.sync({ force: true }).then(() => {
                 return self.sequelize.getQueryInterface().showAllTables().then((tableNames) => {
                     if (dialect === "mssql" /* current.dialect.supports.schemas */) {
@@ -957,11 +953,11 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
         it("truncates all models", async function () {
             const Project = this.sequelize.define(`project${config.rand()}`, {
                 id: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     primaryKey: true,
                     autoIncrement: true
                 },
-                title: DataTypes.STRING
+                title: type.STRING
             });
 
             await this.sequelize.sync({ force: true });
@@ -978,8 +974,8 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
     describe("sync", () => {
         it("synchronizes all models", function () {
-            const Project = this.sequelize.define(`project${config.rand()}`, { title: DataTypes.STRING });
-            const Task = this.sequelize.define(`task${config.rand()}`, { title: DataTypes.STRING });
+            const Project = this.sequelize.define(`project${config.rand()}`, { title: type.STRING });
+            const Task = this.sequelize.define(`task${config.rand()}`, { title: type.STRING });
 
             return Project.sync({ force: true }).then(() => {
                 return Task.sync({ force: true }).then(() => {
@@ -994,19 +990,19 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
         });
 
         it("works with correct database credentials", function () {
-            const User = this.sequelize.define("User", { username: DataTypes.STRING });
+            const User = this.sequelize.define("User", { username: type.STRING });
             return User.sync().then(() => {
                 expect(true).to.be.true;
             });
         });
 
         it("fails with incorrect match condition", async function () {
-            const sequelize = new Sequelize("cyber_bird", "user", "pass", {
+            const sequelize = orm.create("cyber_bird", "user", "pass", {
                 dialect: this.sequelize.options.dialect
             });
 
-            sequelize.define("Project", { title: Sequelize.STRING });
-            sequelize.define("Task", { title: Sequelize.STRING });
+            sequelize.define("Project", { title: type.STRING });
+            sequelize.define("Task", { title: type.STRING });
 
             await assert.throws(async () => {
                 await sequelize.sync({ force: true, match: /$phoenix/ });
@@ -1015,9 +1011,9 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
         if (dialect !== "sqlite") {
             it("fails with incorrect database credentials (1)", function () {
-                this.sequelizeWithInvalidCredentials = new Sequelize("omg", "bar", null, this.sequelize.options);
+                this.sequelizeWithInvalidCredentials = orm.create("omg", "bar", null, this.sequelize.options);
 
-                const User2 = this.sequelizeWithInvalidCredentials.define("User", { name: DataTypes.STRING, bio: DataTypes.TEXT });
+                const User2 = this.sequelizeWithInvalidCredentials.define("User", { name: type.STRING, bio: type.TEXT });
 
                 return User2.sync().catch((err) => {
                     if (dialect === "postgres" || dialect === "postgres-native") {
@@ -1036,12 +1032,12 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
             });
 
             it("fails with incorrect database credentials (2)", function () {
-                const sequelize = new Sequelize("db", "user", "pass", {
+                const sequelize = orm.create("db", "user", "pass", {
                     dialect: this.sequelize.options.dialect
                 });
 
-                sequelize.define("Project", { title: Sequelize.STRING });
-                sequelize.define("Task", { title: Sequelize.STRING });
+                sequelize.define("Project", { title: type.STRING });
+                sequelize.define("Task", { title: type.STRING });
 
                 return sequelize.sync({ force: true }).catch((err) => {
                     expect(err).to.be.ok;
@@ -1049,13 +1045,13 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
             });
 
             it("fails with incorrect database credentials (3)", function () {
-                const sequelize = new Sequelize("db", "user", "pass", {
+                const sequelize = orm.create("db", "user", "pass", {
                     dialect: this.sequelize.options.dialect,
                     port: 99999
                 });
 
-                sequelize.define("Project", { title: Sequelize.STRING });
-                sequelize.define("Task", { title: Sequelize.STRING });
+                sequelize.define("Project", { title: type.STRING });
+                sequelize.define("Task", { title: type.STRING });
 
                 return sequelize.sync({ force: true }).catch((err) => {
                     expect(err).to.be.ok;
@@ -1063,14 +1059,14 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
             });
 
             it("fails with incorrect database credentials (4)", function () {
-                const sequelize = new Sequelize("db", "user", "pass", {
+                const sequelize = orm.create("db", "user", "pass", {
                     dialect: this.sequelize.options.dialect,
                     port: 99999,
                     pool: {}
                 });
 
-                sequelize.define("Project", { title: Sequelize.STRING });
-                sequelize.define("Task", { title: Sequelize.STRING });
+                sequelize.define("Project", { title: type.STRING });
+                sequelize.define("Task", { title: type.STRING });
 
                 return sequelize.sync({ force: true }).catch((err) => {
                     expect(err).to.be.ok;
@@ -1079,7 +1075,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
             it("returns an error correctly if unable to sync a foreign key referenced model", function () {
                 this.sequelize.define("Application", {
-                    authorID: { type: Sequelize.BIGINT, allowNull: false, references: { model: "User", key: "id" } }
+                    authorID: { type: type.BIGINT, allowNull: false, references: { model: "User", key: "id" } }
                 });
 
                 return this.sequelize.sync().catch((error) => {
@@ -1089,8 +1085,8 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
             it("handles self dependant foreign key constraints", function () {
                 const block = this.sequelize.define("block", {
-                    id: { type: DataTypes.INTEGER, primaryKey: true },
-                    name: DataTypes.STRING
+                    id: { type: type.INTEGER, primaryKey: true },
+                    name: type.STRING
                 }, {
                     tableName: "block",
                     timestamps: false,
@@ -1124,8 +1120,8 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
             it("return the single dao after syncing", function () {
                 const block = this.sequelize.define("block", {
-                    id: { type: DataTypes.INTEGER, primaryKey: true },
-                    name: DataTypes.STRING
+                    id: { type: type.INTEGER, primaryKey: true },
+                    name: type.STRING
                 }, {
                     tableName: "block",
                     timestamps: false,
@@ -1149,7 +1145,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                 this.sequelize.options.logging = function () {
                     self.spy();
                 };
-                this.User = this.sequelize.define("UserTest", { username: DataTypes.STRING });
+                this.User = this.sequelize.define("UserTest", { username: type.STRING });
             });
 
             it("through Sequelize.sync()", function () {
@@ -1183,7 +1179,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
     describe("drop should work", () => {
         it("correctly succeeds", function () {
-            const User = this.sequelize.define("Users", { username: DataTypes.STRING });
+            const User = this.sequelize.define("Users", { username: type.STRING });
             return User.sync({ force: true }).then(() => {
                 return User.drop();
             });
@@ -1204,7 +1200,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
         it("imports a dao definition from a function", function () {
             const Project = this.sequelize.import("Project", (sequelize, DataTypes) => {
                 return sequelize.define(`Project${parseInt(Math.random() * 9999999999999999)}`, {
-                    name: DataTypes.STRING
+                    name: type.STRING
                 });
             });
 
@@ -1214,8 +1210,8 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
     describe("define", () => {
         [
-            { type: DataTypes.ENUM, values: ["scheduled", "active", "finished"] },
-            new DataTypes.ENUM("scheduled", "active", "finished")
+            { type: type.ENUM, values: ["scheduled", "active", "finished"] },
+            new type.ENUM("scheduled", "active", "finished")
         ].forEach((status) => {
             describe("enum", () => {
                 beforeEach(function () {
@@ -1231,7 +1227,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                     const self = this;
                     expect(() => {
                         self.sequelize.define("omnomnom", {
-                            bla: { type: DataTypes.ENUM }
+                            bla: { type: type.ENUM }
                         });
                     }).to.throw(Error, "Values for ENUM have not been defined.");
                 });
@@ -1262,9 +1258,9 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
         describe("table", () => {
             [
-                { id: { type: DataTypes.BIGINT, primaryKey: true } },
-                { id: { type: DataTypes.STRING, allowNull: true, primaryKey: true } },
-                { id: { type: DataTypes.BIGINT, allowNull: false, primaryKey: true, autoIncrement: true } }
+                { id: { type: type.BIGINT, primaryKey: true } },
+                { id: { type: type.STRING, allowNull: true, primaryKey: true } },
+                { id: { type: type.BIGINT, allowNull: false, primaryKey: true, autoIncrement: true } }
             ].forEach((customAttributes) => {
 
                 it("should be able to override options on the default attributes", function () {
@@ -1273,7 +1269,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                         Object.keys(customAttributes).forEach((attribute) => {
                             Object.keys(customAttributes[attribute]).forEach((option) => {
                                 const optionValue = customAttributes[attribute][option];
-                                if (is.function(optionValue) && new optionValue() instanceof DataTypes.ABSTRACT) {
+                                if (is.function(optionValue) && new optionValue() instanceof type.ABSTRACT) {
                                     expect(Picture.rawAttributes[attribute][option] instanceof optionValue).to.be.ok;
                                 } else {
                                     expect(Picture.rawAttributes[attribute][option]).to.be.equal(optionValue);
@@ -1296,7 +1292,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                 });
 
                 it("is a transaction method available", () => {
-                    expect(Support.Sequelize).to.respondTo("transaction");
+                    expect(orm.Sequelize).to.respondTo("transaction");
                 });
 
                 it("passes a transaction object to the callback", function () {
@@ -1313,7 +1309,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
                 if (dialect === "sqlite") {
                     it("correctly scopes transaction from other connections", async function () {
-                        const TransactionTest = this.sequelizeWithTransaction.define("TransactionTest", { name: DataTypes.STRING }, { timestamps: false });
+                        const TransactionTest = this.sequelizeWithTransaction.define("TransactionTest", { name: type.STRING }, { timestamps: false });
                         const self = this;
 
                         const count = async (transaction) => {
@@ -1333,7 +1329,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                     });
                 } else {
                     it("correctly handles multiple transactions", async function () {
-                        const TransactionTest = this.sequelizeWithTransaction.define("TransactionTest", { name: DataTypes.STRING }, { timestamps: false });
+                        const TransactionTest = this.sequelizeWithTransaction.define("TransactionTest", { name: type.STRING }, { timestamps: false });
                         const self = this;
 
                         const count = async (transaction) => {
@@ -1360,7 +1356,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
                 it("supports nested transactions using savepoints", function () {
                     const self = this;
-                    const User = this.sequelizeWithTransaction.define("Users", { username: DataTypes.STRING });
+                    const User = this.sequelizeWithTransaction.define("Users", { username: type.STRING });
 
                     return User.sync({ force: true }).then(() => {
                         return self.sequelizeWithTransaction.transaction().then((t1) => {
@@ -1425,7 +1421,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
                 it("supports rolling back a nested transaction", function () {
                     const self = this;
-                    const User = this.sequelizeWithTransaction.define("Users", { username: DataTypes.STRING });
+                    const User = this.sequelizeWithTransaction.define("Users", { username: type.STRING });
 
                     return User.sync({ force: true }).then(() => {
                         return self.sequelizeWithTransaction.transaction().then((t1) => {
@@ -1447,7 +1443,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
                 it("supports rolling back outermost transaction", function () {
                     const self = this;
-                    const User = this.sequelizeWithTransaction.define("Users", { username: DataTypes.STRING });
+                    const User = this.sequelizeWithTransaction.define("Users", { username: type.STRING });
 
                     return User.sync({ force: true }).then(() => {
                         return self.sequelizeWithTransaction.transaction().then((t1) => {
@@ -1483,9 +1479,9 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
             const epochObj = new Date(0);
             const epoch = Number(epochObj);
             const User = this.sequelize.define("user", {
-                username: DataTypes.STRING,
+                username: type.STRING,
                 deletedAt: {
-                    type: DataTypes.DATE,
+                    type: type.DATE,
                     defaultValue: epochObj
                 }
             }, {

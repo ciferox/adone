@@ -1,6 +1,7 @@
 import Support from "../support";
 
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 const current = Support.sequelize;
 
@@ -8,8 +9,8 @@ describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.support
     describe("GEOGRAPHY", () => {
         beforeEach(function () {
             this.User = this.sequelize.define("User", {
-                username: DataTypes.STRING,
-                geography: DataTypes.GEOGRAPHY
+                username: type.STRING,
+                geography: type.GEOGRAPHY
             });
 
             return this.User.sync({ force: true });
@@ -17,7 +18,7 @@ describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.support
 
         it("works with aliases fields", function () {
             const Pub = this.sequelize.define("Pub", {
-                location: { field: "coordinates", type: DataTypes.GEOGRAPHY }
+                location: { field: "coordinates", type: type.GEOGRAPHY }
             });
             const point = { type: "Point", coordinates: [39.807222, -76.984722] };
 
@@ -58,8 +59,8 @@ describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.support
     describe("GEOGRAPHY(POINT)", () => {
         beforeEach(function () {
             this.User = this.sequelize.define("User", {
-                username: DataTypes.STRING,
-                geography: new DataTypes.GEOGRAPHY("POINT")
+                username: type.STRING,
+                geography: new type.GEOGRAPHY("POINT")
             });
 
             return this.User.sync({ force: true });
@@ -94,8 +95,8 @@ describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.support
     describe("GEOGRAPHY(LINESTRING)", () => {
         beforeEach(function () {
             this.User = this.sequelize.define("User", {
-                username: DataTypes.STRING,
-                geography: new DataTypes.GEOGRAPHY("LINESTRING")
+                username: type.STRING,
+                geography: new type.GEOGRAPHY("LINESTRING")
             });
 
             return this.User.sync({ force: true });
@@ -130,8 +131,8 @@ describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.support
     describe("GEOGRAPHY(POLYGON)", () => {
         beforeEach(function () {
             this.User = this.sequelize.define("User", {
-                username: DataTypes.STRING,
-                geography: new DataTypes.GEOGRAPHY("POLYGON")
+                username: type.STRING,
+                geography: new type.GEOGRAPHY("POLYGON")
             });
 
             return this.User.sync({ force: true });
@@ -181,8 +182,8 @@ describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.support
         describe("GEOGRAPHY(POLYGON, SRID)", () => {
             beforeEach(function () {
                 this.User = this.sequelize.define("User", {
-                    username: DataTypes.STRING,
-                    geography: new DataTypes.GEOGRAPHY("POLYGON", 4326)
+                    username: type.STRING,
+                    geography: new type.GEOGRAPHY("POLYGON", 4326)
                 });
 
                 return this.User.sync({ force: true });
@@ -232,7 +233,7 @@ describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.support
     describe("sql injection attacks", () => {
         beforeEach(function () {
             this.Model = this.sequelize.define("Model", {
-                location: DataTypes.GEOGRAPHY
+                location: type.GEOGRAPHY
             });
             return this.sequelize.sync({ force: true });
         });

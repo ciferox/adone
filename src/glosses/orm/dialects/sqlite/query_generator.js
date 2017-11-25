@@ -1,9 +1,24 @@
-const { is, vendor: { lodash: _ } } = adone;
-const Utils = require("../../utils");
-const util = require("util");
-const Transaction = require("../../transaction");
-const MySqlQueryGenerator = require("../mysql/query_generator");
-const AbstractQueryGenerator = require("../abstract/query_generator");
+const {
+    is,
+    vendor: { lodash: _ },
+    orm
+} = adone;
+
+const {
+    util,
+    Transaction
+} = orm;
+
+const {
+    dialect: {
+        abstract: {
+            QueryGenerator: AbstractQueryGenerator
+        },
+        mysql: {
+            QueryGenerator: MySqlQueryGenerator
+        }
+    }
+} = adone.private(orm);
 
 const QueryGenerator = {
     __proto__: MySqlQueryGenerator,
@@ -142,7 +157,6 @@ const QueryGenerator = {
      * @param   {String}               column  The JSON column
      * @param   {String|Array<String>} [path]  The path to extract (optional)
      * @returns {String}                       The generated sql query
-     * @private
      */
     jsonPathExtractionQuery(column, path) {
         const paths = _.toPath(path);
@@ -167,7 +181,7 @@ const QueryGenerator = {
 
 
     handleSequelizeMethod(smth, tableName, factory, options, prepend) {
-        if (smth instanceof Utils.Json) {
+        if (smth instanceof util.Json) {
             // Parse nested object
             if (smth.conditions) {
                 const conditions = this.parseConditionObject(smth.conditions).map((condition) =>
@@ -189,12 +203,12 @@ const QueryGenerator = {
                 }
 
                 if (smth.value) {
-                    str += util.format(" = %s", this.escape(smth.value));
+                    str += ` = ${this.escape(smth.value)}`;
                 }
 
                 return str;
             }
-        } else if (smth instanceof Utils.Cast) {
+        } else if (smth instanceof util.Cast) {
             if (/timestamp/i.test(smth.type)) {
                 smth.type = "datetime";
             }
@@ -230,7 +244,7 @@ const QueryGenerator = {
         options = options || {};
         _.defaults(options, this.options);
 
-        attrValueHash = Utils.removeNullValuesFromHash(attrValueHash, options.omitNull, options);
+        attrValueHash = util.removeNullValuesFromHash(attrValueHash, options.omitNull, options);
 
         const modelAttributeMap = {};
         const values = [];
@@ -295,7 +309,7 @@ const QueryGenerator = {
                     sql += " NOT NULL";
                 }
 
-                if (Utils.defaultValueSchemable(dataType.defaultValue)) {
+                if (util.defaultValueSchemable(dataType.defaultValue)) {
                     // TODO thoroughly check that DataTypes.NOW will properly
                     // get populated on all databases as DEFAULT value
                     // i.e. mysql requires: DEFAULT CURRENT_TIMESTAMP
@@ -363,7 +377,7 @@ const QueryGenerator = {
         let indexName = indexNameOrAttributes;
 
         if (!is.string(indexName)) {
-            indexName = Utils.underscore(`${tableName}_${indexNameOrAttributes.join("_")}`);
+            indexName = util.underscore(`${tableName}_${indexNameOrAttributes.join("_")}`);
         }
 
         return `DROP INDEX IF EXISTS ${this.quoteIdentifier(indexName)}`;
@@ -497,7 +511,7 @@ const QueryGenerator = {
         if (identifier === "*") {
             return identifier;
         }
-        return Utils.addTicks(Utils.removeTicks(identifier, "`"), "`");
+        return util.addTicks(util.removeTicks(identifier, "`"), "`");
     },
 
     /**
@@ -512,4 +526,4 @@ const QueryGenerator = {
     }
 };
 
-module.exports = QueryGenerator;
+export default QueryGenerator;

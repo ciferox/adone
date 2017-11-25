@@ -1,8 +1,8 @@
 import Support from "../support";
 
 const { vendor: { lodash: _ } } = adone;
-const Sequelize = adone.orm;
-const { DataTypes } = Sequelize;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("Self"), () => {
     it("supports freezeTableName", function () {
@@ -25,7 +25,7 @@ describe(Support.getTestDialectTeaser("Self"), () => {
     });
 
     it("can handle 1:m associations", async function () {
-        const Person = this.sequelize.define("Person", { name: DataTypes.STRING });
+        const Person = this.sequelize.define("Person", { name: type.STRING });
 
         Person.hasMany(Person, { as: "Children", foreignKey: "parent_id" });
 
@@ -41,9 +41,7 @@ describe(Support.getTestDialectTeaser("Self"), () => {
     });
 
     it("can handle n:m associations", async function () {
-        const self = this;
-
-        const Person = this.sequelize.define("Person", { name: DataTypes.STRING });
+        const Person = this.sequelize.define("Person", { name: type.STRING });
 
         Person.belongsToMany(Person, { as: "Parents", through: "Family", foreignKey: "ChildId", otherKey: "PersonId" });
         Person.belongsToMany(Person, { as: "Childs", through: "Family", foreignKey: "PersonId", otherKey: "ChildId" });
@@ -70,14 +68,14 @@ describe(Support.getTestDialectTeaser("Self"), () => {
     });
 
     it("can handle n:m associations with pre-defined through table", async function () {
-        const Person = this.sequelize.define("Person", { name: DataTypes.STRING });
+        const Person = this.sequelize.define("Person", { name: type.STRING });
         const Family = this.sequelize.define("Family", {
             preexisting_child: {
-                type: DataTypes.INTEGER,
+                type: type.INTEGER,
                 primaryKey: true
             },
             preexisting_parent: {
-                type: DataTypes.INTEGER,
+                type: type.INTEGER,
                 primaryKey: true
             }
         }, { timestamps: false });

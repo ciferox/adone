@@ -2,7 +2,8 @@ import Support from "../support";
 
 const { promise } = adone;
 const Sequelize = adone.orm;
-const { DataTypes } = Sequelize;
+const { orm } = adone;
+const { type } = orm;
 
 const sortById = function (a, b) {
     return a.id < b.id ? -1 : 1;
@@ -14,38 +15,38 @@ describe(Support.getTestDialectTeaser("Include"), () => {
             this.fixtureA = async function () {
                 const User = this.sequelize.define("User", {});
                 const Company = this.sequelize.define("Company", {
-                    name: DataTypes.STRING
+                    name: type.STRING
                 });
                 const Product = this.sequelize.define("Product", {
-                    title: DataTypes.STRING
+                    title: type.STRING
                 });
                 const Tag = this.sequelize.define("Tag", {
-                    name: DataTypes.STRING
+                    name: type.STRING
                 });
                 const Price = this.sequelize.define("Price", {
-                    value: DataTypes.FLOAT
+                    value: type.FLOAT
                 });
                 const Customer = this.sequelize.define("Customer", {
-                    name: DataTypes.STRING
+                    name: type.STRING
                 });
                 const Group = this.sequelize.define("Group", {
-                    name: DataTypes.STRING
+                    name: type.STRING
                 });
                 const GroupMember = this.sequelize.define("GroupMember", {
 
                 });
                 const Rank = this.sequelize.define("Rank", {
-                    name: DataTypes.STRING,
+                    name: type.STRING,
                     canInvite: {
-                        type: DataTypes.INTEGER,
+                        type: type.INTEGER,
                         defaultValue: 0
                     },
                     canRemove: {
-                        type: DataTypes.INTEGER,
+                        type: type.INTEGER,
                         defaultValue: 0
                     },
                     canPost: {
-                        type: DataTypes.INTEGER,
+                        type: type.INTEGER,
                         defaultValue: 0
                     }
                 });
@@ -247,16 +248,16 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
         it("should accept nested `where` and `limit` at the same time", async function () {
             const Product = this.sequelize.define("Product", {
-                title: DataTypes.STRING
+                title: type.STRING
             });
             const Tag = this.sequelize.define("Tag", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
             const ProductTag = this.sequelize.define("ProductTag", {
-                priority: DataTypes.INTEGER
+                priority: type.INTEGER
             });
             const Set = this.sequelize.define("Set", {
-                title: DataTypes.STRING
+                title: type.STRING
             });
 
             Set.hasMany(Product);
@@ -316,28 +317,28 @@ describe(Support.getTestDialectTeaser("Include"), () => {
         it("should support an include with multiple different association types", async function () {
             const User = this.sequelize.define("User", {});
             const Product = this.sequelize.define("Product", {
-                title: DataTypes.STRING
+                title: type.STRING
             });
             const Tag = this.sequelize.define("Tag", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
             const Price = this.sequelize.define("Price", {
-                value: DataTypes.FLOAT
+                value: type.FLOAT
             });
             const Group = this.sequelize.define("Group", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
             const GroupMember = this.sequelize.define("GroupMember", {
 
             });
             const Rank = this.sequelize.define("Rank", {
-                name: DataTypes.STRING,
+                name: type.STRING,
                 canInvite: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     defaultValue: 0
                 },
                 canRemove: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     defaultValue: 0
                 }
             });
@@ -499,7 +500,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                         promise = promise.then(() => {
                             return model.create({}).then((instance) => {
                                 if (previousInstance) {
-                                    return previousInstance[`set${Sequelize.Utils.uppercaseFirst(model.name)}`](instance).then(() => {
+                                    return previousInstance[`set${orm.util.uppercaseFirst(model.name)}`](instance).then(() => {
                                         previousInstance = instance;
                                     });
                                 }
@@ -562,10 +563,10 @@ describe(Support.getTestDialectTeaser("Include"), () => {
             const E = this.sequelize.define("e", {});
             const F = this.sequelize.define("f", {});
             const G = this.sequelize.define("g", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
             const H = this.sequelize.define("h", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
 
             A.belongsTo(B);
@@ -606,7 +607,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                         promise = promise.then(() => {
                             return model.create(values).then((instance) => {
                                 if (previousInstance) {
-                                    return previousInstance[`set${Sequelize.Utils.uppercaseFirst(model.name)}`](instance).then(() => {
+                                    return previousInstance[`set${orm.util.uppercaseFirst(model.name)}`](instance).then(() => {
                                         previousInstance = instance;
                                     });
                                 }
@@ -667,8 +668,8 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
         it("should support ordering with only belongsTo includes", async function () {
             const User = this.sequelize.define("User", {});
-            const Item = this.sequelize.define("Item", { test: DataTypes.STRING });
-            const Order = this.sequelize.define("Order", { position: DataTypes.INTEGER });
+            const Item = this.sequelize.define("Item", { test: type.STRING });
+            const Order = this.sequelize.define("Order", { position: type.INTEGER });
 
             User.belongsTo(Item, { as: "itemA", foreignKey: "itemA_id" });
             User.belongsTo(Item, { as: "itemB", foreignKey: "itemB_id" });
@@ -740,13 +741,13 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
         it("should include attributes from through models", async function () {
             const Product = this.sequelize.define("Product", {
-                title: DataTypes.STRING
+                title: type.STRING
             });
             const Tag = this.sequelize.define("Tag", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
             const ProductTag = this.sequelize.define("ProductTag", {
-                priority: DataTypes.INTEGER
+                priority: type.INTEGER
             });
 
             Product.belongsToMany(Tag, { through: ProductTag });
@@ -824,7 +825,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
         it("should be possible to extend the on clause with a where option on a belongsTo include", async function () {
             const User = this.sequelize.define("User", {});
             const Group = this.sequelize.define("Group", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
 
             User.belongsTo(Group);
@@ -858,7 +859,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
         it("should be possible to extend the on clause with a where option on a belongsTo include", async function () {
             const User = this.sequelize.define("User", {});
             const Group = this.sequelize.define("Group", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
 
             User.belongsTo(Group);
@@ -890,9 +891,9 @@ describe(Support.getTestDialectTeaser("Include"), () => {
         });
 
         it("should be possible to define a belongsTo include as required with child hasMany not required", function () {
-            const Address = this.sequelize.define("Address", { active: DataTypes.BOOLEAN }),
-                Street = this.sequelize.define("Street", { active: DataTypes.BOOLEAN }),
-                User = this.sequelize.define("User", { username: DataTypes.STRING });
+            const Address = this.sequelize.define("Address", { active: type.BOOLEAN }),
+                Street = this.sequelize.define("Street", { active: type.BOOLEAN }),
+                User = this.sequelize.define("User", { username: type.STRING });
 
             // Associate
             User.belongsTo(Address, { foreignKey: "addressId" });
@@ -931,10 +932,10 @@ describe(Support.getTestDialectTeaser("Include"), () => {
         it("should be possible to define a belongsTo include as required with child hasMany with limit", async function () {
             const User = this.sequelize.define("User", {});
             const Group = this.sequelize.define("Group", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
             const Category = this.sequelize.define("Category", {
-                category: DataTypes.STRING
+                category: type.STRING
             });
 
             User.belongsTo(Group);
@@ -982,10 +983,10 @@ describe(Support.getTestDialectTeaser("Include"), () => {
         it("should be possible to define a belongsTo include as required with child hasMany with limit and aliases", async function () {
             const User = this.sequelize.define("User", {});
             const Group = this.sequelize.define("Group", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
             const Category = this.sequelize.define("Category", {
-                category: DataTypes.STRING
+                category: type.STRING
             });
 
             User.belongsTo(Group, { as: "Team" });
@@ -1033,10 +1034,10 @@ describe(Support.getTestDialectTeaser("Include"), () => {
         it("should be possible to define a belongsTo include as required with child hasMany which is not required with limit", async function () {
             const User = this.sequelize.define("User", {});
             const Group = this.sequelize.define("Group", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
             const Category = this.sequelize.define("Category", {
-                category: DataTypes.STRING
+                category: type.STRING
             });
 
             User.belongsTo(Group);
@@ -1084,7 +1085,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
         it("should be possible to extend the on clause with a where option on a hasOne include", async function () {
             const User = this.sequelize.define("User", {});
             const Project = this.sequelize.define("Project", {
-                title: DataTypes.STRING
+                title: type.STRING
             });
 
             User.hasOne(Project, { as: "LeaderOf" });
@@ -1117,13 +1118,13 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
         it("should be possible to extend the on clause with a where option on a hasMany include with a through model", async function () {
             const Product = this.sequelize.define("Product", {
-                title: DataTypes.STRING
+                title: type.STRING
             });
             const Tag = this.sequelize.define("Tag", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
             const ProductTag = this.sequelize.define("ProductTag", {
-                priority: DataTypes.INTEGER
+                priority: type.INTEGER
             });
 
             Product.belongsToMany(Tag, { through: ProductTag });
@@ -1165,31 +1166,31 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
         it("should be possible to extend the on clause with a where option on nested includes", async function () {
             const User = this.sequelize.define("User", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
             const Product = this.sequelize.define("Product", {
-                title: DataTypes.STRING
+                title: type.STRING
             });
             const Tag = this.sequelize.define("Tag", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
             const Price = this.sequelize.define("Price", {
-                value: DataTypes.FLOAT
+                value: type.FLOAT
             });
             const Group = this.sequelize.define("Group", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
             const GroupMember = this.sequelize.define("GroupMember", {
 
             });
             const Rank = this.sequelize.define("Rank", {
-                name: DataTypes.STRING,
+                name: type.STRING,
                 canInvite: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     defaultValue: 0
                 },
                 canRemove: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     defaultValue: 0
                 }
             });
@@ -1307,7 +1308,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
         it("should be possible to use limit and a where with a belongsTo include", async function () {
             const User = this.sequelize.define("User", {});
             const Group = this.sequelize.define("Group", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
 
             User.belongsTo(Group);
@@ -1463,12 +1464,12 @@ describe(Support.getTestDialectTeaser("Include"), () => {
         it("should be possible not to include the main id in the attributes", function () {
             const Member = this.sequelize.define("Member", {
                 id: {
-                    type: Sequelize.BIGINT,
+                    type: type.BIGINT,
                     primaryKey: true,
                     autoIncrement: true
                 },
                 email: {
-                    type: Sequelize.STRING,
+                    type: type.STRING,
                     unique: true,
                     allowNull: false,
                     validate: {
@@ -1477,16 +1478,16 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                         notEmpty: true
                     }
                 },
-                password: Sequelize.STRING
+                password: type.STRING
             });
             const Album = this.sequelize.define("Album", {
                 id: {
-                    type: Sequelize.BIGINT,
+                    type: type.BIGINT,
                     primaryKey: true,
                     autoIncrement: true
                 },
                 title: {
-                    type: new Sequelize.STRING(25),
+                    type: new type.STRING(25),
                     allowNull: false
                 }
             });
@@ -1594,10 +1595,10 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
         it("should support including date fields, with the correct timeszone", function () {
             const User = this.sequelize.define("user", {
-                    dateField: Sequelize.DATE
+                    dateField: type.DATE
                 }, { timestamps: false }),
                 Group = this.sequelize.define("group", {
-                    dateField: Sequelize.DATE
+                    dateField: type.DATE
                 }, { timestamps: false });
 
             User.belongsToMany(Group, { through: "group_user" });
@@ -1623,8 +1624,8 @@ describe(Support.getTestDialectTeaser("Include"), () => {
         });
 
         it("should still pull the main record(s) when an included model is not required and has where restrictions without matches", function () {
-            const A = this.sequelize.define("a", { name: new DataTypes.STRING(40) });
-            const B = this.sequelize.define("b", { name: new DataTypes.STRING(40) });
+            const A = this.sequelize.define("a", { name: new type.STRING(40) });
+            const B = this.sequelize.define("b", { name: new type.STRING(40) });
 
             A.belongsToMany(B, { through: "a_b" });
             B.belongsToMany(A, { through: "a_b" });
@@ -1652,13 +1653,13 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
         it("should work with paranoid, a main record where, an include where, and a limit", async function () {
             const Post = this.sequelize.define("post", {
-                date: DataTypes.DATE,
-                public: DataTypes.BOOLEAN
+                date: type.DATE,
+                public: type.BOOLEAN
             }, {
                 paranoid: true
             });
             const Category = this.sequelize.define("category", {
-                slug: DataTypes.STRING
+                slug: type.STRING
             });
 
             Post.hasMany(Category);
@@ -1696,30 +1697,30 @@ describe(Support.getTestDialectTeaser("Include"), () => {
         it("should work on a nested set of required 1:1 relations", function () {
             const Person = this.sequelize.define("Person", {
                 name: {
-                    type: Sequelize.STRING,
+                    type: type.STRING,
                     allowNull: false
                 }
             });
 
             const UserPerson = this.sequelize.define("UserPerson", {
                 PersonId: {
-                    type: Sequelize.INTEGER,
+                    type: type.INTEGER,
                     primaryKey: true
                 },
 
                 rank: {
-                    type: Sequelize.STRING
+                    type: type.STRING
                 }
             });
 
             const User = this.sequelize.define("User", {
                 UserPersonId: {
-                    type: Sequelize.INTEGER,
+                    type: type.INTEGER,
                     primaryKey: true
                 },
 
                 login: {
-                    type: Sequelize.STRING,
+                    type: type.STRING,
                     unique: true,
                     allowNull: false
                 }
@@ -1793,10 +1794,10 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
         it("should be able to order on the main table and a required belongsTo relation with custom tablenames and limit ", async function () {
             const User = this.sequelize.define("User", {
-                lastName: DataTypes.STRING
+                lastName: type.STRING
             }, { tableName: "dem_users" });
             const Company = this.sequelize.define("Company", {
-                rank: DataTypes.INTEGER
+                rank: type.INTEGER
             }, { tableName: "dem_companies" });
 
             User.belongsTo(Company);
@@ -1837,10 +1838,10 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
         it("should ignore include with attributes: [] (used for aggregates)", async function () {
             const Post = this.sequelize.define("Post", {
-                title: DataTypes.STRING
+                title: type.STRING
             });
             const Comment = this.sequelize.define("Comment", {
-                content: DataTypes.TEXT
+                content: type.TEXT
             });
 
             Post.Comments = Post.hasMany(Comment, { as: "comments" });
@@ -1877,10 +1878,10 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
         it("should not add primary key when including and aggregating with raw: true", async function () {
             const Post = this.sequelize.define("Post", {
-                title: DataTypes.STRING
+                title: type.STRING
             });
             const Comment = this.sequelize.define("Comment", {
-                content: DataTypes.TEXT
+                content: type.TEXT
             });
 
             Post.Comments = Post.hasMany(Comment, { as: "comments" });
@@ -1917,23 +1918,23 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
             const User = this.sequelize.define("User", {
                 username: {
-                    type: DataTypes.STRING,
+                    type: type.STRING,
                     primaryKey: true
                 }
             });
 
             const Entity = this.sequelize.define("Entity", {
                 entity_id: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     autoIncrement: true,
                     primaryKey: true
                 },
                 creator: {
-                    type: DataTypes.STRING,
+                    type: type.STRING,
                     allowNull: false
                 },
                 votes: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     allowNull: false,
                     defaultValue: 0
                 }
@@ -1941,7 +1942,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
             const Post = this.sequelize.define("Post", {
                 post_id: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     allowNull: false,
                     primaryKey: true
                 }
@@ -1949,7 +1950,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
             const TaggableSentient = this.sequelize.define("TaggableSentient", {
                 nametag: {
-                    type: DataTypes.STRING,
+                    type: type.STRING,
                     primaryKey: true
                 }
             });
@@ -2011,20 +2012,20 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
         it("should be able to generate a correct request with inner and outer join", function () {
             const Customer = this.sequelize.define("customer", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
 
             const ShippingAddress = this.sequelize.define("shippingAddress", {
-                address: DataTypes.STRING,
-                verified: DataTypes.BOOLEAN
+                address: type.STRING,
+                verified: type.BOOLEAN
             });
 
             const Order = this.sequelize.define("purchaseOrder", {
-                description: DataTypes.TEXT
+                description: type.TEXT
             });
 
             const Shipment = this.sequelize.define("shipment", {
-                trackingNumber: DataTypes.STRING
+                trackingNumber: type.STRING
             });
 
             Customer.hasMany(ShippingAddress);

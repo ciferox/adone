@@ -1,10 +1,9 @@
 import Support from "../../support";
 
 const util = require("util");
-const {
-    DataTypes,
-    Model
-} = adone.orm;
+const { orm } = adone;
+const { type } = orm;
+const { Model } = adone.private(orm);
 const expectsql = Support.expectsql;
 const current = Support.sequelize;
 const sql = current.dialect.QueryGenerator;
@@ -31,23 +30,23 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
         // models
         const User = Support.sequelize.define("User", {
             id: {
-                type: DataTypes.INTEGER,
+                type: type.INTEGER,
                 primaryKey: true,
                 autoIncrement: true,
                 field: "id"
             },
             name: {
-                type: DataTypes.STRING,
+                type: type.STRING,
                 field: "name",
                 allowNull: false
             },
             createdAt: {
-                type: DataTypes.DATE,
+                type: type.DATE,
                 field: "created_at",
                 allowNull: false
             },
             updatedAt: {
-                type: DataTypes.DATE,
+                type: type.DATE,
                 field: "updated_at",
                 allowNull: true
             }
@@ -58,23 +57,23 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
 
         const Project = Support.sequelize.define("Project", {
             id: {
-                type: DataTypes.INTEGER,
+                type: type.INTEGER,
                 primaryKey: true,
                 autoIncrement: true,
                 field: "id"
             },
             name: {
-                type: DataTypes.STRING,
+                type: type.STRING,
                 field: "name",
                 allowNull: false
             },
             createdAt: {
-                type: DataTypes.DATE,
+                type: type.DATE,
                 field: "created_at",
                 allowNull: false
             },
             updatedAt: {
-                type: DataTypes.DATE,
+                type: type.DATE,
                 field: "updated_at",
                 allowNull: true
             }
@@ -85,28 +84,28 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
 
         const ProjectUser = Support.sequelize.define("ProjectUser", {
             id: {
-                type: DataTypes.INTEGER,
+                type: type.INTEGER,
                 primaryKey: true,
                 autoIncrement: true,
                 field: "id"
             },
             userId: {
-                type: DataTypes.INTEGER,
+                type: type.INTEGER,
                 field: "user_id",
                 allowNull: false
             },
             projectId: {
-                type: DataTypes.INTEGER,
+                type: type.INTEGER,
                 field: "project_id",
                 allowNull: false
             },
             createdAt: {
-                type: DataTypes.DATE,
+                type: type.DATE,
                 field: "created_at",
                 allowNull: false
             },
             updatedAt: {
-                type: DataTypes.DATE,
+                type: type.DATE,
                 field: "updated_at",
                 allowNull: true
             }
@@ -117,28 +116,28 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
 
         const Task = Support.sequelize.define("Task", {
             id: {
-                type: DataTypes.INTEGER,
+                type: type.INTEGER,
                 primaryKey: true,
                 autoIncrement: true,
                 field: "id"
             },
             name: {
-                type: DataTypes.STRING,
+                type: type.STRING,
                 field: "name",
                 allowNull: false
             },
             projectId: {
-                type: DataTypes.INTEGER,
+                type: type.INTEGER,
                 field: "project_id",
                 allowNull: false
             },
             createdAt: {
-                type: DataTypes.DATE,
+                type: type.DATE,
                 field: "created_at",
                 allowNull: false
             },
             updatedAt: {
-                type: DataTypes.DATE,
+                type: type.DATE,
                 field: "updated_at",
                 allowNull: true
             }
@@ -149,28 +148,28 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
 
         const Subtask = Support.sequelize.define("Subtask", {
             id: {
-                type: DataTypes.INTEGER,
+                type: type.INTEGER,
                 primaryKey: true,
                 autoIncrement: true,
                 field: "id"
             },
             name: {
-                type: DataTypes.STRING,
+                type: type.STRING,
                 field: "name",
                 allowNull: false
             },
             taskId: {
-                type: DataTypes.INTEGER,
+                type: type.INTEGER,
                 field: "task_id",
                 allowNull: false
             },
             createdAt: {
-                type: DataTypes.DATE,
+                type: type.DATE,
                 field: "created_at",
                 allowNull: false
             },
             updatedAt: {
-                type: DataTypes.DATE,
+                type: type.DATE,
                 field: "updated_at",
                 allowNull: true
             }

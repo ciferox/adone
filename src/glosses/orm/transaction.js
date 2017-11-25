@@ -1,15 +1,14 @@
-const { is, vendor: { lodash: _ } } = adone;
+const {
+    vendor: { lodash: _ }
+} = adone;
 
-const Utils = require("./utils");
 
 /**
  * The transaction object is used to identify a running transaction. It is created by calling `Sequelize.transaction()`.
  *
  * To run a query under a transaction, you should pass the transaction in the options object.
- *
- * @see {@link Sequelize.transaction}
  */
-class Transaction {
+export default class Transaction {
     /**
      * @param {Sequelize} sequelize A configured sequelize Instance
      * @param {Object} options An object with options
@@ -194,7 +193,3 @@ class Transaction {
         return Transaction.LOCK;
     }
 }
-
-module.exports = Transaction;
-module.exports.Transaction = Transaction;
-module.exports.default = Transaction;

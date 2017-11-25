@@ -1,18 +1,22 @@
-const { is, vendor: { lodash: _ } } = adone;
-const Utils = require("./../utils");
-const Helpers = require("./helpers");
-const Association = require("./base");
-const Op = require("../operators");
+const {
+    is,
+    vendor: { lodash: _ },
+    orm
+} = adone;
+
+const {
+    util,
+    operator
+} = orm;
+
+const {
+    association
+} = adone.private(orm);
 
 /**
  * One-to-one association
- *
- * In the API reference below, add the name of the association to the method, e.g. for `User.hasOne(Project)` the getter will be `user.getProject()`.
- * This is almost the same as `belongsTo` with one exception - The foreign key will be defined on the target model.
- *
- * @see {@link Model.hasOne}
  */
-class HasOne extends Association {
+export default class HasOne extends association.Base {
     constructor(source, target, options) {
         super(source, target, options);
 
@@ -38,9 +42,9 @@ class HasOne extends Association {
         }
 
         if (!this.foreignKey) {
-            this.foreignKey = Utils.camelizeIf(
+            this.foreignKey = util.camelizeIf(
                 [
-                    Utils.underscoredIf(Utils.singularize(this.options.as || this.source.name), this.target.options.underscored),
+                    util.underscoredIf(util.singularize(this.options.as || this.source.name), this.target.options.underscored),
                     this.source.primaryKeyAttribute
                 ].join("_"),
                 !this.source.options.underscored
@@ -59,7 +63,7 @@ class HasOne extends Association {
         }
 
         // Get singular name, trying to uppercase the first letter, unless the model forbids it
-        const singular = Utils.uppercaseFirst(this.options.name.singular);
+        const singular = util.uppercaseFirst(this.options.name.singular);
 
         this.accessors = {
             get: `get${singular}`,
@@ -68,7 +72,6 @@ class HasOne extends Association {
         };
     }
 
-    // the id is in the target table
     injectAttributes() {
         const newAttributes = {};
         const keyType = this.source.rawAttributes[this.source.primaryKeyAttribute].type;
@@ -77,7 +80,7 @@ class HasOne extends Association {
             type: this.options.keyType || keyType,
             allowNull: true
         });
-        Utils.mergeDefaults(this.target.rawAttributes, newAttributes);
+        util.mergeDefaults(this.target.rawAttributes, newAttributes);
 
         this.identifierField = this.target.rawAttributes[this.foreignKey].field || this.foreignKey;
 
@@ -87,12 +90,12 @@ class HasOne extends Association {
             this.options.onUpdate = this.options.onUpdate || "CASCADE";
         }
 
-        Helpers.addForeignKeyConstraints(this.target.rawAttributes[this.foreignKey], this.source, this.target, this.options);
+        util.addForeignKeyConstraints(this.target.rawAttributes[this.foreignKey], this.source, this.target, this.options);
 
         // Sync attributes and setters/getters to Model prototype
         this.target.refreshAttributes();
 
-        Helpers.checkNamingCollision(this);
+        util.checkNamingCollision(this);
 
         return this;
     }
@@ -100,7 +103,7 @@ class HasOne extends Association {
     mixin(obj) {
         const methods = ["get", "set", "create"];
 
-        Helpers.mixinMethods(this, obj, methods);
+        util.mixinMethods(this, obj, methods);
     }
 
     /**
@@ -109,7 +112,6 @@ class HasOne extends Association {
      * @param {Object} [options]
      * @param {String|Boolean} [options.scope] Apply a scope on the related model, or remove its default scope by passing false
      * @param {String} [options.schema] Apply a schema on the related model
-     * @see {@link Model.findOne} for a full explanation of options
      * @return {Promise<Model>}
      */
     async get(instances, options) {
@@ -118,7 +120,7 @@ class HasOne extends Association {
         let Target = association.target;
         let instance;
 
-        options = Utils.cloneDeep(options);
+        options = util.cloneDeep(options);
 
         if (options.hasOwnProperty("scope")) {
             if (!options.scope) {
@@ -139,7 +141,7 @@ class HasOne extends Association {
 
         if (instances) {
             where[association.foreignKey] = {
-                [Op.in]: instances.map((instance) => instance.get(association.sourceKey))
+                [operator.in]: instances.map((instance) => instance.get(association.sourceKey))
             };
         } else {
             where[association.foreignKey] = instance.get(association.sourceKey);
@@ -150,7 +152,7 @@ class HasOne extends Association {
         }
 
         options.where = options.where ?
-            { [Op.and]: [where, options.where] } :
+            { [operator.and]: [where, options.where] } :
             where;
 
         if (instances) {
@@ -220,7 +222,6 @@ class HasOne extends Association {
      *
      * @param {Object} [values]
      * @param {Object} [options] Options passed to `target.create` and setAssociation.
-     * @see {@link Model#create} for a full explanation of options
      * @return {Promise}
      */
     create(sourceInstance, values, options) {
@@ -246,5 +247,3 @@ class HasOne extends Association {
         return association.target.create(values, options);
     }
 }
-
-module.exports = HasOne;

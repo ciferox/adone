@@ -1,9 +1,7 @@
 import Support from "../../support";
 
-const {
-    DataTypes
-} = adone.orm;
-
+const { orm } = adone;
+const { type } = orm;
 const expectsql = Support.expectsql;
 const current = Support.sequelize;
 const sql = current.dialect.QueryGenerator;
@@ -11,14 +9,14 @@ const sql = current.dialect.QueryGenerator;
 describe(Support.getTestDialectTeaser("SQL"), () => {
     describe("enum", { skip: Support.getTestDialect() !== "postgres" }, () => {
         const FooUser = current.define("user", {
-            mood: new DataTypes.ENUM("happy", "sad")
+            mood: new type.ENUM("happy", "sad")
         }, {
             schema: "foo"
         });
 
         const PublicUser = current.define("user", {
             mood: {
-                type: new DataTypes.ENUM("happy", "sad"),
+                type: new type.ENUM("happy", "sad"),
                 field: "theirMood"
             }
         });

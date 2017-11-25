@@ -1,6 +1,7 @@
 import Support from "../support";
 
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser("Model"), () => {
@@ -16,12 +17,12 @@ describe(Support.getTestDialectTeaser("Model"), () => {
         it("should be able to soft delete with timestamps", function () {
             const Account = this.sequelize.define("Account", {
                 ownerId: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     allowNull: false,
                     field: "owner_id"
                 },
                 name: {
-                    type: DataTypes.STRING
+                    type: type.STRING
                 }
             }, {
                 paranoid: true,
@@ -56,15 +57,15 @@ describe(Support.getTestDialectTeaser("Model"), () => {
         it("should be able to soft delete without timestamps", function () {
             const Account = this.sequelize.define("Account", {
                 ownerId: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     allowNull: false,
                     field: "owner_id"
                 },
                 name: {
-                    type: DataTypes.STRING
+                    type: type.STRING
                 },
                 deletedAt: {
-                    type: DataTypes.DATE,
+                    type: type.DATE,
                     allowNull: true,
                     field: "deleted_at"
                 }
@@ -103,13 +104,13 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 before(function () {
                     this.Model = this.sequelize.define("Model", {
                         name: {
-                            type: DataTypes.STRING
+                            type: type.STRING
                         },
                         data: {
-                            type: DataTypes.JSONB
+                            type: type.JSONB
                         },
                         deletedAt: {
-                            type: DataTypes.DATE,
+                            type: type.DATE,
                             allowNull: true,
                             field: "deleted_at"
                         }

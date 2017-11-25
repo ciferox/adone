@@ -1,25 +1,26 @@
 import Support from "../support";
 
-const Sequelize = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("Model"), () => {
     describe("sync", () => {
         beforeEach(function () {
             this.testSync = this.sequelize.define("testSync", {
-                dummy: Sequelize.STRING
+                dummy: type.STRING
             });
             return this.testSync.drop();
         });
 
         it("should remove a column if it exists in the databases schema but not the model", function () {
             const User = this.sequelize.define("testSync", {
-                name: Sequelize.STRING,
-                age: Sequelize.INTEGER
+                name: type.STRING,
+                age: type.INTEGER
             });
             return this.sequelize.sync()
                 .then(() => {
                     this.sequelize.define("testSync", {
-                        name: Sequelize.STRING
+                        name: type.STRING
                     });
                 })
                 .then(() => this.sequelize.sync({ alter: true }))
@@ -32,12 +33,12 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
         it("should add a column if it exists in the model but not the database", function () {
             const testSync = this.sequelize.define("testSync", {
-                name: Sequelize.STRING
+                name: type.STRING
             });
             return this.sequelize.sync()
                 .then(() => this.sequelize.define("testSync", {
-                    name: Sequelize.STRING,
-                    age: Sequelize.INTEGER
+                    name: type.STRING,
+                    age: type.INTEGER
                 }))
                 .then(() => this.sequelize.sync({ alter: true }))
                 .then(() => testSync.describe())
@@ -46,13 +47,13 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
         it("should change a column if it exists in the model but is different in the database", function () {
             const testSync = this.sequelize.define("testSync", {
-                name: Sequelize.STRING,
-                age: Sequelize.INTEGER
+                name: type.STRING,
+                age: type.INTEGER
             });
             return this.sequelize.sync()
                 .then(() => this.sequelize.define("testSync", {
-                    name: Sequelize.STRING,
-                    age: Sequelize.STRING
+                    name: type.STRING,
+                    age: type.STRING
                 }))
                 .then(() => this.sequelize.sync({ alter: true }))
                 .then(() => testSync.describe())
@@ -64,8 +65,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
         it("should not alter table if data type does not change", function () {
             const testSync = this.sequelize.define("testSync", {
-                name: Sequelize.STRING,
-                age: Sequelize.STRING
+                name: type.STRING,
+                age: type.STRING
             });
             return this.sequelize.sync()
                 .then(() => testSync.create({ name: "test", age: "1" }))
@@ -79,8 +80,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
         it("should properly create composite index without affecting individual fields", function () {
             const testSync = this.sequelize.define("testSync", {
-                name: Sequelize.STRING,
-                age: Sequelize.STRING
+                name: type.STRING,
+                age: type.STRING
             }, { indexes: [{ unique: true, fields: ["name", "age"] }] });
             return this.sequelize.sync()
                 .then(() => testSync.create({ name: "test" }))
@@ -100,8 +101,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
         });
         it("should properly create composite index that fails on constraint violation", function () {
             const testSync = this.sequelize.define("testSync", {
-                name: Sequelize.STRING,
-                age: Sequelize.STRING
+                name: type.STRING,
+                age: type.STRING
             }, { indexes: [{ unique: true, fields: ["name", "age"] }] });
             return this.sequelize.sync()
                 .then(() => testSync.create({ name: "test", age: "1" }))

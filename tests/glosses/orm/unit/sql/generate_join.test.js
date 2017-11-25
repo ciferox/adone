@@ -1,7 +1,8 @@
 import Support from "../../support";
 const { is } = adone;
-const Sequelize = Support.Sequelize;
-const DataTypes = Sequelize.DataTypes;
+const { orm } = adone;
+const { type } = orm;
+const { Model } = adone.private(orm);
 const util = require("util");
 const { vendor: { lodash: _ } } = adone;
 const expectsql = Support.expectsql;
@@ -16,8 +17,8 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
 
             const name = `${path}, ${util.inspect(options, { depth: 10 })}`;
 
-            Sequelize.Model._conformOptions(options);
-            options = Sequelize.Model._validateIncludedElements(options);
+            Model._conformOptions(options);
+            options = Model._validateIncludedElements(options);
 
             const include = _.at(options, path)[0];
 
@@ -36,22 +37,22 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
 
         const User = current.define("User", {
             id: {
-                type: DataTypes.INTEGER,
+                type: type.INTEGER,
                 primaryKey: true,
                 autoIncrement: true,
                 field: "id_user"
             },
             companyId: {
-                type: DataTypes.INTEGER,
+                type: type.INTEGER,
                 field: "company_id"
             }
         }, {
             tableName: "user"
         });
         const Task = current.define("Task", {
-            title: Sequelize.STRING,
+            title: type.STRING,
             userId: {
-                type: DataTypes.INTEGER,
+                type: type.INTEGER,
                 field: "user_id"
             }
         }, {
@@ -59,20 +60,20 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
         });
 
         const Company = current.define("Company", {
-            name: Sequelize.STRING,
+            name: type.STRING,
             ownerId: {
-                type: Sequelize.INTEGER,
+                type: type.INTEGER,
                 field: "owner_id"
             },
             public: {
-                type: Sequelize.BOOLEAN
+                type: type.BOOLEAN
             }
         }, {
             tableName: "company"
         });
 
         const Profession = current.define("Profession", {
-            name: Sequelize.STRING
+            name: type.STRING
         }, {
             tableName: "profession"
         });

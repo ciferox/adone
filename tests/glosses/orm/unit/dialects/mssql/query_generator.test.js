@@ -3,14 +3,14 @@ import Support from "../../../support";
 const { vendor: { lodash: _ } } = adone;
 const expectsql = Support.expectsql;
 const current = Support.sequelize;
-const { Op: Operators } = adone.orm;
-const { QueryGenerator } = adone.orm.dialect.mssql;
+const { operator } = adone.orm;
+const { QueryGenerator } = adone.private(adone.orm).dialect.mssql;
 
 describe("[MSSQL Specific] QueryGenerator", { skip: current.dialect.name !== "mssql" }, () => {
     // Dialect would normally be set by the query interface that instantiates the query-generator, but here we specify it explicitly
     QueryGenerator._dialect = current.dialect;
     //Aliases might not be needed here since it doesn't seem like this test uses any operators
-    QueryGenerator.setOperatorsAliases(Operators.Aliases);
+    QueryGenerator.setOperatorsAliases(operator.Aliases);
 
     it("getDefaultConstraintQuery", () => {
         expectsql(QueryGenerator.getDefaultConstraintQuery({ tableName: "myTable", schema: "mySchema" }, "myColumn"), {

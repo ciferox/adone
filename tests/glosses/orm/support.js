@@ -2,15 +2,13 @@ const { vendor: { lodash: _ } } = adone;
 const fs = require("fs");
 const path = require("path");
 const is = adone.is;
-const Sequelize = adone.orm;
-const { DataTypes } = Sequelize;
+const { orm } = adone;
+const { type } = orm;
 const Config = require(`${__dirname}/config/config`);
 // const supportShim = require(`${__dirname}/supportShim`);
-const AbstractQueryGenerator = adone.orm.dialect.abstract.QueryGenerator;
+const AbstractQueryGenerator = adone.private(adone.orm).dialect.abstract.QueryGenerator;
 
 const Support = {
-    Sequelize,
-
     initTests(options) {
         const sequelize = this.createSequelizeInstance(options);
 
@@ -20,11 +18,11 @@ const Support = {
             }
 
             if (options.beforeComplete) {
-                options.beforeComplete(sequelize, DataTypes);
+                options.beforeComplete(sequelize, type);
             }
 
             if (options.onComplete) {
-                options.onComplete(sequelize, DataTypes);
+                options.onComplete(sequelize, type);
             }
         });
     },
@@ -44,7 +42,7 @@ const Support = {
                 }
             }).then(() => {
                 const options = _.extend({}, sequelize.options, { storage: p });
-                const _sequelize = new Sequelize(sequelize.config.database, null, null, options);
+                const _sequelize = orm.create(sequelize.config.database, null, null, options);
 
                 if (callback) {
                     _sequelize.sync({ force: true }).then(() => {
@@ -100,7 +98,7 @@ const Support = {
     getSequelizeInstance(db, user, pass, options) {
         options = options || {};
         options.dialect = options.dialect || this.getTestDialect();
-        return new Sequelize(db, user, pass, options);
+        return orm.create(db, user, pass, options);
     },
 
     clearDatabase(sequelize) {
@@ -118,7 +116,7 @@ const Support = {
     },
 
     getSupportedDialects() {
-        return Object.keys(adone.orm.dialect).filter((x) => x !== "abstract");
+        return Object.keys(adone.private(adone.orm).dialect).filter((x) => x !== "abstract");
     },
 
     checkMatchForDialects(dialect, value, expectations) {

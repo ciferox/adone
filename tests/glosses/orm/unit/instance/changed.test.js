@@ -1,16 +1,17 @@
 import Support from "../../support";
 
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser("Instance"), () => {
     describe("changed", () => {
         beforeEach(function () {
             this.User = current.define("User", {
-                name: DataTypes.STRING,
-                birthday: DataTypes.DATE,
-                yoj: DataTypes.DATEONLY,
-                meta: DataTypes.JSON
+                name: type.STRING,
+                birthday: type.DATE,
+                yoj: type.DATEONLY,
+                meta: type.JSON
             });
         });
 

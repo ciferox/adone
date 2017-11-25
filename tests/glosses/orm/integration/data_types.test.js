@@ -1,10 +1,9 @@
 import Support from "./support";
 
-const Sequelize = adone.orm;
-
 const { vendor: { lodash: _ } } = adone;
 const current = Support.sequelize;
-const { DataTypes } = Sequelize;
+const { orm } = adone;
+const { type } = orm;
 const dialect = Support.getTestDialect();
 
 describe(Support.getTestDialectTeaser("DataTypes"), () => {
@@ -14,7 +13,7 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
             case "postgres": {
                 const types = require("pg-types");
 
-                _.each(DataTypes, (dataType) => {
+                _.each(type, (dataType) => {
                     if (dataType.types && dataType.types.postgres) {
                         dataType.types.postgres.oids.forEach((oid) => {
                             types.setTypeParser(oid, _.identity);
@@ -34,15 +33,15 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
                 this.sequelize.connectionManager._clearTypeParser();
         }
 
-        this.sequelize.connectionManager.refreshTypeParser(DataTypes[dialect]); // Reload custom parsers
+        this.sequelize.connectionManager.refreshTypeParser(type[dialect]); // Reload custom parsers
     });
 
     it("allows me to return values from a custom parse function", () => {
-        const parse = Sequelize.DATE.parse = spy((value) => {
+        const parse = type.DATE.parse = spy((value) => {
             return adone.datetime(value, "YYYY-MM-DD HH:mm:ss");
         });
 
-        const stringify = Sequelize.DATE.prototype.stringify = spy(function (value, options) {
+        const stringify = type.DATE.prototype.stringify = spy(function (value, options) {
             if (!adone.is.datetime(value)) {
                 value = this._applyTimezone(value, options);
             }
@@ -52,7 +51,7 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
         current.refreshTypes();
 
         const User = current.define("user", {
-            dateField: Sequelize.DATE
+            dateField: type.DATE
         }, {
             timestamps: false
         });
@@ -69,7 +68,7 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
 
             expect(adone.is.datetime(user.dateField)).to.be.ok;
 
-            delete Sequelize.DATE.parse;
+            delete type.DATE.parse;
         });
     });
 
@@ -79,7 +78,7 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
         });
 
         const stringify = Type.constructor.prototype.stringify = spy(function (...args) {
-            return Sequelize.ABSTRACT.prototype.stringify.apply(this, args);
+            return type.ABSTRACT.prototype.stringify.apply(this, args);
         });
 
         current.refreshTypes();
@@ -117,7 +116,7 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
 
     if (current.dialect.supports.JSON) {
         it("calls parse and stringify for JSON", () => {
-            const Type = new Sequelize.JSON();
+            const Type = new type.JSON();
 
             return testSuccess(Type, { test: 42, nested: { foo: "bar" } });
         });
@@ -125,7 +124,7 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
 
     if (current.dialect.supports.JSONB) {
         it("calls parse and stringify for JSONB", () => {
-            const Type = new Sequelize.JSONB();
+            const Type = new type.JSONB();
 
             return testSuccess(Type, { test: 42, nested: { foo: "bar" } });
         });
@@ -133,7 +132,7 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
 
     if (current.dialect.supports.HSTORE) {
         it("calls parse and stringify for HSTORE", () => {
-            const Type = new Sequelize.HSTORE();
+            const Type = new type.HSTORE();
 
             return testSuccess(Type, { test: 42, nested: false });
         });
@@ -141,50 +140,50 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
 
     if (current.dialect.supports.RANGE) {
         it("calls parse and stringify for RANGE", () => {
-            const Type = new Sequelize.RANGE(new Sequelize.INTEGER());
+            const Type = new type.RANGE(new type.INTEGER());
 
             return testSuccess(Type, [1, 2]);
         });
     }
 
     it("calls parse and stringify for DATE", () => {
-        const Type = new Sequelize.DATE();
+        const Type = new type.DATE();
 
         return testSuccess(Type, new Date());
     });
 
     it("calls parse and stringify for DATEONLY", () => {
-        const Type = new Sequelize.DATEONLY();
+        const Type = new type.DATEONLY();
 
         return testSuccess(Type, adone.datetime(new Date()).format("YYYY-MM-DD"));
     });
 
     it("calls parse and stringify for TIME", () => {
-        const Type = new Sequelize.TIME();
+        const Type = new type.TIME();
 
         return testSuccess(Type, new Date());
     });
 
     it("calls parse and stringify for BLOB", () => {
-        const Type = new Sequelize.BLOB();
+        const Type = new type.BLOB();
 
         return testSuccess(Type, "foobar");
     });
 
     it("calls parse and stringify for CHAR", () => {
-        const Type = new Sequelize.CHAR();
+        const Type = new type.CHAR();
 
         return testSuccess(Type, "foobar");
     });
 
     it("calls parse and stringify for STRING", () => {
-        const Type = new Sequelize.STRING();
+        const Type = new type.STRING();
 
         return testSuccess(Type, "foobar");
     });
 
     it("calls parse and stringify for TEXT", () => {
-        const Type = new Sequelize.TEXT();
+        const Type = new type.TEXT();
 
         if (dialect === "mssql") {
             // Text uses nvarchar, same type as string
@@ -195,25 +194,25 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
     });
 
     it("calls parse and stringify for BOOLEAN", () => {
-        const Type = new Sequelize.BOOLEAN();
+        const Type = new type.BOOLEAN();
 
         return testSuccess(Type, true);
     });
 
     it("calls parse and stringify for INTEGER", () => {
-        const Type = new Sequelize.INTEGER();
+        const Type = new type.INTEGER();
 
         return testSuccess(Type, 1);
     });
 
     it("calls parse and stringify for DECIMAL", () => {
-        const Type = new Sequelize.DECIMAL();
+        const Type = new type.DECIMAL();
 
         return testSuccess(Type, 1.5);
     });
 
     it("calls parse and stringify for BIGINT", () => {
-        const Type = new Sequelize.BIGINT();
+        const Type = new type.BIGINT();
 
         if (dialect === "mssql") {
             // Same type as integer
@@ -224,13 +223,13 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
     });
 
     it("calls parse and stringify for DOUBLE", () => {
-        const Type = new Sequelize.DOUBLE();
+        const Type = new type.DOUBLE();
 
         return testSuccess(Type, 1.5);
     });
 
     it("calls parse and stringify for FLOAT", () => {
-        const Type = new Sequelize.FLOAT();
+        const Type = new type.FLOAT();
 
         if (dialect === "postgres") {
             // Postgres doesn't have float, maps to either decimal or double
@@ -241,13 +240,13 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
     });
 
     it("calls parse and stringify for REAL", () => {
-        const Type = new Sequelize.REAL();
+        const Type = new type.REAL();
 
         return testSuccess(Type, 1.5);
     });
 
     it("calls parse and stringify for UUID", () => {
-        const Type = new Sequelize.UUID();
+        const Type = new type.UUID();
 
         // there is no dialect.supports.UUID yet
         if (["postgres", "sqlite"].indexOf(dialect) !== -1) {
@@ -259,7 +258,7 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
     });
 
     it("calls parse and stringify for ENUM", () => {
-        const Type = new Sequelize.ENUM("hat", "cat");
+        const Type = new type.ENUM("hat", "cat");
 
         // No dialects actually allow us to identify that we get an enum back..
         testFailure(Type);
@@ -267,13 +266,13 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
 
     if (current.dialect.supports.GEOMETRY) {
         it("calls parse and stringify for GEOMETRY", () => {
-            const Type = new Sequelize.GEOMETRY();
+            const Type = new type.GEOMETRY();
 
             return testSuccess(Type, { type: "Point", coordinates: [125.6, 10.1] });
         });
 
         it.skip("should parse an empty GEOMETRY field", () => { // TODO: fails with "Invalid GIS data provided to function st_geometryfromtext." on my 5.6.0
-            const Type = new Sequelize.GEOMETRY();
+            const Type = new type.GEOMETRY();
 
             // MySQL 5.7 or above doesn't support POINT EMPTY
             if (dialect === "mysql" && adone.semver.gte(current.options.databaseVersion, "5.7.0")) {
@@ -328,9 +327,9 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
         // postgres actively supports IEEE floating point literals, and sqlite doesn't care what we throw at it
         it("should store and parse IEEE floating point literals (NaN and Infinity)", function () {
             const Model = this.sequelize.define("model", {
-                float: Sequelize.FLOAT,
-                double: Sequelize.DOUBLE,
-                real: Sequelize.REAL
+                float: type.FLOAT,
+                double: type.DOUBLE,
+                real: type.REAL
             });
 
             return Model.sync({ force: true }).then(() => {
@@ -353,11 +352,11 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
     if (dialect === "postgres" || dialect === "mysql") {
         it("should parse DECIMAL as string", function () {
             const Model = this.sequelize.define("model", {
-                decimal: Sequelize.DECIMAL,
-                decimalPre: new Sequelize.DECIMAL(10, 4),
-                decimalWithParser: new Sequelize.DECIMAL(32, 15),
-                decimalWithIntParser: new Sequelize.DECIMAL(10, 4),
-                decimalWithFloatParser: new Sequelize.DECIMAL(10, 8)
+                decimal: type.DECIMAL,
+                decimalPre: new type.DECIMAL(10, 4),
+                decimalWithParser: new type.DECIMAL(32, 15),
+                decimalWithIntParser: new type.DECIMAL(10, 4),
+                decimalWithFloatParser: new type.DECIMAL(10, 8)
             });
 
             const sampleData = {
@@ -393,7 +392,7 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
 
         it("should parse BIGINT as string", function () {
             const Model = this.sequelize.define("model", {
-                jewelPurity: Sequelize.BIGINT
+                jewelPurity: type.BIGINT
             });
 
             const sampleData = {
@@ -416,7 +415,7 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
         it("should return Int4 range properly #5747", async function () {
             const Model = this.sequelize.define("M", {
                 interval: {
-                    type: new Sequelize.RANGE(Sequelize.INTEGER),
+                    type: new type.RANGE(type.INTEGER),
                     allowNull: false,
                     unique: true
                 }
@@ -432,8 +431,8 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
 
     it("should allow spaces in ENUM", function () {
         const Model = this.sequelize.define("user", {
-            name: Sequelize.STRING,
-            type: new Sequelize.ENUM(["action", "mecha", "canon", "class s"])
+            name: type.STRING,
+            type: new type.ENUM(["action", "mecha", "canon", "class s"])
         });
 
         return Model.sync({ force: true }).then(() => {
@@ -445,7 +444,7 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
 
     it("should return YYYY-MM-DD format string for DATEONLY", function () {
         const Model = this.sequelize.define("user", {
-            stamp: Sequelize.DATEONLY
+            stamp: type.DATEONLY
         });
         const testDate = adone.datetime().format("YYYY-MM-DD");
         const newDate = new Date();
@@ -487,7 +486,7 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
 
     it("should return set DATEONLY field to NULL correctly", function () {
         const Model = this.sequelize.define("user", {
-            stamp: Sequelize.DATEONLY
+            stamp: type.DATEONLY
         });
         const testDate = adone.datetime().format("YYYY-MM-DD");
 
@@ -514,13 +513,13 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
 
     it("should be able to cast buffer as boolean", function () {
         const ByteModel = this.sequelize.define("Model", {
-            byteToBool: this.sequelize.Sequelize.BLOB
+            byteToBool: type.BLOB
         }, {
             timestamps: false
         });
 
         const BoolModel = this.sequelize.define("Model", {
-            byteToBool: this.sequelize.Sequelize.BOOLEAN
+            byteToBool: type.BOOLEAN
         }, {
             timestamps: false
         });

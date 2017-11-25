@@ -1,7 +1,7 @@
 import Support from "../support";
 
-const Sequelize = adone.orm;
-const DataTypes = Sequelize.DataTypes;
+const { orm } = adone;
+const { type } = orm;
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser("Model"), () => {
@@ -10,11 +10,11 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             beforeEach(function () {
                 this.Event = this.sequelize.define("Event", {
                     data: {
-                        type: DataTypes.JSON,
+                        type: type.JSON,
                         field: "event_data",
                         index: true
                     },
-                    json: DataTypes.JSON
+                    json: type.JSON
                 });
 
                 return this.Event.sync({ force: true });
@@ -606,7 +606,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             describe("sql injection attacks", () => {
                 beforeEach(function () {
                     this.Model = this.sequelize.define("Model", {
-                        data: DataTypes.JSON
+                        data: type.JSON
                     });
                     return this.sequelize.sync({ force: true });
                 });

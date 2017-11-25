@@ -1,26 +1,26 @@
 import Support from "../support";
 
-const { DataTypes } = adone.orm;
-const Sequelize = Support.Sequelize;
+const { orm } = adone;
+const { type } = orm;
 const dialect = Support.getTestDialect();
 
 describe(Support.getTestDialectTeaser("Hooks"), () => {
     beforeEach(function () {
         this.User = this.sequelize.define("User", {
             username: {
-                type: DataTypes.STRING,
+                type: type.STRING,
                 allowNull: false
             },
             mood: {
-                type: DataTypes.ENUM,
+                type: type.ENUM,
                 values: ["happy", "sad", "neutral"]
             }
         });
 
         this.ParanoidUser = this.sequelize.define("ParanoidUser", {
-            username: DataTypes.STRING,
+            username: type.STRING,
             mood: {
-                type: DataTypes.ENUM,
+                type: type.ENUM,
                 values: ["happy", "sad", "neutral"]
             }
         }, {
@@ -35,14 +35,14 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
             this.sequelize.addHook("beforeDefine", (attributes, options) => {
                 options.modelName = "bar";
                 options.name.plural = "barrs";
-                attributes.type = DataTypes.STRING;
+                attributes.type = type.STRING;
             });
 
             this.sequelize.addHook("afterDefine", (factory) => {
                 factory.options.name.singular = "barr";
             });
 
-            this.model = this.sequelize.define("foo", { name: DataTypes.STRING });
+            this.model = this.sequelize.define("foo", { name: type.STRING });
         });
 
         it("beforeDefine hook can change model name", function () {
@@ -69,16 +69,16 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
 
     describe("#init", () => {
         before(function () {
-            Sequelize.addHook("beforeInit", (config, options) => {
+            orm.hooks.add("beforeInit", (config, options) => {
                 config.database = "db2";
                 options.host = "server9";
             });
 
-            Sequelize.addHook("afterInit", (sequelize) => {
+            orm.hooks.add("afterInit", (sequelize) => {
                 sequelize.options.protocol = "udp";
             });
 
-            this.seq = new Sequelize("db", "user", "pass", { dialect });
+            this.seq = orm.create("db", "user", "pass", { dialect });
         });
 
         it("beforeInit hook can alter config", function () {
@@ -94,7 +94,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
         });
 
         after(() => {
-            Sequelize.options.hooks = {};
+            orm.hooks.removeAll();
         });
     });
 
@@ -104,7 +104,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                 let beforeHooked = false;
                 let afterHooked = false;
                 const User = this.sequelize.define("User", {
-                    username: DataTypes.STRING
+                    username: type.STRING
                 }, {
                     hooks: {
                         beforeValidate(user) {
@@ -134,7 +134,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                 let beforeHooked = false;
                 let afterHooked = false;
                 const User = this.sequelize.define("User", {
-                    username: DataTypes.STRING
+                    username: type.STRING
                 }, {
                     hooks: {
                         beforeCreate(user) {
@@ -164,7 +164,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                 let beforeHooked = false;
                 let afterHooked = false;
                 const User = this.sequelize.define("User", {
-                    username: DataTypes.STRING
+                    username: type.STRING
                 }, {
                     hooks: {
                         beforeDestroy(user) {
@@ -196,7 +196,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                 let beforeHooked = false;
                 let afterHooked = false;
                 const User = this.sequelize.define("User", {
-                    username: DataTypes.STRING
+                    username: type.STRING
                 }, {
                     hooks: {
                         beforeDelete(user) {
@@ -228,7 +228,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                 let beforeHooked = false;
                 let afterHooked = false;
                 const User = this.sequelize.define("User", {
-                    username: DataTypes.STRING
+                    username: type.STRING
                 }, {
                     hooks: {
                         beforeUpdate(user) {

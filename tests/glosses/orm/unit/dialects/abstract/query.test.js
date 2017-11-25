@@ -1,6 +1,8 @@
 import Support from "../../../support";
 
-const { Query } = adone.orm.dialect.abstract;
+const { orm } = adone;
+const { type } = orm;
+const { Query } = adone.private(adone.orm).dialect.abstract;
 const current = Support.sequelize;
 
 describe("[ABSTRACT]", () => {
@@ -10,14 +12,14 @@ describe("[ABSTRACT]", () => {
             const Team = current.define("team", {
                 id: {
                     primaryKey: true,
-                    type: new current.Sequelize.STRING(1)
+                    type: new type.STRING(1)
                 }
             });
 
             const Player = current.define("player", {
                 id: {
                     primaryKey: true,
-                    type: new current.Sequelize.STRING(1)
+                    type: new type.STRING(1)
                 }
             });
 
@@ -28,7 +30,7 @@ describe("[ABSTRACT]", () => {
                 },
                 id: {
                     primaryKey: true,
-                    type: new current.Sequelize.STRING(1)
+                    type: new type.STRING(1)
                 }
             });
 
@@ -96,14 +98,14 @@ describe("[ABSTRACT]", () => {
             const Team = current.define("team", {
                 id: {
                     primaryKey: true,
-                    type: new current.Sequelize.STRING(1)
+                    type: new type.STRING(1)
                 }
             });
 
             const Player = current.define("player", {
                 id: {
                     primaryKey: true,
-                    type: new current.Sequelize.STRING(1)
+                    type: new type.STRING(1)
                 }
             });
 
@@ -178,14 +180,14 @@ describe("[ABSTRACT]", () => {
                 },
                 id: {
                     primaryKey: true,
-                    type: new current.Sequelize.STRING(1)
+                    type: new type.STRING(1)
                 }
             });
 
             const Player = current.define("player", {
                 id: {
                     primaryKey: true,
-                    type: new current.Sequelize.STRING(1)
+                    type: new type.STRING(1)
                 }
             });
 
@@ -265,7 +267,7 @@ describe("[ABSTRACT]", () => {
             const Player = current.define("player", {
                 id: {
                     primaryKey: true,
-                    type: new current.Sequelize.STRING(1)
+                    type: new type.STRING(1)
                 }
             });
 
@@ -335,7 +337,7 @@ describe("[ABSTRACT]", () => {
             const Team = current.define("team", {
                 id: {
                     primaryKey: true,
-                    type: new current.Sequelize.STRING(1)
+                    type: new type.STRING(1)
                 }
             });
 
@@ -399,7 +401,7 @@ describe("[ABSTRACT]", () => {
             const Team = current.define("team", {
                 id: {
                     primaryKey: true,
-                    type: new current.Sequelize.STRING(1)
+                    type: new type.STRING(1)
                 }
             });
 
@@ -410,7 +412,7 @@ describe("[ABSTRACT]", () => {
                 },
                 id: {
                     primaryKey: true,
-                    type: new current.Sequelize.STRING(1)
+                    type: new type.STRING(1)
                 }
             });
 

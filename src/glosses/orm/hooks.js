@@ -1,7 +1,14 @@
-const { is, vendor: { lodash: _ } } = adone;
-const Utils = require("./utils");
-const Promise = require("./promise");
-const debug = Utils.getLogger().debugContext("hooks");
+const {
+    is,
+    vendor: { lodash: _ },
+    orm
+} = adone;
+
+const {
+    util
+} = orm;
+
+const debug = util.getLogger().debugContext("hooks");
 
 const hookTypes = {
     beforeValidate: { params: 2 },
@@ -61,8 +68,7 @@ exports.hookAliases = hookAliases;
 const getProxiedHooks = (hookType) =>
     hookTypes[hookType].proxies
         ? hookTypes[hookType].proxies.concat(hookType)
-        : [hookType]
-    ;
+        : [hookType];
 
 const Hooks = {
     replaceHookAliases(hooks) {
@@ -87,7 +93,7 @@ const Hooks = {
             throw new Error("runHooks requires atleast 1 argument");
         }
 
-        const hookArgs = Utils.sliceArgs(arguments, 1);
+        const hookArgs = util.sliceArgs(arguments, 1);
         let hookType;
 
         if (is.string(hooks)) {
@@ -180,7 +186,7 @@ const Hooks = {
             return this;
         }
 
-        Utils.debug(`removing hook ${hookType}`);
+        util.debug(`removing hook ${hookType}`);
 
         // check for proxies, add them too
         hookType = getProxiedHooks(hookType);
@@ -198,7 +204,14 @@ const Hooks = {
 
         return this;
     },
-
+    removeAllHooks(hookType) {
+        hookType = hookAliases[hookType] || hookType;
+        if (is.undefined(hookType)) {
+            this.options.hooks = {};
+        } else {
+            this.options.hooks[hookType] = [];
+        }
+    },
     /**
      * Check whether the mode has any hooks of this type
      *
@@ -226,3 +239,30 @@ const applyTo = (target) => {
     }
 };
 exports.applyTo = applyTo;
+
+export const interfaceFor = (source) => {
+    const _interface = {
+        replaceAliases(hooks) {
+            return source.replaceAliases(hooks);
+        },
+        add(hookType, name, fn) {
+            return source.addHook(hookType, name, fn);
+        },
+        remove(hookType, name) {
+            return source.removeHook(hookType, name);
+        },
+        removeAll(hookType) {
+            return source.removeAllHooks(hookType);
+        },
+        has(hookType) {
+            return source.hasHook(hookType);
+        }
+    };
+    const allHooks = Object.keys(hookTypes).concat(Object.keys(hookAliases));
+    for (const hook of allHooks) {
+        _interface[hook] = function (name, callback) {
+            return source.addHook(hook, name, callback);
+        };
+    }
+    return _interface;
+};

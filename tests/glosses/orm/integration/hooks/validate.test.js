@@ -1,16 +1,17 @@
 import Support from "../support";
 
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("Hooks"), () => {
     beforeEach(function () {
         this.User = this.sequelize.define("User", {
             username: {
-                type: DataTypes.STRING,
+                type: type.STRING,
                 allowNull: false
             },
             mood: {
-                type: DataTypes.ENUM,
+                type: type.ENUM,
                 values: ["happy", "sad", "neutral"]
             }
         });
@@ -136,7 +137,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                     await this.User.create({ mood: "happy" });
                 });
 
-                expect(err.name).to.equal("SequelizeValidationError");
+                expect(err.name).to.equal("ValidationError");
             });
 
             it("should replace the validation error if validationFailed hook creates a new error", async function () {

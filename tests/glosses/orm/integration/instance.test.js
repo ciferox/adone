@@ -2,11 +2,8 @@ import Support from "./support";
 import config from "../config/config";
 
 const { is } = adone;
-const Sequelize = adone.orm;
-
-const {
-    DataTypes
-} = Sequelize;
+const { orm } = adone;
+const { type } = orm;
 
 const dialect = Support.getTestDialect();
 const current = Support.sequelize;
@@ -22,32 +19,32 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
     beforeEach(function () {
         this.User = this.sequelize.define("User", {
-            username: { type: DataTypes.STRING },
-            uuidv1: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV1 },
-            uuidv4: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4 },
-            touchedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
-            aNumber: { type: DataTypes.INTEGER },
-            bNumber: { type: DataTypes.INTEGER },
-            aDate: { type: DataTypes.DATE },
+            username: { type: type.STRING },
+            uuidv1: { type: type.UUID, defaultValue: type.UUIDV1 },
+            uuidv4: { type: type.UUID, defaultValue: type.UUIDV4 },
+            touchedAt: { type: type.DATE, defaultValue: type.NOW },
+            aNumber: { type: type.INTEGER },
+            bNumber: { type: type.INTEGER },
+            aDate: { type: type.DATE },
 
             validateTest: {
-                type: DataTypes.INTEGER,
+                type: type.INTEGER,
                 allowNull: true,
                 validate: { isInt: true }
             },
             validateCustom: {
-                type: DataTypes.STRING,
+                type: type.STRING,
                 allowNull: true,
                 validate: { len: { msg: "Length failed.", args: [1, 20] } }
             },
 
             dateAllowNullTrue: {
-                type: DataTypes.DATE,
+                type: type.DATE,
                 allowNull: true
             },
 
             isSuperUser: {
-                type: DataTypes.BOOLEAN,
+                type: type.BOOLEAN,
                 defaultValue: false
             }
         });
@@ -126,7 +123,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         if (current.dialect.supports.transactions) {
             it("supports transactions", async function () {
                 const sequelize = await Support.prepareTransactionTest(this.sequelize);
-                const User = sequelize.define("User", { number: Support.Sequelize.INTEGER });
+                const User = sequelize.define("User", { number: type.INTEGER });
 
                 await User.sync({ force: true });
                 const user = await User.create({ number: 1 });
@@ -241,7 +238,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
         it("with timestamps set to true", function () {
             const User = this.sequelize.define("IncrementUser", {
-                aNumber: DataTypes.INTEGER
+                aNumber: type.INTEGER
             }, { timestamps: true });
 
             let oldDate;
@@ -263,7 +260,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
         it("with timestamps set to true and options.silent set to true", async function () {
             const User = this.sequelize.define("IncrementUser", {
-                aNumber: DataTypes.INTEGER
+                aNumber: type.INTEGER
             }, { timestamps: true });
             let oldDate;
 
@@ -286,7 +283,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         if (current.dialect.supports.transactions) {
             it("supports transactions", async function () {
                 const sequelize = await Support.prepareTransactionTest(this.sequelize);
-                const User = sequelize.define("User", { number: Support.Sequelize.INTEGER });
+                const User = sequelize.define("User", { number: type.INTEGER });
 
                 await User.sync({ force: true });
                 const user = await User.create({ number: 3 });
@@ -406,7 +403,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
         it("with timestamps set to true", async function () {
             const User = this.sequelize.define("IncrementUser", {
-                aNumber: DataTypes.INTEGER
+                aNumber: type.INTEGER
             }, { timestamps: true });
             let oldDate;
 
@@ -422,7 +419,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
         it("with timestamps set to true and options.silent set to true", async function () {
             const User = this.sequelize.define("IncrementUser", {
-                aNumber: DataTypes.INTEGER
+                aNumber: type.INTEGER
             }, { timestamps: true });
 
             await User.sync({ force: true });
@@ -440,7 +437,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         if (current.dialect.supports.transactions) {
             it("supports transactions", async function () {
                 const sequelize = await Support.prepareTransactionTest(this.sequelize);
-                const User = sequelize.define("User", { username: Support.Sequelize.STRING });
+                const User = sequelize.define("User", { username: type.STRING });
 
                 await User.sync({ force: true });
                 const user = await User.create({ username: "foo" });
@@ -512,8 +509,8 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         });
 
         it("should update the associations as well", function () {
-            const Book = this.sequelize.define("Book", { title: DataTypes.STRING }),
-                Page = this.sequelize.define("Page", { content: DataTypes.TEXT });
+            const Book = this.sequelize.define("Book", { title: type.STRING }),
+                Page = this.sequelize.define("Page", { content: type.TEXT });
 
             Book.hasMany(Page);
             Page.belongsTo(Book);
@@ -546,8 +543,8 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         });
 
         it("should update internal options of the instance", function () {
-            const Book = this.sequelize.define("Book", { title: DataTypes.STRING }),
-                Page = this.sequelize.define("Page", { content: DataTypes.TEXT });
+            const Book = this.sequelize.define("Book", { title: type.STRING }),
+                Page = this.sequelize.define("Page", { content: type.TEXT });
 
             Book.hasMany(Page);
             Page.belongsTo(Book);
@@ -582,12 +579,12 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
             await user.destroy();
             await assert.throws(async () => {
                 await user.reload();
-            }, Sequelize.InstanceError, "Instance could not be reloaded because it does not exist anymore (find call returned null)");
+            }, orm.x.InstanceError, "Instance could not be reloaded because it does not exist anymore (find call returned null)");
         });
 
         it("should set an association to null after deletion, 1-1", async function () {
-            const Shoe = this.sequelize.define("Shoe", { brand: DataTypes.STRING });
-            const Player = this.sequelize.define("Player", { name: DataTypes.STRING });
+            const Shoe = this.sequelize.define("Shoe", { brand: type.STRING });
+            const Player = this.sequelize.define("Player", { name: type.STRING });
 
             Player.hasOne(Shoe);
             Shoe.belongsTo(Player);
@@ -610,8 +607,8 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         });
 
         it("should set an association to empty after all deletion, 1-N", async function () {
-            const Team = this.sequelize.define("Team", { name: DataTypes.STRING });
-            const Player = this.sequelize.define("Player", { name: DataTypes.STRING });
+            const Team = this.sequelize.define("Team", { name: type.STRING });
+            const Player = this.sequelize.define("Player", { name: type.STRING });
 
             Team.hasMany(Player);
             Player.belongsTo(Team);
@@ -637,8 +634,8 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         });
 
         it("should update the associations after one element deleted", async function () {
-            const Team = this.sequelize.define("Team", { name: DataTypes.STRING });
-            const Player = this.sequelize.define("Player", { name: DataTypes.STRING });
+            const Team = this.sequelize.define("Team", { name: type.STRING });
+            const Player = this.sequelize.define("Player", { name: type.STRING });
 
             Team.hasMany(Player);
             Player.belongsTo(Team);
@@ -687,8 +684,8 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
             it("should store a valid uuid if the field is a primary key named id", function () {
                 const Person = this.sequelize.define("Person", {
                     id: {
-                        type: DataTypes.UUID,
-                        defaultValue: DataTypes.UUIDV1,
+                        type: type.UUID,
+                        defaultValue: type.UUIDV1,
                         primaryKey: true
                     }
                 });
@@ -823,7 +820,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         if (current.dialect.supports.transactions) {
             it("supports transactions", async function () {
                 const sequelize = await Support.prepareTransactionTest(this.sequelize);
-                const User = sequelize.define("User", { username: Support.Sequelize.STRING });
+                const User = sequelize.define("User", { username: type.STRING });
                 await User.sync({ force: true });
                 const t = await sequelize.transaction();
                 await User.build({ username: "foo" }).save({ transaction: t });
@@ -860,9 +857,9 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
         it("should work on a model with an attribute named length", function () {
             const Box = this.sequelize.define("box", {
-                length: DataTypes.INTEGER,
-                width: DataTypes.INTEGER,
-                height: DataTypes.INTEGER
+                length: type.INTEGER,
+                width: type.INTEGER,
+                height: type.INTEGER
             });
 
             return Box.sync({ force: true }).then(() => {
@@ -898,9 +895,9 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         describe("hooks", () => {
             it("should update attributes added in hooks when default fields are used", function () {
                 const User = this.sequelize.define(`User${config.rand()}`, {
-                    name: DataTypes.STRING,
-                    bio: DataTypes.TEXT,
-                    email: DataTypes.STRING
+                    name: type.STRING,
+                    bio: type.TEXT,
+                    email: type.STRING
                 });
 
                 User.beforeUpdate((instance) => {
@@ -929,9 +926,9 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
             it("should update attributes changed in hooks when default fields are used", function () {
                 const User = this.sequelize.define(`User${config.rand()}`, {
-                    name: DataTypes.STRING,
-                    bio: DataTypes.TEXT,
-                    email: DataTypes.STRING
+                    name: type.STRING,
+                    bio: type.TEXT,
+                    email: type.STRING
                 });
 
                 User.beforeUpdate((instance) => {
@@ -961,10 +958,10 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
             it("should validate attributes added in hooks when default fields are used", async function () {
                 const User = this.sequelize.define(`User${config.rand()}`, {
-                    name: DataTypes.STRING,
-                    bio: DataTypes.TEXT,
+                    name: type.STRING,
+                    bio: type.TEXT,
                     email: {
-                        type: DataTypes.STRING,
+                        type: type.STRING,
                         validate: {
                             isEmail: true
                         }
@@ -986,7 +983,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                     await user.set({
                         name: "B"
                     }).save();
-                }, Sequelize.ValidationError);
+                }, orm.x.ValidationError);
 
                 const user2 = await User.findOne({});
 
@@ -995,10 +992,10 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
             it("should validate attributes changed in hooks when default fields are used", async function () {
                 const User = this.sequelize.define(`User${config.rand()}`, {
-                    name: DataTypes.STRING,
-                    bio: DataTypes.TEXT,
+                    name: type.STRING,
+                    bio: type.TEXT,
                     email: {
-                        type: DataTypes.STRING,
+                        type: type.STRING,
                         validate: {
                             isEmail: true
                         }
@@ -1021,7 +1018,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                         name: "B",
                         email: "still.valid.email@gmail.com"
                     }).save();
-                }, Sequelize.ValidationError);
+                }, orm.x.ValidationError);
 
                 const user2 = await User.findOne({});
                 expect(user2.get("email")).to.equal("valid.email@gmail.com");
@@ -1052,11 +1049,11 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
             const newUsername = "newUser";
             const User2 = this.sequelize.define("User2", {
                 id: {
-                    type: DataTypes.INTEGER.UNSIGNED,
+                    type: type.INTEGER.UNSIGNED,
                     autoIncrement: false,
                     primaryKey: true
                 },
-                username: { type: DataTypes.STRING }
+                username: { type: type.STRING }
             });
 
             return User2.sync().then(() => {
@@ -1158,9 +1155,9 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
             it("should not throw ER_EMPTY_QUERY if changed only virtual fields", async function () {
                 const User = this.sequelize.define(`User${config.rand()}`, {
-                    name: DataTypes.STRING,
+                    name: type.STRING,
                     bio: {
-                        type: DataTypes.VIRTUAL,
+                        type: type.VIRTUAL,
                         get: () => "swag"
                     }
                 }, {
@@ -1192,8 +1189,8 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         describe("without timestamps option", () => {
             it("doesn't update the updatedAt column", function () {
                 const User2 = this.sequelize.define("User2", {
-                    username: DataTypes.STRING,
-                    updatedAt: DataTypes.DATE
+                    username: type.STRING,
+                    updatedAt: type.DATE
                 }, { timestamps: false });
                 return User2.sync().then(() => {
                     return User2.create({ username: "john doe" }).then((johnDoe) => {
@@ -1210,7 +1207,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                 this.clock.tick(1000);
 
                 const User2 = this.sequelize.define("User2", {
-                    username: DataTypes.STRING
+                    username: type.STRING
                 }, { updatedAt: false });
 
                 await User2.sync();
@@ -1224,7 +1221,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                 this.clock.tick(1000);
 
                 const User2 = this.sequelize.define("User2", {
-                    username: DataTypes.STRING
+                    username: type.STRING
                 }, { createdAt: false });
 
                 await User2.sync();
@@ -1235,13 +1232,13 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
             it("works with `allowNull: false` on createdAt and updatedAt columns", function () {
                 const User2 = this.sequelize.define("User2", {
-                    username: DataTypes.STRING,
+                    username: type.STRING,
                     createdAt: {
-                        type: DataTypes.DATE,
+                        type: type.DATE,
                         allowNull: false
                     },
                     updatedAt: {
-                        type: DataTypes.DATE,
+                        type: type.DATE,
                         allowNull: false
                     }
                 }, { timestamps: true });
@@ -1311,9 +1308,9 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
         it("saves a record with no primary key", function () {
             const HistoryLog = this.sequelize.define("HistoryLog", {
-                someText: { type: DataTypes.STRING },
-                aNumber: { type: DataTypes.INTEGER },
-                aRandomId: { type: DataTypes.INTEGER }
+                someText: { type: type.STRING },
+                aNumber: { type: type.INTEGER },
+                aRandomId: { type: type.INTEGER }
             });
             return HistoryLog.sync().then(() => {
                 return HistoryLog.create({ someText: "Some random text", aNumber: 3, aRandomId: 5 }).then((log) => {
@@ -1328,13 +1325,13 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
             beforeEach(function () {
                 const self = this;
                 this.UserEager = this.sequelize.define("UserEagerLoadingSaves", {
-                    username: DataTypes.STRING,
-                    age: DataTypes.INTEGER
+                    username: type.STRING,
+                    age: type.INTEGER
                 }, { timestamps: false });
 
                 this.ProjectEager = this.sequelize.define("ProjectEagerLoadingSaves", {
-                    title: DataTypes.STRING,
-                    overdue_days: DataTypes.INTEGER
+                    title: type.STRING,
+                    overdue_days: type.INTEGER
                 }, { timestamps: false });
 
                 this.UserEager.hasMany(this.ProjectEager, { as: "Projects", foreignKey: "PoobahId" });
@@ -1459,13 +1456,13 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         beforeEach(function () {
             const self = this;
             this.User = this.sequelize.define("UserWithUsernameAndAgeAndIsAdmin", {
-                username: DataTypes.STRING,
-                age: DataTypes.INTEGER,
-                isAdmin: DataTypes.BOOLEAN
+                username: type.STRING,
+                age: type.INTEGER,
+                isAdmin: type.BOOLEAN
             }, { timestamps: false });
 
             this.Project = this.sequelize.define("NiceProject",
-                { title: DataTypes.STRING }, { timestamps: false });
+                { title: type.STRING }, { timestamps: false });
 
             this.Project.hasMany(this.User);
             this.User.hasMany(this.Project);
@@ -1495,12 +1492,12 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         beforeEach(function () {
             const self = this;
             this.User = this.sequelize.define("UserWithUsernameAndAgeAndIsAdmin", {
-                username: DataTypes.STRING,
-                age: DataTypes.INTEGER,
-                isAdmin: DataTypes.BOOLEAN
+                username: type.STRING,
+                age: type.INTEGER,
+                isAdmin: type.BOOLEAN
             }, { timestamps: false });
 
-            this.Project = this.sequelize.define("NiceProject", { title: DataTypes.STRING }, { timestamps: false });
+            this.Project = this.sequelize.define("NiceProject", { title: type.STRING }, { timestamps: false });
 
             this.User.hasMany(this.Project, { as: "Projects", foreignKey: "lovelyUserId" });
             this.Project.belongsTo(this.User, { as: "LovelyUser", foreignKey: "lovelyUserId" });
@@ -1590,7 +1587,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
     describe("findAll", () => {
         beforeEach(function () {
             this.ParanoidUser = this.sequelize.define("ParanoidUser", {
-                username: { type: DataTypes.STRING }
+                username: { type: type.STRING }
             }, { paranoid: true });
 
             this.ParanoidUser.hasOne(this.ParanoidUser);
@@ -1726,10 +1723,10 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         it("destroys a record with a primary key of something other than id", function () {
             const UserDestroy = this.sequelize.define("UserDestroy", {
                 newId: {
-                    type: DataTypes.STRING,
+                    type: type.STRING,
                     primaryKey: true
                 },
-                email: DataTypes.STRING
+                email: type.STRING
             });
 
             return UserDestroy.sync().then(() => {
@@ -1809,10 +1806,10 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         });
         it("returns null for null, undefined, and unset boolean values", function () {
             const Setting = this.sequelize.define("SettingHelper", {
-                setting_key: DataTypes.STRING,
-                bool_value: { type: DataTypes.BOOLEAN, allowNull: true },
-                bool_value2: { type: DataTypes.BOOLEAN, allowNull: true },
-                bool_value3: { type: DataTypes.BOOLEAN, allowNull: true }
+                setting_key: type.STRING,
+                bool_value: { type: type.BOOLEAN, allowNull: true },
+                bool_value2: { type: type.BOOLEAN, allowNull: true },
+                bool_value3: { type: type.BOOLEAN, allowNull: true }
             }, { timestamps: false, logging: false });
 
             return Setting.sync({ force: true }).then(() => {
@@ -1841,13 +1838,13 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
             const self = this;
 
             this.UserAssociationEqual = this.sequelize.define("UserAssociationEquals", {
-                username: DataTypes.STRING,
-                age: DataTypes.INTEGER
+                username: type.STRING,
+                age: type.INTEGER
             }, { timestamps: false });
 
             this.ProjectAssociationEqual = this.sequelize.define("ProjectAssocationEquals", {
-                title: DataTypes.STRING,
-                overdue_days: DataTypes.INTEGER
+                title: type.STRING,
+                overdue_days: type.INTEGER
             }, { timestamps: false });
 
             this.UserAssociationEqual.hasMany(this.ProjectAssociationEqual, { as: "Projects", foreignKey: "userId" });
@@ -1879,7 +1876,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
     describe("values", () => {
         it("returns all values", function () {
             const User = this.sequelize.define("UserHelper", {
-                username: DataTypes.STRING
+                username: type.STRING
             }, { timestamps: false, logging: false });
 
             return User.sync().then(() => {
@@ -1893,7 +1890,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         if (current.dialect.supports.transactions) {
             it("supports transactions", async function () {
                 const sequelize = await Support.prepareTransactionTest(this.sequelize);
-                const User = sequelize.define("User", { username: Support.Sequelize.STRING });
+                const User = sequelize.define("User", { username: type.STRING });
                 await User.sync({ force: true });
                 const user = await User.create({ username: "foo" });
                 const t = await sequelize.transaction();
@@ -1908,8 +1905,8 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
         it("does not set the deletedAt date in subsequent destroys if dao is paranoid", function () {
             const UserDestroy = this.sequelize.define("UserDestroy", {
-                name: Support.Sequelize.STRING,
-                bio: Support.Sequelize.TEXT
+                name: type.STRING,
+                bio: type.TEXT
             }, { paranoid: true });
 
             return UserDestroy.sync({ force: true }).then(() => {
@@ -1931,8 +1928,8 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
         it("deletes a record from the database if dao is not paranoid", function () {
             const UserDestroy = this.sequelize.define("UserDestroy", {
-                name: Support.Sequelize.STRING,
-                bio: Support.Sequelize.TEXT
+                name: type.STRING,
+                bio: type.TEXT
             });
 
             return UserDestroy.sync({ force: true }).then(() => {
@@ -1951,8 +1948,8 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
         it("allows sql logging of delete statements", function () {
             const UserDelete = this.sequelize.define("UserDelete", {
-                name: Support.Sequelize.STRING,
-                bio: Support.Sequelize.TEXT
+                name: type.STRING,
+                bio: type.TEXT
             });
 
             return UserDelete.sync({ force: true }).then(() => {
@@ -1973,12 +1970,12 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         it("delete a record of multiple primary keys table", function () {
             const MultiPrimary = this.sequelize.define("MultiPrimary", {
                 bilibili: {
-                    type: new Support.Sequelize.CHAR(2),
+                    type: new type.CHAR(2),
                     primaryKey: true
                 },
 
                 guruguru: {
-                    type: new Support.Sequelize.CHAR(2),
+                    type: new type.CHAR(2),
                     primaryKey: true
                 }
             });
@@ -2013,11 +2010,11 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                 const Date = this.sequelize.define("Date",
                     {
                         date: {
-                            type: DataTypes.DATE,
+                            type: type.DATE,
                             primaryKey: true
                         },
                         deletedAt: {
-                            type: DataTypes.DATE,
+                            type: type.DATE,
                             defaultValue: Infinity
                         }
                     },
@@ -2038,7 +2035,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
     describe("isSoftDeleted", () => {
         beforeEach(function () {
             this.ParanoidUser = this.sequelize.define("ParanoidUser", {
-                username: { type: DataTypes.STRING }
+                username: { type: type.STRING }
             }, { paranoid: true });
 
             return this.ParanoidUser.sync({ force: true });
@@ -2069,7 +2066,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         it("works with custom `deletedAt` field name", function () {
             const self = this;
             this.ParanoidUserWithCustomDeletedAt = this.sequelize.define("ParanoidUserWithCustomDeletedAt", {
-                username: { type: DataTypes.STRING }
+                username: { type: type.STRING }
             }, {
                 deletedAt: "deletedAtThisTime",
                 paranoid: true
@@ -2106,10 +2103,10 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         it("restores a previously deleted model", function () {
             const self = this,
                 ParanoidUser = self.sequelize.define("ParanoidUser", {
-                    username: DataTypes.STRING,
-                    secretValue: DataTypes.STRING,
-                    data: DataTypes.STRING,
-                    intVal: { type: DataTypes.INTEGER, defaultValue: 1 }
+                    username: type.STRING,
+                    secretValue: type.STRING,
+                    data: type.STRING,
+                    intVal: { type: type.INTEGER, defaultValue: 1 }
                 }, {
                     paranoid: true
                 }),

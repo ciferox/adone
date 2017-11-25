@@ -1,15 +1,16 @@
 import Support from "../../support";
 
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser("Instance"), () => {
     describe("previous", () => {
         it("should return correct previous value", () => {
             const Model = current.define("Model", {
-                text: DataTypes.STRING,
+                text: type.STRING,
                 textCustom: {
-                    type: DataTypes.STRING,
+                    type: type.STRING,
                     set(val) {
                         this.setDataValue("textCustom", val);
                     },

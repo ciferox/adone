@@ -1,6 +1,7 @@
 import Support from "../support";
 
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 const current = Support.sequelize;
 const SCHEMA_ONE = "schema_one";
 const SCHEMA_TWO = "schema_two";
@@ -12,11 +13,11 @@ describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.support
         before(function () {
             current.options.schema = null;
             this.RestaurantOne = current.define("restaurant", {
-                foo: DataTypes.STRING,
-                bar: DataTypes.STRING
+                foo: type.STRING,
+                bar: type.STRING
             });
             this.LocationOne = current.define("location", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
             this.RestaurantOne.belongsTo(this.LocationOne,
                 {
@@ -25,11 +26,11 @@ describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.support
                 });
             current.options.schema = SCHEMA_TWO;
             this.RestaurantTwo = current.define("restaurant", {
-                foo: DataTypes.STRING,
-                bar: DataTypes.STRING
+                foo: type.STRING,
+                bar: type.STRING
             });
             this.LocationTwo = current.define("location", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
             this.RestaurantTwo.belongsTo(this.LocationTwo,
                 {
@@ -141,17 +142,17 @@ describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.support
     describe("schemas", () => {
         before(function () {
             this.Restaurant = current.define("restaurant", {
-                foo: DataTypes.STRING,
-                bar: DataTypes.STRING
+                foo: type.STRING,
+                bar: type.STRING
             },
                 { tableName: "restaurants" });
             this.Location = current.define("location", {
-                name: DataTypes.STRING
+                name: type.STRING
             },
                 { tableName: "locations" });
             this.Employee = current.define("employee", {
-                first_name: DataTypes.STRING,
-                last_name: DataTypes.STRING
+                first_name: type.STRING,
+                last_name: type.STRING
             },
                 { tableName: "employees" });
             this.EmployeeOne = this.Employee.schema(SCHEMA_ONE);

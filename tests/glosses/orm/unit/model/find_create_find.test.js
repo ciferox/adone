@@ -1,6 +1,6 @@
 import Support from "../../support";
 
-const UniqueConstraintError = adone.orm.UniqueConstraintError;
+const UniqueConstraintError = adone.orm.x.UniqueConstraintError;
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser("Model"), () => {

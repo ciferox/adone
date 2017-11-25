@@ -1,17 +1,18 @@
 import Support from "../../support";
 
 const { vendor: { lodash: _ } } = adone;
-const Sequelize = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("Model"), () => {
     describe("scope", () => {
         describe("update", () => {
             beforeEach(function () {
                 this.ScopeMe = this.sequelize.define("ScopeMe", {
-                    username: Sequelize.STRING,
-                    email: Sequelize.STRING,
-                    access_level: Sequelize.INTEGER,
-                    other_value: Sequelize.INTEGER
+                    username: type.STRING,
+                    email: type.STRING,
+                    access_level: type.INTEGER,
+                    other_value: type.INTEGER
                 }, {
                     defaultScope: {
                         where: {

@@ -1,12 +1,12 @@
 import Support from "../../support";
 
 const dialect = Support.getTestDialect();
-const { promise } = adone;
-const { DataTypes } = adone.orm;
+const { promise, orm } = adone;
+const { type } = orm;
 
 describe("[MYSQL Specific] Connection Manager", { skip: dialect !== "mysql" }, () => {
     it("works correctly after being idle", function () {
-        const User = this.sequelize.define("User", { username: DataTypes.STRING });
+        const User = this.sequelize.define("User", { username: type.STRING });
         const s = spy();
 
         return User
@@ -31,7 +31,7 @@ describe("[MYSQL Specific] Connection Manager", { skip: dialect !== "mysql" }, (
     it("accepts new queries after shutting down a connection", () => {
         // Create a sequelize instance with fast disconnecting connection
         const sequelize = Support.createSequelizeInstance({ pool: { idle: 50, max: 1, evict: 10 } });
-        const User = sequelize.define("User", { username: DataTypes.STRING });
+        const User = sequelize.define("User", { username: type.STRING });
 
         return User
             .sync({ force: true })
@@ -40,7 +40,7 @@ describe("[MYSQL Specific] Connection Manager", { skip: dialect !== "mysql" }, (
             .then(() => {
                 expect(sequelize.connectionManager.pool.size).to.equal(0);
                 //This query will be queued just after the `client.end` is executed and before its callback is called
-                return sequelize.query("SELECT COUNT(*) AS count FROM Users", { type: sequelize.QueryTypes.SELECT });
+                return sequelize.query("SELECT COUNT(*) AS count FROM Users", { type: sequelize.queryType.SELECT });
             })
             .then((count) => {
                 expect(sequelize.connectionManager.pool.size).to.equal(1);
@@ -106,7 +106,7 @@ describe("[MYSQL Specific] Connection Manager", { skip: dialect !== "mysql" }, (
 
     it("-FOUND_ROWS can be suppressed to get back legacy behavior", async () => {
         const sequelize = Support.createSequelizeInstance({ dialectOptions: { flags: "" } });
-        const User = sequelize.define("User", { username: DataTypes.STRING });
+        const User = sequelize.define("User", { username: type.STRING });
 
         await User.sync({ force: true });
         await User.create({ id: 1, username: "jozef" });

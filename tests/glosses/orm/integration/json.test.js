@@ -1,16 +1,16 @@
 import Support from "./support";
 
-const Sequelize = Support.Sequelize;
 const current = Support.sequelize;
-const DataTypes = Sequelize.DataTypes;
+const { orm } = adone;
+const { type } = orm;
 
 describe("model", () => {
     describe("json", { skip: !current.dialect.supports.JSON }, () => {
         beforeEach(function () {
             this.User = this.sequelize.define("User", {
-                username: DataTypes.STRING,
-                emergency_contact: DataTypes.JSON,
-                emergencyContact: DataTypes.JSON
+                username: type.STRING,
+                emergency_contact: type.JSON,
+                emergencyContact: type.JSON
             });
             return this.sequelize.sync({ force: true });
         });
@@ -42,7 +42,7 @@ describe("model", () => {
 
         it("should insert json using a custom field name", function () {
             this.UserFields = this.sequelize.define("UserFields", {
-                emergencyContact: { type: DataTypes.JSON, field: "emergy_contact" }
+                emergencyContact: { type: type.JSON, field: "emergy_contact" }
             });
             return this.UserFields.sync({ force: true }).then(() => {
                 return this.UserFields.create({
@@ -55,7 +55,7 @@ describe("model", () => {
 
         it("should update json using a custom field name", function () {
             this.UserFields = this.sequelize.define("UserFields", {
-                emergencyContact: { type: DataTypes.JSON, field: "emergy_contact" }
+                emergencyContact: { type: type.JSON, field: "emergy_contact" }
             });
             return this.UserFields.sync({ force: true }).then(() => {
                 return this.UserFields.create({
@@ -90,7 +90,7 @@ describe("model", () => {
                     expect(user.emergency_contact).to.eql(emergencyContact);
                     return this.User.find({
                         where: { username: "swen" },
-                        attributes: [[Sequelize.json("emergency_contact.phones[1]"), "firstEmergencyNumber"]]
+                        attributes: [[orm.util.json("emergency_contact.phones[1]"), "firstEmergencyNumber"]]
                     });
                 })
                 .then((user) => {
@@ -106,7 +106,7 @@ describe("model", () => {
                     expect(user.emergency_contact).to.eql(emergencyContact);
                     return this.User.find({
                         where: { username: "swen" },
-                        attributes: [[Sequelize.json("emergency_contact.kate"), "katesNumber"]]
+                        attributes: [[orm.util.json("emergency_contact.kate"), "katesNumber"]]
                     });
                 })
                 .then((user) => {
@@ -122,14 +122,14 @@ describe("model", () => {
                     expect(user.emergency_contact).to.eql(emergencyContact);
                     return this.User.find({
                         where: { username: "swen" },
-                        attributes: [[Sequelize.json("emergency_contact.kate.email"), "katesEmail"]]
+                        attributes: [[orm.util.json("emergency_contact.kate.email"), "katesEmail"]]
                     });
                 }).then((user) => {
                     expect(user.getDataValue("katesEmail")).to.equal("kate@kate.com");
                 }).then(() => {
                     return this.User.find({
                         where: { username: "swen" },
-                        attributes: [[Sequelize.json("emergency_contact.kate.phones[1]"), "katesFirstPhone"]]
+                        attributes: [[orm.util.json("emergency_contact.kate.phones[1]"), "katesFirstPhone"]]
                     });
                 }).then((user) => {
                     expect(parseInt(user.getDataValue("katesFirstPhone"))).to.equal(42);
@@ -142,7 +142,7 @@ describe("model", () => {
                 this.User.create({ username: "anna", emergency_contact: { name: "joe" } })
             ]).then(() => {
                 return this.User.find({
-                    where: Sequelize.json("emergency_contact.name", "kate"),
+                    where: orm.util.json("emergency_contact.name", "kate"),
                     attributes: ["username", "emergency_contact"]
                 });
             }).then((user) => {
@@ -156,7 +156,7 @@ describe("model", () => {
                 this.User.create({ username: "anna", emergency_contact: { name: "joe" } })
             ]).then(() => {
                 return this.User.find({
-                    where: Sequelize.json({ emergency_contact: { name: "kate" } })
+                    where: orm.util.json({ emergency_contact: { name: "kate" } })
                 });
             }).then((user) => {
                 expect(user.emergency_contact.name).to.equal("kate");
@@ -168,7 +168,7 @@ describe("model", () => {
                 this.User.create({ username: "swen", emergency_contact: { name: "kate" } }),
                 this.User.create({ username: "anna", emergency_contact: { name: "joe" } })
             ]).then(() => {
-                return this.User.find({ where: Sequelize.json("emergency_contact.name", "joe") });
+                return this.User.find({ where: orm.util.json("emergency_contact.name", "joe") });
             }).then((user) => {
                 expect(user.emergency_contact.name).to.equal("joe");
             });
@@ -180,8 +180,8 @@ describe("model", () => {
                 this.User.create({ username: "anna", emergencyContact: { name: "joe" } })
             ]).then(() => {
                 return this.User.find({
-                    attributes: [[Sequelize.json("emergencyContact.name"), "contactName"]],
-                    where: Sequelize.json("emergencyContact.name", "joe")
+                    attributes: [[orm.util.json("emergencyContact.name"), "contactName"]],
+                    where: orm.util.json("emergencyContact.name", "joe")
                 });
             }).then((user) => {
                 expect(user.get("contactName")).to.equal("joe");
@@ -193,11 +193,11 @@ describe("model", () => {
                 this.User.create({ username: "swen", emergency_contact: ["kate", "joe"] }),
                 this.User.create({ username: "anna", emergency_contact: [{ name: "joe" }] })
             ]).then(() => {
-                return this.User.find({ where: Sequelize.json("emergency_contact.0", "kate") });
+                return this.User.find({ where: orm.util.json("emergency_contact.0", "kate") });
             }).then((user) => {
                 expect(user.username).to.equal("swen");
             }).then(() => {
-                return this.User.find({ where: Sequelize.json("emergency_contact[0].name", "joe") });
+                return this.User.find({ where: orm.util.json("emergency_contact[0].name", "joe") });
             }).then((user) => {
                 expect(user.username).to.equal("anna");
             });
@@ -214,7 +214,7 @@ describe("model", () => {
             }).then(() => {
                 return this.User.find({ where: { username: "swen" } });
             }).then(() => {
-                return this.User.find({ where: Sequelize.json("emergency_contact.value", text) });
+                return this.User.find({ where: orm.util.json("emergency_contact.value", text) });
             }).then((user) => {
                 expect(user.username).to.equal("swen");
             });
@@ -231,7 +231,7 @@ describe("model", () => {
             }).then(() => {
                 return this.User.find({ where: { username: "swen" } });
             }).then(() => {
-                return this.User.find({ where: Sequelize.json("emergency_contact.value", text) });
+                return this.User.find({ where: orm.util.json("emergency_contact.value", text) });
             }).then((user) => {
                 expect(user.username).to.equal("swen");
             });

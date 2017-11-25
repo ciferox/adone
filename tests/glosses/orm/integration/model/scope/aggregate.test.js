@@ -1,19 +1,20 @@
 import Support from "../../support";
 
-const Sequelize = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("Model"), () => {
     describe("scope", () => {
         describe("aggregate", () => {
             beforeEach(function () {
                 this.Child = this.sequelize.define("Child", {
-                    priority: Sequelize.INTEGER
+                    priority: type.INTEGER
                 });
                 this.ScopeMe = this.sequelize.define("ScopeMe", {
-                    username: Sequelize.STRING,
-                    email: Sequelize.STRING,
-                    access_level: Sequelize.INTEGER,
-                    other_value: Sequelize.INTEGER
+                    username: type.STRING,
+                    email: type.STRING,
+                    access_level: type.INTEGER,
+                    other_value: type.INTEGER
                 }, {
                     defaultScope: {
                         where: {
@@ -91,7 +92,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             it("should be able to use where on include", async function () {
                 expect(await this.ScopeMe.scope("withInclude").aggregate("ScopeMe.id", "count", {
                     plain: true,
-                    dataType: new Sequelize.INTEGER(),
+                    dataType: new type.INTEGER(),
                     includeIgnoreAttributes: false,
                     limit: null,
                     offset: null,

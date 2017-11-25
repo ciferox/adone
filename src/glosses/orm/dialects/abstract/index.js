@@ -1,4 +1,4 @@
-class AbstractDialect {}
+export default class AbstractDialect {}
 
 AbstractDialect.prototype.supports = {
     DEFAULT: true,
@@ -17,7 +17,7 @@ AbstractDialect.prototype.supports = {
 
     /* features specific to autoIncrement values */
     autoIncrement: {
-    /* does the dialect require modification of insert queries when inserting auto increment fields */
+        /* does the dialect require modification of insert queries when inserting auto increment fields */
         identityInsert: false,
 
         /* does the dialect support inserting default/null values for autoincrement fields */
@@ -63,10 +63,6 @@ AbstractDialect.prototype.supports = {
     JSON: false,
     deferrableConstraints: false
 };
-
-module.exports = AbstractDialect;
-module.exports.AbstractDialect = AbstractDialect;
-module.exports.default = AbstractDialect;
 
 adone.lazify({
     QueryGenerator: "./query_generator",

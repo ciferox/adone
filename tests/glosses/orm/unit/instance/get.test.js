@@ -1,6 +1,7 @@
 import Support from "../../support";
 
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser("Instance"), () => {
@@ -9,7 +10,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
             this.getSpy = spy();
             this.User = current.define("User", {
                 name: {
-                    type: DataTypes.STRING,
+                    type: type.STRING,
                     get: this.getSpy
                 }
             });

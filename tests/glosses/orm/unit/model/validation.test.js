@@ -2,7 +2,8 @@ import Support from "../../support";
 import config from "../../config/config";
 
 const { is } = adone;
-const Sequelize = Support.Sequelize;
+const { orm } = adone;
+const { type } = orm;
 const current = Support.sequelize;
 
 
@@ -186,7 +187,7 @@ describe(Support.getTestDialectTeaser("InstanceValidator"), () => {
 
                     const UserFail = this.sequelize.define(`User${config.rand()}`, {
                         name: {
-                            type: Sequelize.STRING,
+                            type: type.STRING,
                             validate: validations
                         }
                     });
@@ -219,7 +220,7 @@ describe(Support.getTestDialectTeaser("InstanceValidator"), () => {
 
                     const UserSuccess = this.sequelize.define(`User${config.rand()}`, {
                         name: {
-                            type: Sequelize.STRING,
+                            type: orm.type.STRING,
                             validate: validations
                         }
                     });
@@ -260,12 +261,12 @@ describe(Support.getTestDialectTeaser("InstanceValidator"), () => {
         });
 
         const User = current.define("user", {
-            age: Sequelize.INTEGER,
-            name: Sequelize.STRING,
-            awesome: Sequelize.BOOLEAN,
-            number: Sequelize.DECIMAL,
-            uid: Sequelize.UUID,
-            date: Sequelize.DATE
+            age: type.INTEGER,
+            name: type.STRING,
+            awesome: type.BOOLEAN,
+            number: type.DECIMAL,
+            uid: type.UUID,
+            date: type.DATE
         });
 
         before(function () {
@@ -421,7 +422,7 @@ describe(Support.getTestDialectTeaser("InstanceValidator"), () => {
 
         const User = current.define("user", {
             age: {
-                type: Sequelize.INTEGER,
+                type: type.INTEGER,
                 validate: {
                     customFn(val, next) {
                         if (val < 0) {
@@ -432,7 +433,7 @@ describe(Support.getTestDialectTeaser("InstanceValidator"), () => {
                     }
                 }
             },
-            name: Sequelize.STRING
+            name: type.STRING
         }, {
             validate: {
                 customFn() {
@@ -518,7 +519,7 @@ describe(Support.getTestDialectTeaser("InstanceValidator"), () => {
     describe("custom validation functions returning promises", () => {
 
         const User = current.define("user", {
-            name: Sequelize.STRING
+            name: type.STRING
         }, {
             validate: {
                 customFn() {

@@ -1,12 +1,13 @@
 import Support from "../support";
 
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("Multiple Level Filters"), () => {
     it("can filter through belongsTo", function () {
-        const User = this.sequelize.define("User", { username: DataTypes.STRING });
-        const Task = this.sequelize.define("Task", { title: DataTypes.STRING });
-        const Project = this.sequelize.define("Project", { title: DataTypes.STRING });
+        const User = this.sequelize.define("User", { username: type.STRING });
+        const Task = this.sequelize.define("Task", { title: type.STRING });
+        const Project = this.sequelize.define("Project", { title: type.STRING });
 
         Project.belongsTo(User);
         User.hasMany(Project);
@@ -63,9 +64,9 @@ describe(Support.getTestDialectTeaser("Multiple Level Filters"), () => {
     });
 
     it("avoids duplicated tables in query", function () {
-        const User = this.sequelize.define("User", { username: DataTypes.STRING });
-        const Task = this.sequelize.define("Task", { title: DataTypes.STRING });
-        const Project = this.sequelize.define("Project", { title: DataTypes.STRING });
+        const User = this.sequelize.define("User", { username: type.STRING });
+        const Task = this.sequelize.define("Task", { title: type.STRING });
+        const Project = this.sequelize.define("Project", { title: type.STRING });
 
         Project.belongsTo(User);
         User.hasMany(Project);
@@ -126,9 +127,9 @@ describe(Support.getTestDialectTeaser("Multiple Level Filters"), () => {
     });
 
     it("can filter through hasMany", function () {
-        const User = this.sequelize.define("User", { username: DataTypes.STRING });
-        const Task = this.sequelize.define("Task", { title: DataTypes.STRING });
-        const Project = this.sequelize.define("Project", { title: DataTypes.STRING });
+        const User = this.sequelize.define("User", { username: type.STRING });
+        const Task = this.sequelize.define("Task", { title: type.STRING });
+        const Project = this.sequelize.define("Project", { title: type.STRING });
 
         Project.belongsTo(User);
         User.hasMany(Project);
@@ -183,8 +184,8 @@ describe(Support.getTestDialectTeaser("Multiple Level Filters"), () => {
     });
 
     it("can filter through hasMany connector", function () {
-        const User = this.sequelize.define("User", { username: DataTypes.STRING });
-        const Project = this.sequelize.define("Project", { title: DataTypes.STRING });
+        const User = this.sequelize.define("User", { username: type.STRING });
+        const Project = this.sequelize.define("Project", { title: type.STRING });
 
         Project.belongsToMany(User, { through: "user_project" });
         User.belongsToMany(Project, { through: "user_project" });

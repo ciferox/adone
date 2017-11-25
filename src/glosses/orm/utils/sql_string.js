@@ -1,9 +1,13 @@
-const { is, vendor: { lodash: _ } } = adone;
+const {
+    is,
+    vendor: { lodash: _ },
+    std: { util },
+    orm
+} = adone;
 
-const dataTypes = require("./data_types");
-const util = require("util");
+const { type } = orm;
 
-const escape = (val, timeZone, dialect, format) => {
+export const escape = (val, timeZone, dialect, format) => {
     let prependN = false;
     if (is.nil(val)) {
         return "NULL";
@@ -27,21 +31,21 @@ const escape = (val, timeZone, dialect, format) => {
     }
 
     if (val instanceof Date) {
-        val = dataTypes[dialect].DATE.prototype.stringify(val, { timezone: timeZone });
+        val = type[dialect].DATE.prototype.stringify(val, { timezone: timeZone });
     }
 
     if (is.buffer(val)) {
-        if (dataTypes[dialect].BLOB) {
-            return dataTypes[dialect].BLOB.prototype.stringify(val);
+        if (type[dialect].BLOB) {
+            return type[dialect].BLOB.prototype.stringify(val);
         }
 
-        return dataTypes.BLOB.prototype.stringify(val);
+        return type.BLOB.prototype.stringify(val);
     }
 
     if (is.array(val)) {
         const partialEscape = _.partial(escape, _, timeZone, dialect, format);
         if (dialect === "postgres" && !format) {
-            return dataTypes.ARRAY.prototype.stringify(val, { escape: partialEscape });
+            return type.ARRAY.prototype.stringify(val, { escape: partialEscape });
         }
         return val.map(partialEscape);
     }
@@ -69,9 +73,8 @@ const escape = (val, timeZone, dialect, format) => {
     }
     return `${(prependN ? "N'" : "'") + val}'`;
 };
-exports.escape = escape;
 
-const format = (sql, values, timeZone, dialect) => {
+export const format = (sql, values, timeZone, dialect) => {
     values = [].concat(values);
 
     if (!is.string(sql)) {
@@ -85,9 +88,8 @@ const format = (sql, values, timeZone, dialect) => {
         return escape(values.shift(), timeZone, dialect, true);
     });
 };
-exports.format = format;
 
-const formatNamedParameters = (sql, values, timeZone, dialect) => {
+export const formatNamedParameters = (sql, values, timeZone, dialect) => {
     return sql.replace(/\:+(?!\d)(\w+)/g, (value, key) => {
         if (dialect === "postgres" && value.slice(0, 2) === "::") {
             return value;
@@ -97,7 +99,5 @@ const formatNamedParameters = (sql, values, timeZone, dialect) => {
             return escape(values[key], timeZone, dialect, true);
         }
         throw new Error(`Named parameter "${value}" has no value in the given object.`);
-
     });
 };
-exports.formatNamedParameters = formatNamedParameters;

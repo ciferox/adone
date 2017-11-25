@@ -1,16 +1,22 @@
-const { vendor: { lodash: _ } } = adone;
-const AbstractDialect = require("../abstract");
-const ConnectionManager = require("./connection_manager");
-const Query = require("./query");
-const QueryGenerator = require("./query_generator");
-const DataTypes = require("../../data_types").mssql;
+import dataTypes from "./data_types";
 
-class MssqlDialect extends AbstractDialect {
+const {
+    vendor: { lodash: _ },
+    orm
+} = adone;
+
+const {
+    dialect: {
+        abstract: AbstractDialect
+    }
+} = adone.private(orm);
+
+export default class MssqlDialect extends AbstractDialect {
     constructor(sequelize) {
         super();
         this.sequelize = sequelize;
-        this.connectionManager = new ConnectionManager(this, sequelize);
-        this.QueryGenerator = _.extend({}, QueryGenerator, {
+        this.connectionManager = new MssqlDialect.ConnectionManager(this, sequelize);
+        this.QueryGenerator = _.extend({}, MssqlDialect.QueryGenerator, {
             options: sequelize.options,
             _dialect: this,
             sequelize
@@ -52,18 +58,19 @@ MssqlDialect.prototype.supports = _.merge(_.cloneDeep(AbstractDialect.prototype.
     tmpTableTrigger: true
 });
 
-ConnectionManager.prototype.defaultVersion = "12.0.2000"; // SQL Server 2014 Express
-MssqlDialect.prototype.Query = Query;
 MssqlDialect.prototype.name = "mssql";
 MssqlDialect.prototype.TICK_CHAR = '"';
 MssqlDialect.prototype.TICK_CHAR_LEFT = "[";
 MssqlDialect.prototype.TICK_CHAR_RIGHT = "]";
-MssqlDialect.prototype.DataTypes = DataTypes;
-
-module.exports = MssqlDialect;
+MssqlDialect.prototype.DataTypes = dataTypes(orm.type);
 
 adone.lazify({
     QueryGenerator: "./query_generator",
     ResourceLock: "./resource_lock",
-    Query: "./query"
+    Query: "./query",
+    QueryInterface: "./query_interface"
 }, MssqlDialect, require);
+
+adone.lazify({
+    Query: () => MssqlDialect.Query
+}, MssqlDialect.prototype);

@@ -1,8 +1,8 @@
 import Support from "../support";
 
 const { promise } = adone;
-const Sequelize = adone.orm;
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 const dialect = Support.getTestDialect();
 
 const sortById = function (a, b) {
@@ -18,38 +18,38 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
                 await self.sequelize.createSchema("account");
                 const AccUser = self.sequelize.define("AccUser", {}, { schema: "account" });
                 const Company = self.sequelize.define("Company", {
-                    name: DataTypes.STRING
+                    name: type.STRING
                 }, { schema: "account" });
                 const Product = self.sequelize.define("Product", {
-                    title: DataTypes.STRING
+                    title: type.STRING
                 }, { schema: "account" });
                 const Tag = self.sequelize.define("Tag", {
-                    name: DataTypes.STRING
+                    name: type.STRING
                 }, { schema: "account" });
                 const Price = self.sequelize.define("Price", {
-                    value: DataTypes.FLOAT
+                    value: type.FLOAT
                 }, { schema: "account" });
                 const Customer = self.sequelize.define("Customer", {
-                    name: DataTypes.STRING
+                    name: type.STRING
                 }, { schema: "account" });
                 const Group = self.sequelize.define("Group", {
-                    name: DataTypes.STRING
+                    name: type.STRING
                 }, { schema: "account" });
                 const GroupMember = self.sequelize.define("GroupMember", {
 
                 }, { schema: "account" });
                 const Rank = self.sequelize.define("Rank", {
-                    name: DataTypes.STRING,
+                    name: type.STRING,
                     canInvite: {
-                        type: DataTypes.INTEGER,
+                        type: type.INTEGER,
                         defaultValue: 0
                     },
                     canRemove: {
-                        type: DataTypes.INTEGER,
+                        type: type.INTEGER,
                         defaultValue: 0
                     },
                     canPost: {
-                        type: DataTypes.INTEGER,
+                        type: type.INTEGER,
                         defaultValue: 0
                     }
                 }, { schema: "account" });
@@ -191,28 +191,28 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
             await self.sequelize.createSchema("account");
             const AccUser = self.sequelize.define("AccUser", {}, { schema: "account" });
             const Product = self.sequelize.define("Product", {
-                title: DataTypes.STRING
+                title: type.STRING
             }, { schema: "account" });
             const Tag = self.sequelize.define("Tag", {
-                name: DataTypes.STRING
+                name: type.STRING
             }, { schema: "account" });
             const Price = self.sequelize.define("Price", {
-                value: DataTypes.FLOAT
+                value: type.FLOAT
             }, { schema: "account" });
             const Group = self.sequelize.define("Group", {
-                name: DataTypes.STRING
+                name: type.STRING
             }, { schema: "account" });
             const GroupMember = self.sequelize.define("GroupMember", {
 
             }, { schema: "account" });
             const Rank = self.sequelize.define("Rank", {
-                name: DataTypes.STRING,
+                name: type.STRING,
                 canInvite: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     defaultValue: 0
                 },
                 canRemove: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     defaultValue: 0
                 }
             }, { schema: "account" });
@@ -370,7 +370,7 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
             for (const model of singles) {
                 const instance = await model.create({}); // eslint-disable-line
                 if (previousInstance) {
-                    await previousInstance[`set${Sequelize.Utils.uppercaseFirst(model.name)}`](instance); // eslint-disable-line
+                    await previousInstance[`set${orm.util.uppercaseFirst(model.name)}`](instance); // eslint-disable-line
                     previousInstance = instance;
                 } else {
                     previousInstance = b = instance;
@@ -409,8 +409,8 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
 
         it("should support ordering with only belongsTo includes", async function () {
             const User = this.sequelize.define("SpecialUser", {}, { schema: "account" });
-            const Item = this.sequelize.define("Item", { test: DataTypes.STRING }, { schema: "account" });
-            const Order = this.sequelize.define("Order", { position: DataTypes.INTEGER }, { schema: "account" });
+            const Item = this.sequelize.define("Item", { test: type.STRING }, { schema: "account" });
+            const Order = this.sequelize.define("Order", { position: type.INTEGER }, { schema: "account" });
 
             User.belongsTo(Item, { as: "itemA", foreignKey: "itemA_id" });
             User.belongsTo(Item, { as: "itemB", foreignKey: "itemB_id" });
@@ -466,13 +466,13 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
 
         it("should include attributes from through models", async function () {
             const Product = this.sequelize.define("Product", {
-                title: DataTypes.STRING
+                title: type.STRING
             }, { schema: "account" });
             const Tag = this.sequelize.define("Tag", {
-                name: DataTypes.STRING
+                name: type.STRING
             }, { schema: "account" });
             const ProductTag = this.sequelize.define("ProductTag", {
-                priority: DataTypes.INTEGER
+                priority: type.INTEGER
             }, { schema: "account" });
 
             Product.belongsToMany(Tag, { through: ProductTag });
@@ -552,7 +552,7 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
         it("should be possible to extend the on clause with a where option on a belongsTo include", async function () {
             const User = this.sequelize.define("User", {}, { schema: "account" });
             const Group = this.sequelize.define("Group", {
-                name: DataTypes.STRING
+                name: type.STRING
             }, { schema: "account" });
 
             User.belongsTo(Group);
@@ -588,7 +588,7 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
         it("should be possible to extend the on clause with a where option on a belongsTo include", async function () {
             const User = this.sequelize.define("User", {}, { schema: "account" });
             const Group = this.sequelize.define("Group", {
-                name: DataTypes.STRING
+                name: type.STRING
             }, { schema: "account" });
 
             User.belongsTo(Group);
@@ -624,10 +624,10 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
         it("should be possible to define a belongsTo include as required with child hasMany with limit", async function () {
             const User = this.sequelize.define("User", {}, { schema: "account" });
             const Group = this.sequelize.define("Group", {
-                name: DataTypes.STRING
+                name: type.STRING
             }, { schema: "account" });
             const Category = this.sequelize.define("Category", {
-                category: DataTypes.STRING
+                category: type.STRING
             }, { schema: "account" });
 
             User.belongsTo(Group);
@@ -675,10 +675,10 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
         it("should be possible to define a belongsTo include as required with child hasMany with limit and aliases", async function () {
             const User = this.sequelize.define("User", {}, { schema: "account" });
             const Group = this.sequelize.define("Group", {
-                name: DataTypes.STRING
+                name: type.STRING
             }, { schema: "account" });
             const Category = this.sequelize.define("Category", {
-                category: DataTypes.STRING
+                category: type.STRING
             }, { schema: "account" });
 
             User.belongsTo(Group, { as: "Team" });
@@ -726,10 +726,10 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
         it("should be possible to define a belongsTo include as required with child hasMany which is not required with limit", async function () {
             const User = this.sequelize.define("User", {}, { schema: "account" });
             const Group = this.sequelize.define("Group", {
-                name: DataTypes.STRING
+                name: type.STRING
             }, { schema: "account" });
             const Category = this.sequelize.define("Category", {
-                category: DataTypes.STRING
+                category: type.STRING
             }, { schema: "account" });
 
             User.belongsTo(Group);
@@ -777,7 +777,7 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
         it("should be possible to extend the on clause with a where option on a hasOne include", async function () {
             const User = this.sequelize.define("User", {}, { schema: "account" });
             const Project = this.sequelize.define("Project", {
-                title: DataTypes.STRING
+                title: type.STRING
             }, { schema: "account" });
 
             User.hasOne(Project, { as: "LeaderOf" });
@@ -812,13 +812,13 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
 
         it("should be possible to extend the on clause with a where option on a hasMany include with a through model", async function () {
             const Product = this.sequelize.define("Product", {
-                title: DataTypes.STRING
+                title: type.STRING
             }, { schema: "account" });
             const Tag = this.sequelize.define("Tag", {
-                name: DataTypes.STRING
+                name: type.STRING
             }, { schema: "account" });
             const ProductTag = this.sequelize.define("ProductTag", {
-                priority: DataTypes.INTEGER
+                priority: type.INTEGER
             }, { schema: "account" });
 
             Product.belongsToMany(Tag, { through: ProductTag });
@@ -862,31 +862,31 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
 
         it("should be possible to extend the on clause with a where option on nested includes", async function () {
             const User = this.sequelize.define("User", {
-                name: DataTypes.STRING
+                name: type.STRING
             }, { schema: "account" });
             const Product = this.sequelize.define("Product", {
-                title: DataTypes.STRING
+                title: type.STRING
             }, { schema: "account" });
             const Tag = this.sequelize.define("Tag", {
-                name: DataTypes.STRING
+                name: type.STRING
             }, { schema: "account" });
             const Price = this.sequelize.define("Price", {
-                value: DataTypes.FLOAT
+                value: type.FLOAT
             }, { schema: "account" });
             const Group = this.sequelize.define("Group", {
-                name: DataTypes.STRING
+                name: type.STRING
             }, { schema: "account" });
             const GroupMember = this.sequelize.define("GroupMember", {
 
             }, { schema: "account" });
             const Rank = this.sequelize.define("Rank", {
-                name: DataTypes.STRING,
+                name: type.STRING,
                 canInvite: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     defaultValue: 0
                 },
                 canRemove: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     defaultValue: 0
                 }
             }, { schema: "account" });
@@ -998,7 +998,7 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
         it("should be possible to use limit and a where with a belongsTo include", async function () {
             const User = this.sequelize.define("User", {}, { schema: "account" });
             const Group = this.sequelize.define("Group", {
-                name: DataTypes.STRING
+                name: type.STRING
             }, { schema: "account" });
 
             User.belongsTo(Group);
@@ -1120,10 +1120,10 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
 
         it("should support including date fields, with the correct timeszone", function () {
             const User = this.sequelize.define("user", {
-                    dateField: Sequelize.DATE
+                    dateField: type.DATE
                 }, { timestamps: false, schema: "account" }),
                 Group = this.sequelize.define("group", {
-                    dateField: Sequelize.DATE
+                    dateField: type.DATE
                 }, { timestamps: false, schema: "account" });
 
             User.belongsToMany(Group, { through: "group_user" });
@@ -1160,40 +1160,40 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
             const self = this;
             const UserModel = this.sequelize.define("User", {
                 Id: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     primaryKey: true
                 },
-                Name: DataTypes.STRING,
-                UserType: DataTypes.INTEGER,
-                Email: DataTypes.STRING,
-                PasswordHash: DataTypes.STRING,
+                Name: type.STRING,
+                UserType: type.INTEGER,
+                Email: type.STRING,
+                PasswordHash: type.STRING,
                 Enabled: {
-                    type: DataTypes.BOOLEAN
+                    type: type.BOOLEAN
                 },
-                CreatedDatetime: DataTypes.DATE,
-                UpdatedDatetime: DataTypes.DATE
+                CreatedDatetime: type.DATE,
+                UpdatedDatetime: type.DATE
             }, {
                 schema: "hero",
                 tableName: "User",
                 timestamps: false
             });
 
-            const UserIdColumn = { type: Sequelize.INTEGER, references: { model: UserModel, key: "Id" } };
+            const UserIdColumn = { type: type.INTEGER, references: { model: UserModel, key: "Id" } };
 
             const ResumeModel = this.sequelize.define("Resume", {
                 Id: {
-                    type: Sequelize.INTEGER,
+                    type: type.INTEGER,
                     primaryKey: true
                 },
                 UserId: UserIdColumn,
-                Name: Sequelize.STRING,
-                Contact: Sequelize.STRING,
-                School: Sequelize.STRING,
-                WorkingAge: Sequelize.STRING,
-                Description: Sequelize.STRING,
-                PostType: Sequelize.INTEGER,
-                RefreshDatetime: Sequelize.DATE,
-                CreatedDatetime: Sequelize.DATE
+                Name: type.STRING,
+                Contact: type.STRING,
+                School: type.STRING,
+                WorkingAge: type.STRING,
+                Description: type.STRING,
+                PostType: type.INTEGER,
+                RefreshDatetime: type.DATE,
+                CreatedDatetime: type.DATE
             }, {
                 schema: "hero",
                 tableName: "resume",

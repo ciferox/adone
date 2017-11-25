@@ -1,16 +1,13 @@
 import Support from "../../support";
 
 const current = Support.sequelize;
-const {
-    DataTypes,
-    Utils,
-    errors
-} = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("Model"), () => {
     describe("warnOnInvalidOptions", function () {
         beforeEach(() => {
-            this.loggerSpy = spy(Utils, "warn");
+            this.loggerSpy = spy(orm.util, "warn");
         });
 
         afterEach(() => {
@@ -39,7 +36,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
     describe("method findAll", function () {
         const Model = current.define("model", {
-            name: DataTypes.STRING
+            name: type.STRING
         }, { timestamps: false });
 
         beforeEach(() => {

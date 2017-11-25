@@ -1,7 +1,6 @@
 import Support from "../support";
 
-const Sequelize = adone.orm;
-const { DataTypes } = Sequelize;
+const { type } = adone.orm;
 
 describe(Support.getTestDialectTeaser("associations"), () => {
     describe("scope", () => {
@@ -10,11 +9,11 @@ describe(Support.getTestDialectTeaser("associations"), () => {
             this.Image = this.sequelize.define("image", {});
             this.Question = this.sequelize.define("question", {});
             this.Comment = this.sequelize.define("comment", {
-                title: Sequelize.STRING,
-                commentable: Sequelize.STRING,
-                commentable_id: Sequelize.INTEGER,
+                title: type.STRING,
+                commentable: type.STRING,
+                commentable_id: type.INTEGER,
                 isMain: {
-                    type: Sequelize.BOOLEAN,
+                    type: type.BOOLEAN,
                     defaultValue: false
                 }
             });
@@ -249,7 +248,7 @@ describe(Support.getTestDialectTeaser("associations"), () => {
                     beforeEach(function () {
                         this.Post = this.sequelize.define("post", {});
                         this.Tag = this.sequelize.define("tag", {
-                            type: DataTypes.STRING
+                            type: type.STRING
                         });
                         this.PostTag = this.sequelize.define("post_tag");
 
@@ -356,26 +355,26 @@ describe(Support.getTestDialectTeaser("associations"), () => {
 
                         this.ItemTag = this.sequelize.define("item_tag", {
                             id: {
-                                type: DataTypes.INTEGER,
+                                type: type.INTEGER,
                                 primaryKey: true,
                                 autoIncrement: true
                             },
                             tag_id: {
-                                type: DataTypes.INTEGER,
+                                type: type.INTEGER,
                                 unique: "item_tag_taggable"
                             },
                             taggable: {
-                                type: DataTypes.STRING,
+                                type: type.STRING,
                                 unique: "item_tag_taggable"
                             },
                             taggable_id: {
-                                type: DataTypes.INTEGER,
+                                type: type.INTEGER,
                                 unique: "item_tag_taggable",
                                 references: null
                             }
                         });
                         this.Tag = this.sequelize.define("tag", {
-                            name: DataTypes.STRING
+                            name: type.STRING
                         });
 
                         this.Post.belongsToMany(this.Tag, {

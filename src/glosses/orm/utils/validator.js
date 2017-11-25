@@ -1,4 +1,8 @@
-const { is, vendor: { lodash: _ } } = adone;
+const {
+    is,
+    vendor: { lodash: _ }
+} = adone;
+
 const validator = {};
 
 // TODO: move smth to adone.is ?

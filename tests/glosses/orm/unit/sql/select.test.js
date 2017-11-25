@@ -1,9 +1,8 @@
 import Support from "../../support";
 
-const {
-    DataTypes,
-    Model
-} = adone.orm;
+const { orm } = adone;
+const { type } = orm;
+const { Model } = adone.private(orm);
 
 const util = require("util");
 const expectsql = Support.expectsql;
@@ -77,23 +76,23 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
         (function () {
             const User = Support.sequelize.define("user", {
                 id: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     primaryKey: true,
                     autoIncrement: true,
                     field: "id_user"
                 }
             });
             const Project = Support.sequelize.define("project", {
-                title: DataTypes.STRING
+                title: type.STRING
             });
 
             const ProjectUser = Support.sequelize.define("project_user", {
                 userId: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     field: "user_id"
                 },
                 projectId: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     field: "project_id"
                 }
             }, { timestamps: false });
@@ -194,18 +193,18 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
         (function () {
             const User = Support.sequelize.define("user", {
                 id: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     primaryKey: true,
                     autoIncrement: true,
                     field: "id_user"
                 },
-                email: DataTypes.STRING,
+                email: type.STRING,
                 firstName: {
-                    type: DataTypes.STRING,
+                    type: type.STRING,
                     field: "first_name"
                 },
                 lastName: {
-                    type: DataTypes.STRING,
+                    type: type.STRING,
                     field: "last_name"
                 }
             },
@@ -213,9 +212,9 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                 tableName: "users"
             });
             const Post = Support.sequelize.define("Post", {
-                title: DataTypes.STRING,
+                title: type.STRING,
                 userId: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     field: "user_id"
                 }
             },
@@ -226,9 +225,9 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
             User.Posts = User.hasMany(Post, { foreignKey: "userId", as: "POSTS" });
 
             const Comment = Support.sequelize.define("Comment", {
-                title: DataTypes.STRING,
+                title: type.STRING,
                 postId: {
-                    type: DataTypes.INTEGER,
+                    type: type.INTEGER,
                     field: "post_id"
                 }
             },
@@ -343,14 +342,14 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
 
         it("include (left outer join)", () => {
             const User = Support.sequelize.define("User", {
-                name: DataTypes.STRING,
-                age: DataTypes.INTEGER
+                name: type.STRING,
+                age: type.INTEGER
             },
             {
                 freezeTableName: true
             });
             const Post = Support.sequelize.define("Post", {
-                title: DataTypes.STRING
+                title: type.STRING
             },
             {
                 freezeTableName: true
@@ -375,14 +374,14 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
 
         it("include (subQuery alias)", () => {
             const User = Support.sequelize.define("User", {
-                name: DataTypes.STRING,
-                age: DataTypes.INTEGER
+                name: type.STRING,
+                age: type.INTEGER
             },
             {
                 freezeTableName: true
             });
             const Post = Support.sequelize.define("Post", {
-                title: DataTypes.STRING
+                title: type.STRING
             },
             {
                 freezeTableName: true
@@ -418,9 +417,9 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
 
         it("properly stringify IN values as per field definition", () => {
             const User = Support.sequelize.define("User", {
-                name: DataTypes.STRING,
-                age: DataTypes.INTEGER,
-                data: DataTypes.BLOB
+                name: type.STRING,
+                age: type.INTEGER,
+                data: type.BLOB
             }, {
                 freezeTableName: true
             });
@@ -466,14 +465,14 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
 
         it("include (left outer join)", () => {
             const User = Support.sequelize.define("User", {
-                name: DataTypes.STRING,
-                age: DataTypes.INTEGER
+                name: type.STRING,
+                age: type.INTEGER
             },
             {
                 freezeTableName: true
             });
             const Post = Support.sequelize.define("Post", {
-                title: DataTypes.STRING
+                title: type.STRING
             },
             {
                 freezeTableName: true
@@ -500,20 +499,20 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
 
         it("nested include (left outer join)", () => {
             const User = Support.sequelize.define("User", {
-                name: DataTypes.STRING,
-                age: DataTypes.INTEGER
+                name: type.STRING,
+                age: type.INTEGER
             },
             {
                 freezeTableName: true
             });
             const Post = Support.sequelize.define("Post", {
-                title: DataTypes.STRING
+                title: type.STRING
             },
             {
                 freezeTableName: true
             });
             const Comment = Support.sequelize.define("Comment", {
-                title: DataTypes.STRING
+                title: type.STRING
             },
             {
                 freezeTableName: true

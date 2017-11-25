@@ -4,20 +4,21 @@ import config from "../../config/config";
 const { promise } = adone;
 const { vendor: { lodash: _ } } = adone;
 const Sequelize = adone.orm;
-const { DataTypes } = Sequelize;
+const { orm } = adone;
+const { type } = orm;
 const dialect = Support.getTestDialect();
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser("Model"), () => {
     beforeEach(function () {
         this.User = this.sequelize.define("User", {
-            username: DataTypes.STRING,
-            secretValue: DataTypes.STRING,
-            data: DataTypes.STRING,
-            intVal: DataTypes.INTEGER,
-            theDate: DataTypes.DATE,
-            aBool: DataTypes.BOOLEAN,
-            binary: new DataTypes.STRING(16, true)
+            username: type.STRING,
+            secretValue: type.STRING,
+            data: type.STRING,
+            intVal: type.INTEGER,
+            theDate: type.DATE,
+            aBool: type.BOOLEAN,
+            binary: new type.STRING(16, true)
         });
 
         return this.User.sync({ force: true });
@@ -27,7 +28,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
         if (current.dialect.supports.transactions) {
             it("supports transactions", async function () {
                 const sequelize = await Support.prepareTransactionTest(this.sequelize);
-                const User = sequelize.define("User", { username: Sequelize.STRING });
+                const User = sequelize.define("User", { username: type.STRING });
 
                 await User.sync({ force: true });
                 const t = await sequelize.transaction();
@@ -191,7 +192,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             it("should be able to handle false/true values through associations as well...", function () {
                 const User = this.User,
                     Passports = this.sequelize.define("Passports", {
-                        isActive: Sequelize.BOOLEAN
+                        isActive: type.BOOLEAN
                     });
 
                 User.hasMany(Passports);
@@ -237,7 +238,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 const User = this.User;
                 const Binary = this.sequelize.define("Binary", {
                     id: {
-                        type: new DataTypes.STRING(16, true),
+                        type: new type.STRING(16, true),
                         primaryKey: true
                     }
                 });
@@ -470,8 +471,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             describe("belongsTo", () => {
                 beforeEach(function () {
                     const self = this;
-                    self.Task = self.sequelize.define("TaskBelongsTo", { title: Sequelize.STRING });
-                    self.Worker = self.sequelize.define("Worker", { name: Sequelize.STRING });
+                    self.Task = self.sequelize.define("TaskBelongsTo", { title: type.STRING });
+                    self.Worker = self.sequelize.define("Worker", { name: type.STRING });
                     self.Task.belongsTo(self.Worker);
 
                     return self.Worker.sync({ force: true }).then(() => {
@@ -529,8 +530,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             describe("hasOne", () => {
                 beforeEach(function () {
                     const self = this;
-                    self.Task = self.sequelize.define("TaskHasOne", { title: Sequelize.STRING });
-                    self.Worker = self.sequelize.define("Worker", { name: Sequelize.STRING });
+                    self.Task = self.sequelize.define("TaskHasOne", { title: type.STRING });
+                    self.Worker = self.sequelize.define("Worker", { name: type.STRING });
                     self.Worker.hasOne(self.Task);
                     return self.Worker.sync({ force: true }).then(() => {
                         return self.Task.sync({ force: true }).then(() => {
@@ -567,8 +568,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             describe("hasOne with alias", () => {
                 beforeEach(function () {
                     const self = this;
-                    self.Task = self.sequelize.define("Task", { title: Sequelize.STRING });
-                    self.Worker = self.sequelize.define("Worker", { name: Sequelize.STRING });
+                    self.Task = self.sequelize.define("Task", { title: type.STRING });
+                    self.Worker = self.sequelize.define("Worker", { name: type.STRING });
                     self.Worker.hasOne(self.Task, { as: "ToDo" });
                     return self.Worker.sync({ force: true }).then(() => {
                         return self.Task.sync({ force: true }).then(() => {
@@ -623,8 +624,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             describe("hasMany", () => {
                 beforeEach(function () {
                     const self = this;
-                    self.Task = self.sequelize.define("task", { title: Sequelize.STRING });
-                    self.Worker = self.sequelize.define("worker", { name: Sequelize.STRING });
+                    self.Task = self.sequelize.define("task", { title: type.STRING });
+                    self.Worker = self.sequelize.define("worker", { name: type.STRING });
                     self.Worker.hasMany(self.Task);
                     return self.Worker.sync({ force: true }).then(() => {
                         return self.Task.sync({ force: true }).then(() => {
@@ -661,8 +662,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             describe("hasMany with alias", () => {
                 beforeEach(function () {
                     const self = this;
-                    self.Task = self.sequelize.define("Task", { title: Sequelize.STRING });
-                    self.Worker = self.sequelize.define("Worker", { name: Sequelize.STRING });
+                    self.Task = self.sequelize.define("Task", { title: type.STRING });
+                    self.Worker = self.sequelize.define("Worker", { name: type.STRING });
                     self.Worker.hasMany(self.Task, { as: "ToDos" });
                     return self.Worker.sync({ force: true }).then(() => {
                         return self.Task.sync({ force: true }).then(() => {
@@ -755,10 +756,10 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 beforeEach(function () {
                     const self = this;
 
-                    self.Continent = this.sequelize.define("continent", { name: Sequelize.STRING });
-                    self.Country = this.sequelize.define("country", { name: Sequelize.STRING });
-                    self.Industry = this.sequelize.define("industry", { name: Sequelize.STRING });
-                    self.Person = this.sequelize.define("person", { name: Sequelize.STRING, lastName: Sequelize.STRING });
+                    self.Continent = this.sequelize.define("continent", { name: type.STRING });
+                    self.Country = this.sequelize.define("country", { name: type.STRING });
+                    self.Industry = this.sequelize.define("industry", { name: type.STRING });
+                    self.Person = this.sequelize.define("person", { name: type.STRING, lastName: type.STRING });
 
                     self.Continent.hasMany(self.Country);
                     self.Country.belongsTo(self.Continent);
@@ -853,15 +854,15 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
                 beforeEach(async function () {
                     this.Animal = this.sequelize.define("Animal", {
-                        name: Sequelize.STRING,
-                        age: Sequelize.INTEGER
+                        name: type.STRING,
+                        age: type.INTEGER
                     });
                     this.Kingdom = this.sequelize.define("Kingdom", {
-                        name: Sequelize.STRING
+                        name: type.STRING
                     });
                     this.AnimalKingdom = this.sequelize.define("AnimalKingdom", {
-                        relation: Sequelize.STRING,
-                        mutation: Sequelize.BOOLEAN
+                        relation: type.STRING,
+                        mutation: type.BOOLEAN
                     });
 
                     this.Kingdom.belongsToMany(this.Animal, { through: this.AnimalKingdom });
@@ -946,9 +947,9 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 beforeEach(function () {
                     const self = this;
 
-                    self.Continent = this.sequelize.define("continent", { name: Sequelize.STRING });
-                    self.Country = this.sequelize.define("country", { name: Sequelize.STRING });
-                    self.Person = this.sequelize.define("person", { name: Sequelize.STRING, lastName: Sequelize.STRING });
+                    self.Continent = this.sequelize.define("continent", { name: type.STRING });
+                    self.Country = this.sequelize.define("country", { name: type.STRING });
+                    self.Person = this.sequelize.define("person", { name: type.STRING, lastName: type.STRING });
 
                     self.Continent.hasMany(self.Country);
                     self.Country.belongsTo(self.Continent);
@@ -1117,9 +1118,9 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 beforeEach(function () {
                     const self = this;
 
-                    self.Country = this.sequelize.define("country", { name: Sequelize.STRING });
-                    self.Industry = this.sequelize.define("industry", { name: Sequelize.STRING });
-                    self.IndustryCountry = this.sequelize.define("IndustryCountry", { numYears: Sequelize.INTEGER });
+                    self.Country = this.sequelize.define("country", { name: type.STRING });
+                    self.Industry = this.sequelize.define("industry", { name: type.STRING });
+                    self.IndustryCountry = this.sequelize.define("IndustryCountry", { numYears: type.INTEGER });
 
                     self.Country.belongsToMany(self.Industry, { through: self.IndustryCountry });
                     self.Industry.belongsToMany(self.Country, { through: self.IndustryCountry });
@@ -1261,8 +1262,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
             it("should allow us to find IDs using capital letters", function () {
                 const User = this.sequelize.define(`User${config.rand()}`, {
-                    ID: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
-                    Login: { type: Sequelize.STRING }
+                    ID: { type: type.INTEGER, primaryKey: true, autoIncrement: true },
+                    Login: { type: type.STRING }
                 });
 
                 return User.sync({ force: true }).then(() => {
@@ -1278,7 +1279,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             it("should be possible to order by sequelize.col()", function () {
                 const self = this;
                 const Company = this.sequelize.define("Company", {
-                    name: Sequelize.STRING
+                    name: type.STRING
                 });
 
                 return Company.sync().then(() => {
@@ -1291,7 +1292,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             it("should pull in dependent fields for a VIRTUAL", function () {
                 const User = this.sequelize.define("User", {
                     active: {
-                        type: new Sequelize.VIRTUAL(Sequelize.BOOLEAN, ["createdAt"]),
+                        type: new type.VIRTUAL(type.BOOLEAN, ["createdAt"]),
                         get() {
                             return this.get("createdAt") > Date.now() - 7 * 24 * 60 * 60 * 1000;
                         }
@@ -1331,7 +1332,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
         if (current.dialect.supports.transactions) {
             it("supports transactions", async function () {
                 const sequelize = await Support.prepareTransactionTest(this.sequelize);
-                const User = sequelize.define("User", { username: Sequelize.STRING });
+                const User = sequelize.define("User", { username: type.STRING });
 
                 await User.sync({ force: true });
                 const t = await sequelize.transaction();
@@ -1386,10 +1387,10 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
         it("handles offset with includes", function () {
             const Election = this.sequelize.define("Election", {
-                name: Sequelize.STRING
+                name: type.STRING
             });
             const Citizen = this.sequelize.define("Citizen", {
-                name: Sequelize.STRING
+                name: type.STRING
             });
 
             // Associations
@@ -1452,7 +1453,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
         if (current.dialect.supports.transactions) {
             it("supports transactions", async function () {
                 const sequelize = await Support.prepareTransactionTest(this.sequelize);
-                const User = sequelize.define("User", { username: Sequelize.STRING });
+                const User = sequelize.define("User", { username: type.STRING });
                 await User.sync({ force: true });
                 const t = await sequelize.transaction();
                 await User.create({ username: "foo" }, { transaction: t });
@@ -1485,7 +1486,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
     describe("rejectOnEmpty mode", () => {
         it("works from model options", async () => {
             const Model = current.define("Test", {
-                username: new Sequelize.STRING(100)
+                username: new type.STRING(100)
             }, {
                 rejectOnEmpty: true
             });
@@ -1497,15 +1498,15 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         username: "some-username-that-is-not-used-anywhere"
                     }
                 });
-            }, Sequelize.EmptyResultError);
+            }, orm.x.EmptyResultError);
         });
 
         it("throws custom error with initialized", async () => {
 
             const Model = current.define("Test", {
-                username: new Sequelize.STRING(100)
+                username: new type.STRING(100)
             }, {
-                rejectOnEmpty: new Sequelize.ConnectionError("Some Error") //using custom error instance
+                rejectOnEmpty: new orm.x.ConnectionError("Some Error") //using custom error instance
             });
 
             await Model.sync({ force: true });
@@ -1515,15 +1516,15 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         username: "some-username-that-is-not-used-anywhere-for-sure-this-time"
                     }
                 });
-            }, Sequelize.ConnectionError);
+            }, orm.x.ConnectionError);
         });
 
         it("throws custom error with instance", async () => {
 
             const Model = current.define("Test", {
-                username: new Sequelize.STRING(100)
+                username: new type.STRING(100)
             }, {
-                rejectOnEmpty: Sequelize.ConnectionError //using custom error instance
+                rejectOnEmpty: orm.x.ConnectionError //using custom error instance
             });
 
             await Model.sync({ force: true });
@@ -1533,7 +1534,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         username: "some-username-that-is-not-used-anywhere-for-sure-this-time"
                     }
                 });
-            }, Sequelize.ConnectionError);
+            }, orm.x.ConnectionError);
         });
     });
 });

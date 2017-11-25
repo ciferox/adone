@@ -1,19 +1,32 @@
-const { is, vendor: { lodash: _ } } = adone;
-const Utils = require("../../utils");
-const AbstractQueryGenerator = require("../abstract/query_generator");
-const util = require("util");
-const Op = require("../../operators");
+const {
+    is,
+    vendor: { lodash: _ },
+    orm
+} = adone;
+
+const {
+    util,
+    operator
+} = orm;
+
+const {
+    dialect: {
+        abstract: {
+            QueryGenerator: AbstractQueryGenerator
+        }
+    }
+} = adone.private(orm);
 
 // private methods
-const wrapSingleQuote = (identifier) => Utils.addTicks(identifier, "'");
+const wrapSingleQuote = (identifier) => util.addTicks(identifier, "'");
 
 const QueryGenerator = {
     __proto__: AbstractQueryGenerator,
     dialect: "mysql",
 
     OperatorMap: Object.assign({}, AbstractQueryGenerator.OperatorMap, {
-        [Op.regexp]: "REGEXP",
-        [Op.notRegexp]: "NOT REGEXP"
+        [operator.regexp]: "REGEXP",
+        [operator.notRegexp]: "NOT REGEXP"
     }),
 
     createSchema() {
@@ -161,7 +174,7 @@ const QueryGenerator = {
     },
 
     handleSequelizeMethod(smth, tableName, factory, options, prepend) {
-        if (smth instanceof Utils.Json) {
+        if (smth instanceof util.Json) {
             // Parse nested object
             if (smth.conditions) {
                 const conditions = _.map(this.parseConditionObject(smth.conditions), (condition) =>
@@ -200,12 +213,12 @@ const QueryGenerator = {
                 }
 
                 if (smth.value) {
-                    str += util.format(" = %s", this.escape(smth.value));
+                    str += ` = ${this.escape(smth.value)}`;
                 }
 
                 return str;
             }
-        } else if (smth instanceof Utils.Cast) {
+        } else if (smth instanceof util.Cast) {
             if (/timestamp/i.test(smth.type)) {
                 smth.type = "datetime";
             } else if (smth.json && /boolean/i.test(smth.type)) {
@@ -300,7 +313,7 @@ const QueryGenerator = {
         let indexName = indexNameOrAttributes;
 
         if (!is.string(indexName)) {
-            indexName = Utils.underscore(`${tableName}_${indexNameOrAttributes.join("_")}`);
+            indexName = util.underscore(`${tableName}_${indexNameOrAttributes.join("_")}`);
         }
 
         return `DROP INDEX ${this.quoteIdentifier(indexName)} ON ${this.quoteTable(tableName)}`;
@@ -324,7 +337,7 @@ const QueryGenerator = {
         }
 
         // Blobs/texts cannot have a defaultValue
-        if (attribute.type !== "TEXT" && attribute.type._binary !== true && Utils.defaultValueSchemable(attribute.defaultValue)) {
+        if (attribute.type !== "TEXT" && attribute.type._binary !== true && util.defaultValueSchemable(attribute.defaultValue)) {
             template += ` DEFAULT ${this.escape(attribute.defaultValue)}`;
         }
 
@@ -387,7 +400,7 @@ const QueryGenerator = {
         if (identifier === "*") {
             return identifier;
         }
-        return Utils.addTicks(Utils.removeTicks(identifier, "`"), "`");
+        return util.addTicks(util.removeTicks(identifier, "`"), "`");
     },
 
     /**
@@ -522,5 +535,4 @@ const QueryGenerator = {
     }
 };
 
-
-module.exports = QueryGenerator;
+export default QueryGenerator;

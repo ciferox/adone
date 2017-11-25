@@ -1,6 +1,7 @@
 import Support from "../support";
 
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 const SEARCH_PATH_ONE = "schema_one,public";
 const SEARCH_PATH_TWO = "schema_two,public";
@@ -17,17 +18,17 @@ describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.support
     describe("SEARCH PATH", () => {
         before(function () {
             this.Restaurant = current.define("restaurant", {
-                foo: DataTypes.STRING,
-                bar: DataTypes.STRING
+                foo: type.STRING,
+                bar: type.STRING
             },
             { tableName: "restaurants" });
             this.Location = current.define("location", {
-                name: DataTypes.STRING
+                name: type.STRING
             },
             { tableName: "locations" });
             this.Employee = current.define("employee", {
-                first_name: DataTypes.STRING,
-                last_name: DataTypes.STRING
+                first_name: type.STRING,
+                last_name: type.STRING
             },
             { tableName: "employees" });
             this.Restaurant.belongsTo(this.Location,

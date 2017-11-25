@@ -2,9 +2,8 @@ import Support from "./support";
 
 const dialect = Support.getTestDialect();
 const { promise } = adone;
-const {
-    Transaction
-} = adone.orm;
+const { orm } = adone;
+const { type, Transaction } = orm;
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser("Transaction"), { skip: !current.dialect.supports.transactions }, () => {
@@ -80,7 +79,7 @@ describe(Support.getTestDialectTeaser("Transaction"), { skip: !current.dialect.s
         it("do not rollback if already committed", { skip: dialect !== "postgres" }, async function () {
             const SumSumSum = this.sequelize.define("transaction", {
                 value: {
-                    type: Support.Sequelize.DECIMAL(10, 3),
+                    type: type.DECIMAL(10, 3),
                     field: "value"
                 }
             });
@@ -219,8 +218,8 @@ describe(Support.getTestDialectTeaser("Transaction"), { skip: !current.dialect.s
         it("provides persistent transactions", () => {
             const sequelize = new Support.Sequelize("database", "username", "password", { dialect: "sqlite" });
             const User = sequelize.define("user", {
-                username: Support.Sequelize.STRING,
-                awesome: Support.Sequelize.BOOLEAN
+                username: type.STRING,
+                awesome: type.BOOLEAN
             });
             let persistentTransaction;
 
@@ -268,7 +267,7 @@ describe(Support.getTestDialectTeaser("Transaction"), { skip: !current.dialect.s
     if (dialect === "sqlite") {
         it("automatically retries on SQLITE_BUSY failure", async function () {
             const sequelize = await Support.prepareTransactionTest(this.sequelize);
-            const User = sequelize.define("User", { username: Support.Sequelize.STRING });
+            const User = sequelize.define("User", { username: type.STRING });
             await User.sync({ force: true });
             const newTransactionFunc = async () => {
                 const t = await sequelize.transaction({ type: Support.Sequelize.Transaction.TYPES.EXCLUSIVE });
@@ -283,7 +282,7 @@ describe(Support.getTestDialectTeaser("Transaction"), { skip: !current.dialect.s
 
         it("fails with SQLITE_BUSY when retry.match is changed", async function () {
             const sequelize = await Support.prepareTransactionTest(this.sequelize);
-            const User = sequelize.define("User", { id: { type: Support.Sequelize.INTEGER, primaryKey: true }, username: Support.Sequelize.STRING });
+            const User = sequelize.define("User", { id: { type: type.INTEGER, primaryKey: true }, username: type.STRING });
             await User.sync({ force: true });
             const newTransactionFunc = async () => {
                 const t = await sequelize.transaction({ type: Support.Sequelize.Transaction.TYPES.EXCLUSIVE, retry: { match: ["NO_MATCH"] } });
@@ -302,8 +301,8 @@ describe(Support.getTestDialectTeaser("Transaction"), { skip: !current.dialect.s
     describe("row locking", { skip: !current.dialect.supports.lock }, () => {
         it("supports for update", function () {
             const User = this.sequelize.define("user", {
-                username: Support.Sequelize.STRING,
-                awesome: Support.Sequelize.BOOLEAN
+                username: type.STRING,
+                awesome: type.BOOLEAN
             });
             const self = this;
             const t1Spy = spy();
@@ -355,8 +354,8 @@ describe(Support.getTestDialectTeaser("Transaction"), { skip: !current.dialect.s
         });
 
         it("fail locking with outer joins", async function () {
-            const User = this.sequelize.define("User", { username: Support.Sequelize.STRING });
-            const Task = this.sequelize.define("Task", { title: Support.Sequelize.STRING, active: Support.Sequelize.BOOLEAN });
+            const User = this.sequelize.define("User", { username: type.STRING });
+            const Task = this.sequelize.define("Task", { title: type.STRING, active: type.BOOLEAN });
             const self = this;
 
             User.belongsToMany(Task, { through: "UserTasks" });
@@ -396,8 +395,8 @@ describe(Support.getTestDialectTeaser("Transaction"), { skip: !current.dialect.s
 
         if (current.dialect.supports.lockOf) {
             it("supports for update of table", async function () {
-                const User = this.sequelize.define("User", { username: Support.Sequelize.STRING }, { tableName: "Person" });
-                const Task = this.sequelize.define("Task", { title: Support.Sequelize.STRING, active: Support.Sequelize.BOOLEAN });
+                const User = this.sequelize.define("User", { username: type.STRING }, { tableName: "Person" });
+                const Task = this.sequelize.define("Task", { title: type.STRING, active: type.BOOLEAN });
                 const self = this;
 
                 User.belongsToMany(Task, { through: "UserTasks" });
@@ -441,8 +440,8 @@ describe(Support.getTestDialectTeaser("Transaction"), { skip: !current.dialect.s
         if (current.dialect.supports.lockKey) {
             it("supports for key share", function () {
                 const User = this.sequelize.define("user", {
-                    username: Support.Sequelize.STRING,
-                    awesome: Support.Sequelize.BOOLEAN
+                    username: type.STRING,
+                    awesome: type.BOOLEAN
                 });
                 const self = this;
                 const t1Spy = spy();
@@ -492,8 +491,8 @@ describe(Support.getTestDialectTeaser("Transaction"), { skip: !current.dialect.s
 
         it("supports for share", function () {
             const User = this.sequelize.define("user", {
-                username: Support.Sequelize.STRING,
-                awesome: Support.Sequelize.BOOLEAN
+                username: type.STRING,
+                awesome: type.BOOLEAN
             });
             const self = this;
             const t1Spy = spy();

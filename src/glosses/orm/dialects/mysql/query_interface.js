@@ -6,21 +6,25 @@
  @private
  */
 
-const { vendor: { lodash: _ } } = adone;
-const UnknownConstraintError = require("../../errors").UnknownConstraintError;
+const {
+    vendor: { lodash: _ },
+    orm
+} = adone;
+
+const {
+    x: {
+        UnknownConstraintError
+    }
+} = orm;
 
 /**
   A wrapper that fixes MySQL's inability to cleanly remove columns from existing tables if they have a foreign key constraint.
 
-  @method removeColumn
-  @for    QueryInterface
-
   @param  {String} tableName     The name of the table.
   @param  {String} columnName    The name of the attribute that we want to remove.
   @param  {Object} options
- @private
  */
-const removeColumn = async function (tableName, columnName, options) {
+export const removeColumn = async function (tableName, columnName, options) {
     options = options || {};
 
     const [results] = await this.sequelize.query(
@@ -42,10 +46,10 @@ const removeColumn = async function (tableName, columnName, options) {
 };
 
 
-const removeConstraint = async function (tableName, constraintName, options) {
+export const removeConstraint = async function (tableName, constraintName, options) {
     const sql = this.QueryGenerator.showConstraintsQuery(tableName, constraintName);
 
-    const [constraint] = await this.sequelize.query(sql, Object.assign({}, options, { type: this.sequelize.QueryTypes.SHOWCONSTRAINTS }));
+    const [constraint] = await this.sequelize.query(sql, Object.assign({}, options, { type: this.sequelize.queryType.SHOWCONSTRAINTS }));
 
     let query;
     if (constraint && constraint.constraintType) {
@@ -60,6 +64,3 @@ const removeConstraint = async function (tableName, constraintName, options) {
 
     return this.sequelize.query(query, options);
 };
-
-exports.removeConstraint = removeConstraint;
-exports.removeColumn = removeColumn;

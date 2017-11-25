@@ -1,7 +1,8 @@
 import Support from "../../support";
 
 
-const DataTypes = adone.orm.DataTypes;
+const { orm } = adone;
+const { type } = orm;
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser("Model"), () => {
@@ -10,7 +11,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             describe("Sequelize.literal()", () => {
                 beforeEach(async function () {
                     this.User = this.sequelize.define("User", {
-                        email: DataTypes.STRING
+                        email: type.STRING
                     });
 
                     await this.User.sync({ force: true });
@@ -60,7 +61,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             describe("injections", () => {
                 beforeEach(function () {
                     this.User = this.sequelize.define("user", {
-                        name: DataTypes.STRING
+                        name: type.STRING
                     });
                     this.Group = this.sequelize.define("group", {
 

@@ -1,26 +1,32 @@
-const { is, vendor: { lodash: _ } } = adone;
-const DataTypes = require("./data_types");
-const SqlString = require("./sql_string");
-const parameterValidator = require("./utils/parameter_validator");
-const Logger = require("./utils/logger");
-const Promise = require("./promise");
-const operators = require("./operators");
-const operatorsArray = _.values(operators);
-const primitives = ["string", "number", "boolean"];
+import Logger from "./logger";
 
+const {
+    is,
+    vendor: { lodash: _ },
+    orm
+} = adone;
+
+const {
+    operator
+} = orm;
+
+const operatorsArray = _.values(operator);
+const primitives = ["string", "number", "boolean"];
 const logger = new Logger();
+
+const util = adone.lazify({
+    sqlString: "./sql_string",
+    parserStore: "./parser_store",
+    Validator: "./validator",
+    validateParameter: "./validate_parameter"
+}, exports, require);
 
 exports.debug = logger.debug.bind(logger);
 exports.deprecate = logger.deprecate.bind(logger);
 exports.warn = logger.warn.bind(logger);
 exports.getLogger = () => logger;
 
-function useInflection(_inflection) {
-    inflection = _inflection;
-}
-exports.useInflection = useInflection;
-
-function camelizeIf(str, condition) {
+export const camelizeIf = (str, condition) => {
     let result = str;
 
     if (condition) {
@@ -28,10 +34,9 @@ function camelizeIf(str, condition) {
     }
 
     return result;
-}
-exports.camelizeIf = camelizeIf;
+};
 
-function underscoredIf(str, condition) {
+export const underscoredIf = (str, condition) => {
     let result = str;
 
     if (condition) {
@@ -39,32 +44,29 @@ function underscoredIf(str, condition) {
     }
 
     return result;
-}
-exports.underscoredIf = underscoredIf;
+};
 
-function isPrimitive(val) {
+export const isPrimitive = (val) => {
     return primitives.indexOf(typeof val) !== -1;
-}
-exports.isPrimitive = isPrimitive;
+};
 
 // Same concept as _.merge, but don't overwrite properties that have already been assigned
-function mergeDefaults(a, b) {
+export const mergeDefaults = (a, b) => {
     return _.mergeWith(a, b, (objectValue) => {
     // If it's an object, let _ handle it this time, we will be called again for each property
         if (!_.isPlainObject(objectValue) && !is.undefined(objectValue)) {
             return objectValue;
         }
     });
-}
-exports.mergeDefaults = mergeDefaults;
+};
 
 // An alternative to _.merge, which doesn't clone its arguments
 // Cloning is a bad idea because options arguments may contain references to sequelize
 // models - which again reference database libs which don't like to be cloned (in particular pg-native)
-function merge() {
+export const merge = (...args) => {
     const result = {};
 
-    for (const obj of arguments) {
+    for (const obj of args) {
         _.forOwn(obj, (value, key) => {
             if (!is.undefined(value)) {
                 if (!result[key]) {
@@ -81,48 +83,30 @@ function merge() {
     }
 
     return result;
-}
-exports.merge = merge;
+};
 
-function lowercaseFirst(s) {
-    return s[0].toLowerCase() + s.slice(1);
-}
-exports.lowercaseFirst = lowercaseFirst;
+export const lowercaseFirst = (s) => s[0].toLowerCase() + s.slice(1);
 
-function uppercaseFirst(s) {
-    return s[0].toUpperCase() + s.slice(1);
-}
-exports.uppercaseFirst = uppercaseFirst;
+export const uppercaseFirst = (s) => s[0].toUpperCase() + s.slice(1);
 
-function spliceStr(str, index, count, add) {
-    return str.slice(0, index) + add + str.slice(index + count);
-}
-exports.spliceStr = spliceStr;
+export const spliceStr = (str, index, count, add) => str.slice(0, index) + add + str.slice(index + count);
 
-function camelize(str) {
-    return str.trim().replace(/[-_\s]+(.)?/g, (match, c) => c.toUpperCase());
-}
-exports.camelize = camelize;
+export const camelize = (str) => str.trim().replace(/[-_\s]+(.)?/g, (match, c) => c.toUpperCase());
 
-function underscore(str) {
-    return adone.util.inflection.underscore(str);
-}
-exports.underscore = underscore;
+export const underscore = (str) => adone.util.inflection.underscore(str);
 
-function format(arr, dialect) {
+export const format = (arr, dialect) => {
     const timeZone = null;
     // Make a clone of the array beacuse format modifies the passed args
-    return SqlString.format(arr[0], arr.slice(1), timeZone, dialect);
-}
-exports.format = format;
+    return util.sqlString.format(arr[0], arr.slice(1), timeZone, dialect);
+};
 
-function formatNamedParameters(sql, parameters, dialect) {
+export const formatNamedParameters = (sql, parameters, dialect) => {
     const timeZone = null;
-    return SqlString.formatNamedParameters(sql, parameters, timeZone, dialect);
-}
-exports.formatNamedParameters = formatNamedParameters;
+    return util.sqlString.formatNamedParameters(sql, parameters, timeZone, dialect);
+};
 
-function cloneDeep(obj) {
+export const cloneDeep = (obj) => {
     obj = obj || {};
     return _.cloneDeepWith(obj, (elem) => {
     // Do not try to customize cloning of arrays or POJOs
@@ -140,11 +124,10 @@ function cloneDeep(obj) {
             return elem.clone();
         }
     });
-}
-exports.cloneDeep = cloneDeep;
+};
 
 /* Expand and normalize finder options */
-function mapFinderOptions(options, Model) {
+export const mapFinderOptions = (options, Model) => {
     if (Model._hasVirtualAttributes && is.array(options.attributes)) {
         for (const attribute of options.attributes) {
             if (Model._isVirtualAttribute(attribute) && Model.rawAttributes[attribute].type.fields) {
@@ -158,11 +141,10 @@ function mapFinderOptions(options, Model) {
     mapOptionFieldNames(options, Model);
 
     return options;
-}
-exports.mapFinderOptions = mapFinderOptions;
+};
 
 /* Used to map field names in attributes and where conditions */
-function mapOptionFieldNames(options, Model) {
+export const mapOptionFieldNames = (options, Model) => {
     if (is.array(options.attributes)) {
         options.attributes = options.attributes.map((attr) => {
             // Object lookups will force any variable to strings, we don't want that for special objects etc
@@ -182,10 +164,9 @@ function mapOptionFieldNames(options, Model) {
     }
 
     return options;
-}
-exports.mapOptionFieldNames = mapOptionFieldNames;
+};
 
-function mapWhereFieldNames(attributes, Model) {
+export const mapWhereFieldNames = (attributes, Model) => {
     if (attributes) {
         getComplexKeys(attributes).forEach((attribute) => {
             const rawAttribute = Model.rawAttributes[attribute];
@@ -195,10 +176,13 @@ function mapWhereFieldNames(attributes, Model) {
                 delete attributes[attribute];
             }
 
-            if (_.isPlainObject(attributes[attribute])
-        && !(rawAttribute && (
-            rawAttribute.type instanceof DataTypes.HSTORE
-          || rawAttribute.type instanceof DataTypes.JSON))) { // Prevent renaming of HSTORE & JSON fields
+            if (
+                _.isPlainObject(attributes[attribute])
+                && !(
+                    rawAttribute
+                    && (rawAttribute.type instanceof orm.type.HSTORE || rawAttribute.type instanceof orm.type.JSON)
+                )
+            ) { // Prevent renaming of HSTORE & JSON fields
                 attributes[attribute] = mapOptionFieldNames({
                     where: attributes[attribute]
                 }, Model).where;
@@ -218,11 +202,10 @@ function mapWhereFieldNames(attributes, Model) {
     }
 
     return attributes;
-}
-exports.mapWhereFieldNames = mapWhereFieldNames;
+};
 
 /* Used to map field names in values */
-function mapValueFieldNames(dataValues, fields, Model) {
+export const mapValueFieldNames = (dataValues, fields, Model) => {
     const values = {};
 
     for (const attr of fields) {
@@ -237,15 +220,13 @@ function mapValueFieldNames(dataValues, fields, Model) {
     }
 
     return values;
-}
-exports.mapValueFieldNames = mapValueFieldNames;
+};
 
-function isColString(value) {
+export const isColString = (value) => {
     return is.string(value) && value.substr(0, 1) === "$" && value.substr(value.length - 1, 1) === "$";
-}
-exports.isColString = isColString;
+};
 
-function argsArePrimaryKeys(args, primaryKeys) {
+export const argsArePrimaryKeys = (args, primaryKeys) => {
     let result = args.length === Object.keys(primaryKeys).length;
     if (result) {
         _.each(args, (arg) => {
@@ -259,10 +240,9 @@ function argsArePrimaryKeys(args, primaryKeys) {
         });
     }
     return result;
-}
-exports.argsArePrimaryKeys = argsArePrimaryKeys;
+};
 
-function canTreatArrayAsAnd(arr) {
+export const canTreatArrayAsAnd = (arr) => {
     return arr.reduce((treatAsAnd, arg) => {
         if (treatAsAnd) {
             return treatAsAnd;
@@ -270,53 +250,42 @@ function canTreatArrayAsAnd(arr) {
         return _.isPlainObject(arg);
 
     }, false);
-}
-exports.canTreatArrayAsAnd = canTreatArrayAsAnd;
+};
 
-function combineTableNames(tableName1, tableName2) {
+export const combineTableNames = (tableName1, tableName2) => {
     return tableName1.toLowerCase() < tableName2.toLowerCase() ? tableName1 + tableName2 : tableName2 + tableName1;
-}
-exports.combineTableNames = combineTableNames;
+};
 
-function singularize(str) {
-    return adone.util.inflection.singularizeWord(str);
-}
-exports.singularize = singularize;
+export const singularize = (str) => adone.util.inflection.singularizeWord(str);
 
-function pluralize(str) {
-    return adone.util.inflection.pluralizeWord(str);
-}
-exports.pluralize = pluralize;
+export const pluralize = (str) => adone.util.inflection.pluralizeWord(str);
 
-function removeCommentsFromFunctionString(s) {
+export const removeCommentsFromFunctionString = (s) => {
     s = s.replace(/\s*(\/\/.*)/g, "");
     s = s.replace(/(\/\*[\n\r\s\S]*?\*\/)/mg, "");
-
     return s;
-}
-exports.removeCommentsFromFunctionString = removeCommentsFromFunctionString;
+};
 
-function toDefaultValue(value) {
+export const toDefaultValue = (value) => {
+    const { type } = orm;
     if (is.function(value)) {
         const tmp = is.class(value) ? new value() : value();
-        if (tmp instanceof DataTypes.ABSTRACT) {
+        if (tmp instanceof type.ABSTRACT) {
             return tmp.toSql();
         }
         return tmp;
-
-    } else if (value instanceof DataTypes.UUIDV1) {
+    } else if (value instanceof type.UUIDV1) {
         return adone.util.uuid.v1();
-    } else if (value instanceof DataTypes.UUIDV4) {
+    } else if (value instanceof type.UUIDV4) {
         return adone.util.uuid.v4();
-    } else if (value instanceof DataTypes.NOW) {
+    } else if (value instanceof type.NOW) {
         return now();
     } else if (_.isPlainObject(value) || _.isArray(value)) {
         return _.clone(value);
     }
     return value;
 
-}
-exports.toDefaultValue = toDefaultValue;
+};
 
 /**
  * Determine if the default value provided exists and can be described
@@ -326,18 +295,20 @@ exports.toDefaultValue = toDefaultValue;
  * @return {boolean} yes / no.
  * @private
  */
-function defaultValueSchemable(value) {
+export const defaultValueSchemable = (value) => {
     if (is.undefined(value)) {
         return false;
     }
 
+    const { type } = orm;
+
     // TODO this will be schemable when all supported db
     // have been normalized for this case
-    if (value instanceof DataTypes.NOW) {
+    if (value instanceof type.NOW) {
         return false;
     }
 
-    if (value instanceof DataTypes.UUIDV1 || value instanceof DataTypes.UUIDV4) {
+    if (value instanceof type.UUIDV1 || value instanceof type.UUIDV4) {
         return false;
     }
 
@@ -346,10 +317,9 @@ function defaultValueSchemable(value) {
     }
 
     return true;
-}
-exports.defaultValueSchemable = defaultValueSchemable;
+};
 
-function removeNullValuesFromHash(hash, omitNull, options) {
+export const removeNullValuesFromHash = (hash, omitNull, options) => {
     let result = hash;
 
     options = options || {};
@@ -368,10 +338,9 @@ function removeNullValuesFromHash(hash, omitNull, options) {
     }
 
     return result;
-}
-exports.removeNullValuesFromHash = removeNullValuesFromHash;
+};
 
-function stack() {
+export const stack = () => {
     const orig = Error.prepareStackTrace;
     Error.prepareStackTrace = (_, stack) => stack;
     const err = new Error();
@@ -379,45 +348,39 @@ function stack() {
     const errStack = err.stack;
     Error.prepareStackTrace = orig;
     return errStack;
-}
-exports.stack = stack;
+};
 
-function sliceArgs(args, begin) {
+export const sliceArgs = (args, begin) => {
     begin = begin || 0;
     const tmp = new Array(args.length - begin);
     for (let i = begin; i < args.length; ++i) {
         tmp[i - begin] = args[i];
     }
     return tmp;
-}
-exports.sliceArgs = sliceArgs;
+};
 
-function now(dialect) {
+export const now = (dialect) => {
     const now = new Date();
     if (["mysql", "postgres", "sqlite", "mssql"].indexOf(dialect) === -1) {
         now.setMilliseconds(0);
     }
     return now;
-}
-exports.now = now;
+};
 
 // Note: Use the `quoteIdentifier()` and `escape()` methods on the
 // `QueryInterface` instead for more portable code.
 
-const TICK_CHAR = "`";
-exports.TICK_CHAR = TICK_CHAR;
+export const TICK_CHAR = "`";
 
-function addTicks(s, tickChar) {
+export const addTicks = (s, tickChar) => {
     tickChar = tickChar || TICK_CHAR;
     return tickChar + removeTicks(s, tickChar) + tickChar;
-}
-exports.addTicks = addTicks;
+};
 
-function removeTicks(s, tickChar) {
+export const removeTicks = (s, tickChar) => {
     tickChar = tickChar || TICK_CHAR;
     return s.replace(new RegExp(tickChar, "g"), "");
-}
-exports.removeTicks = removeTicks;
+};
 
 /**
  * Receives a tree-like object and returns a plain object which depth is 1.
@@ -448,13 +411,13 @@ exports.removeTicks = removeTicks;
  * @return Object, an flattened object
  * @private
  */
-function flattenObjectDeep(value) {
+export const flattenObjectDeep = (value) => {
     if (!_.isPlainObject(value)) {
         return value;
     }
     const flattenedObj = {};
 
-    function flattenObject(obj, subPath) {
+    const flattenObject = (obj, subPath) => {
         Object.keys(obj).forEach((key) => {
             const pathToProperty = subPath ? `${subPath}.${key}` : `${key}`;
             if (typeof obj[key] === "object") {
@@ -464,33 +427,32 @@ function flattenObjectDeep(value) {
             }
         });
         return flattenedObj;
-    }
+    };
 
     return flattenObject(value, undefined);
-}
-exports.flattenObjectDeep = flattenObjectDeep;
+};
 
 /**
  * Utility functions for representing SQL functions, and columns that should be escaped.
  * Please do not use these functions directly, use Sequelize.fn and Sequelize.col instead.
  * @private
  */
-class SequelizeMethod {}
-exports.SequelizeMethod = SequelizeMethod;
+export class SequelizeMethod {}
 
-class Fn extends SequelizeMethod {
+export class Fn extends SequelizeMethod {
     constructor(fn, args) {
         super();
         this.fn = fn;
         this.args = args;
     }
+
     clone() {
         return new Fn(this.fn, this.args);
     }
 }
-exports.Fn = Fn;
+export const fn = (fn, ...args) => new Fn(fn, args);
 
-class Col extends SequelizeMethod {
+export class Col extends SequelizeMethod {
     constructor(col) {
         super();
         if (arguments.length > 1) {
@@ -499,9 +461,9 @@ class Col extends SequelizeMethod {
         this.col = col;
     }
 }
-exports.Col = Col;
+export const col = (col) => new Col(col);
 
-class Cast extends SequelizeMethod {
+export class Cast extends SequelizeMethod {
     constructor(val, type, json) {
         super();
         this.val = val;
@@ -509,17 +471,17 @@ class Cast extends SequelizeMethod {
         this.json = json || false;
     }
 }
-exports.Cast = Cast;
+export const cast = (val, type) => new Cast(val, type);
 
-class Literal extends SequelizeMethod {
+export class Literal extends SequelizeMethod {
     constructor(val) {
         super();
         this.val = val;
     }
 }
-exports.Literal = Literal;
+export const literal = (val) => new Literal(val);
 
-class Json extends SequelizeMethod {
+export class Json extends SequelizeMethod {
     constructor(conditionsOrPath, value) {
         super();
         if (_.isObject(conditionsOrPath)) {
@@ -532,9 +494,9 @@ class Json extends SequelizeMethod {
         }
     }
 }
-exports.Json = Json;
+export const json = (conditionsOrPath, value) => new Json(conditionsOrPath, value);
 
-class Where extends SequelizeMethod {
+export class Where extends SequelizeMethod {
     constructor(attribute, comparator, logic) {
         super();
         if (is.undefined(logic)) {
@@ -547,12 +509,9 @@ class Where extends SequelizeMethod {
         this.logic = logic;
     }
 }
-exports.Where = Where;
+export const where = (attr, comparator, logic) => new Where(attr, comparator, logic);
 
-exports.validateParameter = parameterValidator;
-
-
-exports.mapIsolationLevelStringToTedious = (isolationLevel, tedious) => {
+export const mapIsolationLevelStringToTedious = (isolationLevel, tedious) => {
     if (!tedious) {
         throw new Error("An instance of tedious lib should be passed to this function");
     }
@@ -579,10 +538,7 @@ exports.mapIsolationLevelStringToTedious = (isolationLevel, tedious) => {
  * @return {Array<Symbol>} All operators properties of obj
  * @private
  */
-function getOperators(obj) {
-    return _.intersection(Object.getOwnPropertySymbols(obj || {}), operatorsArray);
-}
-exports.getOperators = getOperators;
+export const getOperators = (obj) => _.intersection(Object.getOwnPropertySymbols(obj || {}), operatorsArray);
 
 /**
  * getComplexKeys
@@ -590,10 +546,7 @@ exports.getOperators = getOperators;
  * @return {Array<String|Symbol>} All keys including operators
  * @private
  */
-function getComplexKeys(obj) {
-    return getOperators(obj).concat(_.keys(obj));
-}
-exports.getComplexKeys = getComplexKeys;
+export const getComplexKeys = (obj) => getOperators(obj).concat(_.keys(obj));
 
 /**
  * getComplexSize
@@ -601,10 +554,7 @@ exports.getComplexKeys = getComplexKeys;
  * @return {Integer}      Length of object properties including operators if obj is array returns its length
  * @private
  */
-function getComplexSize(obj) {
-    return is.array(obj) ? obj.length : getComplexKeys(obj).length;
-}
-exports.getComplexSize = getComplexSize;
+export const getComplexSize = (obj) => is.array(obj) ? obj.length : getComplexKeys(obj).length;
 
 /**
  * Returns true if a where clause is empty, even with Symbols
@@ -613,7 +563,72 @@ exports.getComplexSize = getComplexSize;
  * @return {Boolean}
  * @private
  */
-function isWhereEmpty(obj) {
-    return _.isEmpty(obj) && getOperators(obj).length === 0;
-}
-exports.isWhereEmpty = isWhereEmpty;
+export const isWhereEmpty = (obj) => _.isEmpty(obj) && getOperators(obj).length === 0;
+
+export const and = (...args) => ({ [operator.and]: args });
+
+export const or = (...args) => ({ [operator.or]: args });
+
+export const checkNamingCollision = (association) => {
+    if (association.source.rawAttributes.hasOwnProperty(association.as)) {
+        throw new Error(`Naming collision between attribute '${association.as}' and association '${association.as}' on model ${association.source.name}. To remedy this, change either foreignKey or as in your association definition`);
+    }
+};
+
+export const addForeignKeyConstraints = (newAttribute, source, target, options, key) => {
+    // FK constraints are opt-in: users must either set `foreignKeyConstraints`
+    // on the association, or request an `onDelete` or `onUpdate` behaviour
+
+    if (options.foreignKeyConstraint || options.onDelete || options.onUpdate) {
+
+    // Find primary keys: composite keys not supported with this approach
+        const primaryKeys = _.chain(source.rawAttributes).keys()
+            .filter((key) => source.rawAttributes[key].primaryKey)
+            .map((key) => source.rawAttributes[key].field || key).value();
+
+        if (primaryKeys.length === 1) {
+            if (source._schema) {
+                newAttribute.references = {
+                    model: source.sequelize.getQueryInterface().QueryGenerator.addSchema({
+                        tableName: source.tableName,
+                        _schema: source._schema,
+                        _schemaDelimiter: source._schemaDelimiter
+                    })
+                };
+            } else {
+                newAttribute.references = { model: source.tableName };
+            }
+
+            newAttribute.references.key = key || primaryKeys[0];
+            newAttribute.onDelete = options.onDelete;
+            newAttribute.onUpdate = options.onUpdate;
+        }
+    }
+};
+
+/**
+ * Mixin (inject) association methods to model prototype
+ *
+ * @private
+ * @param {Object} Association instance
+ * @param {Object} Model prototype
+ * @param {Array} Method names to inject
+ * @param {Object} Mapping between model and association method names
+ */
+export const mixinMethods = (association, obj, methods, aliases) => {
+    aliases = aliases || {};
+
+    for (const method of methods) {
+        // don't override custom methods
+        if (!obj[association.accessors[method]]) {
+            const realMethod = aliases[method] || method;
+
+            obj[association.accessors[method]] = function () {
+                const instance = this;
+                const args = [instance].concat(Array.from(arguments));
+
+                return association[realMethod].apply(association, args);
+            };
+        }
+    }
+};

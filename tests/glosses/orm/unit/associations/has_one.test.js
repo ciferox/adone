@@ -1,15 +1,14 @@
 import Support from "../../support";
 
 const { vendor: { lodash: _ } } = adone;
-const {
-    DataTypes
-} = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser("hasOne"), () => {
     it("properly use the `as` key to generate foreign key name", () => {
-        const User = current.define("User", { username: DataTypes.STRING });
-        const Task = current.define("Task", { title: DataTypes.STRING });
+        const User = current.define("User", { username: type.STRING });
+        const Task = current.define("Task", { title: type.STRING });
 
         User.hasOne(Task);
         expect(Task.rawAttributes.UserId).not.to.be.empty;

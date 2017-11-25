@@ -1,11 +1,12 @@
 import Support from "./support";
 
-const Sequelize = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("Vectors"), () => {
     it("should not allow insert backslash", function () {
         const Student = this.sequelize.define("student", {
-            name: Sequelize.STRING
+            name: type.STRING
         }, {
             tableName: "student"
         });

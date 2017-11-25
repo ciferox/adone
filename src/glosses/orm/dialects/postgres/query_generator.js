@@ -1,8 +1,21 @@
-const { is, vendor: { lodash: _ } } = adone;
-const Utils = require("../../utils");
-const util = require("util");
-const DataTypes = require("../../data_types");
-const AbstractQueryGenerator = require("../abstract/query_generator");
+const {
+    is,
+    vendor: { lodash: _ },
+    orm
+} = adone;
+
+const {
+    util,
+    type
+} = orm;
+
+const {
+    dialect: {
+        abstract: {
+            QueryGenerator: AbstractQueryGenerator
+        }
+    }
+} = adone.private(orm);
 
 const QueryGenerator = {
     __proto__: AbstractQueryGenerator,
@@ -195,7 +208,6 @@ const QueryGenerator = {
      * @param   {String}               column  The JSON column
      * @param   {String|Array<String>} [path]  The path to extract (optional)
      * @returns {String}                       The generated sql query
-     * @private
      */
     jsonPathExtractionQuery(column, path) {
         const paths = _.toPath(path);
@@ -205,7 +217,7 @@ const QueryGenerator = {
     },
 
     handleSequelizeMethod(smth, tableName, factory, options, prepend) {
-        if (smth instanceof Utils.Json) {
+        if (smth instanceof util.Json) {
             // Parse nested object
             if (smth.conditions) {
                 const conditions = _.map(this.parseConditionObject(smth.conditions), (condition) =>
@@ -227,7 +239,7 @@ const QueryGenerator = {
                 }
 
                 if (smth.value) {
-                    str += util.format(" = %s", this.escape(smth.value));
+                    str += ` = ${this.escape(smth.value)}`;
                 }
 
                 return str;
@@ -245,7 +257,7 @@ const QueryGenerator = {
 
         let query = `ALTER TABLE ${quotedTable} ADD COLUMN ${quotedKey} ${definition};`;
 
-        if (dataType.type && dataType.type instanceof DataTypes.ENUM || dataType instanceof DataTypes.ENUM) {
+        if (dataType.type && dataType.type instanceof type.ENUM || dataType instanceof type.ENUM) {
             query = this.pgEnum(table, key, dataType) + query;
         }
 
@@ -465,7 +477,7 @@ const QueryGenerator = {
         let indexName = indexNameOrAttributes;
 
         if (!is.string(indexName)) {
-            indexName = Utils.underscore(`${tableName}_${indexNameOrAttributes.join("_")}`);
+            indexName = util.underscore(`${tableName}_${indexNameOrAttributes.join("_")}`);
         }
 
         return `DROP INDEX IF EXISTS ${this.quoteIdentifiers(indexName)}`;
@@ -493,7 +505,7 @@ const QueryGenerator = {
         }
 
         let type;
-        if (attribute.type instanceof DataTypes.ENUM) {
+        if (attribute.type instanceof type.ENUM) {
             if (attribute.type.values && !attribute.values) {
                 attribute.values = attribute.type.values;
             }
@@ -519,7 +531,7 @@ const QueryGenerator = {
             sql += " SERIAL";
         }
 
-        if (Utils.defaultValueSchemable(attribute.defaultValue)) {
+        if (util.defaultValueSchemable(attribute.defaultValue)) {
             sql += ` DEFAULT ${this.escape(attribute.defaultValue, attribute)}`;
         }
 
@@ -658,7 +670,7 @@ const QueryGenerator = {
     },
 
     pgEscapeAndQuote(val) {
-        return this.quoteIdentifier(Utils.removeTicks(this.escape(val), "'"));
+        return this.quoteIdentifier(util.removeTicks(this.escape(val), "'"));
     },
 
     expandFunctionParamList(params) {
@@ -860,9 +872,9 @@ const QueryGenerator = {
             // characters, they must always be double-quoted. This makes it
             // impossible to write queries in portable SQL if tables are created in
             // this way. Hence, we strip quotes if we don't want case sensitivity.
-            return Utils.removeTicks(identifier, '"');
+            return util.removeTicks(identifier, '"');
         }
-        return Utils.addTicks(Utils.removeTicks(identifier, '"'), '"');
+        return util.addTicks(util.removeTicks(identifier, '"'), '"');
 
     },
 
@@ -910,4 +922,4 @@ const QueryGenerator = {
     }
 };
 
-module.exports = QueryGenerator;
+export default QueryGenerator;

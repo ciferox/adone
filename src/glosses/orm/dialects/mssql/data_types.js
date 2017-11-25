@@ -1,14 +1,14 @@
-const { vendor: { lodash: _ } } = adone;
-const inherits = require("../../utils/inherits");
+const {
+    vendor: { lodash: _ }
+} = adone;
 
-module.exports = (BaseTypes) => {
+export default function defineMssqlTypes(BaseTypes) {
     const warn = BaseTypes.ABSTRACT.warn.bind(undefined, "https://msdn.microsoft.com/en-us/library/ms187752%28v=sql.110%29.aspx");
 
     /**
      * types: [hex, ...]
      * @see hex here https://github.com/tediousjs/tedious/blob/master/src/data-type.js
      */
-
     BaseTypes.DATE.types.mssql = [43];
     BaseTypes.STRING.types.mssql = [231, 173];
     BaseTypes.CHAR.types.mssql = [175];
@@ -210,7 +210,7 @@ module.exports = (BaseTypes) => {
         }
     }
 
-    const exports = {
+    const types = {
         BLOB,
         BOOLEAN,
         ENUM,
@@ -228,7 +228,7 @@ module.exports = (BaseTypes) => {
         TEXT
     };
 
-    _.forIn(exports, (DataType, key) => {
+    _.forIn(types, (DataType, key) => {
         if (!DataType.key) {
             DataType.key = key;
         }
@@ -239,5 +239,7 @@ module.exports = (BaseTypes) => {
         }
     });
 
-    return exports;
+    BaseTypes.mssql = types;
+
+    return types;
 };

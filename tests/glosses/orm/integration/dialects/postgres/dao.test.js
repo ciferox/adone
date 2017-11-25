@@ -2,32 +2,33 @@ import Support from "../../support";
 
 const Sequelize = Support.Sequelize;
 const dialect = Support.getTestDialect();
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => {
     beforeEach(function () {
         this.sequelize.options.quoteIdentifiers = true;
         this.User = this.sequelize.define("User", {
-            username: DataTypes.STRING,
-            email: { type: new DataTypes.ARRAY(DataTypes.TEXT) },
-            settings: DataTypes.HSTORE,
-            document: { type: DataTypes.HSTORE, defaultValue: { default: "'value'" } },
-            phones: new DataTypes.ARRAY(DataTypes.HSTORE),
-            emergency_contact: DataTypes.JSON,
-            emergencyContact: DataTypes.JSON,
+            username: type.STRING,
+            email: { type: new type.ARRAY(type.TEXT) },
+            settings: type.HSTORE,
+            document: { type: type.HSTORE, defaultValue: { default: "'value'" } },
+            phones: new type.ARRAY(type.HSTORE),
+            emergency_contact: type.JSON,
+            emergencyContact: type.JSON,
             friends: {
-                type: new DataTypes.ARRAY(DataTypes.JSON),
+                type: new type.ARRAY(type.JSON),
                 defaultValue: []
             },
             magic_numbers: {
-                type: new DataTypes.ARRAY(DataTypes.INTEGER),
+                type: new type.ARRAY(type.INTEGER),
                 defaultValue: []
             },
-            course_period: new DataTypes.RANGE(DataTypes.DATE),
-            acceptable_marks: { type: new DataTypes.RANGE(DataTypes.DECIMAL), defaultValue: [0.65, 1] },
-            available_amount: DataTypes.RANGE,
-            holidays: new DataTypes.ARRAY(new DataTypes.RANGE(DataTypes.DATE)),
-            location: new DataTypes.GEOMETRY()
+            course_period: new type.RANGE(type.DATE),
+            acceptable_marks: { type: new type.RANGE(type.DECIMAL), defaultValue: [0.65, 1] },
+            available_amount: type.RANGE,
+            holidays: new type.ARRAY(new type.RANGE(type.DATE)),
+            location: new type.GEOMETRY()
         });
         return this.User.sync({ force: true });
     });
@@ -197,11 +198,11 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
         it("should not rename hstore fields", function () {
             const Equipment = this.sequelize.define("Equipment", {
                 grapplingHook: {
-                    type: DataTypes.STRING,
+                    type: type.STRING,
                     field: "grappling_hook"
                 },
                 utilityBelt: {
-                    type: DataTypes.HSTORE
+                    type: type.HSTORE
                 }
             });
 
@@ -222,11 +223,11 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
         it("should not rename json fields", function () {
             const Equipment = this.sequelize.define("Equipment", {
                 grapplingHook: {
-                    type: DataTypes.STRING,
+                    type: type.STRING,
                     field: "grappling_hook"
                 },
                 utilityBelt: {
-                    type: DataTypes.JSON
+                    type: type.JSON
                 }
             });
 
@@ -259,7 +260,7 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
     describe("enums", () => {
         it("should be able to ignore enum types that already exist", function () {
             const User = this.sequelize.define("UserEnums", {
-                mood: new DataTypes.ENUM("happy", "sad", "meh")
+                mood: new type.ENUM("happy", "sad", "meh")
             });
 
             return User.sync({ force: true }).then(() => {
@@ -269,7 +270,7 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
 
         it("should be able to create/drop enums multiple times", function () {
             const User = this.sequelize.define("UserEnums", {
-                mood: new DataTypes.ENUM("happy", "sad", "meh")
+                mood: new type.ENUM("happy", "sad", "meh")
             });
 
             return User.sync({ force: true }).then(() => {
@@ -279,9 +280,9 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
 
         it("should be able to create/drop multiple enums multiple times", function () {
             const DummyModel = this.sequelize.define("Dummy-pg", {
-                username: DataTypes.STRING,
+                username: type.STRING,
                 theEnumOne: {
-                    type: DataTypes.ENUM,
+                    type: type.ENUM,
                     values: [
                         "one",
                         "two",
@@ -289,7 +290,7 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
                     ]
                 },
                 theEnumTwo: {
-                    type: DataTypes.ENUM,
+                    type: type.ENUM,
                     values: [
                         "four",
                         "five",
@@ -309,12 +310,12 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
 
         it("should be able to add values to enum types", function () {
             let User = this.sequelize.define("UserEnums", {
-                mood: new DataTypes.ENUM("happy", "sad", "meh")
+                mood: new type.ENUM("happy", "sad", "meh")
             });
 
             return User.sync({ force: true }).then(() => {
                 User = this.sequelize.define("UserEnums", {
-                    mood: new DataTypes.ENUM("neutral", "happy", "sad", "ecstatic", "meh", "joyful")
+                    mood: new type.ENUM("neutral", "happy", "sad", "ecstatic", "meh", "joyful")
                 });
 
                 return User.sync();
@@ -331,7 +332,7 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
         describe("integer", () => {
             beforeEach(function () {
                 this.User = this.sequelize.define("User", {
-                    aNumber: DataTypes.INTEGER
+                    aNumber: type.INTEGER
                 });
 
                 return this.User.sync({ force: true });
@@ -363,7 +364,7 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
         describe("bigint", () => {
             beforeEach(function () {
                 this.User = this.sequelize.define("User", {
-                    aNumber: DataTypes.BIGINT
+                    aNumber: type.BIGINT
                 });
 
                 return this.User.sync({ force: true });
@@ -396,7 +397,7 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
     describe("timestamps", () => {
         beforeEach(function () {
             this.User = this.sequelize.define("User", {
-                dates: new DataTypes.ARRAY(DataTypes.DATE)
+                dates: new type.ARRAY(type.DATE)
             });
             return this.User.sync({ force: true });
         });
@@ -542,7 +543,7 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
 
         it("should read hstore correctly from included models as well", function () {
             const HstoreSubmodel = this.sequelize.define("hstoreSubmodel", {
-                someValue: DataTypes.HSTORE
+                someValue: type.HSTORE
             });
             const submodelValue = { testing: '"hstore"' };
 
@@ -758,7 +759,7 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
         it("should read range correctly from included models as well", function () {
             const period = [new Date(2016, 0, 1), new Date(2016, 11, 31)];
             const HolidayDate = this.sequelize.define("holidayDate", {
-                period: new DataTypes.RANGE(DataTypes.DATE)
+                period: new type.RANGE(type.DATE)
             });
 
             this.User.hasMany(HolidayDate);
@@ -800,7 +801,7 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
         const point1 = { type: "Point", coordinates: [39.807222, -76.984722] };
         const point2 = { type: "Point", coordinates: [39.828333, -77.232222] };
         const oldUser = await User.create({ username: "user", email: ["foo@bar.com"], location: point1 });
-        const [cound, updatedUsers] = await User.update({ location: point2 }, { where: { username: oldUser.username }, returning: true });
+        const [, updatedUsers] = await User.update({ location: point2 }, { where: { username: oldUser.username }, returning: true });
         expect(updatedUsers[0].location).to.deep.eql(point2);
     });
 
@@ -821,8 +822,8 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
             this.sequelize.getQueryInterface().QueryGenerator.options.quoteIdentifiers = false;
 
             this.User = this.sequelize.define("Userxs", {
-                username: DataTypes.STRING,
-                fullName: DataTypes.STRING // Note mixed case
+                username: type.STRING,
+                fullName: type.STRING // Note mixed case
             }, {
                 quoteIdentifiers: false
             });
@@ -871,17 +872,17 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
             }
         }, async function () {
             this.Professor = this.sequelize.define("Professor", {
-                fullName: DataTypes.STRING
+                fullName: type.STRING
             }, {
                 quoteIdentifiers: false
             });
             this.Class = this.sequelize.define("Class", {
-                name: DataTypes.STRING
+                name: type.STRING
             }, {
                 quoteIdentifiers: false
             });
             this.Student = this.sequelize.define("Student", {
-                fullName: DataTypes.STRING
+                fullName: type.STRING
             }, {
                 quoteIdentifiers: false
             });

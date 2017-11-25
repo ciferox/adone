@@ -1,6 +1,7 @@
 import Support from "../support";
 
 const { vendor: { lodash: _ } } = adone;
+const { orm } = adone;
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser("Hooks"), () => {
@@ -293,8 +294,6 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
 
     describe("promises", () => {
         it("can return a promise", async function () {
-            const self = this;
-
             this.Model.beforeBulkCreate(() => {
                 return Promise.resolve();
             });
@@ -340,10 +339,10 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
         });
 
         it("runs all beforInit/afterInit hooks", function () {
-            Support.Sequelize.addHook("beforeInit", "h1", this.hook1);
-            Support.Sequelize.addHook("beforeInit", "h2", this.hook2);
-            Support.Sequelize.addHook("afterInit", "h3", this.hook3);
-            Support.Sequelize.addHook("afterInit", "h4", this.hook4);
+            orm.hooks.add("beforeInit", "h1", this.hook1);
+            orm.hooks.add("beforeInit", "h2", this.hook2);
+            orm.hooks.add("afterInit", "h3", this.hook3);
+            orm.hooks.add("afterInit", "h4", this.hook4);
 
             Support.createSequelizeInstance();
 
@@ -353,10 +352,10 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
             expect(this.hook4).to.have.been.calledOnce;
 
             // cleanup hooks on Support.Sequelize
-            Support.Sequelize.removeHook("beforeInit", "h1");
-            Support.Sequelize.removeHook("beforeInit", "h2");
-            Support.Sequelize.removeHook("afterInit", "h3");
-            Support.Sequelize.removeHook("afterInit", "h4");
+            orm.hooks.remove("beforeInit", "h1");
+            orm.hooks.remove("beforeInit", "h2");
+            orm.hooks.remove("afterInit", "h3");
+            orm.hooks.remove("afterInit", "h4");
 
             Support.createSequelizeInstance();
 

@@ -1,17 +1,18 @@
 import Support from "../support";
 
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("Hooks"), { skip: !Support.sequelize.dialect.supports.upserts }, () => {
     beforeEach(function () {
         this.User = this.sequelize.define("User", {
             username: {
-                type: DataTypes.STRING,
+                type: type.STRING,
                 allowNull: false,
                 unique: true //Either Primary Key/Unique Keys should be passed to upsert
             },
             mood: {
-                type: DataTypes.ENUM,
+                type: type.ENUM,
                 values: ["happy", "sad", "neutral"]
             }
         });

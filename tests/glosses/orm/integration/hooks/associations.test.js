@@ -1,25 +1,26 @@
 import Support from "../support";
 
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 const dialect = Support.getTestDialect();
 
 describe(Support.getTestDialectTeaser("Hooks"), () => {
     beforeEach(function () {
         this.User = this.sequelize.define("User", {
             username: {
-                type: DataTypes.STRING,
+                type: type.STRING,
                 allowNull: false
             },
             mood: {
-                type: DataTypes.ENUM,
+                type: type.ENUM,
                 values: ["happy", "sad", "neutral"]
             }
         });
 
         this.ParanoidUser = this.sequelize.define("ParanoidUser", {
-            username: DataTypes.STRING,
+            username: type.STRING,
             mood: {
-                type: DataTypes.ENUM,
+                type: type.ENUM,
                 values: ["happy", "sad", "neutral"]
             }
         }, {
@@ -37,11 +38,11 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                     const self = this;
 
                     this.Projects = this.sequelize.define("Project", {
-                        title: DataTypes.STRING
+                        title: type.STRING
                     });
 
                     this.Tasks = this.sequelize.define("Task", {
-                        title: DataTypes.STRING
+                        title: type.STRING
                     });
 
                     this.Projects.hasOne(this.Tasks, { onUpdate: "cascade", hooks: true });
@@ -99,11 +100,11 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
             describe("cascade onDelete", () => {
                 beforeEach(function () {
                     this.Projects = this.sequelize.define("Project", {
-                        title: DataTypes.STRING
+                        title: type.STRING
                     });
 
                     this.Tasks = this.sequelize.define("Task", {
-                        title: DataTypes.STRING
+                        title: type.STRING
                     });
 
                     this.Projects.hasOne(this.Tasks, { onDelete: "CASCADE", hooks: true });
@@ -188,11 +189,11 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                     const self = this;
 
                     this.Projects = this.sequelize.define("Project", {
-                        title: DataTypes.STRING
+                        title: type.STRING
                     });
 
                     this.Tasks = this.sequelize.define("Task", {
-                        title: DataTypes.STRING
+                        title: type.STRING
                     });
 
                     this.Projects.hasOne(this.Tasks);
@@ -243,11 +244,11 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                     const self = this;
 
                     this.Projects = this.sequelize.define("Project", {
-                        title: DataTypes.STRING
+                        title: type.STRING
                     });
 
                     this.Tasks = this.sequelize.define("Task", {
-                        title: DataTypes.STRING
+                        title: type.STRING
                     });
 
                     this.Projects.hasMany(this.Tasks);
@@ -321,11 +322,11 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                 beforeEach(function () {
                     const self = this;
                     this.Projects = this.sequelize.define("Project", {
-                        title: DataTypes.STRING
+                        title: type.STRING
                     });
 
                     this.Tasks = this.sequelize.define("Task", {
-                        title: DataTypes.STRING
+                        title: type.STRING
                     });
 
                     this.Projects.hasMany(this.Tasks, { onDelete: "cascade", hooks: true });
@@ -410,11 +411,11 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
             describe("no cascade", () => {
                 beforeEach(function () {
                     this.Projects = this.sequelize.define("Project", {
-                        title: DataTypes.STRING
+                        title: type.STRING
                     });
 
                     this.Tasks = this.sequelize.define("Task", {
-                        title: DataTypes.STRING
+                        title: type.STRING
                     });
 
                     this.Projects.hasMany(this.Tasks);
@@ -497,11 +498,11 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
             describe("cascade", () => {
                 beforeEach(function () {
                     this.Projects = this.sequelize.define("Project", {
-                        title: DataTypes.STRING
+                        title: type.STRING
                     });
 
                     this.Tasks = this.sequelize.define("Task", {
-                        title: DataTypes.STRING
+                        title: type.STRING
                     });
 
                     this.Projects.belongsToMany(this.Tasks, { cascade: "onDelete", through: "projects_and_tasks", hooks: true });
@@ -584,11 +585,11 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
             describe("no cascade", () => {
                 beforeEach(function () {
                     this.Projects = this.sequelize.define("Project", {
-                        title: DataTypes.STRING
+                        title: type.STRING
                     });
 
                     this.Tasks = this.sequelize.define("Task", {
-                        title: DataTypes.STRING
+                        title: type.STRING
                     });
 
                     this.Projects.belongsToMany(this.Tasks, { hooks: true, through: "project_tasks" });
@@ -673,15 +674,15 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                 describe("cascade", () => {
                     beforeEach(function () {
                         this.Projects = this.sequelize.define("Project", {
-                            title: DataTypes.STRING
+                            title: type.STRING
                         });
 
                         this.Tasks = this.sequelize.define("Task", {
-                            title: DataTypes.STRING
+                            title: type.STRING
                         });
 
                         this.MiniTasks = this.sequelize.define("MiniTask", {
-                            mini_title: DataTypes.STRING
+                            mini_title: type.STRING
                         });
 
                         this.Projects.hasMany(this.Tasks, { onDelete: "cascade", hooks: true });
@@ -810,15 +811,15 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                 describe("cascade", () => {
                     beforeEach(function () {
                         this.Projects = this.sequelize.define("Project", {
-                            title: DataTypes.STRING
+                            title: type.STRING
                         });
 
                         this.Tasks = this.sequelize.define("Task", {
-                            title: DataTypes.STRING
+                            title: type.STRING
                         });
 
                         this.MiniTasks = this.sequelize.define("MiniTask", {
-                            mini_title: DataTypes.STRING
+                            mini_title: type.STRING
                         });
 
                         this.Projects.hasMany(this.Tasks, { onDelete: "cascade", hooks: true });

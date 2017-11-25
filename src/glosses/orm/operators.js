@@ -1,46 +1,7 @@
 /**
  * Operator symbols to be used when querying data
- *
- * @see {@link Model#where}
- *
- * @property eq
- * @property ne
- * @property gte
- * @property gt
- * @property lte
- * @property lt
- * @property not
- * @property is
- * @property in
- * @property notIn
- * @property like
- * @property notLike
- * @property iLike
- * @property notILike
- * @property regexp
- * @property notRegexp
- * @property iRegexp
- * @property notIRegexp
- * @property between
- * @property notBetween
- * @property overlap
- * @property contains
- * @property contained
- * @property adjacent
- * @property strictLeft
- * @property strictRight
- * @property noExtendRight
- * @property noExtendLeft
- * @property and
- * @property or
- * @property any
- * @property all
- * @property values
- * @property col
- * @property placeholder
- * @property join
  */
-const Op = {
+const operators = {
     eq: Symbol("eq"),
     ne: Symbol("ne"),
     gte: Symbol("gte"),
@@ -77,73 +38,74 @@ const Op = {
     col: Symbol("col"),
     placeholder: Symbol("placeholder"),
     join: Symbol("join"),
-    raw: Symbol("raw") //deprecated remove by v5.0
+    raw: Symbol("raw") // deprecated remove by v5.0
 };
 
 const Aliases = {
-    $eq: Op.eq,
-    $ne: Op.ne,
-    $gte: Op.gte,
-    $gt: Op.gt,
-    $lte: Op.lte,
-    $lt: Op.lt,
-    $not: Op.not,
-    $in: Op.in,
-    $notIn: Op.notIn,
-    $is: Op.is,
-    $like: Op.like,
-    $notLike: Op.notLike,
-    $iLike: Op.iLike,
-    $notILike: Op.notILike,
-    $regexp: Op.regexp,
-    $notRegexp: Op.notRegexp,
-    $iRegexp: Op.iRegexp,
-    $notIRegexp: Op.notIRegexp,
-    $between: Op.between,
-    $notBetween: Op.notBetween,
-    $overlap: Op.overlap,
-    $contains: Op.contains,
-    $contained: Op.contained,
-    $adjacent: Op.adjacent,
-    $strictLeft: Op.strictLeft,
-    $strictRight: Op.strictRight,
-    $noExtendRight: Op.noExtendRight,
-    $noExtendLeft: Op.noExtendLeft,
-    $and: Op.and,
-    $or: Op.or,
-    $any: Op.any,
-    $all: Op.all,
-    $values: Op.values,
-    $col: Op.col,
-    $raw: Op.raw //deprecated remove by v5.0
+    $eq: operators.eq,
+    $ne: operators.ne,
+    $gte: operators.gte,
+    $gt: operators.gt,
+    $lte: operators.lte,
+    $lt: operators.lt,
+    $not: operators.not,
+    $in: operators.in,
+    $notIn: operators.notIn,
+    $is: operators.is,
+    $like: operators.like,
+    $notLike: operators.notLike,
+    $iLike: operators.iLike,
+    $notILike: operators.notILike,
+    $regexp: operators.regexp,
+    $notRegexp: operators.notRegexp,
+    $iRegexp: operators.iRegexp,
+    $notIRegexp: operators.notIRegexp,
+    $between: operators.between,
+    $notBetween: operators.notBetween,
+    $overlap: operators.overlap,
+    $contains: operators.contains,
+    $contained: operators.contained,
+    $adjacent: operators.adjacent,
+    $strictLeft: operators.strictLeft,
+    $strictRight: operators.strictRight,
+    $noExtendRight: operators.noExtendRight,
+    $noExtendLeft: operators.noExtendLeft,
+    $and: operators.and,
+    $or: operators.or,
+    $any: operators.any,
+    $all: operators.all,
+    $values: operators.values,
+    $col: operators.col,
+    $raw: operators.raw // deprecated remove by v5.0
 };
 
-const LegacyAliases = { //deprecated remove by v5.0
-    ne: Op.ne,
-    not: Op.not,
-    in: Op.in,
-    notIn: Op.notIn,
-    gte: Op.gte,
-    gt: Op.gt,
-    lte: Op.lte,
-    lt: Op.lt,
-    like: Op.like,
-    ilike: Op.iLike,
-    $ilike: Op.iLike,
-    nlike: Op.notLike,
-    $notlike: Op.notLike,
-    notilike: Op.notILike,
-    "..": Op.between,
-    between: Op.between,
-    "!..": Op.notBetween,
-    notbetween: Op.notBetween,
-    nbetween: Op.notBetween,
-    overlap: Op.overlap,
-    "&&": Op.overlap,
-    "@>": Op.contains,
-    "<@": Op.contained
+const LegacyAliases = { // deprecated remove by v5.0
+    ne: operators.ne,
+    not: operators.not,
+    in: operators.in,
+    notIn: operators.notIn,
+    gte: operators.gte,
+    gt: operators.gt,
+    lte: operators.lte,
+    lt: operators.lt,
+    like: operators.like,
+    ilike: operators.iLike,
+    $ilike: operators.iLike,
+    nlike: operators.notLike,
+    $notlike: operators.notLike,
+    notilike: operators.notILike,
+    "..": operators.between,
+    between: operators.between,
+    "!..": operators.notBetween,
+    notbetween: operators.notBetween,
+    nbetween: operators.notBetween,
+    overlap: operators.overlap,
+    "&&": operators.overlap,
+    "@>": operators.contains,
+    "<@": operators.contained
 };
 
-Op.Aliases = Aliases;
-Op.LegacyAliases = Object.assign({}, LegacyAliases, Aliases);
-module.exports = Op;
+operators.Aliases = Aliases;
+operators.LegacyAliases = Object.assign({}, LegacyAliases, Aliases);
+
+export default operators;

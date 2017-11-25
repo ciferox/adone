@@ -1,15 +1,16 @@
 import Support from "../support";
 
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("Model"), () => {
     beforeEach(function () {
         this.User = this.sequelize.define("User", {
-            username: DataTypes.STRING,
-            age: DataTypes.INTEGER
+            username: type.STRING,
+            age: type.INTEGER
         });
         this.Project = this.sequelize.define("Project", {
-            name: DataTypes.STRING
+            name: type.STRING
         });
 
         this.User.hasMany(this.Project);

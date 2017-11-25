@@ -1,5 +1,6 @@
 import Support from "./support";
 
+const { orm } = adone;
 const dialect = Support.getTestDialect();
 const Sequelize = Support.Sequelize;
 
@@ -13,7 +14,7 @@ describe(Support.getTestDialectTeaser("Pooling"), { skip: dialect === "sqlite" }
     });
 
     it("should reject when unable to acquire connection in given time", async () => {
-        this.testInstance = new Sequelize("localhost", "ffd", "dfdf", {
+        this.testInstance = orm.create("localhost", "ffd", "dfdf", {
             dialect,
             databaseVersion: "1.2.3",
             pool: {

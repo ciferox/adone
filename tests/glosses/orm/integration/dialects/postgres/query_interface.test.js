@@ -2,7 +2,8 @@ import Support from "../../support";
 
 const { vendor: { lodash: _ } } = adone;
 const dialect = Support.getTestDialect();
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 describe("[POSTGRES Specific] QueryInterface", { skip: !/^postgres/.test(dialect) }, () => {
     beforeEach(function () {
@@ -198,9 +199,9 @@ describe("[POSTGRES Specific] QueryInterface", { skip: !/^postgres/.test(dialect
         beforeEach(function () {
             return this.queryInterface.dropTable("Group")
                 .then(() => this.queryInterface.createTable("Group", {
-                    username: DataTypes.STRING,
-                    isAdmin: DataTypes.BOOLEAN,
-                    from: DataTypes.STRING
+                    username: type.STRING,
+                    isAdmin: type.BOOLEAN,
+                    from: type.STRING
                 }));
         });
 

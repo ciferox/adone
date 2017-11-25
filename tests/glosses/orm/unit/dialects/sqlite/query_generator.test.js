@@ -1,12 +1,17 @@
 import Support from "../../../support";
 
+const { orm } = adone;
+
 const {
-    DataTypes,
     dialect: {
         sqlite: { QueryGenerator }
-    },
-    Op: Operators
-} = adone.orm;
+    }
+} = adone.private(orm);
+
+const {
+    operator,
+    type
+} = orm;
 
 const dialect = Support.getTestDialect();
 const { vendor: { lodash: _ } } = adone;
@@ -14,7 +19,7 @@ const { vendor: { lodash: _ } } = adone;
 describe("[SQLITE Specific] QueryGenerator", { skip: dialect !== "sqlite" }, () => {
     beforeEach(function () {
         this.User = this.sequelize.define("User", {
-            username: DataTypes.STRING
+            username: type.STRING
         });
         return this.User.sync({ force: true });
     });
@@ -559,7 +564,7 @@ describe("[SQLITE Specific] QueryGenerator", { skip: dialect !== "sqlite" }, () 
                     QueryGenerator.options = _.assign(context.options, { timezone: "+00:00" });
                     QueryGenerator._dialect = this.sequelize.dialect;
                     QueryGenerator.sequelize = this.sequelize;
-                    QueryGenerator.setOperatorsAliases(Operators.LegacyAliases);
+                    QueryGenerator.setOperatorsAliases(operator.LegacyAliases);
                     const conditions = QueryGenerator[suiteTitle].apply(QueryGenerator, test.arguments);
                     expect(conditions).to.deep.equal(test.expectation);
                 });

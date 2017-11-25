@@ -1,13 +1,14 @@
 import Support from "../../support";
 
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser("Instance"), () => {
     describe("toJSON", () => {
         it("returns copy of json", () => {
             const User = current.define("User", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
             const user = User.build({ name: "my-name" });
             const json1 = user.toJSON();

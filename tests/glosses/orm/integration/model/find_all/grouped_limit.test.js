@@ -2,8 +2,8 @@ import Support from "../../support";
 
 
 const { vendor: { lodash: _ } } = adone;
-const Sequelize = Support.Sequelize;
-const DataTypes = Sequelize.DataTypes;
+const { orm } = adone;
+const { type } = orm;
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.supports["UNION ALL"] }, () => {
@@ -19,10 +19,10 @@ describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.support
 
             beforeEach(async function () {
                 this.User = this.sequelize.define("user", {
-                    age: Sequelize.INTEGER
+                    age: type.INTEGER
                 });
                 this.Project = this.sequelize.define("project", {
-                    title: DataTypes.STRING
+                    title: type.STRING
                 });
                 this.Task = this.sequelize.define("task");
 
@@ -113,14 +113,14 @@ describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.support
                             values: this.projects.map((item) => item.get("id"))
                         },
                         order: [
-                            Sequelize.fn("ABS", Sequelize.col("age"))
+                            orm.util.fn("ABS", orm.util.col("age"))
                         ],
                         include: [this.User.Tasks]
                     }).then((users) => {
                         /*
-           project1 - 1, 3, 4
-           project2 - 3, 5, 4
-         */
+                            project1 - 1, 3, 4
+                            project2 - 3, 5, 4
+                        */
                         expect(users).to.have.length(4);
                         expect(users.map((u) => u.get("id"))).to.deep.equal([1, 3, 5, 4]);
                     });
@@ -135,15 +135,15 @@ describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.support
                             values: this.projects.map((item) => item.get("id"))
                         },
                         order: [
-                            Sequelize.fn("ABS", Sequelize.col("age")),
+                            orm.util.fn("ABS", orm.util.col("age")),
                             ["id", "DESC"]
                         ],
                         include: [this.User.Tasks]
                     }).then((users) => {
                         /*
-            project1 - 1, 3, 4
-            project2 - 3, 5, 7
-           */
+                            project1 - 1, 3, 4
+                            project2 - 3, 5, 7
+                        */
                         expect(users).to.have.length(5);
                         expect(users.map((u) => u.get("id"))).to.deep.equal([1, 3, 5, 7, 4]);
                     });
@@ -158,7 +158,7 @@ describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.support
                             values: this.projects.map((item) => item.get("id"))
                         },
                         order: [
-                            Sequelize.fn("ABS", Sequelize.col("age")),
+                            orm.util.fn("ABS", orm.util.col("age")),
                             ["id", "DESC"]
                         ],
                         include: [this.User.Tasks]
@@ -183,16 +183,16 @@ describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.support
                                 values: this.projects.map((item) => item.get("id"))
                             },
                             order: [
-                                Sequelize.fn("ABS", Sequelize.col("age")),
+                                orm.util.fn("ABS", orm.util.col("age")),
                                 ["id", "DESC"]
                             ],
                             include: [this.User.Tasks]
                         });
                     }).then((users) => {
                         /*
-            project1 - 1, 3
-            project2 - 4
-           */
+                            project1 - 1, 3
+                            project2 - 4
+                        */
                         expect(users).to.have.length(3);
                         expect(users.map((u) => u.get("id"))).to.deep.equal([1, 3, 4]);
                     });

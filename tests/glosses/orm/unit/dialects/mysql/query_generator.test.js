@@ -1,13 +1,19 @@
 import Support from "../../../support";
 
 const dialect = Support.getTestDialect();
+
+const { orm } = adone;
+
 const { vendor: { lodash: _ } } = adone;
+
 const {
     dialect: {
         mysql: { QueryGenerator }
-    },
-    Op: Operators
-} = adone.orm;
+    }
+} = adone.private(orm);
+const {
+    operator
+} = orm;
 
 describe("[MYSQL Specific] QueryGenerator", { skip: dialect !== "mysql" }, () => {
     const suites = {
@@ -586,7 +592,7 @@ describe("[MYSQL Specific] QueryGenerator", { skip: dialect !== "mysql" }, () =>
                     QueryGenerator.options = _.assign(context.options, { timezone: "+00:00" });
                     QueryGenerator._dialect = this.sequelize.dialect;
                     QueryGenerator.sequelize = this.sequelize;
-                    QueryGenerator.setOperatorsAliases(Operators.LegacyAliases);
+                    QueryGenerator.setOperatorsAliases(operator.LegacyAliases);
                     const conditions = QueryGenerator[suiteTitle].apply(QueryGenerator, test.arguments);
                     expect(conditions).to.deep.equal(test.expectation);
                 });

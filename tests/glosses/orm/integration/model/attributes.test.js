@@ -1,6 +1,7 @@
 import Support from "../support";
 
-const Sequelize = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("Model"), () => {
     describe("attributes", () => {
@@ -10,25 +11,25 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 self.callCount = 0;
 
                 this.Student = this.sequelize.define("student", {
-                    no: { type: Sequelize.INTEGER, primaryKey: true },
-                    name: Sequelize.STRING
+                    no: { type: type.INTEGER, primaryKey: true },
+                    name: type.STRING
                 }, {
                     tableName: "student",
                     timestamps: false
                 });
 
                 this.Course = this.sequelize.define("course", {
-                    no: { type: Sequelize.INTEGER, primaryKey: true },
-                    name: Sequelize.STRING
+                    no: { type: type.INTEGER, primaryKey: true },
+                    name: type.STRING
                 }, {
                     tableName: "course",
                     timestamps: false
                 });
 
                 this.Score = this.sequelize.define("score", {
-                    score: Sequelize.INTEGER,
+                    score: type.INTEGER,
                     test_value: {
-                        type: Sequelize.INTEGER,
+                        type: type.INTEGER,
                         set(v) {
                             self.callCount++;
                             this.setDataValue("test_value", v + 1);

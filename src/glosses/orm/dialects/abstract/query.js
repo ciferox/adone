@@ -1,24 +1,22 @@
-const { is, vendor: { lodash: _ } } = adone;
+const {
+    is,
+    vendor: { lodash: _ },
+    orm
+} = adone;
 
-const Utils = require("../../utils");
-const SqlString = require("../../sql_string");
-const QueryTypes = require("../../query_types");
+const {
+    util,
+    queryType
+} = orm;
 
-class AbstractQuery {
+export default class AbstractQuery {
 
     /**
      * rewrite query with parameters
      *
-     * Examples:
-     *
-     *   query.formatBindParameters('select $1 as foo', ['fooval']);
-     *
-     *   query.formatBindParameters('select $foo as foo', { foo: 'fooval' });
-     *
      * Options
      *   skipUnescape: bool, skip unescaping $$
      *   skipValueReplace: bool, do not replace (but do unescape $$). Check correct syntax and if all values are available
-     * @private
      */
     static formatBindParameters(sql, values, dialect, replacementFunc, options) {
         if (!values) {
@@ -42,7 +40,7 @@ class AbstractQuery {
             } else {
                 replacementFunc = (match, key, values, timeZone, dialect) => {
                     if (!is.undefined(values[key])) {
-                        return SqlString.escape(values[key], timeZone, dialect);
+                        return util.sqlString.escape(values[key], timeZone, dialect);
                     }
                     return undefined;
                 };
@@ -89,12 +87,7 @@ class AbstractQuery {
     /**
      * Execute the passed sql query.
      *
-     * Examples:
-     *
-     *     query.run('SELECT 1')
-     *
      * @param {String} sql - The SQL query which should be executed.
-     * @private
      */
     run() {
         throw new Error("The run method wasn't overwritten!");
@@ -102,13 +95,10 @@ class AbstractQuery {
 
     /**
      * Check the logging option of the instance and print deprecation warnings.
-     *
-     * @return {void}
-     * @private
      */
     checkLoggingOption() {
         if (this.options.logging === true) {
-            Utils.deprecate("The logging-option should be either a function or false. Default: console.log");
+            util.deprecate("The logging-option should be either a function or false. Default: console.log");
             this.options.logging = console.log;
         }
     }
@@ -117,7 +107,6 @@ class AbstractQuery {
      * Get the attributes of an insert query, which contains the just inserted id.
      *
      * @return {String} The field name.
-     * @private
      */
     getInsertIdField() {
         return "insertId";
@@ -129,7 +118,6 @@ class AbstractQuery {
      *
      * @param  {String} attribute An attribute of a SQL query. (?)
      * @return {String}           The found tableName / alias.
-     * @private
      */
     findTableNameInAttribute(attribute) {
         if (!this.options.include) {
@@ -164,21 +152,21 @@ class AbstractQuery {
     }
 
     isRawQuery() {
-        return this.options.type === QueryTypes.RAW;
+        return this.options.type === queryType.RAW;
     }
 
     isVersionQuery() {
-        return this.options.type === QueryTypes.VERSION;
+        return this.options.type === queryType.VERSION;
     }
 
     isUpsertQuery() {
-        return this.options.type === QueryTypes.UPSERT;
+        return this.options.type === queryType.UPSERT;
     }
 
     isInsertQuery(results, metaData) {
         let result = true;
 
-        if (this.options.type === QueryTypes.INSERT) {
+        if (this.options.type === queryType.INSERT) {
             return true;
         }
 
@@ -208,7 +196,7 @@ class AbstractQuery {
     }
 
     isShowTablesQuery() {
-        return this.options.type === QueryTypes.SHOWTABLES;
+        return this.options.type === queryType.SHOWTABLES;
     }
 
     handleShowTablesQuery(results) {
@@ -216,35 +204,35 @@ class AbstractQuery {
     }
 
     isShowIndexesQuery() {
-        return this.options.type === QueryTypes.SHOWINDEXES;
+        return this.options.type === queryType.SHOWINDEXES;
     }
 
     isShowConstraintsQuery() {
-        return this.options.type === QueryTypes.SHOWCONSTRAINTS;
+        return this.options.type === queryType.SHOWCONSTRAINTS;
     }
 
     isDescribeQuery() {
-        return this.options.type === QueryTypes.DESCRIBE;
+        return this.options.type === queryType.DESCRIBE;
     }
 
     isSelectQuery() {
-        return this.options.type === QueryTypes.SELECT;
+        return this.options.type === queryType.SELECT;
     }
 
     isBulkUpdateQuery() {
-        return this.options.type === QueryTypes.BULKUPDATE;
+        return this.options.type === queryType.BULKUPDATE;
     }
 
     isBulkDeleteQuery() {
-        return this.options.type === QueryTypes.BULKDELETE;
+        return this.options.type === queryType.BULKDELETE;
     }
 
     isForeignKeysQuery() {
-        return this.options.type === QueryTypes.FOREIGNKEYS;
+        return this.options.type === queryType.FOREIGNKEYS;
     }
 
     isUpdateQuery() {
-        return this.options.type === QueryTypes.UPDATE;
+        return this.options.type === queryType.UPDATE;
     }
 
     handleSelectQuery(results) {
@@ -331,39 +319,6 @@ class AbstractQuery {
     /**
      * The function takes the result of the query execution and groups
      * the associated data by the callee.
-     *
-     * Example:
-     *   groupJoinData([
-     *     {
-     *       some: 'data',
-     *       id: 1,
-     *       association: { foo: 'bar', id: 1 }
-     *     }, {
-     *       some: 'data',
-     *       id: 1,
-     *       association: { foo: 'bar', id: 2 }
-     *     }, {
-     *       some: 'data',
-     *       id: 1,
-     *       association: { foo: 'bar', id: 3 }
-     *     }
-     *   ])
-     *
-     * Result:
-     *   Something like this:
-     *
-     *   [
-     *     {
-     *       some: 'data',
-     *       id: 1,
-     *       association: [
-     *         { foo: 'bar', id: 1 },
-     *         { foo: 'bar', id: 2 },
-     *         { foo: 'bar', id: 3 }
-     *       ]
-     *     }
-     *   ]
-     * @private
      */
     static _groupJoinData(rows, includeOptions, options) {
 
@@ -697,7 +652,3 @@ class AbstractQuery {
         return results;
     }
 }
-
-module.exports = AbstractQuery;
-module.exports.AbstractQuery = AbstractQuery;
-module.exports.default = AbstractQuery;

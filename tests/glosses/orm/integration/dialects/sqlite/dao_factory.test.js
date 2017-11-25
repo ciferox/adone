@@ -1,6 +1,7 @@
 import Support from "../../support";
 
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 const dialect = Support.getTestDialect();
 const dbFile = `${__dirname}/test.sqlite`;
 const storages = [dbFile];
@@ -13,9 +14,9 @@ describe("[SQLITE Specific] DAOFactory", { skip: dialect !== "sqlite" }, () => {
     beforeEach(function () {
         this.sequelize.options.storage = dbFile;
         this.User = this.sequelize.define("User", {
-            age: DataTypes.INTEGER,
-            name: DataTypes.STRING,
-            bio: DataTypes.TEXT
+            age: type.INTEGER,
+            name: type.STRING,
+            bio: type.TEXT
         });
         return this.User.sync({ force: true });
     });
@@ -47,8 +48,8 @@ describe("[SQLITE Specific] DAOFactory", { skip: dialect !== "sqlite" }, () => {
 
                 it("should allow the creation of an object with options as attribute", function () {
                     const Person = this.sequelize.define("Person", {
-                        name: DataTypes.STRING,
-                        options: DataTypes.TEXT
+                        name: type.STRING,
+                        options: type.TEXT
                     });
 
                     return Person.sync({ force: true }).then(() => {
@@ -65,8 +66,8 @@ describe("[SQLITE Specific] DAOFactory", { skip: dialect !== "sqlite" }, () => {
 
                 it("should allow the creation of an object with a boolean (true) as attribute", function () {
                     const Person = this.sequelize.define("Person", {
-                        name: DataTypes.STRING,
-                        has_swag: DataTypes.BOOLEAN
+                        name: type.STRING,
+                        has_swag: type.BOOLEAN
                     });
 
                     return Person.sync({ force: true }).then(() => {
@@ -81,8 +82,8 @@ describe("[SQLITE Specific] DAOFactory", { skip: dialect !== "sqlite" }, () => {
 
                 it("should allow the creation of an object with a boolean (false) as attribute", function () {
                     const Person = this.sequelize.define("Person", {
-                        name: DataTypes.STRING,
-                        has_swag: DataTypes.BOOLEAN
+                        name: type.STRING,
+                        has_swag: type.BOOLEAN
                     });
 
                     return Person.sync({ force: true }).then(() => {

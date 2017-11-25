@@ -1,6 +1,13 @@
-const { vendor: { lodash: _ } } = adone;
-const Promise = require("../../promise");
-const UnknownConstraintError = require("../../errors").UnknownConstraintError;
+const {
+    vendor: { lodash: _ },
+    orm
+} = adone;
+
+const {
+    x: {
+        UnknownConstraintError
+    }
+} = orm;
 
 /**
  Returns an object that treats SQLite's inabilities to do certain queries.

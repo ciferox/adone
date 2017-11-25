@@ -1,9 +1,7 @@
 import Support from "../../support";
 
-const {
-    DataTypes
-} = adone.orm;
-const { Sequelize } = Support;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("associations"), () => {
     describe("Test options.foreignKey", () => {
@@ -11,13 +9,13 @@ describe(Support.getTestDialectTeaser("associations"), () => {
 
             this.A = this.sequelize.define("A", {
                 id: {
-                    type: new DataTypes.CHAR(20),
+                    type: new type.CHAR(20),
                     primaryKey: true
                 }
             });
             this.B = this.sequelize.define("B", {
                 id: {
-                    type: new Sequelize.CHAR(20),
+                    type: new type.CHAR(20),
                     primaryKey: true
                 }
             });

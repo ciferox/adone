@@ -1,19 +1,19 @@
 import Support from "../support";
 
-const Sequelize = Support.Sequelize;
+const { orm } = adone;
 const dialect = Support.getTestDialect();
 
 describe("Sequelize", () => {
     describe("dialect is required", () => {
         it("throw error when no dialect is supplied", () => {
             expect(() => {
-                new Sequelize("localhost", "test", "test");
+                orm.create("localhost", "test", "test");
             }).to.throw(Error);
         });
 
         it("works when dialect explicitly supplied", () => {
             expect(() => {
-                new Sequelize("localhost", "test", "test", {
+                orm.create("localhost", "test", "test", {
                     dialect: "mysql"
                 });
             }).not.to.throw(Error);
@@ -22,7 +22,7 @@ describe("Sequelize", () => {
 
     it("should throw error if pool:false", () => {
         expect(() => {
-            new Sequelize("localhost", "test", "test", {
+            orm.create("localhost", "test", "test", {
                 dialect: "mysql",
                 pool: false
             });
@@ -31,7 +31,7 @@ describe("Sequelize", () => {
 
     describe("Instantiation with arguments", () => {
         it("should accept four parameters (database, username, password, options)", () => {
-            const sequelize = new Sequelize("dbname", "root", "pass", {
+            const sequelize = orm.create("dbname", "root", "pass", {
                 port: 999,
                 dialect,
                 dialectOptions: {
@@ -53,7 +53,7 @@ describe("Sequelize", () => {
 
     describe("Instantiation with a URL string", () => {
         it("should accept username, password, host, port, and database", () => {
-            const sequelize = new Sequelize("mysql://user:pass@example.com:9821/dbname");
+            const sequelize = orm.create("mysql://user:pass@example.com:9821/dbname");
             const config = sequelize.config;
             const options = sequelize.options;
 
@@ -70,28 +70,28 @@ describe("Sequelize", () => {
             const current = Support.sequelize;
             if (current.dialect.name === "sqlite") {
                 it("should accept relative paths for sqlite", () => {
-                    const sequelize = new Sequelize("sqlite:subfolder/dbname.db");
+                    const sequelize = orm.create("sqlite:subfolder/dbname.db");
                     const options = sequelize.options;
                     expect(options.dialect).to.equal("sqlite");
                     expect(options.storage).to.equal("subfolder/dbname.db");
                 });
 
                 it("should accept absolute paths for sqlite", () => {
-                    const sequelize = new Sequelize("sqlite:/home/abs/dbname.db");
+                    const sequelize = orm.create("sqlite:/home/abs/dbname.db");
                     const options = sequelize.options;
                     expect(options.dialect).to.equal("sqlite");
                     expect(options.storage).to.equal("/home/abs/dbname.db");
                 });
 
                 it("should prefer storage in options object", () => {
-                    const sequelize = new Sequelize("sqlite:/home/abs/dbname.db", { storage: "/completely/different/path.db" });
+                    const sequelize = orm.create("sqlite:/home/abs/dbname.db", { storage: "/completely/different/path.db" });
                     const options = sequelize.options;
                     expect(options.dialect).to.equal("sqlite");
                     expect(options.storage).to.equal("/completely/different/path.db");
                 });
 
                 it("should be able to use :memory:", () => {
-                    const sequelize = new Sequelize("sqlite://:memory:");
+                    const sequelize = orm.create("sqlite://:memory:");
                     const options = sequelize.options;
                     expect(options.dialect).to.equal("sqlite");
 
@@ -103,7 +103,7 @@ describe("Sequelize", () => {
         });
 
         it("should work with no authentication options", () => {
-            const sequelize = new Sequelize("mysql://example.com:9821/dbname");
+            const sequelize = orm.create("mysql://example.com:9821/dbname");
             const config = sequelize.config;
 
             expect(config.username).to.not.be.ok;
@@ -111,7 +111,7 @@ describe("Sequelize", () => {
         });
 
         it("should work with no authentication options and passing additional options", () => {
-            const sequelize = new Sequelize("mysql://example.com:9821/dbname", {});
+            const sequelize = orm.create("mysql://example.com:9821/dbname", {});
             const config = sequelize.config;
 
             expect(config.username).to.not.be.ok;
@@ -119,7 +119,7 @@ describe("Sequelize", () => {
         });
 
         it("should use the default port when no other is specified", () => {
-            const sequelize = new Sequelize("dbname", "root", "pass", {
+            const sequelize = orm.create("dbname", "root", "pass", {
                 dialect
             });
             const config = sequelize.config;

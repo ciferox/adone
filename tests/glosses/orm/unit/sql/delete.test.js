@@ -3,7 +3,8 @@ import Support from "../../support";
 const util = require("util");
 const expectsql = Support.expectsql;
 const current = Support.sequelize;
-const Sequelize = Support.Sequelize;
+const { orm } = adone;
+const { type } = orm;
 const sql = current.dialect.QueryGenerator;
 
 // Notice: [] will be replaced by dialect specific tick/quote character when there is not dialect specific expectation but only a default expectation
@@ -150,7 +151,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
         describe("delete when the primary key has a different field name", () => {
             const User = current.define("test_user", {
                 id: {
-                    type: Sequelize.INTEGER,
+                    type: type.INTEGER,
                     primaryKey: true,
                     field: "test_user_id"
                 }

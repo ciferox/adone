@@ -3,7 +3,7 @@ const {
     dialect: {
         mssql: { ResourceLock }
     }
-} = adone.orm;
+} = adone.private(adone.orm);
 
 describe("[MSSQL Specific] ResourceLock", () => {
     it("should process requests serially", () => {

@@ -1,7 +1,11 @@
-const { is, util, vendor: { lodash: _ } } = adone;
-const Promise = require("../../promise");
-const Utils = require("../../utils");
-const debug = Utils.getLogger().debugContext("pool");
+const {
+    is,
+    util,
+    vendor: { lodash: _ },
+    orm
+} = adone;
+
+const debug = orm.util.getLogger().debugContext("pool");
 
 const defaultPoolingConfig = {
     max: 5,
@@ -17,10 +21,8 @@ const defaultPoolingConfig = {
  *
  * Connection manager which handles pool, replication and determining database version
  * Works with generic-pool to maintain connection pool
- *
- * @private
  */
-class ConnectionManager {
+export default class ConnectionManager {
     constructor(dialect, sequelize) {
         const config = _.cloneDeep(sequelize.config);
 
@@ -61,7 +63,6 @@ class ConnectionManager {
     /**
      * Handler which executes on process exit or connection manager shutdown
      *
-     * @private
      * @return {Promise}
      */
     async _onProcessExit() {
@@ -322,7 +323,6 @@ class ConnectionManager {
      * Call dialect library to get connection
      *
      * @param {*} config Connection config
-     * @private
      * @return {Promise<Connection>}
      */
     async _connect(config) {
@@ -347,7 +347,6 @@ class ConnectionManager {
      * Determine if a connection is still valid or not
      *
      * @param {Connection} connection
-     *
      * @return {Boolean}
      */
     _validate(connection) {
@@ -358,7 +357,3 @@ class ConnectionManager {
         return this.dialect.connectionManager.validate(connection);
     }
 }
-
-module.exports = ConnectionManager;
-module.exports.ConnectionManager = ConnectionManager;
-module.exports.default = ConnectionManager;

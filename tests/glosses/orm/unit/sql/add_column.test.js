@@ -1,8 +1,7 @@
 import Support from "../../support";
 
-const {
-    DataTypes
-} = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 const expectsql = Support.expectsql;
 const current = Support.sequelize;
@@ -14,7 +13,7 @@ describe(Support.getTestDialectTeaser("SQL"), { skip: current.dialect.name !== "
 
         const Model = current.define("users", {
             id: {
-                type: DataTypes.INTEGER,
+                type: type.INTEGER,
                 primaryKey: true,
                 autoIncrement: true
             }
@@ -22,7 +21,7 @@ describe(Support.getTestDialectTeaser("SQL"), { skip: current.dialect.name !== "
 
         it("properly generate alter queries", () => {
             return expectsql(sql.addColumnQuery(Model.getTableName(), "level_id", current.normalizeAttribute({
-                type: DataTypes.FLOAT,
+                type: type.FLOAT,
                 allowNull: false
             })), {
                 mysql: "ALTER TABLE `users` ADD `level_id` FLOAT NOT NULL;"
@@ -31,7 +30,7 @@ describe(Support.getTestDialectTeaser("SQL"), { skip: current.dialect.name !== "
 
         it("properly generate alter queries for foreign keys", () => {
             return expectsql(sql.addColumnQuery(Model.getTableName(), "level_id", current.normalizeAttribute({
-                type: DataTypes.INTEGER,
+                type: type.INTEGER,
                 references: {
                     model: "level",
                     key: "id"
@@ -45,7 +44,7 @@ describe(Support.getTestDialectTeaser("SQL"), { skip: current.dialect.name !== "
 
         it("properly generate alter queries with FIRST", () => {
             return expectsql(sql.addColumnQuery(Model.getTableName(), "test_added_col_first", current.normalizeAttribute({
-                type: DataTypes.STRING,
+                type: type.STRING,
                 first: true
             })), {
                 mysql: "ALTER TABLE `users` ADD `test_added_col_first` VARCHAR(255) FIRST;"

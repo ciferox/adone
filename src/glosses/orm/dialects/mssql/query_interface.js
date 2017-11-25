@@ -1,24 +1,12 @@
 /**
- Returns an object that treats MSSQL's inabilities to do certain queries.
-
- @class QueryInterface
- @static
- @private
- */
-
-/**
   A wrapper that fixes MSSQL's inability to cleanly remove columns from existing tables if they have a default constraint.
-
-  @method removeColumn
-  @for    QueryInterface
 
   @param  {String} tableName     The name of the table.
   @param  {String} attributeName The name of the attribute that we want to remove.
   @param  {Object} options
   @param  {Boolean|Function} [options.logging] A function that logs the sql queries, or false for explicitly not logging these queries
- @private
  */
-const removeColumn = async function (tableName, attributeName, options) {
+export const removeColumn = async function (tableName, attributeName, options) {
     options = Object.assign({ raw: true }, options || {});
 
     const findConstraintSql = this.QueryGenerator.getDefaultConstraintQuery(tableName, attributeName);
@@ -52,8 +40,4 @@ const removeColumn = async function (tableName, attributeName, options) {
 
     const removeSql = this.QueryGenerator.removeColumnQuery(tableName, attributeName);
     return this.sequelize.query(removeSql, options);
-};
-
-module.exports = {
-    removeColumn
 };

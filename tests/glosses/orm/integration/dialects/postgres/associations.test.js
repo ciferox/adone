@@ -2,14 +2,15 @@ import Support from "../../support";
 import config from "../../../config/config";
 
 const dialect = Support.getTestDialect();
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 describe("[POSTGRES Specific] associations", { skip: !/^postgres/.test(dialect) }, () => {
     describe("many-to-many", () => {
         describe("where tables have the same prefix", () => {
             it("should create a table wp_table1wp_table2s", function () {
-                const Table2 = this.sequelize.define("wp_table2", { foo: DataTypes.STRING });
-                const Table1 = this.sequelize.define("wp_table1", { foo: DataTypes.STRING });
+                const Table2 = this.sequelize.define("wp_table2", { foo: type.STRING });
+                const Table1 = this.sequelize.define("wp_table1", { foo: type.STRING });
 
                 Table1.belongsToMany(Table2, { through: "wp_table1swp_table2s" });
                 Table2.belongsToMany(Table1, { through: "wp_table1swp_table2s" });
@@ -20,8 +21,8 @@ describe("[POSTGRES Specific] associations", { skip: !/^postgres/.test(dialect) 
 
         describe("when join table name is specified", () => {
             beforeEach(function () {
-                const Table2 = this.sequelize.define("ms_table1", { foo: DataTypes.STRING });
-                const Table1 = this.sequelize.define("ms_table2", { foo: DataTypes.STRING });
+                const Table2 = this.sequelize.define("ms_table1", { foo: type.STRING });
+                const Table1 = this.sequelize.define("ms_table2", { foo: type.STRING });
 
                 Table1.belongsToMany(Table2, { through: "table1_to_table2" });
                 Table2.belongsToMany(Table1, { through: "table1_to_table2" });
@@ -43,8 +44,8 @@ describe("[POSTGRES Specific] associations", { skip: !/^postgres/.test(dialect) 
                 const self = this;
 
                 //prevent periods from occurring in the table name since they are used to delimit (table.column)
-                this.User = this.sequelize.define(`User${config.rand()}`, { name: DataTypes.STRING });
-                this.Task = this.sequelize.define(`Task${config.rand()}`, { name: DataTypes.STRING });
+                this.User = this.sequelize.define(`User${config.rand()}`, { name: type.STRING });
+                this.Task = this.sequelize.define(`Task${config.rand()}`, { name: type.STRING });
                 this.users = null;
                 this.tasks = null;
 
@@ -97,8 +98,8 @@ describe("[POSTGRES Specific] associations", { skip: !/^postgres/.test(dialect) 
                 const tasks = [];
 
                 //prevent periods from occurring in the table name since they are used to delimit (table.column)
-                this.User = this.sequelize.define(`User${config.rand()}`, { name: DataTypes.STRING });
-                this.Task = this.sequelize.define(`Task${config.rand()}`, { name: DataTypes.STRING });
+                this.User = this.sequelize.define(`User${config.rand()}`, { name: type.STRING });
+                this.Task = this.sequelize.define(`Task${config.rand()}`, { name: type.STRING });
                 this.users = null;
                 this.tasks = null;
 

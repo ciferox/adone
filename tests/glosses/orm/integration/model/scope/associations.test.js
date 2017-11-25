@@ -1,6 +1,7 @@
 import Support from "../../support";
 
-const Sequelize = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("Model"), () => {
     describe("scope", () => {
@@ -9,11 +10,11 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 const sequelize = this.sequelize;
 
                 this.ScopeMe = this.sequelize.define("ScopeMe", {
-                    username: Sequelize.STRING,
-                    email: Sequelize.STRING,
-                    access_level: Sequelize.INTEGER,
-                    other_value: Sequelize.INTEGER,
-                    parent_id: Sequelize.INTEGER
+                    username: type.STRING,
+                    email: type.STRING,
+                    access_level: type.INTEGER,
+                    other_value: type.INTEGER,
+                    parent_id: type.INTEGER
                 }, {
                     defaultScope: {
                         where: {
@@ -40,7 +41,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 });
 
                 this.Project = this.sequelize.define("project", {
-                    active: Sequelize.BOOLEAN
+                    active: type.BOOLEAN
                 }, {
                     scopes: {
                         active: {
@@ -52,7 +53,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 });
 
                 this.Company = this.sequelize.define("company", {
-                    active: Sequelize.BOOLEAN
+                    active: type.BOOLEAN
                 }, {
                     defaultScope: {
                         where: { active: true }
@@ -70,7 +71,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 });
 
                 this.Profile = this.sequelize.define("profile", {
-                    active: Sequelize.BOOLEAN
+                    active: type.BOOLEAN
                 }, {
                     defaultScope: {
                         where: { active: true }

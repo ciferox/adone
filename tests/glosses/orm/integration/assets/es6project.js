@@ -1,5 +1,5 @@
-exports.default = function (sequelize, DataTypes) {
-    return sequelize.define(`Project${parseInt(Math.random() * 9999999999999999)}`, {
-        name: DataTypes.STRING
+exports.default = function (orm, type) {
+    return orm.define(`Project${parseInt(Math.random() * 9999999999999999)}`, {
+        name: type.STRING
     });
 };

@@ -2,7 +2,7 @@ import Support from "../../support";
 import Config from "../../../config/config";
 
 const { vendor: { lodash: _ } } = adone;
-const { ConnectionManager } = adone.orm.dialect.abstract;
+const { ConnectionManager } = adone.private(adone.orm).dialect.abstract;
 
 const baseConf = Config[Support.getTestDialect()];
 const poolEntry = {

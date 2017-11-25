@@ -1,13 +1,14 @@
 import Support from "../../support";
 
-const { DataTypes } = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("Model"), () => {
 
     describe("not breaking built-ins", () => {
         it("it should not break instance.set by defining a model set attribute", function () {
             const User = this.sequelize.define("OverWrittenKeys", {
-                set: DataTypes.STRING
+                set: type.STRING
             });
 
             const user = User.build({ set: "A" });

@@ -1,6 +1,8 @@
-const { vendor: { lodash: _ } } = adone;
+const {
+    vendor: { lodash: _ }
+} = adone;
 
-class ModelManager {
+export default class ModelManager {
     constructor(sequelize) {
         this.models = [];
         this.sequelize = sequelize;
@@ -89,7 +91,3 @@ class ModelManager {
         }
     }
 }
-
-module.exports = ModelManager;
-module.exports.ModelManager = ModelManager;
-module.exports.default = ModelManager;

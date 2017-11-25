@@ -1,8 +1,7 @@
 import Support from "../../support";
 
-const {
-    DataTypes
-} = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 const expectsql = Support.expectsql;
 const current = Support.sequelize;
@@ -13,12 +12,12 @@ describe(Support.getTestDialectTeaser("SQL"), { skip: current.dialect.name === "
 
         const Model = current.define("users", {
             id: {
-                type: DataTypes.INTEGER,
+                type: type.INTEGER,
                 primaryKey: true,
                 autoIncrement: true
             },
             level_id: {
-                type: DataTypes.INTEGER
+                type: type.INTEGER
             }
         }, { timestamps: false });
 
@@ -34,7 +33,7 @@ describe(Support.getTestDialectTeaser("SQL"), { skip: current.dialect.name === "
 
         it("properly generate alter queries", () => {
             return current.getQueryInterface().changeColumn(Model.getTableName(), "level_id", {
-                type: DataTypes.FLOAT,
+                type: type.FLOAT,
                 allowNull: false
             }).then((sql) => {
                 expectsql(sql, {
@@ -47,7 +46,7 @@ describe(Support.getTestDialectTeaser("SQL"), { skip: current.dialect.name === "
 
         it("properly generate alter queries for foreign keys", () => {
             return current.getQueryInterface().changeColumn(Model.getTableName(), "level_id", {
-                type: DataTypes.INTEGER,
+                type: type.INTEGER,
                 references: {
                     model: "level",
                     key: "id"

@@ -1,8 +1,7 @@
 import Support from "./support";
 
-const {
-    DataTypes
-} = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 const dialect = Support.getTestDialect();
 
@@ -30,7 +29,7 @@ describe(Support.getTestDialectTeaser("Replication"), { skip: dialect === "sqlit
 
         this.User = this.sequelize.define("User", {
             firstName: {
-                type: DataTypes.STRING,
+                type: type.STRING,
                 field: "first_name"
             }
         });

@@ -1,8 +1,7 @@
 import Support from "../support";
 
 
-const Sequelize = Support.Sequelize;
-const ConnectionManager = Sequelize.dialect.abstract.ConnectionManager;
+const ConnectionManager = adone.private(adone.orm).dialect.abstract.ConnectionManager;
 
 describe("connection manager", () => {
     describe("_connect", () => {

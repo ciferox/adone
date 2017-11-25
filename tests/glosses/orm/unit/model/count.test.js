@@ -1,24 +1,24 @@
 import Support from "../../support";
 
 const current = Support.sequelize;
-const {
-    DataTypes
-} = adone.orm;
+const { orm } = adone;
+const { type } = orm;
+const __ = adone.private(orm);
 
 describe(Support.getTestDialectTeaser("Model"), () => {
     describe("method count", function () {
         before(() => {
-            this.oldFindAll = current.Model.findAll;
-            this.oldAggregate = current.Model.aggregate;
+            this.oldFindAll = __.Model.findAll;
+            this.oldAggregate = __.Model.aggregate;
 
-            current.Model.findAll = stub().returns(Promise.resolve());
+            __.Model.findAll = stub().returns(Promise.resolve());
 
             this.User = current.define("User", {
-                username: DataTypes.STRING,
-                age: DataTypes.INTEGER
+                username: type.STRING,
+                age: type.INTEGER
             });
             this.Project = current.define("Project", {
-                name: DataTypes.STRING
+                name: type.STRING
             });
 
             this.User.hasMany(this.Project);
@@ -26,12 +26,12 @@ describe(Support.getTestDialectTeaser("Model"), () => {
         });
 
         after(() => {
-            current.Model.findAll = this.oldFindAll;
-            current.Model.aggregate = this.oldAggregate;
+            __.Model.findAll = this.oldFindAll;
+            __.Model.aggregate = this.oldAggregate;
         });
 
         beforeEach(() => {
-            this.stub = current.Model.aggregate = stub().returns(Promise.resolve());
+            this.stub = __.Model.aggregate = stub().returns(Promise.resolve());
         });
 
         describe("should pass the same options to model.aggregate as findAndCount", () => {

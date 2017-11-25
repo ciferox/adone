@@ -1,15 +1,15 @@
-const { errors } = adone.orm;
+const { x } = adone.orm;
 
 describe("errors", () => {
     it("should maintain stack trace with message", () => {
         const errorsWithMessage = [
-            "BaseError", "ValidationError", "UnknownConstraintError", "InstanceError",
+            "ValidationError", "UnknownConstraintError", "InstanceError",
             "EmptyResultError", "EagerLoadingError", "AssociationError", "QueryError"
         ];
 
         errorsWithMessage.forEach((errorName) => {
             const throwError = () => {
-                throw new errors[errorName]("this is a message");
+                throw new x[errorName]("this is a message");
             };
             let err;
             try {
@@ -19,8 +19,7 @@ describe("errors", () => {
             }
             expect(err).to.exist;
             const stackParts = err.stack.split("\n");
-            const fullErrorName = `Sequelize${errorName}`;
-            expect(stackParts[0]).to.equal(`${fullErrorName}: this is a message`);
+            expect(stackParts[0]).to.equal(`${errorName}: this is a message`);
             expect(stackParts[1]).to.match(/^ {4}at throwError \(.*errors.test.js:\d+:\d+\)$/);
         });
     });
@@ -33,7 +32,7 @@ describe("errors", () => {
 
         errorsWithoutMessage.forEach((errorName) => {
             const throwError = () => {
-                throw new errors[errorName](null);
+                throw new x[errorName](null);
             };
             let err;
             try {
@@ -44,8 +43,7 @@ describe("errors", () => {
             expect(err).to.exist;
             const stackParts = err.stack.split("\n");
 
-            const fullErrorName = `Sequelize${errorName}`;
-            expect(stackParts[0]).to.equal(fullErrorName);
+            expect(stackParts[0]).to.equal(errorName);
             expect(stackParts[1]).to.match(/^ {4}at throwError \(.*errors.test.js:\d+:\d+\)$/);
         });
     });

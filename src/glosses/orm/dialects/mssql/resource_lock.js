@@ -1,4 +1,4 @@
-class ResourceLock {
+export default class ResourceLock {
     constructor(resource) {
         this.resource = resource;
         this.q = new adone.collection.AsyncQueue();
@@ -18,5 +18,3 @@ class ResourceLock {
         return this.resource;
     }
 }
-
-module.exports = ResourceLock;

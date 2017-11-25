@@ -1,8 +1,8 @@
 import Support from "../../support";
 
 
-const Sequelize = Support.Sequelize;
-const DataTypes = Sequelize.DataTypes;
+const { orm } = adone;
+const { type } = orm;
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser("Model"), () => {
@@ -11,13 +11,13 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             it("should correctly group with attributes, #3009", () => {
 
                 const Post = current.define("Post", {
-                    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-                    name: { type: DataTypes.STRING, allowNull: false }
+                    id: { type: type.INTEGER, autoIncrement: true, primaryKey: true },
+                    name: { type: type.STRING, allowNull: false }
                 });
 
                 const Comment = current.define("Comment", {
-                    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-                    text: { type: DataTypes.STRING, allowNull: false }
+                    id: { type: type.INTEGER, autoIncrement: true, primaryKey: true },
+                    text: { type: type.STRING, allowNull: false }
                 });
 
                 Post.hasMany(Comment);
@@ -38,7 +38,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     ]);
                 }).then(() => {
                     return Post.findAll({
-                        attributes: [[Sequelize.fn("COUNT", Sequelize.col("Comments.id")), "comment_count"]],
+                        attributes: [[orm.util.fn("COUNT", orm.util.col("Comments.id")), "comment_count"]],
                         include: [
                             { model: Comment, attributes: [] }
                         ],
@@ -52,13 +52,13 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
             it("should not add primary key when grouping using a belongsTo association", () => {
                 const Post = current.define("Post", {
-                    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-                    name: { type: DataTypes.STRING, allowNull: false }
+                    id: { type: type.INTEGER, autoIncrement: true, primaryKey: true },
+                    name: { type: type.STRING, allowNull: false }
                 });
 
                 const Comment = current.define("Comment", {
-                    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-                    text: { type: DataTypes.STRING, allowNull: false }
+                    id: { type: type.INTEGER, autoIncrement: true, primaryKey: true },
+                    text: { type: type.STRING, allowNull: false }
                 });
 
                 Post.hasMany(Comment);
@@ -79,7 +79,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     ]);
                 }).then(() => {
                     return Comment.findAll({
-                        attributes: ["PostId", [Sequelize.fn("COUNT", Sequelize.col("Comment.id")), "comment_count"]],
+                        attributes: ["PostId", [orm.util.fn("COUNT", orm.util.col("Comment.id")), "comment_count"]],
                         include: [
                             { model: Post, attributes: [] }
                         ],

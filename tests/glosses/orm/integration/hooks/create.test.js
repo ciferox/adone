@@ -1,17 +1,17 @@
 import Support from "../support";
 
-const { DataTypes } = adone.orm;
-const Sequelize = Support.Sequelize;
+const { orm } = adone;
+const { type } = orm;
 
 describe(Support.getTestDialectTeaser("Hooks"), () => {
     beforeEach(function () {
         this.User = this.sequelize.define("User", {
             username: {
-                type: DataTypes.STRING,
+                type: type.STRING,
                 allowNull: false
             },
             mood: {
-                type: DataTypes.ENUM,
+                type: type.ENUM,
                 values: ["happy", "sad", "neutral"]
             }
         });
@@ -93,10 +93,10 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
 
         it("should not trigger hooks on parent when using N:M association setters", async function () {
             const A = this.sequelize.define("A", {
-                name: Sequelize.STRING
+                name: type.STRING
             });
             const B = this.sequelize.define("B", {
-                name: Sequelize.STRING
+                name: type.STRING
             });
 
             let hookCalled = 0;

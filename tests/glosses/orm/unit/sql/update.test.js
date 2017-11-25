@@ -1,8 +1,7 @@
 import Support from "../../support";
 
-const {
-    DataTypes
-} = adone.orm;
+const { orm } = adone;
+const { type } = orm;
 
 const expectsql = Support.expectsql;
 const current = Support.sequelize;
@@ -15,7 +14,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
         it("with temp table for trigger", () => {
             const User = Support.sequelize.define("user", {
                 username: {
-                    type: DataTypes.STRING,
+                    type: type.STRING,
                     field: "user_name"
                 }
             }, {
@@ -39,10 +38,10 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
         it("Works with limit", () => {
             const User = Support.sequelize.define("User", {
                 username: {
-                    type: DataTypes.STRING
+                    type: type.STRING
                 },
                 userId: {
-                    type: DataTypes.INTEGER
+                    type: type.INTEGER
                 }
             }, {
                 timestamps: false
