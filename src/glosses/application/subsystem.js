@@ -322,7 +322,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
             throw new x.NotValid("Path should be absolute");
         }
 
-        const files = await fs.readdir(path);
+        const files = (await fs.readdir(path)).filter((name) => name.endsWith(".js"));
 
         if (is.array(filter)) {
             const targetNames = filter;
@@ -335,7 +335,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
             if (await filter(file)) { // eslint-disable-line
                 let name = null;
                 if (useFilename) {
-                    name = std.path.basename(file);
+                    name = std.path.basename(file, ".js");
                 }
                 // eslint-disable-next-line
                 await this.addSubsystem({

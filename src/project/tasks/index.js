@@ -5,5 +5,6 @@ adone.lazify({
     Copy: "./copy",
     Transpile: "./transpile",
     TranspileExe: "./transpile_exe",
-    Watch: "./watch"
+    Watch: "./watch",
+    IncreaseVersion: "./increase_version"
 }, adone.asNamespace(exports), require);

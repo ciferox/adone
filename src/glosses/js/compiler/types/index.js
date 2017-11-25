@@ -1,6 +1,7 @@
-import toFastProperties from "to-fast-properties";
-import loClone from "lodash/clone";
-import uniq from "lodash/uniq";
+const {
+  util: { toFastProperties },
+  vendor: { lodash: { clone: loClone, uniq } }
+} = adone;
 
 const t = exports;
 

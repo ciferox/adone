@@ -12,33 +12,8 @@ const {
 const {
     Command,
     MainCommand,
-    CliSubsystem,
     CommandsGroups
 } = application.CliApplication;
-
-class RealmManager extends application.Subsystem {
-    @Command({
-        name: ["init", "initialize"],
-        help: "Initialize realm",
-        arguments: [
-            {
-                name: "name",
-                type: String,
-                default: "dev",
-                help: "Name of realm"
-            }
-        ]
-    })
-    async realmInitialize(args) {
-        const name = args.get("name");
-        try {
-            const path = await adone.realm.init(name);
-            term.print(`Realm {green-fg}'${path}'{/green-fg} successfully initialized`);
-        } catch (err) {
-            term.print(`{red-fg}${err.message}{/}`);
-        }
-    }
-}
 
 @CommandsGroups([
     {
@@ -50,18 +25,18 @@ class RealmManager extends application.Subsystem {
         description: "Realm management"
     }
 ])
-@CliSubsystem({
-    name: "realm",
-    group: "realm",
-    description: "Realm tools",
-    subsystem: new RealmManager()
-})
 class AdoneCLI extends application.CliApplication {
     async configure() {
         this.config = await adone.cli.Configuration.load();
 
         // expose cli interface for subsystems.
         this.exposeCliInterface();
+
+        // Add base subsystems
+        await this.addSubsystemsFrom(std.path.join(__dirname, "..", "lib", "cli", "subsystems"), {
+            addOnCommand: true,
+            useFilename: true
+        });
 
         if (is.array(this.config.raw.commands)) {
             for (const ss of this.config.raw.commands) {
@@ -124,6 +99,36 @@ class AdoneCLI extends application.CliApplication {
             }
 
             adone.require(scriptPath);
+        }
+    }
+
+    @Command({
+        name: "initrealm",
+        group: "realm",
+        help: "Initialize new realm",
+        arguments: [
+            {
+                name: "name",
+                type: String,
+                default: "dev",
+                help: "Name of realm"
+            }
+        ],
+        options: [
+            {
+                name: "--path",
+                type: String,
+                help: "Path where realm will be initialized (home directory by default)"
+            }
+        ]
+    })
+    async initrealmCommand(args, opts) {
+        const name = args.get("name");
+        try {
+            const path = await adone.realm.init(name, opts.has("path") ? opts.get("path") : null);
+            term.print(`Realm {green-fg}'${path}'{/green-fg} successfully initialized\n`);
+        } catch (err) {
+            term.print(`{red-fg}${err.message}{/}\n`);
         }
     }
 
@@ -500,7 +505,7 @@ class AdoneCLI extends application.CliApplication {
             await observer.result;
             return 0;
         } catch (err) {
-            term.print(`{red-fg}${err.message}{/}`);
+            term.print(`{red-fg}${err.message}{/}\n`);
             return 1;
         }
     }
@@ -573,7 +578,7 @@ class AdoneCLI extends application.CliApplication {
             }
             return 0;
         } catch (err) {
-            term.print(`{red-fg}${err.message}{/}`);
+            term.print(`{red-fg}${err.message}{/}\n`);
             return 1;
         }
     }
@@ -597,7 +602,7 @@ class AdoneCLI extends application.CliApplication {
             const observer = await manager.watch(path);
             await observer.result;
         } catch (err) {
-            term.print(`{red-fg}${err.message}{/}`);
+            term.print(`{red-fg}${err.message}{/}\n`);
             return 1;
         }
     }

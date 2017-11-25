@@ -7,8 +7,6 @@ const {
     project
 } = adone;
 
-const VERSION_PARTS = ["major", "minor", "patch", "premajor", "preminor", "prepatch", "prerelease"];
-
 const checkEntry = (entry) => {
     if (is.nil(entry.$dst)) {
         return false;
@@ -60,6 +58,7 @@ export default class ProjectManager extends task.Manager {
         await this.addTask("transpile", project.task.Transpile);
         await this.addTask("transpileExe", project.task.TranspileExe);
         await this.addTask("watch", project.task.Watch);
+        await this.addTask("incver", project.task.IncreaseVersion);
 
         // Load custom tasks
         const tasksPath = std.path.join(this.cwd, ".adone", "tasks.js");
@@ -141,40 +140,9 @@ export default class ProjectManager extends task.Manager {
         })));
     }
 
-    async incVersion({ part = "minor", preid = undefined, loose = false } = {}) {
+    async incVersion(options) {
         this._checkLoaded();
-        if (!VERSION_PARTS.includes(part)) {
-            throw new adone.x.NotValid(`Not valid version part: ${part}`);
-        }
-
-        if (!is.string(this.config.raw.version)) {
-            this.config.raw.version = "0.0.0";
-        }
-
-        const version = this.config.raw.version;
-
-        if (!adone.semver.valid(version, loose)) {
-            throw new adone.x.NotValid(`Version is not valid: ${version}`);
-        }
-
-        this.config.raw.version = adone.semver.inc(adone.semver.clean(version, loose), part, loose, preid);
-
-        await this.config.save();
-
-        const updateConfig = async (name) => {
-            if (await fs.exists(std.path.join(this.cwd, name))) {
-                const cfg = await adone.configuration.load(name, null, {
-                    cwd: this.cwd
-                });
-                cfg.raw.version = this.config.raw.version;
-                await cfg.save(name, null, {
-                    space: "  "
-                });
-            }
-        };
-
-        await updateConfig("package.json");
-        await updateConfig("package-lock.json");
+        return this.run("incver", options);
     }
 
     _getEntries(path) {
