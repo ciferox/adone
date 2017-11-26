@@ -31,6 +31,10 @@ export default class Omnitron extends application.Application {
             group: "core"
         });
 
+        // Check presence of common subsystems.
+        this.subsystem("netron");
+        this.subsystem("service");
+
         if (!is.windows) {
             this.exitOnSignal("SIGQUIT", "SIGTERM", "SIGINT");
             process.on("SIGILL", () => {

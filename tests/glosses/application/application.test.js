@@ -70,6 +70,11 @@ describe("application", "Application", () => {
                 assert.equal(result.stdout, "configure\ninitialize\nuninitialize");
             });
 
+            it("valid subsystems from path", async () => {
+                const result = await forkProcess(fixture("add_valid_subsystems_from_path.js"));
+                assert.equal(result.stdout, "hello configure\nhello configure\nhello configure\nhello init\nhello init\nhello init\nhello uninit\nhello uninit\nhello uninit");
+            });
+
             it("not valid subsystem", async () => {
                 const result = await forkProcess(fixture("add_not_valid_subsystem.js"));
                 assert.equal(result.stdout, "incorrect subsystem");

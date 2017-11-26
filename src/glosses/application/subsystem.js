@@ -253,10 +253,6 @@ export default class Subsystem extends adone.event.AsyncEmitter {
 
         const instance = this.instantiateSubsystem(subsystem, { transpile });
 
-        if (!is.subsystem(instance)) {
-            throw new x.NotValid("'subsystem' should be path or instance of adone.application.Subsystem");
-        }
-
         if (!is.string(name)) {
             name = instance.constructor.name;
             if (this.hasSubsystem(name)) {
@@ -302,6 +298,10 @@ export default class Subsystem extends adone.event.AsyncEmitter {
             instance = subsystem;
         }
 
+        if (!is.subsystem(instance)) {
+            throw new x.NotValid("'subsystem' should be path or instance of adone.application.Subsystem");
+        }
+
         return instance;
     }
 
@@ -333,7 +333,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
             throw new x.NotValid("Path should be absolute");
         }
 
-        const files = (await fs.readdir(path)).filter((name) => name.endsWith(".js"));
+        const files = await fs.readdir(path);
 
         if (is.array(filter)) {
             const targetNames = filter;
@@ -343,10 +343,26 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         }
 
         for (const file of files) {
+            let fullPath = std.path.join(path, file);
+            const st = await fs.lstat(fullPath); // eslint-disable-line
+            if (st.isDirectory()) {
+                fullPath = std.path.join(fullPath, "index.js");
+                // eslint-disable-next-line
+                if (!(await fs.exists(fullPath))) {
+                    continue;
+                }
+            } else if (st.isFile()) {
+                if (!file.endsWith(".js")) {
+                    continue;
+                }
+            } else if (!st.isSymbolicLink()) {
+                continue;
+            }
+
             if (await filter(file)) { // eslint-disable-line
                 const systemInfo = {
                     ...options,
-                    subsystem: std.path.join(path, file)
+                    subsystem: fullPath
                 };
 
                 if (useFilename) {
