@@ -14,6 +14,13 @@ export default class AdoneConfiguration extends adone.configuration.Generic {
 
         this[SUB_CONFIGS] = new Map();
     }
+    
+    /**
+     * Returns full name.
+     */
+    getFullName() {
+        return is.string(this.raw.type) ? `${this.raw.type}.${this.raw.name}` : this.raw.name;
+    }
 
     /**
      * Returns absolute path of configuration.

@@ -35,7 +35,13 @@ export default class InstallTask extends task.Task {
                 adoneConf = await this._installFromLocal();
             } else {
                 if (name.startsWith("adone.")) {
-                    //
+                    // 
+                } else if (is.url(name)) {
+                    if (name.endsWith(".git")) {
+                        adoneConf = await this._installFromGit();
+                    } else {
+                        // Download and install from archive
+                    }
                 } else {
                     this.srcPath = std.path.join(process.cwd(), name);
                     adoneConf = await this._installFromLocal();
@@ -43,7 +49,7 @@ export default class InstallTask extends task.Task {
             }
             const version = is.string(adoneConf.raw.version) ? ` ${adoneConf.raw.version}` : "";
             this.manager._updateProgress({
-                schema: ` :spinner {green-fg}{bold}${name}{/bold}${version}{/green-fg} successfully installed`,
+                schema: ` :spinner {green-fg}{bold}${this.name}{/bold}${version}{/green-fg} successfully installed`,
                 result: true
             });
 
@@ -71,7 +77,7 @@ export default class InstallTask extends task.Task {
 
             const adoneConf = this.rollbackData.adoneConf;
             if (is.configuration(adoneConf)) {
-                const name = is.string(adoneConf.raw.type) ? `${adoneConf.raw.type}.${adoneConf.raw.name}` : adoneConf.raw.name;
+                const name = adoneConf.getFullName();
                 const destPath = std.path.join(adone.realm.config.packagesPath, name);
                 return fs.rm(destPath);
             }
@@ -80,7 +86,7 @@ export default class InstallTask extends task.Task {
 
     async _installFromLocal() {
         this.manager._updateProgress({
-            schema: ` :spinner installing from: ${this.srcPath}`
+            schema: ` :spinner installing from {green-fg}${this.srcPath}{/green-fg}`
         });
 
         const adoneConf = await adone.configuration.Adone.load({
@@ -93,18 +99,29 @@ export default class InstallTask extends task.Task {
             throw new adone.x.NotValid("Package name is not specified");
         }
 
-        this.name = is.string(adoneConf.raw.type) ? `${adoneConf.raw.type}.${adoneConf.raw.name}` : adoneConf.raw.name;
+        this.name = adoneConf.getFullName();
         this.destPath = std.path.join(adone.realm.config.packagesPath, this.name);
 
         if (this.build) {
+            this.manager._updateProgress({
+                schema: " :spinner building project"
+            });
             await this._buildProject();
         }
+
+        this.manager._updateProgress({
+            schema: " :spinner copying files"
+        });
 
         if (this.symlink) {
             await this._createSymlink();
         } else {
             await this._copyFiles(adoneConf);
         }
+
+        this.manager._updateProgress({
+            schema: " :spinner registering components"
+        });
 
         if (is.string(adoneConf.raw.type)) {
             await this.manager.registerComponent(adoneConf, this.destPath);
@@ -131,6 +148,22 @@ export default class InstallTask extends task.Task {
         }
 
         return adoneConf;
+    }
+
+    async _installFromGit() {
+        this.manager._updateProgress({
+            schema: ` :spinner cloning {green-fg}${this.name}{/green-fg}`
+        });
+
+        this.srcPath = await fs.tmpName();
+        await fs.mkdirp(std.path.dirname(this.srcPath));
+
+        await adone.vcs.git.Clone(this.name, this.srcPath);
+
+        this.build = true;
+        this.symlink = false;
+
+        return this._installFromLocal();
     }
 
     async _createSymlink() {
@@ -175,8 +208,8 @@ export default class InstallTask extends task.Task {
                     srcPath,
                     "!**/*.map"
                 ], {
-                    cwd: this.srcPath
-                }).dest(std.path.join(this.destPath, dstDir), DEST_OPTIONS);
+                        cwd: this.srcPath
+                    }).dest(std.path.join(this.destPath, dstDir), DEST_OPTIONS);
             }
         } else {
             const indexPath = std.path.join(this.srcPath, "index.js");
@@ -191,8 +224,8 @@ export default class InstallTask extends task.Task {
             "**/.meta/**/*",
             "**/adone.json"
         ], {
-            cwd: this.srcPath
-        }).dest(this.destPath, DEST_OPTIONS);
+                cwd: this.srcPath
+            }).dest(this.destPath, DEST_OPTIONS);
     }
 
     async _buildProject() {

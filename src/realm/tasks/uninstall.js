@@ -42,7 +42,7 @@ export default class InstallTask extends task.Task {
                 });
 
                 this.fullName = this.name;
-                this.name = is.string(adoneConf.raw.type) ? `${adoneConf.raw.type}.${adoneConf.raw.name}` : adoneConf.raw.name;
+                this.name = adoneConf.getFullName();
 
                 if (is.string(adoneConf.raw.type)) {
                     await this.manager.unregisterComponent(adoneConf);
