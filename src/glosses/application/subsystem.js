@@ -243,29 +243,15 @@ export default class Subsystem extends adone.event.AsyncEmitter {
      * @param {string} description Description of subsystem.
      * @param {string} group Group of subsystem.
      * @param {array} configureArgs Arguments sending to configure() method of subsystem.
-     * @param {boolean} addOnCommand If true, the subsystem will be added only if a command 'name' is requested.
      * @param {boolean} transpile Whether the code must be transpiled
      * @returns {null|Promise<object>}
      */
-    addSubsystem({ subsystem, name = null, description = "", group = "subsystem", configureArgs = [], transpile = false } = {}) {
-        let instance;
-
+    addSubsystem({ subsystem, name = null, description = "", group = "subsystem", configureArgs = [], transpile } = {}) {
         if (is.string(name) && this.hasSubsystem(name)) {
             throw new x.Exists(`Subsystem with name '${name}' already exists`);
         }
 
-        if (is.string(subsystem)) {
-            if (!std.path.isAbsolute(subsystem)) {
-                throw new x.NotValid("Path must be absolute");
-            }
-            let SomeSubsystem = adone.require(subsystem, { transpile });
-            if (SomeSubsystem.__esModule === true) {
-                SomeSubsystem = SomeSubsystem.default;
-            }
-            instance = new SomeSubsystem();
-        } else {
-            instance = subsystem;
-        }
+        const instance = this.instantiateSubsystem(subsystem, { transpile });
 
         if (!is.subsystem(instance)) {
             throw new x.NotValid("'subsystem' should be path or instance of adone.application.Subsystem");
@@ -292,6 +278,31 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         this[SUBSYSTEMS_SYMBOL].push(sysInfo);
 
         return sysInfo;
+    }
+
+    /**
+     * Returns instance of subsystem.
+     * 
+     * @param {adone.application.Subsystem|string} subsystem
+     * @param {object} options 
+     */
+    instantiateSubsystem(subsystem, { transpile = false } = {}) {
+        let instance;
+        
+        if (is.string(subsystem)) {
+            if (!std.path.isAbsolute(subsystem)) {
+                throw new x.NotValid("Path must be absolute");
+            }
+            let SomeSubsystem = adone.require(subsystem, { transpile });
+            if (SomeSubsystem.__esModule === true) {
+                SomeSubsystem = SomeSubsystem.default;
+            }
+            instance = new SomeSubsystem();
+        } else {
+            instance = subsystem;
+        }
+
+        return instance;
     }
 
     /**
@@ -333,16 +344,16 @@ export default class Subsystem extends adone.event.AsyncEmitter {
 
         for (const file of files) {
             if (await filter(file)) { // eslint-disable-line
-                let name = null;
+                const systemInfo = {
+                    ...options,
+                    subsystem: std.path.join(path, file)
+                };
+
                 if (useFilename) {
-                    name = std.path.basename(file, ".js");
+                    systemInfo.name = std.path.basename(file, ".js");
                 }
                 // eslint-disable-next-line
-                await this.addSubsystem({
-                    ...options,
-                    name,
-                    subsystem: std.path.join(path, file)
-                });
+                await this.addSubsystem(systemInfo);
             }
         }
     }

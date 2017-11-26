@@ -7,7 +7,8 @@ const {
     runtime: { term },
     tag,
     terminal: { styler },
-    application
+    application,
+    meta: { reflect }
 } = adone;
 
 const {
@@ -52,6 +53,10 @@ const defaultColors = {
     }
 };
 
+// Annotations.
+const SUBSYSTEM_ANNOTATION = "subsystem";
+
+// Symbols for private proerties.
 const INTERNAL = Symbol();
 const UNNAMED = Symbol();
 const EMPTY_VALUE = Symbol();
@@ -59,9 +64,6 @@ const COMMAND = Symbol();
 const ERROR_SCOPE = Symbol.for("adone.application.Application#errorScope");
 const MAIN_COMMAND = Symbol.for("adone.application.CliApplication#mainCommand");
 const VERSION = Symbol();
-const STATIC_COMMANDS = Symbol.for("adone.application.CliApplication#staticCommands");
-const STATIC_COMMAND_GROUPS = Symbol.for("adone.application.CliApplication#staticCommandGroups");
-const STATIC_MAIN_COMMAND = Symbol.for("adone.application.CliApplication#staticMainCommand");
 
 const escape = (x) => x.replace(/%/g, "%%");
 
@@ -229,7 +231,7 @@ class Argument {
         if (!options.name || options.name.length === 0) {
             throw new x.IllegalState("An argument should have a name");
         }
-        options.name = adone.util.arrify(options.name);
+        options.name = util.arrify(options.name);
 
         const [name] = options.name;
         if (options.action) {
@@ -429,7 +431,7 @@ class Argument {
     }
 
     _formatValue(x) {
-        const type = adone.util.typeOf(x);
+        const type = util.typeOf(x);
 
         switch (type) {
             case "string": {
@@ -945,7 +947,7 @@ class Command {
             return;
         }
         if (this.hasArgument(newArgument)) {
-            throw new x.IllegalState(`${this.names[0]}: Cannot add the argument ${newArgument.names[0]} due to name collision`);
+            throw new x.Exists(`${this.names[0]}: Argument with name ${newArgument.names[0]} is already exist`);
         }
         if (this.arguments.length > 0) {
             const last = this.arguments[this.arguments.length - 1];
@@ -975,7 +977,7 @@ class Command {
             return;
         }
         if (this.hasOption(newOption)) {
-            throw new x.IllegalState(`${this.names[0]}: Cannot add the option ${newOption.names[0]} due to name collision`);
+            throw new x.Exists(`${this.names[0]}: Option with name ${newOption.names[0]} is already exist`);
         }
         if (this.blindMode && (newOption.nargs === "?" || newOption.nargs === "*")) {
             throw new x.IllegalState(`${this.names[0]}: Cannot use options with nargs = "*" | "+" | "?" it can lead to unexpected behaviour`);
@@ -1004,7 +1006,7 @@ class Command {
             newGroup = new Group(newGroup);
         }
         if (this.hasOptionsGroup(newGroup)) {
-            throw new x.IllegalState(`${this.names[0]}: Cannot add the options group ${newGroup.name} due to name collision`);
+            throw new x.Exists(`${this.names[0]}: Options group with name ${newGroup.name} is already exist`);
         }
         const groups = this.optionsGroups;
         groups.push(newGroup);
@@ -1027,8 +1029,9 @@ class Command {
             newCommand = new Command(newCommand, this);
         }
         if (this.hasCommand(newCommand)) {
-            throw new x.IllegalState(`${this.names[0]}: Cannot add the command ${newCommand.names[0]} due to name collision`);
+            throw new x.Exists(`${this.names[0]}: Command with name ${newCommand.names[0]} is already exist`);
         }
+
         for (const group of this.commandsGroups) {
             if (group.name === newCommand.group) {
                 group.add(newCommand);
@@ -1053,7 +1056,7 @@ class Command {
             newGroup = new Group(newGroup);
         }
         if (this.hasOptionsGroup(newGroup)) {
-            throw new x.IllegalState(`${this.names[0]}: Cannot add the options group ${newGroup.name} due to name collision`);
+            throw new x.Exists(`${this.names[0]}: Commands group with name ${newGroup.name} is already exist`);
         }
         const groups = this.commandsGroups;
         groups.push(newGroup);
@@ -1196,7 +1199,7 @@ class Command {
         if (!options.name) {
             throw new x.IllegalState("A command should have a name");
         }
-        options.name = adone.util.arrify(options.name);
+        options.name = util.arrify(options.name);
         for (const name of options.name) {
             if (!is.string(name) || !name) {
                 throw new x.IllegalState("A command name must be a non-empty string");
@@ -1332,7 +1335,7 @@ class Command {
                     helpMessage.push("");
                 }
                 const nonEmptyGroups = this.optionsGroups.filter((x) => !x.empty);
-                for (const [idx, group] of adone.util.enumerate(nonEmptyGroups)) {
+                for (const [idx, group] of util.enumerate(nonEmptyGroups)) {
                     if (idx > 0) {
                         helpMessage.push("");
                     }
@@ -1371,7 +1374,7 @@ class Command {
                     helpMessage.push("");
                 }
                 const nonEmptyGroups = this.commandsGroups.filter((x) => !x.empty);
-                for (const [idx, group] of adone.util.enumerate(nonEmptyGroups)) {
+                for (const [idx, group] of util.enumerate(nonEmptyGroups)) {
                     if (idx > 0) {
                         helpMessage.push("");
                     }
@@ -1480,6 +1483,11 @@ export default class CliApplication extends application.Application {
             }
 
             @Public()
+            defineCommandFromSubsystem(...args) {
+                // Should be implemented
+            }
+
+            @Public()
             exitOnSignal(signame) {
                 return this.app.exitOnSignal(signame);
             }
@@ -1487,58 +1495,41 @@ export default class CliApplication extends application.Application {
         adone.runtime.netron.attachContext(new CliContext(this), ctxId);
     }
 
-    async addSubsystem({
-        subsystem,
-        name = null,
-        description = "",
-        group = "subsystem",
-        configureArgs = [],
-        addOnCommand = false,
-        transpile = false
-    } = {}) {
-        if (addOnCommand === true) {
-            this.defineCommand({
-                name,
-                description,
-                group,
-                loader: () => this.addSubsystem({
-                    subsystem,
-                    name,
-                    description,
-                    group,
-                    configureArgs,
-                    transpile
-                })
-            });
-            return null;
-        }
-        return super.addSubsystem({ subsystem, name, description, group, configureArgs, transpile });
-    }
-
     async _configure(ignoreArgs) {
         this[ERROR_SCOPE] = true;
 
-        if (this[STATIC_MAIN_COMMAND]) {
-            this.defineMainCommand(this[STATIC_MAIN_COMMAND]);
-        }
-
-        if (this[STATIC_COMMAND_GROUPS]) {
-            for (const description of this[STATIC_COMMAND_GROUPS]) {
-                this.defineCommandsGroup(description);
+        const sysMeta = reflect.getMetadata(SUBSYSTEM_ANNOTATION, this.constructor);
+        if (sysMeta) {
+            if (sysMeta.mainCommand) {
+                this.defineMainCommand(sysMeta.mainCommand);
             }
-        }
 
-        if (this[STATIC_COMMANDS]) {
-            for (const description of this[STATIC_COMMANDS]) {
-                if (description.loader) {
-                    // ??
-                    this.exposeCliInterface();
+            if (is.array(sysMeta.groups)) {
+                for (const group of sysMeta.groups) {
+                    this.defineCommandsGroup(group);
                 }
-                this.defineCommand(description);
             }
         }
 
         await super._configure();
+
+        if (sysMeta) {
+            if (is.array(sysMeta.commands)) {
+                for (const command of sysMeta.commands) {
+                    this.defineCommand(command);
+                }
+            }
+
+            if (is.array(sysMeta.subsystems)) {
+                for (const ss of sysMeta.subsystems) {
+                    // eslint-disable-next-line
+                    await this.defineCommandFromSubsystem({
+                        ...ss,
+                        lazily: true
+                    });
+                }
+            }
+        }
 
         this[ERROR_SCOPE] = false;
 
@@ -1786,6 +1777,67 @@ export default class CliApplication extends application.Application {
         const cmd = this._getCommand(commandsChain, true);
         const newCommand = this._createCommand(cmdParams, cmd);
         newCommand._subsystem = subsystem;
+        return newCommand;
+    }
+
+    async defineCommandFromSubsystem({
+        name,
+        description = "",
+        group = "subsystem",
+        subsystem,
+        configureArgs = [],
+        lazily = false,
+        transpile = false
+    } = {}) {
+        if (lazily === true) {
+            this.defineCommand({
+                name,
+                description,
+                group,
+                loader: () => this.addSubsystem({
+                    subsystem,
+                    name,
+                    description,
+                    group,
+                    configureArgs,
+                    transpile
+                })
+            });
+        } else {
+            subsystem = this.instantiateSubsystem(subsystem, { transpile });
+            let sysMeta = reflect.getMetadata(SUBSYSTEM_ANNOTATION, subsystem.constructor);
+            if (sysMeta) {
+                sysMeta.name = sysMeta.name || name;
+                sysMeta.description = sysMeta.description || description;
+                sysMeta.group = sysMeta.group || group;
+            } else {
+                sysMeta = {
+                    name,
+                    description,
+                    group
+                };
+            }
+
+            await this.addSubsystem({ subsystem, name, description, group, configureArgs, transpile });
+            this._defineCommandFromSubsystem(subsystem, sysMeta);
+        }
+    }
+
+    _defineCommandFromSubsystem(subsystem, sysMeta, props) {
+        const commands = util.arrify(sysMeta.commands);
+        if (is.array(sysMeta.subsystems)) {
+            for (const ss of sysMeta.subsystems) {
+                commands.push({
+                    ...util.pick(ss, ["name", "description", "group"]),
+                    loader: () => subsystem.addSubsystem(ss) // eslint-disable-line
+                });
+            }
+        }
+        const params = is.array(props) ? util.pick(sysMeta, props) : sysMeta;
+        this.defineCommand(subsystem, {
+            ...params,
+            commands
+        });
     }
 
     defineOption(...args) {
@@ -1968,11 +2020,21 @@ export default class CliApplication extends application.Application {
                                     const sysInfo = await command.loader.call(command.subsystem); // eslint-disable-line
                                     sysInfo.instance[COMMAND] = command;
                                     await this._configureSubsystem(sysInfo); // eslint-disable-line
+
+                                    // Check for meta data and if exists define sub commands, ...
+                                    const sysMeta = reflect.getMetadata(SUBSYSTEM_ANNOTATION, sysInfo.instance.constructor);
+                                    if (sysMeta) {
+                                        this._defineCommandFromSubsystem(sysInfo.instance, sysMeta, [
+                                            "commandsGroups",
+                                            "arguments",
+                                            "options",
+                                            "handler"
+                                        ]);
+                                    }
                                 }
                                 state.push("start command");
                                 nextPart();
                                 continue next;
-
                             }
                         }
                         // optional arguments
@@ -2321,100 +2383,56 @@ CliApplication.prototype.main[INTERNAL] = true;
 // CliApplication.OptionalArgument = OptionalArgument;
 // CliApplication.Command = Command;
 
-const DESCRIPTION = Symbol();
-const DECORATED = Symbol();
+// Decorators
 
-const decorateConfigure = (target) => {
-    if (target instanceof CliApplication) {
-        return;
-    }
-    if (target[DECORATED]) {
-        return;
-    }
-    target[DECORATED] = true;
-    const configure = target.configure;
-    target.configure = async function (...args) {
-        await adone.runtime.netron.getInterface("cli").defineCommand(this, {
-            ...this[STATIC_MAIN_COMMAND],
-            commandsGroups: this[STATIC_COMMAND_GROUPS],
-            commands: this[STATIC_COMMANDS]
-        });
-        return configure.apply(this, args);
-    };
-};
-
-const getCommandDescription = (descriptor) => {
-    let commandDescription = descriptor.value[DESCRIPTION];
-    if (!commandDescription) {
-        commandDescription = {};
-        descriptor.value[DESCRIPTION] = commandDescription;
-    }
-    return commandDescription;
-};
-
-const CommandDecorator = (description = {}) => (target, key, descriptor) => {
-    decorateConfigure(target);
-    const commandDescription = getCommandDescription(descriptor);
-    description.handler = descriptor.value;
-    Object.assign(commandDescription, description);
-    if (!target[STATIC_COMMANDS]) {
-        target[STATIC_COMMANDS] = [];
-    }
-    if (!commandDescription.name) {
-        commandDescription.name = key;
-    }
-    target[STATIC_COMMANDS].push(commandDescription);
-};
-
-const MainCommandDecorator = (description = {}) => (target, key, descriptor) => {
-    decorateConfigure(target);
-    const commandDescription = getCommandDescription(descriptor);
-    description.handler = descriptor.value;
-    Object.assign(commandDescription, description);
-    target[STATIC_MAIN_COMMAND] = commandDescription;
-};
-
-/**
- * Everywhere we use "unshift" instead of "push" to keep the natural order.
- * Decorators are applied in reverse order, i.e. the last decorator will be applied first.
- * We want to define arguments/options from first to last, not from last to first.
- */
-
-const CommandsGroupDecorator = (description) => (target) => {
-    decorateConfigure(target);
-    if (!target.prototype[STATIC_COMMAND_GROUPS]) {
-        target.prototype[STATIC_COMMAND_GROUPS] = [];
-    }
-    target.prototype[STATIC_COMMAND_GROUPS].unshift(description);
-};
-
-const CommandsGroupsDecorator = (descriptions) => (target) => {
-    decorateConfigure(target.prototype);
-    if (!target.prototype[STATIC_COMMAND_GROUPS]) {
-        target.prototype[STATIC_COMMAND_GROUPS] = [];
-    }
-    for (const descr of descriptions) {
-        target.prototype[STATIC_COMMAND_GROUPS].unshift(descr);
+const SubsystemDecorator = (sysInfo = {}) => (target) => {
+    const info = reflect.getMetadata(SUBSYSTEM_ANNOTATION, target);
+    if (is.undefined(info)) {
+        reflect.defineMetadata(SUBSYSTEM_ANNOTATION, sysInfo, target);
+    } else {
+        Object.assign(info, sysInfo);
     }
 };
 
-const СliSubsystem = (ss) => (target) => {
-    decorateConfigure(target.prototype);
-    if (!target.prototype[STATIC_COMMANDS]) {
-        target.prototype[STATIC_COMMANDS] = [];
-    }
-    target.prototype[STATIC_COMMANDS].unshift({
-        name: ss.name,
-        description: ss.description,
-        group: ss.group,
-        loader() {
-            return this.addSubsystem(ss);
+CliApplication.Cli = SubsystemDecorator;
+CliApplication.CliSubsystem = SubsystemDecorator;
+CliApplication.MainCommand = (mainCommand = {}) => (target, key, descriptor) => {
+    let sysMeta = reflect.getMetadata(SUBSYSTEM_ANNOTATION, target.constructor);
+    mainCommand.handler = descriptor.value;
+    if (is.undefined(sysMeta)) {
+        if (target instanceof CliApplication) {
+            sysMeta = {
+                mainCommand
+            };
+        } else {
+            sysMeta = mainCommand;
         }
-    });
+        reflect.defineMetadata(SUBSYSTEM_ANNOTATION, sysMeta, target.constructor);
+    } else {
+        if (target instanceof CliApplication) {
+            sysMeta.mainCommand = mainCommand;
+        } else {
+            Object.assign(sysMeta, mainCommand);
+        }
+    }
 };
-
-CliApplication.Command = CommandDecorator;
-CliApplication.CommandsGroup = CommandsGroupDecorator;
-CliApplication.CommandsGroups = CommandsGroupsDecorator;
-CliApplication.MainCommand = MainCommandDecorator;
-CliApplication.CliSubsystem = СliSubsystem;
+CliApplication.Command = (commandInfo = {}) => (target, key, descriptor) => {
+    let sysMeta = reflect.getMetadata(SUBSYSTEM_ANNOTATION, target.constructor);
+    commandInfo.handler = descriptor.value;
+    if (is.undefined(sysMeta)) {
+        sysMeta = {
+            commands: [
+                commandInfo
+            ]
+        };
+        reflect.defineMetadata(SUBSYSTEM_ANNOTATION, sysMeta, target.constructor);
+    } else {
+        if (!is.array(sysMeta.commands)) {
+            sysMeta.commands = [
+                commandInfo
+            ];
+        } else {
+            sysMeta.commands.push(commandInfo);
+        }
+    }
+};

@@ -3,6 +3,7 @@
 import "adone";
 
 const {
+    fs,
     is,
     std,
     application,
@@ -10,41 +11,47 @@ const {
 } = adone;
 
 const {
+    Cli,
     Command,
-    MainCommand,
-    CommandsGroups
+    MainCommand
 } = application.CliApplication;
 
-@CommandsGroups([
-    {
-        name: "subsystem",
-        description: "Subsystems"
-    },
-    {
-        name: "realm",
-        description: "Realm management"
-    }
-])
+const baseSubsystem = (name) => std.path.join(__dirname, "..", "lib", "cli", "subsystems", name);
+
+@Cli({
+    subsystems: [
+        {
+            name: "link",
+            group: "cli",
+            description: "Adone cli link management",
+            subsystem: baseSubsystem("link")
+        }
+    ]
+})
 class AdoneCLI extends application.CliApplication {
     async configure() {
         this.config = await adone.cli.Configuration.load();
 
-        // expose cli interface for subsystems.
+        // Expose cli interface for subsystems.
         this.exposeCliInterface();
 
-        // Add base subsystems
-        await this.addSubsystemsFrom(std.path.join(__dirname, "..", "lib", "cli", "subsystems"), {
-            addOnCommand: true,
-            useFilename: true
-        });
+        // Define command groups.
+        const groups = this.config.getGroups();
+        for (const group of groups) {
+            this.defineCommandsGroup(group);
+        }
 
-        if (is.array(this.config.raw.commands)) {
-            for (const ss of this.config.raw.commands) {
-                // eslint-disable-next-line
-                await this.addSubsystem(Object.assign({
-                    addOnCommand: true
-                }, ss));
-            }
+        await this._addInstalledSubsystems();
+    }
+
+    async _addInstalledSubsystems() {
+        const commands = this.config.getCommands();
+        for (const ss of commands) {
+            // eslint-disable-next-line
+            await this.defineCommandFromSubsystem({
+                ...ss,
+                lazily: true
+            });
         }
     }
 
@@ -211,7 +218,7 @@ class AdoneCLI extends application.CliApplication {
                 name: "keyword",
                 type: String,
                 default: "",
-                help: "Name or keywork for searching"
+                help: "Name or keyword for searching"
             }
         ]
     })
@@ -594,7 +601,7 @@ class AdoneCLI extends application.CliApplication {
             }
         ]
     })
-    async watchCommand(args, opts) {
+    async watchCommand(args) {
         try {
             const path = args.has("path") ? args.get("path") : null;
             const manager = new adone.project.Manager();

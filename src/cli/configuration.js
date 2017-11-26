@@ -9,17 +9,26 @@ export default class Configuration extends adone.configuration.Generic {
         super(options);
 
         this.raw = {
+            // Default groups
             groups: [
-                {
-                    name: "common",
-                    description: "Common commands"
-                },
                 {
                     name: "subsystem",
                     description: "Subsystems"
+                },
+                {
+                    name: "cli",
+                    description: "Adone cli specific"
+                },
+                {
+                    name: "realm",
+                    description: "Realm management"
                 }
             ]
         };
+    }
+
+    getGroups() {
+        return adone.util.arrify(this.raw.groups);
     }
 
     hasCommand(name) {
@@ -57,6 +66,10 @@ export default class Configuration extends adone.configuration.Generic {
         }
     }
 
+    getCommands() {
+        return adone.util.arrify(this.raw.commands);
+    }
+
     hasLink(linkName) {
         return is.array(this.raw.links) && this.raw.links.findIndex((x) => x.name === linkName) >= 0;
     }
@@ -68,7 +81,7 @@ export default class Configuration extends adone.configuration.Generic {
         return this.raw.links.find((x) => x.name === name);
     }
 
-    addLink(linkInfo, updateIfExists) {
+    addLink(linkInfo, updateIfExists = false) {
         const isExists = this.hasLink(linkInfo.name);
         if (isExists && !updateIfExists) {
             throw new adone.x.Exists(`Link '${linkInfo.name}' already exists`);

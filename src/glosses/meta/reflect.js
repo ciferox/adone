@@ -5,8 +5,8 @@ const {
 adone.asNamespace(exports);
 
 // feature test for Symbol support
-const toPrimitiveSymbol = typeof Symbol.toPrimitive !== "undefined" ? Symbol.toPrimitive : "@@toPrimitive";
-const iteratorSymbol = typeof Symbol.iterator !== "undefined" ? Symbol.iterator : "@@iterator";
+const toPrimitiveSymbol = !is.undefined(Symbol.toPrimitive) ? Symbol.toPrimitive : "@@toPrimitive";
+const iteratorSymbol = !is.undefined(Symbol.iterator) ? Symbol.iterator : "@@iterator";
 // Load global or shim versions of Map, Set, and WeakMap
 const functionPrototype = Object.getPrototypeOf(Function);
 // [[Metadata]] internal slot
@@ -17,7 +17,7 @@ const decorateConstructor = (decorators, target) => {
     for (let i = decorators.length - 1; i >= 0; --i) {
         const decorator = decorators[i];
         const decorated = decorator(target);
-        if (!is.undefined(decorated) && !is.null(decorated)) {
+        if (!is.nil(decorated)) {
             if (!is.function(decorated)) {
                 throw new TypeError();
             }
@@ -31,7 +31,7 @@ const decorateConstructor = (decorators, target) => {
 // 6 ECMAScript Data Typ0es and Values
 // https://tc39.github.io/ecma262/#sec-ecmascript-data-types-and-values
 const getType = (x) => {
-    if (x === null) {
+    if (is.null(x)) {
         return 1;
     }
     switch (typeof x) {
@@ -40,7 +40,7 @@ const getType = (x) => {
         case "string": return 3;
         case "symbol": return 4;
         case "number": return 5;
-        case "object": return x === null ? 1 /* Null */ : 6;
+        case "object": return is.null(x) ? 1 /* Null */ : 6;
         default: return 6;
     }
 };
@@ -106,7 +106,7 @@ const isPropertyKey = (argument) => {
 // https://tc39.github.io/ecma262/#sec-getmethod
 const getMethod = (V, P) => {
     const func = V[P];
-    if (func === undefined || func === null) {
+    if (is.nil(func)) {
         return undefined;
     }
     if (!is.function(func)) {
@@ -130,7 +130,7 @@ const toPrimitive = (input, PreferredType) => {
     }
     const hint = PreferredType === 3 /* String */ ? "string" : PreferredType === 5 /* Number */ ? "number" : "default";
     const exoticToPrim = getMethod(input, toPrimitiveSymbol);
-    if (exoticToPrim !== undefined) {
+    if (!is.undefined(exoticToPrim)) {
         const result = exoticToPrim.call(input, hint);
         if (is.object(result)) {
             throw new TypeError();
@@ -154,7 +154,7 @@ const decorateProperty = (decorators, target, propertyKey, descriptor) => {
     for (let i = decorators.length - 1; i >= 0; --i) {
         const decorator = decorators[i];
         const decorated = decorator(target, propertyKey, descriptor);
-        if (!is.undefined(decorated) && !is.null(decorated)) {
+        if (!is.nil(decorated)) {
             if (!is.object(decorated)) {
                 throw new TypeError();
             }
@@ -200,7 +200,7 @@ const ordinaryHasOwnMetadata = (MetadataKey, O, P) => {
 // https://tc39.github.io/ecma262/#sec-ordinarygetprototypeof
 const ordinaryGetPrototypeOf = (O) => {
     const proto = Object.getPrototypeOf(O);
-    if (typeof O !== "function" || O === functionPrototype) {
+    if (!is.function(O) || O === functionPrototype) {
         return proto;
     }
     // TypeScript doesn't set __proto__ in ES5, as it's non-standard.
@@ -216,12 +216,12 @@ const ordinaryGetPrototypeOf = (O) => {
     // If the super prototype is Object.prototype, null, or undefined, then we cannot determine the heritage.
     const prototype = O.prototype;
     const prototypeProto = prototype && Object.getPrototypeOf(prototype);
-    if (prototypeProto == null || prototypeProto === Object.prototype) {
+    if (is.nil(prototypeProto) || prototypeProto === Object.prototype) {
         return proto;
     }
     // If the constructor was not a function, then we cannot determine the heritage.
     const constructor = prototypeProto.constructor;
-    if (typeof constructor !== "function") {
+    if (!is.function(constructor)) {
         return proto;
     }
     // If we have some kind of self-reference, then we cannot determine the heritage.
@@ -349,7 +349,7 @@ const ordinaryOwnMetadataKeys = (O, P) => {
 const ordinaryMetadataKeys = (O, P) => {
     const ownKeys = ordinaryOwnMetadataKeys(O, P);
     const parent = ordinaryGetPrototypeOf(O);
-    if (parent === null) {
+    if (is.null(parent)) {
         return ownKeys;
     }
     const parentKeys = ordinaryMetadataKeys(parent, P);

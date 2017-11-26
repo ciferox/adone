@@ -772,6 +772,11 @@ export const tmpName = async ({ name = null, tries = 3, template = null, dir = o
     throw new Error("Could not get a unique tmp filename, max tries reached");
 };
 
+/**
+ * Note: On Debian 'HOME' variable is not preserved when using sudo.
+ * This behaviour can be overriden by adding following line to the sudoers file:
+ * Defaults env_keep += "HOME"
+ */
 export const homeDir = () => (is.windows ? process.env.USERPROFILE : process.env.HOME);
 
 export const lookup = async (path) => {
