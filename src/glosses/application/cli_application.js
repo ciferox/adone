@@ -2025,6 +2025,12 @@ export default class CliApplication extends application.Application {
                                     const sysMeta = reflect.getMetadata(SUBSYSTEM_ANNOTATION, sysInfo.instance.constructor);
                                     if (sysMeta) {
                                         this._defineCommandFromSubsystem(sysInfo.instance, sysMeta, [
+                                            "description", // ??
+                                            "help", // ??
+                                            "match",
+                                            "colors",
+                                            "blindMode",
+                                            "optionsGroups",
                                             "commandsGroups",
                                             "arguments",
                                             "options",
