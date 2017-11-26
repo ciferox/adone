@@ -19,38 +19,38 @@ const {
 const {
     x: {
         MISSING_DOC,
-        REV_CONFLICT,
-        NOT_OPEN,
-        BAD_ARG,
-        MISSING_STUB,
-        createError
+    REV_CONFLICT,
+    NOT_OPEN,
+    BAD_ARG,
+    MISSING_STUB,
+    createError
     }
 } = pouch;
 
 const {
     util: {
         uuid,
-        ChangesHandler,
-        filterChange,
-        merge: {
+    ChangesHandler,
+    filterChange,
+    merge: {
             winningRev: calculateWinningRev,
-            traverseRevTree,
-            compactTree,
-            collectConflicts,
-            latest: getLatest,
-            isDeleted,
-            isLocalId
+        traverseRevTree,
+        compactTree,
+        collectConflicts,
+        latest: getLatest,
+        isDeleted,
+        isLocalId
         },
-        adapter: {
+    adapter: {
             parseDoc,
-            processDocs
+        processDocs
         },
-        binary: {
+    binary: {
             typedBuffer,
-            atob,
-            binaryStringToBuffer
+        atob,
+        binaryStringToBuffer
         },
-        md5: { binary: binaryMd5 }
+    md5: { binary: binaryMd5 }
     }
 } = adone.private(pouch);
 
@@ -514,7 +514,7 @@ export const adapter = function (opts, callback) {
                 if (levelErr) {
                     const err = createError(MISSING_STUB,
                         `unknown stub attachment with digest ${
-                            digest}`);
+                        digest}`);
                     callback(err);
                 } else {
                     callback();
@@ -912,16 +912,21 @@ export const adapter = function (opts, callback) {
                 limit = opts.limit;
             }
             if (limit === 0 ||
-                ("start" in readstreamOpts && "end" in readstreamOpts &&
-                    readstreamOpts.start > readstreamOpts.end)) {
+                ("gte" in readstreamOpts && "lte" in readstreamOpts &&
+                    readstreamOpts.gte > readstreamOpts.lte)) {
                 // should return 0 results when start is greater than end.
                 // normally level would "fix" this for us by reversing the order,
                 // so short-circuit instead
-                return callback(null, {
+                const returnVal = {
                     total_rows: docCount,
                     offset: opts.skip,
                     rows: []
-                });
+                };
+
+                if (opts.update_seq) {
+                    returnVal.update_seq = db._updateSeq;
+                }
+                return callback(null, returnVal);
             }
             const results = [];
             const docstream = stores.docStore.readStream(readstreamOpts);
@@ -997,11 +1002,16 @@ export const adapter = function (opts, callback) {
                         return fetchAttachments(results, stores, opts);
                     }
                 }).then(() => {
-                    callback(null, {
+                    const returnVal = {
                         total_rows: docCount,
                         offset: opts.skip,
                         rows: results
-                    });
+                    };
+
+                    if (opts.update_seq) {
+                        returnVal.update_seq = db._updateSeq;
+                    }
+                    callback(null, returnVal);
                 }, callback);
                 next();
             }).on("unpipe", () => {

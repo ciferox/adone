@@ -19,8 +19,8 @@ const kOwner = Symbol("owner");
 // as documented in https://github.com/nodejs/node/issues/8871#issuecomment-250915913
 // and https://github.com/websockets/ws/issues/1202
 //
-// Intentionally global; it's the global thread pool that's
-// an issue.
+// Intentionally global; it's the global thread pool that's an issue.
+//
 let zlibLimiter;
 
 
@@ -75,6 +75,28 @@ const inflateOnError = function (err) {
 
 
 export default class PerMessageDeflate {
+    /**
+     * Creates a PerMessageDeflate instance.
+     *
+     * @param {Object} options Configuration options
+     * @param {Boolean} options.serverNoContextTakeover Request/accept disabling
+     *     of server context takeover
+     * @param {Boolean} options.clientNoContextTakeover Advertise/acknowledge
+     *     disabling of client context takeover
+     * @param {(Boolean|Number)} options.serverMaxWindowBits Request/confirm the
+     *     use of a custom server window size
+     * @param {(Boolean|Number)} options.clientMaxWindowBits Advertise support
+     *     for, or request, a custom client window size
+     * @param {Number} options.level The value of zlib's `level` param
+     * @param {Number} options.memLevel The value of zlib's `memLevel` param
+     * @param {Number} options.threshold Size (in bytes) below which messages
+     *     should not be compressed
+     * @param {Number} options.concurrencyLimit The number of concurrent calls to
+     *     zlib
+     * @param {Boolean} isServer Create the instance in either server or client
+     *     mode
+     * @param {Number} maxPayload The maximum allowed message length
+     */
     constructor(options, isServer, maxPayload) {
         this._options = options || {};
         this._isServer = Boolean(isServer);
@@ -92,6 +114,9 @@ export default class PerMessageDeflate {
         }
     }
 
+    /**
+     * @type {String}
+     */
     static get extensionName() {
         return "permessage-deflate";
     }
@@ -155,10 +180,10 @@ export default class PerMessageDeflate {
         const result = paramsList.some((params) => {
             if ((this._options.serverNoContextTakeover === false && params.server_no_context_takeover) ||
                 (this._options.serverMaxWindowBits === false && params.server_max_window_bits) ||
-                (is.number(this._options.serverMaxWindowBits) && is.number(params.server_max_window_bits) &&
-                    this._options.serverMaxWindowBits > params.server_max_window_bits) ||
-                (is.number(this._options.clientMaxWindowBits) && !params.client_max_window_bits)) {
-                return undefined;
+                (is.number(this._options.serverMaxWindowBits) && is.number(params.server_max_window_bits) && this._options.serverMaxWindowBits > params.server_max_window_bits) ||
+                (is.number(this._options.clientMaxWindowBits) && !params.client_max_window_bits)
+            ) {
+                return false;
             }
 
             if (this._options.serverNoContextTakeover || params.server_no_context_takeover) {
@@ -180,8 +205,8 @@ export default class PerMessageDeflate {
             return true;
         });
 
-        if (!result) {
-            throw new Error("Doesn't support the offered configuration");
+        if (!result) { 
+            throw new Error("Doesn't support the offered configuration"); 
         }
 
         return accepted;

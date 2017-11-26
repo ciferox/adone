@@ -1,9 +1,9 @@
 Native Abstractions for Node.js
 ===============================
 
-**A header file filled with macro and utility goodness for making add-on development for Node.js easier across versions 0.8, 0.10, 0.12, 1, 2, 3, 4, 5, 6, 7 and 8.**
+**A header file filled with macro and utility goodness for making add-on development for Node.js easier across versions 0.8, 0.10, 0.12, 1, 2, 3, 4, 5, 6, 7, 8 and 9.**
 
-***Current version: 2.7.0***
+***Current version: 2.8.0***
 
 *(See [CHANGELOG.md](https://github.com/nodejs/nan/blob/master/CHANGELOG.md) for complete ChangeLog)*
 
@@ -174,7 +174,8 @@ The `Nan::MaybeLocal` and `Nan::Maybe` types are monads that encapsulate `v8::Lo
   - <a href="doc/maybe_types.md#api_nan_new_instance"><b><code>Nan::NewInstance()</code></b></a>
   - <a href="doc/maybe_types.md#api_nan_get_function"><b><code>Nan::GetFunction()</code></b></a>
   - <a href="doc/maybe_types.md#api_nan_set"><b><code>Nan::Set()</code></b></a>
-  - <a href="doc/maybe_types.md#api_nan_force_set"><b><code>Nan::ForceSet()</code></b></a>
+  - <a href="doc/maybe_types.md#api_nan_define_own_property"><b><code>Nan::DefineOwnProperty()</code></b></a>
+  - <a href="doc/maybe_types.md#api_nan_force_set"><del><b><code>Nan::ForceSet()</code></b></del></a>
   - <a href="doc/maybe_types.md#api_nan_get"><b><code>Nan::Get()</code></b></a>
   - <a href="doc/maybe_types.md#api_nan_get_property_attribute"><b><code>Nan::GetPropertyAttributes()</code></b></a>
   - <a href="doc/maybe_types.md#api_nan_has"><b><code>Nan::Has()</code></b></a>
@@ -416,6 +417,7 @@ By making a contribution to this project, I certify that:
 <tr><th align="left">Brett Lawson</th><td><a href="https://github.com/brett19">GitHub/brett19</a></td><td><a href="http://twitter.com/brett19x">Twitter/@brett19x</a></td></tr>
 <tr><th align="left">Ben Noordhuis</th><td><a href="https://github.com/bnoordhuis">GitHub/bnoordhuis</a></td><td><a href="http://twitter.com/bnoordhuis">Twitter/@bnoordhuis</a></td></tr>
 <tr><th align="left">David Siegel</th><td><a href="https://github.com/agnat">GitHub/agnat</a></td><td><a href="http://twitter.com/agnat">Twitter/@agnat</a></td></tr>
+<tr><th align="left">Michael Ira Krufky</th><td><a href="https://github.com/mkrufky">GitHub/mkrufky</a></td><td><a href="http://twitter.com/mkrufky">Twitter/@mkrufky</a></td></tr>
 </tbody></table>
 
 ## Licence &amp; copyright

@@ -396,14 +396,12 @@ const _replicate = (src, target, opts, returnValue, result) => {
         completeReplication(err);
     };
 
-    const onChange = (change) => {
+    const onChange = (change, pending, lastSeq) => {
         /* istanbul ignore if */
         if (returnValue.cancelled) {
             return completeReplication();
         }
         // Attach 'pending' property if server supports it (CouchDB 2.0+)
-        const pending = change.pending;
-        delete change.pending;
         /* istanbul ignore if */
         if (is.number(pending)) {
             pendingBatch.pending = pending;
@@ -413,7 +411,7 @@ const _replicate = (src, target, opts, returnValue, result) => {
         if (!filter) {
             return;
         }
-        pendingBatch.seq = change.seq;
+        pendingBatch.seq = change.seq || lastSeq;
         pendingBatch.changes.push(change);
         processPendingBatch(batches.length === 0 && changesOpts.live);
     };

@@ -472,48 +472,52 @@ export default class Client extends adone.event.EventEmitter {
         this.emit("open");
     }
 
+    /**
+     * Clean up and release internal resources.
+     *
+     * @param {(Boolean|Error)} error Indicates whether or not an error occurred
+     * @private
+     */
     finalize(error) {
-        if (this._finalizeCalled) {
+        if (this._finalized) { 
             return;
         }
 
         this.readyState = Client.CLOSING;
-        this._finalizeCalled = true;
-
-        clearTimeout(this._closeTimer);
-        this._closeTimer = null;
+        this._finalized = true;
 
         //
         // If the connection was closed abnormally (with an error), or if the close
         // control frame was malformed or not received then the close code must be
         // 1006.
         //
-        if (error) {
-            this._closeCode = 1006;
+        if (error) { 
+            this._closeCode = 1006; 
         }
 
-        if (this._socket) {
-            this._socket.removeListener("error", this._finalize);
-            this._socket.removeListener("close", this._finalize);
-            this._socket.removeListener("end", this._finalize);
-            this._socket.on("error", function onerror() {
-                this.destroy();
-            });
-
-            if (!error) {
-                this._socket.end();
-            } else {
-                this._socket.destroy();
-            }
-
-            this._receiver.cleanup(() => this.emitClose());
-
-            this._receiver = null;
-            this._sender = null;
-            this._socket = null;
-        } else {
-            this.emitClose();
+        if (!this._socket) { 
+            return this.emitClose();
         }
+
+        clearTimeout(this._closeTimer);
+        this._closeTimer = null;
+
+        this._socket.removeListener("error", this._finalize);
+        this._socket.removeListener("close", this._finalize);
+        this._socket.removeListener("end", this._finalize);
+        this._socket.on("error", adone.noop);
+
+        if (!error) { 
+            this._socket.end();
+        } else { 
+            this._socket.destroy(); 
+        }
+
+        this._socket = null;
+        this._sender = null;
+
+        this._receiver.cleanup(() => this.emitClose());
+        this._receiver = null;
     }
 
     emitClose() {

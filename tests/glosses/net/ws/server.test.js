@@ -1,5 +1,8 @@
-const { is, net: { ws: { Client, Server } }, std: { fs, http, https, crypto, net } } = adone;
-let port = 8000;
+const {
+    is,
+    net: { ws: { Client, Server } },
+    std: { fs, http, https, crypto, net }
+} = adone;
 
 describe("net", "ws", "WebSocketServer", () => {
     describe("#ctor", () => {
@@ -20,7 +23,8 @@ describe("net", "ws", "WebSocketServer", () => {
         });
 
         it("starts a server on a given port", (done) => {
-            const wss = new Server({ port: ++port }, () => {
+            const wss = new Server({ port: 0 }, () => {
+                const port = wss._server.address().port;
                 new Client(`ws://localhost:${port}`);
             });
 
@@ -28,7 +32,7 @@ describe("net", "ws", "WebSocketServer", () => {
         });
 
         it("binds the server on any IPv6 address when available", (done) => {
-            const wss = new Server({ port: ++port }, () => {
+            const wss = new Server({ port: 0 }, () => {
                 assert.strictEqual(wss._server.address().address, "::");
                 wss.close(done);
             });
@@ -37,9 +41,9 @@ describe("net", "ws", "WebSocketServer", () => {
         it("uses a precreated http server", (done) => {
             const server = http.createServer();
 
-            server.listen(++port, () => {
+            server.listen(0, () => {
                 const wss = new Server({ server });
-                new Client(`ws://localhost:${port}`);
+                new Client(`ws://localhost:${server.address().port}`);
 
                 wss.on("connection", (client) => {
                     wss.close();
@@ -49,7 +53,8 @@ describe("net", "ws", "WebSocketServer", () => {
         });
 
         it("426s for non-Upgrade requests", (done) => {
-            const wss = new Server({ port: ++port }, () => {
+            const wss = new Server({ port: 0 }, () => {
+                const port = wss._server.address().port;
                 http.get(`http://localhost:${port}`, (res) => {
                     let body = "";
 
@@ -95,12 +100,13 @@ describe("net", "ws", "WebSocketServer", () => {
         });
 
         it("will not crash when it receives an unhandled opcode", (done) => {
-            const wss = new Server({ port: ++port });
+            const wss = new Server({ port: 0 });
 
             wss.on("connection", (ws) => {
                 ws.onerror = () => wss.close(done);
             });
 
+            const port = wss._server.address().port;
             const ws = new Client(`ws://localhost:${port}/`);
 
             ws.onopen = () => ws._socket.write(Buffer.from([0x85, 0x00]));
@@ -109,7 +115,7 @@ describe("net", "ws", "WebSocketServer", () => {
 
     describe("#close", () => {
         it("does not thrown when called twice", (done) => {
-            const wss = new Server({ port: ++port }, () => {
+            const wss = new Server({ port: 0 }, () => {
                 wss.close();
                 wss.close();
                 wss.close();
@@ -120,7 +126,8 @@ describe("net", "ws", "WebSocketServer", () => {
 
         it("closes all clients", (done) => {
             let closes = 0;
-            const wss = new Server({ port: ++port }, () => {
+            const wss = new Server({ port: 0 }, () => {
+                const port = wss._server.address().port;
                 const ws = new Client(`ws://localhost:${port}`);
                 ws.on("close", () => {
                     if (++closes === 2) {
@@ -155,8 +162,8 @@ describe("net", "ws", "WebSocketServer", () => {
                 server.close(done);
             });
 
-            server.listen(++port, () => {
-                new Client(`ws://localhost:${port}`);
+            server.listen(0, () => {
+                new Client(`ws://localhost:${server.address().port}`);
             });
         });
 
@@ -170,7 +177,7 @@ describe("net", "ws", "WebSocketServer", () => {
             const server = http.createServer();
             const wss = new Server({ server });
 
-            server.listen(++port, () => {
+            server.listen(0, () => {
                 wss.close(() => {
                     assert.strictEqual(server.listeners("listening").length, 0);
                     assert.strictEqual(server.listeners("upgrade").length, 0);
@@ -184,8 +191,9 @@ describe("net", "ws", "WebSocketServer", () => {
 
     describe("#clients", () => {
         it("returns a list of connected clients", (done) => {
-            const wss = new Server({ port: ++port }, () => {
+            const wss = new Server({ port: 0 }, () => {
                 assert.strictEqual(wss.clients.size, 0);
+                const port = wss._server.address().port;
                 new Client(`ws://localhost:${port}`);
             });
 
@@ -196,8 +204,9 @@ describe("net", "ws", "WebSocketServer", () => {
         });
 
         it("can be disabled", (done) => {
-            const wss = new Server({ port: ++port, clientTracking: false }, () => {
+            const wss = new Server({ port: 0, clientTracking: false }, () => {
                 assert.strictEqual(wss.clients, undefined);
+                const port = wss._server.address().port;
                 const ws = new Client(`ws://localhost:${port}`);
 
                 ws.on("open", () => ws.close());
@@ -210,7 +219,8 @@ describe("net", "ws", "WebSocketServer", () => {
         });
 
         it("is updated when client terminates the connection", (done) => {
-            const wss = new Server({ port: ++port }, () => {
+            const wss = new Server({ port: 0 }, () => {
+                const port = wss._server.address().port;
                 const ws = new Client(`ws://localhost:${port}`);
 
                 ws.on("open", () => ws.terminate());
@@ -225,7 +235,8 @@ describe("net", "ws", "WebSocketServer", () => {
         });
 
         it("is updated when client closes the connection", (done) => {
-            const wss = new Server({ port: ++port }, () => {
+            const wss = new Server({ port: 0 }, () => {
+                const port = wss._server.address().port;
                 const ws = new Client(`ws://localhost:${port}`);
 
                 ws.on("open", () => ws.close());
@@ -242,8 +253,9 @@ describe("net", "ws", "WebSocketServer", () => {
 
     describe("#options", () => {
         it("exposes options passed to constructor", (done) => {
-            const wss = new Server({ port: ++port }, () => {
-                assert.strictEqual(wss.options.port, port);
+            const wss = new Server({ port: 0 }, () => {
+                const port = wss._server.address().port;
+                assert.strictEqual(wss.options.port, 0);
                 wss.close();
                 done();
             });
@@ -253,7 +265,8 @@ describe("net", "ws", "WebSocketServer", () => {
     describe("#maxpayload", () => {
         it("maxpayload is passed on to clients", (done) => {
             const maxPayload = 20480;
-            const wss = new Server({ port: ++port, maxPayload }, () => {
+            const wss = new Server({ port: 0, maxPayload }, () => {
+                const port = wss._server.address().port;
                 new Client(`ws://localhost:${port}`);
             });
 
@@ -266,7 +279,8 @@ describe("net", "ws", "WebSocketServer", () => {
 
         it("maxpayload is passed on to hybi receivers", (done) => {
             const maxPayload = 20480;
-            const wss = new Server({ port: ++port, maxPayload }, () => {
+            const wss = new Server({ port: 0, maxPayload }, () => {
+                const port = wss._server.address().port;
                 new Client(`ws://localhost:${port}`);
             });
 
@@ -281,9 +295,10 @@ describe("net", "ws", "WebSocketServer", () => {
             const maxPayload = 20480;
             const wss = new Server({
                 perMessageDeflate: true,
-                port: ++port,
+                port: 0,
                 maxPayload
             }, () => {
+                const port = wss._server.address().port;
                 new Client(`ws://localhost:${port}`);
             });
 
@@ -316,14 +331,14 @@ describe("net", "ws", "WebSocketServer", () => {
         it("can be used for a pre-existing server", (done) => {
             const server = http.createServer();
 
-            server.listen(++port, () => {
+            server.listen(0, () => {
                 const wss = new Server({ noServer: true });
 
                 server.on("upgrade", (req, socket, head) => {
                     wss.handleUpgrade(req, socket, head, (client) => client.send("hello"));
                 });
 
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${server.address().port}`);
 
                 ws.on("message", (message) => {
                     assert.strictEqual(message, "hello");
@@ -334,7 +349,8 @@ describe("net", "ws", "WebSocketServer", () => {
         });
 
         it("closes the connection when path does not match", (done) => {
-            const wss = new Server({ port: ++port, path: "/ws" }, () => {
+            const wss = new Server({ port: 0, path: "/ws" }, () => {
+                const port = wss._server.address().port;
                 const req = http.request({
                     headers: {
                         Connection: "Upgrade",
@@ -355,7 +371,8 @@ describe("net", "ws", "WebSocketServer", () => {
         });
 
         it("closes the connection when protocol version is Hixie-76", (done) => {
-            const wss = new Server({ port: ++port }, () => {
+            const wss = new Server({ port: 0 }, () => {
+                const port = wss._server.address().port;
                 const req = http.request({
                     headers: {
                         Connection: "Upgrade",
@@ -380,7 +397,8 @@ describe("net", "ws", "WebSocketServer", () => {
 
     describe("connection establishing", () => {
         it("does not accept connections with no sec-websocket-key", (done) => {
-            const wss = new Server({ port: ++port }, () => {
+            const wss = new Server({ port: 0 }, () => {
+                const port = wss._server.address().port;
                 const req = http.request({
                     headers: {
                         Connection: "Upgrade",
@@ -405,7 +423,8 @@ describe("net", "ws", "WebSocketServer", () => {
         });
 
         it("does not accept connections with no sec-websocket-version", (done) => {
-            const wss = new Server({ port: ++port }, () => {
+            const wss = new Server({ port: 0 }, () => {
+                const port = wss._server.address().port;
                 const req = http.request({
                     headers: {
                         Connection: "Upgrade",
@@ -431,7 +450,8 @@ describe("net", "ws", "WebSocketServer", () => {
         });
 
         it("does not accept connections with invalid sec-websocket-version", (done) => {
-            const wss = new Server({ port: ++port }, () => {
+            const wss = new Server({ port: 0 }, () => {
+                const port = wss._server.address().port;
                 const req = http.request({
                     headers: {
                         Connection: "Upgrade",
@@ -460,8 +480,9 @@ describe("net", "ws", "WebSocketServer", () => {
         it("client can be denied", (done) => {
             const wss = new Server({
                 verifyClient: (o) => false,
-                port: ++port
+                port: 0
             }, () => {
+                const port = wss._server.address().port;
                 const req = http.request({
                     headers: {
                         Connection: "Upgrade",
@@ -490,9 +511,10 @@ describe("net", "ws", "WebSocketServer", () => {
 
         it("client can be accepted", (done) => {
             const wss = new Server({
-                port: ++port,
+                port: 0,
                 verifyClient: (o) => true
             }, () => {
+                const port = wss._server.address().port;
                 const req = http.request({
                     headers: {
                         Connection: "Upgrade",
@@ -522,8 +544,9 @@ describe("net", "ws", "WebSocketServer", () => {
                     verifyClientCalled = true;
                     return false;
                 },
-                port: ++port
+                port: 0
             }, () => {
+                const port = wss._server.address().port;
                 const req = http.request({
                     headers: {
                         Connection: "Upgrade",
@@ -557,8 +580,9 @@ describe("net", "ws", "WebSocketServer", () => {
                     verifyClientCalled = true;
                     return false;
                 },
-                port: ++port
+                port: 0
             }, () => {
+                const port = wss._server.address().port;
                 const req = http.request({
                     headers: {
                         Connection: "Upgrade",
@@ -602,7 +626,7 @@ describe("net", "ws", "WebSocketServer", () => {
                 server.close(done);
             });
 
-            server.listen(++port, () => new Client(`wss://localhost:${port}`, {
+            server.listen(0, () => new Client(`wss://localhost:${server.address().port}`, {
                 rejectUnauthorized: false
             }));
         });
@@ -625,16 +649,17 @@ describe("net", "ws", "WebSocketServer", () => {
                 server.close(done);
             });
 
-            server.listen(++port, () => {
-                new Client(`ws://localhost:${port}`);
+            server.listen(0, () => {
+                new Client(`ws://localhost:${server.address().port}`);
             });
         });
 
         it("client can be denied asynchronously", (done) => {
             const wss = new Server({
                 verifyClient: (o, cb) => process.nextTick(cb, false),
-                port: ++port
+                port: 0
             }, () => {
+                const port = wss._server.address().port;
                 const req = http.request({
                     headers: {
                         Connection: "Upgrade",
@@ -664,8 +689,9 @@ describe("net", "ws", "WebSocketServer", () => {
         it("client can be denied asynchronously with custom response code", (done) => {
             const wss = new Server({
                 verifyClient: (o, cb) => process.nextTick(cb, false, 404),
-                port: ++port
+                port: 0
             }, () => {
+                const port = wss._server.address().port;
                 const req = http.request({
                     headers: {
                         Connection: "Upgrade",
@@ -695,8 +721,9 @@ describe("net", "ws", "WebSocketServer", () => {
         it("client can be accepted asynchronously", (done) => {
             const wss = new Server({
                 verifyClient: (o, cb) => process.nextTick(cb, true),
-                port: ++port
+                port: 0
             }, () => {
+                const port = wss._server.address().port;
                 const req = http.request({
                     headers: {
                         Connection: "Upgrade",
@@ -721,7 +748,7 @@ describe("net", "ws", "WebSocketServer", () => {
         it("doesn't emit the `connection` event if socket is closed prematurely", (done) => {
             const server = http.createServer();
 
-            server.listen(++port, () => {
+            server.listen(0, () => {
                 const wss = new Server({
                     verifyClient: (o, cb) => setTimeout(cb, 100, true),
                     server
@@ -731,7 +758,7 @@ describe("net", "ws", "WebSocketServer", () => {
                     throw new Error("connection event emitted");
                 });
 
-                const socket = net.connect({ host: "localhost", port }, () => {
+                const socket = net.connect({ host: "localhost", port: server.address().port }, () => {
                     socket.write([
                         "GET / HTTP/1.1",
                         "Host: localhost",
@@ -754,7 +781,8 @@ describe("net", "ws", "WebSocketServer", () => {
         });
 
         it("handles messages passed along with the upgrade request (upgrade head)", (done) => {
-            const wss = new Server({ port: ++port }, () => {
+            const wss = new Server({ port: 0 }, () => {
+                const port = wss._server.address().port;
                 const req = http.request({
                     headers: {
                         Connection: "Upgrade",
@@ -781,7 +809,8 @@ describe("net", "ws", "WebSocketServer", () => {
         });
 
         it("selects the first protocol by default", (done) => {
-            const wss = new Server({ port: ++port }, () => {
+            const wss = new Server({ port: 0 }, () => {
+                const port = wss._server.address().port;
                 const ws = new Client(`ws://localhost:${port}`, ["prot1", "prot2"]);
 
                 ws.on("open", () => {
@@ -798,7 +827,8 @@ describe("net", "ws", "WebSocketServer", () => {
                 assert.strictEqual(request.url, "/");
                 return protocols.pop();
             };
-            const wss = new Server({ handleProtocols, port: ++port }, () => {
+            const wss = new Server({ handleProtocols, port: 0 }, () => {
+                const port = wss._server.address().port;
                 const ws = new Client(`ws://localhost:${port}`, ["prot1", "prot2"]);
 
                 ws.on("open", () => {
@@ -811,8 +841,9 @@ describe("net", "ws", "WebSocketServer", () => {
         it("client detects invalid server protocol", (done) => {
             const wss = new Server({
                 handleProtocols: (ps) => "prot3",
-                port: ++port
+                port: 0
             }, () => {
+                const port = wss._server.address().port;
                 const ws = new Client(`ws://localhost:${port}`, ["prot1", "prot2"]);
 
                 ws.on("open", () => done(new Error("connection must not be established")));
@@ -826,8 +857,9 @@ describe("net", "ws", "WebSocketServer", () => {
         it("client detects no server protocol", (done) => {
             const wss = new Server({
                 handleProtocols: (ps) => { },
-                port: ++port
+                port: 0
             }, () => {
+                const port = wss._server.address().port;
                 const ws = new Client(`ws://localhost:${port}`, ["prot1", "prot2"]);
 
                 ws.on("open", () => done(new Error("connection must not be established")));
@@ -841,8 +873,9 @@ describe("net", "ws", "WebSocketServer", () => {
         it("server detects unauthorized protocol handler", (done) => {
             const wss = new Server({
                 handleProtocols: (ps) => false,
-                port: ++port
+                port: 0
             }, () => {
+                const port = wss._server.address().port;
                 const req = http.request({
                     headers: {
                         Connection: "Upgrade",
@@ -866,7 +899,8 @@ describe("net", "ws", "WebSocketServer", () => {
         });
 
         it("accept connections with sec-websocket-extensions", (done) => {
-            const wss = new Server({ port: ++port }, () => {
+            const wss = new Server({ port: 0 }, () => {
+                const port = wss._server.address().port;
                 const req = http.request({
                     headers: {
                         Connection: "Upgrade",
@@ -889,7 +923,8 @@ describe("net", "ws", "WebSocketServer", () => {
         });
 
         it("emits the `headers` event", (done) => {
-            const wss = new Server({ port: ++port }, () => {
+            const wss = new Server({ port: 0 }, () => {
+                const port = wss._server.address().port;
                 new Client(`ws://localhost:${port}`);
 
                 wss.on("headers", (headers, request) => {
@@ -916,7 +951,8 @@ describe("net", "ws", "WebSocketServer", () => {
             }
             data = data.join("");
 
-            const wss = new Server({ port: ++port }, () => {
+            const wss = new Server({ port: 0 }, () => {
+                const port = wss._server.address().port;
                 const ws = new Client(`ws://localhost:${port}`);
 
                 ws.on("message", (message) => ws.send(message));
@@ -936,7 +972,8 @@ describe("net", "ws", "WebSocketServer", () => {
 
     describe("client properties", () => {
         it("protocol is exposed", (done) => {
-            const wss = new Server({ port: ++port }, () => {
+            const wss = new Server({ port: 0 }, () => {
+                const port = wss._server.address().port;
                 new Client(`ws://localhost:${port}`, "hi");
             });
 
@@ -948,7 +985,8 @@ describe("net", "ws", "WebSocketServer", () => {
         });
 
         it("protocolVersion is exposed", (done) => {
-            const wss = new Server({ port: ++port }, () => {
+            const wss = new Server({ port: 0 }, () => {
+                const port = wss._server.address().port;
                 new Client(`ws://localhost:${port}`, { protocolVersion: 8 });
             });
 
@@ -964,8 +1002,9 @@ describe("net", "ws", "WebSocketServer", () => {
         it("accept connections with permessage-deflate extension", (done) => {
             const wss = new Server({
                 perMessageDeflate: true,
-                port: ++port
+                port: 0
             }, () => {
+                const port = wss._server.address().port;
                 const req = http.request({
                     headers: {
                         Connection: "Upgrade",
@@ -990,8 +1029,9 @@ describe("net", "ws", "WebSocketServer", () => {
         it("does not accept connections with not defined extension parameter", (done) => {
             const wss = new Server({
                 perMessageDeflate: true,
-                port: ++port
+                port: 0
             }, () => {
+                const port = wss._server.address().port;
                 const req = http.request({
                     headers: {
                         Connection: "Upgrade",
@@ -1021,8 +1061,9 @@ describe("net", "ws", "WebSocketServer", () => {
         it("does not accept connections with invalid extension parameter", (done) => {
             const wss = new Server({
                 perMessageDeflate: true,
-                port: ++port
+                port: 0
             }, () => {
+                const port = wss._server.address().port;
                 const req = http.request({
                     headers: {
                         Connection: "Upgrade",

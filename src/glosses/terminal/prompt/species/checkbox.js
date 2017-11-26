@@ -124,7 +124,7 @@ export default class CheckboxPrompt extends terminal.BasePrompt {
         let bottomContent = "";
 
         if (this.firstRender) {
-            message += `(Press ${styler.cyan.bold("<space>")} to select, ${styler.cyan.bold("<a>")} to toggle all, ${styler.cyan.bold("<i>")} to inverse selection)`;
+            message += `(Press ${styler.cyan.bold("<space>")} to select, ${styler.cyan.bold("<a>")} to toggle all, ${styler.cyan.bold("<i>")} to invert selection)`;
         }
 
         // Render choices or answer depending on the state

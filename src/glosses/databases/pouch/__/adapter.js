@@ -131,6 +131,9 @@ const allDocsKeysQuery = (api, opts, callback) => {
                 if (err) {
                     return reject(err);
                 }
+                if (opts.update_seq && !is.undefined(res.update_seq)) {
+                    finalResults.update_seq = res.update_seq;
+                }
                 finalResults.total_rows = res.total_rows;
                 resolve(res.rows[0] || { key, error: "not_found" });
             });

@@ -23,40 +23,29 @@ const tokenChars = [
 ];
 
 /**
- * Adds an offer to the map of extension offers.
+ * Adds an offer to the map of extension offers or a parameter to the map of
+ * parameters.
  *
- * @param {object} offers The map of extension offers
- * @param {string} name The extension name
- * @param {object} params The extension parameters
+ * @param {Object} dest The map of extension offers or parameters
+ * @param {String} name The extension or parameter name
+ * @param {(Object|Boolean|String)} elem The extension parameters or the
+ *     parameter value
+ * @private
  */
-const pushOffer = (offers, name, params) => {
-    if (is.propertyOwned(offers, name)) {
-        offers[name].push(params);
+const push = (dest, name, elem) => {
+    if (Object.prototype.hasOwnProperty.call(dest, name)) {
+        dest[name].push(elem);
     } else {
-        offers[name] = [params];
-    }
-};
-
-/**
- * Adds a parameter to the map of parameters.
- *
- * @param {object} params The map of parameters
- * @param {string} name The parameter name
- * @param {object} value The parameter value
- */
-const pushParam = (params, name, value) => {
-    if (is.propertyOwned(params, name)) {
-        params[name].push(value);
-    } else {
-        params[name] = [value];
+        dest[name] = [elem];
     }
 };
 
 /**
  * Parses the `Sec-WebSocket-Extensions` header into an object.
  *
- * @param {string} header The field value of the header
- * @return {object} The parsed object
+ * @param {String} header The field value of the header
+ * @return {Object} The parsed object
+ * @public
  */
 export const parse = (header) => {
     const offers = {};
@@ -73,9 +62,8 @@ export const parse = (header) => {
     let paramName;
     let start = -1;
     let end = -1;
-    let i = 0;
-
-    for (; i < header.length; i++) {
+    let i;
+    for (i = 0; i < header.length; i++) {
         const code = header.charCodeAt(i);
 
         if (is.undefined(extensionName)) {
@@ -83,7 +71,7 @@ export const parse = (header) => {
                 if (start === -1) {
                     start = i;
                 }
-            } else if (code === 0x20/* ' ' */|| code === 0x09/* '\t' */) {
+            } else if (code === 0x20/* ' ' */ || code === 0x09/* '\t' */) {
                 if (end === -1 && start !== -1) {
                     end = i;
                 }
@@ -97,7 +85,7 @@ export const parse = (header) => {
                 }
                 const name = header.slice(start, end);
                 if (code === 0x2c) {
-                    pushOffer(offers, name, params);
+                    push(offers, name, params);
                     params = {};
                 } else {
                     extensionName = name;
@@ -124,15 +112,15 @@ export const parse = (header) => {
                 if (end === -1) {
                     end = i;
                 }
-                pushParam(params, header.slice(start, end), true);
+                push(params, header.slice(start, end), true);
                 if (code === 0x2c) {
-                    pushOffer(offers, extensionName, params);
+                    push(offers, extensionName, params);
                     params = {};
                     extensionName = undefined;
                 }
 
                 start = end = -1;
-            } else if (code === 0x3d/* '=' */&& start !== -1 && end === -1) {
+            } else if (code === 0x3d/* '=' */ && start !== -1 && end === -1) {
                 paramName = header.slice(start, i);
                 start = end = -1;
             } else {
@@ -190,9 +178,9 @@ export const parse = (header) => {
                     value = value.replace(/\\/g, "");
                     mustUnescape = false;
                 }
-                pushParam(params, paramName, value);
+                push(params, paramName, value);
                 if (code === 0x2c) {
-                    pushOffer(offers, extensionName, params);
+                    push(offers, extensionName, params);
                     params = {};
                     extensionName = undefined;
                 }
@@ -214,23 +202,23 @@ export const parse = (header) => {
     }
     const token = header.slice(start, end);
     if (is.undefined(extensionName)) {
-        pushOffer(offers, token, {});
+        push(offers, token, {});
     } else {
         if (is.undefined(paramName)) {
-            pushParam(params, token, true);
+            push(params, token, true);
         } else if (mustUnescape) {
-            pushParam(params, paramName, token.replace(/\\/g, ""));
+            push(params, paramName, token.replace(/\\/g, ""));
         } else {
-            pushParam(params, paramName, token);
+            push(params, paramName, token);
         }
-        pushOffer(offers, extensionName, params);
+        push(offers, extensionName, params);
     }
 
     return offers;
 };
 
 /**
- * Serialize a parsed `Sec-WebSocket-Extensions` header to a string.
+ * Serializes a parsed `Sec-WebSocket-Extensions` header to a string.
  *
  * @param {Object} value The object to format
  * @return {String} A string representing the given value

@@ -15,10 +15,10 @@ const {
 } = adone.private(pouch);
 
 
-const tryCatchInChangeListener = (self, change) => {
+const tryCatchInChangeListener = (self, change, pending, lastSeq) => {
     // isolate try/catches to avoid V8 deoptimizations
     try {
-        self.emit("change", change);
+        self.emit("change", change, pending, lastSeq);
     } catch (e) {
         adone.error('Error in .on("change", function):', e);
     }
@@ -77,12 +77,12 @@ export default class Changes extends EventEmitter {
         }
         db.once("destroyed", onDestroy);
 
-        opts.onChange = (change) => {
+        opts.onChange = (change, pending, lastSeq) => {
             /* istanbul ignore if */
             if (this.isCancelled) {
                 return;
             }
-            tryCatchInChangeListener(this, change);
+            tryCatchInChangeListener(this, change, pending, lastSeq);
         };
 
         const promise = new Promise((fulfill, reject) => {

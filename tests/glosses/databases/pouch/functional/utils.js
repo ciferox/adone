@@ -26,6 +26,16 @@ export const cleanup = async (...dbs) => {
     await Promise.all(util.unique(dbs).map((db) => new DB(db).destroy().catch(noop)));
 };
 
+// export const isPouchDbServer = function (cb) {
+//     testUtils.ajax({ url: testUtils.couchHost() + '/' }, function (err, res) {
+//         if (err || !res) {
+//             return cb(false);
+//         } else {
+//             return cb('express-pouchdb' in res);
+//         }
+//     });
+// };
+
 export const writeDocs = async (db, docs) => {
     const info = [];
     for (const doc of docs) {

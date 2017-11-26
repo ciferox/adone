@@ -1,9 +1,10 @@
 // @flow
 
+import path from "path";
 import * as context from "../index";
 import Plugin, { validatePluginObject } from "./plugin";
 import buildConfigChain, { type ConfigItem } from "./build-config-chain";
-import { makeWeakCache } from "./caching";
+import { makeWeakCache, type CacheConfigurator } from "./caching";
 import { getEnv } from "./helpers/environment";
 import { validate, type ValidatedOptions, type PluginItem } from "./options";
 
@@ -13,6 +14,7 @@ const {
   js: { compiler: { traverse } },
   vendor: { lodash: { merge, clone } }
 } = adone;
+
 
 type MergeOptions =
   | ConfigItem
@@ -47,32 +49,29 @@ class OptionManager {
    *  - `loc` is used to point to the original config.
    *  - `dirname` is used to resolve plugins relative to it.
    */
-
-  mergeOptions(config: MergeOptions, pass?: Array<Plugin>) {
+  mergeOptions(config: MergeOptions, pass: Array<Plugin>, envName: string) {
     const result = loadConfig(config);
 
     const plugins = result.plugins.map(descriptor =>
-      loadPluginDescriptor(descriptor),
+      loadPluginDescriptor(descriptor, envName),
     );
-    const presets = result.presets.map(descriptor =>
-      loadPresetDescriptor(descriptor),
-    );
-
-    const passPerPreset = config.options.passPerPreset;
-    pass = pass || this.passes[0];
+    const presets = result.presets.map(descriptor => ({
+      pass: descriptor.ownPass ? [] : pass,
+      preset: loadPresetDescriptor(descriptor, envName),
+    }));
 
     // resolve presets
     if (presets.length > 0) {
-      let presetPasses = null;
-      if (passPerPreset) {
-        presetPasses = presets.map(() => []);
-        // The passes are created in the same order as the preset list, but are inserted before any
-        // existing additional passes.
-        this.passes.splice(1, 0, ...presetPasses);
-      }
+      // The passes are created in the same order as the preset list, but are inserted before any
+      // existing additional passes.
+      this.passes.splice(
+        1,
+        0,
+        ...presets.map(o => o.pass).filter(p => p !== pass),
+      );
 
-      presets.forEach((presetConfig, i) => {
-        this.mergeOptions(presetConfig, presetPasses ? presetPasses[i] : pass);
+      presets.forEach(({ preset, pass }) => {
+        this.mergeOptions(preset, pass, envName);
       });
     }
 
@@ -87,6 +86,8 @@ class OptionManager {
     delete options.plugins;
     delete options.presets;
     delete options.passPerPreset;
+    delete options.ignore;
+    delete options.only;
 
     // "sourceMap" is just aliased to sourceMap, so copy it over as
     // we merge the options together.
@@ -101,12 +102,15 @@ class OptionManager {
   init(inputOpts: {}) {
     const args = validate("arguments", inputOpts);
 
-    const configChain = buildConfigChain(args);
+    const { envName = getEnv(), cwd = "." } = args;
+    const absoluteCwd = path.resolve(cwd);
+
+    const configChain = buildConfigChain(absoluteCwd, args, envName);
     if (!configChain) return null;
 
     try {
       for (const config of configChain) {
-        this.mergeOptions(config);
+        this.mergeOptions(config, this.passes[0], envName);
       }
     } catch (e) {
       // There are a few case where thrown errors will try to annotate themselves multiple times, so
@@ -129,6 +133,8 @@ class OptionManager {
       .filter(plugins => plugins.length > 0)
       .map(plugins => ({ plugins }));
     opts.passPerPreset = opts.presets.length > 0;
+    opts.envName = envName;
+    opts.cwd = absoluteCwd;
 
     return {
       options: opts,
@@ -142,6 +148,7 @@ type BasicDescriptor = {
   options: {} | void,
   dirname: string,
   alias: string,
+  ownPass?: boolean,
 };
 
 type LoadedDescriptor = {
@@ -172,6 +179,7 @@ const loadConfig = makeWeakCache((config: MergeOptions): {
     createDescriptor(preset, loadPreset, config.dirname, {
       index,
       alias: config.alias,
+      ownPass: config.options.passPerPreset,
     }),
   );
 
@@ -184,13 +192,13 @@ const loadConfig = makeWeakCache((config: MergeOptions): {
 const loadDescriptor = makeWeakCache(
   (
     { value, options = {}, dirname, alias }: BasicDescriptor,
-    cache,
+    cache: CacheConfigurator<{ envName: string }>,
   ): LoadedDescriptor => {
     let item = value;
     if (typeof value === "function") {
       const api = Object.assign(Object.create(context), {
-        cache,
-        env: () => cache.using(() => getEnv()),
+        cache: cache.simple(),
+        env: () => cache.using(data => data.envName),
         async: () => false,
       });
 
@@ -224,7 +232,10 @@ const loadDescriptor = makeWeakCache(
 /**
  * Instantiate a plugin for the given descriptor, returning the plugin/options pair.
  */
-function loadPluginDescriptor(descriptor: BasicDescriptor): Plugin {
+function loadPluginDescriptor(
+  descriptor: BasicDescriptor,
+  envName: string,
+): Plugin {
   if (descriptor.value instanceof Plugin) {
     if (descriptor.options) {
       throw new Error(
@@ -235,11 +246,16 @@ function loadPluginDescriptor(descriptor: BasicDescriptor): Plugin {
     return descriptor.value;
   }
 
-  return instantiatePlugin(loadDescriptor(descriptor));
+  return instantiatePlugin(loadDescriptor(descriptor, { envName }), {
+    envName,
+  });
 }
 
 const instantiatePlugin = makeWeakCache(
-  ({ value, options, dirname, alias }: LoadedDescriptor, cache): Plugin => {
+  (
+    { value, options, dirname, alias }: LoadedDescriptor,
+    cache: CacheConfigurator<{ envName: string }>,
+  ): Plugin => {
     const pluginObj = validatePluginObject(value);
 
     const plugin = Object.assign({}, pluginObj);
@@ -256,8 +272,8 @@ const instantiatePlugin = makeWeakCache(
       };
 
       // If the inherited plugin changes, reinstantiate this plugin.
-      const inherits = cache.invalidate(() =>
-        loadPluginDescriptor(inheritsDescriptor),
+      const inherits = cache.invalidate(data =>
+        loadPluginDescriptor(inheritsDescriptor, data.envName),
       );
 
       plugin.pre = chain(inherits.pre, plugin.pre);
@@ -279,8 +295,11 @@ const instantiatePlugin = makeWeakCache(
 /**
  * Generate a config object that will act as the root of a new nested config.
  */
-const loadPresetDescriptor = (descriptor: BasicDescriptor): MergeOptions => {
-  return instantiatePreset(loadDescriptor(descriptor));
+const loadPresetDescriptor = (
+  descriptor: BasicDescriptor,
+  envName: string,
+): MergeOptions => {
+  return instantiatePreset(loadDescriptor(descriptor, { envName }));
 };
 
 const instantiatePreset = makeWeakCache(
@@ -304,9 +323,11 @@ function createDescriptor(
   {
     index,
     alias,
+    ownPass,
   }: {
     index: number,
     alias: string,
+    ownPass?: boolean,
   },
 ): BasicDescriptor {
   let options;
@@ -347,18 +368,12 @@ function createDescriptor(
     );
   }
 
-  if (options != null && typeof options !== "object") {
-    throw new Error(
-      "Plugin/Preset options must be an object, null, or undefined",
-    );
-  }
-  options = options || undefined;
-
   return {
     alias: filepath || `${alias}$${index}`,
     value,
     options,
     dirname,
+    ownPass,
   };
 }
 

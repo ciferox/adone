@@ -9,9 +9,9 @@ const {
 const {
     collate: {
         collate,
-        toIndexableString,
-        normalizeKey,
-        parseIndexableString
+    toIndexableString,
+    normalizeKey,
+    parseIndexableString
     },
     util: {
         md5: {
@@ -381,6 +381,7 @@ const createAbstractMapReduce = (localDocName, mapper, reducer, ddocValidator) =
         addHttpParam("end_key", opts, params, true);
         addHttpParam("inclusive_end", opts, params);
         addHttpParam("key", opts, params, true);
+        addHttpParam("update_seq", opts, params);
 
         // Format the list of parameters into a valid URI query string
         params = params.join("&");
@@ -802,6 +803,9 @@ const createAbstractMapReduce = (localDocName, mapper, reducer, ddocValidator) =
                     rows
                 };
             }
+            if (opts.update_seq) {
+                finalResults.update_seq = view.seq;
+            }
             if (opts.include_docs) {
                 const docIds = adone.util.unique(rows.map(rowToDocId));
 
@@ -837,6 +841,9 @@ const createAbstractMapReduce = (localDocName, mapper, reducer, ddocValidator) =
                     startkey: toIndexableString([key]),
                     endkey: toIndexableString([key, {}])
                 };
+                if (opts.update_seq) {
+                    viewOpts.update_seq = true;
+                }
                 return fetchFromView(viewOpts);
             });
             return Promise.all(fetchPromises).then(util.flatten).then(onMapResultsReady);
@@ -844,6 +851,9 @@ const createAbstractMapReduce = (localDocName, mapper, reducer, ddocValidator) =
         const viewOpts = {
             descending: opts.descending
         };
+        if (opts.update_seq) {
+            viewOpts.update_seq = true;
+        }
         let startkey;
         let endkey;
         if ("start_key" in opts) {

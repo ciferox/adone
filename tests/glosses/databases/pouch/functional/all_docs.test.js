@@ -716,4 +716,65 @@ describe("database", "pouch", "db.allDocs()", () => {
             assert.isUndefined(result.rows[0].doc._conflicts);
         });
     });
+
+    it("#6230 Test allDocs opts update_seq: false", () => {
+        const db = new DB(dbName);
+        return db.bulkDocs(origDocs).then(() => {
+            return db.allDocs({
+                update_seq: false
+            });
+        }).then((result) => {
+            assert.lengthOf(result.rows, 4);
+            assert.notExists(result.update_seq);
+        });
+    });
+
+
+    it.skip("#6230 Test allDocs opts update_seq: true", (done) => {
+        const db = new DB(dbName);
+        testUtils.isPouchDbServer((isPouchDbServer) => {
+            if (isPouchDbServer) {
+                // pouchdb-server does not currently support opts.update_seq
+                return done();
+            }
+            return db.bulkDocs(origDocs).then(() => {
+                return db.allDocs({
+                    update_seq: true
+                });
+            }).then((result) => {
+                result.rows.should.have.length(4);
+                should.exist(result.update_seq);
+                result.update_seq.should.satisfy((update_seq) => {
+                    if (is.number(update_seq) || is.string(update_seq)) {
+                        return true;
+                    } 
+                    return false;
+                    
+                });
+                const normSeq = normalizeSeq(result.update_seq);
+                normSeq.should.be.a("number");
+            }).then(done, done);
+
+            function normalizeSeq(seq) {
+                try {
+                    if (is.string(seq) && seq.indexOf("-") > 0) {
+                        return parseInt(seq.substring(0, seq.indexOf("-")));
+                    }
+                    return seq;
+                } catch (err) {
+                    return seq;
+                }
+            }
+        });
+    });
+
+    it("#6230 Test allDocs opts with update_seq missing", () => {
+        const db = new DB(dbName);
+        return db.bulkDocs(origDocs).then(() => {
+            return db.allDocs();
+        }).then((result) => {
+            assert.lengthOf(result.rows, 4);
+            assert.notExists(result.update_seq);
+        });
+    });
 });
