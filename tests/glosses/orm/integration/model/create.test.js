@@ -892,8 +892,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             }
 
             const User = this.sequelize.define("UserWithArray", {
-                myvals: { type: type.ARRAY(type.INTEGER) },
-                mystr: { type: type.ARRAY(type.STRING) }
+                myvals: { type: new type.ARRAY(type.INTEGER) },
+                mystr: { type: new type.ARRAY(type.STRING) }
             });
 
             let test = false;

@@ -303,6 +303,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
         });
 
         it("allows us to customize the error message for unique constraint", async function () {
+            // fixme: sometimes it fails for postgres
             const self = this;
             const User = this.sequelize.define("UserWithUniqueUsername", {
                 username: { type: type.STRING, unique: { name: "user_and_email", msg: "User and email must be unique" } },
@@ -350,6 +351,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     User.create({ user_id: 1, email: "tobi@tobi.me" })
                 ]);
             }, self.sequelize.UniqueConstraintError, "User and email must be unique");
+            await adone.promise.delay(100); // fixme: sometimes fails on postgres...
         });
 
         it("should allow the user to specify indexes in options", async function () {

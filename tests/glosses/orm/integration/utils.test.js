@@ -180,7 +180,11 @@ describe(Support.getTestDialectTeaser("Utils"), () => {
 
     if (Support.getTestDialect() === "postgres") {
         describe("json", () => {
-            const queryGenerator = require("../../lib/dialects/postgres/query-generator.js");
+            const {
+                dialect: {
+                    postgres: { QueryGenerator }
+                }
+            } = adone.private(orm);
 
             it("successfully parses a complex nested condition hash", () => {
                 const conditions = {
@@ -191,23 +195,23 @@ describe(Support.getTestDialectTeaser("Utils"), () => {
                     another_json_field: { x: 1 }
                 };
                 const expected = '("metadata"#>>\'{language}\') = \'icelandic\' AND ("metadata"#>>\'{pg_rating,dk}\') = \'G\' AND ("another_json_field"#>>\'{x}\') = \'1\'';
-                expect(queryGenerator.handleSequelizeMethod(new orm.util.Json(conditions))).to.deep.equal(expected);
+                expect(QueryGenerator.handleSequelizeMethod(new orm.util.Json(conditions))).to.deep.equal(expected);
             });
 
             it("successfully parses a string using dot notation", () => {
                 const path = "metadata.pg_rating.dk";
-                expect(queryGenerator.handleSequelizeMethod(new orm.util.Json(path))).to.equal('("metadata"#>>\'{pg_rating,dk}\')');
+                expect(QueryGenerator.handleSequelizeMethod(new orm.util.Json(path))).to.equal('("metadata"#>>\'{pg_rating,dk}\')');
             });
 
             it("allows postgres json syntax", () => {
                 const path = "metadata->pg_rating->>dk";
-                expect(queryGenerator.handleSequelizeMethod(new orm.util.Json(path))).to.equal(path);
+                expect(QueryGenerator.handleSequelizeMethod(new orm.util.Json(path))).to.equal(path);
             });
 
             it("can take a value to compare against", () => {
                 const path = "metadata.pg_rating.is";
                 const value = "U";
-                expect(queryGenerator.handleSequelizeMethod(new orm.util.Json(path, value))).to.equal('("metadata"#>>\'{pg_rating,is}\') = \'U\'');
+                expect(QueryGenerator.handleSequelizeMethod(new orm.util.Json(path, value))).to.equal('("metadata"#>>\'{pg_rating,is}\') = \'U\'');
             });
         });
     }

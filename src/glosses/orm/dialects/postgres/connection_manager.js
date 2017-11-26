@@ -39,7 +39,6 @@ export default class ConnectionManager extends AbstractConnectionManager {
             }
             throw err;
         }
-
         this.refreshTypeParser(type.postgres);
     }
 
@@ -173,11 +172,11 @@ export default class ConnectionManager extends AbstractConnectionManager {
         for (const row of result.rows) {
             let type;
             if (row.typname === "geometry") {
-                type = type.postgres.GEOMETRY;
+                type = orm.type.postgres.GEOMETRY;
             } else if (row.typname === "hstore") {
-                type = type.postgres.HSTORE;
+                type = orm.type.postgres.HSTORE;
             } else if (row.typname === "geography") {
-                type = type.postgres.GEOGRAPHY;
+                type = orm.type.postgres.GEOGRAPHY;
             }
 
             type.types.postgres.oids.push(row.oid);

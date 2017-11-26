@@ -423,23 +423,21 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
 
             await Model.sync({ force: true });
             await Model.create({ interval: [1, 4] });
-            const m = await Model.findAll();
+            const [m] = await Model.findAll();
             expect(m.interval[0]).to.be.eql(1);
             expect(m.interval[1]).to.be.eql(4);
         });
     }
 
-    it("should allow spaces in ENUM", function () {
+    it("should allow spaces in ENUM", async function () {
         const Model = this.sequelize.define("user", {
             name: type.STRING,
             type: new type.ENUM(["action", "mecha", "canon", "class s"])
         });
 
-        return Model.sync({ force: true }).then(() => {
-            return Model.create({ name: "sakura", type: "class s" });
-        }).then((record) => {
-            expect(record.type).to.be.eql("class s");
-        });
+        await Model.sync({ force: true });
+        const record = await Model.create({ name: "sakura", type: "class s" });
+        expect(record.type).to.be.eql("class s");
     });
 
     it("should return YYYY-MM-DD format string for DATEONLY", function () {
@@ -511,7 +509,7 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
             });
     });
 
-    it("should be able to cast buffer as boolean", function () {
+    it("should be able to cast buffer as boolean", async function () {
         const ByteModel = this.sequelize.define("Model", {
             byteToBool: type.BLOB
         }, {
@@ -524,18 +522,16 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
             timestamps: false
         });
 
-        return ByteModel.sync({
+        await ByteModel.sync({
             force: true
-        }).then(() => {
-            return ByteModel.create({
-                byteToBool: Buffer.from([true])
-            });
-        }).then((byte) => {
-            expect(byte.byteToBool).to.be.ok;
-
-            return BoolModel.findById(byte.id);
-        }).then((bool) => {
-            expect(bool.byteToBool).to.be.true;
         });
+        const byte = await ByteModel.create({
+            byteToBool: Buffer.from([true])
+        });
+
+        expect(byte.byteToBool).to.be.ok;
+
+        const bool = await BoolModel.findById(byte.id);
+        expect(bool.byteToBool).to.be.true;
     });
 });

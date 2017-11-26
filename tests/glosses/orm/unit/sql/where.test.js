@@ -462,7 +462,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                         $contains: [2, 5]
                     }, {
                         field: {
-                            type: type.ARRAY(type.INTEGER)
+                            type: new type.ARRAY(type.INTEGER)
                         }
                     }, {
                         postgres: '"muscles" @> ARRAY[2,5]::INTEGER[]'
@@ -500,7 +500,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                         $any: [2, 5]
                     }, {
                         field: {
-                            type: type.ARRAY(type.INTEGER)
+                            type: new type.ARRAY(type.INTEGER)
                         }
                     }, {
                         postgres: '"userId" = ANY (ARRAY[2,5]::INTEGER[])'
@@ -521,7 +521,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                             }
                         }, {
                             field: {
-                                type: type.ARRAY(type.INTEGER)
+                                type: new type.ARRAY(type.INTEGER)
                             }
                         }, {
                             postgres: '"userId" = ANY (VALUES (2), (5))'
@@ -540,7 +540,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                         $all: [2, 5]
                     }, {
                         field: {
-                            type: type.ARRAY(type.INTEGER)
+                            type: new type.ARRAY(type.INTEGER)
                         }
                     }, {
                         postgres: '"userId" = ALL (ARRAY[2,5]::INTEGER[])'
@@ -561,7 +561,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                             }
                         }, {
                             field: {
-                                type: type.ARRAY(type.INTEGER)
+                                type: new type.ARRAY(type.INTEGER)
                             }
                         }, {
                             postgres: '"userId" = ALL (VALUES (2), (5))'

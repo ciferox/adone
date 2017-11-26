@@ -1,12 +1,16 @@
 const { vendor: { lodash: _ } } = adone;
-const fs = require("fs");
-const path = require("path");
 const is = adone.is;
 const { orm } = adone;
 const { type } = orm;
 const Config = require(`${__dirname}/config/config`);
 // const supportShim = require(`${__dirname}/supportShim`);
 const AbstractQueryGenerator = adone.private(adone.orm).dialect.abstract.QueryGenerator;
+
+/**
+ * Postgres requires postgis extension to be installed
+ */
+
+let tmp;
 
 const Support = {
     initTests(options) {
@@ -27,38 +31,27 @@ const Support = {
         });
     },
 
-    prepareTransactionTest(sequelize, callback) {
+    async prepareTransactionTest(sequelize) {
         const dialect = Support.getTestDialect();
 
         if (dialect === "sqlite") {
-            const p = path.join(__dirname, "tmp", "db.sqlite");
+            if (!tmp) {
+                tmp = await adone.fs.Directory.createTmp();
+            } else {
+                await tmp.clean();
+            }
 
-            return new Promise((resolve) => {
-                // We cannot promisify exists, since exists does not follow node callback convention - first argument is a boolean, not an error / null
-                if (fs.existsSync(p)) {
-                    resolve(Promise.promisify(fs.unlink)(p));
-                } else {
-                    resolve();
-                }
-            }).then(() => {
-                const options = _.extend({}, sequelize.options, { storage: p });
-                const _sequelize = orm.create(sequelize.config.database, null, null, options);
+            const dbfile = tmp.getFile("db.sqlite");
 
-                if (callback) {
-                    _sequelize.sync({ force: true }).then(() => {
-                        callback(_sequelize);
-                    });
-                } else {
-                    return _sequelize.sync({ force: true }).then(() => _sequelize);
-                }
-            });
-        }
-        if (callback) {
-            callback(sequelize);
-        } else {
-            return Promise.resolve(sequelize);
+            const options = _.extend({}, sequelize.options, { storage: dbfile.path() });
+            const _sequelize = orm.create(sequelize.config.database, null, null, options);
+
+            await _sequelize.sync({ force: true });
+
+            return _sequelize;
         }
 
+        return sequelize;
     },
 
     createSequelizeInstance(options) {
@@ -203,6 +196,12 @@ const Support = {
 
 before(function () {
     this.sequelize = Support.sequelize;
+});
+
+after(async () => {
+    if (tmp) {
+        await tmp.unlink();
+    }
 });
 
 Support.sequelize = Support.createSequelizeInstance();

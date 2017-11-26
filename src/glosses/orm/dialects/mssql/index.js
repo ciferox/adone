@@ -65,6 +65,7 @@ MssqlDialect.prototype.TICK_CHAR_RIGHT = "]";
 MssqlDialect.prototype.DataTypes = dataTypes(orm.type);
 
 adone.lazify({
+    ConnectionManager: "./connection_manager",
     QueryGenerator: "./query_generator",
     ResourceLock: "./resource_lock",
     Query: "./query",

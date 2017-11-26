@@ -128,8 +128,8 @@ describe(Support.getTestDialectTeaser("DAO"), () => {
                             b: self.sequelize.col("always_false")
                         });
 
-                        expect(user.get("d")).to.be.instanceof(self.sequelize.Utils.Fn);
-                        expect(user.get("b")).to.be.instanceof(self.sequelize.Utils.Col);
+                        expect(user.get("d")).to.be.instanceof(orm.util.Fn);
+                        expect(user.get("b")).to.be.instanceof(orm.util.Col);
 
                         return user.save().then(() => {
                             return user.reload().then(() => {

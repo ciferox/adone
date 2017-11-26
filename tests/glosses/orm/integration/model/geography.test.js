@@ -5,7 +5,9 @@ const { type } = orm;
 
 const current = Support.sequelize;
 
-describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.supports.GEOGRAPHY }, () => {
+describe(Support.getTestDialectTeaser("Model"), {
+    skip: !current.dialect.supports.GEOGRAPHY
+}, () => {
     describe("GEOGRAPHY", () => {
         beforeEach(function () {
             this.User = this.sequelize.define("User", {

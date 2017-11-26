@@ -64,6 +64,7 @@ PostgresDialect.prototype.TICK_CHAR_LEFT = PostgresDialect.prototype.TICK_CHAR;
 PostgresDialect.prototype.TICK_CHAR_RIGHT = PostgresDialect.prototype.TICK_CHAR;
 
 adone.lazify({
+    ConnectionManager: "./connection_manager",
     QueryGenerator: "./query_generator",
     hstore: "./hstore",
     range: "./range",

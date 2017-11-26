@@ -14,7 +14,7 @@ describe("[POSTGRES Specific] QueryInterface", { skip: !/^postgres/.test(dialect
     describe("createSchema", () => {
         beforeEach(function () {
             // make sure we don't have a pre-existing schema called testSchema.
-            return this.queryInterface.dropSchema("testschema").reflect();
+            return this.queryInterface.dropSchema("testschema").catch(() => {});
         });
 
         it("creates a schema", function () {
@@ -23,7 +23,7 @@ describe("[POSTGRES Specific] QueryInterface", { skip: !/^postgres/.test(dialect
             SELECT schema_name
             FROM information_schema.schemata
             WHERE schema_name = 'testschema';
-          `, { type: this.sequelize.QueryTypes.SELECT }))
+          `, { type: this.sequelize.queryType.SELECT }))
                 .then((res) => {
                     expect(res, "query results").to.not.be.empty;
                     expect(res[0].schema_name).to.be.equal("testschema");
@@ -37,7 +37,7 @@ describe("[POSTGRES Specific] QueryInterface", { skip: !/^postgres/.test(dialect
             SELECT schema_name
             FROM information_schema.schemata
             WHERE schema_name = 'testschema';
-          `, { type: this.sequelize.QueryTypes.SELECT }))
+          `, { type: this.sequelize.queryType.SELECT }))
                 .then((res) => {
                     expect(res, "query results").to.not.be.empty;
                     expect(res[0].schema_name).to.be.equal("testschema");
@@ -60,15 +60,15 @@ describe("[POSTGRES Specific] QueryInterface", { skip: !/^postgres/.test(dialect
             // ensure the function names we'll use don't exist before we start.
             // then setup our function to rename
             return this.queryInterface.dropFunction("rftest1", [])
-                .reflect()
+                .catch(() => {})
                 .then(() => this.queryInterface.dropFunction("rftest2", []))
-                .reflect()
+                .catch(() => {})
                 .then(() => this.queryInterface.createFunction("rftest1", [], "varchar", "plpgsql", "return 'testreturn';", {}));
         });
 
         it("renames a function", function () {
             return this.queryInterface.renameFunction("rftest1", [], "rftest2")
-                .then(() => this.sequelize.query("select rftest2();", { type: this.sequelize.QueryTypes.SELECT }))
+                .then(() => this.sequelize.query("select rftest2();", { type: this.sequelize.queryType.SELECT }))
                 .then((res) => {
                     expect(res[0].rftest2).to.be.eql("testreturn");
                 });
@@ -83,14 +83,14 @@ describe("[POSTGRES Specific] QueryInterface", { skip: !/^postgres/.test(dialect
             // test suite causing a failure of afterEach's cleanup to be called.
             return this.queryInterface.dropFunction("create_job", [{ type: "varchar", name: "test" }])
                 // suppress errors here. if create_job doesn't exist thats ok.
-                .reflect();
+                .catch(() => {});
         });
 
         after(function () {
             // cleanup
             return this.queryInterface.dropFunction("create_job", [{ type: "varchar", name: "test" }])
                 // suppress errors here. if create_job doesn't exist thats ok.
-                .reflect();
+                .catch(() => {});
         });
 
         it("creates a stored procedure", function () {
@@ -100,7 +100,7 @@ describe("[POSTGRES Specific] QueryInterface", { skip: !/^postgres/.test(dialect
             // make our call to create a function
             return this.queryInterface.createFunction("create_job", [{ type: "varchar", name: "test" }], "varchar", "plpgsql", body, options)
                 // validate
-                .then(() => this.sequelize.query("select create_job('test');", { type: this.sequelize.QueryTypes.SELECT }))
+                .then(() => this.sequelize.query("select create_job('test');", { type: this.sequelize.queryType.SELECT }))
                 .then((res) => {
                     expect(res[0].create_job).to.be.eql("test");
                 });
@@ -112,7 +112,7 @@ describe("[POSTGRES Specific] QueryInterface", { skip: !/^postgres/.test(dialect
             // run with null options parameter
             return this.queryInterface.createFunction("create_job", [{ type: "varchar", name: "test" }], "varchar", "plpgsql", body, null)
                 // validate
-                .then(() => this.sequelize.query("select create_job('test');", { type: this.sequelize.QueryTypes.SELECT }))
+                .then(() => this.sequelize.query("select create_job('test');", { type: this.sequelize.queryType.SELECT }))
                 .then((res) => {
                     expect(res[0].create_job).to.be.eql("test");
                 });
@@ -124,34 +124,34 @@ describe("[POSTGRES Specific] QueryInterface", { skip: !/^postgres/.test(dialect
 
             return Promise.all([
                 // requires functionName
-                expect(() => {
-                    return this.queryInterface.createFunction(null, [{ name: "test" }], "integer", "plpgsql", body, options);
-                }).to.throw(/createFunction missing some parameters. Did you pass functionName, returnType, language and body/),
+                assert.throws(async () => {
+                    await this.queryInterface.createFunction(null, [{ name: "test" }], "integer", "plpgsql", body, options);
+                }, /createFunction missing some parameters. Did you pass functionName, returnType, language and body/),
 
                 // requires Parameters array
-                expect(() => {
+                assert.throws(async () => {
                     return this.queryInterface.createFunction("create_job", null, "integer", "plpgsql", body, options);
-                }).to.throw(/function parameters array required/),
+                }, /function parameters array required/),
 
                 // requires returnType
-                expect(() => {
+                assert.throws(async () => {
                     return this.queryInterface.createFunction("create_job", [{ type: "varchar", name: "test" }], null, "plpgsql", body, options);
-                }).to.throw(/createFunction missing some parameters. Did you pass functionName, returnType, language and body/),
+                }, /createFunction missing some parameters. Did you pass functionName, returnType, language and body/),
 
                 // requires type in parameter array
-                expect(() => {
+                assert.throws(async () => {
                     return this.queryInterface.createFunction("create_job", [{ name: "test" }], "integer", "plpgsql", body, options);
-                }).to.throw(/function or trigger used with a parameter without any type/),
+                }, /function or trigger used with a parameter without any type/),
 
                 // requires language
-                expect(() => {
+                assert.throws(async () => {
                     return this.queryInterface.createFunction("create_job", [{ type: "varchar", name: "test" }], "varchar", null, body, options);
-                }).to.throw(/createFunction missing some parameters. Did you pass functionName, returnType, language and body/),
+                }, /createFunction missing some parameters. Did you pass functionName, returnType, language and body/),
 
                 // requires body
-                expect(() => {
+                assert.throws(async () => {
                     return this.queryInterface.createFunction("create_job", [{ type: "varchar", name: "test" }], "varchar", "plpgsql", null, options);
-                }).to.throw(/createFunction missing some parameters. Did you pass functionName, returnType, language and body/)
+                }, /createFunction missing some parameters. Did you pass functionName, returnType, language and body/)
             ]);
         });
     });
@@ -164,7 +164,7 @@ describe("[POSTGRES Specific] QueryInterface", { skip: !/^postgres/.test(dialect
             // make sure we have a droptest function in place.
             return this.queryInterface.createFunction("droptest", [{ type: "varchar", name: "test" }], "varchar", "plpgsql", body, options)
                 // suppress errors.. this could fail if the function is already there.. thats ok.
-                .reflect();
+                .catch(() => {});
         });
 
         it("can drop a function", async function () {
@@ -174,23 +174,23 @@ describe("[POSTGRES Specific] QueryInterface", { skip: !/^postgres/.test(dialect
             // call the function we attempted to drop.. if it is still there then throw an error informing that the expected behavior is not met.
 
             await assert.throws(async () => {
-                await this.sequelize.query("select droptest('test');", { type: this.sequelize.QueryTypes.SELECT });
+                await this.sequelize.query("select droptest('test');", { type: this.sequelize.queryType.SELECT });
             }, /.*function droptest.* does not exist/);
         });
 
         it("produces an error when missing expected parameters", function () {
             return Promise.all([
-                expect(() => {
+                assert.throws(async () => {
                     return this.queryInterface.dropFunction();
-                }).to.throw(/.*requires functionName/),
+                }, /.*requires functionName/),
 
-                expect(() => {
+                assert.throws(async () => {
                     return this.queryInterface.dropFunction("droptest");
-                }).to.throw(/.*function parameters array required/),
+                }, /.*function parameters array required/),
 
-                expect(() => {
+                assert.throws(async () => {
                     return this.queryInterface.dropFunction("droptest", [{ name: "test" }]);
-                }).to.throw(/.*function or trigger used with a parameter without any type/)
+                }, /.*function or trigger used with a parameter without any type/)
             ]);
         });
     });

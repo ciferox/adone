@@ -12,7 +12,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), { skip: !Support.sequelize.d
                 options = options || {};
 
                 const taskTableName = options.taskTableName || `tasks_${config.rand()}`;
-                const transactionOptions = _.assign({}, { deferrable: Sequelize.Deferrable.SET_DEFERRED }, options);
+                const transactionOptions = _.assign({}, { deferrable: orm.Deferrable.SET_DEFERRED }, options);
                 const userTableName = `users_${config.rand()}`;
 
                 const User = this.sequelize.define(
@@ -38,19 +38,19 @@ describe(Support.getTestDialectTeaser("Sequelize"), { skip: !Support.sequelize.d
 
                 await User.sync({ force: true });
                 await Task.sync({ force: true });
-                const t = await this.sequelize.transaction(transactionOptions);
-                const task = await Task.create({ title: "a task", user_id: -1 }, { transaction: t })
-                const user = await User.create({}, { transaction: t });
-                task.user_id = user.id;
-                await task.save({ transaction: t });
-                // commit?
+                return this.sequelize.transaction(transactionOptions, async (t) => {
+                    const task = await Task.create({ title: "a task", user_id: -1 }, { transaction: t })
+                    const user = await User.create({}, { transaction: t });
+                    task.user_id = user.id;
+                    return task.save({ transaction: t });
+                });
             };
         });
 
         describe("NOT", () => {
             it("does not allow the violation of the foreign key constraint", async function () {
                 await assert.throws(async () => {
-                    await this.run(Sequelize.Deferrable.NOT);
+                    await this.run(orm.Deferrable.NOT);
                 }, orm.x.ForeignKeyConstraintError);
             });
         });
@@ -58,7 +58,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), { skip: !Support.sequelize.d
         describe("INITIALLY_IMMEDIATE", () => {
             it("allows the violation of the foreign key constraint if the transaction is deferred", function () {
                 return this
-                    .run(Sequelize.Deferrable.INITIALLY_IMMEDIATE)
+                    .run(orm.Deferrable.INITIALLY_IMMEDIATE)
                     .then((task) => {
                         expect(task.title).to.equal("a task");
                         expect(task.user_id).to.equal(1);
@@ -67,7 +67,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), { skip: !Support.sequelize.d
 
             it("does not allow the violation of the foreign key constraint if the transaction is not deffered", async function () {
                 await assert.throws(async () => {
-                    await this.run(Sequelize.Deferrable.INITIALLY_IMMEDIATE, {
+                    await this.run(orm.Deferrable.INITIALLY_IMMEDIATE, {
                         deferrable: undefined
                     });
                 }, orm.x.ForeignKeyConstraintError);
@@ -77,8 +77,8 @@ describe(Support.getTestDialectTeaser("Sequelize"), { skip: !Support.sequelize.d
                 const taskTableName = `tasks_${config.rand()}`;
 
                 return this
-                    .run(Sequelize.Deferrable.INITIALLY_IMMEDIATE, {
-                        deferrable: Sequelize.Deferrable.SET_DEFERRED([`${taskTableName}_user_id_fkey`]),
+                    .run(orm.Deferrable.INITIALLY_IMMEDIATE, {
+                        deferrable: new orm.Deferrable.SET_DEFERRED([`${taskTableName}_user_id_fkey`]),
                         taskTableName
                     })
                     .then((task) => {
@@ -91,7 +91,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), { skip: !Support.sequelize.d
         describe("INITIALLY_DEFERRED", () => {
             it("allows the violation of the foreign key constraint", function () {
                 return this
-                    .run(Sequelize.Deferrable.INITIALLY_DEFERRED)
+                    .run(orm.Deferrable.INITIALLY_DEFERRED)
                     .then((task) => {
                         expect(task.title).to.equal("a task");
                         expect(task.user_id).to.equal(1);

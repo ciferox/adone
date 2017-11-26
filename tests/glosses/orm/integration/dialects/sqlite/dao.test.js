@@ -78,7 +78,7 @@ describe("[SQLITE Specific] DAO", { skip: dialect !== "sqlite" }, () => {
                 this.User.create({ username: "anna", emergency_contact: { name: "joe" } })
             ]).then(() => {
                 return this.User.find({
-                    where: Sequelize.json("json_extract(emergency_contact, '$.name')", "kate"),
+                    where: orm.util.json("json_extract(emergency_contact, '$.name')", "kate"),
                     attributes: ["username", "emergency_contact"]
                 });
             }).then((user) => {
@@ -92,7 +92,7 @@ describe("[SQLITE Specific] DAO", { skip: dialect !== "sqlite" }, () => {
                 this.User.create({ username: "anna", emergency_contact: ["kate", "joe"] })
             ]).then(() => {
                 return this.User.find({
-                    where: Sequelize.json("json_type(emergency_contact)", "array"),
+                    where: orm.util.json("json_type(emergency_contact)", "array"),
                     attributes: ["username", "emergency_contact"]
                 });
             }).then((user) => {

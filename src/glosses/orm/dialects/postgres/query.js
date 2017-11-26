@@ -6,7 +6,7 @@ const {
 const debug = orm.util.getLogger().debugContext("sql:pg");
 
 const {
-    queryTypes,
+    queryType,
     x
 } = orm;
 
@@ -30,7 +30,6 @@ export default class Query extends AbstractQuery {
             plain: false,
             raw: false
         }, options || {});
-
         this.checkLoggingOption();
     }
 
@@ -205,7 +204,7 @@ export default class Query extends AbstractQuery {
                 });
             }
             return this.handleSelectQuery(result);
-        } else if (queryTypes.DESCRIBE === this.options.type) {
+        } else if (queryType.DESCRIBE === this.options.type) {
             const result = {};
 
             for (const row of rows) {
@@ -242,13 +241,13 @@ export default class Query extends AbstractQuery {
             return rows[0].server_version;
         } else if (this.isShowOrDescribeQuery()) {
             return rows;
-        } else if (queryTypes.BULKUPDATE === this.options.type) {
+        } else if (queryType.BULKUPDATE === this.options.type) {
             if (!this.options.returning) {
                 return parseInt(rowCount, 10);
             }
 
             return this.handleSelectQuery(rows);
-        } else if (queryTypes.BULKDELETE === this.options.type) {
+        } else if (queryType.BULKDELETE === this.options.type) {
             return parseInt(rowCount, 10);
         } else if (this.isUpsertQuery()) {
             return rows[0].sequelize_upsert;

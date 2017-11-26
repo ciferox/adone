@@ -33,7 +33,6 @@ export default class Query extends AbstractQuery {
             plain: false,
             raw: false
         }, options || {});
-
         this.checkLoggingOption();
     }
 
@@ -118,9 +117,8 @@ export default class Query extends AbstractQuery {
                     resolve(new Promise((resolve, reject) => {
                         const query = this;
                         // cannot use arrow function here because the function is bound to the statement
-                        const afterExecute = (err, results) => {
+                        const afterExecute = function (err, results) {
                             debug(`executed(${query.database.uuid || "default"}) : ${query.sql}`);
-
                             if (benchmark) {
                                 query.sequelize.log(`Executed (${query.database.uuid || "default"}): ${query.sql}`, Date.now() - queryBegin, query.options);
                             }
@@ -257,7 +255,6 @@ export default class Query extends AbstractQuery {
                                 } else if (query.isUpdateQuery() || query.isInsertQuery()) {
                                     result = [result, metaData.changes];
                                 }
-
                                 resolve(result);
                             }
                         };

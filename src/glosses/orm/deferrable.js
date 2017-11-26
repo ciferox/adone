@@ -7,6 +7,10 @@ class ABSTRACT {
     toString(...args) {
         return this.toSql(...args);
     }
+
+    static toString(...args) {
+        return new this().toString(...args);
+    }
 }
 
 

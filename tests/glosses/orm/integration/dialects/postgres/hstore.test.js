@@ -3,7 +3,7 @@ import Support from "../../support";
 const dialect = Support.getTestDialect();
 
 if (dialect.match(/^postgres/)) {
-    const hstore = adone.orm.dialect.postgres.hstore;
+    const hstore = adone.private(adone.orm).dialect.postgres.hstore;
 
     describe("[POSTGRES Specific] hstore", () => {
         describe("stringify", () => {

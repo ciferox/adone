@@ -142,9 +142,9 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                         .catch((err) => {
                             expect(
                                 err.message.match(/connect ECONNREFUSED/) ||
-                err.message.match(/invalid port number/) ||
-                err.message.match(/should be >=? 0 and < 65536/) ||
-                err.message.match(/Login failed for user/)
+                                err.message.match(/invalid port number/) ||
+                                err.message.match(/(?:should|must) be >=? 0 and < 65536/) ||
+                                err.message.match(/Login failed for user/)
                             ).to.be.ok;
                         });
                 });
@@ -1017,12 +1017,13 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
                 return User2.sync().catch((err) => {
                     if (dialect === "postgres" || dialect === "postgres-native") {
-                        assert([
+                        expect(err.message.trim()).to.match(new RegExp(`(?:${[
                             "fe_sendauth: no password supplied",
                             'role "bar" does not exist',
                             'FATAL:  role "bar" does not exist',
-                            'password authentication failed for user "bar"'
-                        ].include(err.message.trim()));
+                            'password authentication failed for user "bar"',
+                            "no .+ entry for host .+ user \"bar\", database \"omg\""
+                        ].join("|")})`));
                     } else if (dialect === "mssql") {
                         expect(err.message).to.equal("Login failed for user 'bar'.");
                     } else {

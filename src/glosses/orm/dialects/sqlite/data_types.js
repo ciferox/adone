@@ -60,7 +60,7 @@ export default function defineSqliteTypes(BaseTypes) {
             if (this._binary) {
                 return `VARCHAR BINARY(${this._length})`;
             }
-            return BaseTypes.STRING.prototype.toSql.call(this);
+            return super.toSql();
 
         }
     }
@@ -80,7 +80,7 @@ export default function defineSqliteTypes(BaseTypes) {
             if (this._binary) {
                 return `CHAR BINARY(${this._length})`;
             }
-            return BaseTypes.CHAR.prototype.toSql.call(this);
+            return super.toSql();
         }
     }
 

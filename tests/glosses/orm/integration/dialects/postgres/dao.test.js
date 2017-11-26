@@ -1,11 +1,12 @@
 import Support from "../../support";
 
-const Sequelize = Support.Sequelize;
 const dialect = Support.getTestDialect();
 const { orm } = adone;
 const { type } = orm;
 
-describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => {
+describe("[POSTGRES Specific] DAO", {
+    skip: !/^postgres/.test(dialect)
+}, () => {
     beforeEach(function () {
         this.sequelize.options.quoteIdentifiers = true;
         this.User = this.sequelize.define("User", {
@@ -89,7 +90,7 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
                 this.User.create({ username: "swen", emergency_contact: { name: "kate" } }),
                 this.User.create({ username: "anna", emergency_contact: { name: "joe" } })])
                 .then(() => {
-                    return this.User.find({ where: Sequelize.json("emergency_contact->>'name'", "kate"), attributes: ["username", "emergency_contact"] });
+                    return this.User.find({ where: orm.util.json("emergency_contact->>'name'", "kate"), attributes: ["username", "emergency_contact"] });
                 })
                 .then((user) => {
                     expect(user.emergency_contact.name).to.equal("kate");
@@ -102,7 +103,7 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
                 this.User.create({ username: "anna", emergency_contact: { name: "joe" } })])
                 .then(() => {
                     return this.User.find({
-                        where: Sequelize.json({ emergency_contact: { name: "kate" } })
+                        where: orm.util.json({ emergency_contact: { name: "kate" } })
                     });
                 })
                 .then((user) => {
@@ -115,7 +116,7 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
                 this.User.create({ username: "swen", emergency_contact: { name: "kate" } }),
                 this.User.create({ username: "anna", emergency_contact: { name: "joe" } })])
                 .then(() => {
-                    return this.User.find({ where: Sequelize.json("emergency_contact.name", "joe") });
+                    return this.User.find({ where: orm.util.json("emergency_contact.name", "joe") });
                 })
                 .then((user) => {
                     expect(user.emergency_contact.name).to.equal("joe");
@@ -128,8 +129,8 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
                 this.User.create({ username: "anna", emergencyContact: { name: "joe" } })])
                 .then(() => {
                     return this.User.find({
-                        attributes: [[Sequelize.json("emergencyContact.name"), "contactName"]],
-                        where: Sequelize.json("emergencyContact.name", "joe")
+                        attributes: [[orm.util.json("emergencyContact.name"), "contactName"]],
+                        where: orm.util.json("emergencyContact.name", "joe")
                     });
                 })
                 .then((user) => {
@@ -148,7 +149,7 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
                     return this.User.find({ where: { username: "swen" } });
                 })
                 .then(() => {
-                    return this.User.find({ where: Sequelize.json("emergency_contact.value", text) });
+                    return this.User.find({ where: orm.util.json("emergency_contact.value", text) });
                 })
                 .then((user) => {
                     expect(user.username).to.equal("swen");
@@ -166,7 +167,7 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
                     return this.User.find({ where: { username: "swen" } });
                 })
                 .then(() => {
-                    return this.User.find({ where: Sequelize.json("emergency_contact.value", text) });
+                    return this.User.find({ where: orm.util.json("emergency_contact.value", text) });
                 })
                 .then((user) => {
                     expect(user.username).to.equal("swen");
@@ -581,8 +582,8 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
                 expect(newUser.acceptable_marks.inclusive).to.deep.equal([true, false]); // inclusive, exclusive
                 expect(newUser.course_period[0] instanceof Date).to.be.ok; // lower bound
                 expect(newUser.course_period[1] instanceof Date).to.be.ok; // upper bound
-                expect(newUser.course_period[0]).to.equalTime(period[0]); // lower bound
-                expect(newUser.course_period[1]).to.equalTime(period[1]); // upper bound
+                expect(newUser.course_period[0]).to.be.deep.equal(period[0]); // lower bound
+                expect(newUser.course_period[1]).to.be.deep.equal(period[1]); // upper bound
                 expect(newUser.course_period.inclusive).to.deep.equal([true, false]); // inclusive, exclusive
 
                 // Check to see if updating a range field works
@@ -611,13 +612,13 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
                     expect(user.holidays[0].length).to.equal(2);
                     expect(user.holidays[0][0] instanceof Date).to.be.ok;
                     expect(user.holidays[0][1] instanceof Date).to.be.ok;
-                    expect(user.holidays[0][0]).to.equalTime(holidays[0][0]);
-                    expect(user.holidays[0][1]).to.equalTime(holidays[0][1]);
+                    expect(user.holidays[0][0]).to.be.deep.equal(holidays[0][0]);
+                    expect(user.holidays[0][1]).to.be.deep.equal(holidays[0][1]);
                     expect(user.holidays[1].length).to.equal(2);
                     expect(user.holidays[1][0] instanceof Date).to.be.ok;
                     expect(user.holidays[1][1] instanceof Date).to.be.ok;
-                    expect(user.holidays[1][0]).to.equalTime(holidays[1][0]);
-                    expect(user.holidays[1][1]).to.equalTime(holidays[1][1]);
+                    expect(user.holidays[1][0]).to.be.deep.equal(holidays[1][0]);
+                    expect(user.holidays[1][1]).to.be.deep.equal(holidays[1][1]);
                 });
             });
         });
@@ -634,8 +635,8 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
                 return User.findById(1).then((user) => {
                     expect(user.course_period[0] instanceof Date).to.be.ok;
                     expect(user.course_period[1] instanceof Date).to.be.ok;
-                    expect(user.course_period[0]).to.equalTime(period[0]); // lower bound
-                    expect(user.course_period[1]).to.equalTime(period[1]); // upper bound
+                    expect(user.course_period[0]).to.be.deep.equal(period[0]); // lower bound
+                    expect(user.course_period[1]).to.be.deep.equal(period[1]); // upper bound
                     expect(user.course_period.inclusive).to.deep.equal([true, false]); // inclusive, exclusive
                 });
             });
@@ -653,8 +654,8 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
                 expect(newUser.acceptable_marks.inclusive).to.deep.equal([true, false]); // inclusive, exclusive
                 expect(newUser.course_period[0] instanceof Date).to.be.ok;
                 expect(newUser.course_period[1] instanceof Date).to.be.ok;
-                expect(newUser.course_period[0]).to.equalTime(period[0]); // lower bound
-                expect(newUser.course_period[1]).to.equalTime(period[1]); // upper bound
+                expect(newUser.course_period[0]).to.deep.equal(period[0]); // lower bound
+                expect(newUser.course_period[1]).to.deep.equal(period[1]); // upper bound
                 expect(newUser.course_period.inclusive).to.deep.equal([true, false]); // inclusive, exclusive
 
                 const period2 = [new Date(2015, 1, 1), new Date(2015, 10, 30)];
@@ -664,8 +665,8 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
                     return newUser.reload().then(() => {
                         expect(newUser.course_period[0] instanceof Date).to.be.ok;
                         expect(newUser.course_period[1] instanceof Date).to.be.ok;
-                        expect(newUser.course_period[0]).to.equalTime(period2[0]); // lower bound
-                        expect(newUser.course_period[1]).to.equalTime(period2[1]); // upper bound
+                        expect(newUser.course_period[0]).to.deep.equal(period2[0]); // lower bound
+                        expect(newUser.course_period[1]).to.deep.equal(period2[1]); // upper bound
                         expect(newUser.course_period.inclusive).to.deep.equal([true, false]); // inclusive, exclusive
                     });
                 });
@@ -686,8 +687,8 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
             expect(count).to.equal(1);
             expect(users[0].course_period[0] instanceof Date).to.be.ok;
             expect(users[0].course_period[1] instanceof Date).to.be.ok;
-            expect(users[0].course_period[0]).to.equalTime(period[0]); // lower bound
-            expect(users[0].course_period[1]).to.equalTime(period[1]); // upper bound
+            expect(users[0].course_period[0]).to.be.deep.equal(period[0]); // lower bound
+            expect(users[0].course_period[1]).to.be.deep.equal(period[1]); // upper bound
             expect(users[0].course_period.inclusive).to.deep.equal([true, false]); // inclusive, exclusive
         });
 
@@ -747,11 +748,11 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
                     return User.findAll({ order: ["username"] });
                 })
                 .then((users) => {
-                    expect(users[0].course_period[0]).to.equalTime(periods[0][0]); // lower bound
-                    expect(users[0].course_period[1]).to.equalTime(periods[0][1]); // upper bound
+                    expect(users[0].course_period[0]).to.be.deep.equal(periods[0][0]); // lower bound
+                    expect(users[0].course_period[1]).to.be.deep.equal(periods[0][1]); // upper bound
                     expect(users[0].course_period.inclusive).to.deep.equal([true, false]); // inclusive, exclusive
-                    expect(users[1].course_period[0]).to.equalTime(periods[1][0]); // lower bound
-                    expect(users[1].course_period[1]).to.equalTime(periods[1][1]); // upper bound
+                    expect(users[1].course_period[0]).to.be.deep.equal(periods[1][0]); // lower bound
+                    expect(users[1].course_period[1]).to.be.deep.equal(periods[1][1]); // upper bound
                     expect(users[1].course_period.inclusive).to.deep.equal([true, false]); // inclusive, exclusive
                 });
         });
@@ -783,8 +784,8 @@ describe("[POSTGRES Specific] DAO", { skip: !/^postgres/.test(dialect) }, () => 
                     expect(user.hasOwnProperty("holidayDates")).to.be.ok;
                     expect(user.holidayDates.length).to.equal(1);
                     expect(user.holidayDates[0].period.length).to.equal(2);
-                    expect(user.holidayDates[0].period[0]).to.equalTime(period[0]);
-                    expect(user.holidayDates[0].period[1]).to.equalTime(period[1]);
+                    expect(user.holidayDates[0].period[0]).to.be.deep.equal(period[0]);
+                    expect(user.holidayDates[0].period[1]).to.be.deep.equal(period[1]);
                 });
         });
     });

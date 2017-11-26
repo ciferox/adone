@@ -30,7 +30,7 @@ describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.support
             });
 
             await User.sync({ force: true });
-            await this.sequelize.query(triggerQuery, { type: this.sequelize.QueryTypes.RAW });
+            await this.sequelize.query(triggerQuery, { type: this.sequelize.queryType.RAW });
         });
 
         it("should return output rows after insert", async () => {

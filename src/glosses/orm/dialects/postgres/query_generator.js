@@ -505,7 +505,7 @@ const QueryGenerator = {
         }
 
         let type;
-        if (attribute.type instanceof type.ENUM) {
+        if (attribute.type instanceof orm.type.ENUM) {
             if (attribute.type.values && !attribute.values) {
                 attribute.values = attribute.type.values;
             }

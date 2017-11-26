@@ -64,14 +64,14 @@ export default class QueryInterface {
      *
      * @return {Promise}
      */
-    dropAllSchemas(options) {
+    async dropAllSchemas(options) {
         options = options || {};
 
         if (!this.QueryGenerator._dialect.supports.schemas) {
             return this.sequelize.drop(options);
         }
-        return this.showAllSchemas(options).map((schemaName) => this.dropSchema(schemaName, options));
-
+        const schemas = await this.showAllSchemas(options);
+        return Promise.all(schemas.map((schemaName) => this.dropSchema(schemaName, options)));
     }
 
     /**

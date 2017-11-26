@@ -14,18 +14,29 @@ if (dialect === "sqlite") {
 describe(Support.getTestDialectTeaser("Configuration"), () => {
     describe("Connections problems should fail with a nice message", () => {
         it("when we don't have the correct server details", async () => {
-            const seq = orm.create(config[dialect].database, config[dialect].username, config[dialect].password, { storage: "/path/to/no/where/land", logging: false, host: "0.0.0.1", port: config[dialect].port, dialect });
+            const seq = orm.create(config[dialect].database, config[dialect].username, config[dialect].password, {
+                storage: "/path/to/no/where/land",
+                logging: false,
+                host: "0.0.0.1",
+                port: config[dialect].port,
+                dialect
+            });
             if (dialect === "sqlite") {
                 // SQLite doesn't have a breakdown of error codes, so we are unable to discern between the different types of errors.
                 await assert.throws(async () => {
                     await seq.query("select 1 as hello");
                 }, seq.ConnectionError, "SQLITE_CANTOPEN: unable to open database file");
-            }
-            const err = await assert.throws(async () => {
-                await seq.query("select 1 as hello");
-            });
-            if (!(err instanceof seq.InvalidConnectionError) && !(err instanceof seq.HostNotReachableError)) {
-                assert.fail("expected error to be instance of InvalidConnectionError or HostNotReachableError");
+            } else {
+                const err = await assert.throws(async () => {
+                    await seq.query("select 1 as hello");
+                });
+                if (
+                    !(err instanceof orm.x.InvalidConnectionError)
+                    && !(err instanceof orm.x.HostNotReachableError)
+                    && !(err instanceof orm.x.ConnectionError)
+                ) {
+                    assert.fail();
+                }
             }
         });
 
@@ -41,10 +52,11 @@ describe(Support.getTestDialectTeaser("Configuration"), () => {
             if (dialect === "sqlite") {
                 // SQLite doesn't require authentication and `select 1 as hello` is a valid query, so this should be fulfilled not rejected for it.
                 await seq.query("select 1 as hello");
+            } else {
+                await assert.throws(async () => {
+                    await seq.query("select 1 as hello");
+                }, seq.ConnectionRefusedError, "connect ECONNREFUSED");
             }
-            await assert.throws(async () => {
-                await seq.query("select 1 as hello");
-            }, seq.ConnectionRefusedError, "connect ECONNREFUSED");
         });
 
         it("when we don't have a valid dialect.", () => {

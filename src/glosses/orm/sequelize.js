@@ -1010,30 +1010,19 @@ export default class Sequelize {
 }
 
 // Aliases
-Sequelize.prototype.fn = Sequelize.fn;
-Sequelize.prototype.col = Sequelize.col;
-Sequelize.prototype.cast = Sequelize.cast;
-Sequelize.prototype.literal = Sequelize.asIs = Sequelize.prototype.asIs = Sequelize.literal;
-Sequelize.prototype.and = Sequelize.and;
-Sequelize.prototype.or = Sequelize.or;
-Sequelize.prototype.json = Sequelize.json;
-Sequelize.prototype.where = Sequelize.condition = Sequelize.prototype.condition = Sequelize.where;
+Sequelize.prototype.fn = orm.util.fn; // TODO: pass the same to orm.* ??
+Sequelize.prototype.col = orm.util.col; // TODO: pass the same to orm.* ??
+Sequelize.prototype.cast = orm.util.cast; // TODO: pass the same to orm.* ??
+Sequelize.prototype.literal = Sequelize.asIs = Sequelize.prototype.asIs = orm.util.literal; // TODO: pass the same to orm.* ??
+Sequelize.prototype.and = orm.util.and; // TODO: pass the same to orm.* ??
+Sequelize.prototype.or = orm.util.or; // TODO: pass the same to orm.* ??
+Sequelize.prototype.json = orm.util.json; // TODO: pass the same to orm.* ??
+Sequelize.prototype.where = Sequelize.prototype.condition = orm.util.where; // TODO: pass the same to orm.* ??
 Sequelize.prototype.validate = Sequelize.prototype.authenticate;
 
 // Sequelize.version = require("../package.json").version;
 
 Sequelize.options = { hooks: {} };
-
-/**
- * A reference to Sequelize constructor from sequelize. Useful for accessing DataTypes, Errors etc.
- * @see {@link Sequelize}
- */
-Sequelize.prototype.Sequelize = Sequelize;
-
-/**
- * @private
- */
-Sequelize.prototype.Utils = Sequelize.Utils = util;
 
 /**
  * Available query types for use with `sequelize.query`
@@ -1054,7 +1043,7 @@ Sequelize.prototype.operator = Sequelize.operator = operator;
  */
 Sequelize.prototype.Validator = Sequelize.Validator = util.Validator.validator;
 
-Sequelize.type = type;
+Sequelize.type = Sequelize.prototype.type = type;
 // for (const dataType in DataTypes) {
 //     Sequelize[dataType] = DataTypes[dataType];
 // }

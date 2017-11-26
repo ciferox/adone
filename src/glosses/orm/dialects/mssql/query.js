@@ -111,7 +111,6 @@ export default class Query extends AbstractQuery {
             } else {
                 const results = [];
                 const request = new connection.lib.Request(this.sql, (err, rowCount) => {
-
                     debug(`executed(${this.connection.uuid || "default"}) : ${this.sql}`);
 
                     if (benchmark) {
