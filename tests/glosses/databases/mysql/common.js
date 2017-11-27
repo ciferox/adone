@@ -1,10 +1,10 @@
 const { database: { mysql } } = adone;
 
 export const config = {
-    host: process.env.MYSQL_HOST || "localhost",
-    user: process.env.MYSQL_USER || "root",
-    password: process.env.MYSQL_PASSWORD || "root",
-    database: process.env.MYSQL_DATABASE || "node_mysql_test",
+    host: process.env.DB_HOST || process.env.MYSQL_HOST || "localhost",
+    user: process.env.MYSQL_USER || "adone",
+    password: process.env.MYSQL_PASSWORD || "adone",
+    database: process.env.MYSQL_DATABASE || "adone_tests",
     compress: process.env.MYSQL_USE_COMPRESSION,
     port: process.env.MYSQL_PORT || 3306
 };

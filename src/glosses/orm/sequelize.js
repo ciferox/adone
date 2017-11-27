@@ -120,7 +120,7 @@ export default class Sequelize {
 
         Sequelize.runHooks("beforeInit", config, options);
 
-        this.options = _.extend({
+        this.options = Object.assign({
             dialect: null,
             dialectModulePath: null,
             host: "localhost",
@@ -163,7 +163,7 @@ export default class Sequelize {
             this.options.logging = console.log;
         }
 
-        this.options.hooks = this.replaceHookAliases(this.options.hooks);
+        this._setupHooks(options.hooks);
 
         if (["", null, false].indexOf(config.password) > -1 || is.undefined(config.password)) {
             config.password = null;

@@ -131,7 +131,7 @@ export default function defineMysqlTypes(BaseTypes) {
 
             // Empty buffer, MySQL doesn't support POINT EMPTY
             // check, https://dev.mysql.com/worklog/task/?id=2381
-            if (value.length === 0) {
+            if (!value || value.length === 0) {
                 return null;
             }
 

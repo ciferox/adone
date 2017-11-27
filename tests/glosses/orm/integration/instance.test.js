@@ -1451,43 +1451,6 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         });
     });
 
-    describe("many to many relations", () => {
-        let udo;
-        beforeEach(function () {
-            const self = this;
-            this.User = this.sequelize.define("UserWithUsernameAndAgeAndIsAdmin", {
-                username: type.STRING,
-                age: type.INTEGER,
-                isAdmin: type.BOOLEAN
-            }, { timestamps: false });
-
-            this.Project = this.sequelize.define("NiceProject",
-                { title: type.STRING }, { timestamps: false });
-
-            this.Project.hasMany(this.User);
-            this.User.hasMany(this.Project);
-
-            return this.User.sync({ force: true }).then(() => {
-                return self.Project.sync({ force: true }).then(() => {
-                    return self.User.create({ username: "fnord", age: 1, isAdmin: true })
-                        .then((user) => {
-                            udo = user;
-                        });
-                });
-            });
-        });
-
-        it.skip("Should assign a property to the instance", function () {
-            // @thanpolas rethink this test, it doesn't make sense, a relation has
-            // to be created first in the beforeEach().
-            return this.User.findOne({ id: udo.id })
-                .then((user) => {
-                    user.NiceProjectId = 1;
-                    expect(user.NiceProjectId).to.equal(1);
-                });
-        });
-    });
-
     describe("toJSON", () => {
         beforeEach(function () {
             const self = this;

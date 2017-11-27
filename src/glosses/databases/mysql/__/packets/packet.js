@@ -363,6 +363,9 @@ export default class Packet {
 
     readLengthCodedBuffer() {
         const len = this.readLengthCodedNumber();
+        if (is.null(len)) {
+            return null;
+        }
         return this.readBuffer(len);
     }
 

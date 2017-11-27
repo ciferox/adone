@@ -1,6 +1,10 @@
 import getInstances from "./get_instances";
 import customRules from "./custom_rules";
 
+const {
+    is
+} = adone;
+
 describe("schema", "custom keywords", () => {
     let instance;
     let instances;
@@ -20,7 +24,7 @@ describe("schema", "custom keywords", () => {
                 testEvenKeyword({ type: "number", validate: validateEven });
 
                 function validateEven(schema, data) {
-                    if (typeof schema !== "boolean") {
+                    if (!is.boolean(schema)) {
                         throw new Error('The value of "even" keyword must be boolean');
                     }
                     return data % 2 ? !schema : schema;
@@ -116,7 +120,7 @@ describe("schema", "custom keywords", () => {
                 shouldBeInvalidSchema({ "x-even": "not_boolean" });
 
                 function compileEven(schema) {
-                    if (typeof schema !== "boolean") {
+                    if (!is.boolean(schema)) {
                         throw new Error('The value of "even" keyword must be boolean');
                     }
                     return schema ? isEven : isOdd;
@@ -168,7 +172,7 @@ describe("schema", "custom keywords", () => {
         });
 
         function compileConstant(schema) {
-            return typeof schema === "object" && schema !== null ? isDeepEqual : isStrictEqual;
+            return typeof schema === "object" && !is.null(schema) ? isDeepEqual : isStrictEqual;
 
             function isDeepEqual(data) {
                 return adone.is.deepEqual(data, schema);
@@ -523,7 +527,7 @@ describe("schema", "custom keywords", () => {
             });
 
             function validateEven(schema, data) {
-                if (typeof schema !== "boolean") {
+                if (!is.boolean(schema)) {
                     return false;
                 }
                 return data % 2 ? !schema : schema;
@@ -542,7 +546,7 @@ describe("schema", "custom keywords", () => {
 
 
             function validateEven(schema, data) {
-                if (typeof schema !== "boolean") {
+                if (!is.boolean(schema)) {
                     return false;
                 }
                 return data % 2 ? !schema : schema;
@@ -550,7 +554,7 @@ describe("schema", "custom keywords", () => {
 
             function compileEven(schema) {
                 compileCalled = true;
-                if (typeof schema !== "boolean") {
+                if (!is.boolean(schema)) {
                     throw new Error('The value of "even" keyword must be boolean');
                 }
                 return schema ? isEven : isOdd;
@@ -606,7 +610,7 @@ describe("schema", "custom keywords", () => {
 
 
             function validateEven(schema, data) {
-                if (typeof schema !== "boolean") {
+                if (!is.boolean(schema)) {
                     return false;
                 }
                 return data % 2 ? !schema : schema;
@@ -664,7 +668,7 @@ describe("schema", "custom keywords", () => {
 
 
             function validateEven(schema, data) {
-                if (typeof schema !== "boolean") {
+                if (!is.boolean(schema)) {
                     return false;
                 }
                 return data % 2 ? !schema : schema;
@@ -892,12 +896,12 @@ describe("schema", "custom keywords", () => {
     }
 
     function validateRangeSchema(schema, parentSchema) {
-        const schemaValid = Array.isArray(schema) && schema.length == 2 && typeof schema[0] === "number" && typeof schema[1] === "number";
+        const schemaValid = is.array(schema) && schema.length == 2 && is.number(schema[0]) && is.number(schema[1]);
         if (!schemaValid) {
             throw new Error("Invalid schema for range keyword, should be array of 2 numbers");
         }
 
-        const exclusiveRangeSchemaValid = parentSchema.exclusiveRange === undefined || typeof parentSchema.exclusiveRange === "boolean";
+        const exclusiveRangeSchemaValid = is.undefined(parentSchema.exclusiveRange) || is.boolean(parentSchema.exclusiveRange);
         if (!exclusiveRangeSchemaValid) {
             throw new Error("Invalid schema for exclusiveRange keyword, should be bolean");
         }
@@ -991,6 +995,15 @@ describe("schema", "custom keywords", () => {
                     }
                 });
             }).to.throw();
+        });
+
+        it("should return instance of itself", () => {
+            const res = instance.addKeyword("any", {
+                validate() {
+                    return true;
+                }
+            });
+            expect(res).to.be.equal(instance);
         });
 
         it("should throw if unknown type is passed", () => {
@@ -1105,6 +1118,17 @@ describe("schema", "custom keywords", () => {
             expect(validate(0)).to.be.equal(false);
             expect(validate(1)).to.be.equal(false);
             expect(validate(2)).to.be.equal(true);
+        });
+
+        it("should return instance of itself", () => {
+            const res = instance
+                .addKeyword("any", {
+                    validate() {
+                        return true;
+                    }
+                })
+                .removeKeyword("any");
+            expect(res).to.be.equal(instance);
         });
     });
 

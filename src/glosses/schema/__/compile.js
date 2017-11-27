@@ -183,7 +183,7 @@ export default function compile(schema, root, localRefs, baseId) {
             if (!valid) {
                 const message = `keyword schema is invalid: ${this.errorsText(validateSchema.errors)}`;
                 if (this._opts.validateSchema === "log") {
-                    console.error(message);
+                    this.logger.error(message);
                 } else {
                     throw new Error(message);
                 }
@@ -250,6 +250,7 @@ export default function compile(schema, root, localRefs, baseId) {
             useCustomRule,
             opts,
             formats,
+            logger: this.logger,
             self: this
         });
 
@@ -284,7 +285,7 @@ export default function compile(schema, root, localRefs, baseId) {
 
             refVal[0] = validate;
         } catch (e) {
-            adone.error("Error compiling schema, function code:", sourceCode);
+            this.logger.error("Error compiling schema, function code:", sourceCode);
             throw e;
         }
 

@@ -116,8 +116,7 @@ describe("schema", "Validator", () => {
 
     describe("addSchema method", () => {
         it("should add and compile schema with key", () => {
-            const res = instance.addSchema({ type: "integer" }, "int");
-            expect(res).not.to.be.ok;
+            instance.addSchema({ type: "integer" }, "int");
             const validate = instance.getSchema("int");
             expect(validate).to.be.a("function");
 
@@ -211,6 +210,11 @@ describe("schema", "Validator", () => {
             } catch (e) {
                 expect(e.message).to.be.equal("schema id must be string");
             }
+        });
+
+        it("should return instance of itself", () => {
+            const res = instance.addSchema({ type: "integer" }, "int");
+            expect(res).to.be.equal(instance);
         });
     });
 
@@ -377,6 +381,14 @@ describe("schema", "Validator", () => {
             expect(instance._cache.get(str2)).not.to.be.ok;
             expect(instance._cache.get(str3)).to.be.an("object");
         });
+
+
+        it("should return instance of itself", () => {
+            const res = instance
+                .addSchema({ type: "integer" }, "int")
+                .removeSchema("int");
+            expect(res).to.be.equal(instance);
+        });
     });
 
     describe("addFormat method", () => {
@@ -408,12 +420,18 @@ describe("schema", "Validator", () => {
             testFormat();
         });
 
-        function testFormat() {
+
+        it("should return instance of itself", () => {
+            const res = instance.addFormat("identifier", /^[a-z_$][a-z0-9_$]*$/i);
+            expect(res).to.be.equal(instance);
+        });
+
+        const testFormat = () => {
             const validate = instance.compile({ format: "identifier" });
             expect(validate("Abc1")).to.be.equal(true);
             expect(validate("123")).to.be.equal(false);
             expect(validate(123)).to.be.equal(true);
-        }
+        };
 
         describe("formats for number", () => {
             it("should validate only numbers", () => {

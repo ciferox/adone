@@ -754,7 +754,6 @@ export default class Model {
             schemaDelimiter: "",
             defaultScope: {},
             scopes: [],
-            hooks: {},
             indexes: []
         }, options);
 
@@ -764,12 +763,7 @@ export default class Model {
         }
 
         this.associations = {};
-        this.options.hooks = _.mapValues(this.replaceHookAliases(this.options.hooks), (hooks) => {
-            if (!is.array(hooks)) {
-                hooks = [hooks];
-            }
-            return hooks;
-        });
+        this._setupHooks(options.hooks);
 
         this.underscored = this.underscored || this.underscoredAll;
 

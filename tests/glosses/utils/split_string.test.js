@@ -35,6 +35,13 @@ describe("util", "splitString", () => {
         assert.deepEqual(splitString("a.`b.c`.d.`.e.f.g.`.h"), ["a", "b.c", "d", ".e.f.g.", "h"]);
     });
 
+    it("should respect strings in “” double quotes", () => {
+        assert.deepEqual(splitString("“b.c”"), ["b.c"]);
+        assert.deepEqual(splitString("a.“b.c”"), ["a", "b.c"]);
+        assert.deepEqual(splitString("a.“b.c”.d"), ["a", "b.c", "d"]);
+        assert.deepEqual(splitString("a.“b.c”.d.“.e.f.g.”.h"), ["a", "b.c", "d", ".e.f.g.", "h"]);
+    });
+
     it("should not split on escaped dots", () => {
         assert.deepEqual(splitString("a.b.c\\.d"), ["a", "b", "c.d"]);
     });
@@ -56,6 +63,10 @@ describe("util", "splitString", () => {
     describe("options", () => {
         it("should keep double quotes", () => {
             assert.deepEqual(splitString('a."b.c".d', { keepDoubleQuotes: true }), ["a", '"b.c"', "d"]);
+        });
+
+        it("should keep “” double quotes", () => {
+            assert.deepEqual(splitString("a.“b.c”.d", { keepDoubleQuotes: true }), ["a", "“b.c”", "d"]);
         });
 
         it("should not split inside brackets", () => {
@@ -102,6 +113,14 @@ describe("util", "splitString", () => {
 
         it("should split on a custom separator", () => {
             assert.deepEqual(splitString("a,b,c", { sep: "," }), ["a", "b", "c"]);
+        });
+
+        it("should allow custom quotes array", () => {
+            assert.deepEqual(splitString("a.^b.c^", { quotes: ["^"] }), ["a", "b.c"]);
+        });
+
+        it("should allow custom quotes object", () => {
+            assert.deepEqual(splitString("a.^b.c$", { quotes: { "^": "$" } }), ["a", "b.c"]);
         });
     });
 

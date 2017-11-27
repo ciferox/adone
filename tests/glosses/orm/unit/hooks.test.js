@@ -2,6 +2,7 @@ import Support from "../support";
 
 const { vendor: { lodash: _ } } = adone;
 const { orm } = adone;
+const { type } = orm;
 const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser("Hooks"), () => {
@@ -18,6 +19,87 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
             const options = {};
             return this.Model.runHooks("beforeCreate", options).then(() => {
                 expect(options.answer).to.equal(41);
+            });
+        });
+    });
+
+    describe("proxies", function () {
+        beforeEach(() => {
+            stub(current, "query").returns(Promise.resolve([{
+                _previousDataValues: {},
+                dataValues: { id: 1, name: "abc" }
+            }]));
+        });
+
+        afterEach(() => {
+            current.query.restore();
+        });
+
+        describe("defined by options.hooks", () => {
+            beforeEach(() => {
+                this.beforeSaveHook = spy();
+                this.afterSaveHook = spy();
+                this.afterCreateHook = spy();
+
+                this.Model = current.define("m", {
+                    name: type.STRING
+                }, {
+                    hooks: {
+                        beforeSave: this.beforeSaveHook,
+                        afterSave: this.afterSaveHook,
+                        afterCreate: this.afterCreateHook
+                    }
+                });
+            });
+
+            it("calls beforeSave/afterSave", () => {
+                return this.Model.create({}).then(() => {
+                    expect(this.afterCreateHook).to.have.been.calledOnce;
+                    expect(this.beforeSaveHook).to.have.been.calledOnce;
+                    expect(this.afterSaveHook).to.have.been.calledOnce;
+                });
+            });
+        });
+
+        describe("defined by addHook method", () => {
+            beforeEach(() => {
+                this.beforeSaveHook = spy();
+                this.afterSaveHook = spy();
+
+                this.Model = current.define("m", {
+                    name: type.STRING
+                });
+
+                this.Model.addHook("beforeSave", this.beforeSaveHook);
+                this.Model.addHook("afterSave", this.afterSaveHook);
+            });
+
+            it("calls beforeSave/afterSave", () => {
+                return this.Model.create({}).then(() => {
+                    expect(this.beforeSaveHook).to.have.been.calledOnce;
+                    expect(this.afterSaveHook).to.have.been.calledOnce;
+                });
+            });
+        });
+
+        describe("defined by hook method", () => {
+            beforeEach(() => {
+                this.beforeSaveHook = spy();
+                this.afterSaveHook = spy();
+
+                this.Model = current.define("m", {
+                    name: type.STRING
+                });
+
+                this.Model.hook("beforeSave", this.beforeSaveHook);
+                this.Model.hook("afterSave", this.afterSaveHook);
+            });
+
+            it("calls beforeSave/afterSave", () => {
+                return this.Model.create({}).then(() => {
+                    expect(this.beforeSaveHook).to.have.been.calledOnce;
+                    expect(this.afterSaveHook).to.have.been.calledOnce;
+                });
             });
         });
     });

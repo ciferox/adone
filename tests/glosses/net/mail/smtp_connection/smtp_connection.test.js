@@ -8,6 +8,37 @@ const XOAUTH_PORT = 8497;
 
 const { net: { mail: { __: { SMTPConnection, XOAuth2 } } }, std: { fs, net, path } } = adone;
 
+
+const proxyConnect = (port, host, destinationPort, destinationHost, callback) => {
+    const socket = net.connect(port, host, () => {
+        socket.write(`CONNECT ${destinationHost}:${destinationPort} HTTP/1.1\r\n\r\n`);
+
+        let headers = "";
+        const onSocketData = function (chunk) {
+            let match;
+            let remainder;
+
+            headers += chunk.toString("binary");
+            if ((match = headers.match(/\r\n\r\n/))) {
+                socket.removeListener("data", onSocketData);
+                remainder = headers.substr(match.index + match[0].length);
+                headers = headers.substr(0, match.index);
+                if (remainder) {
+                    socket.unshift(new Buffer(remainder, "binary"));
+                }
+                // proxy connection is now established
+                return callback(null, socket);
+            }
+        };
+        socket.on("data", onSocketData);
+    });
+
+    socket.on("error", (err) => {
+        expect(err).to.not.exist;
+    });
+};
+
+
 describe("net", "mail", "SMTP-Connection Tests", () => {
 
     const NODE_TLS_REJECT_UNAUTHORIZED = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
@@ -28,9 +59,13 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
     });
 
     describe("Connection tests", () => {
-        let server, insecureServer, invalidServer, secureServer, httpProxy;
+        let server;
+        let insecureServer;
+        let invalidServer;
+        let secureServer;
+        let httpProxy;
 
-        beforeEach((done) => {
+        beforeEach(async () => {
             server = new SMTPServer({
                 onAuth(auth, session, callback) {
                     if (auth.username !== "testuser" || auth.password !== "testpass") {
@@ -93,14 +128,12 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                 await ctx.connect();
             });
 
-            server.listen(PORT_NUMBER, () => {
-                invalidServer.listen(PORT_NUMBER + 1, () => {
-                    secureServer.listen(PORT_NUMBER + 2, () => {
-                        insecureServer.listen(PORT_NUMBER + 3, () => {
-                            httpProxy.listen(PROXY_PORT_NUMBER).then(done);
-                        });
-                    });
-                });
+            await new Promise((resolve) => server.listen(PORT_NUMBER, resolve));
+            await new Promise((resolve) => invalidServer.listen(PORT_NUMBER + 1, resolve));
+            await new Promise((resolve) => secureServer.listen(PORT_NUMBER + 2, resolve));
+            await new Promise((resolve) => insecureServer.listen(PORT_NUMBER + 3, resolve));
+            await httpProxy.bind({
+                port: PROXY_PORT_NUMBER
             });
         });
 
@@ -1131,32 +1164,3 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
         });
     });
 });
-
-function proxyConnect(port, host, destinationPort, destinationHost, callback) {
-    const socket = net.connect(port, host, () => {
-        socket.write(`CONNECT ${destinationHost}:${destinationPort} HTTP/1.1\r\n\r\n`);
-
-        let headers = "";
-        const onSocketData = function (chunk) {
-            let match;
-            let remainder;
-
-            headers += chunk.toString("binary");
-            if ((match = headers.match(/\r\n\r\n/))) {
-                socket.removeListener("data", onSocketData);
-                remainder = headers.substr(match.index + match[0].length);
-                headers = headers.substr(0, match.index);
-                if (remainder) {
-                    socket.unshift(new Buffer(remainder, "binary"));
-                }
-                // proxy connection is now established
-                return callback(null, socket);
-            }
-        };
-        socket.on("data", onSocketData);
-    });
-
-    socket.on("error", (err) => {
-        expect(err).to.not.exist;
-    });
-}

@@ -12,7 +12,7 @@ const getClosingQuote = (str, ch, i) => {
 };
 
 const keepQuotes = (ch, opts) => {
-    if (opts.keepDoubleQuotes === true && ch === '"') {
+    if (opts.keepDoubleQuotes === true && (ch === '"' || ch === "“" || ch === "”")) {
         return true;
     }
     if (opts.keepSingleQuotes === true && ch === "'") {
@@ -22,6 +22,9 @@ const keepQuotes = (ch, opts) => {
 };
 
 const keepEscaping = (opts, str, idx) => {
+    if (is.function(opts.keepEscaping)) {
+        return opts.keepEscaping(str, idx);
+    }
     return opts.keepEscaping === true || str[idx + 1] === "\\";
 };
 
@@ -41,7 +44,19 @@ export default function splitString(str, options, fn) {
     }
 
     const opts = { sep: ".", ...options };
-    const quotes = opts.quotes || ['"', "'", "`"];
+    let quotes = opts.quotes || {
+        '"': '"',
+        "'": "'",
+        "`": "`",
+        "“": "”"
+    };
+    if (is.array(quotes)) {
+        quotes = quotes.reduce((acc, ele) => {
+            acc[ele] = ele;
+            return acc;
+        }, {});
+    }
+
     let brackets;
 
     if (opts.brackets === true) {
@@ -99,8 +114,8 @@ export default function splitString(str, options, fn) {
                         continue;
                     }
 
-                    if (quotes.includes(s)) {
-                        i = getClosingQuote(str, s, i + 1);
+                    if (quotes[s]) {
+                        i = getClosingQuote(str, quotes[s], i + 1);
                         continue;
                     }
 
@@ -131,8 +146,8 @@ export default function splitString(str, options, fn) {
             tok.idx = idx = closeIdx;
         }
 
-        if (quotes.includes(ch)) {
-            closeIdx = getClosingQuote(str, ch, idx + 1);
+        if (quotes[ch]) {
+            closeIdx = getClosingQuote(str, quotes[ch], idx + 1);
             if (closeIdx === -1) {
                 arr[arr.length - 1] += ch;
                 continue;

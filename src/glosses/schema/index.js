@@ -77,17 +77,17 @@ const _removeAllSchemas = (self, schemas, regex) => {
     }
 };
 
-const _getId = (schema) => {
+const _getId = function (schema) {
     if (schema.$id) {
-        adone.warn("schema $id ignored", schema.$id);
+        this.logger.warn("schema $id ignored", schema.$id);
     }
     return schema.id;
 };
 
 
-const _get$Id = (schema) => {
+const _get$Id = function (schema) {
     if (schema.id) {
-        adone.warn("schema id ignored", schema.id);
+        this.logger.warn("schema id ignored", schema.id);
     }
     return schema.$id;
 };
@@ -202,9 +202,25 @@ const patternGroups = (self) => {
     self.RULES.all.properties.implements.push("patternGroups");
 };
 
+const setLogger = (self) => {
+    let logger = self._opts.logger;
+    if (logger === false) {
+        self.logger = { log: adone.noop, warn: adone.noop, error: adone.noop };
+    } else {
+        if (is.undefined(logger)) {
+            logger = adone;
+        }
+        if (!(is.object(logger) && logger.log && logger.warn && logger.error)) {
+            throw new Error("logger must implement log, warn and error methods");
+        }
+        self.logger = logger;
+    }
+};
+
 export class Validator {
     constructor(opts) {
         opts = this._opts = adone.util.clone(opts) || {};
+        setLogger(this);
         this._schemas = {};
         this._refs = {};
         this._fragments = {};
@@ -269,7 +285,7 @@ export class Validator {
             for (const s of schema) {
                 this.addSchema(s, undefined, _skipValidation, _meta);
             }
-            return;
+            return this;
         }
         const id = this._getId(schema);
         if (!is.undefined(id) && !is.string(id)) {
@@ -278,10 +294,11 @@ export class Validator {
         key = __.resolve.normalizeId(key || id);
         checkUnique(this, key);
         this._schemas[key] = this._addSchema(schema, _skipValidation, _meta, true);
+        return this;
     }
 
     addMetaSchema(schema, key, skipValidation) {
-        this.addSchema(schema, key, skipValidation, true);
+        return this.addSchema(schema, key, skipValidation, true);
     }
 
     validateSchema(schema, throwOrLogError) {
@@ -291,7 +308,7 @@ export class Validator {
         }
         $schema = $schema || this._opts.defaultMeta || defaultMeta(this);
         if (!$schema) {
-            console.warn("meta-schema not available");
+            this.logger.warn("meta-schema not available");
             this.errors = null;
             return true;
         }
@@ -308,7 +325,7 @@ export class Validator {
         if (!valid && throwOrLogError) {
             const message = `schema is invalid: ${this.errorsText()}`;
             if (this._opts.validateSchema === "log") {
-                adone.error(message);
+                this.logger.error(message);
             } else {
                 throw new x.Exception(message);
             }
@@ -335,14 +352,14 @@ export class Validator {
         if (schemaKeyRef instanceof RegExp) {
             _removeAllSchemas(this, this._schemas, schemaKeyRef);
             _removeAllSchemas(this, this._refs, schemaKeyRef);
-            return;
+            return this;
         }
         switch (typeof schemaKeyRef) {
             case "undefined": {
                 _removeAllSchemas(this, this._schemas);
                 _removeAllSchemas(this, this._refs);
                 this._cache.clear();
-                return;
+                return this;
             }
             case "string": {
                 const schemaObj = _getSchemaObj(this, schemaKeyRef);
@@ -351,7 +368,7 @@ export class Validator {
                 }
                 delete this._schemas[schemaKeyRef];
                 delete this._refs[schemaKeyRef];
-                return;
+                return this;
             }
             case "object": {
                 const serialize = this._opts.serialize;
@@ -365,6 +382,7 @@ export class Validator {
                 }
             }
         }
+        return this;
     }
 
     addFormat(name, format) {
@@ -372,6 +390,7 @@ export class Validator {
             format = new RegExp(format);
         }
         this._formats[name] = format;
+        return this;
     }
 
     errorsText(errors, options) {
@@ -563,6 +582,8 @@ export class Validator {
         }
 
         RULES.keywords[keyword] = RULES.all[keyword] = true;
+
+        return this;
     }
 
     getKeyword(keyword) {
@@ -586,6 +607,7 @@ export class Validator {
                 }
             }
         }
+        return this;
     }
 
     compileAsync(schema, meta, callback) {

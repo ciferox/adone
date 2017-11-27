@@ -901,7 +901,7 @@ describe("schema", "options", () => {
             });
         });
 
-        function test(instance, shouldExtendRef) {
+        const test = (instance, shouldExtendRef) => {
             let schema = {
                 definitions: {
                     int: { type: "integer" }
@@ -934,14 +934,14 @@ describe("schema", "options", () => {
             expect(validate({ foo: 10, bar: 10 })).to.be.equal(true);
             expect(validate({ foo: 1, bar: 10 })).to.be.equal(!shouldExtendRef);
             expect(validate({ foo: 10, bar: 1 })).to.be.equal(false);
-        }
+        };
 
-        function testWarning(instance, msgPattern) {
+        const testWarning = (instance, msgPattern) => {
             let oldConsole;
             try {
-                oldConsole = console.warn;
+                oldConsole = adone.warn;
                 let consoleMsg;
-                console.warn = function () {
+                adone.warn = function () {
                     consoleMsg = Array.prototype.join.call(arguments, " ");
                 };
 
@@ -960,9 +960,9 @@ describe("schema", "options", () => {
                     expect(consoleMsg).not.to.be.ok;
                 }
             } finally {
-                console.warn = oldConsole;
+                adone.warn = oldConsole;
             }
-        }
+        };
     });
 
     describe("sourceCode", () => {
@@ -1221,6 +1221,90 @@ describe("schema", "options", () => {
                 validate = instance.compile({ id: "mySchema2", type: "string" });
                 expect(instance.getSchema("mySchema2")).not.to.be.ok;
             });
+        });
+    });
+
+
+    describe("logger", () => {
+        /**
+         * The logger option tests are based on the meta scenario which writes into the logger.warn
+         */
+
+        const origConsoleWarn = adone.warn;
+        let consoleCalled;
+
+        beforeEach(() => {
+            consoleCalled = false;
+            adone.warn = function () {
+                consoleCalled = true;
+            };
+        });
+
+        afterEach(() => {
+            adone.warn = origConsoleWarn;
+        });
+
+        it("no custom logger is given - global console should be used", () => {
+            const instance = new Validator({
+                meta: false
+            });
+
+            instance.compile({
+                type: "number",
+                minimum: 1
+            });
+
+            assert.equal(consoleCalled, true);
+        });
+
+        it("custom logger is an object - logs should only report to it", () => {
+            let loggerCalled = false;
+
+            const log = () => {
+                loggerCalled = true;
+            };
+
+            const logger = {
+                warn: log,
+                log,
+                error: log
+            };
+
+            const instance = new Validator({
+                meta: false,
+                logger
+            });
+
+            instance.compile({
+                type: "number",
+                minimum: 1
+            });
+
+            assert.equal(loggerCalled, true);
+            assert.equal(consoleCalled, false);
+        });
+
+        it("logger option is false - no logs should be reported", () => {
+            const instance = new Validator({
+                meta: false,
+                logger: false
+            });
+
+            instance.compile({
+                type: "number",
+                minimum: 1
+            });
+
+            assert.equal(consoleCalled, false);
+        });
+
+        it("logger option is an object without required methods - an error should be thrown", () => {
+            expect(() => {
+                new Validator({
+                    meta: false,
+                    logger: {}
+                });
+            }).to.throw(Error, /logger must implement log, warn and error methods/);
         });
     });
 });

@@ -1,4 +1,9 @@
-const { std: { stream: { Transform } }, data: { base64 } } = adone;
+const {
+    is,
+    std: {
+        stream: { Transform }
+    }
+} = adone;
 
 // Adds soft line breaks to a base64 string
 const wrap = (str, lineLength, delimiter) => {
@@ -13,12 +18,28 @@ const wrap = (str, lineLength, delimiter) => {
     let pos = 0;
     const chunkLength = lineLength * 1024;
     while (pos < str.length) {
-        const wrappedLines = str.substr(pos, chunkLength).replace(new RegExp(`.{${lineLength}}`, "g"), "$&\r\n").trim();
+        const wrappedLines = str
+            .substr(pos, chunkLength)
+            .replace(new RegExp(`.{${lineLength}}`, "g"), "$&\r\n")
+            .trim();
         result.push(wrappedLines);
         pos += chunkLength;
     }
 
     return result.join(delimiter).trim();
+};
+
+const encode = (buffer) => {
+    if (is.string(buffer)) {
+        buffer = Buffer.from(buffer, "utf-8");
+    }
+
+    return buffer.toString("base64");
+};
+
+const decode = (str) => {
+    str = str || "";
+    return Buffer.from(str, "base64");
 };
 
 export class Encode extends Transform {
@@ -39,20 +60,18 @@ export class Encode extends Transform {
     }
 
     _transform(chunk, encoding, done) {
-        let b64;
-
         if (encoding !== "buffer") {
             chunk = Buffer.from(chunk, encoding);
         }
 
         if (!chunk || !chunk.length) {
-            return done();
+            return setImmediate(done);
         }
 
         this.inputBytes += chunk.length;
 
         if (this._remainingBytes && this._remainingBytes.length) {
-            chunk = Buffer.concat([this._remainingBytes, chunk]);
+            chunk = Buffer.concat([this._remainingBytes, chunk], this._remainingBytes.length + chunk.length);
             this._remainingBytes = false;
         }
 
@@ -63,22 +82,29 @@ export class Encode extends Transform {
             this._remainingBytes = false;
         }
 
-        b64 = this._curLine + base64.encode(chunk, { buffer: false });
+        let b64 = this._curLine + encode(chunk);
 
         if (this.options.lineLength) {
             b64 = wrap(b64, this.options.lineLength, this.options.delimiter);
-            b64 = b64.replace(/(^|\n)([^\n]*)$/, (match, lineBreak, lastLine) => {
-                this._curLine = lastLine;
-                return lineBreak;
-            });
+            // remove last line as it is still most probably incomplete
+            const lastLF = b64.lastIndexOf("\n");
+            if (lastLF < 0) {
+                this._curLine = b64;
+                b64 = "";
+            } else if (lastLF === b64.length - 1) {
+                this._curLine = "";
+            } else {
+                this._curLine = b64.substr(lastLF + 1);
+                b64 = b64.substr(0, lastLF + 1);
+            }
         }
 
         if (b64) {
             this.outputBytes += b64.length;
-            this.push(b64);
+            this.push(Buffer.from(b64, "ascii"));
         }
 
-        done();
+        setImmediate(done);
     }
 
     _flush(done) {
@@ -92,7 +118,7 @@ export class Encode extends Transform {
             this.push(this._curLine, "ascii");
             this._curLine = "";
         }
-        done();
+        setImmediate(done);
     }
 }
 
@@ -105,36 +131,33 @@ export class Decode extends Transform {
     }
 
     _transform(chunk, encoding, done) {
-        chunk = chunk.toString("ascii");
-
         if (!chunk || !chunk.length) {
-            return done();
+            return setImmediate(done);
         }
 
         this.inputBytes += chunk.length;
-
-        let b64 = this._curLine + chunk;
+        let b64 = this._curLine + chunk.toString("ascii");
         this._curLine = "";
 
-        b64 = b64.replace(/[^a-zA-Z0-9+/=]/g, "");
+        if (/[^a-zA-Z0-9+/=]/.test(b64)) {
+            b64 = b64.replace(/[^a-zA-Z0-9+/=]/g, "");
+        }
 
-        if (b64.length % 4) {
+        if (b64.length < 4) {
+            this._curLine = b64;
+            b64 = "";
+        } else if (b64.length % 4) {
             this._curLine = b64.substr(-b64.length % 4);
-            if (this._curLine.length === b64.length || this._curLine.length < 4) {
-                this._curLine = b64;
-                b64 = "";
-            } else {
-                b64 = b64.substr(0, this._curLine.length);
-            }
+            b64 = b64.substr(0, b64.length - this._curLine.length);
         }
 
         if (b64) {
-            const buf = base64.decode(b64, { buffer: true });
+            const buf = decode(b64);
             this.outputBytes += buf.length;
             this.push(buf);
         }
 
-        done();
+        setImmediate(done);
     }
 
     _flush(done) {
@@ -144,6 +167,6 @@ export class Decode extends Transform {
             this.push(buf);
             this._curLine = "";
         }
-        done();
+        setImmediate(done);
     }
 }

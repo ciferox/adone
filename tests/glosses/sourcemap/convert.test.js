@@ -59,6 +59,92 @@ describe("sourcemap", "convert", () => {
                 expect(comment(x, "")).not.to.be.ok;
             });
         });
+
+        const mapFileCommentWrap = (s1, s2) => {
+            const mapFileRx = convert.getMapFileCommentRegex();
+            return mapFileRx.test(`${s1}sourceMappingURL=foo.js.map${s2}`);
+        };
+
+        specify("mapFileComment regex old spec - @", () => {
+
+            [
+                ["//@ ", ""],
+                ["  //@ ", ""], // with leading spaces
+                ["\t//@ ", ""], // with a leading tab
+                ["///@ ", ""], // with a leading text
+                [";//@ ", ""], // with a leading text
+                ["return//@ ", ""] // with a leading text
+            ].forEach((x) => {
+                assert.ok(mapFileCommentWrap(x[0], x[1]), `matches ${x.join(" :: ")}`);
+            });
+
+            [
+                [" @// @", ""],
+                ["var sm = `//@ ", "`"], // not inside a string
+                ['var sm = "//@ ', '"'], // not inside a string
+                ["var sm = '//@ ", "'"], // not inside a string
+                ["var sm = ' //@ ", "'"] // not inside a string
+            ].forEach((x) => {
+                assert.ok(!mapFileCommentWrap(x[0], x[1]), `does not match ${x.join(" :: ")}`);
+            });
+        });
+
+        specify("mapFileComment regex new spec - #", () => {
+            [
+                ["//# ", ""],
+                ["  //# ", ""], // with leading space
+                ["\t//# ", ""], // with leading tab
+                ["///# ", ""], // with leading text
+                [";//# ", ""], // with leading text
+                ["return//# ", ""] // with leading text
+            ].forEach((x) => {
+                assert.ok(mapFileCommentWrap(x[0], x[1]), `matches ${x.join(" :: ")}`);
+            });
+
+            [
+                [" #// #", ""],
+                ["var sm = `//# ", "`"], // not inside a string
+                ['var sm = "//# ', '"'], // not inside a string
+                ["var sm = '//# ", "'"], // not inside a string
+                ["var sm = ' //# ", "'"] // not inside a string
+            ].forEach((x) => {
+                assert.ok(!mapFileCommentWrap(x[0], x[1]), `does not match ${x.join(" :: ")}`);
+            });
+        });
+
+        specify("mapFileComment regex /* */ old spec - @", () => {
+            [["/*@ ", "*/"],
+                ["  /*@ ", "  */ "], // with leading spaces
+                ["\t/*@ ", " \t*/\t "], // with a leading tab
+                ["leading string/*@ ", "*/"], // with a leading string
+                ["/*@ ", " \t*/\t "] // with trailing whitespace
+            ].forEach((x) => {
+                assert.ok(mapFileCommentWrap(x[0], x[1]), `matches ${x.join(" :: ")}`);
+            });
+
+            [["/*@ ", " */ */ "], // not the last thing on its line
+                ["/*@ ", " */ more text "] // not the last thing on its line
+            ].forEach((x) => {
+                assert.ok(!mapFileCommentWrap(x[0], x[1]), `does not match ${x.join(" :: ")}`);
+            });
+        });
+
+        specify("mapFileComment regex /* */ new spec - #", () => {
+            [["/*# ", "*/"],
+                ["  /*# ", "  */ "], // with leading spaces
+                ["\t/*# ", " \t*/\t "], // with a leading tab
+                ["leading string/*# ", "*/"], // with a leading string
+                ["/*# ", " \t*/\t "] // with trailing whitespace
+            ].forEach((x) => {
+                assert.ok(mapFileCommentWrap(x[0], x[1]), `matches ${x.join(" :: ")}`);
+            });
+
+            [["/*# ", " */ */ "], // not the last thing on its line
+                ["/*# ", " */ more text "] // not the last thing on its line
+            ].forEach((x) => {
+                assert.ok(!mapFileCommentWrap(x[0], x[1]), `does not match ${x.join(" :: ")}`);
+            });
+        });
     });
 
 

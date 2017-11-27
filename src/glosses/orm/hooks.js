@@ -70,21 +70,28 @@ const getProxiedHooks = (hookType) =>
         ? hookTypes[hookType].proxies.concat(hookType)
         : [hookType];
 
+const getHooks = function (hookType) {
+    return (this.options.hooks || {})[hookType] || [];
+};
+
 const Hooks = {
-    replaceHookAliases(hooks) {
-        _.each(hooks, (hooksArray, name) => {
-            // Does an alias for this hook name exist?
-            const realHookName = hookAliases[name];
-            if (realHookName) {
-                // Add the hooks to the actual hook
-                hooks[realHookName] = (hooks[realHookName] || []).concat(hooksArray);
-
-                // Delete the alias
-                delete hooks[name];
+    /**
+     * Process user supplied hooks definition
+     *
+     * @param {Object} hooks
+     *
+     * @private
+     * @memberOf Sequelize
+     * @memberOf Sequelize.Model
+     */
+    _setupHooks(hooks) {
+        this.options.hooks = {};
+        _.map(hooks || {}, (hooksArray, hookName) => {
+            if (!_.isArray(hooksArray)) {
+                hooksArray = [hooksArray];
             }
+            hooksArray.forEach((hookFn) => this.addHook(hookName, hookFn));
         });
-
-        return hooks;
     },
 
     runHooks(hooks) {
@@ -98,9 +105,10 @@ const Hooks = {
 
         if (is.string(hooks)) {
             hookType = hooks;
-            hooks = this.options.hooks[hookType] || [];
+            hooks = getHooks.call(this, hookType);
+
             if (this.sequelize) {
-                hooks = hooks.concat(this.sequelize.options.hooks[hookType] || []);
+                hooks = hooks.concat(getHooks.call(this.sequelize, hookType));
             }
         }
 
@@ -162,7 +170,7 @@ const Hooks = {
         hookType = getProxiedHooks(hookType);
 
         _.each(hookType, (type) => {
-            this.options.hooks[type] = this.options.hooks[type] || [];
+            this.options.hooks[type] = getHooks.call(this, type);
             this.options.hooks[type].push(name ? { name, fn } : fn);
         });
 

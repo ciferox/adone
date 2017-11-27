@@ -437,7 +437,9 @@ export default class Cursor extends EventEmitter {
             // Topology is not connected, save the call in the provided store to be
             // Executed at some point when the handler deems it's reconnected
             if (!this.topology.isConnected(this.options)) {
-                if (!this.topology.s.options.reconnect) {
+                // Only need this for single server, because repl sets and mongos
+                // will always continue trying to reconnect
+                if (this.topology._type === "server" && !this.topology.s.options.reconnect) {
                     // Reconnect is disabled, so we'll never reconnect
                     return callback(new MongoError("no connection available"));
                 }
