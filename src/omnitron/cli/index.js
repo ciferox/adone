@@ -9,20 +9,48 @@ const {
 } = adone;
 
 const {
-    Command,
-    CliSubsystem
+    Cli,
+    Command
 } = application.CliApplication;
 
 const { STATUSES } = omnitron;
 
-@CliSubsystem({
-    name: "startup",
-    description: "Omnitron startup stuff",
-    subsystem: std.path.resolve(__dirname, "startup")
+@Cli({
+    commandsGroups: [
+        {
+            name: "common",
+            description: "Common commands"
+        },
+        {
+            name: "startup",
+            description: "Startup and lifecycle management"
+        },
+        {
+            name: "inspect",
+            description: "Inspection and metrics"
+        },
+        {
+            name: "services",
+            description: "Services management"
+        },
+        {
+            name: "subsystems",
+            description: "Subsystems management"
+        }
+    ],
+    subsystems: [
+        {
+            name: "startup",
+            group: "startup",
+            description: "Omnitron startup stuff",
+            subsystem: std.path.resolve(__dirname, "startup")
+        }
+    ]
 })
 export default class Omnitron extends Subsystem {
     @Command({
         name: "up",
+        group: "startup",
         help: "Up omnitron"
     })
     async upCommand() {
@@ -45,6 +73,7 @@ export default class Omnitron extends Subsystem {
 
     @Command({
         name: "down",
+        group: "startup",
         help: "Down omnitron"
     })
     async downCommand() {
@@ -73,7 +102,8 @@ export default class Omnitron extends Subsystem {
 
     @Command({
         name: "ping",
-        help: "ping the omnitron"
+        group: "startup",
+        help: "Ping the omnitron"
     })
     async pingCommand() {
         this._createProgress("checking");
@@ -90,7 +120,8 @@ export default class Omnitron extends Subsystem {
 
     @Command({
         name: "info",
-        help: "the omnitron's information",
+        group: "inspect",
+        help: "The omnitron's information",
         arguments: [
             {
                 name: "param",
@@ -117,7 +148,8 @@ export default class Omnitron extends Subsystem {
 
     @Command({
         name: "report",
-        help: "report omnitron process statistics"
+        group: "inspect",
+        help: "Report omnitron process statistics"
     })
     async reportCommand() {
         try {
@@ -135,6 +167,7 @@ export default class Omnitron extends Subsystem {
 
     @Command({
         name: "enable",
+        group: "services",
         help: "Enable service",
         arguments: [
             {
@@ -160,6 +193,7 @@ export default class Omnitron extends Subsystem {
 
     @Command({
         name: "disable",
+        group: "services",
         help: "Disable service",
         arguments: [
             {
@@ -185,6 +219,7 @@ export default class Omnitron extends Subsystem {
 
     @Command({
         name: "start",
+        group: "services",
         help: "Start service",
         arguments: [
             {
@@ -210,6 +245,7 @@ export default class Omnitron extends Subsystem {
 
     @Command({
         name: "stop",
+        group: "services",
         help: "Stop service",
         arguments: [
             {
@@ -235,6 +271,7 @@ export default class Omnitron extends Subsystem {
 
     @Command({
         name: "restart",
+        group: "services",
         help: "Restart service",
         arguments: [
             {
@@ -261,6 +298,7 @@ export default class Omnitron extends Subsystem {
 
     @Command({
         name: "configure",
+        group: "services",
         help: "Configure service",
         arguments: [
             {
@@ -306,6 +344,7 @@ export default class Omnitron extends Subsystem {
 
     @Command({
         name: "services",
+        group: "services",
         help: "Show services",
         options: [
             {
@@ -386,6 +425,7 @@ export default class Omnitron extends Subsystem {
 
     @Command({
         name: "peers",
+        group: "inspect",
         help: "Show connected peers"
     })
     async peersCommand() {
@@ -437,6 +477,7 @@ export default class Omnitron extends Subsystem {
 
     @Command({
         name: "contexts",
+        group: "inspect",
         help: "Show attached contexts"
     })
     async contextsCommand() {
@@ -472,7 +513,8 @@ export default class Omnitron extends Subsystem {
     }
 
     @Command({
-        name: "subsystems",
+        name: ["subsystems", "ss"],
+        group: "subsystems",
         help: "Show omnitron subsystems"
     })
     async subsystemsCommand() {
@@ -517,6 +559,7 @@ export default class Omnitron extends Subsystem {
 
     @Command({
         name: "load",
+        group: "subsystems",
         help: "Load subsystem",
         arguments: [
             {
@@ -574,6 +617,7 @@ export default class Omnitron extends Subsystem {
 
     @Command({
         name: "unload",
+        group: "subsystems",
         help: "Unload subsystem",
         arguments: [
             {
