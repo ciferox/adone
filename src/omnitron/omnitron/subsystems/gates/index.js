@@ -3,7 +3,7 @@ const {
     runtime
 } = adone;
 
-export default class NetronManager extends application.Subsystem {
+export default class Gates extends application.Subsystem {
     configure() {
         Object.assign(runtime.netron.options, this.parent.config.raw.netron);
 
@@ -17,10 +17,10 @@ export default class NetronManager extends application.Subsystem {
     }
 
     async initialize() {
-        this._servicePort = this.parent.config.raw.gates[0].port;
+        this._servicePort = this.parent.config.getLocalGate().port;
 
         // Bind all gates.
-        for (const gate of this.parent.config.raw.gates) {
+        for (const gate of this.parent.config.getGates()) {
             await runtime.netron.bind(gate); // eslint-disable-line
         }
 

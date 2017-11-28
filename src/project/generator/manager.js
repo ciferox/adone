@@ -56,7 +56,7 @@ export default class ProjectGenerator extends task.Manager {
 
         if (is.string(input.type)) {
             // Update parent jsconfig.json if it exists
-            if (await fs.exists(std.path.join(this.owner.cwd, configuration.Jsconfig.name))) {
+            if (await fs.exists(std.path.join(this.owner.cwd, configuration.Jsconfig.configName))) {
                 await this.runAndWait("jsconfig", {
                     cwd: this.owner.cwd,
                     include: [std.path.relative(this.owner.cwd, std.path.join(cwd, "src"))]

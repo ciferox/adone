@@ -20,11 +20,10 @@ export default class Editor {
 
     async spawn({ detached = false } = {}) {
         const child = exec(this.bin, this.args.concat([this.path]), {
-            detached,
-            stdio: "inherit"
+            detached
         });
         if (detached) {
-            detached.unref();
+            child.unref();
         }
         return child;
     }

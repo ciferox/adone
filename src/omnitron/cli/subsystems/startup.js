@@ -1,4 +1,4 @@
-import Subsystem from "./subsystem";
+import Subsystem from "../subsystem";
 
 const {
     application: {

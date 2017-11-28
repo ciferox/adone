@@ -5,28 +5,6 @@ const {
 const CONFIG_NAME = "cli.json";
 
 export default class Configuration extends adone.configuration.Generic {
-    constructor(options) {
-        super(options);
-
-        this.raw = {
-            // Default groups
-            groups: [
-                {
-                    name: "subsystem",
-                    description: "Subsystems"
-                },
-                {
-                    name: "cli",
-                    description: "Adone cli specific"
-                },
-                {
-                    name: "realm",
-                    description: "Realm management"
-                }
-            ]
-        };
-    }
-
     getGroups() {
         return adone.util.arrify(this.raw.groups);
     }
@@ -128,17 +106,34 @@ export default class Configuration extends adone.configuration.Generic {
             cwd: adone.realm.config.configsPath
         });
 
-        if (await adone.fs.exists(adone.std.path.join(adone.realm.config.configsPath, CONFIG_NAME))) {
+        if (await adone.fs.exists(Configuration.path)) {
             // assign config from home
             await config.load(CONFIG_NAME);
+            adone.vendor.lodash.defaults(config.raw, Configuration.default);
         } else {
+            config.raw = Configuration.default;
             await config.save();
         }
     
         return config;
     }
 
-    static get name() {
-        return CONFIG_NAME;
-    }
+    static configName = CONFIG_NAME;
+    static path = adone.std.path.join(adone.realm.config.configsPath, CONFIG_NAME);
+    static default = {
+        groups: [
+            {
+                name: "subsystem",
+                description: "Subsystems"
+            },
+            {
+                name: "cli",
+                description: "Adone cli specific"
+            },
+            {
+                name: "realm",
+                description: "Realm management"
+            }
+        ]
+    };
 }

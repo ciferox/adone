@@ -15,15 +15,13 @@ const {
 
 const { STATUSES } = omnitron;
 
+const subsystemPath = (name) => std.path.resolve(__dirname, "subsystems", name);
+
 @Cli({
     commandsGroups: [
         {
             name: "common",
             description: "Common commands"
-        },
-        {
-            name: "startup",
-            description: "Startup and lifecycle management"
         },
         {
             name: "inspect",
@@ -40,17 +38,29 @@ const { STATUSES } = omnitron;
     ],
     subsystems: [
         {
+            name: "config",
+            group: "common",
+            description: "Omnitron configuration",
+            subsystem: subsystemPath("config")
+        },
+        {
             name: "startup",
-            group: "startup",
+            group: "common",
             description: "Omnitron startup stuff",
-            subsystem: std.path.resolve(__dirname, "startup")
+            subsystem: subsystemPath("startup")
+        },
+        {
+            name: "gate",
+            group: "common",
+            description: "Gates management",
+            subsystem: subsystemPath("gate")
         }
     ]
 })
 export default class Omnitron extends Subsystem {
     @Command({
         name: "up",
-        group: "startup",
+        group: "common",
         help: "Up omnitron"
     })
     async upCommand() {
@@ -73,7 +83,7 @@ export default class Omnitron extends Subsystem {
 
     @Command({
         name: "down",
-        group: "startup",
+        group: "common",
         help: "Down omnitron"
     })
     async downCommand() {
@@ -102,7 +112,7 @@ export default class Omnitron extends Subsystem {
 
     @Command({
         name: "ping",
-        group: "startup",
+        group: "common",
         help: "Ping the omnitron"
     })
     async pingCommand() {
@@ -116,6 +126,24 @@ export default class Omnitron extends Subsystem {
         const result = await omnitron.dispatcher.ping();
         this._updateProgress(result ? "done" : "failed", result);
         return 0;
+    }
+
+    @Command({
+        name: "gc",
+        group: "common",
+        help: "Force garbage collector"
+    })
+    async gcCommand() {
+        try {
+            this._createProgress("trying");
+            await this._connectToLocal();
+            const result = await omnitron.dispatcher.gc();
+            this._updateProgress(result, true);
+            return 0;
+        } catch (err) {
+            this._updateProgress(err.message, false);
+            return 1;
+        }
     }
 
     @Command({

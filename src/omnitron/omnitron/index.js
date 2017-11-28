@@ -28,12 +28,13 @@ export default class Omnitron extends application.Application {
         // Add subsystems
         await this.addSubsystemsFrom(std.path.join(__dirname, "subsystems"), {
             useFilename: true,
+            bind: true,
             group: "core"
         });
 
         // Check presence of common subsystems.
-        this.subsystem("netron");
-        this.subsystem("service");
+        this.subsystem("gates");
+        this.subsystem("services");
 
         if (!is.windows) {
             this.exitOnSignal("SIGQUIT", "SIGTERM", "SIGINT");
@@ -73,9 +74,9 @@ export default class Omnitron extends application.Application {
         // ...
 
         // Uninitialize managers in right order
-        for (const manager of ["service", "netron"]) {
+        for (const name of ["services", "gates"]) {
             try {
-                await this.uninitializeSubsystem(manager); // eslint-disable-line
+                await this.uninitializeSubsystem(name); // eslint-disable-line
             } catch (err) {
                 adone.error(err);
             }
@@ -123,7 +124,11 @@ export default class Omnitron extends application.Application {
         description: "Force garbage collector"
     })
     gc() {
-        return is.function(global.gc) && global.gc();
+        if (is.function(global.gc)) {
+            global.gc();
+            return "done";
+        }
+        return "none";
     }
 
     @Public({
@@ -247,7 +252,7 @@ export default class Omnitron extends application.Application {
         type: Array
     })
     enumerate(filter) {
-        return this.subsystem("service").enumerate(filter);
+        return this.services.enumerate(filter);
     }
 
     @Public({
@@ -255,7 +260,7 @@ export default class Omnitron extends application.Application {
         type: Array
     })
     enumerateByGroup(group) {
-        return this.subsystem("service").enumerateByGroup(group);
+        return this.services.enumerateByGroup(group);
     }
 
     @Public({
@@ -263,54 +268,54 @@ export default class Omnitron extends application.Application {
         type: Array
     })
     enumerateGroups() {
-        return this.subsystem("service").enumerateGroups();
+        return this.services.enumerateGroups();
     }
 
     @Public({})
     getMaintainer(group) {
-        return this.subsystem("service").getMaintainer(group, true);
+        return this.services.getMaintainer(group, true);
     }
 
     @Public({
         description: "Enables service"
     })
     enableService(name, options) {
-        return this.subsystem("service").enableService(name, options);
+        return this.services.enableService(name, options);
     }
 
     @Public({
         description: "Disables service"
     })
     disableService(name, options) {
-        return this.subsystem("service").disableService(name, options);
+        return this.services.disableService(name, options);
     }
 
     @Public({
         description: "Starts service"
     })
     startService(name) {
-        return this.subsystem("service").startService(name);
+        return this.services.startService(name);
     }
 
     @Public({
         description: "Stops service"
     })
     stopService(name) {
-        return this.subsystem("service").stopService(name);
+        return this.services.stopService(name);
     }
 
     @Public({
         description: "Configures service"
     })
     configureService(name, options) {
-        return this.subsystem("service").configureService(name, options);
+        return this.services.configureService(name, options);
     }
 
     @Public({
         description: "Returns valuable used as service configuration store"
     })
     async getServiceConfiguration(name) {
-        await this.subsystem("service").checkService(name);
+        await this.services.checkService(name);
         return this.db.getServiceConfiguration(name);
     }
 
@@ -378,7 +383,7 @@ export default class Omnitron extends application.Application {
 
     @Public()
     async unloadSubsystem(name) {
-        if (["netron", "service"].includes(name)) {
+        if (["gates", "services"].includes(name)) {
             throw new adone.x.NotAllowed("Unload core subsystem is not possible");
         }
         await super.unloadSubsystem(name);

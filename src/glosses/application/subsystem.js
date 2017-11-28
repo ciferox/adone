@@ -246,7 +246,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
      * @param {boolean} transpile Whether the code must be transpiled
      * @returns {null|Promise<object>}
      */
-    addSubsystem({ subsystem, name = null, description = "", group = "subsystem", configureArgs = [], transpile } = {}) {
+    addSubsystem({ subsystem, name = null, description = "", group = "subsystem", configureArgs = [], transpile, bind } = {}) {
         if (is.string(name) && this.hasSubsystem(name)) {
             throw new x.Exists(`Subsystem with name '${name}' already exists`);
         }
@@ -270,6 +270,18 @@ export default class Subsystem extends adone.event.AsyncEmitter {
             instance,
             path: is.string(subsystem) ? subsystem : null
         };
+
+        if (bind === true) {
+            bind = name;
+        }
+
+        if (is.string(bind)) {
+            if (this[bind]) {
+                throw new adone.x.NotAllowed(`Property with name '${bind}' is already exist`);
+            }
+            this[bind] = instance;
+            sysInfo.property = bind;
+        }
 
         this[SUBSYSTEMS_SYMBOL].push(sysInfo);
 
@@ -316,6 +328,11 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         }
         if (!force && ![STATE.INITIAL, STATE.UNINITIALIZED, STATE.FAILED].includes(this[SUBSYSTEMS_SYMBOL][index].instance[STATE_SYMBOL])) {
             throw new x.NotAllowed("The subsystem is used and can not be deleted");
+        }
+
+        const sysInfo = this[SUBSYSTEMS_SYMBOL][index];
+        if (is.string(sysInfo.property) && is.subsystem(this[sysInfo.property])) {
+            delete this[sysInfo.property];
         }
 
         this[SUBSYSTEMS_SYMBOL].splice(index, 1);

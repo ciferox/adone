@@ -7,8 +7,6 @@ const {
     runtime
 } = adone;
 
-// NOTE: local gate always be first in list of gates in gates.json
-
 export default class Dispatcher {
     constructor({ noisily = false, netronOptions = {} } = {}) {
         this.noisily = noisily;
@@ -58,7 +56,7 @@ export default class Dispatcher {
     async connectLocal({ forceStart = true } = {}, _counter = 0) {
         let status = 0;
         if (is.null(this.peer)) {
-            const localGate = (await adone.omnitron.Configuration.load()).raw.gates[0];
+            const localGate = (await adone.omnitron.Configuration.load()).getLocalGate();
             if (is.nil(localGate)) {
                 throw new x.NotExists("Configuration for gate 'local' is not found");
             }
@@ -115,11 +113,15 @@ export default class Dispatcher {
                 return result.process.id;
             }
             return new Promise(async (resolve, reject) => {
-                const omnitronConfig = adone.realm.config.omnitron;
-                await adone.fs.mkdirp(std.path.dirname(omnitronConfig.logFilePath));
-                this.descriptors.stdout = std.fs.openSync(omnitronConfig.logFilePath, "a");
-                this.descriptors.stderr = std.fs.openSync(omnitronConfig.errorLogFilePath, "a");
-                const child = std.child_process.spawn(process.execPath || "node", [std.path.resolve(adone.rootPath, "lib/omnitron/omnitron/index.js")], {
+                const omniConfig = await adone.omnitron.Configuration.load();
+                await adone.fs.mkdirp(std.path.dirname(adone.realm.config.omnitron.logFilePath));
+                this.descriptors.stdout = std.fs.openSync(adone.realm.config.omnitron.logFilePath, "a");
+                this.descriptors.stderr = std.fs.openSync(adone.realm.config.omnitron.errorLogFilePath, "a");
+                const args = [std.path.resolve(adone.rootPath, "lib/omnitron/omnitron/index.js")];
+                if( omniConfig.raw.gc) {
+                    args.unshift("--expose-gc");
+                }
+                const child = std.child_process.spawn(process.execPath || "node", args, {
                     detached: true,
                     cwd: process.cwd(),
                     stdio: ["ipc", this.descriptors.stdout, this.descriptors.stderr]
@@ -225,7 +227,7 @@ export default class Dispatcher {
         });
         let isOK = false;
         try {
-            const localGate = (await adone.omnitron.Configuration.load()).raw.gates[0];
+            const localGate = (await adone.omnitron.Configuration.load()).getLocalGate();
             await n.connect(localGate);
             await n.disconnect();
             isOK = true;
@@ -344,5 +346,9 @@ export default class Dispatcher {
 
     unloadSubsystem(name) {
         return this.getInterface("omnitron").unloadSubsystem(name);
+    }
+
+    gc() {
+        return this.getInterface("omnitron").gc();
     }
 }

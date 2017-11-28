@@ -4,17 +4,15 @@ const {
     std
 } = adone;
 
-const CONFIG_NAME = "adone.json";
-
 const SUB_CONFIGS = Symbol();
 
-export default class AdoneConfiguration extends adone.configuration.Generic {
+export default class Configuration extends adone.configuration.Generic {
     constructor({ cwd } = {}) {
         super({ cwd });
 
         this[SUB_CONFIGS] = new Map();
     }
-    
+
     /**
      * Returns full name.
      */
@@ -26,7 +24,7 @@ export default class AdoneConfiguration extends adone.configuration.Generic {
      * Returns absolute path of configuration.
      */
     getPath() {
-        return std.path.join(this.cwd, CONFIG_NAME);
+        return std.path.join(this.cwd, Configuration.configName);
     }
 
     /**
@@ -49,7 +47,7 @@ export default class AdoneConfiguration extends adone.configuration.Generic {
      * Loads configuration.
      */
     async load() {
-        await super.load(CONFIG_NAME);
+        await super.load(Configuration.configName);
         await this._loadSubConfigs("", this.raw.structure);
     }
 
@@ -65,7 +63,7 @@ export default class AdoneConfiguration extends adone.configuration.Generic {
             }
         }
 
-        return super.save(is.string(cwd) ? std.path.join(cwd, CONFIG_NAME) : CONFIG_NAME, null, {
+        return super.save(is.string(cwd) ? std.path.join(cwd, Configuration.configName) : Configuration.configName, null, {
             space: "    "
         });
     }
@@ -144,7 +142,7 @@ export default class AdoneConfiguration extends adone.configuration.Generic {
                 if (is.string(val) && !key.startsWith("$")) {
                     const subCwd = std.path.join(this.getCwd(), val);
 
-                    const subConfigPath = std.path.join(subCwd, CONFIG_NAME);
+                    const subConfigPath = std.path.join(subCwd, Configuration.configName);
                     // eslint-disable-next-line
                     if (!(await fs.exists(subConfigPath))) {
                         throw new adone.x.NotExists(`Configuration '${subConfigPath}' not exists`);
@@ -153,7 +151,7 @@ export default class AdoneConfiguration extends adone.configuration.Generic {
                     this[SUB_CONFIGS].set(fullKey, {
                         dirName: val,
                         // eslint-disable-next-line
-                        config: await AdoneConfiguration.load({
+                        config: await Configuration.load({
                             cwd: subCwd
                         })
                     });
@@ -165,17 +163,12 @@ export default class AdoneConfiguration extends adone.configuration.Generic {
     }
 
     static async load({ cwd } = {}) {
-        const config = new AdoneConfiguration({
+        const config = new Configuration({
             cwd
         });
         await config.load();
         return config;
     }
 
-    /**
-     * Returns name of configuration file.
-     */
-    static get name() {
-        return CONFIG_NAME;
-    }
+    static configName = "adone.json";
 }

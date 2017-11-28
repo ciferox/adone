@@ -98,6 +98,15 @@ describe("application", "Application", () => {
                     }, "Subsystem with name 'Hello' already exists");
                 });
             });
+
+            it("add subsystem and bind it", async () => {
+                const result = await forkProcess(fixture("add_and_bind.js"));
+                assert.equal(result.stdout, "true\nsome_data\nfalse");
+            });
+
+            it("add subsystem and bind it with unallowed name", async () => {
+                await assert.throws(async () => forkProcess(fixture("add_and_bind_notallowed_name.js")), "Property with name 'removeListener' is already exist");
+            });
         });
 
         it("initialization and deinitialization of subsystems in accordance with the order of their addition", async () => {

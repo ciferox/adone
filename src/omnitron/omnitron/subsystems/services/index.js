@@ -14,7 +14,7 @@ const api = adone.lazify({
     ServiceMaintainer: "./service_maintainer"
 }, exports, require);
 
-export default class ServiceManager extends application.Subsystem {
+export default class Services extends application.Subsystem {
     async configure() {
         this.services = null;
         this.groupMaintainers = new Map();

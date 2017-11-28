@@ -39,7 +39,8 @@ describe("omnitron", () => {
         });
 
         it("config, pidfile and log files should exist", async () => {
-            assert.isTrue(await fs.exists(std.path.join(adone.realm.config.configsPath, adone.omnitron.Configuration.name)));
+            assert.isTrue(await fs.exists(adone.omnitron.Configuration.path));
+            assert.deepEqual((await adone.omnitron.Configuration.load()).raw, adone.omnitron.Configuration.default);
             assert.isTrue(await fs.exists(adone.realm.config.omnitron.pidFilePath));
             assert.isTrue(await fs.exists(adone.realm.config.omnitron.logFilePath));
             assert.isTrue(await fs.exists(adone.realm.config.omnitron.errorLogFilePath));
@@ -425,7 +426,7 @@ describe("omnitron", () => {
         describe("subsystems", () => {
             it("list subsystems", async () => {
                 const subsystems = await iOmnitron.getSubsystems();
-                assert.sameMembers(subsystems.map((s) => s.name), ["netron", "service"]);
+                assert.sameMembers(subsystems.map((s) => s.name), ["gates", "services"]);
             });
 
             it("load/unload subsystem", async () => {
@@ -455,10 +456,10 @@ describe("omnitron", () => {
             });
 
             it("should not allow unload core subsystems", async () => {
-                let err = await assert.throws(async () => iOmnitron.unloadSubsystem("netron"));
+                let err = await assert.throws(async () => iOmnitron.unloadSubsystem("gates"));
                 assert.instanceOf(err, adone.x.NotAllowed);
 
-                err = await assert.throws(async () => iOmnitron.unloadSubsystem("service"));
+                err = await assert.throws(async () => iOmnitron.unloadSubsystem("services"));
                 assert.instanceOf(err, adone.x.NotAllowed);
             });
         });
