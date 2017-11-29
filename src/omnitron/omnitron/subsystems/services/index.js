@@ -3,9 +3,7 @@ const {
     x,
     is,
     fs,
-    std,
-    omnitron: { STATUS },
-    vault
+    omnitron: { STATUS }
 } = adone;
 
 const SERVICES_PATH = adone.realm.config.omnitron.servicesPath;
@@ -22,7 +20,9 @@ export default class Services extends application.Subsystem {
         this.options = Object.assign({
             startTimeout: 10000,
             stopTimeout: 10000
-        }, this.parent.config.raw.services);
+        }, this.parent.config.raw.service);
+
+        adone.info("Services subsystem configured");
     }
 
     async initialize() {
@@ -47,7 +47,7 @@ export default class Services extends application.Subsystem {
             }
         }
 
-        adone.info("Manager 'service' initialized");
+        adone.info("Services subsystem initialized");
     }
 
     async uninitialize() {
@@ -60,7 +60,7 @@ export default class Services extends application.Subsystem {
 
         this.groupMaintainers.clear();
 
-        adone.info("Manager 'service' uninitialized");
+        adone.info("Services subsystem uninitialized");
     }
 
     async enumerate({ name, status } = {}) {

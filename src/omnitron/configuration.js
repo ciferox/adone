@@ -17,26 +17,25 @@ export default class Configuration extends adone.configuration.Generic {
     }
 
     hasGate(name) {
-        return is.plainObject(this.raw.gate[name]);
+        return this.raw.gates.findIndex((g) => g.name === name) >= 0;
     }
 
     getGate(name) {
-        if (!this.hasGate(name)) {
+        const index = this.raw.gates.findIndex((g) => g.name === name);
+        if (index < 0) {
             throw new adone.x.NotExists(`Gate '${name}' is not exist`);
         }
 
-        return this.raw.gate[name];
+        return this.raw.gates[index];
     }
 
     getLocalGate() {
         return this.getGate("local");
     }
 
-    getGates(asArray = true) {
-        if (asArray) {
-            return Object.values(this.raw.gate);
-        }
-        return this.raw.gate;
+    getGates() {
+        // At least one local gate should be exist.
+        return this.raw.gates;
     }
 
     static async load({ defaults = true } = {}) {
@@ -60,6 +59,7 @@ export default class Configuration extends adone.configuration.Generic {
         return config;
     }    
 
+    static configName = CONFIG_NAME;
     static path = adone.std.path.join(adone.realm.config.configsPath, CONFIG_NAME);
     static default = {
         gc: false,
@@ -74,14 +74,15 @@ export default class Configuration extends adone.configuration.Generic {
                 randomize: false
             }
         },
-        services: {
+        service: {
             startTimeout: 10000,
             stopTimeout: 10000
         },
-        gate: {
-            local: {
+        gates: [
+            {
+                name: "local",
                 port: (is.windows ? `\\\\.\\pipe\\${adone.realm.config.realm}\\omnitron.sock` : std.path.join(adone.realm.config.runtimePath, "omnitron.sock"))
             }
-        }
+        ]
     };
 }

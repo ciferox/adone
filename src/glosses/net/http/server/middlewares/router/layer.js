@@ -90,7 +90,7 @@ export default class Layer {
         const replaced = toPath(replace);
 
         if (options && options.query) {
-            return new adone.URI(replaced).query(options.query).toString();
+            return new adone.uri.URI(replaced).query(options.query).toString();
         }
 
         return replaced;

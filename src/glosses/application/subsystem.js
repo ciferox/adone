@@ -246,12 +246,16 @@ export default class Subsystem extends adone.event.AsyncEmitter {
      * @param {boolean} transpile Whether the code must be transpiled
      * @returns {null|Promise<object>}
      */
-    addSubsystem({ subsystem, name = null, description = "", group = "subsystem", configureArgs = [], transpile, bind } = {}) {
+    addSubsystem({ subsystem, name = null, useFilename = false, description = "", group = "subsystem", configureArgs = [], transpile, bind } = {}) {
         if (is.string(name) && this.hasSubsystem(name)) {
             throw new x.Exists(`Subsystem with name '${name}' already exists`);
         }
 
         const instance = this.instantiateSubsystem(subsystem, { transpile });
+
+        if (is.string(subsystem) && useFilename) {
+            name = std.path.basename(subsystem, ".js");
+        }
 
         if (!is.string(name)) {
             name = instance.constructor.name;
@@ -289,6 +293,56 @@ export default class Subsystem extends adone.event.AsyncEmitter {
     }
 
     /**
+     * Adds subsystems from specified path.
+     *
+     * @param {string} path Subsystems path.
+     * @param {array|function} filter Array of subsystem names or filter [async] function '(name) => true | false'.
+     * @returns {Promise<void>}
+     */
+    async addSubsystemsFrom(path, { filter, ...options } = {}) {
+        if (!std.path.isAbsolute(path)) {
+            throw new x.NotValid("Path should be absolute");
+        }
+
+        const files = await fs.readdir(path);
+
+        if (is.array(filter)) {
+            const targetNames = filter;
+            filter = (name) => targetNames.includes(name);
+        } else if (!is.function(filter)) {
+            filter = adone.truly;
+        }
+
+        for (const file of files) {
+            let fullPath = std.path.join(path, file);
+            const st = await fs.lstat(fullPath); // eslint-disable-line
+            if (st.isDirectory()) {
+                fullPath = std.path.join(fullPath, "index.js");
+                // eslint-disable-next-line
+                if (!(await fs.exists(fullPath))) {
+                    continue;
+                }
+            } else if (st.isFile()) {
+                if (!file.endsWith(".js")) {
+                    continue;
+                }
+            } else if (!st.isSymbolicLink()) {
+                continue;
+            }
+
+            if (await filter(file)) { // eslint-disable-line
+                const systemInfo = {
+                    ...options,
+                    subsystem: fullPath
+                };
+
+                // eslint-disable-next-line
+                await this.addSubsystem(systemInfo);
+            }
+        }
+    }
+
+    /**
      * Returns instance of subsystem.
      * 
      * @param {adone.application.Subsystem|string} subsystem
@@ -296,7 +350,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
      */
     instantiateSubsystem(subsystem, { transpile = false } = {}) {
         let instance;
-        
+
         if (is.string(subsystem)) {
             if (!std.path.isAbsolute(subsystem)) {
                 throw new x.NotValid("Path must be absolute");
@@ -336,59 +390,6 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         }
 
         this[SUBSYSTEMS_SYMBOL].splice(index, 1);
-    }
-
-    /**
-     * Adds subsystems from specified path.
-     *
-     * @param {string} path Subsystems path.
-     * @param {array|function} filter Array of subsystem names or filter [async] function '(name) => true | false'.
-     * @returns {Promise<void>}
-     */
-    async addSubsystemsFrom(path, { useFilename = false, filter, ...options } = {}) {
-        if (!std.path.isAbsolute(path)) {
-            throw new x.NotValid("Path should be absolute");
-        }
-
-        const files = await fs.readdir(path);
-
-        if (is.array(filter)) {
-            const targetNames = filter;
-            filter = (name) => targetNames.includes(name);
-        } else if (!is.function(filter)) {
-            filter = adone.truly;
-        }
-
-        for (const file of files) {
-            let fullPath = std.path.join(path, file);
-            const st = await fs.lstat(fullPath); // eslint-disable-line
-            if (st.isDirectory()) {
-                fullPath = std.path.join(fullPath, "index.js");
-                // eslint-disable-next-line
-                if (!(await fs.exists(fullPath))) {
-                    continue;
-                }
-            } else if (st.isFile()) {
-                if (!file.endsWith(".js")) {
-                    continue;
-                }
-            } else if (!st.isSymbolicLink()) {
-                continue;
-            }
-
-            if (await filter(file)) { // eslint-disable-line
-                const systemInfo = {
-                    ...options,
-                    subsystem: fullPath
-                };
-
-                if (useFilename) {
-                    systemInfo.name = std.path.basename(file, ".js");
-                }
-                // eslint-disable-next-line
-                await this.addSubsystem(systemInfo);
-            }
-        }
     }
 
     /**

@@ -1,3 +1,5 @@
+import { isAbsolute } from "path";
+
 const {
     is,
     x,
@@ -107,7 +109,7 @@ export default class Dispatcher {
                 });
 
                 if (shouldDisconnect) {
-                    await this.peer.disconnect();
+                    await this.disconnect();
                 }
 
                 return result.process.id;
@@ -118,7 +120,7 @@ export default class Dispatcher {
                 this.descriptors.stdout = std.fs.openSync(adone.realm.config.omnitron.logFilePath, "a");
                 this.descriptors.stderr = std.fs.openSync(adone.realm.config.omnitron.errorLogFilePath, "a");
                 const args = [std.path.resolve(adone.rootPath, "lib/omnitron/omnitron/index.js")];
-                if( omniConfig.raw.gc) {
+                if (omniConfig.raw.gc) {
                     args.unshift("--expose-gc");
                 }
                 const child = std.child_process.spawn(process.execPath || "node", args, {

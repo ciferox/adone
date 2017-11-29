@@ -518,6 +518,11 @@
                     }
                 }
             },
+            "uri": {
+                "description": "URI manipulation",
+                "index": "glosses/uri/index",
+                "src": "glosses/uri/**/*"
+            },
             "shell": {
                 "description": "Implementation of some shell utilites",
                 "index": "glosses/shell/index",

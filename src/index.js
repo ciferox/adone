@@ -323,7 +323,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         js: "./glosses/js",
         punycode: "./glosses/punycode",
         sourcemap: "./glosses/sourcemap",
-        URI: "./glosses/uri",
+        uri: "./glosses/uri",
         semver: "./glosses/semver",
         sprintf: "./glosses/text/sprintf",
         text: "./glosses/text",

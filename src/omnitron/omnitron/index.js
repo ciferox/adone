@@ -12,6 +12,12 @@ const {
 
 const previousUsage = process.cpuUsage();
 
+// The order of the subsystems is significant.
+const CORE_SUBSYSTEMS = [
+    "services",
+    "gates"
+];
+
 @Context({
     description: "Omnitron"
 })
@@ -26,15 +32,15 @@ export default class Omnitron extends application.Application {
         this.db = new omnitron.DB();
 
         // Add subsystems
-        await this.addSubsystemsFrom(std.path.join(__dirname, "subsystems"), {
-            useFilename: true,
-            bind: true,
-            group: "core"
-        });
-
-        // Check presence of common subsystems.
-        this.subsystem("gates");
-        this.subsystem("services");
+        for (const name of CORE_SUBSYSTEMS) {
+            // eslint-disable-next-line
+            await this.addSubsystem({
+                subsystem: std.path.join(__dirname, "subsystems", name),
+                name,
+                bind: true,
+                group: "core"
+            });
+        }
 
         if (!is.windows) {
             this.exitOnSignal("SIGQUIT", "SIGTERM", "SIGINT");
@@ -74,7 +80,7 @@ export default class Omnitron extends application.Application {
         // ...
 
         // Uninitialize managers in right order
-        for (const name of ["services", "gates"]) {
+        for (const name of CORE_SUBSYSTEMS) {
             try {
                 await this.uninitializeSubsystem(name); // eslint-disable-line
             } catch (err) {
@@ -383,10 +389,36 @@ export default class Omnitron extends application.Application {
 
     @Public()
     async unloadSubsystem(name) {
-        if (["gates", "services"].includes(name)) {
+        if (CORE_SUBSYSTEMS.includes(name)) {
             throw new adone.x.NotAllowed("Unload core subsystem is not possible");
         }
         await super.unloadSubsystem(name);
+    }
+
+    // Gates
+    @Public()
+    addGate(gate) {
+        return this.gates.addGate(gate);
+    }
+
+    @Public()
+    deleteGate(gate) {
+        return this.gates.deleteGate(gate);
+    }
+
+    @Public()
+    upGate(name) {
+        return this.gates.upGate(name);
+    }
+
+    @Public()
+    downGate(name) {
+        return this.gates.downGate(name);
+    }
+
+    @Public()
+    getGates() {
+        return this.gates.getGates();
     }
 }
 

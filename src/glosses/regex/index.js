@@ -2,7 +2,6 @@ adone.asNamespace(exports);
 
 export const filename = /^[\w\-. ]+$/;
 
-
 const v4 = "(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])(?:\\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])){3}";
 const v6seg = "[0-9a-fA-F]{1,4}";
 const v6 = `
@@ -20,3 +19,10 @@ const v6 = `
 
 export const ip4 = new RegExp(`^${v4}$`);
 export const ip6 = new RegExp(`^${v6}$`);
+export const protocol = /^[a-z][a-z0-9.+-]*$/i;
+export const idn = /[^a-z0-9\._-]/i;
+export const punycode = /(xn--)/i;
+
+// http://mathiasbynens.be/demo/url-regex
+// http://rodneyrehm.de/t/url-regex.html
+export const uri = /\b((?:[a-z][\w-]+:(?:\/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))/ig;

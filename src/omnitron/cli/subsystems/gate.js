@@ -7,6 +7,10 @@ const {
 } = application.CliApplication;
 
 export default class Gate extends application.Subsystem {
+    async initialize() {
+        
+    }
+
     @Command({
         name: "list",
         help: "Show all gates"

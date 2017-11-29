@@ -4,16 +4,18 @@ const {
 } = adone;
 
 export default class Gates extends application.Subsystem {
-    configure() {
+    async configure() {
         Object.assign(runtime.netron.options, this.parent.config.raw.netron);
 
-        runtime.netron.registerAdapter("ws", adone.netron.ws.Adapter);
+        await runtime.netron.registerAdapter("ws", adone.netron.ws.Adapter);
 
         runtime.netron.on("peer online", (peer) => {
             adone.info(`Peer '${peer.getRemoteAddress().full}' (uid: ${peer.uid}) connected`);
         }).on("peer offline", (peer) => {
             adone.info(`Peer '${peer.getRemoteAddress().full}' (uid: ${peer.uid}) disconnected`);
         });
+
+        adone.info("Gates subsystem configured");
     }
 
     async initialize() {
@@ -24,7 +26,7 @@ export default class Gates extends application.Subsystem {
             await runtime.netron.bind(gate); // eslint-disable-line
         }
 
-        adone.info("Manager 'netron' initialized");
+        adone.info("Gates subsystem initialized");
     }
 
     async uninitialize() {
@@ -38,10 +40,30 @@ export default class Gates extends application.Subsystem {
             adone.error(err);
         }
 
-        adone.info("Manager 'netron' uninitialized");
+        adone.info("Gates subsystem uninitialized");
     }
 
     getServicePort() {
         return this._servicePort;
     }
+
+    addGate(gate) {
+
+    }
+
+    deleteGate(name) {
+
+    }
+
+    upGate(name) {
+
+    }
+
+    downGate(name) {
+        
+    }
+
+    getGates() {
+        return this.parent.config.getGates();
+    }    
 }

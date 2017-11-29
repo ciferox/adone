@@ -54,7 +54,7 @@ const SCHEMA = {
                 }
             }
         },
-        services: {
+        service: {
             type: "object",
             additionalProperties: false,
             properties: {
