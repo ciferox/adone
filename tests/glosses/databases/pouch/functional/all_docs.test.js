@@ -119,6 +119,8 @@ describe("database", "pouch", "db.allDocs()", () => {
             });
         }).then((result) => {
             assert.deepEqual(result.rows.map(keyFunc), keys);
+            expect(result.rows[keys.indexOf("2")].value.deleted).to.be.true;
+            expect(result.rows[keys.indexOf("2")].doc).to.be.null;
         });
     });
 
@@ -747,9 +749,9 @@ describe("database", "pouch", "db.allDocs()", () => {
                 result.update_seq.should.satisfy((update_seq) => {
                     if (is.number(update_seq) || is.string(update_seq)) {
                         return true;
-                    } 
+                    }
                     return false;
-                    
+
                 });
                 const normSeq = normalizeSeq(result.update_seq);
                 normSeq.should.be.a("number");

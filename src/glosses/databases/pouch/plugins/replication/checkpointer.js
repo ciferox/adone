@@ -165,7 +165,7 @@ export default class Checkpointer {
         this.target = target;
         this.id = id;
         this.returnValue = returnValue;
-        this.opts = opts;
+        this.opts = opts || {};
     }
 
     writeCheckpoint(checkpoint, session) {
@@ -186,14 +186,11 @@ export default class Checkpointer {
     updateSource(checkpoint, session) {
         if (this.opts.writeSourceCheckpoint) {
             const self = this;
-            if (this.readOnlySource) {
-                return Promise.resolve(true);
-            }
             return updateCheckpoint(this.src, this.id, checkpoint,
                 session, this.returnValue)
                 .catch((err) => {
                     if (isForbiddenError(err)) {
-                        self.readOnlySource = true;
+                        self.opts.writeSourceCheckpoint = false;
                         return true;
                     }
                     throw err;
@@ -252,7 +249,7 @@ export default class Checkpointer {
                         return LOWEST_SEQ;
                     }, (err) => {
                         if (isForbiddenError(err)) {
-                            self.readOnlySource = true;
+                            self.opts.writeSourceCheckpoint = false;
                             return targetDoc.last_seq;
                         }
                         /* istanbul ignore next */

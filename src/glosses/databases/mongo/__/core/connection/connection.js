@@ -283,7 +283,7 @@ export default class Connection extends EventEmitter {
         // Default options
         this.port = options.port || 27017;
         this.host = options.host || "localhost";
-        this.family = is.number(options.family) ? options.family : 4;
+        this.family = is.number(options.family) ? options.family : undefined;
         this.keepAlive = is.boolean(options.keepAlive) ? options.keepAlive : true;
         this.keepAliveInitialDelay = is.number(options.keepAliveInitialDelay) ? options.keepAliveInitialDelay : 300000;
         this.noDelay = is.boolean(options.noDelay) ? options.noDelay : true;
@@ -376,9 +376,15 @@ export default class Connection extends EventEmitter {
         }
 
         // Create new connection instance
-        const connectionOptions = this.domainSocket
-            ? { path: this.host }
-            : { port: this.port, host: this.host, family: this.family };
+        let connectionOptions;
+        if (this.domainSocket) {
+            connectionOptions = { path: this.host };
+        } else {
+            connectionOptions = { port: this.port, host: this.host };
+            if (!is.undefined(this.family)) {
+                connectionOptions.family = this.family;
+            }
+        }
         this.connection = net.createConnection(connectionOptions);
 
         // Set the options for the connection

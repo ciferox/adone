@@ -484,7 +484,7 @@ describe("examples", function () {
                 status: "A"
             }
         ]);
-        await db.collection("inventory").updateOne(
+        await db.collection("inventory").replaceOne(
             { item: "paper" },
             {
                 $set: { "size.uom": "cm", status: "P" },

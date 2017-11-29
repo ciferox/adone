@@ -19,38 +19,39 @@ const {
 const {
     x: {
         MISSING_DOC,
-    REV_CONFLICT,
-    NOT_OPEN,
-    BAD_ARG,
-    MISSING_STUB,
-    createError
+        REV_CONFLICT,
+        NOT_OPEN,
+        BAD_ARG,
+        MISSING_STUB,
+        createError
     }
 } = pouch;
 
 const {
     util: {
         uuid,
-    ChangesHandler,
-    filterChange,
-    merge: {
+        ChangesHandler,
+        filterChange,
+        merge: {
             winningRev: calculateWinningRev,
-        traverseRevTree,
-        compactTree,
-        collectConflicts,
-        latest: getLatest,
-        isDeleted,
-        isLocalId
+            traverseRevTree,
+            compactTree,
+            collectConflicts,
+            latest: getLatest,
+            isDeleted,
+            isLocalId
         },
-    adapter: {
+        adapter: {
             parseDoc,
-        processDocs
+            processDocs,
+            allDocsKeysQuery
         },
-    binary: {
+        binary: {
             typedBuffer,
-        atob,
-        binaryStringToBuffer
+            atob,
+            binaryStringToBuffer
         },
-    md5: { binary: binaryMd5 }
+        md5: { binary: binaryMd5 }
     }
 } = adone.private(pouch);
 
@@ -514,7 +515,7 @@ export const adapter = function (opts, callback) {
                 if (levelErr) {
                     const err = createError(MISSING_STUB,
                         `unknown stub attachment with digest ${
-                        digest}`);
+                            digest}`);
                     callback(err);
                 } else {
                     callback();
@@ -882,147 +883,152 @@ export const adapter = function (opts, callback) {
         });
     });
 
-    api._allDocs = readLock((opts, callback) => {
-        opts = util.clone(opts);
-        countDocs((err, docCount) => {
+    api._allDocs = function (opts, callback) {
+        if ("keys" in opts) {
+            return allDocsKeysQuery(this, opts);
+        }
+        return readLock((opts, callback) => {
+            opts = util.clone(opts);
+            countDocs((err, docCount) => {
             /* istanbul ignore if */
-            if (err) {
-                return callback(err);
-            }
-            const readstreamOpts = {};
-            let skip = opts.skip || 0;
-            if (opts.startkey) {
-                readstreamOpts.gte = opts.startkey;
-            }
-            if (opts.endkey) {
-                readstreamOpts.lte = opts.endkey;
-            }
-            if (opts.key) {
-                readstreamOpts.gte = readstreamOpts.lte = opts.key;
-            }
-            if (opts.descending) {
-                readstreamOpts.reverse = true;
-                // switch start and ends
-                const tmp = readstreamOpts.lte;
-                readstreamOpts.lte = readstreamOpts.gte;
-                readstreamOpts.gte = tmp;
-            }
-            let limit;
-            if (is.number(opts.limit)) {
-                limit = opts.limit;
-            }
-            if (limit === 0 ||
+                if (err) {
+                    return callback(err);
+                }
+                const readstreamOpts = {};
+                let skip = opts.skip || 0;
+                if (opts.startkey) {
+                    readstreamOpts.gte = opts.startkey;
+                }
+                if (opts.endkey) {
+                    readstreamOpts.lte = opts.endkey;
+                }
+                if (opts.key) {
+                    readstreamOpts.gte = readstreamOpts.lte = opts.key;
+                }
+                if (opts.descending) {
+                    readstreamOpts.reverse = true;
+                    // switch start and ends
+                    const tmp = readstreamOpts.lte;
+                    readstreamOpts.lte = readstreamOpts.gte;
+                    readstreamOpts.gte = tmp;
+                }
+                let limit;
+                if (is.number(opts.limit)) {
+                    limit = opts.limit;
+                }
+                if (limit === 0 ||
                 ("gte" in readstreamOpts && "lte" in readstreamOpts &&
                     readstreamOpts.gte > readstreamOpts.lte)) {
                 // should return 0 results when start is greater than end.
                 // normally level would "fix" this for us by reversing the order,
                 // so short-circuit instead
-                const returnVal = {
-                    total_rows: docCount,
-                    offset: opts.skip,
-                    rows: []
-                };
-
-                if (opts.update_seq) {
-                    returnVal.update_seq = db._updateSeq;
-                }
-                return callback(null, returnVal);
-            }
-            const results = [];
-            const docstream = stores.docStore.readStream(readstreamOpts);
-
-            const throughStream = adone.stream.through.obj((entry, _, next) => {
-                const metadata = entry.value;
-                // winningRev and deleted are performance-killers, but
-                // in newer versions of PouchDB, they are cached on the metadata
-                const winningRev = getWinningRev(metadata);
-                const deleted = getIsDeleted(metadata, winningRev);
-                if (!deleted) {
-                    if (skip-- > 0) {
-                        next();
-                        return;
-                    } else if (is.number(limit) && limit-- <= 0) {
-                        docstream.unpipe();
-                        docstream.destroy();
-                        next();
-                        return;
-                    }
-                } else if (opts.deleted !== "ok") {
-                    next();
-                    return;
-                }
-                const allDocsInner = (data) => {
-                    const doc = {
-                        id: metadata.id,
-                        key: metadata.id,
-                        value: {
-                            rev: winningRev
-                        }
-                    };
-                    if (opts.include_docs) {
-                        doc.doc = data;
-                        doc.doc._rev = doc.value.rev;
-                        if (opts.conflicts) {
-                            const conflicts = collectConflicts(metadata);
-                            if (conflicts.length) {
-                                doc.doc._conflicts = conflicts;
-                            }
-                        }
-                        for (const att in doc.doc._attachments) {
-                            if (doc.doc._attachments.hasOwnProperty(att)) {
-                                doc.doc._attachments[att].stub = true;
-                            }
-                        }
-                    }
-                    if (opts.inclusive_end === false && metadata.id === opts.endkey) {
-                        return next();
-                    } else if (deleted) {
-                        if (opts.deleted === "ok") {
-                            doc.value.deleted = true;
-                            doc.doc = null;
-                        } else {
-                            /* istanbul ignore next */
-                            return next();
-                        }
-                    }
-                    results.push(doc);
-                    next();
-                };
-                if (opts.include_docs) {
-                    const seq = metadata.rev_map[winningRev];
-                    stores.bySeqStore.get(formatSeq(seq), (err, data) => {
-                        allDocsInner(data);
-                    });
-                } else {
-                    allDocsInner();
-                }
-            }, (next) => {
-                Promise.resolve().then(() => {
-                    if (opts.include_docs && opts.attachments) {
-                        return fetchAttachments(results, stores, opts);
-                    }
-                }).then(() => {
                     const returnVal = {
                         total_rows: docCount,
                         offset: opts.skip,
-                        rows: results
+                        rows: []
                     };
 
                     if (opts.update_seq) {
                         returnVal.update_seq = db._updateSeq;
                     }
-                    callback(null, returnVal);
-                }, callback);
-                next();
-            }).on("unpipe", () => {
-                throughStream.end();
+                    return callback(null, returnVal);
+                }
+                const results = [];
+                const docstream = stores.docStore.readStream(readstreamOpts);
+
+                const throughStream = adone.stream.through.obj((entry, _, next) => {
+                    const metadata = entry.value;
+                    // winningRev and deleted are performance-killers, but
+                    // in newer versions of PouchDB, they are cached on the metadata
+                    const winningRev = getWinningRev(metadata);
+                    const deleted = getIsDeleted(metadata, winningRev);
+                    if (!deleted) {
+                        if (skip-- > 0) {
+                            next();
+                            return;
+                        } else if (is.number(limit) && limit-- <= 0) {
+                            docstream.unpipe();
+                            docstream.destroy();
+                            next();
+                            return;
+                        }
+                    } else if (opts.deleted !== "ok") {
+                        next();
+                        return;
+                    }
+                    const allDocsInner = (data) => {
+                        const doc = {
+                            id: metadata.id,
+                            key: metadata.id,
+                            value: {
+                                rev: winningRev
+                            }
+                        };
+                        if (opts.include_docs) {
+                            doc.doc = data;
+                            doc.doc._rev = doc.value.rev;
+                            if (opts.conflicts) {
+                                const conflicts = collectConflicts(metadata);
+                                if (conflicts.length) {
+                                    doc.doc._conflicts = conflicts;
+                                }
+                            }
+                            for (const att in doc.doc._attachments) {
+                                if (doc.doc._attachments.hasOwnProperty(att)) {
+                                    doc.doc._attachments[att].stub = true;
+                                }
+                            }
+                        }
+                        if (opts.inclusive_end === false && metadata.id === opts.endkey) {
+                            return next();
+                        } else if (deleted) {
+                            if (opts.deleted === "ok") {
+                                doc.value.deleted = true;
+                                doc.doc = null;
+                            } else {
+                            /* istanbul ignore next */
+                                return next();
+                            }
+                        }
+                        results.push(doc);
+                        next();
+                    };
+                    if (opts.include_docs) {
+                        const seq = metadata.rev_map[winningRev];
+                        stores.bySeqStore.get(formatSeq(seq), (err, data) => {
+                            allDocsInner(data);
+                        });
+                    } else {
+                        allDocsInner();
+                    }
+                }, (next) => {
+                    Promise.resolve().then(() => {
+                        if (opts.include_docs && opts.attachments) {
+                            return fetchAttachments(results, stores, opts);
+                        }
+                    }).then(() => {
+                        const returnVal = {
+                            total_rows: docCount,
+                            offset: opts.skip,
+                            rows: results
+                        };
+
+                        if (opts.update_seq) {
+                            returnVal.update_seq = db._updateSeq;
+                        }
+                        callback(null, returnVal);
+                    }, callback);
+                    next();
+                }).on("unpipe", () => {
+                    throughStream.end();
+                });
+
+                docstream.on("error", callback);
+
+                docstream.pipe(throughStream);
             });
-
-            docstream.on("error", callback);
-
-            docstream.pipe(throughStream);
-        });
-    });
+        })(opts, callback);
+    };
 
     api._changes = function (opts) {
         opts = util.clone(opts);

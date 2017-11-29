@@ -290,7 +290,7 @@ const QueryGenerator = {
                 }
 
                 if (allAttributes.indexOf(key) === -1) {
-                    if (is.null(value) && attributes[key].autoIncrement) {
+                    if (is.null(value) && attributes[key] && attributes[key].autoIncrement) {
                         return;
                     }
 

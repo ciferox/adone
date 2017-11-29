@@ -107,41 +107,16 @@ const computeHeight = (revs) => {
     return height;
 };
 
-const allDocsKeysQuery = (api, opts, callback) => {
+const allDocsKeysParse = (opts) => {
     const keys = ("limit" in opts) ?
         opts.keys.slice(opts.skip, opts.limit + opts.skip) :
         (opts.skip > 0) ? opts.keys.slice(opts.skip) : opts.keys;
+    opts.keys = keys;
+    opts.skip = 0;
     if (opts.descending) {
         keys.reverse();
+        opts.descending = false;
     }
-    if (!keys.length) {
-        return api._allDocs({ limit: 0 }, callback);
-    }
-    const finalResults = {
-        offset: opts.skip
-    };
-    return Promise.all(keys.map((key) => {
-        const subOpts = { key, deleted: "ok", ...opts };
-        ["limit", "skip", "keys"].forEach((optKey) => {
-            delete subOpts[optKey];
-        });
-        return new Promise((resolve, reject) => {
-            api._allDocs(subOpts, (err, res) => {
-                /* istanbul ignore if */
-                if (err) {
-                    return reject(err);
-                }
-                if (opts.update_seq && !is.undefined(res.update_seq)) {
-                    finalResults.update_seq = res.update_seq;
-                }
-                finalResults.total_rows = res.total_rows;
-                resolve(res.rows[0] || { key, error: "not_found" });
-            });
-        });
-    })).then((results) => {
-        finalResults.rows = results;
-        return finalResults;
-    });
 };
 
 // all compaction is done in a queue, to avoid attaching
@@ -803,7 +778,10 @@ export default class AbstractPouchDB extends EventEmitter {
                 return;
             }
             if (!isRemote(this)) {
-                return allDocsKeysQuery(this, opts, callback);
+                allDocsKeysParse(opts);
+                if (opts.keys.length === 0) {
+                    return this._allDocs({ limit: 0 }, callback);
+                }
             }
         }
 

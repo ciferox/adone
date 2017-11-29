@@ -106,6 +106,7 @@ export default class Client extends adone.event.EventEmitter {
 
         this._binaryType = adone.net.ws.constants.BINARY_TYPES[0];
         this._finalize = this.finalize.bind(this);
+        this._closeFrameSent = false;
         this._finalizeCalled = false;
         this._closeMessage = null;
         this._closeTimer = null;
@@ -460,7 +461,9 @@ export default class Client extends adone.event.EventEmitter {
         this._receiver.onclose = (code, reason) => {
             this._closeMessage = reason;
             this._closeCode = code;
-            this.close(code, reason);
+            if (!this._finalized) {
+                this.close(code, reason);
+            }
         };
         this._receiver.onerror = (error, code) => {
             // close the connection when the receiver reports a HyBi error code
@@ -479,24 +482,15 @@ export default class Client extends adone.event.EventEmitter {
      * @private
      */
     finalize(error) {
-        if (this._finalized) { 
+        if (this._finalized) {
             return;
         }
 
         this.readyState = Client.CLOSING;
         this._finalized = true;
 
-        //
-        // If the connection was closed abnormally (with an error), or if the close
-        // control frame was malformed or not received then the close code must be
-        // 1006.
-        //
-        if (error) { 
-            this._closeCode = 1006; 
-        }
-
-        if (!this._socket) { 
-            return this.emitClose();
+        if (!this._socket) {
+            return this.emitClose(error);
         }
 
         clearTimeout(this._closeTimer);
@@ -507,21 +501,30 @@ export default class Client extends adone.event.EventEmitter {
         this._socket.removeListener("end", this._finalize);
         this._socket.on("error", adone.noop);
 
-        if (!error) { 
+        if (!error) {
             this._socket.end();
-        } else { 
-            this._socket.destroy(); 
+        } else {
+            this._socket.destroy();
         }
 
         this._socket = null;
         this._sender = null;
 
-        this._receiver.cleanup(() => this.emitClose());
+        this._receiver.cleanup(() => this.emitClose(error));
         this._receiver = null;
     }
 
-    emitClose() {
+    emitClose(error) {
         this.readyState = Client.CLOSED;
+        //
+        // If the connection was closed abnormally (with an error), or if the close
+        // control frame was not sent or received then the close code must be 1006.
+        //
+        if (error || !this._closeFrameSent) {
+            this._closeMessage = "";
+            this._closeCode = 1006;
+        }
+
         this.emit("close", this._closeCode || 1006, this._closeMessage || "");
 
         if (this.extensions[adone.net.ws.PerMessageDeflate.extensionName]) {
@@ -531,7 +534,6 @@ export default class Client extends adone.event.EventEmitter {
         this.extensions = null;
 
         this.removeAllListeners();
-        this.on("error", adone.noop); // Catch all errors after this.
     }
 
     pause() {
@@ -564,7 +566,7 @@ export default class Client extends adone.event.EventEmitter {
         }
 
         if (this.readyState === Client.CLOSING) {
-            if (this._closeCode && this._socket) {
+            if (this._closeFrameSent && this._closeCode) {
                 this._socket.end();
             }
             return;
@@ -572,21 +574,26 @@ export default class Client extends adone.event.EventEmitter {
 
         this.readyState = Client.CLOSING;
         this._sender.close(code, data, !this._isServer, (err) => {
-            if (err) {
-                this.emit("error", err);
+            if (this._finalized) {
+                return;
             }
 
-            if (this._socket) {
-                if (this._closeCode) {
-                    this._socket.end();
-                }
-                //
-                // Ensure that the connection is cleaned up even when the closing
-                // handshake fails.
-                //
-                clearTimeout(this._closeTimer);
-                this._closeTimer = setTimeout(this._finalize, closeTimeout, true);
+            if (err) {
+                this.emit("error", err);
+                this.finalize(true);
+                return;
             }
+
+            if (this._closeCode) {
+                this._socket.end();
+            }
+            this._closeFrameSent = true;
+
+            //
+            // Ensure that the connection is cleaned up even when the closing
+            // handshake fails.
+            //
+            this._closeTimer = setTimeout(this._finalize, closeTimeout, true);
         });
     }
 
