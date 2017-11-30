@@ -45,7 +45,7 @@ describe("Query:", () => {
             const Product = db.model(prodName);
             const prodQ = Product.find({ title: /test/ }).toConstructor();
 
-            assert.ok(prodQ() instanceof Query);
+            assert.ok(new prodQ() instanceof Query);
             done();
         });
 
@@ -56,15 +56,15 @@ describe("Query:", () => {
 
             const prodC = prodQ.toConstructor();
 
-            assert.deepEqual(prodQ._conditions, prodC()._conditions);
-            assert.deepEqual(prodQ._fields, prodC()._fields);
-            assert.deepEqual(prodQ._update, prodC()._update);
-            assert.equal(prodQ._path, prodC()._path);
-            assert.equal(prodQ._distinct, prodC()._distinct);
-            assert.deepEqual(prodQ._collection, prodC()._collection);
-            assert.deepEqual(prodQ.model, prodC().model);
-            assert.deepEqual(prodQ.mongooseCollection, prodC().mongooseCollection);
-            assert.deepEqual(prodQ._mongooseOptions, prodC()._mongooseOptions);
+            assert.deepEqual(prodQ._conditions, new prodC()._conditions);
+            assert.deepEqual(prodQ._fields, new prodC()._fields);
+            assert.deepEqual(prodQ._update, new prodC()._update);
+            assert.equal(prodQ._path, new prodC()._path);
+            assert.equal(prodQ._distinct, new prodC()._distinct);
+            assert.deepEqual(prodQ._collection, new prodC()._collection);
+            assert.deepEqual(prodQ.model, new prodC().model);
+            assert.deepEqual(prodQ.mongooseCollection, new prodC().mongooseCollection);
+            assert.deepEqual(prodQ._mongooseOptions, new prodC()._mongooseOptions);
             done();
         });
 
@@ -72,9 +72,9 @@ describe("Query:", () => {
             const Product = db.model(prodName);
             Product.create({ title: "this is a test" }, (err, p) => {
                 assert.ifError(err);
-                let prodC = Product.find({ title: /test/ }).toConstructor();
+                const prodC = Product.find({ title: /test/ }).toConstructor();
 
-                prodC().exec((err, results) => {
+                new prodC().exec((err, results) => {
                     assert.ifError(err);
                     assert.equal(results.length, 1);
                     assert.equal(p.title, results[0].title);
@@ -89,18 +89,18 @@ describe("Query:", () => {
             Product.create([{ title: "moar thing" }, { title: "second thing" }], (err, prods) => {
                 assert.ifError(err);
                 assert.equal(prods.length, 2);
-                let prod = prods[0];
-                let prodC = Product.find({ title: /thing/ }).toConstructor();
+                const prod = prods[0];
+                const prodC = Product.find({ title: /thing/ }).toConstructor();
 
-                prodC().exec((err, results) => {
+                new prodC().exec((err, results) => {
                     assert.ifError(err);
 
                     assert.equal(results.length, 2);
-                    prodC().find({ _id: prod.id }).exec(function (err, res) {
+                    new prodC().find({ _id: prod.id }).exec((err, res) => {
                         assert.ifError(err);
                         assert.equal(res.length, 1);
 
-                        prodC().exec(function (err, res) {
+                        new prodC().exec((err, res) => {
                             assert.ifError(err);
                             assert.equal(res.length, 2);
                             done();
@@ -116,7 +116,7 @@ describe("Query:", () => {
             let prodC = Product.find({ title: /blah/ }).setOptions({ sort: "title", lean: true });
             prodC = prodC.toConstructor();
 
-            const nq = prodC(null, { limit: 3 });
+            const nq = new prodC(null, { limit: 3 });
             assert.deepEqual(nq._mongooseOptions, { lean: true, limit: 3 });
             assert.deepEqual(nq.options, { sort: { title: 1 }, limit: 3, retainKeyOrder: false });
             done();
@@ -128,10 +128,10 @@ describe("Query:", () => {
             let prodC = Product.find({ title: /blah/ }).setOptions({ sort: "title", lean: true });
             prodC = prodC.toConstructor();
 
-            const nq = prodC(null, { limit: 3 });
+            const nq = new prodC(null, { limit: 3 });
             assert.deepEqual(nq._mongooseOptions, { lean: true, limit: 3 });
             assert.deepEqual(nq.options, { sort: { title: 1 }, limit: 3, retainKeyOrder: false });
-            const nq2 = prodC(null, { limit: 5 });
+            const nq2 = new prodC(null, { limit: 5 });
             assert.deepEqual(nq._mongooseOptions, { lean: true, limit: 3 });
             assert.deepEqual(nq2._mongooseOptions, { lean: true, limit: 5 });
 
@@ -154,7 +154,7 @@ describe("Query:", () => {
             q.find();
 
             const M = q.toConstructor();
-            const m = M();
+            const m = new M();
 
             assert.ok(m instanceof Query);
             assert.deepEqual(opts, m.options);
@@ -176,7 +176,7 @@ describe("Query:", () => {
                 strings: ["123"],
                 numbers: [1, 2, 3]
             };
-            Q().findOneAndUpdate(query, update, (error) => {
+            new Q().findOneAndUpdate(query, update, (error) => {
                 assert.ifError(error);
                 done();
             });

@@ -1,8 +1,3 @@
-
-/*!
- * Module dependencies.
- */
-
 const utils = require("./utils");
 
 /*!
@@ -11,172 +6,138 @@ const utils = require("./utils");
  *
  * @api private
  */
-
-const StateMachine = module.exports = exports = function StateMachine() {
-};
-
-/*!
- * StateMachine.ctor('state1', 'state2', ...)
- * A factory method for subclassing StateMachine.
- * The arguments are a list of states. For each state,
- * the constructor's prototype gets state transition
- * methods named after each state. These transition methods
- * place their path argument into the given state.
- *
- * @param {String} state
- * @param {String} [state]
- * @return {Function} subclass constructor
- * @private
- */
-
-StateMachine.ctor = function () {
-    const states = utils.args(arguments);
-
-    const ctor = function () {
-        StateMachine.apply(this, arguments);
+export default class StateMachine {
+    constructor(...states) {
         this.paths = {};
         this.states = {};
         this.stateNames = states;
 
-        let i = states.length,
-            state;
+        let i = states.length;
+        let state;
 
         while (i--) {
             state = states[i];
             this.states[state] = {};
         }
-    };
 
-    ctor.prototype = new StateMachine();
-
-    states.forEach((state) => {
-        // Changes the `path`'s state to `state`.
-        ctor.prototype[state] = function (path) {
-            this._changeState(path, state);
-        };
-    });
-
-    return ctor;
-};
-
-/*!
- * This function is wrapped by the state change functions:
- *
- * - `require(path)`
- * - `modify(path)`
- * - `init(path)`
- *
- * @api private
- */
-
-StateMachine.prototype._changeState = function _changeState(path, nextState) {
-    const prevBucket = this.states[this.paths[path]];
-    if (prevBucket) {
-        delete prevBucket[path];
+        states.forEach((state) => {
+            // Changes the `path`'s state to `state`.
+            this[state] = function (path) {
+                this._changeState(path, state);
+            };
+        });
     }
 
-    this.paths[path] = nextState;
-    this.states[nextState][path] = true;
-};
-
-/*!
- * ignore
- */
-
-StateMachine.prototype.clear = function clear(state) {
-    let keys = Object.keys(this.states[state]),
-        i = keys.length,
-        path;
-
-    while (i--) {
-        path = keys[i];
-        delete this.states[state][path];
-        delete this.paths[path];
-    }
-};
-
-/*!
- * Checks to see if at least one path is in the states passed in via `arguments`
- * e.g., this.some('required', 'inited')
- *
- * @param {String} state that we want to check for.
- * @private
- */
-
-StateMachine.prototype.some = function some() {
-    const _this = this;
-    const what = arguments.length ? arguments : this.stateNames;
-    return Array.prototype.some.call(what, (state) => {
-        return Object.keys(_this.states[state]).length;
-    });
-};
-
-/*!
- * This function builds the functions that get assigned to `forEach` and `map`,
- * since both of those methods share a lot of the same logic.
- *
- * @param {String} iterMethod is either 'forEach' or 'map'
- * @return {Function}
- * @api private
- */
-
-StateMachine.prototype._iter = function _iter(iterMethod) {
-    return function () {
-        let numArgs = arguments.length,
-            states = utils.args(arguments, 0, numArgs - 1),
-            callback = arguments[numArgs - 1];
-
-        if (!states.length) {
-            states = this.stateNames;
+    /*!
+    * This function is wrapped by the state change functions:
+    *
+    * - `require(path)`
+    * - `modify(path)`
+    * - `init(path)`
+    *
+    * @api private
+    */
+    _changeState(path, nextState) {
+        const prevBucket = this.states[this.paths[path]];
+        if (prevBucket) {
+            delete prevBucket[path];
         }
 
+        this.paths[path] = nextState;
+        this.states[nextState][path] = true;
+    }
+
+    clear(state) {
+        const keys = Object.keys(this.states[state]);
+        let i = keys.length;
+        let path;
+
+        while (i--) {
+            path = keys[i];
+            delete this.states[state][path];
+            delete this.paths[path];
+        }
+    }
+
+    /*!
+    * Checks to see if at least one path is in the states passed in via `arguments`
+    * e.g., this.some('required', 'inited')
+    *
+    * @param {String} state that we want to check for.
+    * @private
+    */
+    some() {
         const _this = this;
-
-        const paths = states.reduce((paths, state) => {
-            return paths.concat(Object.keys(_this.states[state]));
-        }, []);
-
-        return paths[iterMethod]((path, i, paths) => {
-            return callback(path, i, paths);
+        const what = arguments.length ? arguments : this.stateNames;
+        return Array.prototype.some.call(what, (state) => {
+            return Object.keys(_this.states[state]).length;
         });
-    };
-};
+    }
 
-/*!
- * Iterates over the paths that belong to one of the parameter states.
- *
- * The function profile can look like:
- * this.forEach(state1, fn);         // iterates over all paths in state1
- * this.forEach(state1, state2, fn); // iterates over all paths in state1 or state2
- * this.forEach(fn);                 // iterates over all paths in all states
- *
- * @param {String} [state]
- * @param {String} [state]
- * @param {Function} callback
- * @private
- */
+    /*!
+    * This function builds the functions that get assigned to `forEach` and `map`,
+    * since both of those methods share a lot of the same logic.
+    *
+    * @param {String} iterMethod is either 'forEach' or 'map'
+    * @return {Function}
+    * @api private
+    */
+    _iter(iterMethod) {
+        return function () {
+            const numArgs = arguments.length;
+            let states = utils.args(arguments, 0, numArgs - 1);
+            const callback = arguments[numArgs - 1];
 
-StateMachine.prototype.forEach = function forEach() {
-    this.forEach = this._iter("forEach");
-    return this.forEach.apply(this, arguments);
-};
+            if (!states.length) {
+                states = this.stateNames;
+            }
 
-/*!
- * Maps over the paths that belong to one of the parameter states.
- *
- * The function profile can look like:
- * this.forEach(state1, fn);         // iterates over all paths in state1
- * this.forEach(state1, state2, fn); // iterates over all paths in state1 or state2
- * this.forEach(fn);                 // iterates over all paths in all states
- *
- * @param {String} [state]
- * @param {String} [state]
- * @param {Function} callback
- * @return {Array}
- * @private
- */
+            const _this = this;
 
-StateMachine.prototype.map = function map() {
-    this.map = this._iter("map");
-    return this.map.apply(this, arguments);
-};
+            const paths = states.reduce((paths, state) => {
+                return paths.concat(Object.keys(_this.states[state]));
+            }, []);
+
+            return paths[iterMethod]((path, i, paths) => {
+                return callback(path, i, paths);
+            });
+        };
+    }
+
+    /*!
+    * Iterates over the paths that belong to one of the parameter states.
+    *
+    * The function profile can look like:
+    * this.forEach(state1, fn);         // iterates over all paths in state1
+    * this.forEach(state1, state2, fn); // iterates over all paths in state1 or state2
+    * this.forEach(fn);                 // iterates over all paths in all states
+    *
+    * @param {String} [state]
+    * @param {String} [state]
+    * @param {Function} callback
+    * @private
+    */
+    forEach() {
+        this.forEach = this._iter("forEach");
+        return this.forEach.apply(this, arguments);
+    }
+
+    /*!
+    * Maps over the paths that belong to one of the parameter states.
+    *
+    * The function profile can look like:
+    * this.forEach(state1, fn);         // iterates over all paths in state1
+    * this.forEach(state1, state2, fn); // iterates over all paths in state1 or state2
+    * this.forEach(fn);                 // iterates over all paths in all states
+    *
+    * @param {String} [state]
+    * @param {String} [state]
+    * @param {Function} callback
+    * @return {Array}
+    * @private
+    */
+    map() {
+        this.map = this._iter("map");
+        return this.map.apply(this, arguments);
+    }
+}

@@ -2,7 +2,7 @@ const start = require("./common");
 const mongoose = adone.odm;
 const Schema = mongoose.Schema;
 const MongooseDocumentArray = mongoose.Types.DocumentArray;
-const { EmbeddedDocument, DocumentArray } = adone.odm.types;
+const { Embedded, DocumentArray } = adone.odm.types;
 
 /**
  * setup
@@ -17,25 +17,16 @@ const test = new Schema({
     }
 });
 
-function TestDoc(schema) {
-    const Subdocument = function () {
-        EmbeddedDocument.call(this, {}, new DocumentArray());
-    };
-
-    /**
-     * Inherits from EmbeddedDocument.
-     */
-
-    Subdocument.prototype.__proto__ = EmbeddedDocument.prototype;
-
-    /**
-     * Set schema.
-     */
-
+const TestDoc = function (schema) {
+    class Subdocument extends Embedded {
+        constructor() {
+            super({}, new DocumentArray());
+        }
+    }
     Subdocument.prototype.$__setSchema(schema || test);
 
     return Subdocument;
-}
+};
 
 /**
  * Test.

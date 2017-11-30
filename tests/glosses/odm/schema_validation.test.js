@@ -1182,7 +1182,7 @@ describe("schema", () => {
         });
 
         it("allows you to validate embedded doc that was .create()-ed (gh-2902) (gh-2929)", (done) => {
-            const parentSchema = mongoose.Schema({
+            const parentSchema = new mongoose.Schema({
                 children: [{ name: { type: String, required: true } }]
             });
 
@@ -1203,7 +1203,7 @@ describe("schema", () => {
         });
 
         it("returns correct kind for user defined custom validators (gh-2885)", (done) => {
-            const s = mongoose.Schema({
+            const s = new mongoose.Schema({
                 n: {
                     type: String, validate: {
                         validator() {
@@ -1223,7 +1223,7 @@ describe("schema", () => {
         });
 
         it("enums report kind (gh-3009)", (done) => {
-            const s = mongoose.Schema({ n: { type: String, enum: ["a", "b"] } });
+            const s = new mongoose.Schema({ n: { type: String, enum: ["a", "b"] } });
             const M = mongoose.model("gh3009", s);
 
             const m = new M({ n: "test" });
@@ -1235,7 +1235,7 @@ describe("schema", () => {
         });
 
         it("skips conditional required (gh-3539)", (done) => {
-            const s = mongoose.Schema({
+            const s = new mongoose.Schema({
                 n: {
                     type: Number, required() {
                         return false;

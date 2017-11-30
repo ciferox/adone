@@ -1,3 +1,4 @@
+import SchemaArray from "../array";
 const castArraysOfNumbers = require("./helpers").castArraysOfNumbers;
 const castToNumber = require("./helpers").castToNumber;
 
@@ -14,8 +15,6 @@ exports.cast$near = cast$near;
 exports.cast$within = cast$within;
 
 function cast$near(val) {
-    const SchemaArray = require("../array");
-
     if (is.array(val)) {
         castArraysOfNumbers(val, this);
         return val;

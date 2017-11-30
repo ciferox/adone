@@ -213,20 +213,20 @@ describe("model", () => {
         });
 
         it("nested embedded docs (gh-5199)", (done) => {
-            const SubSubSchema = mongoose.Schema({
+            const SubSubSchema = new mongoose.Schema({
                 nested2: String
             });
 
             SubSubSchema.index({ nested2: 1 });
 
-            const SubSchema = mongoose.Schema({
+            const SubSchema = new mongoose.Schema({
                 nested1: String,
                 subSub: SubSubSchema
             });
 
             SubSchema.index({ nested1: 1 });
 
-            const ContainerSchema = mongoose.Schema({
+            const ContainerSchema = new mongoose.Schema({
                 nested0: String,
                 sub: SubSchema
             });
@@ -340,14 +340,14 @@ describe("model", () => {
 
         describe("model.ensureIndexes()", () => {
             it("is a function", (done) => {
-                const schema = mongoose.Schema({ x: "string" });
+                const schema = new mongoose.Schema({ x: "string" });
                 const Test = mongoose.createConnection().model(`ensureIndexes-${random}`, schema);
                 assert.equal(typeof Test.ensureIndexes, "function");
                 done();
             });
 
             it("returns a Promise", (done) => {
-                const schema = mongoose.Schema({ x: "string" });
+                const schema = new mongoose.Schema({ x: "string" });
                 const Test = mongoose.createConnection().model(`ensureIndexes-${random}`, schema);
                 const p = Test.ensureIndexes();
                 assert.ok(p instanceof mongoose.Promise);

@@ -61,7 +61,7 @@ describe("model query casting", () => {
     it("works", (done) => {
         let db = start(),
             BlogPostB = db.model(modelName, collection),
-            title = `Loki ${ random()}`;
+            title = `Loki ${random()}`;
 
         let post = new BlogPostB(),
             id = post.get("_id").toString();
@@ -299,7 +299,7 @@ describe("model query casting", () => {
 
         it("with objects", (done) => {
             let db = start(),
-                Test = db.model("Geo5", geoSchemaObject, `y${ random()}`);
+                Test = db.model("Geo5", geoSchemaObject, `y${random()}`);
 
             let pending = 2;
 
@@ -332,7 +332,7 @@ describe("model query casting", () => {
             const geoSchemaObject = new Schema({ loc: { nested: { long: Number, lat: Number } } });
             geoSchemaObject.index({ "loc.nested": "2d" });
 
-            const Test = db.model("Geo52", geoSchemaObject, `y${ random()}`);
+            const Test = db.model("Geo52", geoSchemaObject, `y${random()}`);
 
             let pending = 2;
 
@@ -369,7 +369,7 @@ describe("model query casting", () => {
 
         it("with arrays", (done) => {
             let db = start(),
-                Test = db.model("Geo4", geoSchemaArray, `y${ random()}`);
+                Test = db.model("Geo4", geoSchemaArray, `y${random()}`);
 
             let pending = 2;
 
@@ -398,7 +398,7 @@ describe("model query casting", () => {
 
         it("with objects", (done) => {
             let db = start(),
-                Test = db.model("Geo5", geoSchemaObject, `y${ random()}`);
+                Test = db.model("Geo5", geoSchemaObject, `y${random()}`);
 
             let pending = 2;
 
@@ -464,7 +464,7 @@ describe("model query casting", () => {
         describe("$centerSphere", () => {
             it("with arrays", (done) => {
                 let db = start(),
-                    Test = db.model("Geo4", geoSchemaArray, `y${  random()}`);
+                    Test = db.model("Geo4", geoSchemaArray, `y${random()}`);
 
                 let pending = 2;
 
@@ -493,7 +493,7 @@ describe("model query casting", () => {
 
             it("with objects", (done) => {
                 let db = start(),
-                    Test = db.model("Geo5", geoSchemaObject, `y${  random()}`);
+                    Test = db.model("Geo5", geoSchemaObject, `y${random()}`);
 
                 let pending = 2;
 
@@ -525,7 +525,7 @@ describe("model query casting", () => {
                 const geoSchemaObject = new Schema({ loc: { nested: { long: Number, lat: Number } } });
                 geoSchemaObject.index({ "loc.nested": "2d" });
 
-                const Test = db.model("Geo52", geoSchemaObject, `y${  random()}`);
+                const Test = db.model("Geo52", geoSchemaObject, `y${random()}`);
 
                 let pending = 2;
 
@@ -556,7 +556,7 @@ describe("model query casting", () => {
         describe("$center", () => {
             it("with arrays", (done) => {
                 let db = start(),
-                    Test = db.model("Geo4", geoSchemaArray, `y${  random()}`);
+                    Test = db.model("Geo4", geoSchemaArray, `y${random()}`);
 
                 let pending = 2;
 
@@ -585,7 +585,7 @@ describe("model query casting", () => {
 
             it("with objects", (done) => {
                 let db = start(),
-                    Test = db.model("Geo5", geoSchemaObject, `y${  random()}`);
+                    Test = db.model("Geo5", geoSchemaObject, `y${random()}`);
 
                 let pending = 2;
 
@@ -617,7 +617,7 @@ describe("model query casting", () => {
                 const geoSchemaObject = new Schema({ loc: { nested: { long: Number, lat: Number } } });
                 geoSchemaObject.index({ "loc.nested": "2d" });
 
-                const Test = db.model("Geo52", geoSchemaObject, `y${  random()}`);
+                const Test = db.model("Geo52", geoSchemaObject, `y${random()}`);
 
                 let pending = 2;
 
@@ -648,7 +648,7 @@ describe("model query casting", () => {
         describe("$polygon", () => {
             it("with arrays", (done) => {
                 let db = start(),
-                    Test = db.model("Geo4", geoSchemaArray, `y${  random()}`);
+                    Test = db.model("Geo4", geoSchemaArray, `y${random()}`);
 
                 let pending = 2;
 
@@ -677,7 +677,7 @@ describe("model query casting", () => {
 
             it("with objects", (done) => {
                 let db = start(),
-                    Test = db.model("Geo5", geoSchemaObject, `y${  random()}`);
+                    Test = db.model("Geo5", geoSchemaObject, `y${random()}`);
 
                 let pending = 2;
 
@@ -709,7 +709,7 @@ describe("model query casting", () => {
                 const geoSchemaObject = new Schema({ loc: { nested: { long: Number, lat: Number } } });
                 geoSchemaObject.index({ "loc.nested": "2d" });
 
-                const Test = db.model("Geo52", geoSchemaObject, `y${  random()}`);
+                const Test = db.model("Geo52", geoSchemaObject, `y${random()}`);
 
                 let pending = 2;
 
@@ -740,7 +740,7 @@ describe("model query casting", () => {
         describe("$box", () => {
             it("with arrays", (done) => {
                 let db = start(),
-                    Test = db.model("Geo4", geoSchemaArray, `y${  random()}`);
+                    Test = db.model("Geo4", geoSchemaArray, `y${random()}`);
 
                 let pending = 2;
 
@@ -769,7 +769,7 @@ describe("model query casting", () => {
 
             it("with objects", (done) => {
                 let db = start(),
-                    Test = db.model("Geo5", geoSchemaObject, `y${  random()}`);
+                    Test = db.model("Geo5", geoSchemaObject, `y${random()}`);
 
                 let pending = 2;
 
@@ -801,7 +801,7 @@ describe("model query casting", () => {
                 const geoSchemaObject = new Schema({ loc: { nested: { long: Number, lat: Number } } });
                 geoSchemaObject.index({ "loc.nested": "2d" });
 
-                const Test = db.model("Geo52", geoSchemaObject, `y${  random()}`);
+                const Test = db.model("Geo52", geoSchemaObject, `y${random()}`);
 
                 let pending = 2;
 
@@ -981,22 +981,24 @@ describe("model query casting", () => {
     it("setOnInsert with custom type (gh-5126)", (done) => {
         const db = start();
 
-        function Point(key, options) {
-            mongoose.SchemaType.call(this, key, options, "Point");
+        let called = 0;
+
+        class Point extends mongoose.SchemaType {
+            constructor(key, options) {
+                super(key, options, "Point");
+            }
+
+            cast(point) {
+                ++called;
+                if (point.type !== "Point") {
+                    throw new Error("Woops");
+                }
+
+                return point;
+            }
         }
 
         mongoose.Schema.Types.Point = Point;
-        Point.prototype = Object.create(mongoose.SchemaType.prototype);
-
-        let called = 0;
-        Point.prototype.cast = function (point) {
-            ++called;
-            if (point.type !== "Point") {
-                throw new Error("Woops");
-            }
-
-            return point;
-        };
 
         const testSchema = new mongoose.Schema({ name: String, test: Point });
         const Test = db.model("gh5126", testSchema);
@@ -1057,7 +1059,7 @@ describe("model query casting", () => {
                 assert.equal(contexts[1].constructor.name, "Query");
             }).
             then(() => {
-                done(); 
+                done();
             }).
             catch(done);
     });
@@ -1128,7 +1130,7 @@ describe("model query casting", () => {
                 assert.equal(doc.num, 2);
             }).
             then(() => {
-                done(); 
+                done();
             }).
             catch(done);
     });

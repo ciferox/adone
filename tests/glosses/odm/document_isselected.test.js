@@ -9,15 +9,8 @@ const DocumentObjectId = mongoose.Types.ObjectId;
  * Test Document constructor.
  */
 
-function TestDocument() {
-    Document.apply(this, arguments);
+class TestDocument extends Document {
 }
-
-/**
- * Inherits from Document.
- */
-
-TestDocument.prototype.__proto__ = Document.prototype;
 
 for (const i in EventEmitter.prototype) {
     TestDocument[i] = EventEmitter.prototype[i];

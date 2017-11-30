@@ -1,4 +1,4 @@
-const Mixed = require("../schema/mixed");
+import Mixed from "../schema/mixed";
 const ValidationError = require("../error/validation");
 const parallel = require("async/parallel");
 const flatten = require("./common").flatten;
@@ -92,7 +92,7 @@ module.exports = function (query, schema, castedDoc, options) {
                         }
                         callback(null);
                     },
-                    options && options.context === "query" ? query : null,
+                    query,// options && options.context === "query" ? query : null,
                     { updateValidator: true });
             });
         }

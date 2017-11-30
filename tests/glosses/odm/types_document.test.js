@@ -1,6 +1,6 @@
 const start = require("./common");
 const mongoose = adone.odm;
-const { DocumentArray, EmbeddedDocument } = adone.odm.types;
+const { DocumentArray, Embedded } = adone.odm.types;
 const EventEmitter = require("events").EventEmitter;
 const Schema = mongoose.Schema;
 const ValidationError = mongoose.Document.ValidationError;
@@ -25,11 +25,11 @@ describe("types.document", () => {
             arr._path = "jsconf.ar";
             arr._parent = new Dummy();
             arr[0] = this;
-            EmbeddedDocument.call(this, {}, arr);
+            Embedded.call(this, {}, arr);
         }
         Subdocument = _Subdocument;
 
-        Subdocument.prototype.__proto__ = EmbeddedDocument.prototype;
+        Subdocument.prototype.__proto__ = Embedded.prototype;
 
         for (const i in EventEmitter.prototype) {
             Subdocument[i] = EventEmitter.prototype[i];

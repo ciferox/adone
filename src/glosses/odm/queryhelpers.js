@@ -1,8 +1,8 @@
-const get = require("lodash.get");
 const utils = require("./utils");
 
 const {
-    is
+    is,
+    vendor: { lodash: { get } }
 } = adone;
 
 /*!

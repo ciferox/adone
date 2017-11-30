@@ -9,16 +9,8 @@ const {
     is
 } = adone;
 
-/**
- * Setup.
- */
-
-let posts = `blogposts_${random()}`,
-    users = `users_${random()}`;
-
-/**
- * Tests.
- */
+const posts = `blogposts_${random()}`;
+const users = `users_${random()}`;
 
 describe("model: populate:", () => {
     describe("setting populated paths (gh-570)", () => {
@@ -75,46 +67,41 @@ describe("model: populate:", () => {
                         name: "Fan 1",
                         email: "fan1@learnboost.com"
                     }, {
-                            _id: construct[id](),
-                            name: "Fan 2",
-                            email: "fan2@learnboost.com"
-                        }, (err, fan1, fan2) => {
-                            assert.ifError(err);
-                            u1 = fan1;
+                        _id: construct[id](),
+                        name: "Fan 2",
+                        email: "fan2@learnboost.com"
+                    }, (err, fan1, fan2) => {
+                        assert.ifError(err);
+                        u1 = fan1;
 
-                            B.create({
-                                title: "Woot",
-                                fans: [fan1, fan2],
-                                adhoc: [{ subdoc: fan2, subarray: [{ things: [fan1] }] }],
-                                _creator: fan1,
-                                embed: [{ other: fan1, array: [fan1, fan2] }, { other: fan2, array: [fan2, fan1] }]
-                            }, {
-                                    title: "Woot2",
-                                    fans: [fan2, fan1],
-                                    adhoc: [{ subdoc: fan1, subarray: [{ things: [fan2] }] }],
-                                    _creator: fan1,
-                                    _creator: fan2,
-                                    embed: [{ other: fan2, array: [fan2, fan1] }, { other: fan1, array: [fan1, fan2] }]
-                                }, (err, post1, post2) => {
-                                    assert.ifError(err);
-                                    b1 = post1;
-                                    b2 = post2;
-                                    done();
-                                });
+                        B.create({
+                            title: "Woot",
+                            fans: [fan1, fan2],
+                            adhoc: [{ subdoc: fan2, subarray: [{ things: [fan1] }] }],
+                            _creator: fan1,
+                            embed: [{ other: fan1, array: [fan1, fan2] }, { other: fan2, array: [fan2, fan1] }]
+                        }, {
+                            title: "Woot2",
+                            fans: [fan2, fan1],
+                            adhoc: [{ subdoc: fan1, subarray: [{ things: [fan2] }] }],
+                            _creator: fan1,
+                            _creator: fan2,
+                            embed: [{ other: fan2, array: [fan2, fan1] }, { other: fan1, array: [fan1, fan2] }]
+                        }, (err, post1, post2) => {
+                            assert.ifError(err);
+                            b1 = post1;
+                            b2 = post2;
+                            done();
                         });
+                    });
                 });
 
                 after((done) => {
                     db.close(done);
                 });
 
-                function userLiteral(name) {
-                    return { _id: construct[id](), name };
-                }
-
-                function user(name) {
-                    return new U(userLiteral(name));
-                }
+                const userLiteral = (name) => ({ _id: construct[id](), name });
+                const user = (name) => new U(userLiteral(name));
 
                 it("if a document", (done) => {
                     const query = B.findById(b1).
@@ -124,23 +111,23 @@ describe("model: populate:", () => {
                     query.exec((err, doc) => {
                         assert.ifError(err);
 
-                        let user3 = user("user3");
+                        const user3 = user("user3");
                         doc.fans.push(user3);
                         assert.deepEqual(doc.fans[2].toObject(), user3.toObject());
 
-                        let user4 = user("user4");
+                        const user4 = user("user4");
                         doc.fans.nonAtomicPush(user4);
                         assert.deepEqual(doc.fans[3].toObject(), user4.toObject());
 
-                        let user5 = user("user5");
+                        const user5 = user("user5");
                         doc.fans.splice(2, 1, user5);
                         assert.deepEqual(doc.fans[2].toObject(), user5.toObject());
 
-                        let user6 = user("user6");
+                        const user6 = user("user6");
                         doc.fans.unshift(user6);
                         assert.deepEqual(doc.fans[0].toObject(), user6.toObject());
 
-                        let user7 = user("user7");
+                        const user7 = user("user7");
                         doc.fans.addToSet(user7);
                         assert.deepEqual(doc.fans[5].toObject(), user7.toObject());
 
@@ -148,14 +135,14 @@ describe("model: populate:", () => {
                             assert.ok(doc instanceof U);
                         });
 
-                        let user8 = user("user8");
+                        const user8 = user("user8");
                         doc.fans.set(0, user8);
                         assert.deepEqual(doc.fans[0].toObject(), user8.toObject());
 
                         doc.fans.push(null);
                         assert.equal(doc.fans[6], null);
 
-                        let _id = construct[id]();
+                        const _id = construct[id]();
                         doc.fans.addToSet(_id);
                         if (is.buffer(_id)) {
                             assert.equal(doc.fans[7]._id.toString("utf8"), _id.toString("utf8"));
@@ -168,36 +155,36 @@ describe("model: populate:", () => {
                         doc._creator = null;
                         assert.equal(doc._creator, null);
 
-                        let creator = user("creator");
+                        const creator = user("creator");
                         doc._creator = creator;
                         assert.ok(doc._creator instanceof mongoose.Document);
                         assert.deepEqual(doc._creator.toObject(), creator.toObject());
 
                         // embedded with declared ref in schema
-                        let user1a = user("user1a");
+                        const user1a = user("user1a");
                         doc.embed[0].array.set(0, user1a);
                         assert.deepEqual(doc.embed[0].array[0].toObject(), user1a.toObject());
 
-                        let user1b = user("user1b");
+                        const user1b = user("user1b");
                         doc.embed[0].other = user1b;
                         assert.deepEqual(doc.embed[0].other.toObject(), user1b.toObject());
 
-                        let user1c = user("user2c");
+                        const user1c = user("user2c");
                         doc.embed[0].nested = [{ subdoc: user1c }];
                         assert.deepEqual(doc.embed[0].nested[0].subdoc.toObject(), user1c.toObject());
 
                         // embedded without declared ref in schema
-                        let user2a = user("user2a");
+                        const user2a = user("user2a");
                         doc.adhoc[0].subdoc = user2a;
                         assert.deepEqual(doc.adhoc[0].subdoc.toObject(), user2a.toObject());
 
-                        let user2b = user("user2b");
+                        const user2b = user("user2b");
                         doc.adhoc[0].subarray[0].things.push(user2b);
                         assert.deepEqual(doc.adhoc[0].subarray[0].things[1].toObject(), user2b.toObject());
 
                         doc.save((err) => {
                             assert.ifError(err);
-                            B.findById(b1).exec(function (err, doc) {
+                            B.findById(b1).exec((err, doc) => {
                                 // db is closed in after()
                                 assert.ifError(err);
                                 assert.equal(doc.fans.length, 8);
@@ -260,50 +247,50 @@ describe("model: populate:", () => {
                             });
 
                             name = "creator";
-                            let creator = userLiteral(name);
+                            const creator = userLiteral(name);
                             doc._creator = creator;
-                            let creatorId = doc._creator._id;
+                            const creatorId = doc._creator._id;
                             assert.ok(creatorId);
                             assert.equal(doc._creator.name, name);
                             assert.ok(doc._creator instanceof U);
 
-                            let fan2Id = doc.fans[2]._id;
-                            let fan5Id = doc.fans[5]._id;
+                            const fan2Id = doc.fans[2]._id;
+                            const fan5Id = doc.fans[5]._id;
 
                             name = "user1a";
-                            let user1a = userLiteral(name);
+                            const user1a = userLiteral(name);
                             doc.embed[0].array.set(0, user1a);
                             assert.equal(doc.embed[0].array[0].name, name);
-                            let user1aId = doc.embed[0].array[0]._id;
+                            const user1aId = doc.embed[0].array[0]._id;
 
                             name = "user1b";
-                            let user1b = userLiteral(name);
+                            const user1b = userLiteral(name);
                             doc.embed[0].other = user1b;
                             assert.equal(doc.embed[0].other.name, name);
-                            let user1bId = doc.embed[0].other._id;
+                            const user1bId = doc.embed[0].other._id;
 
                             name = "user1c";
-                            let user1c = userLiteral(name);
+                            const user1c = userLiteral(name);
                             doc.embed[0].nested = [{ subdoc: user1c }];
                             assert.equal(doc.embed[0].nested[0].subdoc.name, name);
-                            let user1cId = doc.embed[0].nested[0].subdoc._id;
+                            const user1cId = doc.embed[0].nested[0].subdoc._id;
 
                             // embedded without declared ref in schema
                             name = "user2a";
-                            let user2a = userLiteral(name);
+                            const user2a = userLiteral(name);
                             doc.adhoc[0].subdoc = user2a;
                             assert.equal(doc.adhoc[0].subdoc.name, name);
-                            let user2aId = doc.adhoc[0].subdoc._id;
+                            const user2aId = doc.adhoc[0].subdoc._id;
 
                             name = "user2b";
-                            let user2b = userLiteral(name);
+                            const user2b = userLiteral(name);
                             doc.adhoc[0].subarray[0].things.push(user2b);
                             assert.deepEqual(name, doc.adhoc[0].subarray[0].things[1].name);
-                            let user2bId = doc.adhoc[0].subarray[0].things[1]._id;
+                            const user2bId = doc.adhoc[0].subarray[0].things[1]._id;
 
                             doc.save((err) => {
                                 assert.ifError(err);
-                                B.findById(b2).exec(function (err, doc) {
+                                B.findById(b2).exec((err, doc) => {
                                     // db is closed in after()
                                     assert.ifError(err);
                                     assert.equal(doc.fans.length, 6);

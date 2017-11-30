@@ -1,5 +1,4 @@
 const EmbeddedDocument = require("./embedded");
-const Document = require("../document");
 const ObjectId = require("./objectid");
 const cleanModifiedSubpaths = require("../services/document/cleanModifiedSubpaths");
 const utils = require("../utils");
@@ -19,7 +18,7 @@ const isMongooseObject = utils.isMongooseObject;
  *
  * @param {Array} values
  * @param {String} path
- * @param {Document} doc parent document
+ * @param {adone.odm.Document} doc parent document
  * @api private
  * @inherits Array
  * @see http://bit.ly/f6CnZU
@@ -44,7 +43,7 @@ function MongooseArray(values, path, doc) {
     // can happen if there was a null somewhere up the chain (see #3020)
     // RB Jun 17, 2015 updated to check for presence of expected paths instead
     // to make more proof against unusual node environments
-    if (doc && doc instanceof Document) {
+    if (doc && doc instanceof adone.odm.Document) {
         arr._parent = doc;
         arr._schema = doc.schema.path(path);
     }
@@ -485,7 +484,7 @@ MongooseArray.mixin = {
     /**
    * Pulls items from the array atomically. Equality is determined by casting
    * the provided value to an embedded document and comparing using
-   * [the `Document.equals()` function.](./api.html#document_Document-equals)
+   * [the `adone.odm.Document.equals()` function.](./api.html#document_Document-equals)
    *
    * ####Examples:
    *
@@ -521,7 +520,7 @@ MongooseArray.mixin = {
 
         while (i--) {
             mem = cur[i];
-            if (mem instanceof Document) {
+            if (mem instanceof adone.odm.Document) {
                 let some = values.some((v) => {
                     return mem.equals(v);
                 });
@@ -737,7 +736,7 @@ MongooseArray.mixin = {
         if (options && options.depopulate) {
             options._isNested = true;
             return this.map((doc) => {
-                return doc instanceof Document
+                return doc instanceof adone.odm.Document
                     ? doc.toObject(options)
                     : doc;
             });
@@ -807,7 +806,7 @@ function _isAllSubdocs(docs, ref) {
             return false;
         }
         const model = arg.constructor;
-        if (!(arg instanceof Document) ||
+        if (!(arg instanceof adone.odm.Document) ||
             (model.modelName !== ref && model.baseModelName !== ref)) {
             return false;
         }

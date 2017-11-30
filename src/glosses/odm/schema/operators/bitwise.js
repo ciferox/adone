@@ -4,11 +4,15 @@ const {
     is
 } = adone;
 
-/*!
- * ignore
- */
+const _castNumber = function (path, num) {
+    const v = Number(num);
+    if (isNaN(v)) {
+        throw new CastError("number", num, path);
+    }
+    return v;
+};
 
-function handleBitwiseOperator(val) {
+export const handleBitwiseOperator = function (val) {
     const _this = this;
     if (is.array(val)) {
         return val.map((v) => {
@@ -19,18 +23,4 @@ function handleBitwiseOperator(val) {
     }
     // Assume trying to cast to number
     return _castNumber(_this.path, val);
-}
-
-/*!
- * ignore
- */
-
-function _castNumber(path, num) {
-    const v = Number(num);
-    if (isNaN(v)) {
-        throw new CastError("number", num, path);
-    }
-    return v;
-}
-
-module.exports = handleBitwiseOperator;
+};

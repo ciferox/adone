@@ -70,7 +70,6 @@
     "mongo-clean": "^1.2.2",
     "mongodb-topology-manager": "^1.0.13",
     "mongodb-version-manager": "^1.0.7",
-    "mongoose-long": "^0.1.1",
     "moving-average": "0.1.1",
     "mqtt": "^1.6.3",
     "mqtt-connection": "^2.1.1",

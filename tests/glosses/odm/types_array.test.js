@@ -126,12 +126,12 @@ describe("types array", () => {
 
         before((done) => {
             db = start();
-            N = db.model("arraySet", Schema({ arr: [Number] }));
-            S = db.model("arraySetString", Schema({ arr: [String] }));
-            B = db.model("arraySetBuffer", Schema({ arr: [Buffer] }));
-            M = db.model("arraySetMixed", Schema({ arr: [] }));
-            D = db.model("arraySetSubDocs", Schema({ arr: [{ name: String }] }));
-            ST = db.model("arrayWithSetters", Schema({
+            N = db.model("arraySet", new Schema({ arr: [Number] }));
+            S = db.model("arraySetString", new Schema({ arr: [String] }));
+            B = db.model("arraySetBuffer", new Schema({ arr: [Buffer] }));
+            M = db.model("arraySetMixed", new Schema({ arr: [] }));
+            D = db.model("arraySetSubDocs", new Schema({ arr: [{ name: String }] }));
+            ST = db.model("arrayWithSetters", new Schema({
                 arr: [{
                     type: String,
                     lowercase: true
@@ -477,7 +477,7 @@ describe("types array", () => {
         });
 
         it("applies setters (gh-3032)", (done) => {
-            let ST = db.model("setterArray", Schema({
+            let ST = db.model("setterArray", new Schema({
                 arr: [{
                     type: String,
                     lowercase: true
@@ -1123,7 +1123,7 @@ describe("types array", () => {
 
         it("applies setters (gh-3032)", (done) => {
             let db = start();
-            let ST = db.model("setterArray", Schema({
+            let ST = db.model("setterArray", new Schema({
                 arr: [{
                     type: String,
                     lowercase: true
@@ -1255,12 +1255,12 @@ describe("types array", () => {
 
         before((done) => {
             db = start();
-            N = db.model("arraySet", Schema({ arr: [Number] }));
-            S = db.model("arraySetString", Schema({ arr: [String] }));
-            B = db.model("arraySetBuffer", Schema({ arr: [Buffer] }));
-            M = db.model("arraySetMixed", Schema({ arr: [] }));
-            D = db.model("arraySetSubDocs", Schema({ arr: [{ name: String }] }));
-            ST = db.model("arrayWithSetters", Schema({
+            N = db.model("arraySet", new Schema({ arr: [Number] }));
+            S = db.model("arraySetString", new Schema({ arr: [String] }));
+            B = db.model("arraySetBuffer", new Schema({ arr: [Buffer] }));
+            M = db.model("arraySetMixed", new Schema({ arr: [] }));
+            D = db.model("arraySetSubDocs", new Schema({ arr: [{ name: String }] }));
+            ST = db.model("arrayWithSetters", new Schema({
                 arr: [{
                     type: String,
                     lowercase: true

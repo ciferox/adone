@@ -1,9 +1,9 @@
-const Document = require("../document");
-const EventEmitter = require("events").EventEmitter;
+import Document from "../document";
 const PromiseProvider = require("../promise_provider");
 
 const {
-    is
+    is,
+    std: { events: { EventEmitter } }
 } = adone;
 
 /**
@@ -12,37 +12,32 @@ const {
  * @param {Object} obj js object returned from the db
  * @param {MongooseDocumentArray} parentArr the parent array of this document
  * @param {Boolean} skipId
- * @inherits Document
+ * @inherits adone.odm.Document
  * @api private
  */
 
-function EmbeddedDocument(obj, parentArr, skipId, fields, index) {
-    if (parentArr) {
-        this.__parentArray = parentArr;
-        this.__parent = parentArr._parent;
-    } else {
-        this.__parentArray = undefined;
-        this.__parent = undefined;
+class EmbeddedDocument extends Document {
+    constructor(obj, parentArr, skipId, fields, index) {
+        super(obj, fields, skipId);
+        if (parentArr) {
+            this.__parentArray = parentArr;
+            this.__parent = parentArr._parent;
+        } else {
+            this.__parentArray = undefined;
+            this.__parent = undefined;
+        }
+        this.__index = index;
+
+        const _this = this;
+        this.on("isNew", (val) => {
+            _this.isNew = val;
+        });
+
+        _this.on("save", () => {
+            _this.constructor.emit("save", _this);
+        });
     }
-    this.__index = index;
-
-    Document.call(this, obj, fields, skipId);
-
-    const _this = this;
-    this.on("isNew", (val) => {
-        _this.isNew = val;
-    });
-
-    _this.on("save", () => {
-        _this.constructor.emit("save", _this);
-    });
 }
-
-/*!
- * Inherit from Document
- */
-EmbeddedDocument.prototype = Object.create(Document.prototype);
-EmbeddedDocument.prototype.constructor = EmbeddedDocument;
 
 for (const i in EventEmitter.prototype) {
     EmbeddedDocument[i] = EventEmitter.prototype[i];
@@ -213,7 +208,7 @@ EmbeddedDocument.prototype.inspect = function () {
 
 EmbeddedDocument.prototype.invalidate = function (path, err, val, first) {
     if (!this.__parent) {
-        Document.prototype.invalidate.call(this, path, err, val);
+        adone.odm.Document.prototype.invalidate.call(this, path, err, val);
         if (err.$isValidatorError) {
             return true;
         }
@@ -278,7 +273,7 @@ EmbeddedDocument.prototype.$isValid = function (path) {
 /**
  * Returns the top level document of this sub-document.
  *
- * @return {Document}
+ * @return {adone.odm.Document}
  */
 
 EmbeddedDocument.prototype.ownerDocument = function () {

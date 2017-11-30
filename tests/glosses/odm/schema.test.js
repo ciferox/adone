@@ -14,23 +14,8 @@ const {
     is
 } = adone;
 
-/**
- * Test Document constructor.
- */
-
-function TestDocument() {
-    Document.apply(this, arguments);
+class TestDocument extends Document {
 }
-
-/**
- * Inherits from Document.
- */
-
-TestDocument.prototype.__proto__ = Document.prototype;
-
-/*
- * Test.
- */
 
 describe("schema", () => {
     before(() => {
@@ -1374,11 +1359,11 @@ describe("schema", () => {
             });
 
             assert.doesNotThrow(() => {
-                Schema({ child: [{ parent: String }] });
+                new Schema({ child: [{ parent: String }] });
             });
 
             assert.doesNotThrow(() => {
-                Schema({ child: [{ parentArray: String }] });
+                new Schema({ child: [{ parentArray: String }] });
             });
 
             assert.doesNotThrow(() => {

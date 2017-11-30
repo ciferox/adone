@@ -1,19 +1,10 @@
-let Document;
 const utils = require("../../utils");
-
-/*!
- * exports
- */
-
-exports.compile = compile;
-exports.defineKey = defineKey;
 
 /*!
  * Compiles schemas.
  */
 
-function compile(tree, proto, prefix, options) {
-    Document = Document || require("../../document");
+const compile = function (tree, proto, prefix, options) {
     const keys = Object.keys(tree);
     let i = keys.length;
     const len = keys.length;
@@ -53,14 +44,13 @@ function compile(tree, proto, prefix, options) {
                 , options);
         }
     }
-}
+};
 
 /*!
  * Defines the accessor named prop on the incoming prototype.
  */
 
-function defineKey(prop, subprops, prototype, prefix, keys, options) {
-    Document = Document || require("../../document");
+const defineKey = function (prop, subprops, prototype, prefix, keys, options) {
     const path = (prefix ? `${prefix}.` : "") + prop;
     prefix = prefix || "";
 
@@ -75,7 +65,7 @@ function defineKey(prop, subprops, prototype, prefix, keys, options) {
                 }
 
                 if (!this.$__.getters[path]) {
-                    const nested = Object.create(Document.prototype, getOwnPropertyDescriptors(this));
+                    const nested = Object.create(adone.odm.Document.prototype, getOwnPropertyDescriptors(this));
 
                     // save scope for nested getters/setters
                     if (!prefix) {
@@ -121,7 +111,7 @@ function defineKey(prop, subprops, prototype, prefix, keys, options) {
                 return this.$__.getters[path];
             },
             set(v) {
-                if (v instanceof Document) {
+                if (v instanceof adone.odm.Document) {
                     v = v.toObject({ transform: false });
                 }
                 const doc = this.$__.scope || this;
@@ -140,11 +130,11 @@ function defineKey(prop, subprops, prototype, prefix, keys, options) {
             }
         });
     }
-}
+};
 
 // gets descriptors for all properties of `object`
 // makes all properties non-enumerable to match previous behavior to #2211
-function getOwnPropertyDescriptors(object) {
+const getOwnPropertyDescriptors = function (object) {
     const result = {};
 
     Object.getOwnPropertyNames(object).forEach((key) => {
@@ -158,4 +148,7 @@ function getOwnPropertyDescriptors(object) {
     });
 
     return result;
-}
+};
+
+exports.compile = compile;
+exports.defineKey = defineKey;

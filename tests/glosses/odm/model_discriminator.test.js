@@ -84,16 +84,16 @@ describe("model", () => {
         });
 
         it("can define static and instance methods", (done) => {
-            function BossBaseSchema() {
-                Schema.apply(this, arguments);
+            class BossBaseSchema extends Schema {
+                constructor(...args) {
+                    super(...args);
 
-                this.add({
-                    name: String,
-                    createdAt: Date
-                });
+                    this.add({
+                        name: String,
+                        createdAt: Date
+                    });
+                }
             }
-
-            util.inherits(BossBaseSchema, Schema);
 
             const PersonSchema = new BossBaseSchema();
             const BossSchema = new BossBaseSchema({ department: String });
@@ -206,26 +206,28 @@ describe("model", () => {
         });
 
         it("works with nested schemas (gh-2821)", (done) => {
-            const MinionSchema = function () {
-                mongoose.Schema.apply(this, arguments);
+            class MinionSchema extends Schema {
+                constructor(...args) {
+                    super(...args);
 
-                this.add({
-                    name: String
-                });
-            };
-            util.inherits(MinionSchema, mongoose.Schema);
+                    this.add({
+                        name: String
+                    });
+                }
+            }
 
-            const BaseSchema = function () {
-                mongoose.Schema.apply(this, arguments);
+            class BaseSchema extends Schema {
+                constructor(...args) {
+                    super(...args);
 
-                this.add({
-                    name: String,
-                    created_at: Date,
-                    minions: [new MinionSchema()]
-                });
-            };
-            util.inherits(BaseSchema, mongoose.Schema);
-
+                    this.add({
+                        name: String,
+                        created_at: Date,
+                        minions: [new MinionSchema()]
+                    });
+                }
+            }
+            
             const PersonSchema = new BaseSchema();
             const BossSchema = new BaseSchema({
                 department: String

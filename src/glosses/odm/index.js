@@ -1,11 +1,12 @@
-const Schema = require("./schema");
-const SchemaType = require("./schematype");
-const VirtualType = require("./virtualtype");
+import Schema from "./schema";
+import SchemaType from "./schematype";
+import VirtualType from "./virtualtype";
+import StateMachine from "./statemachine";
 const STATES = require("./connectionstate");
 const Types = require("./types");
-const Query = require("./query");
-const Model = require("./model");
-const Document = require("./document");
+import Query from "./query";
+import Model from "./model";
+import Document from "./document";
 const utils = require("./utils");
 const format = utils.toCollectionName;
 
@@ -13,7 +14,7 @@ const querystring = require("querystring");
 const saveSubdocs = require("./plugins/saveSubdocs");
 const validateBeforeSave = require("./plugins/validateBeforeSave");
 
-const Aggregate = require("./aggregate");
+import Aggregate from "./aggregate";
 const PromiseProvider = require("./promise_provider");
 const shardingPlugin = require("./plugins/sharding");
 
@@ -839,19 +840,12 @@ MongooseThenable.prototype.catch = function (onRejected) {
  * @api public
  */
 
-var mongoose = module.exports = exports = new Mongoose();
-
-
+const mongoose = module.exports = exports = new Mongoose();
 mongoose.utils = utils;
 mongoose.cast = require("./cast");
-mongoose.StateMachine = require("./statemachine");
+mongoose.StateMachine = StateMachine;
 
-mongoose.types = {
-    EmbeddedDocument: require("./types/embedded"),
-    DocumentArray: require("./types/documentarray"),
-    ObjectId: require("./types/objectid"),
-    Buffer: require("./types/buffer")
-};
+mongoose.types = Types;
 
 mongoose.selectPopulatedFields = require("./services/query/selectPopulatedFields");
 mongoose.updateValidators = require("./services/updateValidators");

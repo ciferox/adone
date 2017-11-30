@@ -3,15 +3,7 @@ const { StateMachine, utils, Schema } = adone.odm;
 const ObjectId = adone.odm.types.ObjectId;
 const MongooseBuffer = adone.odm.types.Buffer;
 
-/**
- * Setup.
- */
-
-const ActiveRoster = StateMachine.ctor("require", "init", "modify");
-
-/**
- * Test.
- */
+const states = ["require", "init", "modify"];
 
 describe("utils", () => {
     describe("toCollectionName", () => {
@@ -24,28 +16,28 @@ describe("utils", () => {
 
     describe("ActiveRoster", () => {
         it("should detect a path as required if it has been required", (done) => {
-            const ar = new ActiveRoster();
+            const ar = new StateMachine(...states);
             ar.require("hello");
             assert.equal(ar.paths.hello, "require");
             done();
         });
 
         it("should detect a path as inited if it has been inited", (done) => {
-            const ar = new ActiveRoster();
+            const ar = new StateMachine(...states);
             ar.init("hello");
             assert.equal(ar.paths.hello, "init");
             done();
         });
 
         it("should detect a path as modified", (done) => {
-            const ar = new ActiveRoster();
+            const ar = new StateMachine(...states);
             ar.modify("hello");
             assert.equal(ar.paths.hello, "modify");
             done();
         });
 
         it("should remove a path from an old state upon a state change", (done) => {
-            const ar = new ActiveRoster();
+            const ar = new StateMachine(...states);
             ar.init("hello");
             ar.modify("hello");
             assert.ok(!ar.states.init.hasOwnProperty("hello"));
@@ -54,7 +46,7 @@ describe("utils", () => {
         });
 
         it("forEach should be able to iterate through the paths belonging to one state", (done) => {
-            const ar = new ActiveRoster();
+            const ar = new StateMachine(...states);
             ar.init("hello");
             ar.init("goodbye");
             ar.modify("world");
@@ -66,7 +58,7 @@ describe("utils", () => {
         });
 
         it("forEach should be able to iterate through the paths in the union of two or more states", (done) => {
-            const ar = new ActiveRoster();
+            const ar = new StateMachine(...states);
             ar.init("hello");
             ar.init("goodbye");
             ar.modify("world");
@@ -78,7 +70,7 @@ describe("utils", () => {
         });
 
         it("forEach should iterate through all paths that have any state if given no state arguments", (done) => {
-            const ar = new ActiveRoster();
+            const ar = new StateMachine(...states);
             ar.init("hello");
             ar.init("goodbye");
             ar.modify("world");
@@ -90,7 +82,7 @@ describe("utils", () => {
         });
 
         it("should be able to detect if at least one path exists in a set of states", (done) => {
-            const ar = new ActiveRoster();
+            const ar = new StateMachine(...states);
             ar.init("hello");
             ar.modify("world");
             assert.ok(ar.some("init"));
@@ -103,7 +95,7 @@ describe("utils", () => {
         });
 
         it("should be able to `map` over the set of paths in a given state", (done) => {
-            const ar = new ActiveRoster();
+            const ar = new StateMachine(...states);
             ar.init("hello");
             ar.modify("world");
             ar.require("iAmTheWalrus");
@@ -115,7 +107,7 @@ describe("utils", () => {
         });
 
         it("should `map` over all states' paths if no states are specified in a `map` invocation", (done) => {
-            const ar = new ActiveRoster();
+            const ar = new StateMachine(...states);
             ar.init("hello");
             ar.modify("world");
             ar.require("iAmTheWalrus");

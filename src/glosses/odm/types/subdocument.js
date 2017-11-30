@@ -1,25 +1,25 @@
-const Document = require("../document");
+import Document from "../document";
 const PromiseProvider = require("../promise_provider");
 
 const {
     is
 } = adone;
 
-module.exports = Subdocument;
-
 /**
  * Subdocument constructor.
  *
- * @inherits Document
+ * @inherits adone.odm.Document
  * @api private
  */
 
-function Subdocument(value, fields, parent, skipId, options) {
-    this.$isSingleNested = true;
-    Document.call(this, value, fields, skipId, options);
+class Subdocument extends Document {
+    constructor(value, fields, parent, skipId, options) {
+        super(value, fields, skipId, options);
+        this.$isSingleNested = true;
+    }
 }
 
-Subdocument.prototype = Object.create(Document.prototype);
+module.exports = Subdocument;
 
 Subdocument.prototype.toBSON = function () {
     return this.toObject({
@@ -55,11 +55,11 @@ Subdocument.prototype.$isValid = function (path) {
     if (this.$parent && this.$basePath) {
         return this.$parent.$isValid([this.$basePath, path].join("."));
     }
-    return Document.prototype.$isValid.call(this, path);
+    return adone.odm.Document.prototype.$isValid.call(this, path);
 };
 
 Subdocument.prototype.markModified = function (path) {
-    Document.prototype.markModified.call(this, path);
+    adone.odm.Document.prototype.markModified.call(this, path);
     if (this.$parent && this.$basePath) {
         if (this.$parent.isDirectModified(this.$basePath)) {
             return;
@@ -69,7 +69,7 @@ Subdocument.prototype.markModified = function (path) {
 };
 
 Subdocument.prototype.$markValid = function (path) {
-    Document.prototype.$markValid.call(this, path);
+    adone.odm.Document.prototype.$markValid.call(this, path);
     if (this.$parent && this.$basePath) {
         this.$parent.$markValid([this.$basePath, path].join("."));
     }
@@ -80,7 +80,7 @@ Subdocument.prototype.invalidate = function (path, err, val) {
     // so validating an array subdoc gives the top-level doc back. Temporary
     // workaround for #5208 so we don't have circular errors.
     if (err !== this.ownerDocument().$__.validationError) {
-        Document.prototype.invalidate.call(this, path, err, val);
+        adone.odm.Document.prototype.invalidate.call(this, path, err, val);
     }
 
     if (this.$parent && this.$basePath) {
@@ -93,7 +93,7 @@ Subdocument.prototype.invalidate = function (path, err, val) {
 /**
  * Returns the top level document of this sub-document.
  *
- * @return {Document}
+ * @return {adone.odm.Document}
  */
 
 Subdocument.prototype.ownerDocument = function () {
@@ -127,7 +127,7 @@ Subdocument.prototype.parent = function () {
  * Null-out this subdoc
  *
  * @param {Object} [options]
- * @param {Function} [callback] optional callback for compatibility with Document.prototype.remove
+ * @param {Function} [callback] optional callback for compatibility with adone.odm.Document.prototype.remove
  */
 
 Subdocument.prototype.remove = function (options, callback) {

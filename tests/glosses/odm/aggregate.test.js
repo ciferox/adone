@@ -1,7 +1,3 @@
-/**
- * Module dependencies
- */
-
 const start = require("./common");
 const Aggregate = adone.odm.Aggregate; // require('../lib/aggregate');
 const mongoose = adone.odm;
@@ -539,11 +535,10 @@ describe("aggregate: ", () => {
                 model(db.model("Employee")).
                 group({ _id: "$dept" }).
                 exec((err, docs) => {
-                    let depts;
                     assert.ifError(err);
                     assert.equal(docs.length, 2);
 
-                    depts = docs.map((doc) => {
+                    const depts = docs.map((doc) => {
                         return doc._id;
                     });
                     assert.notEqual(depts.indexOf("sales"), -1);

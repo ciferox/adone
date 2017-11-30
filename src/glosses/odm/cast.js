@@ -1,7 +1,3 @@
-/*!
- * Module dependencies.
- */
-
 const StrictModeError = require("./error/strict");
 const Types = require("./schema/index");
 const util = require("util");
@@ -12,6 +8,31 @@ const {
 } = adone;
 
 const ALLOWED_GEOWITHIN_GEOJSON_TYPES = ["Polygon", "MultiPolygon"];
+
+const _cast = function (val, numbertype, context) {
+    if (is.array(val)) {
+        val.forEach((item, i) => {
+            if (is.array(item) || utils.isObject(item)) {
+                return _cast(item, numbertype, context);
+            }
+            val[i] = numbertype.castForQueryWrapper({ val: item, context });
+        });
+    } else {
+        const nearKeys = Object.keys(val);
+        let nearLen = nearKeys.length;
+        while (nearLen--) {
+            const nkey = nearKeys[nearLen];
+            const item = val[nkey];
+            if (is.array(item) || utils.isObject(item)) {
+                _cast(item, numbertype, context);
+                val[nkey] = item;
+            } else {
+                val[nkey] = numbertype.castForQuery({ val: item, context });
+            }
+        }
+    }
+};
+
 
 /**
  * Handles internal casting for query filters.
@@ -36,13 +57,14 @@ module.exports = function cast(schema, obj, options, context) {
     let path;
     let type;
     let val;
+    let k;
 
     while (i--) {
         path = paths[i];
         val = obj[path];
 
         if (path === "$or" || path === "$nor" || path === "$and") {
-            var k = val.length;
+            k = val.length;
 
             while (k--) {
                 val[k] = cast(schema, val[k], options, context);
@@ -71,11 +93,11 @@ module.exports = function cast(schema, obj, options, context) {
 
             if (!schematype) {
                 // Handle potential embedded array queries
-                var split = path.split("."),
-                    j = split.length,
-                    pathFirstHalf,
-                    pathLastHalf,
-                    remainingConds;
+                const split = path.split(".");
+                let j = split.length;
+                let pathFirstHalf;
+                let pathLastHalf;
+                let remainingConds;
 
                 // Find the part of the var path that is a path of the Schema
                 while (j--) {
@@ -141,7 +163,7 @@ module.exports = function cast(schema, obj, options, context) {
                                 || value.$polygon;
 
                             if (!withinType) {
-                                throw new Error(`Bad $within paramater: ${  JSON.stringify(val)}`);
+                                throw new Error(`Bad $within paramater: ${JSON.stringify(val)}`);
                             }
 
                             value = withinType;
@@ -178,7 +200,7 @@ module.exports = function cast(schema, obj, options, context) {
                                 }
                                 const geoWithinType = value.$geometry.type;
                                 if (ALLOWED_GEOWITHIN_GEOJSON_TYPES.indexOf(geoWithinType) === -1) {
-                                    throw new Error(`Invalid geoJSON type for $geoWithin "${ 
+                                    throw new Error(`Invalid geoJSON type for $geoWithin "${
                                         geoWithinType}", must be "Polygon" or "MultiPolygon"`);
                                 }
                                 value = value.$geometry.coordinates;
@@ -220,8 +242,8 @@ module.exports = function cast(schema, obj, options, context) {
                         context
                     });
                 } else {
-                    var ks = Object.keys(val),
-                        $cond;
+                    const ks = Object.keys(val);
+                    let $cond;
 
                     k = ks.length;
 
@@ -280,27 +302,3 @@ module.exports = function cast(schema, obj, options, context) {
 
     return obj;
 };
-
-function _cast(val, numbertype, context) {
-    if (is.array(val)) {
-        val.forEach((item, i) => {
-            if (is.array(item) || utils.isObject(item)) {
-                return _cast(item, numbertype, context);
-            }
-            val[i] = numbertype.castForQueryWrapper({ val: item, context });
-        });
-    } else {
-        const nearKeys = Object.keys(val);
-        let nearLen = nearKeys.length;
-        while (nearLen--) {
-            const nkey = nearKeys[nearLen];
-            const item = val[nkey];
-            if (is.array(item) || utils.isObject(item)) {
-                _cast(item, numbertype, context);
-                val[nkey] = item;
-            } else {
-                val[nkey] = numbertype.castForQuery({ val: item, context });
-            }
-        }
-    }
-}

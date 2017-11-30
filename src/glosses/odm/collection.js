@@ -1,7 +1,3 @@
-/*!
- * Module dependencies.
- */
-
 const EventEmitter = require("events").EventEmitter;
 const STATES = require("./connectionstate");
 

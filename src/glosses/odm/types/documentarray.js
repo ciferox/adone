@@ -1,8 +1,7 @@
 const MongooseArray = require("./array");
 const ObjectId = require("./objectid");
-const ObjectIdSchema = require("../schema/objectid");
+import ObjectIdSchema from "../schema/objectid";
 const utils = require("../utils");
-const Document = require("../document");
 
 const {
     is
@@ -13,7 +12,7 @@ const {
  *
  * @param {Array} values
  * @param {String} path the path to this array
- * @param {Document} doc parent document
+ * @param {adone.odm.Document} doc parent document
  * @api private
  * @return {MongooseDocumentArray}
  * @inherits MongooseArray
@@ -57,7 +56,7 @@ function MongooseDocumentArray(values, path, doc) {
     // can happen if there was a null somewhere up the chain (see #3020 && #3034)
     // RB Jun 17, 2015 updated to check for presence of expected paths instead
     // to make more proof against unusual node environments
-    if (doc && doc instanceof Document) {
+    if (doc && doc instanceof adone.odm.Document) {
         arr._parent = doc;
         arr._schema = doc.schema.path(path);
         arr._handlers = {
@@ -172,7 +171,7 @@ MongooseDocumentArray.mixin = {
 
             if (is.null(_id) || is.undefined(_id)) {
                 continue;
-            } else if (_id instanceof Document) {
+            } else if (_id instanceof adone.odm.Document) {
                 sid || (sid = String(id));
                 if (sid == _id._id) {
                     return this[i];

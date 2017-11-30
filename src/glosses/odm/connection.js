@@ -1,7 +1,7 @@
 const utils = require("./utils");
 const EventEmitter = require("events").EventEmitter;
 const driver = global.MONGOOSE_DRIVER_PATH || "./drivers/node-mongodb-native";
-const Schema = require("./schema");
+import Schema from "./schema";
 const Collection = require(`${driver}/collection`);
 const STATES = require("./connectionstate");
 const MongooseError = require("./error");

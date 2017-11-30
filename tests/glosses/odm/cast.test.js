@@ -68,8 +68,7 @@ describe("cast: ", () => {
     describe("bitwise query operators: ", () => {
         it("with a number", (done) => {
             const schema = new Schema({ x: Buffer });
-            assert.deepEqual(cast(schema, { x: { $bitsAllClear: 3 } }),
-                { x: { $bitsAllClear: 3 } });
+            assert.deepEqual(cast(schema, { x: { $bitsAllClear: 3 } }), { x: { $bitsAllClear: 3 } });
             done();
         });
 

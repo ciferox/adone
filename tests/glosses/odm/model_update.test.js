@@ -1065,11 +1065,11 @@ describe("model: update:", () => {
         });
 
         it("avoids nested paths if setting parent path (gh-4911)", (done) => {
-            var EmbeddedSchema = mongoose.Schema({
+            var EmbeddedSchema = new mongoose.Schema({
                 embeddedField: String
             });
 
-            var ParentSchema = mongoose.Schema({
+            var ParentSchema = new mongoose.Schema({
                 embedded: EmbeddedSchema
             });
 
@@ -1640,7 +1640,7 @@ describe("model: update:", () => {
         });
 
         it("mixed type casting (gh-3305)", (done) => {
-            var Schema = mongoose.Schema({}, { strict: false });
+            var Schema = new mongoose.Schema({}, { strict: false });
             var Model = db.model('gh3305', Schema);
 
             Model.create({}, function (error, m) {
@@ -1656,7 +1656,7 @@ describe("model: update:", () => {
         });
 
         it("replaceOne", (done) => {
-            var schema = mongoose.Schema({ name: String, age: Number }, {
+            var schema = new mongoose.Schema({ name: String, age: Number }, {
                 versionKey: false
             });
             var Model = db.model('gh3998_r1', schema);
@@ -1678,7 +1678,7 @@ describe("model: update:", () => {
         });
 
         it("mixed nested type casting (gh-3337)", (done) => {
-            var Schema = mongoose.Schema({ attributes: {} }, { strict: true });
+            var Schema = new mongoose.Schema({ attributes: {} }, { strict: true });
             var Model = db.model('gh3337', Schema);
 
             Model.create({}, function (error, m) {
@@ -1763,7 +1763,7 @@ describe("model: update:", () => {
         });
 
         it("works with buffers (gh-3496)", (done) => {
-            var Schema = mongoose.Schema({ myBufferField: Buffer });
+            var Schema = new mongoose.Schema({ myBufferField: Buffer });
             var Model = db.model('gh3496', Schema);
 
             Model.update({}, { myBufferField: new Buffer(1) }, function (error) {
@@ -1773,7 +1773,7 @@ describe("model: update:", () => {
         });
 
         it("dontThrowCastError option (gh-3512)", (done) => {
-            var Schema = mongoose.Schema({ name: String });
+            var Schema = new mongoose.Schema({ name: String });
             var Model = db.model('gh3412', Schema);
 
             var badQuery = { _id: 'foo' };
@@ -1786,7 +1786,7 @@ describe("model: update:", () => {
         });
 
         it(".update(doc) (gh-3221)", (done) => {
-            var Schema = mongoose.Schema({ name: String });
+            var Schema = new mongoose.Schema({ name: String });
             var Model = db.model('gh3221', Schema);
 
             var query = Model.update({ name: 'Val' });
@@ -1822,7 +1822,7 @@ describe("model: update:", () => {
         });
 
         it("middleware update with exec (gh-3549)", (done) => {
-            var Schema = mongoose.Schema({ name: String });
+            var Schema = new mongoose.Schema({ name: String });
 
             Schema.pre('update', function (next) {
                 this.update({ name: 'Val' });
@@ -1845,7 +1845,7 @@ describe("model: update:", () => {
         });
 
         it("casting $push with overwrite (gh-3564)", (done) => {
-            var schema = mongoose.Schema({
+            var schema = new mongoose.Schema({
                 topicId: Number,
                 name: String,
                 followers: [Number]
@@ -2225,16 +2225,14 @@ describe("model: update:", () => {
             });
         });
 
-        it("update handles casting with mongoose-long (gh-4283)", (done) => {
-            require('mongoose-long')(mongoose);
-
+        it.only("update handles casting with Long (gh-4283)", (done) => {
             var Model = db.model('gh4283', {
                 number: { type: mongoose.Types.Long }
             });
 
-            Model.create({ number: mongoose.mongo.Long.fromString('0') }, function (error) {
+            Model.create({ number: adone.database.mongo.Long.fromString('0') }, function (error) {
                 assert.ifError(error);
-                Model.update({}, { $inc: { number: mongoose.mongo.Long.fromString('2147483648') } }, function (error) {
+                Model.update({}, { $inc: { number: adone.database.mongo.Long.fromString('2147483648') } }, function (error) {
                     assert.ifError(error);
                     Model.findOne({ number: { $type: 18 } }, function (error, doc) {
                         assert.ifError(error);
@@ -2405,7 +2403,7 @@ describe("model: update:", () => {
         });
 
         it("findOneAndUpdate with nested arrays (gh-5032)", (done) => {
-            var schema = Schema({
+            var schema = new Schema({
                 name: String,
                 inputs: [[String]] // Array of Arrays of Strings
             });
@@ -2722,7 +2720,7 @@ describe("model: update:", () => {
         });
 
         it("$pull with updateValidators and $in (gh-5744)", (done) => {
-            var exampleSchema = mongoose.Schema({
+            var exampleSchema = new mongoose.Schema({
                 subdocuments: [{
                     name: String
                 }]
@@ -2827,6 +2825,24 @@ describe("model: update:", () => {
                 var expected = 'Parameter "filter" to updateMany() must be an object';
                 assert.ok(error.message.indexOf(expected) !== -1, error.message);
                 done();
+            });
+        });
+
+        it('upsert: 1 (gh-5839)', function (done) {
+            var schema = new mongoose.Schema({
+                name: String
+            });
+
+            var Model = db.model('gh3677', schema);
+
+            var opts = { upsert: 1 };
+            Model.update({ name: 'Test' }, { name: 'Test2' }, opts, function (error) {
+                assert.ifError(error);
+                Model.findOne({}, function (error, doc) {
+                    assert.ifError(error);
+                    assert.equal(doc.name, 'Test2');
+                    done();
+                });
             });
         });
 

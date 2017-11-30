@@ -1,4 +1,4 @@
-const SchemaType = require("../schematype");
+import SchemaType from "../schematype";
 const utils = require("../utils");
 
 const {
@@ -13,22 +13,49 @@ const {
  * @inherits SchemaType
  * @api public
  */
+export default class Mixed extends SchemaType {
+    constructor(path, options) {
+        super(path, options, "Mixed");
 
-function Mixed(path, options) {
-    if (options && options.default) {
-        const def = options.default;
-        if (is.array(def) && def.length === 0) {
-            // make sure empty array defaults are handled
-            options.default = Array;
-        } else if (!options.shared && utils.isObject(def) && Object.keys(def).length === 0) {
-            // prevent odd "shared" objects between documents
-            options.default = function () {
-                return {};
-            };
+        if (options && options.default) {
+            const def = options.default;
+            if (is.array(def) && def.length === 0) {
+                // make sure empty array defaults are handled
+                options.default = Array;
+            } else if (!options.shared && utils.isObject(def) && Object.keys(def).length === 0) {
+                // prevent odd "shared" objects between documents
+                options.default = function () {
+                    return {};
+                };
+            }
         }
     }
 
-    SchemaType.call(this, path, options, "Mixed");
+    /**
+     * Casts `val` for Mixed.
+     *
+     * _this is a no-op_
+     *
+     * @param {Object} value to cast
+     * @api private
+     */
+    cast(val) {
+        return val;
+    }
+
+    /**
+     * Casts contents for queries.
+     *
+     * @param {String} $cond
+     * @param {any} [val]
+     * @api private
+     */
+    castForQuery($cond, val) {
+        if (arguments.length === 2) {
+            return val;
+        }
+        return $cond;
+    }
 }
 
 /**
@@ -38,43 +65,3 @@ function Mixed(path, options) {
  * @api public
  */
 Mixed.schemaName = "Mixed";
-
-/*!
- * Inherits from SchemaType.
- */
-Mixed.prototype = Object.create(SchemaType.prototype);
-Mixed.prototype.constructor = Mixed;
-
-/**
- * Casts `val` for Mixed.
- *
- * _this is a no-op_
- *
- * @param {Object} value to cast
- * @api private
- */
-
-Mixed.prototype.cast = function (val) {
-    return val;
-};
-
-/**
- * Casts contents for queries.
- *
- * @param {String} $cond
- * @param {any} [val]
- * @api private
- */
-
-Mixed.prototype.castForQuery = function ($cond, val) {
-    if (arguments.length === 2) {
-        return val;
-    }
-    return $cond;
-};
-
-/*!
- * Module exports.
- */
-
-module.exports = Mixed;

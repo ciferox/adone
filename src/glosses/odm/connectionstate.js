@@ -1,8 +1,3 @@
-
-/*!
- * Connection states
- */
-
 const STATES = module.exports = exports = Object.create(null);
 
 const disconnected = "disconnected";

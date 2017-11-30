@@ -2780,11 +2780,11 @@ describe("model: populate:", () => {
         before((done) => {
             db = start();
 
-            C = db.model('Comment', Schema({
+            C = db.model('Comment', new Schema({
                 body: 'string', title: String
             }), 'comments_' + random());
 
-            U = db.model('User', Schema({
+            U = db.model('User', new Schema({
                 name: 'string',
                 comments: [{ type: Schema.ObjectId, ref: 'Comment' }],
                 comment: { type: Schema.ObjectId, ref: 'Comment' }
@@ -2998,12 +2998,12 @@ describe("model: populate:", () => {
         });
 
         it("with nonexistant refPath (gh-4637)", (done) => {
-            var baseballSchema = mongoose.Schema({
+            var baseballSchema = new mongoose.Schema({
                 seam: String
             });
             var Baseball = db.model('Baseball', baseballSchema);
 
-            var ballSchema = mongoose.Schema({
+            var ballSchema = new mongoose.Schema({
                 league: String,
                 kind: String,
                 ball: {
@@ -3012,7 +3012,7 @@ describe("model: populate:", () => {
                 }
             });
 
-            var basketSchema = mongoose.Schema({
+            var basketSchema = new mongoose.Schema({
                 balls: [ballSchema]
             });
             var Basket = db.model('Basket', basketSchema);

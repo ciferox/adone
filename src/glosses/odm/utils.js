@@ -1,7 +1,3 @@
-/*!
- * Module dependencies.
- */
-
 const Decimal = require("./types/decimal128");
 const ObjectId = require("./types/objectid");
 const cloneRegExp = require("regexp-clone");
@@ -15,7 +11,6 @@ const {
 
 let MongooseBuffer;
 let MongooseArray;
-let Document;
 
 /*!
  * Produces a collection name from model `name`.
@@ -25,7 +20,7 @@ let Document;
  * @api private
  */
 
-exports.toCollectionName = function (name, options) {
+export const toCollectionName = function (name, options) {
     options = options || {};
     if (name === "system.profile") {
         return name;
@@ -47,7 +42,7 @@ exports.toCollectionName = function (name, options) {
  * @deprecated remove in 4.x gh-1350
  */
 
-exports.pluralization = [
+export const pluralization = [
     [/(m)an$/gi, "$1en"],
     [/(pe)rson$/gi, "$1ople"],
     [/(child)$/gi, "$1ren"],
@@ -71,7 +66,7 @@ exports.pluralization = [
     [/([^a-z])$/, "$1"],
     [/$/gi, "s"]
 ];
-const rules = exports.pluralization;
+const rules = pluralization;
 
 /**
  * Uncountable words.
@@ -80,7 +75,7 @@ const rules = exports.pluralization;
  * @api public
  */
 
-exports.uncountables = [
+export const uncountables = [
     "advice",
     "energy",
     "excretion",
@@ -109,7 +104,6 @@ exports.uncountables = [
     "status",
     "media"
 ];
-const uncountables = exports.uncountables;
 
 /*!
  * Pluralize function.
@@ -143,7 +137,7 @@ function pluralize(str) {
  * @api private
  */
 
-exports.deepEqual = function deepEqual(a, b) {
+export const deepEqual = function deepEqual(a, b) {
     if (a === b) {
         return true;
     }
@@ -182,7 +176,7 @@ exports.deepEqual = function deepEqual(a, b) {
     }
 
     if (is.buffer(a)) {
-        return exports.buffer.areEqual(a, b);
+        return buffer.areEqual(a, b);
     }
 
     if (isMongooseObject(a)) {
@@ -243,7 +237,7 @@ exports.deepEqual = function deepEqual(a, b) {
  * @api private
  */
 
-exports.clone = function clone(obj, options) {
+export const clone = function clone(obj, options) {
     if (is.nil(obj)) {
         return obj;
     }
@@ -260,7 +254,7 @@ exports.clone = function clone(obj, options) {
     }
 
     if (obj.constructor) {
-        switch (exports.getFunctionName(obj.constructor)) {
+        switch (getFunctionName(obj.constructor)) {
             case "Object":
                 return cloneObject(obj, options);
             case "Date":
@@ -283,7 +277,7 @@ exports.clone = function clone(obj, options) {
         return Decimal.fromString(obj.toString());
     }
 
-    if (!obj.constructor && exports.isObject(obj)) {
+    if (!obj.constructor && isObject(obj)) {
         // object created with Object.create(null)
         return cloneObject(obj, options);
     }
@@ -292,13 +286,11 @@ exports.clone = function clone(obj, options) {
         return obj.valueOf();
     }
 };
-const clone = exports.clone;
 
 /*!
  * TODO: replace with Object.assign() in 5.0
  */
-
-exports.assign = function (target) {
+export const assign = function (target) {
     for (let i = 1; i < arguments.length; ++i) {
         const nextSource = arguments[i];
 
@@ -378,7 +370,7 @@ function cloneArray(arr, options) {
  * @api private
  */
 
-exports.options = function (defaults, options) {
+export const options = function (defaults, options) {
     let keys = Object.keys(defaults),
         i = keys.length,
         k;
@@ -401,7 +393,7 @@ exports.options = function (defaults, options) {
  * @api private
  */
 
-exports.random = function () {
+export const random = function () {
     return Math.random().toString().substr(3);
 };
 
@@ -413,7 +405,7 @@ exports.random = function () {
  * @api private
  */
 
-exports.merge = function merge(to, from, options) {
+export const merge = function merge(to, from, options) {
     options = options || {};
     const keys = Object.keys(from);
     let i = 0;
@@ -425,7 +417,7 @@ exports.merge = function merge(to, from, options) {
             key = keys[i++];
             if (is.nil(to[key])) {
                 to[key] = from[key];
-            } else if (exports.isObject(from[key])) {
+            } else if (isObject(from[key])) {
                 merge(to[key], from[key], options);
             } else if (options.overwrite) {
                 to[key] = from[key];
@@ -436,7 +428,7 @@ exports.merge = function merge(to, from, options) {
             key = keys[len];
             if (is.nil(to[key])) {
                 to[key] = from[key];
-            } else if (exports.isObject(from[key])) {
+            } else if (isObject(from[key])) {
                 merge(to[key], from[key], options);
             } else if (options.overwrite) {
                 to[key] = from[key];
@@ -448,20 +440,19 @@ exports.merge = function merge(to, from, options) {
 /*!
  * Applies toObject recursively.
  *
- * @param {Document|Array|Object} obj
+ * @param {adone.odm.Document|Array|Object} obj
  * @return {Object}
  * @api private
  */
 
-exports.toObject = function toObject(obj) {
-    Document || (Document = require("./document"));
+export const toObject = function toObject(obj) {
     let ret;
 
-    if (exports.isNullOrUndefined(obj)) {
+    if (isNullOrUndefined(obj)) {
         return obj;
     }
 
-    if (obj instanceof Document) {
+    if (obj instanceof adone.odm.Document) {
         return obj.toObject();
     }
 
@@ -475,8 +466,8 @@ exports.toObject = function toObject(obj) {
         return ret;
     }
 
-    if ((obj.constructor && exports.getFunctionName(obj.constructor) === "Object") ||
-        (!obj.constructor && exports.isObject(obj))) {
+    if ((obj.constructor && getFunctionName(obj.constructor) === "Object") ||
+        (!obj.constructor && isObject(obj))) {
         ret = {};
 
         for (const k in obj) {
@@ -497,7 +488,7 @@ exports.toObject = function toObject(obj) {
  * @return {Boolean}
  */
 
-exports.isObject = function (arg) {
+export const isObject = function (arg) {
     if (is.buffer(arg)) {
         return true;
     }
@@ -509,7 +500,7 @@ exports.isObject = function (arg) {
  * @api private
  */
 
-exports.args = sliced;
+export const args = sliced;
 
 /*!
  * process.nextTick helper.
@@ -522,7 +513,7 @@ exports.args = sliced;
  * @api private
  */
 
-exports.tick = function tick(callback) {
+export const tick = function tick(callback) {
     if (!is.function(callback)) {
         return;
     }
@@ -548,16 +539,14 @@ exports.tick = function tick(callback) {
  * @api private
  */
 
-exports.isMongooseObject = function (v) {
-    Document || (Document = require("./document"));
+export const isMongooseObject = function (v) {
     MongooseArray || (MongooseArray = require("./types").Array);
     MongooseBuffer || (MongooseBuffer = require("./types").Buffer);
 
-    return v instanceof Document ||
+    return v instanceof adone.odm.Document ||
         (v && v.isMongooseArray) ||
         (v && v.isMongooseBuffer);
 };
-var isMongooseObject = exports.isMongooseObject;
 
 /*!
  * Converts `expires` options of index objects to `expiresAfterSeconds` options for MongoDB.
@@ -566,7 +555,7 @@ var isMongooseObject = exports.isMongooseObject;
  * @api private
  */
 
-exports.expires = function expires(object) {
+export const expires = function expires(object) {
     if (!(object && object.constructor.name === "Object")) {
         return;
     }
@@ -603,14 +592,11 @@ function PopulateOptions(path, select, match, options, model, subPopulate) {
 // make it compatible with utils.clone
 PopulateOptions.prototype.constructor = Object;
 
-// expose
-exports.PopulateOptions = PopulateOptions;
-
 /*!
  * populate helper
  */
 
-exports.populate = function populate(path, select, model, match, options, subPopulate) {
+export const populate = function populate(path, select, model, match, options, subPopulate) {
     // The order of select/conditions args is opposite Model.find but
     // necessary to keep backward compatibility (select could be
     // an array, string, or object literal).
@@ -623,11 +609,11 @@ exports.populate = function populate(path, select, model, match, options, subPop
 
         if (is.array(path)) {
             return path.map((o) => {
-                return exports.populate(o)[0];
+                return populate(o)[0];
             });
         }
 
-        if (exports.isObject(path)) {
+        if (isObject(path)) {
             match = path.match;
             options = path.options;
             select = path.select;
@@ -646,12 +632,12 @@ exports.populate = function populate(path, select, model, match, options, subPop
     }
 
     if (typeof subPopulate === "object") {
-        subPopulate = exports.populate(subPopulate);
+        subPopulate = populate(subPopulate);
     }
 
     const ret = [];
     const paths = path.split(" ");
-    options = exports.clone(options, { retainKeyOrder: true });
+    options = clone(options, { retainKeyOrder: true });
     for (let i = 0; i < paths.length; ++i) {
         ret.push(new PopulateOptions(paths[i], select, match, options, model, subPopulate));
     }
@@ -666,7 +652,7 @@ exports.populate = function populate(path, select, model, match, options, subPop
  * @param {Object} obj
  */
 
-exports.getValue = function (path, obj, map) {
+export const getValue = function (path, obj, map) {
     return mpath.get(path, obj, "_doc", map);
 };
 
@@ -678,7 +664,7 @@ exports.getValue = function (path, obj, map) {
  * @param {Object} obj
  */
 
-exports.setValue = function (path, val, obj, map) {
+export const setValue = function (path, val, obj, map) {
     mpath.set(path, val, obj, "_doc", map);
 };
 
@@ -690,8 +676,8 @@ exports.setValue = function (path, val, obj, map) {
  * @private
  */
 
-exports.object = {};
-exports.object.vals = function vals(o) {
+export const object = {};
+object.vals = function vals(o) {
     let keys = Object.keys(o),
         i = keys.length,
         ret = [];
@@ -704,10 +690,10 @@ exports.object.vals = function vals(o) {
 };
 
 /*!
- * @see exports.options
+ * @see export const options
  */
 
-exports.object.shallowCopy = exports.options;
+object.shallowCopy = options;
 
 /*!
  * Safer helper for hasOwnProperty checks
@@ -717,7 +703,7 @@ exports.object.shallowCopy = exports.options;
  */
 
 const hop = Object.prototype.hasOwnProperty;
-exports.object.hasOwnProperty = function (obj, prop) {
+object.hasOwnProperty = function (obj, prop) {
     return hop.call(obj, prop);
 };
 
@@ -727,7 +713,7 @@ exports.object.hasOwnProperty = function (obj, prop) {
  * @return {Boolean}
  */
 
-exports.isNullOrUndefined = function (val) {
+export const isNullOrUndefined = function (val) {
     return is.nil(val);
 };
 
@@ -735,7 +721,7 @@ exports.isNullOrUndefined = function (val) {
  * ignore
  */
 
-exports.array = {};
+export const array = {};
 
 /*!
  * Flattens an array.
@@ -748,7 +734,7 @@ exports.array = {};
  * @private
  */
 
-exports.array.flatten = function flatten(arr, filter, ret) {
+array.flatten = function flatten(arr, filter, ret) {
     ret || (ret = []);
 
     arr.forEach((item) => {
@@ -776,7 +762,7 @@ exports.array.flatten = function flatten(arr, filter, ret) {
  * @private
  */
 
-exports.array.unique = function (arr) {
+array.unique = function (arr) {
     const primitives = {};
     const ids = {};
     const ret = [];
@@ -809,8 +795,9 @@ exports.array.unique = function (arr) {
  * @param {Object} b
  */
 
-exports.buffer = {};
-exports.buffer.areEqual = function (a, b) {
+export const pluralizationbuffer = {};
+const buffer = {};
+buffer.areEqual = function (a, b) {
     if (!is.buffer(a)) {
         return false;
     }
@@ -828,14 +815,14 @@ exports.buffer.areEqual = function (a, b) {
     return true;
 };
 
-exports.getFunctionName = function (fn) {
+export const getFunctionName = function (fn) {
     if (fn.name) {
         return fn.name;
     }
     return (fn.toString().trim().match(/^function\s*([^\s(]+)/) || [])[1];
 };
 
-exports.decorate = function (destination, source) {
+export const decorate = function (destination, source) {
     for (const key in source) {
         destination[key] = source[key];
     }
@@ -849,7 +836,7 @@ exports.decorate = function (destination, source) {
  * @api private
  */
 
-exports.mergeClone = function (to, fromObj) {
+export const mergeClone = function (to, fromObj) {
     const keys = Object.keys(fromObj);
     const len = keys.length;
     let i = 0;
@@ -860,24 +847,24 @@ exports.mergeClone = function (to, fromObj) {
         if (is.undefined(to[key])) {
             // make sure to retain key order here because of a bug handling the $each
             // operator in mongodb 2.4.4
-            to[key] = exports.clone(fromObj[key], {
+            to[key] = clone(fromObj[key], {
                 retainKeyOrder: 1,
                 flattenDecimals: false
             });
         } else {
-            if (exports.isObject(fromObj[key])) {
+            if (isObject(fromObj[key])) {
                 let obj = fromObj[key];
                 if (isMongooseObject(fromObj[key]) && !fromObj[key].isMongooseBuffer) {
                     obj = obj.toObject({ transform: false, virtuals: false });
                 }
                 if (fromObj[key].isMongooseBuffer) {
-                    obj = new Buffer(obj);
+                    obj = Buffer.from(obj);
                 }
-                exports.mergeClone(to[key], obj);
+                mergeClone(to[key], obj);
             } else {
                 // make sure to retain key order here because of a bug handling the
                 // $each operator in mongodb 2.4.4
-                to[key] = exports.clone(fromObj[key], {
+                to[key] = clone(fromObj[key], {
                     retainKeyOrder: 1,
                     flattenDecimals: false
                 });
@@ -894,7 +881,7 @@ exports.mergeClone = function (to, fromObj) {
  * @api private
  */
 
-exports.each = function (arr, fn) {
+export const each = function (arr, fn) {
     for (let i = 0; i < arr.length; ++i) {
         fn(arr[i]);
     }
@@ -904,4 +891,4 @@ exports.each = function (arr, fn) {
  * ignore
  */
 
-exports.noop = function () { };
+export const noop = function () { };

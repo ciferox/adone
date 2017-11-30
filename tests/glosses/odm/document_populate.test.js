@@ -6,23 +6,9 @@ const Schema = mongoose.Schema;
 const ObjectId = Schema.ObjectId;
 const Document = adone.odm.Document;
 
-/**
- * Setup.
- */
-
-/**
- * Test Document constructor.
- */
-
-function TestDocument() {
-    Document.apply(this, arguments);
+class TestDocument extends Document {
 }
 
-/**
- * Inherits from Document.
- */
-
-TestDocument.prototype.__proto__ = Document.prototype;
 
 /**
  * Set a dummy schema to simulate compilation.

@@ -3,7 +3,7 @@ const mongoose = adone.odm;
 const random = adone.odm.utils.random;
 const setValue = adone.odm.utils.setValue;
 const MongooseDocumentArray = mongoose.Types.DocumentArray;
-const { DocumentArray, EmbeddedDocument } = adone.odm.types;
+const { DocumentArray, Embedded } = adone.odm.types;
 const Schema = mongoose.Schema;
 const collection = `types.documentarray_${random()}`;
 
@@ -13,14 +13,14 @@ const {
 
 function TestDoc(schema) {
     const Subdocument = function () {
-        EmbeddedDocument.call(this, {}, new DocumentArray());
+        Embedded.call(this, {}, new DocumentArray());
     };
 
     /**
-   * Inherits from EmbeddedDocument.
+   * Inherits from Embedded.
    */
 
-    Subdocument.prototype.__proto__ = EmbeddedDocument.prototype;
+    Subdocument.prototype.__proto__ = Embedded.prototype;
 
     /**
    * Set schema.

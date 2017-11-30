@@ -9,3 +9,4 @@ exports.Decimal128 = require("./decimal128");
 exports.ObjectId = require("./objectid");
 
 exports.Subdocument = require("./subdocument");
+exports.Long = adone.database.mongo.Long;

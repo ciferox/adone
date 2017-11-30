@@ -2072,7 +2072,7 @@ describe("Query", () => {
         });
 
         it("slice respects schema projections (gh-5450)", (done) => {
-            var gameSchema = Schema({
+            var gameSchema = new Schema({
                 name: String,
                 developer: {
                     type: String,

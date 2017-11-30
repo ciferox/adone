@@ -2,9 +2,9 @@ const {
     is
 } = adone;
 
-const Types = {
-    Number: require("../number")
-};
+const Types = adone.lazify({
+    Number: "../number"
+}, null, require);
 
 /*!
  * @ignore

@@ -1097,7 +1097,7 @@ describe("connections:", () => {
     });
 
     describe("errors", () => {
-        it("event fires with one listener", function (done) {
+        it.skip("event fires with one listener", function (done) {
             this.timeout(1000);
             const db = start({ uri: "mongodb://whatever23939.localhost/fakeeee?connectTimeoutMS=500", noErrorListener: 1 });
             db.on("error", () => {
