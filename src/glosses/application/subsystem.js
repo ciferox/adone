@@ -10,17 +10,32 @@ const {
     }
 } = adone;
 
+const NAME_SYMBOL = Symbol();
+const PARENT_SYMBOL = Symbol();
 const STATE_SYMBOL = Symbol.for("application.Subsystem#state");
 const SUBSYSTEMS_SYMBOL = Symbol.for("application.Subsystem#subsystems");
 
 export default class Subsystem extends adone.event.AsyncEmitter {
-    constructor({ name = null } = {}) {
+    constructor({ name } = {}) {
         super();
 
-        this.name = name;
-        this.parent = null;
+        this[NAME_SYMBOL] = name;
         this[SUBSYSTEMS_SYMBOL] = [];
         this[STATE_SYMBOL] = STATE.INITIAL;
+    }
+
+    /**
+     * Returns name of subsystem
+     */
+    getName() {
+        return this[NAME_SYMBOL];
+    }
+
+    /**
+     * Returns parent subsystem - supersystem
+     */
+    getParent() {
+        return this[PARENT_SYMBOL];
     }
 
     /**
@@ -264,8 +279,6 @@ export default class Subsystem extends adone.event.AsyncEmitter {
             }
         }
 
-        instance.parent = this;
-
         const sysInfo = {
             name,
             description,
@@ -274,6 +287,9 @@ export default class Subsystem extends adone.event.AsyncEmitter {
             instance,
             path: is.string(subsystem) ? subsystem : null
         };
+
+        instance[NAME_SYMBOL] = name;
+        instance[PARENT_SYMBOL] = this;
 
         if (bind === true) {
             bind = name;
@@ -355,11 +371,11 @@ export default class Subsystem extends adone.event.AsyncEmitter {
             if (!std.path.isAbsolute(subsystem)) {
                 throw new x.NotValid("Path must be absolute");
             }
-            let SomeSubsystem = adone.require(subsystem, { transpile });
-            if (SomeSubsystem.__esModule === true) {
-                SomeSubsystem = SomeSubsystem.default;
+            let SubsystemClass = adone.require(subsystem, { transpile });
+            if (SubsystemClass.__esModule === true) {
+                SubsystemClass = SubsystemClass.default;
             }
-            instance = new SomeSubsystem();
+            instance = new SubsystemClass();
         } else {
             instance = subsystem;
         }

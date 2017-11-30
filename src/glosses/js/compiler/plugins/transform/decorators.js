@@ -1,7 +1,7 @@
-// Fork of https://github.com/loganfsmyth/babel-plugin-transform-decorators-legacy
+// Fork of https://github.com/loganfsmyth/babel-plugin-proposal-decorators-legacy
 
 const {
-    js: { compiler: { template } }
+    js: { compiler: { template, types: t } }
 } = adone;
 
 const buildClassDecorator = template(`
@@ -31,8 +31,8 @@ const buildInitializerWarningHelper = template(`
     function NAME(descriptor, context){
         throw new Error(
           'Decorating class property failed. Please ensure that ' +
-          'transform-class-properties is enabled and set to use loose mode. ' +
-          'To use transform-class-properties in spec mode with decorators, wait for ' +
+          'proposal-class-properties is enabled and set to use loose mode. ' +
+          'To use proposal-class-properties in spec mode with decorators, wait for ' +
           'the next major version of decorators in stage 2.'
         );
     }
@@ -83,12 +83,12 @@ const buildApplyDecoratedDescriptor = template(`
     }
 `);
 
-export default function ({ types: t }) {
+export default function () {
     /**
      * Add a helper to take an initial descriptor, apply some decorators to it, and optionally
      * define the property.
      */
-    const ensureApplyDecoratedDescriptorHelper = (path, state) => {
+    const ensureApplyDecoratedDescriptorHelper = function (path, state) {
         if (!state.applyDecoratedDescriptor) {
             state.applyDecoratedDescriptor = path.scope.generateUidIdentifier(
                 "applyDecoratedDescriptor",
@@ -105,7 +105,7 @@ export default function ({ types: t }) {
     /**
      * Add a helper to call as a replacement for class property definition.
      */
-    const ensureInitializerDefineProp = (path, state) => {
+    const ensureInitializerDefineProp = function (path, state) {
         if (!state.initializerDefineProp) {
             state.initializerDefineProp = path.scope.generateUidIdentifier(
                 "initDefineProp",
@@ -123,7 +123,7 @@ export default function ({ types: t }) {
      * Add a helper that will throw a useful error if the transform fails to detect the class
      * property assignment, so users know something failed.
      */
-    const ensureInitializerWarning = (path, state) => {
+    const ensureInitializerWarning = function (path, state) {
         if (!state.initializerWarningHelper) {
             state.initializerWarningHelper = path.scope.generateUidIdentifier(
                 "initializerWarningHelper",
@@ -141,7 +141,7 @@ export default function ({ types: t }) {
      * If the decorator expressions are non-identifiers, hoist them to before the class so we can be sure
      * that they are evaluated in order.
      */
-    const applyEnsureOrdering = (path) => {
+    const applyEnsureOrdering = function (path) {
         // TODO: This should probably also hoist computed properties.
         const decorators = (path.isClass()
             ? [path].concat(path.get("body.body"))
@@ -172,7 +172,7 @@ export default function ({ types: t }) {
      * Given a class expression with class-level decorators, create a new expression
      * with the proper decorated behavior.
      */
-    const applyClassDecorators = (classPath) => {
+    const applyClassDecorators = function (classPath) {
         const decorators = classPath.node.decorators || [];
         classPath.node.decorators = null;
 
@@ -197,7 +197,7 @@ export default function ({ types: t }) {
     /**
      * A helper to pull out property decorators into a sequence expression.
      */
-    const applyTargetDecorators = (path, state, decoratedProps) => {
+    const applyTargetDecorators = function (path, state, decoratedProps) {
         const name = path.scope.generateDeclaredUidIdentifier(
             path.isClass() ? "class" : "obj",
         );
@@ -301,7 +301,7 @@ export default function ({ types: t }) {
      * Given a class expression with method-level decorators, create a new expression
      * with the proper decorated behavior.
      */
-    const applyMethodDecorators = (path, state) => {
+    const applyMethodDecorators = function (path, state) {
         const hasMethodDecorators = path.node.body.body.some((node) => {
             return (node.decorators || []).length > 0;
         });
@@ -317,7 +317,7 @@ export default function ({ types: t }) {
      * Given an object expression with property decorators, create a new expression
      * with the proper decorated behavior.
      */
-    const applyObjectDecorators = (path, state) => {
+    const applyObjectDecorators = function (path, state) {
         const hasMethodDecorators = path.node.properties.some((node) => {
             return (node.decorators || []).length > 0;
         });

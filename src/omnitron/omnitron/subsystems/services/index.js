@@ -20,13 +20,13 @@ export default class Services extends application.Subsystem {
         this.options = Object.assign({
             startTimeout: 10000,
             stopTimeout: 10000
-        }, this.parent.config.raw.service);
+        }, this.getParent().config.raw.service);
 
         adone.info("Services subsystem configured");
     }
 
     async initialize() {
-        this.services = await this.parent.db.getMetaValuable("service");
+        this.services = await this.getParent().db.getMetaValuable("service");
 
         const VALID_STATUSES = [STATUS.DISABLED, STATUS.INACTIVE];
 

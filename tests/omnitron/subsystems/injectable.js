@@ -12,7 +12,7 @@ class Payload {
 
     @Public()
     getInfo(options) {
-        return this.service.parent.getInfo(options);
+        return this.service.getParent().getInfo(options);
     }
 }
 

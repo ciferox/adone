@@ -50,13 +50,68 @@ export const humanizeState = (state) => {
 export const EXIT_SUCCESS = 0;
 export const EXIT_ERROR = 1;
 
+// Decorators
+const SUBSYSTEM_ANNOTATION = "subsystem";
+
+const SubsystemDecorator = (sysInfo = {}) => (target) => {
+    const info = adone.meta.reflect.getMetadata(SUBSYSTEM_ANNOTATION, target);
+    if (is.undefined(info)) {
+        adone.meta.reflect.defineMetadata(SUBSYSTEM_ANNOTATION, sysInfo, target);
+    } else {
+        Object.assign(info, sysInfo);
+    }
+};
+
+export const DSubsystem = SubsystemDecorator;
+export const DApplication = SubsystemDecorator;
+export const DCliMainCommand = (mainCommand = {}) => (target, key, descriptor) => {
+    let sysMeta = adone.meta.reflect.getMetadata(SUBSYSTEM_ANNOTATION, target.constructor);
+    mainCommand.handler = descriptor.value;
+    if (is.undefined(sysMeta)) {
+        if (target instanceof adone.application.CliApplication) {
+            sysMeta = {
+                mainCommand
+            };
+        } else {
+            sysMeta = mainCommand;
+        }
+        adone.meta.reflect.defineMetadata(SUBSYSTEM_ANNOTATION, sysMeta, target.constructor);
+    } else {
+        if (target instanceof adone.application.CliApplication) {
+            sysMeta.mainCommand = mainCommand;
+        } else {
+            Object.assign(sysMeta, mainCommand);
+        }
+    }
+};
+export const DCliCommand = (commandInfo = {}) => (target, key, descriptor) => {
+    let sysMeta = adone.meta.reflect.getMetadata(SUBSYSTEM_ANNOTATION, target.constructor);
+    commandInfo.handler = descriptor.value;
+    if (is.undefined(sysMeta)) {
+        sysMeta = {
+            commands: [
+                commandInfo
+            ]
+        };
+        adone.meta.reflect.defineMetadata(SUBSYSTEM_ANNOTATION, sysMeta, target.constructor);
+    } else {
+        if (!is.array(sysMeta.commands)) {
+            sysMeta.commands = [
+                commandInfo
+            ];
+        } else {
+            sysMeta.commands.push(commandInfo);
+        }
+    }
+};
+
 adone.lazify({
     Subsystem: "./subsystem",
     Application: "./application",
     CliApplication: "./cli_application",
     Logger: "./logger",
     report: "./report",
-    locking: "./locking"
+    locking: "./locking",
 }, adone.asNamespace(exports), require);
 
 adone.definePrivate({

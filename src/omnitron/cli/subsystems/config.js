@@ -1,14 +1,14 @@
+import Subsystem from "../subsystem";
+
 const {
-    application,
+    application: {
+        DCliCommand
+    },
     is,
     omnitron,
     runtime: { term },
     vendor: { lodash }
 } = adone;
-
-const {
-    Command
-} = application.CliApplication;
 
 const SCHEMA = {
     type: "object",
@@ -71,7 +71,7 @@ const SCHEMA = {
     }
 };
 
-export default class Config extends application.Subsystem {
+export default class Config extends Subsystem {
     async initialize() {
         this.config = await omnitron.Configuration.load({ defaults: false });
         const validator = new adone.schema.Validator({
@@ -80,7 +80,7 @@ export default class Config extends application.Subsystem {
         this.validate = validator.compile(SCHEMA);
     }
 
-    @Command({
+    @DCliCommand({
         name: "set",
         help: "Set property value",
         arguments: [
@@ -110,7 +110,7 @@ export default class Config extends application.Subsystem {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: "get",
         help: "Get property value",
         arguments: [
@@ -136,7 +136,7 @@ export default class Config extends application.Subsystem {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: ["delete", "del"],
         help: "Delete property",
         arguments: [
@@ -167,7 +167,7 @@ export default class Config extends application.Subsystem {
         return 0;
     }
 
-    @Command({
+    @DCliCommand({
         name: "list",
         help: "Show configuration",
         options: [
@@ -188,7 +188,7 @@ export default class Config extends application.Subsystem {
         return 0;
     }
 
-    @Command({
+    @DCliCommand({
         name: "schema",
         help: "Show configuration schema"
     })
@@ -197,7 +197,7 @@ export default class Config extends application.Subsystem {
         return 0;
     }
 
-    @Command({
+    @DCliCommand({
         name: "edit",
         help: "Open config in editor",
         options: [

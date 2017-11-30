@@ -1611,7 +1611,7 @@ export default class CliApplication extends application.Application {
 
     defineMainCommand(options) {
         options = adone.o({
-            name: this.name,
+            name: this.getName(),
             handler: (args, opts, meta) => this.main(args, opts, meta),
             options: [],
             arguments: [],
@@ -2388,57 +2388,3 @@ CliApplication.prototype.main[INTERNAL] = true;
 // CliApplication.PositionalArgument = PositionalArgument;
 // CliApplication.OptionalArgument = OptionalArgument;
 // CliApplication.Command = Command;
-
-// Decorators
-
-const SubsystemDecorator = (sysInfo = {}) => (target) => {
-    const info = reflect.getMetadata(SUBSYSTEM_ANNOTATION, target);
-    if (is.undefined(info)) {
-        reflect.defineMetadata(SUBSYSTEM_ANNOTATION, sysInfo, target);
-    } else {
-        Object.assign(info, sysInfo);
-    }
-};
-
-CliApplication.Cli = SubsystemDecorator;
-CliApplication.CliSubsystem = SubsystemDecorator;
-CliApplication.MainCommand = (mainCommand = {}) => (target, key, descriptor) => {
-    let sysMeta = reflect.getMetadata(SUBSYSTEM_ANNOTATION, target.constructor);
-    mainCommand.handler = descriptor.value;
-    if (is.undefined(sysMeta)) {
-        if (target instanceof CliApplication) {
-            sysMeta = {
-                mainCommand
-            };
-        } else {
-            sysMeta = mainCommand;
-        }
-        reflect.defineMetadata(SUBSYSTEM_ANNOTATION, sysMeta, target.constructor);
-    } else {
-        if (target instanceof CliApplication) {
-            sysMeta.mainCommand = mainCommand;
-        } else {
-            Object.assign(sysMeta, mainCommand);
-        }
-    }
-};
-CliApplication.Command = (commandInfo = {}) => (target, key, descriptor) => {
-    let sysMeta = reflect.getMetadata(SUBSYSTEM_ANNOTATION, target.constructor);
-    commandInfo.handler = descriptor.value;
-    if (is.undefined(sysMeta)) {
-        sysMeta = {
-            commands: [
-                commandInfo
-            ]
-        };
-        reflect.defineMetadata(SUBSYSTEM_ANNOTATION, sysMeta, target.constructor);
-    } else {
-        if (!is.array(sysMeta.commands)) {
-            sysMeta.commands = [
-                commandInfo
-            ];
-        } else {
-            sysMeta.commands.push(commandInfo);
-        }
-    }
-};

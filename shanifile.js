@@ -31,19 +31,19 @@ export default {
             ["transform.importReplace", {
                 old: "adone",
                 new: path.resolve(__dirname, "lib")
-            }],
+            }, "adone"],
             ["transform.importReplace", {
                 old: "shani",
                 new: path.resolve(__dirname, "lib", "glosses", "shani")
-            }],
+            }, "shani"],
             ["transform.importReplace", {
                 old: "fast",
                 new: path.resolve(__dirname, "lib", "glosses", "fast")
-            }],
+            }, "fast"],
             ["transform.importReplace", {
                 old: "omnitron",
                 new: path.resolve(__dirname, "lib", "omnitron")
-            }]
+            }, "omnitron"]
         ],
         compact: false,
         ignore: [/glosses.vendor/]

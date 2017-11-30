@@ -1,17 +1,17 @@
+import Subsystem from "../subsystem";
+
 const {
-    application
+    application: {
+        DCliCommand
+    }
 } = adone;
 
-const {
-    Command
-} = application.CliApplication;
-
-export default class Gate extends application.Subsystem {
+export default class Gate extends Subsystem {
     async initialize() {
         
     }
 
-    @Command({
+    @DCliCommand({
         name: "list",
         help: "Show all gates"
     })
@@ -19,7 +19,7 @@ export default class Gate extends application.Subsystem {
         return 0;
     }
 
-    @Command({
+    @DCliCommand({
         name: "add",
         help: "Add new gate"
     })
@@ -27,7 +27,7 @@ export default class Gate extends application.Subsystem {
         return 0;
     }
 
-    @Command({
+    @DCliCommand({
         name: ["delete", "del"],
         help: "Delete gate"
     })
@@ -35,7 +35,7 @@ export default class Gate extends application.Subsystem {
         return 0;
     }
 
-    @Command({
+    @DCliCommand({
         name: "up",
         help: "Up gate"
     })
@@ -43,7 +43,7 @@ export default class Gate extends application.Subsystem {
         return 0;
     }
 
-    @Command({
+    @DCliCommand({
         name: "down",
         help: "Down gate"
     })

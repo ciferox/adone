@@ -3,7 +3,6 @@
 import "adone";
 
 const {
-    fs,
     is,
     std,
     application,
@@ -11,14 +10,14 @@ const {
 } = adone;
 
 const {
-    Cli,
-    Command,
-    MainCommand
-} = application.CliApplication;
+    DApplication,
+    DCliCommand,
+    DCliMainCommand
+} = application;
 
 const baseSubsystem = (name) => std.path.join(__dirname, "..", "lib", "cli", "subsystems", name);
 
-@Cli({
+@DApplication({
     subsystems: [
         {
             name: "link",
@@ -55,7 +54,7 @@ class AdoneCLI extends application.CliApplication {
         }
     }
 
-    @MainCommand({
+    @DCliMainCommand({
         blindMode: true,
         arguments: [
             {
@@ -109,7 +108,7 @@ class AdoneCLI extends application.CliApplication {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: "initrealm",
         group: "realm",
         help: "Initialize new realm",
@@ -139,7 +138,7 @@ class AdoneCLI extends application.CliApplication {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: "install",
         group: "realm",
         help: "Install adone glosses, extensions, applications, etc.",
@@ -180,7 +179,7 @@ class AdoneCLI extends application.CliApplication {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: "uninstall",
         group: "realm",
         help: "Uninstall adone glosses, extensions, applications, etc.",
@@ -209,7 +208,7 @@ class AdoneCLI extends application.CliApplication {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: "list",
         group: "realm",
         help: "List installed packages",
@@ -266,7 +265,7 @@ class AdoneCLI extends application.CliApplication {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: "config",
         help: "Configurations management",
         arguments: [
@@ -330,7 +329,7 @@ class AdoneCLI extends application.CliApplication {
         return 0;
     }
 
-    @Command({
+    @DCliCommand({
         name: "inspect",
         help: "Inspect adone namespace/object",
         arguments: [
@@ -492,7 +491,7 @@ class AdoneCLI extends application.CliApplication {
 
     // Temporary commands, until the builds for all supported systems are ready
 
-    @Command({
+    @DCliCommand({
         name: "clean",
         help: "Clean project",
         arguments: [
@@ -517,7 +516,7 @@ class AdoneCLI extends application.CliApplication {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: "build",
         help: "Build project",
         arguments: [
@@ -554,7 +553,7 @@ class AdoneCLI extends application.CliApplication {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: "rebuild",
         help: "Rebuild project",
         options: [
@@ -590,7 +589,7 @@ class AdoneCLI extends application.CliApplication {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: "watch",
         help: "Watch project",
         arguments: [

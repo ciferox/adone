@@ -5,7 +5,7 @@ const {
 
 export default class Gates extends application.Subsystem {
     async configure() {
-        Object.assign(runtime.netron.options, this.parent.config.raw.netron);
+        Object.assign(runtime.netron.options, this.getParent().config.raw.netron);
 
         await runtime.netron.registerAdapter("ws", adone.netron.ws.Adapter);
 
@@ -19,10 +19,10 @@ export default class Gates extends application.Subsystem {
     }
 
     async initialize() {
-        this._servicePort = this.parent.config.getLocalGate().port;
+        this._servicePort = this.getParent().config.getLocalGate().port;
 
         // Bind all gates.
-        for (const gate of this.parent.config.getGates()) {
+        for (const gate of this.getParent().config.getGates()) {
             await runtime.netron.bind(gate); // eslint-disable-line
         }
 
@@ -64,6 +64,6 @@ export default class Gates extends application.Subsystem {
     }
 
     getGates() {
-        return this.parent.config.getGates();
+        return this.getParent().config.getGates();
     }    
 }

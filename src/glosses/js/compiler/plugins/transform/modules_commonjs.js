@@ -16,22 +16,20 @@ export default function (api, options) {
         strict,
         strictMode,
         noInterop,
-
         // Defaulting to 'true' for now. May change before 7.x major.
         allowCommonJSExports = true
     } = options;
-
     const getAssertion = (localName) => template.expression.ast`
-      (function(){
-        throw new Error("The CommonJS '" + "${localName}" + "' variable is not available in ES6 modules.");
-      })()
-    `;
+    (function(){
+      throw new Error("The CommonJS '" + "${localName}" + "' variable is not available in ES6 modules.");
+    })()
+  `;
 
     const moduleExportsVisitor = {
         ReferencedIdentifier(path) {
             const localName = path.node.name;
-            if (localName !== "module" && localName !== "exports") {
-                return;
+            if (localName !== "module" && localName !== "exports") { 
+                return; 
             }
 
             const localBinding = path.scope.getBinding(localName);
@@ -56,15 +54,15 @@ export default function (api, options) {
             if (left.isIdentifier()) {
                 const localName = path.node.name;
                 if (localName !== "module" && localName !== "exports") {
-                    return;
+                    return; 
                 }
 
                 const localBinding = path.scope.getBinding(localName);
                 const rootBinding = this.scope.getBinding(localName);
 
                 // redeclared in this scope
-                if (rootBinding !== localBinding) {
-                    return;
+                if (rootBinding !== localBinding) { 
+                    return; 
                 }
 
                 const right = path.get("right");
@@ -74,8 +72,8 @@ export default function (api, options) {
             } else if (left.isPattern()) {
                 const ids = left.getOuterBindingIdentifiers();
                 const localName = Object.keys(ids).filter((localName) => {
-                    if (localName !== "module" && localName !== "exports") {
-                        return false;
+                    if (localName !== "module" && localName !== "exports") { 
+                        return false; 
                     }
 
                     return (
@@ -100,8 +98,8 @@ export default function (api, options) {
                 exit(path) {
                     // For now this requires unambiguous rather that just sourceType
                     // because Babel currently parses all files as sourceType:module.
-                    if (!isModule(path, true /* requireUnambiguous */)) {
-                        return;
+                    if (!isModule(path, true /* requireUnambiguous */)) { 
+                        return; 
                     }
 
                     // Rename the bindings auto-injected into the scope so there is no
@@ -123,14 +121,11 @@ export default function (api, options) {
                     }
 
                     let moduleName = this.getModuleName();
-                    if (moduleName) {
-                        moduleName = t.stringLiteral(moduleName);
+                    if (moduleName) { 
+                        moduleName = t.stringLiteral(moduleName); 
                     }
 
-                    const {
-                        meta,
-                        headers
-                    } = rewriteModuleStatementsAndPrepareHeader(path, {
+                    const { meta, headers } = rewriteModuleStatementsAndPrepareHeader(path, {
                         exportName: "exports",
                         loose,
                         strict,
@@ -158,7 +153,9 @@ export default function (api, options) {
                         header.loc = metadata.loc;
 
                         headers.push(header);
-                        headers.push(...buildNamespaceInitStatements(meta, metadata, loose));
+                        headers.push(
+                            ...buildNamespaceInitStatements(meta, metadata, loose),
+                        );
                     }
 
                     ensureStatementsHoisted(headers);

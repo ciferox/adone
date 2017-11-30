@@ -2,13 +2,9 @@ import Subsystem from "../subsystem";
 
 const {
     application: {
-        CliApplication
+        DCliCommand
     }
 } = adone;
-
-const {
-    Command
-} = CliApplication;
 
 const __ = adone.lazify({
     Service: () => {
@@ -24,7 +20,7 @@ const __ = adone.lazify({
 });
 
 export default class Startup extends Subsystem {
-    @Command({
+    @DCliCommand({
         name: "enable",
         help: "Enable omnitron startup",
         options: [
@@ -64,7 +60,7 @@ export default class Startup extends Subsystem {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: "disable",
         help: "Disable omnitron startup",
         options: [

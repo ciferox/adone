@@ -1,23 +1,21 @@
 import Subsystem from "./subsystem";
 
 const {
-    application,
+    application: {
+        DSubsystem,
+        DCliCommand
+    },
     is,
     text: { pretty },
     omnitron,
     std
 } = adone;
 
-const {
-    Cli,
-    Command
-} = application.CliApplication;
-
 const { STATUSES } = omnitron;
 
 const subsystemPath = (name) => std.path.resolve(__dirname, "subsystems", name);
 
-@Cli({
+@DSubsystem({
     commandsGroups: [
         {
             name: "common",
@@ -58,7 +56,7 @@ const subsystemPath = (name) => std.path.resolve(__dirname, "subsystems", name);
     ]
 })
 export default class Omnitron extends Subsystem {
-    @Command({
+    @DCliCommand({
         name: "up",
         group: "common",
         help: "Up omnitron"
@@ -81,7 +79,7 @@ export default class Omnitron extends Subsystem {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: "down",
         group: "common",
         help: "Down omnitron"
@@ -110,7 +108,7 @@ export default class Omnitron extends Subsystem {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: "ping",
         group: "common",
         help: "Ping the omnitron"
@@ -128,7 +126,7 @@ export default class Omnitron extends Subsystem {
         return 0;
     }
 
-    @Command({
+    @DCliCommand({
         name: "gc",
         group: "common",
         help: "Force garbage collector"
@@ -146,7 +144,7 @@ export default class Omnitron extends Subsystem {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: "info",
         group: "inspect",
         help: "The omnitron's information",
@@ -174,7 +172,7 @@ export default class Omnitron extends Subsystem {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: "report",
         group: "inspect",
         help: "Report omnitron process statistics"
@@ -193,7 +191,7 @@ export default class Omnitron extends Subsystem {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: "enable",
         group: "services",
         help: "Enable service",
@@ -219,7 +217,7 @@ export default class Omnitron extends Subsystem {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: "disable",
         group: "services",
         help: "Disable service",
@@ -245,7 +243,7 @@ export default class Omnitron extends Subsystem {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: "start",
         group: "services",
         help: "Start service",
@@ -271,7 +269,7 @@ export default class Omnitron extends Subsystem {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: "stop",
         group: "services",
         help: "Stop service",
@@ -297,7 +295,7 @@ export default class Omnitron extends Subsystem {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: "restart",
         group: "services",
         help: "Restart service",
@@ -324,7 +322,7 @@ export default class Omnitron extends Subsystem {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: "configure",
         group: "services",
         help: "Configure service",
@@ -370,7 +368,7 @@ export default class Omnitron extends Subsystem {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: "services",
         group: "services",
         help: "Show services",
@@ -451,7 +449,7 @@ export default class Omnitron extends Subsystem {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: "peers",
         group: "inspect",
         help: "Show connected peers"
@@ -503,7 +501,7 @@ export default class Omnitron extends Subsystem {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: "contexts",
         group: "inspect",
         help: "Show attached contexts"
@@ -540,7 +538,7 @@ export default class Omnitron extends Subsystem {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: ["subsystems", "ss"],
         group: "subsystems",
         help: "Show omnitron subsystems"
@@ -585,7 +583,7 @@ export default class Omnitron extends Subsystem {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: "load",
         group: "subsystems",
         help: "Load subsystem",
@@ -643,7 +641,7 @@ export default class Omnitron extends Subsystem {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: "unload",
         group: "subsystems",
         help: "Unload subsystem",

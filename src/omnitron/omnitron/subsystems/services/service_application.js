@@ -101,9 +101,8 @@ class ServiceApplication extends application.Application {
             throw new adone.x.NotValid("Service should be a class");
         }
 
-        const subsystem = new ServiceClass();
+        const subsystem = new ServiceClass({ name });
         subsystem[Symbol.for("omnitron.Service#peer")] = this.peer;
-        subsystem.name = name;
 
         if (!(subsystem instanceof adone.omnitron.Service)) {
             throw new adone.x.NotValid("The class of service should inherit the class 'adone.omnitron.BaseService'");

@@ -37,10 +37,12 @@ export default class Configuration extends adone.configuration.Generic {
     }
 
     deleteCommand(name) {
-        const index = this.raw.commands.findIndex((x) => x.name === name);
-        if (index >= 0) {
-            this.raw.commands.splice(index, 1);
-            return this.save();
+        if (is.array(this.raw.commands)) {
+            const index = this.raw.commands.findIndex((x) => x.name === name);
+            if (index >= 0) {
+                this.raw.commands.splice(index, 1);
+                return this.save();
+            }
         }
     }
 
