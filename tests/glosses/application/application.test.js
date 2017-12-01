@@ -22,11 +22,11 @@ describe("application", "Application", () => {
         assert.equal(result.stdout, "configured\ninitialized\nrun\nuninitialized");
     });
 
-    it("parent subsystem should be 'null' for main application", () => {
+    it("parent subsystem should be 'undefined' for main application", () => {
         class TestApp extends Application {
         }
         const testApp = new TestApp();
-        assert.isNull(testApp.parent);
+        assert.isUndefined(testApp.parent);
     });
 
     it("Compact application with properties", async () => {
@@ -41,10 +41,8 @@ describe("application", "Application", () => {
     });
 
     it("no public properties instead of application's reserved", async () => {
-        const expected = ["parent", "name"];
-        const result = await forkProcess(fixture("public_reserved_props.js"));
-        const props = result.stdout.split(";");
-        assert.sameMembers(props, expected);
+        const result = await forkProcess(fixture("no_public_props_and_getters.js"));
+        assert.equal(result.stdout, "true");
     });
 
     it("'isMain' is not writable", async () => {
@@ -152,6 +150,12 @@ describe("application", "Application", () => {
             const result = await forkProcess(fixture("complex_custom_reinitialization.js"));
             assert.equal(result.stdout, "nc\nc\nc1\nc11\nc111\nc112\nc2\ni2\ni\ni1\ni11\ni111\ni112\nm\nr\nu\nu2\nu1\nu111\nu11\nu112\ni2\ni\ni1\ni11\ni111\ni112\nu\nu2\nu1\nu111\nu11\nu112");
         });
+
+        it("root subsystem", async () => {
+            const result = await forkProcess(fixture("root_subsystem.js"));
+            assert.equal(result.stdout, "true\ntrue\ntrue\ntrue");
+        });
+        
 
         describe("deleteSubsystem", () => {
             it("delete an uninitialized subsystem", async () => {

@@ -23,7 +23,7 @@ describe("realm", () => {
         await realm.init(".adone_test");
         await realm.clean();
         realmManager = await realm.getManager();
-        realmManager.setSilent(true);
+        adone.cli.kit.setSilent(true);
 
         cliConfig = await cli.Configuration.load();
     });

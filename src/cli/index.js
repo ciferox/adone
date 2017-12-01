@@ -3,5 +3,6 @@ const {
 } = adone;
 
 lazify({
-    Configuration: "./configuration"
+    Configuration: "./configuration",
+    kit: "./kit"
 }, adone.asNamespace(exports), require);

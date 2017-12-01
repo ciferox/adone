@@ -35,6 +35,7 @@ export default class Application extends application.Subsystem {
         this[INTERACTIVE] = interactive;
         this[EXIT_SIGNALS] = null;
 
+        this.setRoot(this);
         this.setMaxListeners(Infinity);
     }
 
@@ -164,7 +165,7 @@ export default class Application extends application.Subsystem {
         this[EXITING] = true;
 
         try {
-            switch (this.getState()) {
+            switch (this.state) {
                 // initializing?
                 case STATE.INITIALIZED:
                 case STATE.RUNNING:

@@ -47,7 +47,7 @@ export default class GenesisNetron extends AsyncEmitter {
 
         this._ownPeer = null;
         this._svrNetronAddrs = new Map();
-        this.nuidPeerMap = new Map();
+        this.peers = new Map();
         this._peerEvents = new Map();
         this._remoteEvents = new Map();
         this._remoteListeners = new Map();
@@ -126,7 +126,7 @@ export default class GenesisNetron extends AsyncEmitter {
     disconnect(uid) {
         if (is.nil(uid)) {
             const promises = [];
-            for (const uid of this.nuidPeerMap.keys()) {
+            for (const uid of this.peers.keys()) {
                 promises.push(this.disconnect(uid));
             }
             return Promise.all(promises);
@@ -363,7 +363,7 @@ export default class GenesisNetron extends AsyncEmitter {
         if (is.nil(uid)) {
             throw new x.InvalidArgument("Invalid peer or peer uid");
         }
-        const peer = is.genesisPeer(uid) ? uid : this.nuidPeerMap.get(uid);
+        const peer = is.genesisPeer(uid) ? uid : this.peers.get(uid);
         if (is.genesisPeer(peer)) {
             return peer;
         }
@@ -379,7 +379,7 @@ export default class GenesisNetron extends AsyncEmitter {
     }
 
     getPeers() {
-        return this.nuidPeerMap;
+        return this.peers;
     }
 
     getStubById(defId) {
@@ -400,7 +400,7 @@ export default class GenesisNetron extends AsyncEmitter {
     async onRemote(uid, eventName, handler) {
         if (is.nil(uid)) {
             const promises = [];
-            for (const uid of this.nuidPeerMap.keys()) {
+            for (const uid of this.peers.keys()) {
                 promises.push(this.onRemote(uid, eventName, handler));
             }
             return Promise.all(promises);
@@ -431,7 +431,7 @@ export default class GenesisNetron extends AsyncEmitter {
     async offRemote(uid, eventName, listener) {
         if (is.nil(uid)) {
             const promises = [];
-            for (const uid of this.nuidPeerMap.keys()) {
+            for (const uid of this.peers.keys()) {
                 promises.push(this.offRemote(uid, eventName, listener));
             }
             return Promise.all(promises);
@@ -474,7 +474,7 @@ export default class GenesisNetron extends AsyncEmitter {
 
     async _peerDisconnected(peer) {
         if (!is.null(peer.uid)) {
-            this.nuidPeerMap.delete(peer.uid);
+            this.peers.delete(peer.uid);
         }
         peer._setStatus(PEER_STATUS.OFFLINE);
         const listeners = this._remoteListeners.get(peer.uid);
@@ -530,7 +530,7 @@ export default class GenesisNetron extends AsyncEmitter {
     }
 
     // _removePeersRelatedDefinitions(exceptPeer, proxyDef) {
-    //     for (let peer of this.nuidPeerMap.values()) {
+    //     for (let peer of this.peers.values()) {
     //         if (peer.uid !== exceptPeer.uid) {
     //             peer._removeRelatedDefinitions(proxyDef);
     //         }

@@ -1,4 +1,5 @@
 const {
+    cli: { kit },
     fs,
     std,
     task,
@@ -7,6 +8,7 @@ const {
 
 export default class ListTask extends task.Task {
     async run({ keyword = "", threshold = 0.2 } = {}) {
+        kit.createProgress("obtaining");
         await fs.mkdirp(adone.realm.config.packagesPath);
         const packages = await fs.readdir(adone.realm.config.packagesPath);
 
@@ -33,7 +35,7 @@ export default class ListTask extends task.Task {
             };
 
             // eslint-disable-next-line
-            if (isValid && await fs.exists(std.path.join(packagePath, adone.configuration.Adone.name))) {
+            if (isValid && await fs.exists(std.path.join(packagePath, adone.configuration.Adone.configName))) {
                 // eslint-disable-next-line
                 const adoneConf = await adone.configuration.Adone.load({
                     cwd: packagePath
@@ -45,6 +47,12 @@ export default class ListTask extends task.Task {
 
             result.push(packageInfo);
         }
+
+        kit.updateProgress({
+            schema: "",
+            result: true,
+            clean: true
+        });
 
         if (keyword.length === 0) {
             return result;

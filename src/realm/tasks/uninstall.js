@@ -1,4 +1,5 @@
 const {
+    cli: { kit },
     fs,
     is,
     std,
@@ -7,9 +8,7 @@ const {
 
 export default class InstallTask extends task.Task {
     async run({ name = "" } = {}) {
-        this.manager._createProgress({
-            schema: " :spinner preparing"
-        });
+        kit.createProgress("preparing");
 
         this.name = name;
 
@@ -60,13 +59,13 @@ export default class InstallTask extends task.Task {
 
             await fs.rm(this.destPath);
 
-            this.manager._updateProgress({
-                schema: ` :spinner {green-fg}{bold}${this.fullName}{/bold}{/green-fg} successfully uninstalled`,
+            kit.updateProgress({
+                message: `{green-fg}{bold}${this.fullName}{/bold}{/green-fg} successfully uninstalled`,
                 result: true
             });
         } catch (err) {
-            this.manager._updateProgress({
-                schema: " :spinner installation failed",
+            kit.updateProgress({
+                message: "installation failed",
                 result: false
             });
 

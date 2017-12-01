@@ -11,8 +11,8 @@ class Test3 {
 
     @Public()
     check(name) {
-        if (name !== this.service.getName()) {
-            throw new adone.x.NotValid(`Invalid service name: ${this.service.getName()}`);
+        if (name !== this.service.name) {
+            throw new adone.x.NotValid(`Invalid service name: ${this.service.name}`);
         }
         if (!is.netronPeer(this.service.peer)) {
             throw new adone.x.NotValid("Invalid service peer");

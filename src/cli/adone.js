@@ -34,6 +34,13 @@ class AdoneCLI extends application.CliApplication {
         // Expose cli interface for subsystems.
         this.exposeCliInterface();
 
+        // Add cli kit as subsystem
+        await this.addSubsystem({
+            name: "kit",
+            bind: true,
+            subsystem: adone.cli.kit
+        });
+
         // Define command groups.
         const groups = this.config.getGroups();
         for (const group of groups) {
@@ -133,8 +140,10 @@ class AdoneCLI extends application.CliApplication {
         try {
             const path = await adone.realm.init(name, opts.has("path") ? opts.get("path") : null);
             term.print(`Realm {green-fg}'${path}'{/green-fg} successfully initialized\n`);
+            return 0;
         } catch (err) {
             term.print(`{red-fg}${err.message}{/}\n`);
+            return 1;
         }
     }
 
@@ -481,12 +490,12 @@ class AdoneCLI extends application.CliApplication {
             } else {
                 throw new adone.x.Unknown(`Unknown object: ${name}`);
             }
+            return 0;
         } catch (err) {
             adone.log(err);
             // adone.error(err.message);
             return 1;
         }
-        return 0;
     }
 
     // Temporary commands, until the builds for all supported systems are ready

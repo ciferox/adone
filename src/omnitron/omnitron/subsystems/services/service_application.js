@@ -85,7 +85,7 @@ class ServiceApplication extends application.Application {
     @Public()
     async loadService({ name, description, path } = {}) {
         // It's important that application should be fully initialized before any service can be loaded.
-        if (this.getState() <= application.STATE.INITIALIZED) {
+        if (this.state <= application.STATE.INITIALIZED) {
             await this.waitForState(application.STATE.INITIALIZED);
         }
         if (this.hasSubsystem(name)) {
@@ -148,8 +148,8 @@ class ServiceApplication extends application.Application {
             throw new adone.x.NotExists(`Service ${name} not loaded`);
         }
 
-        const service = this.subsystem(name);
-        if (service.getState() === application.STATE.INITIALIZED) {
+        const service = this.getSubsystem(name);
+        if (service.state === application.STATE.INITIALIZED) {
             process.nextTick(async () => {
                 try {
                     await this.uninitializeSubsystem(name);
@@ -166,10 +166,10 @@ class ServiceApplication extends application.Application {
                     }
                 }
             });
-        } else if (service.getState() === application.STATE.UNINITIALIZING) {
+        } else if (service.state === application.STATE.UNINITIALIZING) {
             throw new adone.x.IllegalState(`Serivce '${name}' is being uninitialized`);
         } else {
-            throw new adone.x.IllegalState(`Service '${name}' is in non stopable state: ${application.humanizeState(service.getState())}`);
+            throw new adone.x.IllegalState(`Service '${name}' is in non stopable state: ${application.humanizeState(service.state)}`);
         }
     }
 }

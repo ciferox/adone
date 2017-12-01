@@ -11,4 +11,4 @@ export default class Hello extends adone.application.Subsystem {
     uninitialize() {
         adone.log("hello uninit");
     }
-};
+}

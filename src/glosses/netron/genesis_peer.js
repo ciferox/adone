@@ -226,7 +226,7 @@ export default class GenesisPeer extends AsyncEmitter {
                 this._responseAwaiters.clear();
             } else if (status === PEER_STATUS.ONLINE) {
                 this.connectedTime = new Date();
-                this.netron.nuidPeerMap.set(this.uid, this);
+                this.netron.peers.set(this.uid, this);
             }
             this.emit("status", status);
         }

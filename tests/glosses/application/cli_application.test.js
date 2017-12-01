@@ -1,7 +1,5 @@
 const {
-    std,
-    system: { process: { exec, execStdout } },
-    application: { CliApplication }
+    std
 } = adone;
 
 const fixture = std.path.join.bind(std.path, __dirname, "fixtures");
@@ -26,9 +24,7 @@ describe("application", "CliApplication", () => {
     });
 
     it("no public properties instead of application's reserved", async () => {
-        const expected = ["parent", "argv", "name"];
-        const result = await forkProcess(fixture("public_reserved_props_cli.js"));
-        const props = result.stdout.split(";");
-        assert.sameMembers(props, expected);
+        const result = await forkProcess(fixture("no_public_props_and_getters_cli.js"));
+        assert.equal(result.stdout, "true");
     });
 });

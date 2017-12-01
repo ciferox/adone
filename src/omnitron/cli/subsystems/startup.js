@@ -1,9 +1,9 @@
-import Subsystem from "../subsystem";
-
 const {
     application: {
+        Subsystem,
         DCliCommand
-    }
+    },
+    cli: { kit }
 } = adone;
 
 const __ = adone.lazify({
@@ -41,7 +41,7 @@ export default class Startup extends Subsystem {
     })
     async enableCommand(args, opts) {
         try {
-            this._createProgress("trying to install omnitron service");
+            kit.createProgress("trying to install omnitron service");
             const config = {
                 mode: opts.get("mode")
             };
@@ -52,10 +52,10 @@ export default class Startup extends Subsystem {
 
             const service = new __.Service(config);
             await service.install();
-            this._updateProgress("done", true);
+            kit.updateProgress("done", true);
             return 0;
         } catch (err) {
-            this._updateProgress(err.message, false);
+            kit.updateProgress(err.message, false);
             return 1;
         }
     }
@@ -75,17 +75,17 @@ export default class Startup extends Subsystem {
     })
     async disableCommand(args, opts) {
         try {
-            this._createProgress("trying to uninstall omnitron service");
+            kit.createProgress("trying to uninstall omnitron service");
             const config = {
                 mode: opts.get("mode")
             };
 
             const service = new __.Service(config);
             await service.uninstall();
-            this._updateProgress("done", true);
+            kit.updateProgress("done", true);
             return 0;
         } catch (err) {
-            this._updateProgress(err.message, false);
+            kit.updateProgress(err.message, false);
             return 1;
         }
     }

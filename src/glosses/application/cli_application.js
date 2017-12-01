@@ -1611,7 +1611,7 @@ export default class CliApplication extends application.Application {
 
     defineMainCommand(options) {
         options = adone.o({
-            name: this.getName(),
+            name: this.name,
             handler: (args, opts, meta) => this.main(args, opts, meta),
             options: [],
             arguments: [],

@@ -1,4 +1,5 @@
 const {
+    cli: { kit },
     fast,
     fs,
     is,
@@ -17,9 +18,7 @@ const DEST_OPTIONS = {
 
 export default class InstallTask extends task.Task {
     async run({ name = "", build = false, symlink = false } = {}) {
-        this.manager._createProgress({
-            schema: " :spinner preparing"
-        });
+        kit.createProgress("preparing");
 
         this.name = name;
         this.build = build;
@@ -48,15 +47,15 @@ export default class InstallTask extends task.Task {
                 }
             }
             const version = is.string(adoneConf.raw.version) ? ` ${adoneConf.raw.version}` : "";
-            this.manager._updateProgress({
-                schema: ` :spinner {green-fg}{bold}${this.name}{/bold}${version}{/green-fg} successfully installed`,
+            kit.updateProgress({
+                message: `{green-fg}{bold}${this.name}{/bold}${version}{/green-fg} successfully installed`,
                 result: true
             });
 
             return adoneConf;
         } catch (err) {
-            this.manager._updateProgress({
-                schema: " :spinner installation failed",
+            kit.updateProgress({
+                message: "installation failed",
                 result: false
             });
 
@@ -85,8 +84,8 @@ export default class InstallTask extends task.Task {
     }
 
     async _installFromLocal() {
-        this.manager._updateProgress({
-            schema: ` :spinner installing from {green-fg}${this.srcPath}{/green-fg}`
+        kit.updateProgress({
+            message: `installing from {green-fg}${this.srcPath}{/green-fg}`
         });
 
         const adoneConf = await adone.configuration.Adone.load({
@@ -103,14 +102,14 @@ export default class InstallTask extends task.Task {
         this.destPath = std.path.join(adone.realm.config.packagesPath, this.name);
 
         if (this.build) {
-            this.manager._updateProgress({
-                schema: " :spinner building project"
+            kit.updateProgress({
+                message: "building project"
             });
             await this._buildProject();
         }
 
-        this.manager._updateProgress({
-            schema: " :spinner copying files"
+        kit.updateProgress({
+            message: "copying files"
         });
 
         if (this.symlink) {
@@ -119,8 +118,8 @@ export default class InstallTask extends task.Task {
             await this._copyFiles(adoneConf);
         }
 
-        this.manager._updateProgress({
-            schema: " :spinner registering components"
+        kit.updateProgress({
+            message: "registering components"
         });
 
         if (is.string(adoneConf.raw.type)) {
@@ -151,8 +150,8 @@ export default class InstallTask extends task.Task {
     }
 
     async _installFromGit() {
-        this.manager._updateProgress({
-            schema: ` :spinner cloning {green-fg}${this.name}{/green-fg}`
+        kit.updateProgress({
+            message: `cloning {green-fg}${this.name}{/green-fg}`
         });
 
         this.srcPath = await fs.tmpName();
@@ -208,8 +207,8 @@ export default class InstallTask extends task.Task {
                     srcPath,
                     "!**/*.map"
                 ], {
-                        cwd: this.srcPath
-                    }).dest(std.path.join(this.destPath, dstDir), DEST_OPTIONS);
+                    cwd: this.srcPath
+                }).dest(std.path.join(this.destPath, dstDir), DEST_OPTIONS);
             }
         } else {
             const indexPath = std.path.join(this.srcPath, "index.js");
@@ -224,8 +223,8 @@ export default class InstallTask extends task.Task {
             "**/.meta/**/*",
             "**/adone.json"
         ], {
-                cwd: this.srcPath
-            }).dest(this.destPath, DEST_OPTIONS);
+            cwd: this.srcPath
+        }).dest(this.destPath, DEST_OPTIONS);
     }
 
     async _buildProject() {

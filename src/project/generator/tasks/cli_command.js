@@ -8,8 +8,8 @@ const TEMPLATE =
 } = adone;
 
 const {
-    Command
-} = application.CliApplication;
+    DCliCommand
+} = application;
 
 export default class {{ name }} extends application.Subsystem {
     async configure() {
@@ -18,7 +18,7 @@ export default class {{ name }} extends application.Subsystem {
     async initialize() {
     }
 
-    @Command({
+    @DCliCommand({
         name: "test",
         help: "Test command"
     })

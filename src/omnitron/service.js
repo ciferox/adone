@@ -19,7 +19,7 @@ export default class Service extends adone.application.Subsystem {
 
     async getConfiguration() {
         if (is.null(this[CONFIGURATION_SYMBOL])) {
-            this[CONFIGURATION_SYMBOL] = await this.getParent().iMaintainer.getServiceConfiguration(this.getName());
+            this[CONFIGURATION_SYMBOL] = await this.parent.iMaintainer.getServiceConfiguration(this.name);
         }
         return this[CONFIGURATION_SYMBOL];
     }
@@ -27,8 +27,8 @@ export default class Service extends adone.application.Subsystem {
     async configure() {
         await this.configureService();
         await this.configureSubsystems();
-        return this.getParent().iMaintainer.notifyServiceStatus({
-            name: this.getName(),
+        return this.parent.iMaintainer.notifyServiceStatus({
+            name: this.name,
             status: STATE.CONFIGURED
         });
     }
@@ -42,8 +42,8 @@ export default class Service extends adone.application.Subsystem {
     async initialize() {
         await this.initializeService();
         await this.initializeSubsystems();
-        return this.getParent().iMaintainer.notifyServiceStatus({
-            name: this.getName(),
+        return this.parent.iMaintainer.notifyServiceStatus({
+            name: this.name,
             status: STATE.INITIALIZED
         });
     }
@@ -60,8 +60,8 @@ export default class Service extends adone.application.Subsystem {
         await this.uninitializeSubsystems();
         this[PEER_SYMBOL] = null;
         this[CONFIGURATION_SYMBOL] = null;
-        return this.getParent().iMaintainer.notifyServiceStatus({
-            name: this.getName(),
+        return this.parent.iMaintainer.notifyServiceStatus({
+            name: this.name,
             status: STATE.UNINITIALIZED
         });
     }

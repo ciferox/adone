@@ -1,10 +1,8 @@
 const {
     application: { locking },
     is,
-    fs,
     std,
     task,
-    text,
     util,
     realm
 } = adone;
@@ -15,7 +13,6 @@ export default class RealmManager extends task.Manager {
 
         this.id = id;
         this.bar = null;
-        this.silent = false;
         this.typeHandler = null;
     }
 
@@ -89,26 +86,6 @@ export default class RealmManager extends task.Manager {
     async unlock() {
         if (await locking.check(adone.realm.config.lockFilePath)) {
             return locking.release(adone.realm.config.lockFilePath);
-        }
-    }
-
-    setSilent(silent) {
-        this.silent = silent;
-    }
-
-    _createProgress({ schema = " :spinner" } = {}) {
-        if (!this.silent) {
-            this.bar = adone.runtime.term.progress({
-                schema
-            });
-            this.bar.update(0);
-        }
-    }
-
-    _updateProgress({ schema, result = null } = {}) {
-        if (!is.null(this.bar) && !this.silent) {
-            this.bar.setSchema(schema);
-            is.boolean(result) && this.bar.complete(result);
         }
     }
 

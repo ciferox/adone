@@ -1,11 +1,11 @@
-import Subsystem from "./subsystem";
-
 const {
     application: {
+        Subsystem,
         DSubsystem,
         DCliCommand
     },
     is,
+    cli: { kit },
     text: { pretty },
     omnitron,
     std
@@ -63,18 +63,24 @@ export default class Omnitron extends Subsystem {
     })
     async upCommand() {
         try {
-            this._createProgress("starting up omnitron");
+            kit.createProgress("starting up omnitron");
             const pid = await omnitron.dispatcher.startOmnitron();
             if (is.number(pid)) {
-                this._updateProgress(`done (pid: ${pid})`, true);
+                kit.updateProgress({
+                    message: `done (pid: ${pid})`,
+                    result: true
+                });
             } else {
-                this._updateProgress({
+                kit.updateProgress({
                     schema: ` {yellow-fg}!{/yellow-fg} already running (pid: ${pid.pid})`
                 }, true);
             }
             return 0;
         } catch (err) {
-            this._updateProgress(err.message, false);
+            kit.updateProgress({
+                message: err.message,
+                result: false
+            });
             return 1;
         }
     }
@@ -86,24 +92,34 @@ export default class Omnitron extends Subsystem {
     })
     async downCommand() {
         try {
-            this._createProgress("shutting down omnitron");
+            kit.createProgress("shutting down omnitron");
             const result = await omnitron.dispatcher.stopOmnitron();
             switch (result) {
                 case 0:
-                    this._updateProgress("failed", false);
+                    kit.updateProgress({
+                        message: "failed",
+                        result: false
+                    });
                     break;
                 case 1:
-                    this._updateProgress("done", true);
+                    kit.updateProgress({
+                        message: "done",
+                        result: true
+                    });
                     break;
                 case 2:
-                    this._updateProgress({
-                        schema: " {yellow-fg}!{/yellow-fg} omnitron is not started"
-                    }, true);
+                    kit.updateProgress({
+                        schema: " {yellow-fg}!{/yellow-fg} omnitron is not started",
+                        result: true
+                    });
                     break;
             }
             return 0;
         } catch (err) {
-            this._updateProgress(err.message, false);
+            kit.updateProgress({
+                message: err.message,
+                result: false
+            });
             return 1;
         }
     }
@@ -114,15 +130,18 @@ export default class Omnitron extends Subsystem {
         help: "Ping the omnitron"
     })
     async pingCommand() {
-        this._createProgress("checking");
+        kit.createProgress("checking");
         try {
-            await this._connectToLocal();
+            await kit.connect();
         } catch (err) {
             //
         }
 
         const result = await omnitron.dispatcher.ping();
-        this._updateProgress(result ? "done" : "failed", result);
+        kit.updateProgress({
+            message: result ? "done" : "failed",
+            result
+        });
         return 0;
     }
 
@@ -133,13 +152,19 @@ export default class Omnitron extends Subsystem {
     })
     async gcCommand() {
         try {
-            this._createProgress("trying");
-            await this._connectToLocal();
-            const result = await omnitron.dispatcher.gc();
-            this._updateProgress(result, true);
+            kit.createProgress("trying");
+            await kit.connect();
+            const message = await omnitron.dispatcher.gc();
+            kit.updateProgress({
+                message,
+                result: true
+            });
             return 0;
         } catch (err) {
-            this._updateProgress(err.message, false);
+            kit.updateProgress({
+                messgae: err.message,
+                result: false
+            });
             return 1;
         }
     }
@@ -160,14 +185,21 @@ export default class Omnitron extends Subsystem {
     })
     async infoCommand(args) {
         try {
-            this._createProgress("obtaining");
-            await this._connectToLocal();
+            kit.createProgress("obtaining");
+            await kit.connect();
             const result = await omnitron.dispatcher.getInfo(args.get("param"));
-            this._updateProgress("done", true, true);
+            kit.updateProgress({
+                message: "done",
+                result: true,
+                clean: true
+            });
             adone.log(adone.text.pretty.json(result));
             return 0;
         } catch (err) {
-            this._updateProgress(err.message, false);
+            kit.updateProgress({
+                message: err.message,
+                result: false
+            });
             return 1;
         }
     }
@@ -179,14 +211,21 @@ export default class Omnitron extends Subsystem {
     })
     async reportCommand() {
         try {
-            this._createProgress("obtaining");
-            await this._connectToLocal();
+            kit.createProgress("obtaining");
+            await kit.connect();
             const result = await omnitron.dispatcher.getReport();
-            this._updateProgress("done", true, true);
+            kit.updateProgress({
+                message: "done",
+                result: true,
+                clean: true
+            });
             adone.log(result);
             return 0;
         } catch (err) {
-            this._updateProgress(err.message, false);
+            kit.updateProgress({
+                message: err.message,
+                result: false
+            });
             return 1;
         }
     }
@@ -205,14 +244,20 @@ export default class Omnitron extends Subsystem {
     })
     async enableCommand(args, opts) {
         try {
-            this._createProgress("enabling");
+            kit.createProgress("enabling");
             const name = args.get("service");
-            await this._connectToLocal();
+            await kit.connect();
             await omnitron.dispatcher.enableService(name);
-            this._updateProgress("done", true);
+            kit.updateProgress({
+                message: "done",
+                result: true
+            });
             return 0;
         } catch (err) {
-            this._updateProgress(err.message, false);
+            kit.updateProgress({
+                message: err.message,
+                result: false
+            });
             return 1;
         }
     }
@@ -231,14 +276,20 @@ export default class Omnitron extends Subsystem {
     })
     async disableCommand(args, opts) {
         try {
-            this._createProgress("disabling");
+            kit.createProgress("disabling");
             const name = args.get("service");
-            await this._connectToLocal();
+            await kit.connect();
             await omnitron.dispatcher.disableService(name);
-            this._updateProgress("done", true);
+            kit.updateProgress({
+                message: "done",
+                result: true
+            });
             return 0;
         } catch (err) {
-            this._updateProgress(err.message, false);
+            kit.updateProgress({
+                message: err.message,
+                result: false
+            });
             return 1;
         }
     }
@@ -257,14 +308,20 @@ export default class Omnitron extends Subsystem {
     })
     async startCommand(args) {
         try {
-            this._createProgress("starting");
+            kit.createProgress("starting");
             const name = args.get("service");
-            await this._connectToLocal();
+            await kit.connect();
             await omnitron.dispatcher.startService(name);
-            this._updateProgress("done", true);
+            kit.updateProgress({
+                message: "done",
+                result: true
+            });
             return 0;
         } catch (err) {
-            this._updateProgress(err.message, false);
+            kit.updateProgress({
+                message: err.message,
+                result: false
+            });
             return 1;
         }
     }
@@ -283,14 +340,20 @@ export default class Omnitron extends Subsystem {
     })
     async stopCommand(args) {
         try {
-            this._createProgress("stopping");
+            kit.createProgress("stopping");
             const name = args.get("service");
-            await this._connectToLocal();
+            await kit.connect();
             await omnitron.dispatcher.stopService(name);
-            this._updateProgress("done", true);
+            kit.updateProgress({
+                message: "done",
+                result: true
+            });
             return 0;
         } catch (err) {
-            this._updateProgress(err.message, false);
+            kit.updateProgress({
+                message: err.message,
+                result: false
+            });
             return 1;
         }
     }
@@ -310,14 +373,20 @@ export default class Omnitron extends Subsystem {
     })
     async restartCommand(args) {
         try {
-            this._createProgress("restarting");
+            kit.createProgress("restarting");
             const name = args.get("service");
-            await this._connectToLocal();
+            await kit.connect();
             await omnitron.dispatcher.restart(name);
-            this._updateProgress("done", true);
+            kit.updateProgress({
+                message: "done",
+                result: true
+            });
             return 0;
         } catch (err) {
-            this._updateProgress(err.message, false);
+            kit.updateProgress({
+                message: err.message,
+                result: false
+            });
             return 1;
         }
     }
@@ -344,9 +413,9 @@ export default class Omnitron extends Subsystem {
     })
     async configureCommand(args, opts) {
         try {
-            this._createProgress("configuring");
+            kit.createProgress("configuring");
             const name = args.get("service");
-            await this._connectToLocal();
+            await kit.connect();
             const config = {};
             if (opts.has("group")) {
                 config.group = opts.get("group");
@@ -354,16 +423,23 @@ export default class Omnitron extends Subsystem {
 
             if (Object.keys(config).length > 0) {
                 await omnitron.dispatcher.configureService(name, config);
-                this._updateProgress("done", true);
+                kit.updateProgress({
+                    message: "done",
+                    result: true
+                });
             } else {
-                this._updateProgress({
-                    schema: " {yellow-fg}!{/yellow-fg} nothing to configure"
-                }, true);
+                kit.updateProgress({
+                    schema: " {yellow-fg}!{/yellow-fg} nothing to configure",
+                    result: true
+                });
             }
 
             return 0;
         } catch (err) {
-            this._updateProgress(err.message, false);
+            kit.updateProgress({
+                message: err.message,
+                result: false
+            });
             return 1;
         }
     }
@@ -390,14 +466,18 @@ export default class Omnitron extends Subsystem {
     })
     async servicesCommand(args, opts) {
         try {
-            this._createProgress("obtaining");
-            await this._connectToLocal();
+            kit.createProgress("obtaining");
+            await kit.connect();
             const services = await omnitron.dispatcher.enumerate({
                 name: opts.get("name"),
                 status: opts.get("status")
             });
 
-            this._updateProgress("done", true, true);
+            kit.updateProgress({
+                message: "done",
+                result: true,
+                clean: true
+            });
 
             if (services.length > 0) {
                 adone.log(pretty.table(services, {
@@ -444,7 +524,10 @@ export default class Omnitron extends Subsystem {
             }
             return 0;
         } catch (err) {
-            this._updateProgress(err.message, false);
+            kit.updateProgress({
+                message: err.message,
+                result: false
+            });
             return 1;
         }
     }
@@ -456,11 +539,15 @@ export default class Omnitron extends Subsystem {
     })
     async peersCommand() {
         try {
-            this._createProgress("obtaining");
-            await this._connectToLocal();
+            kit.createProgress("obtaining");
+            await kit.connect();
             const peers = await omnitron.dispatcher.getPeers();
 
-            this._updateProgress("done", true, true);
+            kit.updateProgress({
+                message: "done",
+                result: true,
+                clean: true
+            });
 
             adone.log(pretty.table(peers, {
                 width: "100%",
@@ -496,7 +583,10 @@ export default class Omnitron extends Subsystem {
             }));
             return 0;
         } catch (err) {
-            this._updateProgress(err.message, false);
+            kit.updateProgress({
+                message: err.message,
+                result: false
+            });
             return 1;
         }
     }
@@ -508,11 +598,15 @@ export default class Omnitron extends Subsystem {
     })
     async contextsCommand() {
         try {
-            this._createProgress("obtaining");
-            await this._connectToLocal();
+            kit.createProgress("obtaining");
+            await kit.connect();
             const peers = await omnitron.dispatcher.getContexts();
 
-            this._updateProgress("done", true, true);
+            kit.updateProgress({
+                message: "done",
+                result: true,
+                clean: true
+            });
 
             adone.log(pretty.table(peers, {
                 style: {
@@ -533,7 +627,10 @@ export default class Omnitron extends Subsystem {
             }));
             return 0;
         } catch (err) {
-            this._updateProgress(err.message, false);
+            kit.updateProgress({
+                message: err.message,
+                result: false
+            });
             return 1;
         }
     }
@@ -545,11 +642,15 @@ export default class Omnitron extends Subsystem {
     })
     async subsystemsCommand() {
         try {
-            this._createProgress("obtaining");
-            await this._connectToLocal();
+            kit.createProgress("obtaining");
+            await kit.connect();
             const peers = await omnitron.dispatcher.getSubsystems();
 
-            this._updateProgress("done", true, true);
+            kit.updateProgress({
+                message: "done",
+                result: true,
+                clean: true
+            });
 
             adone.log(pretty.table(peers, {
                 style: {
@@ -578,7 +679,10 @@ export default class Omnitron extends Subsystem {
             }));
             return 0;
         } catch (err) {
-            this._updateProgress(err.message, false);
+            kit.updateProgress({
+                message: err.message,
+                result: false
+            });
             return 1;
         }
     }
@@ -620,23 +724,29 @@ export default class Omnitron extends Subsystem {
     })
     async loadCommand(args, opts) {
         try {
-            this._createProgress("loading");
+            kit.createProgress("loading");
             let path = args.get("path");
             if (!std.path.isAbsolute(path)) {
                 path = std.path.join(process.cwd(), path);
             }
 
-            await this._connectToLocal();
+            await kit.connect();
             await omnitron.dispatcher.loadSubsystem(path, {
                 name: opts.has("name") ? opts.get("name") : null,
                 group: opts.get("group"),
                 description: opts.get("description"),
                 transpile: opts.has("transpile")
             });
-            this._updateProgress("done", true);
+            kit.updateProgress({
+                message: "done",
+                result: true
+            });
             return 0;
         } catch (err) {
-            this._updateProgress(err.message, false);
+            kit.updateProgress({
+                message: err.message,
+                result: false
+            });
             return 1;
         }
     }
@@ -655,59 +765,21 @@ export default class Omnitron extends Subsystem {
     })
     async unloadCommand(args) {
         try {
-            this._createProgress("unloading");
+            kit.createProgress("unloading");
             const name = args.get("name");
-            await this._connectToLocal();
+            await kit.connect();
             await omnitron.dispatcher.unloadSubsystem(name);
-            this._updateProgress("done", true);
+            kit.updateProgress({
+                message: "done",
+                result: true
+            });
             return 0;
         } catch (err) {
-            this._updateProgress(err.message, false);
+            kit.updateProgress({
+                message: err.message,
+                result: false
+            });
             return 1;
         }
     }
-
-    // async gatesCommand() {
-    //     try {
-    //         adone.log(pretty.table(await omnitron.dispatcher.gates(), {
-    //             style: {
-    //                 head: ["gray"],
-    //                 compact: true
-    //             },
-    //             model: [
-    //                 {
-    //                     id: "id",
-    //                     header: "ID",
-    //                     style: "{green-fg}"
-    //                 },
-    //                 {
-    //                     id: "port",
-    //                     header: "Address",
-    //                     style: "{bold}"
-    //                 },
-    //                 {
-    //                     id: "type",
-    //                     header: "Type"
-    //                 },
-    //                 {
-    //                     id: "status",
-    //                     header: "Status",
-    //                     style: (val) => {
-    //                         switch (val) {
-    //                             case "disabled": return "{red-bg}{white-bg}";
-    //                             case "enabled": return "{yellow-bg}{black-fg}";
-    //                             case "active": return "{green-bg}{black-fg}";
-    //                             default: return "";
-    //                         }
-    //                     },
-    //                     format: " %s ",
-    //                     align: "right"
-    //                 }
-    //             ]
-    //         }));
-    //     } catch (err) {
-    //         adone.log(err);
-    //     }
-    //     return 0;
-    // }
 }

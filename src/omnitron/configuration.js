@@ -23,7 +23,7 @@ export default class Configuration extends adone.configuration.Generic {
     getGate(name) {
         const index = this.raw.gates.findIndex((g) => g.name === name);
         if (index < 0) {
-            throw new adone.x.NotExists(`Gate '${name}' is not exist`);
+            throw new adone.x.NotExists(`Gate with name '${name}' is not exist`);
         }
 
         return this.raw.gates[index];
@@ -33,9 +33,50 @@ export default class Configuration extends adone.configuration.Generic {
         return this.getGate("local");
     }
 
-    getGates() {
+    getGates(status) {
         // At least one local gate should be exist.
+
+        if (is.string(status)) {
+            // Local gate always is enabled.
+            return this.raw.gates.filter((g) => g.status === status || g.name === "local");
+        }
         return this.raw.gates;
+    }
+
+    addGate(gate) {
+        if (!is.string(gate.name)) {
+            throw new adone.x.NotValid("'name' property is not a string");
+        }
+
+        if (this.hasGate(gate.name)) {
+            throw new adone.x.Exists(`Gate with name '${gate.name}' is already exist`);
+        }
+
+        this.raw.gates.push(gate);
+
+        return this.save();
+    }
+
+    deleteGate(name) {
+        const index = this.raw.gates.findIndex((g) => g.name === name);
+        if (index < 0) {
+            throw new adone.x.NotExists(`Gate with name '${name}' is not exist`);
+        }
+
+        this.raw.gates.splice(index, 1);
+        return this.save();
+    }
+
+    disableGate(name) {
+        const gate = this.getGate(name);
+        gate.status = "off";
+        return this.save();
+    }
+
+    enableGate(name) {
+        const gate = this.getGate(name);
+        gate.status = "on";
+        return this.save();
     }
 
     static async load({ defaults = true } = {}) {
@@ -55,9 +96,9 @@ export default class Configuration extends adone.configuration.Generic {
             }
             await config.save();
         }
-    
+
         return config;
-    }    
+    }
 
     static configName = CONFIG_NAME;
     static path = adone.std.path.join(adone.realm.config.configsPath, CONFIG_NAME);

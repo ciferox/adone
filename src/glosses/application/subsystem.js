@@ -11,6 +11,7 @@ const {
 } = adone;
 
 const NAME_SYMBOL = Symbol();
+const ROOT_SYMBOL = Symbol();
 const PARENT_SYMBOL = Symbol();
 const STATE_SYMBOL = Symbol.for("application.Subsystem#state");
 const SUBSYSTEMS_SYMBOL = Symbol.for("application.Subsystem#subsystems");
@@ -27,21 +28,37 @@ export default class Subsystem extends adone.event.AsyncEmitter {
     /**
      * Returns name of subsystem
      */
-    getName() {
+    get name() {
         return this[NAME_SYMBOL];
+    }
+
+    /**
+     * Returns root subsystem. In most cases, the root subsystem is the application.
+     */
+    get root() {
+        return this[ROOT_SYMBOL];
+    }
+
+    /**
+     * Sets root subsystem.
+     * 
+     * Note: This method can call only root subsystems (by design), for example, the applications.
+     */
+    setRoot(root) {
+        this[ROOT_SYMBOL] = root;
     }
 
     /**
      * Returns parent subsystem - supersystem
      */
-    getParent() {
+    get parent() {
         return this[PARENT_SYMBOL];
     }
 
     /**
      * Returns current state
      */
-    getState() {
+    get state() {
         return this[STATE_SYMBOL];
     }
 
@@ -49,9 +66,9 @@ export default class Subsystem extends adone.event.AsyncEmitter {
      * Sets new state (im most cases it's not a good idea to change state unless the common logic is redifined).
      * @param {*} newState new state
      */
-    async setState(newState) {
+    setState(newState) {
         this[STATE_SYMBOL] = newState;
-        await this.emitParallel("state", newState);
+        this.emit("state", newState);
     }
 
     /**
@@ -230,7 +247,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
      * @param {string} name Name of subsystem
      * @returns {adone.application.Subsystem}
      */
-    subsystem(name) {
+    getSubsystem(name) {
         const sysInfo = this.getSubsystemInfo(name);
         return sysInfo.instance;
     }
@@ -289,6 +306,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         };
 
         instance[NAME_SYMBOL] = name;
+        instance[ROOT_SYMBOL] = this.root;
         instance[PARENT_SYMBOL] = this;
 
         if (bind === true) {
@@ -461,28 +479,28 @@ export default class Subsystem extends adone.event.AsyncEmitter {
     }
 
     async _configure(...args) {
-        await this.setState(STATE.CONFIGURING);
+        this.setState(STATE.CONFIGURING);
         await this.configure(...args);
         await this.configureSubsystems();
-        await this.setState(STATE.CONFIGURED);
+        this.setState(STATE.CONFIGURED);
     }
 
     async _initialize() {
-        await this.setState(STATE.INITIALIZING);
+        this.setState(STATE.INITIALIZING);
         await this.initialize();
         await this.initializeSubsystems();
-        await this.setState(STATE.INITIALIZED);
+        this.setState(STATE.INITIALIZED);
     }
 
     async _uninitialize() {
-        await this.setState(STATE.UNINITIALIZING);
+        this.setState(STATE.UNINITIALIZING);
         await this.uninitialize();
         await this.uninitializeSubsystems();
-        await this.setState(STATE.UNINITIALIZED);
+        this.setState(STATE.UNINITIALIZED);
     }
 
     async _forceConfigured() {
-        await this.setState(STATE.CONFIGURED);
+        this.setState(STATE.CONFIGURED);
         for (const sysInfo of this[SUBSYSTEMS_SYMBOL]) {
             sysInfo.instance._forceConfigured();
         }

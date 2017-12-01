@@ -94,7 +94,7 @@ export default class ServiceMaintainer extends AsyncEmitter {
 
     @Public()
     getServiceConfiguration(name) {
-        return this.manager.getParent().db.getServiceConfiguration(name);
+        return this.manager.parent.db.getServiceConfiguration(name);
     }
 
     onServiceStopped(name) {
@@ -246,7 +246,7 @@ export default class ServiceMaintainer extends AsyncEmitter {
                     detached: true,
                     cwd: process.cwd(),
                     env: Object.assign({}, process.env, {
-                        OMNITRON_PORT: this.manager.getParent().gates.getServicePort(),
+                        OMNITRON_PORT: this.manager.parent.gates.getServicePort(),
                         OMNITRON_SERVICE_GROUP: this.group
                     }),
                     stdio: ["ignore", stdout, stderr]

@@ -353,4 +353,32 @@ export default class Dispatcher {
     gc() {
         return this.getInterface("omnitron").gc();
     }
+
+    addGate(gate) {
+        return this.getInterface("omnitron").addGate(gate);
+    }
+
+    deleteGate(name) {
+        return this.getInterface("omnitron").deleteGate(name);
+    }
+
+    upGate(name) {
+        return this.getInterface("omnitron").upGate(name);
+    }
+
+    downGate(name) {
+        return this.getInterface("omnitron").downGate(name);
+    }
+
+    getGates(options) {
+        return this.getInterface("omnitron").getGates(options);
+    }
+
+    offGate(name) {
+        return this.getInterface("omnitron").offGate(name);
+    }
+
+    onGate(name) {
+        return this.getInterface("omnitron").onGate(name);
+    }
 }

@@ -121,7 +121,7 @@ describe("Node Device", () => {
         it("should return the device name", () => {
             //test driver does not provide mechanisms to test this function
             try {
-                const name = test.device.getName();
+                const name = test.device.name;
                 expect(name).to.exist;
             } catch (error) {
                 expect(error.code).to.equal(error.VIR_ERR_NO_SUPPORT);
