@@ -32,11 +32,11 @@ class Hello extends application.Subsystem {
 
 class TestApp extends adone.application.Application {
     async configure() {
-        await this.addSubsystem({
+        this.addSubsystem({
             subsystem: new AppSubsystem(),
             name: "Hello"
         });
-        await this.addSubsystem({
+        this.addSubsystem({
             subsystem: new Hello()
         });
     }

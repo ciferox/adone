@@ -8,7 +8,7 @@ const {
     omnitron
 } = adone;
 
-export default class Gate extends Subsystem {
+export default class Host extends Subsystem {
     @DCliCommand({
         name: "list",
         help: "Show gates",
@@ -31,8 +31,8 @@ export default class Gate extends Subsystem {
                 if (options.active) {
                     gates = [];
                 } else {
-                    const config = await omnitron.dispatcher.getConfiguration();
-                    gates = config.getGates();
+                    const omniConf = await omnitron.Configuration.load();
+                    gates = omniConf.getGates();
                 }
             }
 
@@ -48,7 +48,6 @@ export default class Gate extends Subsystem {
             }
             return 0;
         } catch (err) {
-            adone.log(err);
             kit.updateProgress({
                 message: err.message,
                 result: false
@@ -85,12 +84,18 @@ export default class Gate extends Subsystem {
     async addCommand(args, opts) {
         try {
             kit.createProgress("adding");
-
-            const config = await omnitron.dispatcher.getConfiguration();
-            await config.addGate({
+            const gate = {
                 name: args.get("name"),
                 ...opts.getAll()
-            });
+            };
+
+            if (await omnitron.dispatcher.isOmnitronActive()) {
+                await kit.connect();
+                await omnitron.dispatcher.addGate(gate);
+            } else {
+                const omniConf = await omnitron.Configuration.load();
+                await omniConf.addGate(gate);
+            }
 
             kit.updateProgress({
                 message: "done",
@@ -120,9 +125,14 @@ export default class Gate extends Subsystem {
     async deleteCommand(args) {
         try {
             kit.createProgress("deleting");
-
-            const config = await omnitron.dispatcher.getConfiguration();
-            await config.deleteGate(args.get("name"));
+            const name = args.get("name");
+            if (await omnitron.dispatcher.isOmnitronActive()) {
+                await kit.connect();
+                await omnitron.dispatcher.deleteGate(name);
+            } else {
+                const omniConf = await omnitron.Configuration.load();
+                await omniConf.deleteGate(name);
+            }
 
             kit.updateProgress({
                 message: "done",
@@ -153,7 +163,7 @@ export default class Gate extends Subsystem {
         try {
             const name = args.get("name");
             kit.createProgress(`activating gate {green-fg}${name}{/green-fg}`);
-
+            
             await kit.connect();
             await omnitron.dispatcher.upGate(name);
 
@@ -186,7 +196,7 @@ export default class Gate extends Subsystem {
         try {
             const name = args.get("name");
             kit.createProgress(`deactivating gate {green-fg}${name}{/green-fg}`);
-
+            
             await kit.connect();
             await omnitron.dispatcher.downGate(name);
 
@@ -217,10 +227,16 @@ export default class Gate extends Subsystem {
     })
     async onCommand(args) {
         try {
-            kit.createProgress("enabling");
+            const name = args.get("name");
+            kit.createProgress(`enabling gate {green-fg}${name}{/green-fg}`);
 
-            const config = await omnitron.dispatcher.getConfiguration();
-            await config.onGate(args.get("name"));
+            if (await omnitron.dispatcher.isOmnitronActive()) {
+                await kit.connect();
+                await omnitron.dispatcher.onGate(name);
+            } else {
+                const omniConf = await omnitron.Configuration.load();
+                await omniConf.onGate(name);
+            }
 
             kit.updateProgress({
                 message: "done",
@@ -249,10 +265,16 @@ export default class Gate extends Subsystem {
     })
     async offCommand(args) {
         try {
-            kit.createProgress("disabling");
-
-            const config = await omnitron.dispatcher.getConfiguration();
-            await config.offGate(args.get("name"));
+            const name = args.get("name");
+            kit.createProgress(`disabling gate {green-fg}${name}{/green-fg}`);
+            
+            if (await omnitron.dispatcher.isOmnitronActive()) {
+                await kit.connect();
+                await omnitron.dispatcher.offGate(name);
+            } else {
+                const omniConf = await omnitron.Configuration.load();
+                await omniConf.offGate(name);
+            }
 
             kit.updateProgress({
                 message: "done",

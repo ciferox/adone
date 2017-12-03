@@ -26,15 +26,10 @@ export default class Omnitron extends application.Application {
         // Force create home and runtime directories
         await fs.mkdirp(adone.realm.config.runtimePath);
 
-        // Load omnitron configuration
-        this.config = await omnitron.Configuration.load();
-
-        this.db = new omnitron.DB();
-
         // Add subsystems
         for (const name of CORE_SUBSYSTEMS) {
             // eslint-disable-next-line
-            await this.addSubsystem({
+            this.addSubsystem({
                 subsystem: std.path.join(__dirname, "subsystems", name),
                 name,
                 bind: true,
@@ -54,7 +49,7 @@ export default class Omnitron extends application.Application {
     }
 
     async initialize() {
-        await this.db.open();
+        this.db = await omnitron.DB.open();
         adone.info("Database opened");
 
         await runtime.netron.attachContext(this, "omnitron");
@@ -150,14 +145,15 @@ export default class Omnitron extends application.Application {
         description: "Returns information about omnitron",
         type: Object
     })
-    async getInfo({ process: proc = false, version = false, realm = false, env = false } = {}) {
+    async getInfo({ process: proc = false, version = false, realm = false, env = false, netron = false } = {}) {
         const result = {};
 
-        if (!proc && !version && !realm && !env) {
+        if (!proc && !version && !realm && !env && !netron) {
             proc = true;
             version = true;
             realm = true;
             env = true;
+            netron = true;
         }
 
         if (proc) {
@@ -204,6 +200,10 @@ export default class Omnitron extends application.Application {
             result.env = Object.assign({}, process.env);
         }
 
+        if (netron) {
+            result.netron = adone.util.omit(adone.runtime.netron.options, (key, val) => is.function(val));
+        }
+
         return result;
     }
 
@@ -230,14 +230,6 @@ export default class Omnitron extends application.Application {
             }
         }
     }
-
-    // @Public({
-    //     description: "Returns list of all gates",
-    //     type: Array
-    // })
-    // gates() {
-    //     return this.config.gates;
-    // }
 
     @Public({
         description: "Register new service"
@@ -393,6 +385,12 @@ export default class Omnitron extends application.Application {
             throw new adone.x.NotAllowed("Unload core subsystem is not possible");
         }
         await super.unloadSubsystem(name);
+    }
+
+    // Configuration
+    @Public()
+    getConfiguration() {
+        return this.db.getConfiguration();
     }
 
     // Gates

@@ -6,7 +6,7 @@ const {
 class TestApp extends adone.application.Application {
     async configure() {
         try {
-            await this.addSubsystem({
+            this.addSubsystem({
                 subsystem: std.path.join(__dirname, "not_valid_subsystem.js")
             });
         } catch (err) {

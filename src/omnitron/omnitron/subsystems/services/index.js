@@ -13,19 +13,24 @@ const api = adone.lazify({
 }, exports, require);
 
 export default class Services extends application.Subsystem {
-    async configure() {
+    constructor(options) {
+        super(options);
+
         this.services = null;
         this.groupMaintainers = new Map();
+    }
 
-        this.options = Object.assign({
-            startTimeout: 10000,
-            stopTimeout: 10000
-        }, this.parent.config.raw.service);
-
+    async configure() {
         adone.info("Services subsystem configured");
     }
 
     async initialize() {
+        this.config = await this.root.db.getConfiguration();
+        this.options = Object.assign({
+            startTimeout: 10000,
+            stopTimeout: 10000
+        }, await this.config.get("service"));
+    
         this.services = await this.parent.db.getMetaValuable("service");
 
         const VALID_STATUSES = [STATUS.DISABLED, STATUS.INACTIVE];

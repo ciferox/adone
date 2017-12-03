@@ -11,7 +11,6 @@ class CliKit extends application.Subsystem {
     }
 
     uninitialize() {
-        return adone.omnitron.dispatcher.disconnect();
     }
 
     setProgressBar(bar) {
@@ -23,9 +22,20 @@ class CliKit extends application.Subsystem {
     }
 
     async connect() {
-        await adone.omnitron.dispatcher.connectLocal({
-            forceStart: false
-        });
+        if (!adone.omnitron.dispatcher.isConnected()) {
+            await adone.omnitron.dispatcher.connectLocal({
+                forceStart: false
+            });
+
+            // Add dispatcher as subsystem.
+            this.addSubsystem({
+                name: "dispatcher",
+                bind: true,
+                subsystem: adone.omnitron.dispatcher
+            });
+            await this.configureSubsystem("dispatcher");
+            await this.initializeSubsystem("dispatcher");
+        }
     }
 
     createProgress(message) {

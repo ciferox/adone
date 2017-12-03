@@ -3,39 +3,8 @@ const {
     runtime
 } = adone;
 
-const STATUS = {
-    OFF: "off",
-    ON: "on"
-};
-
-const STATUSES = [
-    STATUS.OFF,
-    STATUS.ON
-];
-
-const GATE_SCHEMA = {
-    type: "object",
-    additionalProperties: false,
-    requires: ["name", "port"],
-    properties: {
-        name: {
-            type: "string"
-        },
-        port: {
-            type: ["integer", "string"]
-        },
-        status: {
-            type: "string",
-            default: STATUS.ON,
-            enum: STATUSES
-        }
-    }
-};
-
 export default class Gates extends application.Subsystem {
     async configure() {
-        Object.assign(runtime.netron.options, this.parent.config.raw.netron);
-
         await runtime.netron.registerAdapter("ws", adone.netron.ws.Adapter);
 
         runtime.netron.on("peer online", (peer) => {
@@ -44,20 +13,22 @@ export default class Gates extends application.Subsystem {
             adone.info(`Peer '${peer.getRemoteAddress().full}' (uid: ${peer.uid}) disconnected`);
         });
 
-        const validator = new adone.schema.Validator({
-            coerceTypes: true,
-            useDefaults: true
-        });
-        this.validate = validator.compile(GATE_SCHEMA);
-
         adone.info("Gates subsystem configured");
     }
 
     async initialize() {
-        this._servicePort = this.parent.config.getLocalGate().port;
+        this.config = await this.root.db.getConfiguration();
+        Object.assign(runtime.netron.options, await this.config.get("netron"));
 
-        // Bind enabled gates.
-        for (const gate of this.parent.config.getGates(STATUS.ON)) {
+        // Bind local gate
+        await runtime.netron.bind({
+            name: "local",
+            port: adone.omnitron.port
+        });
+
+        // Bind other enabled gates.
+        const gates = await this.config.getGates("on");
+        for (const gate of gates) {
             await runtime.netron.bind(gate); // eslint-disable-line
         }
 
@@ -78,24 +49,16 @@ export default class Gates extends application.Subsystem {
         adone.info("Gates subsystem uninitialized");
     }
 
-    getServicePort() {
-        return this._servicePort;
-    }
-
     addGate(gate) {
-        if (!this.validate(gate)) {
-            throw new adone.x.AggregateException(this.validate.errors);
-        }
-
-        return this.parent.config.addGate(gate);
+        return this.config.addGate(gate);
     }
 
     deleteGate(name) {
-        return this.parent.config.deleteGate(name);
+        return this.config.deleteGate(name);
     }
 
     async upGate(name) {
-        const gate = this.parent.config.getGate(name);
+        const gate = await this.config.getGate(name);
         if (runtime.netron.gates.has(name)) {
             throw new adone.x.IllegalState(`Gate with name '${name}' already active`);
         }
@@ -108,28 +71,28 @@ export default class Gates extends application.Subsystem {
         }
 
         // This call checks if gate is exist.
-        const gate = this.parent.config.getGate(name);
+        const gate = await this.config.getGate(name);
         if (!runtime.netron.gates.has(name)) {
             throw new adone.x.IllegalState(`Gate with name '${name}' is not active`);
         }
         await runtime.netron.unbind(gate.name);
     }
 
-    getGates({ active = false } = {}) {
-        const allGates = this.parent.config.getGates();
-        
+    async getGates({ active = false } = {}) {
+        const allGates = await this.config.getGates();
+
         if (active) {
             const names = runtime.netron.gates.getAll().map((g) => g.name);
             return allGates.filter((g) => names.includes(g.name));
         }
         return allGates;
     }
-    
+
     offGate(name) {
-        return this.parent.config.disableGate(name);
+        return this.config.offGate(name);
     }
 
     onGate(name) {
-        return this.parent.config.enableGate(name);
+        return this.config.onGate(name);
     }
 }

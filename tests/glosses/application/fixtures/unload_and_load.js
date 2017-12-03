@@ -25,7 +25,7 @@ class TestApp extends application.Application {
             contents: subsystemCode(1)
         });
 
-        await this.addSubsystem({
+        this.addSubsystem({
             name: "hello",
             subsystem: this.tmpfile.path()
         });

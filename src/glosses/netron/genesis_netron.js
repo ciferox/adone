@@ -1,5 +1,3 @@
-import { normalize } from "path";
-
 const {
     is,
     x,

@@ -10,13 +10,12 @@ const {
 @Context()
 class ServiceApplication extends application.Application {
     async configure() {
-        this.omnitronPort = process.env.OMNITRON_PORT;
         this.group = process.env.OMNITRON_SERVICE_GROUP;
 
         this.exitOnSignal("SIGTERM");
 
         this.peer = await runtime.netron.connect({
-            port: this.omnitronPort
+            port: adone.omnitron.port
         });
 
         // Waiting for omnitron context is available.

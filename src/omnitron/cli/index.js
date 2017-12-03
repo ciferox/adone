@@ -32,15 +32,13 @@ const subsystemPath = (name) => std.path.resolve(__dirname, "subsystems", name);
         {
             name: "subsystems",
             description: "Subsystems management"
+        },
+        {
+            name: "config",
+            description: "Configuration"
         }
     ],
     subsystems: [
-        {
-            name: "config",
-            group: "common",
-            description: "Omnitron configuration",
-            subsystem: subsystemPath("config")
-        },
         {
             name: "startup",
             group: "common",
@@ -48,10 +46,22 @@ const subsystemPath = (name) => std.path.resolve(__dirname, "subsystems", name);
             subsystem: subsystemPath("startup")
         },
         {
+            name: "config",
+            group: "config",
+            description: "Generic omnitron configuration",
+            subsystem: subsystemPath("config")
+        },
+        {
             name: "gate",
-            group: "common",
+            group: "config",
             description: "Gates management",
             subsystem: subsystemPath("gate")
+        },
+        {
+            name: "host",
+            group: "config",
+            description: "Hosts management",
+            subsystem: subsystemPath("host")
         }
     ]
 })
@@ -178,7 +188,7 @@ export default class Omnitron extends Subsystem {
                 name: "param",
                 action: "set",
                 set: "trueOnEmpty",
-                choices: ["process", "version", "realm", "env"],
+                choices: ["process", "version", "realm", "env", "netron"],
                 help: "Name of parameter(s): env, version, process, realm, eventloop"
             }
         ]

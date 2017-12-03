@@ -258,7 +258,7 @@ const inspect_ = (runtime, options, variable) => {
                 str += options.style.limit("[depth limit]");
             }
             str += options.style.nl;
-        } else if (runtime.ancestors.indexOf(variable) !== -1) {
+        } else if (runtime.ancestors.includes(variable)) {
             if (!options.noNotices) {
                 str += options.style.limit("[circular]");
             }

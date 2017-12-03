@@ -1,6 +1,7 @@
-import { isAbsolute } from "path";
-
 const {
+    application: {
+        Subsystem
+    },
     is,
     x,
     std,
@@ -9,24 +10,29 @@ const {
     runtime
 } = adone;
 
-export default class Dispatcher {
-    constructor({ noisily = false, netronOptions = {} } = {}) {
-        this.noisily = noisily;
-        adone.vendor.lodash.extend(runtime.netron.options, netronOptions);
-
-        if (noisily) {
-            runtime.netron.on("peer online", (peer) => {
-                adone.info(`Peer '${peer.getRemoteAddress().full}' (${peer.uid}) connected`);
-            }).on("peer offline", (peer) => {
-                adone.info(`Peer '${peer.getRemoteAddress().full}' (${peer.uid}) disconnected`);
-            });
-        }
+export default class Dispatcher extends Subsystem {
+    constructor() {
+        super();
 
         this.peer = null;
         this.descriptors = {
             stodut: null,
             stderr: null
         };
+        
+        runtime.netron.on("peer offline", (peer) => {
+            if (this.peer.uid === peer.uid) {
+                this.peer = null;
+            }
+        });
+    }
+
+    async uninitialize() {
+        if (this.db) {
+            await this.db.close();
+        }
+     
+        return this.disconnect();
     }
 
     bind(options) {
@@ -46,6 +52,10 @@ export default class Dispatcher {
         }
     }
 
+    isConnected() {
+        return is.netronPeer(this.peer);
+    }
+
     async connect(gate = null) {
         if (is.nil(gate) || is.nil(gate.port)) {
             return this.connectLocal();
@@ -58,14 +68,11 @@ export default class Dispatcher {
     async connectLocal({ forceStart = true } = {}, _counter = 0) {
         let status = 0;
         if (is.null(this.peer)) {
-            const localGate = (await adone.omnitron.Configuration.load()).getLocalGate();
-            if (is.nil(localGate)) {
-                throw new x.NotExists("Configuration for gate 'local' is not found");
-            }
-
             let peer = null;
             try {
-                peer = await runtime.netron.connect(localGate);
+                peer = await runtime.netron.connect({
+                    port: omnitron.port
+                });
                 status = _counter >= 1 ? 0 : 1;
             } catch (err) {
                 if (!forceStart || _counter >= 3) {
@@ -93,7 +100,7 @@ export default class Dispatcher {
         }
     }
 
-    async startOmnitron(spiritualWay = true) {
+    async startOmnitron({ spiritualWay = true, gc = false } = {}) {
         if (spiritualWay) {
             const isActive = await this.isOmnitronActive();
             if (isActive) {
@@ -115,12 +122,12 @@ export default class Dispatcher {
                 return result.process.id;
             }
             return new Promise(async (resolve, reject) => {
-                const omniConfig = await adone.omnitron.Configuration.load();
-                await adone.fs.mkdirp(std.path.dirname(adone.realm.config.omnitron.logFilePath));
-                this.descriptors.stdout = std.fs.openSync(adone.realm.config.omnitron.logFilePath, "a");
-                this.descriptors.stderr = std.fs.openSync(adone.realm.config.omnitron.errorLogFilePath, "a");
+                const omniConfig = adone.realm.config.omnitron;
+                await adone.fs.mkdirp(std.path.dirname(omniConfig.logFilePath));
+                this.descriptors.stdout = std.fs.openSync(omniConfig.logFilePath, "a");
+                this.descriptors.stderr = std.fs.openSync(omniConfig.errorLogFilePath, "a");
                 const args = [std.path.resolve(adone.rootPath, "lib/omnitron/omnitron/index.js")];
-                if (omniConfig.raw.gc) {
+                if (gc) {
                     args.unshift("--expose-gc");
                 }
                 const child = std.child_process.spawn(process.execPath || "node", args, {
@@ -229,8 +236,9 @@ export default class Dispatcher {
         });
         let isOK = false;
         try {
-            const localGate = (await adone.omnitron.Configuration.load()).getLocalGate();
-            await n.connect(localGate);
+            await n.connect({
+                port: omnitron.port
+            });
             await n.disconnect();
             isOK = true;
         } catch (err) {
@@ -277,6 +285,20 @@ export default class Dispatcher {
     }
 
     // Omnitron interface
+
+    async getConfiguration() {
+        let config;
+        if (await this.isOmnitronActive()) {
+            await this.connectLocal({
+                forceStart: false
+            });
+            config = await this.getInterface("omnitron").getConfiguration();
+        } else {
+            this.db = await adone.omnitron.DB.open();
+            config = await this.db.getConfiguration();
+        }
+        return config;
+    }
 
     kill() {
         return this.getInterface("omnitron").kill();

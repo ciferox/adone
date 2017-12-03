@@ -20,7 +20,7 @@ class Hello extends application.Subsystem {
 
 class TestApp extends application.Application {
     async configure() {
-        await this.addSubsystem({
+        this.addSubsystem({
             name: "hello",
             subsystem: new Hello()
         });

@@ -33,11 +33,11 @@ class Sys112 extends application.Subsystem {
 
 class Sys11 extends application.Subsystem {
     async configure() {
-        await this.addSubsystem({
+        this.addSubsystem({
             subsystem: new Sys111()
         });
 
-        await this.addSubsystem({
+        this.addSubsystem({
             subsystem: new Sys112()
         });
 
@@ -57,7 +57,7 @@ class Sys11 extends application.Subsystem {
 
 class Sys1 extends application.Subsystem {
     async configure() {
-        await this.addSubsystem({
+        this.addSubsystem({
             subsystem: new Sys11()
         });
         adone.log("c1");
@@ -93,10 +93,10 @@ class TestApp extends application.Application {
     }
 
     async configure() {
-        await this.addSubsystem({
+        this.addSubsystem({
             subsystem: new Sys1()
         });
-        await this.addSubsystem({
+        this.addSubsystem({
             subsystem: new Sys2()
         });
         adone.log("c");

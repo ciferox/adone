@@ -1,85 +1,16 @@
-import Subsystem from "../subsystem";
-
 const {
     application: {
-        DCliCommand
+        Subsystem,
+    DCliCommand
     },
+    cli: { kit },
     is,
     omnitron,
     runtime: { term },
     vendor: { lodash }
 } = adone;
 
-const SCHEMA = {
-    type: "object",
-    additionalProperties: false,
-    properties: {
-        gc: { type: "boolean" },
-        netron: {
-            type: "object",
-            additionalProperties: false,
-            properties: {
-                responseTimeout: {
-                    type: "number",
-                    minimum: 10
-                },
-                isSuper: {
-                    type: "boolean"
-                },
-                connect: {
-                    type: "object",
-                    additionalProperties: false,
-                    properties: {
-                        retries: {
-                            type: "number",
-                            minimum: 1
-                        },
-                        minTimeout: {
-                            type: "number",
-                            minimum: 100
-                        },
-                        maxTimeout: {
-                            type: "number",
-                            minimum: 100
-                        },
-                        factor: {
-                            type: "number",
-                            minimum: 1
-
-                        },
-                        randomize: {
-                            type: "boolean"
-                        }
-                    }
-                }
-            }
-        },
-        service: {
-            type: "object",
-            additionalProperties: false,
-            properties: {
-                startTimeout: {
-                    type: "number",
-                    minimum: 1000
-                },
-                stopTimeout: {
-                    type: "number",
-                    minimum: 1000
-                }
-            }
-        }
-    }
-};
-
 export default class Config extends Subsystem {
-    async initialize() {
-        this.config = await omnitron.Configuration.load({ defaults: false });
-        const validator = new adone.schema.Validator({
-            coerceTypes: true
-        });
-        this.validate = validator.compile(SCHEMA);
-    }
-
     @DCliCommand({
         name: "set",
         help: "Set property value",
@@ -98,11 +29,18 @@ export default class Config extends Subsystem {
     })
     async setCommand(args) {
         try {
+            kit.createProgress("setting");
             const key = args.get("key");
             const value = args.get("value");
 
-            lodash.set(this.config.raw, key, this._validateAndGet(key, value));
-            await this.config.save();
+            const config = await adone.omnitron.dispatcher.getConfiguration();
+            await config.set(key, value);
+
+            kit.updateProgress({
+                message: "done",
+                result: true
+            });
+
             return 0;
         } catch (err) {
             term.print(`{red-fg}${err.message}{/red-fg}\n`);
@@ -123,11 +61,18 @@ export default class Config extends Subsystem {
     })
     async getCommand(args) {
         try {
+            kit.createProgress("getting");
             const key = args.get("key");
-            const value = lodash.get(this.config.raw, key);
-            if (is.undefined(value)) {
-                throw new adone.x.Unknown(`Unknown property: ${key}`);
-            }
+
+            const config = await adone.omnitron.dispatcher.getConfiguration();
+            const value = await config.get(key);
+
+            kit.updateProgress({
+                message: "done",
+                result: true,
+                clean: true
+            });
+
             adone.log(adone.text.pretty.json(value));
             return 0;
         } catch (err) {
@@ -148,52 +93,34 @@ export default class Config extends Subsystem {
         ]
     })
     async deleteCommand(args) {
+        kit.createProgress("deleting");
         const key = args.get("key");
-        const value = lodash.get(this.config.raw, key);
-        if (is.undefined(value)) {
-            throw new adone.x.Unknown(`Unknown property: ${key}`);
-        }
 
-        const parts = key.split(".");
-        if (parts.length === 1) {
-            delete this.config.raw[key];
-        } else {
-            const subKey = parts.pop();
-            const obj = lodash.get(this.config.raw, parts);
-            delete obj[subKey];
-        }
-
-        await this.config.save();
+        const config = await adone.omnitron.dispatcher.getConfiguration();
+        await config.delete(key);
+  
+        kit.updateProgress({
+            message: "done",
+            result: true
+        });
+        
         return 0;
     }
 
     @DCliCommand({
         name: "list",
-        help: "Show configuration",
-        options: [
-            {
-                name: "--default",
-                help: "Shwo default configuration instead of real"
-            }
-        ]
+        help: "Show configuration"
     })
-    async listCommand(args, opts) {
-        let config;
-        if (opts.has("default")) {
-            config = omnitron.Configuration.DEFAULT;
-        } else {
-            config = this.config.raw;
-        }
-        adone.log(adone.text.pretty.json(config));
-        return 0;
-    }
+    async listCommand() {
+        kit.createProgress("obtaining");
+        const config = await adone.omnitron.dispatcher.getConfiguration();
+        kit.updateProgress({
+            message: "done",
+            result: true,
+            clean: true
+        });
 
-    @DCliCommand({
-        name: "schema",
-        help: "Show configuration schema"
-    })
-    async schemaCommand() {
-        adone.log(adone.text.pretty.json(SCHEMA));
+        adone.log(adone.text.pretty.json(await config.getAll()));
         return 0;
     }
 
@@ -210,28 +137,14 @@ export default class Config extends Subsystem {
         ]
     })
     async editCommand(args, opts) {
-        await (new adone.util.Editor({
-            path: omnitron.Configuration.path,
-            editor: opts.get("editor")
-        })).spawn({
-            detached: true
-        });
+        const config = await adone.omnitron.dispatcher.getConfiguration();        
+        // await (new adone.util.Editor({
+        //     path: omnitron.Configuration.path,
+        //     editor: opts.get("editor")
+        // })).spawn({
+        //     detached: true
+        // });
 
         return 0;
-    }
-
-    _validateAndGet(key, value) {
-        const holder = {};
-
-        const confValue = lodash.get(this.config.raw, key);
-        if (!is.primitive(confValue)) {
-            throw new adone.x.NotAllowed("Can not change the value of a non-primitive property");
-        }
-
-        lodash.set(holder, key, value);
-        if (!this.validate(holder)) {
-            throw new adone.x.NotValid(adone.text.capitalize(this.validate.errors[0].message));
-        }
-        return lodash.get(holder, key);
     }
 }

@@ -35,7 +35,7 @@ class AdoneCLI extends application.CliApplication {
         this.exposeCliInterface();
 
         // Add cli kit as subsystem
-        await this.addSubsystem({
+        this.addSubsystem({
             name: "kit",
             bind: true,
             subsystem: adone.cli.kit
@@ -353,6 +353,12 @@ class AdoneCLI extends application.CliApplication {
             {
                 name: "--all",
                 help: "Show all properties"
+            },
+            {
+                name: "--depth",
+                type: Number,
+                default: 1,
+                help: "The depth of object inspection"
             }
         ]
     })
@@ -360,7 +366,14 @@ class AdoneCLI extends application.CliApplication {
         try {
             const name = args.get("name");
             const { namespace, objectName } = adone.meta.parseName(name);
-            const inspectOptions = { style: "color", depth: 1, noDescriptor: true, noNotices: true, sort: true };
+            const inspectOptions = {
+                style: "color",
+                depth: opts.get("depth"),
+                noDescriptor: true,
+                noNotices: true,
+                sort: true,
+                proto: true
+            };
 
             let ns;
             if (namespace === "global" || namespace === "") {

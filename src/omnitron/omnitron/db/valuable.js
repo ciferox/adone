@@ -11,6 +11,26 @@ export default class ServiceValuable {
     }
 
     @Public()
+    name() {
+        return this._valuable.name();
+    }
+
+    @Public()
+    internalId() {
+        return this._valuable.internalId();
+    }
+
+    @Public()
+    getNotes() {
+        return this._valuable.getNotes();
+    }
+
+    @Public()
+    setNotes(notes) {
+        return this._valuable.setNotes(notes);
+    }
+
+    @Public()
     set(name, value, type) {
         return this._valuable.set(name, value, type);
     }

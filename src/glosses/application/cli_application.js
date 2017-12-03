@@ -1818,7 +1818,7 @@ export default class CliApplication extends application.Application {
                 };
             }
 
-            await this.addSubsystem({ subsystem, name, description, group, configureArgs, transpile });
+            this.addSubsystem({ subsystem, name, description, group, configureArgs, transpile });
             this._defineCommandFromSubsystem(subsystem, sysMeta);
         }
     }

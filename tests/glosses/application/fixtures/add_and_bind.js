@@ -11,7 +11,7 @@ class AppSubsystem extends application.Subsystem {
 
 class TestApp extends adone.application.Application {
     async configure() {
-        await this.addSubsystem({
+        this.addSubsystem({
             name: "sys1",
             subsystem: new AppSubsystem(),
             bind: true

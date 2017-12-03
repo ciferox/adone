@@ -174,7 +174,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
      * @param {object} options 
      */
     async loadSubsystem(subsystem, { name = null, description = "", group, transpile = false } = {}) {
-        const sysInfo = await this.addSubsystem({ subsystem, name, description, group, transpile });
+        const sysInfo = this.addSubsystem({ subsystem, name, description, group, transpile });
         name = sysInfo.name;
         await this.configureSubsystem(name);
         await this.initializeSubsystem(name);
@@ -371,7 +371,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
                 };
 
                 // eslint-disable-next-line
-                await this.addSubsystem(systemInfo);
+                this.addSubsystem(systemInfo);
             }
         }
     }

@@ -19,7 +19,7 @@ class AppSubsystem {
 class TestApp extends adone.application.Application {
     async configure() {
         try {
-            await this.addSubsystem({
+            this.addSubsystem({
                 subsystem: new AppSubsystem()
             });
         } catch (err) {

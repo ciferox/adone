@@ -1,3 +1,6 @@
+import Valuable from "./valuable";
+import Configuration from "./configuration";
+
 const {
     fs,
     is,
@@ -7,12 +10,9 @@ const {
     x
 } = adone;
 
-const __ = adone.lazify({
-    ServiceValuable: "./service_valuable"
-}, null, require);
-
 const VALUABLES_SYMBOL = Symbol();
 const SERVICE_VALUABLES_SYMBOL = Symbol();
+const CONFIGURATION_SYMBOL = Symbol();
 
 export default class DB {
     constructor() {
@@ -21,6 +21,7 @@ export default class DB {
         });
         this[VALUABLES_SYMBOL] = new Map();
         this[SERVICE_VALUABLES_SYMBOL] = new Map();
+        this[CONFIGURATION_SYMBOL] = undefined;
     }
 
     async open() {
@@ -70,13 +71,23 @@ export default class DB {
     }
 
     /**
+     * Returns omnitron configuration valuable
+     */
+    async getConfiguration() {
+        if (is.undefined(this[CONFIGURATION_SYMBOL])) {            
+            this[CONFIGURATION_SYMBOL] = await Configuration.load(await this.getValuable("$config"));
+        }
+        return this[CONFIGURATION_SYMBOL];
+    }
+
+    /**
      * Returns contextable valuable used by the each service itself to store own runtime configuration.
      */
     async getServiceConfiguration(name) {
         let val = this[SERVICE_VALUABLES_SYMBOL].get(name);
         if (is.undefined(val)) {
             val = await this.getValuable("$service", name);
-            const serviceVal = new __.ServiceValuable(val);
+            const serviceVal = new Valuable(val);
             this[SERVICE_VALUABLES_SYMBOL].set(name, serviceVal);
             return serviceVal;
         }
@@ -117,5 +128,11 @@ export default class DB {
         }
 
         return services.delete(name);
+    }
+
+    static async open() {
+        const db = new DB();
+        await db.open();
+        return db;
     }
 }

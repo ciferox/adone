@@ -246,7 +246,6 @@ export default class ServiceMaintainer extends AsyncEmitter {
                     detached: true,
                     cwd: process.cwd(),
                     env: Object.assign({}, process.env, {
-                        OMNITRON_PORT: this.manager.parent.gates.getServicePort(),
                         OMNITRON_SERVICE_GROUP: this.group
                     }),
                     stdio: ["ignore", stdout, stderr]
