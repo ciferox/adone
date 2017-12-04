@@ -1,6 +1,5 @@
 const {
     std,
-    // system: { process: { exec, execStdout } },
     application: { Application }
 } = adone;
 
@@ -83,7 +82,19 @@ describe("application", "Application", () => {
                 assert.equal(result.stdout, "incorrect subsystem");
             });
 
-            describe("name collisions", () => {
+            describe("subsystem name and name collisions", () => {
+                it("it's impossible to set name", () => {
+                    class SubSys extends adone.application.Subsystem {
+                        constructor() {
+                            super();
+                            this.name = "ownname";
+                        }
+                    }
+
+                    const err = assert.throws(() => new SubSys());
+                    assert.instanceOf(err, TypeError);
+                });
+
                 it("should throw if a subsystem with the same name already exists", async () => {
                     await assert.throws(async () => {
                         await forkProcess(fixture("add_existing_name.js"));
@@ -155,7 +166,7 @@ describe("application", "Application", () => {
             const result = await forkProcess(fixture("root_subsystem.js"));
             assert.equal(result.stdout, "true\ntrue\ntrue\ntrue");
         });
-        
+
 
         describe("deleteSubsystem", () => {
             it("delete an uninitialized subsystem", async () => {
@@ -341,6 +352,56 @@ describe("application", "Application", () => {
                 await assert.throws(async () => {
                     await forkProcess(fixture("load_invalid_argument.js"));
                 }, "'subsystem' should be path or instance of adone.application.Subsystem");
+            });
+        });
+
+        describe("owning", () => {
+            class Sys extends adone.application.Subsystem {
+            }
+
+            class SubSys extends adone.application.Subsystem {
+            }
+
+            it("by default subsystem should not be owned", () => {
+                const sys = new Sys();
+                assert.isFalse(sys.isOwned);
+            });
+
+            it("subsystem should be owned after addSubsystem() and should be freed after deleteSubsystem() ", () => {
+                const sys = new Sys();
+
+                const subSys = new SubSys();
+                assert.isFalse(sys.isOwned);
+
+                sys.addSubsystem({
+                    name: "s",
+                    subsystem: subSys
+                });
+
+                assert.isFalse(sys.isOwned);
+                assert.isTrue(subSys.isOwned);
+
+                sys.deleteSubsystem("s");
+
+                assert.isFalse(sys.isOwned);
+                assert.isFalse(subSys.isOwned);
+            });
+
+            it("subsystem can be owned once", () => {
+                const sys = new Sys();
+
+                const subSys = new SubSys();
+
+                sys.addSubsystem({
+                    name: "s",
+                    subsystem: subSys
+                });
+
+                const err = assert.throws(() => sys.addSubsystem({
+                    name: "s1",
+                    subsystem: subSys
+                }));
+                assert.instanceOf(err, adone.x.NotAllowed);
             });
         });
     });

@@ -32,7 +32,7 @@ export default class Gate extends Subsystem {
                     gates = [];
                 } else {
                     const config = await omnitron.dispatcher.getConfiguration();
-                    gates = config.getGates();
+                    gates = await config.getGates();
                 }
             }
 
@@ -121,8 +121,14 @@ export default class Gate extends Subsystem {
         try {
             kit.createProgress("deleting");
 
-            const config = await omnitron.dispatcher.getConfiguration();
-            await config.deleteGate(args.get("name"));
+            const name = args.get("name");
+            if (await omnitron.dispatcher.isOmnitronActive()) {
+                await kit.connect();
+                await omnitron.dispatcher.deleteGate(name);
+            } else {
+                const config = await omnitron.dispatcher.getConfiguration();
+                await config.deleteGate(name);
+            }            
 
             kit.updateProgress({
                 message: "done",
@@ -205,59 +211,57 @@ export default class Gate extends Subsystem {
     }
 
     @DCliCommand({
-        name: "on",
-        help: "Enable gate",
+        name: "configure",
+        help: "Configure gate",
         arguments: [
             {
                 name: "name",
                 type: String,
                 help: "Gate name"
             }
-        ]
-    })
-    async onCommand(args) {
-        try {
-            kit.createProgress("enabling");
-
-            const config = await omnitron.dispatcher.getConfiguration();
-            await config.onGate(args.get("name"));
-
-            kit.updateProgress({
-                message: "done",
-                result: true
-            });
-            return 0;
-        } catch (err) {
-            kit.updateProgress({
-                message: err.message,
-                result: false
-            });
-            return 1;
-        }
-    }
-
-    @DCliCommand({
-        name: "off",
-        help: "Disable gate",
-        arguments: [
+        ],
+        options: [
             {
-                name: "name",
-                type: String,
-                help: "Gate name"
+                name: "--port",
+                nargs: 1,
+                type(val) {
+                    if (is.numeral(val)) {
+                        return Number.parseInt(val);
+                    }
+                    return val;
+                },
+                help: "Port number, path to unix socket or pipe name (windows)"
+            },
+            {
+                name: "--startup",
+                nargs: "?",
+                type: Number,
+                choices: [0, 1],
+                default: 1,
+                help: "Startup flag"
             }
         ]
     })
-    async offCommand(args) {
+    async configureCommand(args, opts) {
         try {
-            kit.createProgress("disabling");
+            kit.createProgress("configuring");
 
             const config = await omnitron.dispatcher.getConfiguration();
-            await config.offGate(args.get("name"));
+            if (!opts.hasSomething()) {
+                kit.updateProgress({
+                    message: "done",
+                    result: true,
+                    clean: true
+                });
+                adone.log(adone.text.pretty.json(await config.configureGate(args.get("name"))));
+            } else {
+                await config.configureGate(args.get("name"), opts.getAll(true));
+                kit.updateProgress({
+                    message: "done",
+                    result: true
+                });    
+            }
 
-            kit.updateProgress({
-                message: "done",
-                result: true
-            });
             return 0;
         } catch (err) {
             kit.updateProgress({

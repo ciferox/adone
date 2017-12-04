@@ -570,8 +570,8 @@ adone.lazify({
 
         const decodeException = (buf) => {
             const id = buf.readUInt16BE();
-            const message = s.decode(buf);
             const stack = s.decode(buf);
+            const message = s.decode(buf);
             return adone.x.create(id, message, stack);
         };
 
@@ -580,15 +580,25 @@ adone.lazify({
         // Adone exceptions encoders/decoders
         s.register(127, adone.x.Exception, (obj, buf) => {
             buf.writeUInt16BE(obj.id);
-            s.encode(obj.message, buf);
             s.encode(obj.stack, buf);
+
+            // AggregateException case
+            if (obj.id === 99) {
+                const errors = [];
+                for (const error of obj._errors) {
+                    errors.push(error);
+                }
+                s.encode(errors, buf);
+            } else {
+                s.encode(obj.message, buf);
+            }
         }, decodeException);
 
         // Std exceptions encoders/decoders
         s.register(126, Error, (obj, buf) => {
             buf.writeUInt16BE(adone.x.getStdId(obj));
-            s.encode(obj.message, buf);
             s.encode(obj.stack, buf);
+            s.encode(obj.message, buf);
         }, decodeException);
 
         // Date

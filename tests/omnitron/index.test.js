@@ -716,15 +716,20 @@ describe("omnitron", () => {
 
             const addGateAndCheck = async (gate, restart = true) => {
                 await iOmnitron.addGate(gate);
-                
+
+                if (is.undefined(gate.startup)) {
+                    gate.startup = true;
+                }
+
                 if (restart) {
                     await stopOmnitron();
                     await startOmnitron();
+
+                    gate.active = gate.startup ? true : false;
+                } else {
+                    gate.active = false;
                 }
 
-                if (!is.string(gate.status)) {
-                    gate.status = "on";
-                }
                 const gates = await iOmnitron.getGates();
                 assert.sameDeepMembers(gates, [gate]);
             };
@@ -736,11 +741,11 @@ describe("omnitron", () => {
                 });
             });
 
-            it("add gate with 'off' status", async () => {
+            it("add gate with startup=false", async () => {
                 await addGateAndCheck({
                     name: "gate1",
                     port: 32768,
-                    status: "off"
+                    startup: false
                 });
             });
 
@@ -748,19 +753,29 @@ describe("omnitron", () => {
                 const err = await assert.throws(async () => addGateAndCheck({
                     port: 32768
                 }));
-                assert.instanceOf(err, adone.x.NotValid);
+                assert.instanceOf(err, adone.x.AggregateException);
             });
 
             it("delete gate", async () => {
                 await addGateAndCheck({
                     name: "gate1",
                     port: 32768
-                });
+                }, false);
 
                 await iOmnitron.deleteGate("gate1");
                 await stopOmnitron();
                 await startOmnitron();
                 assert.lengthOf(await iOmnitron.getGates(), 0);
+            });
+
+            it("delete active gate is not allowed", async () => {
+                await addGateAndCheck({
+                    name: "gate1",
+                    port: 32768
+                });
+
+                const err = await assert.throws(async () => iOmnitron.deleteGate("gate1"));
+                assert.instanceOf(err, adone.x.NotAllowed);
             });
 
             it("up/down gate", async (done) => {
@@ -819,7 +834,7 @@ describe("omnitron", () => {
                 const gate = {
                     name: "gate1",
                     port: await adone.net.util.getPort(),
-                    status: "off"
+                    startup: false
                 };
                 await addGateAndCheck(gate);
 
@@ -845,6 +860,77 @@ describe("omnitron", () => {
                 });
 
                 assert.lengthOf(gates, 0);
+            });
+
+            it("configure port", async () => {
+                let port = await adone.net.util.getPort();
+                const gate = {
+                    name: "gate1",
+                    port,
+                    startup: false
+                };
+                await addGateAndCheck(gate);
+
+                let gates = await iOmnitron.getGates();
+                assert.deepEqual(gates[0], {
+                    ...gate,
+                    port
+                });
+
+                port = port - 1;
+                await iOmnitron.configureGate("gate1", {
+                    port
+                });
+
+                gates = await iOmnitron.getGates();
+                assert.deepEqual(gates[0], {
+                    ...gate,
+                    port
+                });
+            });
+
+            it("configure startup", async () => {
+                const gate = {
+                    name: "gate1",
+                    port: await adone.net.util.getPort(),
+                    startup: false
+                };
+                await addGateAndCheck(gate);
+
+                let gates = await iOmnitron.getGates();
+                assert.deepEqual(gates[0], {
+                    ...gate,
+                    startup: false
+                });
+
+                await iOmnitron.configureGate("gate1", {
+                    startup: true
+                });
+
+                gates = await iOmnitron.getGates();
+                assert.deepEqual(gates[0], {
+                    ...gate,
+                    startup: true
+                });
+            });
+
+            it("configure with undefined options should only return gate configuration", async () => {
+                const gate = {
+                    name: "gate1",
+                    port: await adone.net.util.getPort(),
+                    startup: false
+                };
+                await addGateAndCheck(gate);
+
+                const gateConfig = await iOmnitron.configureGate("gate1");
+                assert.deepEqual(gateConfig, adone.util.omit(gate, ["active"]));
+
+                const gates = await iOmnitron.getGates();
+                assert.sameDeepMembers(gates, [gate]);
+            });
+
+            it.skip("configure active gate should not be allowed", async () => {
+                // ???
             });
         });
     });

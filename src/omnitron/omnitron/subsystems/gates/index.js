@@ -27,9 +27,11 @@ export default class Gates extends application.Subsystem {
         });
 
         // Bind other enabled gates.
-        const gates = await this.config.getGates("on");
+        const gates = await this.config.getGates();
         for (const gate of gates) {
-            await runtime.netron.bind(gate); // eslint-disable-line
+            if (gate.startup) {
+                await runtime.netron.bind(gate); // eslint-disable-line
+            }
         }
 
         adone.info("Gates subsystem initialized");
@@ -54,6 +56,9 @@ export default class Gates extends application.Subsystem {
     }
 
     deleteGate(name) {
+        if (runtime.netron.gates.has(name)) {
+            throw new adone.x.NotAllowed("Delete active gate is not allowed");
+        }
         return this.config.deleteGate(name);
     }
 
@@ -81,18 +86,17 @@ export default class Gates extends application.Subsystem {
     async getGates({ active = false } = {}) {
         const allGates = await this.config.getGates();
 
+        const names = runtime.netron.gates.getAll().map((g) => g.name);
         if (active) {
-            const names = runtime.netron.gates.getAll().map((g) => g.name);
             return allGates.filter((g) => names.includes(g.name));
         }
-        return allGates;
+        return allGates.map((g) => ({
+            ...g,
+            active: names.includes(g.name)
+        }));
     }
 
-    offGate(name) {
-        return this.config.offGate(name);
-    }
-
-    onGate(name) {
-        return this.config.onGate(name);
+    configureGate(name, options) {
+        return this.config.configureGate(name, options);
     }
 }

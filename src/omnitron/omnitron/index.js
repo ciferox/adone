@@ -420,13 +420,8 @@ export default class Omnitron extends application.Application {
     }
 
     @Public()
-    onGate(name) {
-        return this.gates.onGate(name);
-    }
-
-    @Public()
-    offGate(options) {
-        return this.gates.offGate(options);
+    configureGate(name, options) {
+        return this.gates.configureGate(name, options);
     }
 }
 

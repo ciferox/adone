@@ -13,6 +13,7 @@ const {
 const NAME_SYMBOL = Symbol();
 const ROOT_SYMBOL = Symbol();
 const PARENT_SYMBOL = Symbol();
+const OWNED_SYMBOL = Symbol();
 const STATE_SYMBOL = Symbol.for("application.Subsystem#state");
 const SUBSYSTEMS_SYMBOL = Symbol.for("application.Subsystem#subsystems");
 
@@ -23,6 +24,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         this[NAME_SYMBOL] = name;
         this[SUBSYSTEMS_SYMBOL] = [];
         this[STATE_SYMBOL] = STATE.INITIAL;
+        this[OWNED_SYMBOL] = false;
     }
 
     /**
@@ -60,6 +62,10 @@ export default class Subsystem extends adone.event.AsyncEmitter {
      */
     get state() {
         return this[STATE_SYMBOL];
+    }
+
+    get isOwned() {
+        return this[OWNED_SYMBOL];
     }
 
     /**
@@ -279,11 +285,11 @@ export default class Subsystem extends adone.event.AsyncEmitter {
      * @returns {null|Promise<object>}
      */
     addSubsystem({ subsystem, name = null, useFilename = false, description = "", group = "subsystem", configureArgs = [], transpile, bind } = {}) {
-        if (is.string(name) && this.hasSubsystem(name)) {
-            throw new x.Exists(`Subsystem with name '${name}' already exists`);
-        }
-
         const instance = this.instantiateSubsystem(subsystem, { transpile });
+
+        if (instance[OWNED_SYMBOL] === true) {
+            throw new adone.x.NotAllowed("Subsystem already owned by other subsystem");
+        }
 
         if (is.string(subsystem) && useFilename) {
             name = std.path.basename(subsystem, ".js");
@@ -291,9 +297,10 @@ export default class Subsystem extends adone.event.AsyncEmitter {
 
         if (!is.string(name)) {
             name = instance.constructor.name;
-            if (this.hasSubsystem(name)) {
-                throw new x.Exists(`Subsystem with name '${name}' already exists`);
-            }
+        }
+
+        if (this.hasSubsystem(name)) {
+            throw new x.Exists(`Subsystem with name '${name}' already exists`);
         }
 
         const sysInfo = {
@@ -308,6 +315,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         instance[NAME_SYMBOL] = name;
         instance[ROOT_SYMBOL] = this.root;
         instance[PARENT_SYMBOL] = this;
+        instance[OWNED_SYMBOL] = true;
 
         if (bind === true) {
             bind = name;
@@ -424,6 +432,13 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         }
 
         this[SUBSYSTEMS_SYMBOL].splice(index, 1);
+
+        const instance = sysInfo.instance;
+        instance[OWNED_SYMBOL] = false;
+        instance[STATE_SYMBOL] = STATE.INITIAL;
+        instance[ROOT_SYMBOL] = undefined;
+        instance[PARENT_SYMBOL] = undefined;
+
     }
 
     /**

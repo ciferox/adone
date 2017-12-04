@@ -60,15 +60,10 @@ const SERVICE_SCHEMA = {
     }
 };
 
-const STATUSES = [
-    "off",
-    "on"
-];
-
 const GATE_SCHEMA = {
     type: "object",
     additionalProperties: false,
-    requires: ["name", "port"],
+    required: ["name", "port"],
     properties: {
         name: {
             type: "string"
@@ -76,10 +71,9 @@ const GATE_SCHEMA = {
         port: {
             type: ["integer", "string"]
         },
-        status: {
-            type: "string",
-            default: "on",
-            enum: STATUSES
+        startup: {
+            type: "boolean",
+            default: true
         }
     }
 };
@@ -172,11 +166,7 @@ export default class Configuration extends Valuable {
     }
 
     @Public()
-    getGates(status) {
-        if (is.string(status)) {
-            // Local gate always is enabled.
-            return this.gates.filter((g) => g.status === status || g.name === "local");
-        }
+    getGates() {
         return this.gates;
     }
 
@@ -207,16 +197,20 @@ export default class Configuration extends Valuable {
     }
 
     @Public()
-    offGate(name) {
+    configureGate(name, options) {
         const gate = this.getGate(name);
-        gate.status = "off";
-        return this.set("gates", this.gates);
-    }
 
-    @Public()
-    onGate(name) {
-        const gate = this.getGate(name);
-        gate.status = "on";
+        if (is.undefined(options)) {
+            return gate;
+        }
+
+        options.name = name;
+
+        if (!this.validateGate(gate)) {
+            throw new adone.x.AggregateException(this.validateGate.errors);
+        }
+
+        Object.assign(gate, options);
         return this.set("gates", this.gates);
     }
 

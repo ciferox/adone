@@ -21,7 +21,7 @@ export default class Dispatcher extends Subsystem {
         };
         
         runtime.netron.on("peer offline", (peer) => {
-            if (this.peer.uid === peer.uid) {
+            if (!is.null(this.peer) && this.peer.uid === peer.uid) {
                 this.peer = null;
             }
         });
@@ -384,6 +384,10 @@ export default class Dispatcher extends Subsystem {
         return this.getInterface("omnitron").deleteGate(name);
     }
 
+    getGates(options) {
+        return this.getInterface("omnitron").getGates(options);
+    }
+
     upGate(name) {
         return this.getInterface("omnitron").upGate(name);
     }
@@ -392,15 +396,7 @@ export default class Dispatcher extends Subsystem {
         return this.getInterface("omnitron").downGate(name);
     }
 
-    getGates(options) {
-        return this.getInterface("omnitron").getGates(options);
-    }
-
-    offGate(name) {
-        return this.getInterface("omnitron").offGate(name);
-    }
-
-    onGate(name) {
-        return this.getInterface("omnitron").onGate(name);
+    configureGate(name, options) {
+        return this.getInterface("omnitron").configureGate(name, options);
     }
 }
