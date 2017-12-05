@@ -4,10 +4,7 @@ const {
     DCliCommand
     },
     cli: { kit },
-    is,
-    omnitron,
-    runtime: { term },
-    vendor: { lodash }
+    runtime: { term }
 } = adone;
 
 export default class Config extends Subsystem {
@@ -43,7 +40,10 @@ export default class Config extends Subsystem {
 
             return 0;
         } catch (err) {
-            term.print(`{red-fg}${err.message}{/red-fg}\n`);
+            kit.updateProgress({
+                message: err.message,
+                result: false
+            });
             return 1;
         }
     }
@@ -76,7 +76,10 @@ export default class Config extends Subsystem {
             adone.log(adone.text.pretty.json(value));
             return 0;
         } catch (err) {
-            term.print(`{red-fg}${err.message}{/red-fg}\n`);
+            kit.updateProgress({
+                message: err.message,
+                result: false
+            });
             return 1;
         }
     }
@@ -93,35 +96,51 @@ export default class Config extends Subsystem {
         ]
     })
     async deleteCommand(args) {
-        kit.createProgress("deleting");
-        const key = args.get("key");
+        try {
+            kit.createProgress("deleting");
+            const key = args.get("key");
 
-        const config = await adone.omnitron.dispatcher.getConfiguration();
-        await config.delete(key);
-  
-        kit.updateProgress({
-            message: "done",
-            result: true
-        });
-        
-        return 0;
+            const config = await adone.omnitron.dispatcher.getConfiguration();
+            await config.delete(key);
+
+            kit.updateProgress({
+                message: "done",
+                result: true
+            });
+
+            return 0;
+        } catch (err) {
+            kit.updateProgress({
+                message: err.message,
+                result: false
+            });
+            return 1;
+        }
     }
 
     @DCliCommand({
-        name: "list",
-        help: "Show configuration"
+        name: "all",
+        help: "Show whole configuration"
     })
-    async listCommand() {
-        kit.createProgress("obtaining");
-        const config = await adone.omnitron.dispatcher.getConfiguration();
-        kit.updateProgress({
-            message: "done",
-            result: true,
-            clean: true
-        });
+    async allCommand() {
+        try {
+            kit.createProgress("obtaining");
+            const config = await adone.omnitron.dispatcher.getConfiguration();
+            kit.updateProgress({
+                message: "done",
+                result: true,
+                clean: true
+            });
 
-        adone.log(adone.text.pretty.json(await config.getAll()));
-        return 0;
+            adone.log(adone.text.pretty.json(await config.getAll()));
+            return 0;
+        } catch (err) {
+            kit.updateProgress({
+                message: err.message,
+                result: false
+            });
+            return 1;
+        }
     }
 
     @DCliCommand({
@@ -137,7 +156,7 @@ export default class Config extends Subsystem {
         ]
     })
     async editCommand(args, opts) {
-        const config = await adone.omnitron.dispatcher.getConfiguration();        
+        const config = await adone.omnitron.dispatcher.getConfiguration();
         // await (new adone.util.Editor({
         //     path: omnitron.Configuration.path,
         //     editor: opts.get("editor")

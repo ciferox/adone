@@ -704,6 +704,120 @@ describe("omnitron", () => {
             });
         }
 
+        describe("configuration", () => {
+            let iConfig;
+            beforeEach(async () => {
+                iConfig = await adone.omnitron.dispatcher.getConfiguration();
+            });
+
+            it("default service subsystem configuration", async () => {
+                assert.deepEqual(await iConfig.get("service"), {
+                    startTimeout: 10000,
+                    stopTimeout: 10000
+                });
+            });
+
+            it("default netron options", async () => {
+                assert.deepEqual(await iConfig.get("netron"), {
+                    responseTimeout: 30000,
+                    isSuper: true,
+                    connect: {
+                        retries: 3,
+                        minTimeout: 100,
+                        maxTimeout: 10000,
+                        factor: 2,
+                        randomize: false
+                    }
+
+                });
+            });
+
+            it("no gates", async () => {
+                assert.lengthOf(await iConfig.get("gates"), 0);
+            });
+
+            it("no hosts", async () => {
+                assert.lengthOf(await iConfig.get("hosts"), 0);
+            });
+
+            it("get nested values", async () => {
+                assert.equal(await iConfig.get("service.startTimeout"), 10000);
+                assert.equal(await iConfig.get("netron.connect.retries"), 3);
+            });
+
+            it("should have thrown on nonexistent keys", async () => {
+                await assert.throws(async () => iConfig.get("gate"), /Key not exist/);
+                await assert.throws(async () => iConfig.get("some.value"), /Key not exist/);
+            });
+
+            it("set service options", async () => {
+                const options = {
+                    startTimeout: 5000,
+                    stopTimeout: 3000
+                };
+                await iConfig.set("service", options);
+                assert.deepEqual(await iConfig.get("service"), options);
+
+                await iConfig.set("service.stopTimeout", 3535);
+                assert.equal(await iConfig.get("service.stopTimeout"), 3535);
+            });
+
+            it("set invalid service options", async () => {
+                await assert.throws(async () => iConfig.set("service", {
+                    startTimeout: 100,
+                    stopTimeout: 100
+                }), adone.x.AggregateException);
+
+                await assert.throws(async () => iConfig.set("service.stopTimeout", 500), adone.x.AggregateException);
+                await assert.throws(async () => iConfig.set("service.timeout", 5000), adone.x.AggregateException);
+            });
+
+            it("set netron options", async () => {
+                const options = {
+                    responseTimeout: 10000,
+                    isSuper: false,
+                    connect: {
+                        retries: 3,
+                        minTimeout: 100,
+                        maxTimeout: 10000,
+                        factor: 3,
+                        randomize: false
+                    }
+                };
+                await iConfig.set("netron", options);
+                assert.deepEqual(await iConfig.get("netron"), options);
+                
+                await iConfig.set("netron.isSuper", true);
+                assert.equal(await iConfig.get("netron.isSuper"), true);
+
+                await iConfig.set("netron.connect.factor", 2);
+                assert.equal(await iConfig.get("netron.connect.factor"), 2);
+            });
+
+            it("set invalid service options", async () => {
+                await assert.throws(async () => iConfig.set("netron", {
+                    someTimeout: 10,
+                    isSuper: false,
+                    connect: {
+                        retries: 3,
+                        minTimeout: 100,
+                        maxTimeout: 10000,
+                        factor: 3,
+                        randomize: false
+                    }
+                }), adone.x.AggregateException);
+
+                await assert.throws(async () => iConfig.set("service.nonexisten", 5000), adone.x.AggregateException);
+            });
+
+            it("delete keys", async () => {
+                await iConfig.delete("hosts");
+                await iConfig.delete("service.stopTimeout");
+                await assert.throws(async () => iConfig.get("hosts"), adone.x.NotExists);
+                await assert.throws(async () => iConfig.get("netron.stopTimeout"), adone.x.NotExists);
+            });
+        });
+
         describe("gates", () => {
             afterEach(async () => {
                 const iConfig = await iOmnitron.getConfiguration();
