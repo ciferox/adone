@@ -699,37 +699,49 @@ export const parseTime = (str) => {
     return adone.datetime.duration(value, unit).as("milliseconds");
 };
 
-export const clone = (obj, { deep = true, nonPlainObjects = false, onlyEnumerable = true } = {}) => {
-    if (!is.object(obj)) {
-        return obj;
-    }
-    if (is.array(obj)) {
-        if (deep) {
-            return obj.map((x) => clone(x, { deep, nonPlainObjects, onlyEnumerable }));
+export class Cloner {
+    clone(obj, {
+        deep = true,
+        nonPlainObjects = false,
+        onlyEnumerable = true
+    } = {}) {
+        if (!is.object(obj)) {
+            return obj;
         }
-        return obj.slice(0);
+        if (is.array(obj)) {
+            if (deep) {
+                return obj.map((x) => this.clone(x, { deep, nonPlainObjects, onlyEnumerable }));
+            }
+            return obj.slice(0);
+        }
+        if (is.function(obj)) {
+            return obj;
+        }
+        if (is.regexp(obj)) {
+            return new RegExp(obj.source, obj.flags);
+        }
+        if (is.buffer(obj)) {
+            return Buffer.from(obj);
+        }
+        if (is.date(obj)) {
+            return new Date(obj.getTime());
+        }
+        if (!nonPlainObjects && !is.plainObject(obj)) {
+            return obj;
+        }
+        const res = {};
+        for (const key of keys(obj, { onlyEnumerable })) {
+            res[key] = deep ? this.clone(obj[key], { deep, nonPlainObjects, onlyEnumerable }) : obj[key];
+        }
+        return res;
     }
-    if (is.function(obj)) {
-        return obj;
+
+    binding() {
+        return this.clone.bind(this);
     }
-    if (is.regexp(obj)) {
-        return new RegExp(obj.source, obj.flags);
-    }
-    if (is.buffer(obj)) {
-        return Buffer.from(obj);
-    }
-    if (is.date(obj)) {
-        return new Date(obj.getTime());
-    }
-    if (!nonPlainObjects && !is.plainObject(obj)) {
-        return obj;
-    }
-    const res = {};
-    for (const key of keys(obj, { onlyEnumerable })) {
-        res[key] = deep ? clone(obj[key], { deep, nonPlainObjects, onlyEnumerable }) : obj[key];
-    }
-    return res;
-};
+}
+
+export const clone = new Cloner().binding();
 
 export const asyncIter = (arr, iter, cb) => {
     let i = -1;

@@ -24,7 +24,8 @@ const mongo = lazify({
     BSONRegExp: () => adone.data.bson.BSONRegExp,
     ReadPreference: "./read_preference",
     GridFSBucket: "./gridfs_stream",
-    GridStore: "./grid_store"
+    GridStore: "./grid_store",
+    QueryBuilder: "./query_builder"
 }, exports, require);
 
 lazifyPrivate({
@@ -59,3 +60,5 @@ export const instrument = (options, callback) => {
 };
 
 export const connect = (...args) => new mongo.MongoClient({ relayEvents: false }).connect(...args);
+
+export const buildQuery = (...args) => new mongo.QueryBuilder(...args);
