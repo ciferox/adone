@@ -135,6 +135,7 @@ void GitCherrypick::CherrypickWorker::HandleOKCallback() {
         err = Nan::Error("Method cherrypick has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Cherrypick.cherrypick").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -190,6 +191,7 @@ void GitCherrypick::CherrypickWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method cherrypick has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Cherrypick.cherrypick").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -339,6 +341,7 @@ void GitCherrypick::CommitWorker::HandleOKCallback() {
         err = Nan::Error("Method commit has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Cherrypick.commit").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -396,6 +399,7 @@ void GitCherrypick::CommitWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method commit has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Cherrypick.commit").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

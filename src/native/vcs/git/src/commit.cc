@@ -255,6 +255,7 @@ void GitCommit::AmendWorker::HandleOKCallback() {
         err = Nan::Error("Method amend has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Commit.amend").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -313,6 +314,7 @@ void GitCommit::AmendWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method amend has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Commit.amend").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -658,6 +660,7 @@ void GitCommit::CreateWorker::HandleOKCallback() {
         err = Nan::Error("Method create has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Commit.create").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -719,6 +722,7 @@ void GitCommit::CreateWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method create has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Commit.create").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1055,6 +1059,7 @@ void GitCommit::CreateWithSignatureWorker::HandleOKCallback() {
         err = Nan::Error("Method createWithSignature has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Commit.createWithSignature").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1111,6 +1116,7 @@ void GitCommit::CreateWithSignatureWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method createWithSignature has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Commit.createWithSignature").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1199,6 +1205,7 @@ void GitCommit::DupWorker::HandleOKCallback() {
         err = Nan::Error("Method dup has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Commit.dup").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1251,6 +1258,7 @@ void GitCommit::DupWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method dup has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Commit.dup").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1385,6 +1393,7 @@ void GitCommit::HeaderFieldWorker::HandleOKCallback() {
         err = Nan::Error("Method headerField has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Commit.headerField").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1438,6 +1447,7 @@ void GitCommit::HeaderFieldWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method headerField has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Commit.headerField").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1608,6 +1618,7 @@ void GitCommit::LookupWorker::HandleOKCallback() {
         err = Nan::Error("Method lookup has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Commit.lookup").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1662,6 +1673,7 @@ void GitCommit::LookupWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method lookup has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Commit.lookup").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1809,6 +1821,7 @@ void GitCommit::LookupPrefixWorker::HandleOKCallback() {
         err = Nan::Error("Method lookupPrefix has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Commit.lookupPrefix").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1864,6 +1877,7 @@ void GitCommit::LookupPrefixWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method lookupPrefix has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Commit.lookupPrefix").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2073,6 +2087,7 @@ void GitCommit::NthGenAncestorWorker::HandleOKCallback() {
         err = Nan::Error("Method nthGenAncestor has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Commit.nthGenAncestor").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2126,6 +2141,7 @@ void GitCommit::NthGenAncestorWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method nthGenAncestor has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Commit.nthGenAncestor").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2263,6 +2279,7 @@ void GitCommit::ParentWorker::HandleOKCallback() {
         err = Nan::Error("Method parent has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Commit.parent").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2316,6 +2333,7 @@ void GitCommit::ParentWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method parent has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Commit.parent").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

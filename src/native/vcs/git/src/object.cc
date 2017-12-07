@@ -166,6 +166,7 @@ void GitObject::DupWorker::HandleOKCallback() {
         err = Nan::Error("Method dup has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Object.dup").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -218,6 +219,7 @@ void GitObject::DupWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method dup has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Object.dup").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -421,6 +423,7 @@ void GitObject::LookupWorker::HandleOKCallback() {
         err = Nan::Error("Method lookup has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Object.lookup").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -476,6 +479,7 @@ void GitObject::LookupWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method lookup has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Object.lookup").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -602,6 +606,7 @@ void GitObject::LookupBypathWorker::HandleOKCallback() {
         err = Nan::Error("Method lookupByPath has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Object.lookupByPath").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -656,6 +661,7 @@ void GitObject::LookupBypathWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method lookupByPath has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Object.lookupByPath").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -811,6 +817,7 @@ void GitObject::LookupPrefixWorker::HandleOKCallback() {
         err = Nan::Error("Method lookupPrefix has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Object.lookupPrefix").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -867,6 +874,7 @@ void GitObject::LookupPrefixWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method lookupPrefix has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Object.lookupPrefix").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1008,6 +1016,7 @@ void GitObject::PeelWorker::HandleOKCallback() {
         err = Nan::Error("Method peel has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Object.peel").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1061,6 +1070,7 @@ void GitObject::PeelWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method peel has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Object.peel").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1150,6 +1160,7 @@ void GitObject::ShortIdWorker::HandleOKCallback() {
         err = Nan::Error("Method shortId has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Object.shortId").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1202,6 +1213,7 @@ void GitObject::ShortIdWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method shortId has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Object.shortId").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

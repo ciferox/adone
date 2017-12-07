@@ -288,3 +288,9 @@ adone.lazify({
         normalizeFetchOptions: "./utils/normalize_fetch_options"
     }, null, require)
 }, exports, require);
+
+// For disccussion on why `cloneDeep` is required, see:
+// https://github.com/facebook/jest/issues/3552
+// https://github.com/facebook/jest/issues/3550
+// https://github.com/nodejs/node/issues/5016
+exports.__proto__ = adone.vendor.lodash.cloneDeep(native);

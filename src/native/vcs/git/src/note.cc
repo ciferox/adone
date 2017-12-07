@@ -332,6 +332,7 @@ void GitNote::CreateWorker::HandleOKCallback() {
         err = Nan::Error("Method create has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Note.create").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -391,6 +392,7 @@ void GitNote::CreateWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method create has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Note.create").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -520,6 +522,7 @@ void GitNote::ForeachWorker::HandleOKCallback() {
         err = Nan::Error("Method foreach has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Note.foreach").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -575,6 +578,7 @@ void GitNote::ForeachWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method foreach has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Note.foreach").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -838,6 +842,7 @@ void GitNote::IteratorNewWorker::HandleOKCallback() {
         err = Nan::Error("Method iteratorNew has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Note.iteratorNew").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -892,6 +897,7 @@ void GitNote::IteratorNewWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method iteratorNew has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Note.iteratorNew").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1180,6 +1186,7 @@ void GitNote::ReadWorker::HandleOKCallback() {
         err = Nan::Error("Method read has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Note.read").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1235,6 +1242,7 @@ void GitNote::ReadWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method read has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Note.read").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1405,6 +1413,7 @@ void GitNote::RemoveWorker::HandleOKCallback() {
         err = Nan::Error("Method remove has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Note.remove").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1462,6 +1471,7 @@ void GitNote::RemoveWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method remove has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Note.remove").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

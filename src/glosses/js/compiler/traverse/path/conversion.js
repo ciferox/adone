@@ -227,7 +227,7 @@ function hoistFunctionEnvironment(
       thisPaths.forEach(thisChild => {
         thisChild.replaceWith(
           thisChild.isJSX()
-            ? t.jSXIdentifier(thisBinding)
+            ? t.jsxIdentifier(thisBinding)
             : t.identifier(thisBinding),
         );
       });

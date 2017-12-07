@@ -174,6 +174,7 @@ void GitTree::CreateUpdatedWorker::HandleOKCallback() {
         err = Nan::Error("Method createUpdated has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tree.createUpdated").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -229,6 +230,7 @@ void GitTree::CreateUpdatedWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method createUpdated has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tree.createUpdated").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -317,6 +319,7 @@ void GitTree::DupWorker::HandleOKCallback() {
         err = Nan::Error("Method dup has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tree.dup").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -369,6 +372,7 @@ void GitTree::DupWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method dup has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tree.dup").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -653,6 +657,7 @@ void GitTree::EntryBypathWorker::HandleOKCallback() {
         err = Nan::Error("Method entryByPath has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tree.entryByPath").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -706,6 +711,7 @@ void GitTree::EntryBypathWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method entryByPath has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tree.entryByPath").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1012,6 +1018,7 @@ void GitTree::LookupWorker::HandleOKCallback() {
         err = Nan::Error("Method lookup has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tree.lookup").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1066,6 +1073,7 @@ void GitTree::LookupWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method lookup has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tree.lookup").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1213,6 +1221,7 @@ void GitTree::LookupPrefixWorker::HandleOKCallback() {
         err = Nan::Error("Method lookupPrefix has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tree.lookupPrefix").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1268,6 +1277,7 @@ void GitTree::LookupPrefixWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method lookupPrefix has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tree.lookupPrefix").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

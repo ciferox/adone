@@ -258,6 +258,7 @@ void GitOdb::OpenWorker::HandleOKCallback() {
         err = Nan::Error("Method open has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Odb.open").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -311,6 +312,7 @@ void GitOdb::OpenWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method open has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Odb.open").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -432,6 +434,7 @@ void GitOdb::ReadWorker::HandleOKCallback() {
         err = Nan::Error("Method read has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Odb.read").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -485,6 +488,7 @@ void GitOdb::ReadWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method read has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Odb.read").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -625,6 +629,7 @@ void GitOdb::WriteWorker::HandleOKCallback() {
         err = Nan::Error("Method write has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Odb.write").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -680,6 +685,7 @@ void GitOdb::WriteWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method write has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Odb.write").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

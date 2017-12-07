@@ -216,6 +216,7 @@ void GitIgnore::PathIsIgnoredWorker::HandleOKCallback() {
         err = Nan::Error("Method pathIsIgnored has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Ignore.pathIsIgnored").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -270,6 +271,7 @@ void GitIgnore::PathIsIgnoredWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method pathIsIgnored has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Ignore.pathIsIgnored").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

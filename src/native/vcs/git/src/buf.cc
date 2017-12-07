@@ -172,6 +172,7 @@ void GitBuf::GrowWorker::HandleOKCallback() {
         err = Nan::Error("Method grow has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Buf.grow").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -225,6 +226,7 @@ void GitBuf::GrowWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method grow has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Buf.grow").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -353,6 +355,7 @@ void GitBuf::SetWorker::HandleOKCallback() {
         err = Nan::Error("Method set has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Buf.set").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -407,6 +410,7 @@ void GitBuf::SetWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method set has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Buf.set").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

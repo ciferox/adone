@@ -173,6 +173,7 @@ void GitMerge::MergeWorker::HandleOKCallback() {
         err = Nan::Error("Method merge has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Merge.merge").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -230,6 +231,7 @@ void GitMerge::MergeWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method merge has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Merge.merge").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -396,6 +398,7 @@ void GitMerge::BaseWorker::HandleOKCallback() {
         err = Nan::Error("Method base has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Merge.base").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -451,6 +454,7 @@ void GitMerge::BaseWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method base has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Merge.base").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -624,6 +628,7 @@ void GitMerge::BasesWorker::HandleOKCallback() {
         err = Nan::Error("Method bases has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Merge.bases").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -679,6 +684,7 @@ void GitMerge::BasesWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method bases has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Merge.bases").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -825,6 +831,7 @@ void GitMerge::CommitsWorker::HandleOKCallback() {
         err = Nan::Error("Method commits has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Merge.commits").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -881,6 +888,7 @@ void GitMerge::CommitsWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method commits has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Merge.commits").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1119,6 +1127,7 @@ void GitMerge::TreesWorker::HandleOKCallback() {
         err = Nan::Error("Method trees has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Merge.trees").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1176,6 +1185,7 @@ void GitMerge::TreesWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method trees has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Merge.trees").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

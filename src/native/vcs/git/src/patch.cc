@@ -235,6 +235,7 @@ void GitPatch::FromBlobAndBufferWorker::HandleOKCallback() {
         err = Nan::Error("Method fromBlobAndBuffer has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Patch.fromBlobAndBuffer").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -293,6 +294,7 @@ void GitPatch::FromBlobAndBufferWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method fromBlobAndBuffer has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Patch.fromBlobAndBuffer").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -461,6 +463,7 @@ void GitPatch::FromBlobsWorker::HandleOKCallback() {
         err = Nan::Error("Method fromBlobs has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Patch.fromBlobs").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -518,6 +521,7 @@ void GitPatch::FromBlobsWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method fromBlobs has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Patch.fromBlobs").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -628,6 +632,7 @@ void GitPatch::FromDiffWorker::HandleOKCallback() {
         err = Nan::Error("Method fromDiff has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Patch.fromDiff").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -682,6 +687,7 @@ void GitPatch::FromDiffWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method fromDiff has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Patch.fromDiff").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -827,6 +833,7 @@ void GitPatch::GetHunkWorker::HandleOKCallback() {
         err = Nan::Error("Method getHunk has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Patch.getHunk").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -880,6 +887,7 @@ void GitPatch::GetHunkWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method getHunk has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Patch.getHunk").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -992,6 +1000,7 @@ void GitPatch::GetLineInHunkWorker::HandleOKCallback() {
         err = Nan::Error("Method getLineInHunk has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Patch.getLineInHunk").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1046,6 +1055,7 @@ void GitPatch::GetLineInHunkWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method getLineInHunk has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Patch.getLineInHunk").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1321,6 +1331,7 @@ void GitPatch::ConvenientFromDiffWorker::HandleOKCallback() {
       err = Nan::Error("Method convenientFromDiff has thrown an error.")->ToObject();
     }
     err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+    err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Patch.convenientFromDiff").ToLocalChecked());
     Local<v8::Value> argv[1] = {
       err
     };
@@ -1338,6 +1349,7 @@ void GitPatch::ConvenientFromDiffWorker::HandleOKCallback() {
   if (baton->error_code < 0) {
     Local<v8::Object> err = Nan::Error("method convenientFromDiff has thrown an error.")->ToObject();
     err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+    err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Patch.convenientFromDiff").ToLocalChecked());
     Local<v8::Value> argv[1] = {
       err
     };

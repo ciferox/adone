@@ -287,6 +287,7 @@ void GitRefs::CreateWorker::HandleOKCallback() {
         err = Nan::Error("Method create has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.create").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -344,6 +345,7 @@ void GitRefs::CreateWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method create has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.create").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -568,6 +570,7 @@ void GitRefs::CreateMatchingWorker::HandleOKCallback() {
         err = Nan::Error("Method createMatching has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.createMatching").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -626,6 +629,7 @@ void GitRefs::CreateMatchingWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method createMatching has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.createMatching").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -747,6 +751,7 @@ void GitRefs::DupWorker::HandleOKCallback() {
         err = Nan::Error("Method dup has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.dup").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -799,6 +804,7 @@ void GitRefs::DupWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method dup has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.dup").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -919,6 +925,7 @@ void GitRefs::DwimWorker::HandleOKCallback() {
         err = Nan::Error("Method dwim has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.dwim").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -973,6 +980,7 @@ void GitRefs::DwimWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method dwim has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.dwim").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1315,6 +1323,7 @@ void GitRefs::ListWorker::HandleOKCallback() {
         err = Nan::Error("Method list has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.list").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1368,6 +1377,7 @@ void GitRefs::ListWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method list has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.list").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1490,6 +1500,7 @@ void GitRefs::LookupWorker::HandleOKCallback() {
         err = Nan::Error("Method lookup has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.lookup").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1544,6 +1555,7 @@ void GitRefs::LookupWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method lookup has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.lookup").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1701,6 +1713,7 @@ void GitRefs::NameToIdWorker::HandleOKCallback() {
         err = Nan::Error("Method nameToId has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.nameToId").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1755,6 +1768,7 @@ void GitRefs::NameToIdWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method nameToId has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.nameToId").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1975,6 +1989,7 @@ void GitRefs::PeelWorker::HandleOKCallback() {
         err = Nan::Error("Method peel has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.peel").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2028,6 +2043,7 @@ void GitRefs::PeelWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method peel has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.peel").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2226,6 +2242,7 @@ void GitRefs::RenameWorker::HandleOKCallback() {
         err = Nan::Error("Method rename has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.rename").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2281,6 +2298,7 @@ void GitRefs::RenameWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method rename has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.rename").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2369,6 +2387,7 @@ void GitRefs::ResolveWorker::HandleOKCallback() {
         err = Nan::Error("Method resolve has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.resolve").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2421,6 +2440,7 @@ void GitRefs::ResolveWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method resolve has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.resolve").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2564,6 +2584,7 @@ void GitRefs::SetTargetWorker::HandleOKCallback() {
         err = Nan::Error("Method setTarget has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.setTarget").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2618,6 +2639,7 @@ void GitRefs::SetTargetWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method setTarget has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.setTarget").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2833,6 +2855,7 @@ void GitRefs::SymbolicCreateWorker::HandleOKCallback() {
         err = Nan::Error("Method symbolicCreate has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.symbolicCreate").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2890,6 +2913,7 @@ void GitRefs::SymbolicCreateWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method symbolicCreate has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.symbolicCreate").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -3088,6 +3112,7 @@ void GitRefs::SymbolicCreateMatchingWorker::HandleOKCallback() {
         err = Nan::Error("Method symbolicCreateMatching has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.symbolicCreateMatching").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -3146,6 +3171,7 @@ void GitRefs::SymbolicCreateMatchingWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method symbolicCreateMatching has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.symbolicCreateMatching").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -3279,6 +3305,7 @@ void GitRefs::SymbolicSetTargetWorker::HandleOKCallback() {
         err = Nan::Error("Method symbolicSetTarget has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.symbolicSetTarget").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -3333,6 +3360,7 @@ void GitRefs::SymbolicSetTargetWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method symbolicSetTarget has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reference.symbolicSetTarget").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

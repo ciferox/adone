@@ -343,6 +343,7 @@ void GitCred::SshKeyMemoryNewWorker::HandleOKCallback() {
         err = Nan::Error("Method sshKeyMemoryNew has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Cred.sshKeyMemoryNew").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -399,6 +400,7 @@ void GitCred::SshKeyMemoryNewWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method sshKeyMemoryNew has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Cred.sshKeyMemoryNew").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -619,6 +621,7 @@ void GitCred::UsernameNewWorker::HandleOKCallback() {
         err = Nan::Error("Method usernameNew has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Cred.usernameNew").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -672,6 +675,7 @@ void GitCred::UsernameNewWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method usernameNew has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Cred.usernameNew").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

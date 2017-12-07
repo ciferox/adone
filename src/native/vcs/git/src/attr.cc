@@ -271,6 +271,7 @@ void GitAttr::GetWorker::HandleOKCallback() {
         err = Nan::Error("Method get has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Attr.get").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -327,6 +328,7 @@ void GitAttr::GetWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method get has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Attr.get").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

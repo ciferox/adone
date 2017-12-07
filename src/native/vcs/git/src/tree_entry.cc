@@ -284,6 +284,7 @@ void GitTreeEntry::ToObjectWorker::HandleOKCallback() {
         err = Nan::Error("Method toObject has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("TreeEntry.toObject").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -337,6 +338,7 @@ void GitTreeEntry::ToObjectWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method toObject has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("TreeEntry.toObject").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

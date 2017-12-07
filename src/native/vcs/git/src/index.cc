@@ -156,6 +156,7 @@ void GitIndex::AddWorker::HandleOKCallback() {
         err = Nan::Error("Method add has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.add").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -209,6 +210,7 @@ void GitIndex::AddWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method add has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.add").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -322,6 +324,7 @@ void GitIndex::AddAllWorker::HandleOKCallback() {
         err = Nan::Error("Method addAll has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.addAll").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -377,6 +380,7 @@ void GitIndex::AddAllWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method addAll has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.addAll").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -557,6 +561,7 @@ void GitIndex::AddBypathWorker::HandleOKCallback() {
         err = Nan::Error("Method addByPath has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.addByPath").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -610,6 +615,7 @@ void GitIndex::AddBypathWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method addByPath has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.addByPath").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -747,6 +753,7 @@ void GitIndex::ClearWorker::HandleOKCallback() {
         err = Nan::Error("Method clear has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.clear").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -799,6 +806,7 @@ void GitIndex::ClearWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method clear has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.clear").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -916,6 +924,7 @@ void GitIndex::ConflictAddWorker::HandleOKCallback() {
         err = Nan::Error("Method conflictAdd has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.conflictAdd").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -971,6 +980,7 @@ void GitIndex::ConflictAddWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method conflictAdd has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.conflictAdd").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1046,6 +1056,7 @@ void GitIndex::ConflictCleanupWorker::HandleOKCallback() {
         err = Nan::Error("Method conflictCleanup has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.conflictCleanup").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1098,6 +1109,7 @@ void GitIndex::ConflictCleanupWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method conflictCleanup has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.conflictCleanup").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1235,6 +1247,7 @@ void GitIndex::ConflictGetWorker::HandleOKCallback() {
         err = Nan::Error("Method conflictGet has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.conflictGet").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1288,6 +1301,7 @@ void GitIndex::ConflictGetWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method conflictGet has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.conflictGet").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1385,6 +1399,7 @@ void GitIndex::ConflictRemoveWorker::HandleOKCallback() {
         err = Nan::Error("Method conflictRemove has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.conflictRemove").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1438,6 +1453,7 @@ void GitIndex::ConflictRemoveWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method conflictRemove has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.conflictRemove").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1635,6 +1651,7 @@ void GitIndex::FindWorker::HandleOKCallback() {
         err = Nan::Error("Method find has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.find").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1688,6 +1705,7 @@ void GitIndex::FindWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method find has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.find").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1792,6 +1810,7 @@ void GitIndex::FindPrefixWorker::HandleOKCallback() {
         err = Nan::Error("Method findPrefix has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.findPrefix").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1845,6 +1864,7 @@ void GitIndex::FindPrefixWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method findPrefix has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.findPrefix").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2092,6 +2112,7 @@ void GitIndex::OpenWorker::HandleOKCallback() {
         err = Nan::Error("Method open has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.open").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2145,6 +2166,7 @@ void GitIndex::OpenWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method open has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.open").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2305,6 +2327,7 @@ void GitIndex::ReadWorker::HandleOKCallback() {
         err = Nan::Error("Method read has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.read").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2358,6 +2381,7 @@ void GitIndex::ReadWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method read has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.read").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2446,6 +2470,7 @@ void GitIndex::ReadTreeWorker::HandleOKCallback() {
         err = Nan::Error("Method readTree has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.readTree").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2499,6 +2524,7 @@ void GitIndex::ReadTreeWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method readTree has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.readTree").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2608,6 +2634,7 @@ void GitIndex::RemoveWorker::HandleOKCallback() {
         err = Nan::Error("Method remove has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.remove").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2662,6 +2689,7 @@ void GitIndex::RemoveWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method remove has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.remove").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2762,6 +2790,7 @@ void GitIndex::RemoveAllWorker::HandleOKCallback() {
         err = Nan::Error("Method removeAll has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.removeAll").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2816,6 +2845,7 @@ void GitIndex::RemoveAllWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method removeAll has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.removeAll").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2996,6 +3026,7 @@ void GitIndex::RemoveBypathWorker::HandleOKCallback() {
         err = Nan::Error("Method removeByPath has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.removeByPath").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -3049,6 +3080,7 @@ void GitIndex::RemoveBypathWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method removeByPath has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.removeByPath").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -3158,6 +3190,7 @@ void GitIndex::RemoveDirectoryWorker::HandleOKCallback() {
         err = Nan::Error("Method removeDirectory has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.removeDirectory").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -3212,6 +3245,7 @@ void GitIndex::RemoveDirectoryWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method removeDirectory has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.removeDirectory").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -3382,6 +3416,7 @@ void GitIndex::UpdateAllWorker::HandleOKCallback() {
         err = Nan::Error("Method updateAll has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.updateAll").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -3436,6 +3471,7 @@ void GitIndex::UpdateAllWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method updateAll has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.updateAll").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -3619,6 +3655,7 @@ void GitIndex::WriteWorker::HandleOKCallback() {
         err = Nan::Error("Method write has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.write").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -3671,6 +3708,7 @@ void GitIndex::WriteWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method write has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.write").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -3761,6 +3799,7 @@ void GitIndex::WriteTreeWorker::HandleOKCallback() {
         err = Nan::Error("Method writeTree has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.writeTree").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -3813,6 +3852,7 @@ void GitIndex::WriteTreeWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method writeTree has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.writeTree").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -3916,6 +3956,7 @@ void GitIndex::WriteTreeToWorker::HandleOKCallback() {
         err = Nan::Error("Method writeTreeTo has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.writeTreeTo").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -3969,6 +4010,7 @@ void GitIndex::WriteTreeToWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method writeTreeTo has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Index.writeTreeTo").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

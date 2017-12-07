@@ -125,6 +125,7 @@ void GitConfig::FindProgramdataWorker::HandleOKCallback() {
         err = Nan::Error("Method findProgramdata has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Config.findProgramdata").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -177,6 +178,7 @@ void GitConfig::FindProgramdataWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method findProgramdata has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Config.findProgramdata").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -290,6 +292,7 @@ void GitConfig::GetStringBufWorker::HandleOKCallback() {
         err = Nan::Error("Method getStringBuf has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Config.getStringBuf").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -343,6 +346,7 @@ void GitConfig::GetStringBufWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method getStringBuf has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Config.getStringBuf").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -466,6 +470,7 @@ void GitConfig::OpenDefaultWorker::HandleOKCallback() {
         err = Nan::Error("Method openDefault has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Config.openDefault").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -518,6 +523,7 @@ void GitConfig::OpenDefaultWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method openDefault has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Config.openDefault").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -777,6 +783,7 @@ void GitConfig::SetStringWorker::HandleOKCallback() {
         err = Nan::Error("Method setString has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Config.setString").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -831,6 +838,7 @@ void GitConfig::SetStringWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method setString has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Config.setString").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -919,6 +927,7 @@ void GitConfig::SnapshotWorker::HandleOKCallback() {
         err = Nan::Error("Method snapshot has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Config.snapshot").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -971,6 +980,7 @@ void GitConfig::SnapshotWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method snapshot has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Config.snapshot").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

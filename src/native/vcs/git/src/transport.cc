@@ -240,6 +240,7 @@ void GitTransport::SshWithPathsWorker::HandleOKCallback() {
         err = Nan::Error("Method sshWithPaths has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Transport.sshWithPaths").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -294,6 +295,7 @@ void GitTransport::SshWithPathsWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method sshWithPaths has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Transport.sshWithPaths").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

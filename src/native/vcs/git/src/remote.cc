@@ -375,6 +375,7 @@ void GitRemote::ConnectWorker::HandleOKCallback() {
         err = Nan::Error("Method connect has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.connect").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -431,6 +432,7 @@ void GitRemote::ConnectWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method connect has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.connect").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -598,6 +600,7 @@ void GitRemote::CreateWorker::HandleOKCallback() {
         err = Nan::Error("Method create has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.create").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -653,6 +656,7 @@ void GitRemote::CreateWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method create has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.create").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -773,6 +777,7 @@ void GitRemote::CreateAnonymousWorker::HandleOKCallback() {
         err = Nan::Error("Method createAnonymous has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.createAnonymous").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -827,6 +832,7 @@ void GitRemote::CreateAnonymousWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method createAnonymous has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.createAnonymous").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -991,6 +997,7 @@ void GitRemote::CreateWithFetchspecWorker::HandleOKCallback() {
         err = Nan::Error("Method createWithFetchspec has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.createWithFetchspec").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1047,6 +1054,7 @@ void GitRemote::CreateWithFetchspecWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method createWithFetchspec has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.createWithFetchspec").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1136,6 +1144,7 @@ void GitRemote::DefaultBranchWorker::HandleOKCallback() {
         err = Nan::Error("Method defaultBranch has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.defaultBranch").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1188,6 +1197,7 @@ void GitRemote::DefaultBranchWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method defaultBranch has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.defaultBranch").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1297,6 +1307,7 @@ void GitRemote::DeleteWorker::HandleOKCallback() {
         err = Nan::Error("Method delete has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.delete").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1351,6 +1362,7 @@ void GitRemote::DeleteWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method delete has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.delete").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1420,6 +1432,7 @@ void GitRemote::DisconnectWorker::HandleOKCallback() {
         err = Nan::Error("Method disconnect has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.disconnect").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1472,6 +1485,7 @@ void GitRemote::DisconnectWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method disconnect has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.disconnect").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1570,6 +1584,7 @@ void GitRemote::DownloadWorker::HandleOKCallback() {
         err = Nan::Error("Method download has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.download").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1624,6 +1639,7 @@ void GitRemote::DownloadWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method download has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.download").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1712,6 +1728,7 @@ void GitRemote::DupWorker::HandleOKCallback() {
         err = Nan::Error("Method dup has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.dup").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1764,6 +1781,7 @@ void GitRemote::DupWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method dup has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.dup").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1885,6 +1903,7 @@ void GitRemote::FetchWorker::HandleOKCallback() {
         err = Nan::Error("Method fetch has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.fetch").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1940,6 +1959,7 @@ void GitRemote::FetchWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method fetch has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.fetch").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2044,6 +2064,7 @@ void GitRemote::GetFetchRefspecsWorker::HandleOKCallback() {
         err = Nan::Error("Method getFetchRefspecs has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.getFetchRefspecs").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2096,6 +2117,7 @@ void GitRemote::GetFetchRefspecsWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method getFetchRefspecs has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.getFetchRefspecs").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2179,6 +2201,7 @@ void GitRemote::GetPushRefspecsWorker::HandleOKCallback() {
         err = Nan::Error("Method getPushRefspecs has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.getPushRefspecs").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2231,6 +2254,7 @@ void GitRemote::GetPushRefspecsWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method getPushRefspecs has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.getPushRefspecs").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2464,6 +2488,7 @@ void GitRemote::ListWorker::HandleOKCallback() {
         err = Nan::Error("Method list has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.list").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2517,6 +2542,7 @@ void GitRemote::ListWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method list has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.list").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2639,6 +2665,7 @@ void GitRemote::LookupWorker::HandleOKCallback() {
         err = Nan::Error("Method lookup has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.lookup").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2693,6 +2720,7 @@ void GitRemote::LookupWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method lookup has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.lookup").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2928,6 +2956,7 @@ void GitRemote::PushWorker::HandleOKCallback() {
         err = Nan::Error("Method push has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.push").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2982,6 +3011,7 @@ void GitRemote::PushWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method push has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.push").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -3573,6 +3603,7 @@ void GitRemote::ReferenceListWorker::HandleOKCallback()
   {
     Local<v8::Object> err = Nan::Error("Reference List has thrown an error.")->ToObject();
     err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+    err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Remote.referenceList").ToLocalChecked());
     Local<v8::Value> argv[1] = {
       err
     };

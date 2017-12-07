@@ -444,6 +444,7 @@ void GitReflog::ReadWorker::HandleOKCallback() {
         err = Nan::Error("Method read has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reflog.read").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -498,6 +499,7 @@ void GitReflog::ReadWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method read has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reflog.read").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -647,6 +649,7 @@ void GitReflog::WriteWorker::HandleOKCallback() {
         err = Nan::Error("Method write has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reflog.write").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -699,6 +702,7 @@ void GitReflog::WriteWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method write has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reflog.write").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

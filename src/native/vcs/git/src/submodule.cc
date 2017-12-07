@@ -139,6 +139,7 @@ void GitSubmodule::AddFinalizeWorker::HandleOKCallback() {
         err = Nan::Error("Method addFinalize has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.addFinalize").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -191,6 +192,7 @@ void GitSubmodule::AddFinalizeWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method addFinalize has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.addFinalize").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -345,6 +347,7 @@ void GitSubmodule::AddSetupWorker::HandleOKCallback() {
         err = Nan::Error("Method addSetup has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.addSetup").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -401,6 +404,7 @@ void GitSubmodule::AddSetupWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method addSetup has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.addSetup").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -488,6 +492,7 @@ void GitSubmodule::AddToIndexWorker::HandleOKCallback() {
         err = Nan::Error("Method addToIndex has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.addToIndex").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -541,6 +546,7 @@ void GitSubmodule::AddToIndexWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method addToIndex has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.addToIndex").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -704,6 +710,7 @@ void GitSubmodule::ForeachWorker::HandleOKCallback() {
         err = Nan::Error("Method foreach has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.foreach").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -758,6 +765,7 @@ void GitSubmodule::ForeachWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method foreach has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.foreach").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1050,6 +1058,7 @@ void GitSubmodule::InitWorker::HandleOKCallback() {
         err = Nan::Error("Method init has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.init").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1103,6 +1112,7 @@ void GitSubmodule::InitWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method init has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.init").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1185,6 +1195,7 @@ void GitSubmodule::LocationWorker::HandleOKCallback() {
         err = Nan::Error("Method location has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.location").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1237,6 +1248,7 @@ void GitSubmodule::LocationWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method location has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.location").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1357,6 +1369,7 @@ void GitSubmodule::LookupWorker::HandleOKCallback() {
         err = Nan::Error("Method lookup has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.lookup").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1411,6 +1424,7 @@ void GitSubmodule::LookupWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method lookup has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.lookup").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1534,6 +1548,7 @@ void GitSubmodule::OpenWorker::HandleOKCallback() {
         err = Nan::Error("Method open has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.open").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1586,6 +1601,7 @@ void GitSubmodule::OpenWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method open has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.open").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1793,6 +1809,7 @@ void GitSubmodule::RepoInitWorker::HandleOKCallback() {
         err = Nan::Error("Method repoInit has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.repoInit").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1846,6 +1863,7 @@ void GitSubmodule::RepoInitWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method repoInit has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.repoInit").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1967,6 +1985,7 @@ void GitSubmodule::ResolveUrlWorker::HandleOKCallback() {
         err = Nan::Error("Method resolveUrl has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.resolveUrl").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2021,6 +2040,7 @@ void GitSubmodule::ResolveUrlWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method resolveUrl has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.resolveUrl").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2280,6 +2300,7 @@ void GitSubmodule::SetIgnoreWorker::HandleOKCallback() {
         err = Nan::Error("Method setIgnore has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.setIgnore").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2335,6 +2356,7 @@ void GitSubmodule::SetIgnoreWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method setIgnore has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.setIgnore").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2454,6 +2476,7 @@ void GitSubmodule::SetUpdateWorker::HandleOKCallback() {
         err = Nan::Error("Method setUpdate has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.setUpdate").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2509,6 +2532,7 @@ void GitSubmodule::SetUpdateWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method setUpdate has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.setUpdate").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2638,6 +2662,7 @@ void GitSubmodule::SetUrlWorker::HandleOKCallback() {
         err = Nan::Error("Method setUrl has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.setUrl").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2693,6 +2718,7 @@ void GitSubmodule::SetUrlWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method setUrl has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.setUrl").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2819,6 +2845,7 @@ void GitSubmodule::StatusWorker::HandleOKCallback() {
         err = Nan::Error("Method status has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.status").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2874,6 +2901,7 @@ void GitSubmodule::StatusWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method status has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.status").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2949,6 +2977,7 @@ void GitSubmodule::SyncWorker::HandleOKCallback() {
         err = Nan::Error("Method sync has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.sync").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -3001,6 +3030,7 @@ void GitSubmodule::SyncWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method sync has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.sync").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -3102,6 +3132,7 @@ void GitSubmodule::UpdateWorker::HandleOKCallback() {
         err = Nan::Error("Method update has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.update").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -3156,6 +3187,7 @@ void GitSubmodule::UpdateWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method update has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Submodule.update").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

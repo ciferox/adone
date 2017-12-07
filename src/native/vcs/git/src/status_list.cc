@@ -172,6 +172,7 @@ void GitStatusList::GetPerfdataWorker::HandleOKCallback() {
         err = Nan::Error("Method getPerfdata has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("StatusList.getPerfdata").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -224,6 +225,7 @@ void GitStatusList::GetPerfdataWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method getPerfdata has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("StatusList.getPerfdata").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -336,6 +338,7 @@ void GitStatusList::CreateWorker::HandleOKCallback() {
         err = Nan::Error("Method create has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("StatusList.create").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -390,6 +393,7 @@ void GitStatusList::CreateWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method create has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("StatusList.create").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

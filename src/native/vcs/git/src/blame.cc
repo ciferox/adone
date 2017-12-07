@@ -160,6 +160,7 @@ void GitBlame::BufferWorker::HandleOKCallback() {
         err = Nan::Error("Method buffer has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Blame.buffer").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -214,6 +215,7 @@ void GitBlame::BufferWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method buffer has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Blame.buffer").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -348,6 +350,7 @@ void GitBlame::FileWorker::HandleOKCallback() {
         err = Nan::Error("Method file has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Blame.file").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -403,6 +406,7 @@ void GitBlame::FileWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method file has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Blame.file").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

@@ -21,7 +21,8 @@ Revwalk.prototype.fileHistoryWalk = promisifyAll(Revwalk.prototype.fileHistoryWa
 Object.defineProperty(Revwalk.prototype, "repo", {
     get() {
         return this.repository();
-    }
+    },
+    configurable: true
 });
 
 const _sorting = Revwalk.prototype.sorting;

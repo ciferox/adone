@@ -222,6 +222,7 @@ void GitTag::AnnotationCreateWorker::HandleOKCallback() {
         err = Nan::Error("Method annotationCreate has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tag.annotationCreate").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -279,6 +280,7 @@ void GitTag::AnnotationCreateWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method annotationCreate has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tag.annotationCreate").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -461,6 +463,7 @@ void GitTag::CreateWorker::HandleOKCallback() {
         err = Nan::Error("Method create has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tag.create").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -519,6 +522,7 @@ void GitTag::CreateWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method create has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tag.create").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -666,6 +670,7 @@ void GitTag::CreateLightweightWorker::HandleOKCallback() {
         err = Nan::Error("Method createLightweight has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tag.createLightweight").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -722,6 +727,7 @@ void GitTag::CreateLightweightWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method createLightweight has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tag.createLightweight").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -829,6 +835,7 @@ void GitTag::DeleteWorker::HandleOKCallback() {
         err = Nan::Error("Method delete has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tag.delete").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -883,6 +890,7 @@ void GitTag::DeleteWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method delete has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tag.delete").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -971,6 +979,7 @@ void GitTag::DupWorker::HandleOKCallback() {
         err = Nan::Error("Method dup has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tag.dup").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1023,6 +1032,7 @@ void GitTag::DupWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method dup has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tag.dup").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1174,6 +1184,7 @@ void GitTag::ListWorker::HandleOKCallback() {
         err = Nan::Error("Method list has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tag.list").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1227,6 +1238,7 @@ void GitTag::ListWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method list has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tag.list").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1425,6 +1437,7 @@ void GitTag::LookupWorker::HandleOKCallback() {
         err = Nan::Error("Method lookup has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tag.lookup").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1479,6 +1492,7 @@ void GitTag::LookupWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method lookup has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tag.lookup").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1626,6 +1640,7 @@ void GitTag::LookupPrefixWorker::HandleOKCallback() {
         err = Nan::Error("Method lookupPrefix has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tag.lookupPrefix").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1681,6 +1696,7 @@ void GitTag::LookupPrefixWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method lookupPrefix has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tag.lookupPrefix").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

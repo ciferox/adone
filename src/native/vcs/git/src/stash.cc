@@ -136,6 +136,7 @@ void GitStash::ApplyWorker::HandleOKCallback() {
         err = Nan::Error("Method apply has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Stash.apply").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -191,6 +192,7 @@ void GitStash::ApplyWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method apply has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Stash.apply").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -332,6 +334,7 @@ void GitStash::DropWorker::HandleOKCallback() {
         err = Nan::Error("Method drop has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Stash.drop").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -386,6 +389,7 @@ void GitStash::DropWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method drop has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Stash.drop").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -489,6 +493,7 @@ void GitStash::ForeachWorker::HandleOKCallback() {
         err = Nan::Error("Method foreach has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Stash.foreach").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -543,6 +548,7 @@ void GitStash::ForeachWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method foreach has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Stash.foreach").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -739,6 +745,7 @@ void GitStash::PopWorker::HandleOKCallback() {
         err = Nan::Error("Method pop has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Stash.pop").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -794,6 +801,7 @@ void GitStash::PopWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method pop has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Stash.pop").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -942,6 +950,7 @@ void GitStash::SaveWorker::HandleOKCallback() {
         err = Nan::Error("Method save has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Stash.save").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -998,6 +1007,7 @@ void GitStash::SaveWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method save has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Stash.save").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

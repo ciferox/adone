@@ -148,6 +148,7 @@ void GitReset::ResetWorker::HandleOKCallback() {
         err = Nan::Error("Method reset has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reset.reset").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -204,6 +205,7 @@ void GitReset::ResetWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method reset has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reset.reset").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -316,6 +318,7 @@ void GitReset::DefaultWorker::HandleOKCallback() {
         err = Nan::Error("Method default has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reset.default").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -371,6 +374,7 @@ void GitReset::DefaultWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method default has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reset.default").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -495,6 +499,7 @@ void GitReset::FromAnnotatedWorker::HandleOKCallback() {
         err = Nan::Error("Method fromAnnotated has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reset.fromAnnotated").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -551,6 +556,7 @@ void GitReset::FromAnnotatedWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method fromAnnotated has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Reset.fromAnnotated").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

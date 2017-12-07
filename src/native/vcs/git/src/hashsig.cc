@@ -200,6 +200,7 @@ void GitHashsig::CreateWorker::HandleOKCallback() {
         err = Nan::Error("Method create has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Hashsig.create").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -255,6 +256,7 @@ void GitHashsig::CreateWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method create has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Hashsig.create").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -374,6 +376,7 @@ void GitHashsig::CreateFromfileWorker::HandleOKCallback() {
         err = Nan::Error("Method createFromFile has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Hashsig.createFromFile").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -428,6 +431,7 @@ void GitHashsig::CreateFromfileWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method createFromFile has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Hashsig.createFromFile").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

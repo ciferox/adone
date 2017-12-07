@@ -183,6 +183,7 @@ void GitPathspec::MatchDiffWorker::HandleOKCallback() {
         err = Nan::Error("Method matchDiff has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Pathspec.matchDiff").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -237,6 +238,7 @@ void GitPathspec::MatchDiffWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method matchDiff has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Pathspec.matchDiff").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -350,6 +352,7 @@ void GitPathspec::MatchIndexWorker::HandleOKCallback() {
         err = Nan::Error("Method matchIndex has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Pathspec.matchIndex").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -404,6 +407,7 @@ void GitPathspec::MatchIndexWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method matchIndex has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Pathspec.matchIndex").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -749,6 +753,7 @@ void GitPathspec::MatchTreeWorker::HandleOKCallback() {
         err = Nan::Error("Method matchTree has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Pathspec.matchTree").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -803,6 +808,7 @@ void GitPathspec::MatchTreeWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method matchTree has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Pathspec.matchTree").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -916,6 +922,7 @@ void GitPathspec::MatchWorkdirWorker::HandleOKCallback() {
         err = Nan::Error("Method matchWorkdir has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Pathspec.matchWorkdir").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -970,6 +977,7 @@ void GitPathspec::MatchWorkdirWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method matchWorkdir has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Pathspec.matchWorkdir").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

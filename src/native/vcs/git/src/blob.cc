@@ -169,6 +169,7 @@ void GitBlob::CreateFrombufferWorker::HandleOKCallback() {
         err = Nan::Error("Method createFromBuffer has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Blob.createFromBuffer").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -224,6 +225,7 @@ void GitBlob::CreateFrombufferWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method createFromBuffer has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Blob.createFromBuffer").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -346,6 +348,7 @@ void GitBlob::CreateFromdiskWorker::HandleOKCallback() {
         err = Nan::Error("Method createFromDisk has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Blob.createFromDisk").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -400,6 +403,7 @@ void GitBlob::CreateFromdiskWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method createFromDisk has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Blob.createFromDisk").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -520,6 +524,7 @@ void GitBlob::CreateFromstreamWorker::HandleOKCallback() {
         err = Nan::Error("Method createFromStream has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Blob.createFromStream").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -574,6 +579,7 @@ void GitBlob::CreateFromstreamWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method createFromStream has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Blob.createFromStream").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -674,6 +680,7 @@ void GitBlob::CreateFromstreamCommitWorker::HandleOKCallback() {
         err = Nan::Error("Method createFromstreamCommit has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Blob.createFromstreamCommit").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -727,6 +734,7 @@ void GitBlob::CreateFromstreamCommitWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method createFromstreamCommit has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Blob.createFromstreamCommit").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -849,6 +857,7 @@ void GitBlob::CreateFromworkdirWorker::HandleOKCallback() {
         err = Nan::Error("Method createFromWorkdir has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Blob.createFromWorkdir").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -903,6 +912,7 @@ void GitBlob::CreateFromworkdirWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method createFromWorkdir has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Blob.createFromWorkdir").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -991,6 +1001,7 @@ void GitBlob::DupWorker::HandleOKCallback() {
         err = Nan::Error("Method dup has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Blob.dup").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1043,6 +1054,7 @@ void GitBlob::DupWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method dup has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Blob.dup").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1176,6 +1188,7 @@ void GitBlob::FilteredContentWorker::HandleOKCallback() {
         err = Nan::Error("Method filteredContent has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Blob.filteredContent").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1231,6 +1244,7 @@ void GitBlob::FilteredContentWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method filteredContent has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Blob.filteredContent").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1449,6 +1463,7 @@ void GitBlob::LookupWorker::HandleOKCallback() {
         err = Nan::Error("Method lookup has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Blob.lookup").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1503,6 +1518,7 @@ void GitBlob::LookupWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method lookup has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Blob.lookup").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1650,6 +1666,7 @@ void GitBlob::LookupPrefixWorker::HandleOKCallback() {
         err = Nan::Error("Method lookupPrefix has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Blob.lookupPrefix").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1705,6 +1722,7 @@ void GitBlob::LookupPrefixWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method lookupPrefix has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Blob.lookupPrefix").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

@@ -279,6 +279,7 @@ void GitDiff::BlobToBufferWorker::HandleOKCallback() {
         err = Nan::Error("Method blobToBuffer has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Diff.blobToBuffer").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -338,6 +339,7 @@ void GitDiff::BlobToBufferWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method blobToBuffer has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Diff.blobToBuffer").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -758,6 +760,7 @@ void GitDiff::FindSimilarWorker::HandleOKCallback() {
         err = Nan::Error("Method findSimilar has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Diff.findSimilar").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -811,6 +814,7 @@ void GitDiff::FindSimilarWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method findSimilar has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Diff.findSimilar").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -930,6 +934,7 @@ void GitDiff::FromBufferWorker::HandleOKCallback() {
         err = Nan::Error("Method fromBuffer has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Diff.fromBuffer").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -984,6 +989,7 @@ void GitDiff::FromBufferWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method fromBuffer has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Diff.fromBuffer").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1120,6 +1126,7 @@ void GitDiff::GetPerfdataWorker::HandleOKCallback() {
         err = Nan::Error("Method getPerfdata has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Diff.getPerfdata").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1172,6 +1179,7 @@ void GitDiff::GetPerfdataWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method getPerfdata has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Diff.getPerfdata").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1309,6 +1317,7 @@ void GitDiff::IndexToIndexWorker::HandleOKCallback() {
         err = Nan::Error("Method indexToIndex has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Diff.indexToIndex").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1365,6 +1374,7 @@ void GitDiff::IndexToIndexWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method indexToIndex has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Diff.indexToIndex").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1491,6 +1501,7 @@ void GitDiff::IndexToWorkdirWorker::HandleOKCallback() {
         err = Nan::Error("Method indexToWorkdir has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Diff.indexToWorkdir").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1546,6 +1557,7 @@ void GitDiff::IndexToWorkdirWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method indexToWorkdir has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Diff.indexToWorkdir").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1634,6 +1646,7 @@ void GitDiff::MergeWorker::HandleOKCallback() {
         err = Nan::Error("Method merge has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Diff.merge").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1687,6 +1700,7 @@ void GitDiff::MergeWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method merge has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Diff.merge").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1813,6 +1827,7 @@ void GitDiff::ToBufWorker::HandleOKCallback() {
         err = Nan::Error("Method toBuf has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Diff.toBuf").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1866,6 +1881,7 @@ void GitDiff::ToBufWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method toBuf has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Diff.toBuf").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2008,6 +2024,7 @@ void GitDiff::TreeToIndexWorker::HandleOKCallback() {
         err = Nan::Error("Method treeToIndex has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Diff.treeToIndex").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2064,6 +2081,7 @@ void GitDiff::TreeToIndexWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method treeToIndex has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Diff.treeToIndex").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2204,6 +2222,7 @@ void GitDiff::TreeToTreeWorker::HandleOKCallback() {
         err = Nan::Error("Method treeToTree has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Diff.treeToTree").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2260,6 +2279,7 @@ void GitDiff::TreeToTreeWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method treeToTree has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Diff.treeToTree").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2386,6 +2406,7 @@ void GitDiff::TreeToWorkdirWorker::HandleOKCallback() {
         err = Nan::Error("Method treeToWorkdir has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Diff.treeToWorkdir").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2441,6 +2462,7 @@ void GitDiff::TreeToWorkdirWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method treeToWorkdir has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Diff.treeToWorkdir").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2567,6 +2589,7 @@ void GitDiff::TreeToWorkdirWithIndexWorker::HandleOKCallback() {
         err = Nan::Error("Method treeToWorkdirWithIndex has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Diff.treeToWorkdirWithIndex").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2622,6 +2645,7 @@ void GitDiff::TreeToWorkdirWithIndexWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method treeToWorkdirWithIndex has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Diff.treeToWorkdirWithIndex").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

@@ -1,7 +1,7 @@
 {
   "name": "adone",
   "description": "The generalized core of 'cyber-fractal systems' infrastructure.",
-  "version": "0.6.67",
+  "version": "0.6.68",
   "author": "Adone Core Team <info@adone.io>",
   "license": "Apache-2.0",
   "devDependencies": {

@@ -186,6 +186,7 @@ void GitGraph::AheadBehindWorker::HandleOKCallback() {
         err = Nan::Error("Method aheadBehind has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Graph.aheadBehind").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -241,6 +242,7 @@ void GitGraph::AheadBehindWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method aheadBehind has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Graph.aheadBehind").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -401,6 +403,7 @@ void GitGraph::DescendantOfWorker::HandleOKCallback() {
         err = Nan::Error("Method descendantOf has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Graph.descendantOf").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -456,6 +459,7 @@ void GitGraph::DescendantOfWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method descendantOf has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Graph.descendantOf").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

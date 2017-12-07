@@ -184,6 +184,7 @@ void GitRepository::ConfigWorker::HandleOKCallback() {
         err = Nan::Error("Method config has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.config").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -236,6 +237,7 @@ void GitRepository::ConfigWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method config has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.config").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -324,6 +326,7 @@ void GitRepository::ConfigSnapshotWorker::HandleOKCallback() {
         err = Nan::Error("Method configSnapshot has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.configSnapshot").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -376,6 +379,7 @@ void GitRepository::ConfigSnapshotWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method configSnapshot has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.configSnapshot").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -543,6 +547,7 @@ void GitRepository::DiscoverWorker::HandleOKCallback() {
         err = Nan::Error("Method discover has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.discover").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -598,6 +603,7 @@ void GitRepository::DiscoverWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method discover has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.discover").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -693,6 +699,7 @@ void GitRepository::FetchheadForeachWorker::HandleOKCallback() {
         err = Nan::Error("Method fetchheadForeach has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.fetchheadForeach").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -746,6 +753,7 @@ void GitRepository::FetchheadForeachWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method fetchheadForeach has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.fetchheadForeach").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -979,6 +987,7 @@ void GitRepository::HeadWorker::HandleOKCallback() {
         err = Nan::Error("Method head has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.head").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1031,6 +1040,7 @@ void GitRepository::HeadWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method head has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.head").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1169,6 +1179,7 @@ void GitRepository::IndexWorker::HandleOKCallback() {
         err = Nan::Error("Method index has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.index").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1221,6 +1232,7 @@ void GitRepository::IndexWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method index has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.index").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1340,6 +1352,7 @@ void GitRepository::InitWorker::HandleOKCallback() {
         err = Nan::Error("Method init has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.init").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1394,6 +1407,7 @@ void GitRepository::InitWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method init has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.init").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1514,6 +1528,7 @@ void GitRepository::InitExtWorker::HandleOKCallback() {
         err = Nan::Error("Method initExt has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.initExt").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1568,6 +1583,7 @@ void GitRepository::InitExtWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method initExt has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.initExt").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1736,6 +1752,7 @@ void GitRepository::MergeheadForeachWorker::HandleOKCallback() {
         err = Nan::Error("Method mergeheadForeach has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.mergeheadForeach").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1789,6 +1806,7 @@ void GitRepository::MergeheadForeachWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method mergeheadForeach has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.mergeheadForeach").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1983,6 +2001,7 @@ void GitRepository::OdbWorker::HandleOKCallback() {
         err = Nan::Error("Method odb has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.odb").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2035,6 +2054,7 @@ void GitRepository::OdbWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method odb has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.odb").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2142,6 +2162,7 @@ void GitRepository::OpenWorker::HandleOKCallback() {
         err = Nan::Error("Method open has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.open").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2195,6 +2216,7 @@ void GitRepository::OpenWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method open has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.open").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2302,6 +2324,7 @@ void GitRepository::OpenBareWorker::HandleOKCallback() {
         err = Nan::Error("Method openBare has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.openBare").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2355,6 +2378,7 @@ void GitRepository::OpenBareWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method openBare has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.openBare").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2496,6 +2520,7 @@ void GitRepository::OpenExtWorker::HandleOKCallback() {
         err = Nan::Error("Method openExt has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.openExt").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2551,6 +2576,7 @@ void GitRepository::OpenExtWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method openExt has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.openExt").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2674,6 +2700,7 @@ void GitRepository::RefdbWorker::HandleOKCallback() {
         err = Nan::Error("Method refdb has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.refdb").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2726,6 +2753,7 @@ void GitRepository::RefdbWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method refdb has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.refdb").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -2823,6 +2851,7 @@ void GitRepository::SetHeadWorker::HandleOKCallback() {
         err = Nan::Error("Method setHead has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.setHead").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -2876,6 +2905,7 @@ void GitRepository::SetHeadWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method setHead has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.setHead").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -3400,6 +3430,7 @@ void GitRepository::WrapOdbWorker::HandleOKCallback() {
         err = Nan::Error("Method wrapOdb has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.wrapOdb").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -3453,6 +3484,7 @@ void GitRepository::WrapOdbWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method wrapOdb has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Repository.wrapOdb").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

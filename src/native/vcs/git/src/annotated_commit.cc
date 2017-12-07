@@ -235,6 +235,7 @@ void GitAnnotatedCommit::FromFetchheadWorker::HandleOKCallback() {
         err = Nan::Error("Method fromFetchhead has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("AnnotatedCommit.fromFetchhead").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -291,6 +292,7 @@ void GitAnnotatedCommit::FromFetchheadWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method fromFetchhead has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("AnnotatedCommit.fromFetchhead").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -406,6 +408,7 @@ void GitAnnotatedCommit::FromRefWorker::HandleOKCallback() {
         err = Nan::Error("Method fromRef has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("AnnotatedCommit.fromRef").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -460,6 +463,7 @@ void GitAnnotatedCommit::FromRefWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method fromRef has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("AnnotatedCommit.fromRef").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -580,6 +584,7 @@ void GitAnnotatedCommit::FromRevspecWorker::HandleOKCallback() {
         err = Nan::Error("Method fromRevspec has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("AnnotatedCommit.fromRevspec").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -634,6 +639,7 @@ void GitAnnotatedCommit::FromRevspecWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method fromRevspec has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("AnnotatedCommit.fromRevspec").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -802,6 +808,7 @@ void GitAnnotatedCommit::LookupWorker::HandleOKCallback() {
         err = Nan::Error("Method lookup has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("AnnotatedCommit.lookup").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -856,6 +863,7 @@ void GitAnnotatedCommit::LookupWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method lookup has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("AnnotatedCommit.lookup").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

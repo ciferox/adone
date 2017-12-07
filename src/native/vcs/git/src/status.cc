@@ -190,6 +190,7 @@ void GitStatus::FileWorker::HandleOKCallback() {
         err = Nan::Error("Method file has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Status.file").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -244,6 +245,7 @@ void GitStatus::FileWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method file has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Status.file").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -347,6 +349,7 @@ void GitStatus::ForeachWorker::HandleOKCallback() {
         err = Nan::Error("Method foreach has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Status.foreach").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -401,6 +404,7 @@ void GitStatus::ForeachWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method foreach has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Status.foreach").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -600,6 +604,7 @@ void GitStatus::ForeachExtWorker::HandleOKCallback() {
         err = Nan::Error("Method foreachExt has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Status.foreachExt").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -655,6 +660,7 @@ void GitStatus::ForeachExtWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method foreachExt has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Status.foreachExt").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

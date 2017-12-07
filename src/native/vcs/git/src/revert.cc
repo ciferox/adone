@@ -135,6 +135,7 @@ void GitRevert::RevertWorker::HandleOKCallback() {
         err = Nan::Error("Method revert has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Revert.revert").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -190,6 +191,7 @@ void GitRevert::RevertWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method revert has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Revert.revert").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -340,6 +342,7 @@ void GitRevert::CommitWorker::HandleOKCallback() {
         err = Nan::Error("Method commit has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Revert.commit").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -397,6 +400,7 @@ void GitRevert::CommitWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method commit has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Revert.commit").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

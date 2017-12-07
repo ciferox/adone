@@ -44,7 +44,7 @@ describe("Revert", () => {
         }).then((index) => {
             const entries = index.entries;
             assert.equal(1, entries.length);
-            assert.ok(_.endsWith(fileName, entries[0].path));
+            assert.isOk(_.endsWith(fileName, entries[0].path));
         });
     });
 

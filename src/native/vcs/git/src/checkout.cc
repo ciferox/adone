@@ -123,6 +123,7 @@ void GitCheckout::HeadWorker::HandleOKCallback() {
         err = Nan::Error("Method head has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Checkout.head").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -177,6 +178,7 @@ void GitCheckout::HeadWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method head has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Checkout.head").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -289,6 +291,7 @@ void GitCheckout::IndexWorker::HandleOKCallback() {
         err = Nan::Error("Method index has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Checkout.index").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -344,6 +347,7 @@ void GitCheckout::IndexWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method index has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Checkout.index").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -501,6 +505,7 @@ void GitCheckout::TreeWorker::HandleOKCallback() {
         err = Nan::Error("Method tree has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Checkout.tree").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -556,6 +561,7 @@ void GitCheckout::TreeWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method tree has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Checkout.tree").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

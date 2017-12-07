@@ -1,10 +1,9 @@
 const {
     application: {
         Subsystem,
-    DCliCommand
+        DCliCommand
     },
-    cli: { kit },
-    runtime: { term }
+    cli: { kit }
 } = adone;
 
 export default class Config extends Subsystem {

@@ -121,6 +121,7 @@ void GitRebase::AbortWorker::HandleOKCallback() {
         err = Nan::Error("Method abort has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Rebase.abort").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -173,6 +174,7 @@ void GitRebase::AbortWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method abort has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Rebase.abort").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -336,6 +338,7 @@ void GitRebase::CommitWorker::HandleOKCallback() {
         err = Nan::Error("Method commit has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Rebase.commit").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -392,6 +395,7 @@ void GitRebase::CommitWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method commit has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Rebase.commit").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -582,6 +586,7 @@ void GitRebase::InitWorker::HandleOKCallback() {
         err = Nan::Error("Method init has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Rebase.init").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -639,6 +644,7 @@ void GitRebase::InitWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method init has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Rebase.init").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -807,6 +813,7 @@ void GitRebase::NextWorker::HandleOKCallback() {
         err = Nan::Error("Method next has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Rebase.next").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -859,6 +866,7 @@ void GitRebase::NextWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method next has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Rebase.next").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -970,6 +978,7 @@ void GitRebase::OpenWorker::HandleOKCallback() {
         err = Nan::Error("Method open has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Rebase.open").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1024,6 +1033,7 @@ void GitRebase::OpenWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method open has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Rebase.open").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };

@@ -180,6 +180,7 @@ void GitBranch::CreateWorker::HandleOKCallback() {
         err = Nan::Error("Method create has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Branch.create").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -236,6 +237,7 @@ void GitBranch::CreateWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method create has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Branch.create").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -382,6 +384,7 @@ void GitBranch::CreateFromAnnotatedWorker::HandleOKCallback() {
         err = Nan::Error("Method createFromAnnotated has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Branch.createFromAnnotated").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -438,6 +441,7 @@ void GitBranch::CreateFromAnnotatedWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method createFromAnnotated has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Branch.createFromAnnotated").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -616,6 +620,7 @@ void GitBranch::IteratorNewWorker::HandleOKCallback() {
         err = Nan::Error("Method iteratorNew has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Branch.iteratorNew").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -670,6 +675,7 @@ void GitBranch::IteratorNewWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method iteratorNew has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Branch.iteratorNew").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -802,6 +808,7 @@ void GitBranch::LookupWorker::HandleOKCallback() {
         err = Nan::Error("Method lookup has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Branch.lookup").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -857,6 +864,7 @@ void GitBranch::LookupWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method lookup has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Branch.lookup").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -989,6 +997,7 @@ void GitBranch::MoveWorker::HandleOKCallback() {
         err = Nan::Error("Method move has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Branch.move").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1044,6 +1053,7 @@ void GitBranch::MoveWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method move has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Branch.move").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1140,6 +1150,7 @@ void GitBranch::NameWorker::HandleOKCallback() {
         err = Nan::Error("Method name has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Branch.name").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1193,6 +1204,7 @@ void GitBranch::NameWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method name has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Branch.name").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1301,6 +1313,7 @@ void GitBranch::SetUpstreamWorker::HandleOKCallback() {
         err = Nan::Error("Method setUpstream has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Branch.setUpstream").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1355,6 +1368,7 @@ void GitBranch::SetUpstreamWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method setUpstream has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Branch.setUpstream").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1476,6 +1490,7 @@ void GitBranch::RemoteNameWorker::HandleOKCallback() {
         err = Nan::Error("Method remoteName has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Branch.remoteName").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1530,6 +1545,7 @@ void GitBranch::RemoteNameWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method remoteName has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Branch.remoteName").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
@@ -1630,6 +1646,7 @@ void GitBranch::UpstreamWorker::HandleOKCallback() {
         err = Nan::Error("Method upstream has thrown an error.")->ToObject();
       }
       err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Branch.upstream").ToLocalChecked());
       v8::Local<v8::Value> argv[1] = {
         err
       };
@@ -1683,6 +1700,7 @@ void GitBranch::UpstreamWorker::HandleOKCallback() {
       if (!callbackFired) {
         v8::Local<v8::Object> err = Nan::Error("Method upstream has thrown an error.")->ToObject();
         err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Branch.upstream").ToLocalChecked());
         v8::Local<v8::Value> argv[1] = {
           err
         };
