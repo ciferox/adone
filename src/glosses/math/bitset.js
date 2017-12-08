@@ -62,6 +62,9 @@ export default class BitSet {
             wordCount = Math.ceil(nBitsOrKey / BITS_PER_INT);
             this.arr = new Uint32Array(wordCount);
             this.MAX_BIT = nBitsOrKey - 1;
+        } else if (is.undefined(nBitsOrKey)) {
+            this.arr = [];
+            this.MAX_BIT = Infinity;
         } else {
             let arrVals = JSON.parse(`[${nBitsOrKey}]`);
             this.MAX_BIT = arrVals.pop();
@@ -89,6 +92,7 @@ export default class BitSet {
      */
     get(idx) {
         const word = this._getWord(idx);
+        this._ensureDynamicCapacity(word);
         return word === -1 ? false : (((this.arr[word] >> (idx % BITS_PER_INT)) & 1) === 1);
     }
 
@@ -103,6 +107,7 @@ export default class BitSet {
         if (word === -1) {
             return false;
         }
+        this._ensureDynamicCapacity(word);
         this.arr[word] |= 1 << (idx % BITS_PER_INT);
         return true;
     }
@@ -129,6 +134,7 @@ export default class BitSet {
         if (word === -1) {
             return false;
         }
+        this._ensureDynamicCapacity(word);
         this.arr[word] &= ~(1 << (idx % BITS_PER_INT));
         return true;
     }
@@ -155,6 +161,7 @@ export default class BitSet {
         if (word === -1) {
             return false;
         }
+        this._ensureDynamicCapacity(word);
         this.arr[word] ^= (1 << (idx % BITS_PER_INT));
         return true;
     }
@@ -188,6 +195,7 @@ export default class BitSet {
      * @returns {BitSet}
      */
     clone() {
+        // TODO: reimplement this
         return new BitSet(this.dehydrate());
     }
 
@@ -460,6 +468,7 @@ export default class BitSet {
         if (startWord === -1) {
             return -1;
         }
+        this._ensureDynamicCapacity(startWord);
         const wordIdx = idx % BITS_PER_INT;
         const len = BITS_PER_INT - wordIdx;
         const mask = ((1 << (len)) - 1) << wordIdx;
@@ -482,6 +491,7 @@ export default class BitSet {
         if (startWord === -1) {
             return -1;
         }
+        this._ensureDynamicCapacity(startWord);
         const mask = ((1 << (idx % BITS_PER_INT)) - 1);
         const reducedWord = this.arr[startWord] | mask;
         if (reducedWord === 0x7fffffff) {
@@ -502,6 +512,7 @@ export default class BitSet {
         if (startWord === -1) {
             return -1;
         }
+        this._ensureDynamicCapacity(startWord);
         const mask = 0x7fffffff >>> (BITS_PER_INT - (idx % BITS_PER_INT) - 1);
         const reducedWord = this.arr[startWord] & mask;
         if (reducedWord > 0) {
@@ -521,6 +532,7 @@ export default class BitSet {
         if (startWord === -1) {
             return -1;
         }
+        this._ensureDynamicCapacity(startWord);
         const wordIdx = idx % BITS_PER_INT;
         const mask = ((1 << (BITS_PER_INT - wordIdx - 1)) - 1) << wordIdx + 1;
         const reducedWord = this.arr[startWord] | mask;
@@ -537,6 +549,7 @@ export default class BitSet {
      *                        Using a negative number will result in a left shift.
      */
     circularShift(offset) {
+        // todo: is it allowed for a dynamic bitset?
         offset = -offset;
 
         const S = this; // source BitSet (this)
@@ -663,6 +676,15 @@ export default class BitSet {
         return (idx < 0 || idx > this.MAX_BIT) ? -1 : ~~(idx / BITS_PER_INT);
     }
 
+    _ensureDynamicCapacity(word) {
+        if (this.MAX_BIT !== Infinity) {
+            return;
+        }
+        while (this.arr.length < word) {
+            this.arr.push(0);
+        }
+    }
+
     /**
      * Shared function for setting, unsetting, or toggling a range of bits
      */
@@ -677,6 +699,7 @@ export default class BitSet {
         if (startWord === -1 || endWord === -1) {
             return false;
         }
+        this._ensureDynamicCapacity(endWord);
         for (let i = startWord; i <= endWord; i++) {
             const curStart = (i === startWord) ? from % BITS_PER_INT : 0;
             const curEnd = (i === endWord) ? to % BITS_PER_INT : BITS_PER_INT - 1;
@@ -688,6 +711,7 @@ export default class BitSet {
     }
 
     _op(bsOrIdx, func) {
+        // TODO: is it allowed for a dynamic bitset?
         let newBS;
         const arr1 = this.arr;
         if (is.number(bsOrIdx)) {

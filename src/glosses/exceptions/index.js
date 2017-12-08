@@ -200,3 +200,12 @@ export const create = (id, message, stack) => {
 };
 
 export const getStdId = (err) => stdIdMap[err.constructor.name];
+
+export const captureStack = (reason) => {
+    const e = new Error();
+    const stack = e.stack.split("\n").slice(2).join("\n");
+    if (reason) {
+        return `Stack capture: ${reason}\n${stack}`;
+    }
+    return stack;
+};
