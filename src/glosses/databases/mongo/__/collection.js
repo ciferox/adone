@@ -1781,6 +1781,10 @@ export default class Collection {
         options = options || {};
         return bulk.initializeOrderedBulkOp(this.s.topology, this, options);
     }
+
+    query(options) {
+        return new mongo.QueryBuilder(this, options);
+    }
 }
 
 Collection.prototype.removeOne = Collection.prototype.deleteOne;

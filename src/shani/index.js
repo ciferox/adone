@@ -99,6 +99,19 @@ class Hook {
     }
 }
 
+const generateId = (parent) => {
+    if (!parent) {
+        return null;
+    }
+    let id = "";
+    if (parent.id) {
+        id += `${parent.id}.`;
+    }
+    id += parent.children.length + 1;
+
+    return id;
+};
+
 class Block {
     constructor(name, parent = null, options) {
         this.name = name;
@@ -116,10 +129,12 @@ class Block {
 
         this._timeout = adone.null;
         this._level = null;
+        this._todo = false;
         this._skip = false;
         this._only = false;
         this._watch = false;
         this._options = options;
+        this.id = generateId(parent);
     }
 
     async prepare() {
@@ -206,6 +221,10 @@ class Block {
         return this._only === true;
     }
 
+    isTodo() {
+        return this._todo === true;
+    }
+
     hasInclusive(exclusiveMode = false) {
         for (const child of this.children) {
             if (
@@ -223,11 +242,18 @@ class Block {
 
     skip() {
         this._skip = true;
+        this._todo = false;
         return this;
     }
 
     only() {
         this._only = true;
+        return this;
+    }
+
+    todo() {
+        this.skip();
+        this._todo = true;
         return this;
     }
 
@@ -295,6 +321,7 @@ class Test {
         this.runtimeContext = runtimeContext;
         this._skip = false;
         this._only = false;
+        this._todo = false;
         this._timeout = adone.null;
         this._beforeHooks = [];
         this._afterHooks = [];
@@ -302,6 +329,7 @@ class Test {
         this._afterHooksFired = false;
         this._engineOptions = engineOptions;
         this._options = options;
+        this.id = generateId(block);
     }
 
     async prepare() {
@@ -473,13 +501,24 @@ class Test {
         return this._only === true;
     }
 
+    isTodo() {
+        return this._todo === true;
+    }
+
     skip() {
+        this._todo = false;
         this._skip = true;
         return this;
     }
 
     only() {
         this._only = true;
+        return this;
+    }
+
+    todo() {
+        this.skip();
+        this._todo = true;
         return this;
     }
 
@@ -603,6 +642,7 @@ export class Engine {
 
         describe.skip = (...args) => describe(...args).skip();
         describe.only = (...args) => describe(...args).only();
+        describe.todo = (...args) => describe(...args).todo();
 
         const it = (description, options, callback) => {
             if (is.function(options)) {
@@ -617,6 +657,7 @@ export class Engine {
 
         it.skip = (...args) => it(...args).skip();
         it.only = (...args) => it(...args).only();
+        it.todo = (...args) => it(...args).todo();
 
         const before = (description, callback) => {
             if (adone.is.function(description)) {
@@ -663,6 +704,25 @@ export class Engine {
         };
         skip.promise = Promise.resolve();
 
+        // debug..
+        const printStructure = (block = root, level = 0) => {
+            for (const t of block.children) {
+                const n = t instanceof Block ? t.name : t.description;
+                if (t.isInclusive()) {
+                    console.log("    ".repeat(level), "+", n);
+                } else if (t.isTodo()) {
+                    console.log("    ".repeat(level), "?", n);
+                } else if (t.isExclusive()) {
+                    console.log("    ".repeat(level), "-", n);
+                } else {
+                    console.log("    ".repeat(level), " ", n);
+                }
+                if (t instanceof Block) {
+                    printStructure(t, level + 1);
+                }
+            }
+        };
+
         const start = function () {
             const emitter = new adone.event.EventEmitter();
 
@@ -686,9 +746,10 @@ export class Engine {
                 // mark all the skipped nodes
                 (function markSkipped(block) {
                     const exclusive = block.isExclusive();
+                    const todo = block.isTodo();
                     for (const node of block.children) {
-                        if (exclusive && !node.isExclusive()) {
-                            node.skip();
+                        if (exclusive) {
+                            todo ? node.todo() : node.skip();
                         }
                         if (node instanceof Block) {
                             markSkipped(node);
@@ -957,6 +1018,26 @@ export class Engine {
             return emitter;
         };
 
+        const structure = () => {
+            /**
+             * @param {Block} node
+             */
+            const analyze = (node) => {
+                const result = {};
+
+                for (const child of node.children) {
+                    if (child instanceof Block) {
+                        result[`${child.id} ${child.name}`] = analyze(child);
+                    } else {
+                        result[child.id] = child.description;
+                    }
+                }
+                return result;
+            };
+
+            return analyze(root);
+        };
+
         return {
             describe,
             context: describe,
@@ -967,24 +1048,16 @@ export class Engine {
             beforeEach,
             afterEach,
             start,
+            structure,
             root,
             skip
         };
     }
 
-    start() {
-        let executing = null;
-        const executingDone = () => new Promise((resolve, reject) => {
-            executing.once("error", reject);
-            executing.once("done", resolve);
-        });
-
-        let stopped = false;
+    // TODO: refactor the shit
+    _process(cb, { wrapLogFunctions = true } = {}) {
         const emitter = new adone.event.EventEmitter();
-        emitter.stop = () => {
-            stopped = true;
-            executing && executing.stop();
-        };
+
         const main = async (paths) => {
             const contentCache = new Map();
             const transpiledCache = new Map();
@@ -1055,13 +1128,12 @@ export class Engine {
                 }
             };
 
-            stub.stub(console, "log", "error", "debug", "info", "dir", "warn");
-            stub.stub(adone, "log", "fatal", "error", "warn", "info", "debug", "trace");
+            if (wrapLogFunctions) {
+                stub.stub(console, "log", "error", "debug", "info", "dir", "warn");
+                stub.stub(adone, "log", "fatal", "error", "warn", "info", "debug", "trace");
+            }
 
-            for (const path of await adone.fs.glob(paths)) {
-                if (stopped) {
-                    break;
-                }
+            for (const path of (await adone.fs.glob(paths)).sort()) {
                 const context = this.context();
                 const topass = [
                     "describe", "context",
@@ -1122,38 +1194,31 @@ export class Engine {
 
                 try {
                     m.loadItself();
-                    // eslint-disable-next-line no-await-in-loop
-                    await context.skip.promise;
-                    executing = context.start();
-                    const events = [
-                        "enter block", "exit block",
-                        "start test", "end test", "skip test",
-                        "start before hook", "end before hook",
-                        "start after hook", "end after hook",
-                        "start before each hook", "end before each hook",
-                        "start before test hook", "end before test hook",
-                        "start after each hook", "end after each hook",
-                        "start after test hook", "end after test hook"
-                    ];
-                    for (const e of events) {
-                        executing.on(e, (...data) => {
-                            emitter.emit(e, ...data);
-                        });
-                    }
-                    // eslint-disable-next-line no-await-in-loop
-                    await executingDone();
                 } catch (err) {
                     err.message = `Error while loading this file: ${path}\n${err.message}`;
                     emitter.emit("error", err);
+                }
+
+                let mustContinue = true;
+                try {
+                    await context.skip.promise; // omg, delete?
+                    const res = await cb(context, path);
+                    if (is.boolean(res)) {
+                        mustContinue = res;
+                    }
                 } finally {
                     m.cache.delete(path);
                     if (this.callGc) {
                         callGc();
                     }
                 }
+                if (!mustContinue) {
+                    break;
+                }
             }
-
-            stub.restore();
+            if (wrapLogFunctions) {
+                stub.restore();
+            }
         };
 
         Promise.resolve().then(() => main(this._paths)).catch((err) => {
@@ -1162,6 +1227,56 @@ export class Engine {
             emitter.emit("done");
         });
 
+        return emitter;
+    }
+
+    start() {
+        let mustContinue = true;
+
+        let executing = null;
+        const executingDone = () => new Promise((resolve, reject) => {
+            executing.once("error", reject);
+            executing.once("done", resolve);
+        });
+
+        const emitter = this._process(async (context) => {
+            executing = context.start();
+            const events = [
+                "enter block", "exit block",
+                "start test", "end test", "skip test",
+                "start before hook", "end before hook",
+                "start after hook", "end after hook",
+                "start before each hook", "end before each hook",
+                "start before test hook", "end before test hook",
+                "start after each hook", "end after each hook",
+                "start after test hook", "end after test hook"
+            ];
+            for (const e of events) {
+                executing.on(e, (...data) => {
+                    emitter.emit(e, ...data);
+                });
+            }
+
+            // eslint-disable-next-line no-await-in-loop
+            await executingDone();
+
+            return mustContinue;
+        });
+
+        emitter.stop = () => {
+            mustContinue = false;
+            if (executing) {
+                executing.stop();
+            }
+        };
+
+        return emitter;
+    }
+
+    structure() {
+        const emitter = this._process(async (context, path) => {
+            emitter.emit("structure", path, context.structure());
+        }, { wrapLogFunctions: false });
         return emitter;
     }
 }
@@ -1207,6 +1322,7 @@ export const consoleReporter = ({
         let pending = 0;
         let failed = 0;
         let passed = 0;
+        let todos = 0;
         let testsElapsed = 0;
         let totalElapsed = hrtime();
         const errors = [];
@@ -1355,11 +1471,19 @@ export const consoleReporter = ({
                 if (!runtime) {
                     bar = createTestBar(test);
                 }
-                bar.complete(`{cyan-fg}${symbol.minus}{/cyan-fg}`, {
-                    color: "cyan",
-                    suffix: ""
-                });
-                ++pending;
+                if (test.isTodo()) {
+                    bar.complete("{yellow-fg}?{/yellow-fg}", {
+                        color: "yellow",
+                        suffix: ""
+                    });
+                    ++todos;
+                } else {
+                    bar.complete(`{cyan-fg}${symbol.minus}{/cyan-fg}`, {
+                        color: "cyan",
+                        suffix: ""
+                    });
+                    ++pending;
+                }
             }))
             .on("done", reportOnThrow(() => {
                 const printColorDiff = (diff) => {
@@ -1466,12 +1590,15 @@ export const consoleReporter = ({
                 totalElapsed = adone.util.humanizeTime(
                     totalElapsed[0] * 1e3 + totalElapsed[1] / 1e6
                 );
-                log(`    {green-fg}${passed} passing{/} {grey-fg}(${testsElapsed}){/}`);
+                log(`    {green-fg}${passed} passed{/} {grey-fg}(${testsElapsed}){/}`);
                 if (pending) {
-                    log(`{cyan-fg}    ${pending} pending{/}`);
+                    log(`{cyan-fg}    ${pending} skipped{/}`);
                 }
                 if (failed) {
-                    log(`{red-fg}    ${failed} failing{/}`);
+                    log(`{red-fg}    ${failed} failed{/}`);
+                }
+                if (todos) {
+                    log(`{yellow-fg}    ${todos} todo{/}`);
                 }
                 if (globalErrors.length) {
                     log(`{#ff9500-fg}    ${globalErrors.length} error${globalErrors.length > 1 ? "s" : ""}{/}`);
@@ -1513,20 +1640,21 @@ export const minimalReporter = () => {
         let pending = 0;
         let failed = 0;
         let passed = 0;
+        let todos = 0;
         const errors = [];
         const globalErrors = [];
 
         console.log();
 
         const totalBar = adone.runtime.term.progress({
-            schema: "    :spinner {green-fg}:passed{/green-fg} {red-fg}:failed{/red-fg} {cyan-fg}:pending{/cyan-fg} :elapsed"
+            schema: "    :spinner {green-fg}:passed{/green-fg} {red-fg}:failed{/red-fg} {cyan-fg}:pending{/cyan-fg} {yellow-fg}:todos{/yellow-fg} :elapsed"
         });
 
         const testsBar = adone.runtime.term.progress({
             schema: "    :path"
         });
 
-        totalBar.tick(0, { passed, failed, pending });
+        totalBar.tick(0, { passed, failed, pending, todos });
 
         testsBar.tick(0, { path: "" });
 
@@ -1613,9 +1741,11 @@ export const minimalReporter = () => {
                 }
                 totalBar.tick(0, { passed, failed });
             }))
-            .on("skip test", reportOnThrow(() => {
-                ++pending;
-                totalBar.tick(0, { pending });
+            .on("skip test", reportOnThrow(({ test }) => {
+                test.isTodo()
+                    ? ++todos
+                    : ++pending;
+                totalBar.tick(0, { pending, todos });
             }))
             .on("done", reportOnThrow(() => {
                 totalBar.complete(failed === 0 && globalErrors.length === 0);
@@ -1755,6 +1885,7 @@ export const simpleReporter = ({
         let pending = 0;
         let failed = 0;
         let passed = 0;
+        let todos = 0;
         let testsElapsed = 0;
         let totalElapsed = hrtime();
         const errors = [];
@@ -1860,9 +1991,15 @@ export const simpleReporter = ({
                 }
             })
             .on("skip test", ({ test }) => {
-                const msg = `{cyan-fg}\u2212 {escape}${test.description}{/escape}{/}`;
+                let msg;
+                if (test.isTodo()) {
+                    msg = `{yellow-fg}? {escape}${test.description}{/escape}{/}`;
+                    ++todos;
+                } else {
+                    msg = `{cyan-fg}\u2212 {escape}${test.description}{/escape}{/}`;
+                    ++pending;
+                }
                 log(`${"    ".repeat(test.block.level() + 1)} ${msg}`);
-                ++pending;
             })
             .on("done", () => {
                 const printColorDiff = (diff) => {
@@ -1968,12 +2105,15 @@ export const simpleReporter = ({
                 totalElapsed = adone.util.humanizeTime(
                     totalElapsed[0] * 1e3 + totalElapsed[1] / 1e6
                 );
-                log(`    {green-fg}${passed} passing{/} {grey-fg}(${testsElapsed}){/}`);
+                log(`    {green-fg}${passed} passed{/} {grey-fg}(${testsElapsed}){/}`);
                 if (pending) {
-                    log(`{cyan-fg}    ${pending} pending{/}`);
+                    log(`{cyan-fg}    ${pending} skipped{/}`);
                 }
                 if (failed) {
-                    log(`{red-fg}    ${failed} failing{/}`);
+                    log(`{red-fg}    ${failed} failed{/}`);
+                }
+                if (todos) {
+                    log(`{yellow-fg}    ${todos} todo{/}`);
                 }
                 if (globalErrors.length) {
                     log(`{#ff9500-fg}    ${globalErrors.length} error${globalErrors.length > 1 ? "s" : ""}{/}`);

@@ -1,4 +1,4 @@
-require("../..");
+require("../.."); // adone
 const EventEmitter = require("events");
 const assert = require("assert");
 const path = require("path");
@@ -10,9 +10,22 @@ const { is, shani: { Engine } } = adone;
 const blocks = []; // top-level blocks
 const stack = []; // describe's stack
 
-const describe = (name, callback) => {
-    const block = { name, tests: [], nested: [] };
+class Block {
+    constructor(name) {
+        this.name = name;
+        this.tests = [];
+        this.nested = [];
+        this.inclusive = false;
+    }
 
+    only() {
+        this.inclusive = true;
+        return this;
+    }
+}
+
+const describe = (name, callback) => {
+    const block = new Block(name, callback);
     if (!stack.length) {
         blocks.push(block);
     } else {
@@ -21,16 +34,76 @@ const describe = (name, callback) => {
     stack.push(block);
     callback();
     stack.pop();
+    return block;
 };
 
+describe.only = (...args) => describe(...args).only();
+
+class Test {
+    constructor(description, callback) {
+        this.description = description;
+        this.callback = callback;
+        this.inclusive = false;
+    }
+
+    only() {
+        this.inclusive = true;
+        return this;
+    }
+}
+
 const it = (description, callback) => {
-    stack[stack.length - 1].tests.push({ description, callback });
+    const test = new Test(description, callback);
+    stack[stack.length - 1].tests.push(test);
+    return test;
+};
+
+it.only = (...args) => it(...args).only();
+
+const hasInclusive = (block) => {
+    for (const test of block.tests) {
+        if (test.inclusive) {
+            return true;
+        }
+    }
+    for (const nested of block.nested) {
+        if (nested.inclusive) {
+            return true;
+        }
+        if (hasInclusive(nested)) {
+            return true;
+        }
+    }
+    return false;
+};
+
+const removeNonInclusive = (block) => {
+    for (let i = 0; i < block.tests.length; ++i) {
+        if (!block.tests[i].inclusive) {
+            block.tests.splice(i, 1);
+            --i;
+        }
+    }
+    for (let i = 0; i < block.nested.length; ++i) {
+        if (block.nested[i].inclusive) {
+            continue;
+        }
+        if (!hasInclusive(block.nested[i])) {
+            block.nested.splice(i, 1);
+            --i;
+        } else {
+            removeNonInclusive(block.nested[i]);
+        }
+    }
 };
 
 const run = () => {
     const emitter = new EventEmitter();
 
     const runner = async (block, level = 0) => {
+        if (hasInclusive(block)) {
+            removeNonInclusive(block);
+        }
         emitter.emit("header", { name: block.name, level });
         for (const test of block.tests) {
             try {
@@ -651,14 +724,14 @@ describe("Engine", () => {
 
             const calls = [];
 
-            describe("/", () => {
+            const root = describe("/", () => {
                 describe.only("a", () => {
                     it("test1", () => calls.push("test1"));
-                    it.skip("test2", () => { });
+                    it.skip("test2", () => calls.push("test2"));
                     it("test3", () => calls.push("test3"));
 
                     describe.skip("b", () => {
-                        it("test4", () => { });
+                        it("test4", () => calls.push("test4"));
                     });
                 });
             });
@@ -4598,6 +4671,89 @@ describe("Engine", () => {
                 const err = await waitFor(emitter, "error");
                 assert.equal(err.message, "skip: only functions and booleans are allowed");
             });
+        });
+    });
+
+    describe("todo", () => {
+        it("should work as skip, but isTodo must be true", async () => {
+            const engine = new Engine();
+            const { describe, it, start } = engine.context();
+
+            const calls = [];
+
+            describe("/", () => {
+                it("test1", () => calls.push("test1"));
+
+                it.todo("test2", () => calls.push("test2"));
+
+                it("test3", () => calls.push("test3"));
+            });
+            const res = [];
+            const e = start();
+
+            e.on("skip test", ({ test }) => {
+                res.push([test.description, test.isExclusive() && test.isTodo()]);
+            });
+
+            await waitFor(e, "done");
+            assert.deepEqual(calls, ["test1", "test3"]);
+            assert.deepEqual(res, [["test2", true]]);
+        });
+
+        it("should work for blocks", async () => {
+            const engine = new Engine();
+            const { describe, it, start } = engine.context();
+
+            const calls = [];
+
+            describe("/", () => {
+                it("test1", () => calls.push("test1"));
+
+                describe.todo("hh", () => {
+                    it("test2", () => calls.push("test2"));
+
+                    it.only("test3", () => calls.push("test3"));
+                });
+
+                it("test4", () => calls.push("test4"));
+            });
+            const res = [];
+            const e = start();
+
+            e.on("skip test", ({ test }) => {
+                res.push([test.description, test.isExclusive() && test.isTodo()]);
+            });
+
+            await waitFor(e, "done");
+            assert.deepEqual(calls, ["test1", "test4"]);
+            assert.deepEqual(res, [["test2", true], ["test3", true]]);
+        });
+
+        it("should mark nested block as todo if it is skipped but the parent is todo", async () => {
+            const engine = new Engine();
+            const { describe, it, start } = engine.context();
+
+            const calls = [];
+
+            describe("/", () => {
+                it("test1", () => calls.push("test1"));
+
+                describe.todo("hh", () => {
+                    it.skip("test2", () => calls.push("test2"));
+                });
+
+                it("test3", () => calls.push("test3"));
+            });
+            const res = [];
+            const e = start();
+
+            e.on("skip test", ({ test }) => {
+                res.push([test.description, test.isExclusive() && test.isTodo()]);
+            });
+
+            await waitFor(e, "done");
+            assert.deepEqual(calls, ["test1", "test3"]);
+            assert.deepEqual(res, [["test2", true]]);
         });
     });
 });

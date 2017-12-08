@@ -331,4 +331,21 @@ describe("CRUD API", function () {
         const r = await this.db.collection("try").updateOne({ _id: 1 }, { $set: { x: 1 } }, { upsert: true, w: 0 });
         expect(r).to.exist;
     });
+
+    describe("query", () => {
+        it("should create a query builder", async () => {
+            const t = this.db.collection("t");
+            await t.insert([{ a: 1 }, { a: 2 }, { a: 3 }, { a: 4 }]);
+            await t.query().where({ a: 1 }).update({ b: 2 });
+            expect(await t.query().findOne({ a: 1 })).to.have.property("b", 2);
+        });
+
+        it("should pass options to the builder", () => {
+            const t = this.db.collection("t");
+            const builder1 = t.query();
+            expect(builder1.options.tailable).to.be.undefined;
+            const builder2 = t.query({ tailable: true });
+            expect(builder2.options.tailable).to.be.true;
+        });
+    });
 });
