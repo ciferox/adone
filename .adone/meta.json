@@ -143,6 +143,16 @@
                         "description": "Implementation of YAML serializer",
                         "index": "glosses/data/yaml/index",
                         "src": "glosses/data/yaml/**/*"
+                    },
+                    "base58": {
+                        "description": "Implementation of Base58 serializer",
+                        "index": "glosses/data/base58",
+                        "src": "glosses/data/base58.js"
+                    },
+                    "varint": {
+                        "description": "Implementation of Protobuf varint serializer",
+                        "index": "glosses/data/varint",
+                        "src": "glosses/data/varint.js"
                     }
                 }
             },
@@ -250,6 +260,23 @@
                 "description": "Different metrics",
                 "index": "glosses/metrics/index",
                 "src": "glosses/metrics/**/*"
+            },
+            "multi": {
+                "description": "Multiformats",
+                "index": "glosses/multi/index",
+                "src": "glosses/multi/**/*",
+                "namespace": {
+                    "address": {
+                        "description": "Multiaddress implementation",
+                        "index": "glosses/multi/address/index",
+                        "src": "glosses/multi/address/**/*.js"
+                    },
+                    "hash": {
+                        "description": "Multihash implementation",
+                        "index": "glosses/multi/hash/index",
+                        "src": "glosses/multi/hash/**/*.js"
+                    }
+                }
             },
             "net": {
                 "description": "Implementation of different network abstractions, protocols and associated stuff",

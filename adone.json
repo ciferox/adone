@@ -124,6 +124,11 @@
                     "$src": "src/glosses/metrics/**/*.js",
                     "$dst": "lib/glosses/metrics"
                 },
+                "multi": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/multi/**/*.js",
+                    "$dst": "lib/glosses/multi"
+                },
                 "net": {
                     "$task": "adoneTranspile",
                     "$src": "src/glosses/net/**/*.js",

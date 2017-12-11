@@ -333,6 +333,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         promise: "./glosses/promise",
         math: "./glosses/math",
         meta: "./glosses/meta",
+        multi: "./glosses/multi",
         net: "./glosses/net",
         netron: "./glosses/netron",
         metrics: "./glosses/metrics",
