@@ -88,8 +88,10 @@ doT.template = function (tmpl, c, def) {
     let indv;
     let str = (c.use || c.define) ? resolveDefs(c, tmpl, def || {}) : tmpl;
 
-    const out = (c.strip ? str.replace(/(^|\r|\n)\t* +| +\t*(\r|\n|$)/g, " ")
-        .replace(/\r|\n|\t|\/\*[\s\S]*?\*\//g, "") : str)
+    const out = (c.strip
+        ? str.replace(/(^|\r|\n)\t* +| +\t*(\r|\n|$)/g, " ").replace(/\r|\n|\t|\/\*[\s\S]*?\*\//g, "")
+        : str
+    )
         .replace(/'|\\/g, "\\$&")
         .replace(c.interpolate || skip, (m, code) => {
             return cse.start + unescape(code) + cse.end;
@@ -127,12 +129,8 @@ doT.template = function (tmpl, c, def) {
             doT.encodeHTMLSource.toString()}(${c.doNotSkipEncoded || ""}));${
             str}`;
     }
-    try {
-        return new Function(c.varname, str);
-    } catch (e) {
-        console.log(`Could not create a template function: ${str}`);
-        throw e;
-    }
+
+    return new Function(c.varname, str);
 };
 
 doT.compile = function (tmpl, def) {

@@ -26,9 +26,12 @@ const log = (options, isError) => {
 };
 
 const createRenderFunction = (template) => {
-    const fn = dot.template(template, { ...dot.templateSettings, strip: false });
+    let fn;
     return (obj) => {
         try {
+            if (!fn) {
+                fn = dot.template(template, { ...dot.templateSettings, strip: false });
+            }
             return fn(obj);
         } catch (err) {
             adone.warn(`Notify string rendering failed due to: ${err.message}`);

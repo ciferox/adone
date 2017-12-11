@@ -53,10 +53,18 @@ export default class TransformTask extends adone.project.task.Base {
 
     notifyError(stream, params) {
         if (is.fastLocalStream(stream)) {
-            stream.on("error", fast.plugin.notify.onError({
+            const notify = fast.plugin.notify.onError({
                 title: params.$id,
                 message: (error) => error.message
-            }));
+            });
+            stream.on("error", (err) => {
+                try {
+                    notify(err);
+                } catch (notifyErr) {
+                    adone.warn(`Could not notify about an error due to: ${notifyErr.message}`);
+                    adone.error(err.stack || err.message);
+                }
+            });
         }
     }
 }
