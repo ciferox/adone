@@ -289,9 +289,9 @@ const inspect_ = (runtime, options, variable) => {
                             descriptor,
                             forceType: "getter/setter"
                         }, options, {
-                                get: descriptor.get,
-                                set: descriptor.set
-                            });
+                            get: descriptor.get,
+                            set: descriptor.set
+                        });
                     } else {
                         str += inspect_({
                             depth: runtime.depth + 1,
@@ -300,8 +300,8 @@ const inspect_ = (runtime, options, variable) => {
                             keyIsProperty,
                             descriptor: options.noDescriptor ? undefined : descriptor
                         },
-                            options,
-                            variable[propertyList[i]]
+                        options,
+                        variable[propertyList[i]]
                         );
                     }
                 } catch (error) {
@@ -312,8 +312,8 @@ const inspect_ = (runtime, options, variable) => {
                         keyIsProperty,
                         descriptor: options.noDescriptor ? undefined : descriptor
                     },
-                        options,
-                        error
+                    options,
+                    error
                     );
                 }
             }
@@ -325,8 +325,8 @@ const inspect_ = (runtime, options, variable) => {
                     key: "__proto__",
                     keyIsProperty: true
                 },
-                    options,
-                    variable.__proto__	// jshint ignore:line
+                options,
+                variable.__proto__	// jshint ignore:line
                 );
             }
 
@@ -382,15 +382,15 @@ export const inspectStack = (stack, options = {}) => {
         stack = stack
             .replace(/[<\/]*(?=@)/g, "")	// Firefox output some WTF </</</</< stuff in its stack trace -- removing that
             .replace(/^\s*([^@]*)\s*@\s*([^\n]*)(?::([0-9]+):([0-9]+))?$/mg,
-            (matches, method, file, line, column) => {	// jshint ignore:line
-                return options.style.errorStack("    at ") +
+                (matches, method, file, line, column) => {	// jshint ignore:line
+                    return options.style.errorStack("    at ") +
                     (method ? `${options.style.errorStackMethod(method)} ` : "") +
                     options.style.errorStack("(") +
                     (file ? options.style.errorStackFile(file) : options.style.errorStack("unknown")) +
                     (line ? options.style.errorStack(":") + options.style.errorStackLine(line) : "") +
                     (column ? options.style.errorStack(":") + options.style.errorStackColumn(column) : "") +
                     options.style.errorStack(")");
-            }
+                }
             );
     } else {
         stack = stack.replace(/^[^\n]*\n/, "");

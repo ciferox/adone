@@ -288,7 +288,11 @@ const formatValue = (ctx, value, recurseTimes) => {
     return reduceToSingleString(output, base, braces);
 };
 
-export default function inspect(obj, showHidden, depth = 2, quoteStrings = true) {
+export default function inspect(obj, {
+    showHidden = false,
+    depth = 2,
+    quoteStrings = true
+} = {}) {
     const ctx = {
         quoteStrings,
         showHidden,

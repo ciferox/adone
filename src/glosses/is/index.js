@@ -452,6 +452,15 @@ export const deepEqual = (leftHandOperand, rightHandOperand, options) => {
     };
 
     const objectEqual = (leftHandOperand, rightHandOperand, options) => {
+        // must they be equal?
+        // if (
+        //     leftHandOperand.constructor
+        //     && rightHandOperand.constructor
+        //     && leftHandOperand.constructor !== rightHandOperand.constructor
+        // ) {
+        //     return false;
+        // }
+
         const leftHandKeys = adone.util.keys(leftHandOperand, { followProto: true });
         const rightHandKeys = adone.util.keys(rightHandOperand, { followProto: true });
 
@@ -514,6 +523,7 @@ export const deepEqual = (leftHandOperand, rightHandOperand, options) => {
             case "function":
             case "WeakMap":
             case "WeakSet":
+            case "class":
             case "Error": {
                 return leftHandOperand === rightHandOperand;
             }

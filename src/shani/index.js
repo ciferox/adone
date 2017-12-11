@@ -1486,36 +1486,6 @@ export const consoleReporter = ({
                 }
             }))
             .on("done", reportOnThrow(() => {
-                const printColorDiff = (diff) => {
-                    log("{red-fg}- actual{/red-fg} {green-fg}+ expected{/green-fg}\n");
-                    let msg = "";
-                    for (let i = 0; i < diff.length; i++) {
-                        let value = diff[i].value;
-                        if (!is.string(value)) {
-                            value = adone.meta.inspect(diff[i].value, { minimal: true });
-                        }
-                        value = adone.text.splitLines(value);
-
-                        if (value[value.length - 1]) {
-                            if (i < diff.length - 1) {
-                                value[value.length - 1] += "\n";
-                            }
-                        } else {
-                            value = value.slice(0, -1);
-                        }
-
-                        if (diff[i].added) {
-                            msg += `{green-fg}{escape}+${value.join("+")}{/escape}{/green-fg}`;
-                        } else if (diff[i].removed) {
-                            msg += `{red-fg}{escape}-${value.join("-")}{/escape}{/red-fg}`;
-                        } else {
-                            msg += `{escape} ${value.join(" ")}{/escape}`;
-                        }
-                    }
-
-                    log(msg);
-                };
-
                 if (errors.length) {
                     log();
                     log("Errors:\n");
@@ -1537,25 +1507,8 @@ export const consoleReporter = ({
                         }
 
                         if (err.expected && err.actual) {
-                            if (
-                                adone.is.string(err.expected) &&
-                                adone.is.string(err.actual) &&
-                                (
-                                    adone.text.splitLines(err.expected).length > 1 ||
-                                    adone.text.splitLines(err.actual).length > 1
-                                )
-                            ) {
-                                printColorDiff(adone.diff.lines(err.actual, err.expected));
-                            } else if (adone.is.array(err.expected) && adone.is.array(err.actual)) {
-                                printColorDiff(adone.diff.arrays(err.actual, err.expected));
-                            } else if (adone.is.plainObject(err.expected) && adone.is.plainObject(err.actual)) {
-                                printColorDiff(adone.diff.json(err.actual, err.expected));
-                            } else {
-                                printColorDiff([
-                                    { removed: true, value: adone.meta.inspect(err.actual, { minimal: true }) },
-                                    { added: true, value: adone.meta.inspect(err.expected, { minimal: true }) }
-                                ]);
-                            }
+                            log();
+                            log(adone.text.indent(shani.util.diff.getDiff(err.actual, err.expected), 2));
                         }
                         log();
                         if (adone.is.string(err.stack)) {
@@ -1750,35 +1703,6 @@ export const minimalReporter = () => {
             .on("done", reportOnThrow(() => {
                 totalBar.complete(failed === 0 && globalErrors.length === 0);
                 testsBar.complete();
-                const printColorDiff = (diff) => {
-                    log("{red-fg}- actual{/red-fg} {green-fg}+ expected{/green-fg}\n");
-                    let msg = "";
-                    for (let i = 0; i < diff.length; i++) {
-                        let value = diff[i].value;
-                        if (!is.string(value)) {
-                            value = adone.meta.inspect(diff[i].value, { minimal: true });
-                        }
-                        value = adone.text.splitLines(value);
-
-                        if (value[value.length - 1]) {
-                            if (i < diff.length - 1) {
-                                value[value.length - 1] += "\n";
-                            }
-                        } else {
-                            value = value.slice(0, -1);
-                        }
-
-                        if (diff[i].added) {
-                            msg += `{green-fg}{escape}+${value.join("+")}{/escape}{/green-fg}`;
-                        } else if (diff[i].removed) {
-                            msg += `{red-fg}{escape}-${value.join("-")}{/escape}{/red-fg}`;
-                        } else {
-                            msg += `{escape} ${value.join(" ")}{/escape}`;
-                        }
-                    }
-
-                    log(msg);
-                };
 
                 if (errors.length) {
                     log();
@@ -1800,24 +1724,9 @@ export const minimalReporter = () => {
                         }
 
                         if (err.expected && err.actual) {
-                            if (
-                                adone.is.string(err.expected) &&
-                                adone.is.string(err.actual) &&
-                                (
-                                    adone.text.splitLines(err.expected).length > 1 ||
-                                    adone.text.splitLines(err.actual).length > 1
-                                )
-                            ) {
-                                printColorDiff(adone.diff.lines(err.actual, err.expected));
-                            } else if (adone.is.array(err.expected) && adone.is.array(err.actual)) {
-                                printColorDiff(adone.diff.arrays(err.actual, err.expected));
-                            } else if (adone.is.plainObject(err.expected) && adone.is.plainObject(err.actual)) {
-                                printColorDiff(adone.diff.json(err.actual, err.expected));
-                            } else {
-                                printColorDiff([
-                                    { removed: true, value: adone.meta.inspect(err.actual, { minimal: true }) },
-                                    { added: true, value: adone.meta.inspect(err.expected, { minimal: true }) }
-                                ]);
+                            if (err.expected && err.actual) {
+                                log();
+                                log(adone.text.indent(shani.util.diff.getDiff(err.actual, err.expected), 2));
                             }
                         }
                         log();
@@ -2002,36 +1911,6 @@ export const simpleReporter = ({
                 log(`${"    ".repeat(test.block.level() + 1)} ${msg}`);
             })
             .on("done", () => {
-                const printColorDiff = (diff) => {
-                    log("{red-fg}- actual{/red-fg} {green-fg}+ expected{/green-fg}\n");
-                    let msg = "";
-                    for (let i = 0; i < diff.length; i++) {
-                        let value = diff[i].value;
-                        if (!is.string(value)) {
-                            value = adone.meta.inspect(diff[i].value, { minimal: true });
-                        }
-                        value = adone.text.splitLines(value);
-
-                        if (value[value.length - 1]) {
-                            if (i < diff.length - 1) {
-                                value[value.length - 1] += "\n";
-                            }
-                        } else {
-                            value = value.slice(0, -1);
-                        }
-
-                        if (diff[i].added) {
-                            msg += `{green-fg}{escape}+${value.join("+")}{/escape}{/green-fg}`;
-                        } else if (diff[i].removed) {
-                            msg += `{red-fg}{escape}-${value.join("-")}{/escape}{/red-fg}`;
-                        } else {
-                            msg += `{escape} ${value.join(" ")}{/escape}`;
-                        }
-                    }
-
-                    log(msg);
-                };
-
                 if (errors.length) {
                     log();
                     log("Errors:\n");
@@ -2053,24 +1932,9 @@ export const simpleReporter = ({
                         }
 
                         if (err.expected && err.actual) {
-                            if (
-                                adone.is.string(err.expected) &&
-                                adone.is.string(err.actual) &&
-                                (
-                                    adone.text.splitLines(err.expected).length > 1 ||
-                                    adone.text.splitLines(err.actual).length > 1
-                                )
-                            ) {
-                                printColorDiff(adone.diff.lines(err.actual, err.expected));
-                            } else if (adone.is.array(err.expected) && adone.is.array(err.actual)) {
-                                printColorDiff(adone.diff.arrays(err.actual, err.expected));
-                            } else if (adone.is.plainObject(err.expected) && adone.is.plainObject(err.actual)) {
-                                printColorDiff(adone.diff.json(err.actual, err.expected));
-                            } else {
-                                printColorDiff([
-                                    { removed: true, value: adone.meta.inspect(err.actual, { minimal: true }) },
-                                    { added: true, value: adone.meta.inspect(err.expected, { minimal: true }) }
-                                ]);
+                            if (err.expected && err.actual) {
+                                log();
+                                log(adone.text.indent(shani.util.diff.getDiff(err.actual, err.expected), 2));
                             }
                         }
                         if (adone.is.string(err.stack)) {
