@@ -168,6 +168,18 @@
                     }
                 }
             },
+            "datastore": {
+                "description": "Datastores",
+                "index": "glosses/datastores/index",
+                "src": "glosses/datastores/**/*",
+                "namespace": {
+                    "level": {
+                        "description": "Implementation of LevelDB",
+                        "index": "glosses/databases/level/index",
+                        "src": "glosses/databases/level/**/*"
+                    }
+                }
+            },
             "datetime": {
                 "description": "Datetime utilites",
                 "index": "glosses/datetime/index",
@@ -270,6 +282,16 @@
                         "description": "Multiaddress implementation",
                         "index": "glosses/multi/address/index",
                         "src": "glosses/multi/address/**/*.js"
+                    },
+                    "base": {
+                        "description": "Multibase implementation",
+                        "index": "glosses/multi/base/index",
+                        "src": "glosses/multi/base/**/*.js"
+                    },
+                    "codec": {
+                        "description": "Multicodec implementation",
+                        "index": "glosses/multi/codec/index",
+                        "src": "glosses/multi/codec/**/*.js"
                     },
                     "hash": {
                         "description": "Multihash implementation",

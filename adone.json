@@ -64,6 +64,11 @@
                     "$src": "src/glosses/databases/**/*.js",
                     "$dst": "lib/glosses/databases"
                 },
+                "datastores": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/datastores/**/*.js",
+                    "$dst": "lib/glosses/datastores"
+                },
                 "datetime": {
                     "$task": "adoneTranspile",
                     "$src": "src/glosses/datetime/**/*.js",
