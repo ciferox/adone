@@ -176,6 +176,14 @@ export class Set extends Node {}
 Set.prototype.typename = "Set";
 Set.prototype.fields = ["targets", "value"];
 
+export class Switch extends Node {}
+Switch.prototype.typename = "Switch";
+Switch.prototype.fields = ["expr", "cases", "default"];
+
+export class Case extends Node {}
+Case.prototype.typename = "Case";
+Case.prototype.fields = ["cond", "body"];
+
 export class Output extends NodeList {}
 Output.prototype.typename = "Output";
 
@@ -196,6 +204,9 @@ BinOp.prototype.fields = ["left", "right"];
 
 export class In extends BinOp {}
 In.prototype.typename = "In";
+
+export class Is extends BinOp {}
+Is.prototype.typename = "Is";
 
 export class Or extends BinOp {}
 Or.prototype.typename = "Or";

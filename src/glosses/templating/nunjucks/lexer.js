@@ -244,6 +244,17 @@ class Tokenizer {
                 return token(TOKEN_NONE, tok, lineno, colno);
             }
 
+            /*
+             * Added to make the test `null is null` evaluate truthily.
+             * Otherwise, Nunjucks will look up null in the context and
+             * return `undefined`, which is not what we want. This *may* have
+             * consequences is someone is using null in their templates as a
+             * variable.
+             */
+            if (tok === "null") {
+                return token(TOKEN_NONE, tok, lineno, colno);
+            }
+
             if (tok) {
                 return token(TOKEN_SYMBOL, tok, lineno, colno);
             }

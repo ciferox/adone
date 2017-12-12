@@ -4,6 +4,7 @@ import builtinFilters from "./filters";
 import { FileSystemLoader } from "./loaders";
 import * as runtime from "./runtime";
 import globals from "./globals";
+import builtinTests from "./tests";
 const { std: { path, vm }, is, util, x } = adone;
 const { Frame } = runtime;
 
@@ -276,12 +277,16 @@ export class Environment {
 
         this.globals = globals();
         this.filters = {};
+        this.tests = {};
         this.asyncFilters = [];
         this.extensions = {};
         this.extensionsList = [];
 
         for (const name in builtinFilters) {
             this.addFilter(name, builtinFilters[name]);
+        }
+        for (const test in builtinTests) {
+            this.addTest(test, builtinTests[test]);
         }
     }
 
@@ -356,6 +361,18 @@ export class Environment {
             throw new x.Unknown(`filter not found: ${name}`);
         }
         return this.filters[name];
+    }
+
+    addTest(name, func) {
+        this.tests[name] = func;
+        return this;
+    }
+
+    getTest(name) {
+        if (!this.tests[name]) {
+            throw new Error(`test not found: ${name}`);
+        }
+        return this.tests[name];
     }
 
     resolveTemplate(loader, parentName, filename) {

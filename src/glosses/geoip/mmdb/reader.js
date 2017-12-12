@@ -1,4 +1,4 @@
-const { geoip: { mmdb }, collection: { FastLRU } } = adone;
+const { geoip: { mmdb } } = adone;
 const { __: { Metadata, Decoder, helper: { concat3, concat4, ip: ipUtil } } } = mmdb;
 
 const DATA_SECTION_SEPARATOR_SIZE = 16;
@@ -46,18 +46,18 @@ const readNodeRight32 = function (offset) {
 };
 
 export default class Reader {
-    constructor(db, opts = {}) {
-        this.cache = new FastLRU(opts.cache || 50000);  // todo maxage?
+    constructor(db) {
         this.load(db);
     }
 
-    load(db) {
+    load(db, opts) {
         this.db = db;
 
         this.metadata = new Metadata(this.db);
         this.decoder = new Decoder(
             this.db,
-            this.metadata.searchTreeSize + DATA_SECTION_SEPARATOR_SIZE
+            this.metadata.searchTreeSize + DATA_SECTION_SEPARATOR_SIZE,
+            opts
         );
 
         this.setupNodeReaderFn(this.metadata.recordSize);
@@ -190,10 +190,6 @@ export default class Reader {
     }
 
     resolveDataPointer(pointer) {
-        if (this.cache.has(pointer)) {
-            return this.cache.get(pointer);
-        }
-
         // In order to determine where in the file this offset really points to, we also
         // need to know where the data section starts. This can be calculated by
         // determining the size of the search tree in bytes and then adding an additional
@@ -203,8 +199,6 @@ export default class Reader {
         //                       + $search_tree_size_in_bytes
         const resolved = pointer - this.metadata.nodeCount + this.metadata.searchTreeSize;
 
-        const result = this.decoder.decode(resolved).value;
-        this.cache.set(pointer, result);
-        return result;
+        return this.decoder.decodeFast(resolved).value;
     }
 }

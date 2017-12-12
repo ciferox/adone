@@ -46,6 +46,7 @@ describe("net", "mail", "SMTP Transport Tests", function () {
     describe("Anonymous sender tests", () => {
 
         let server;
+        let failingServer;
 
         beforeEach((done) => {
             server = new SMTPServer({
@@ -72,11 +73,44 @@ describe("net", "mail", "SMTP Transport Tests", function () {
                 logger: false
             });
 
-            server.listen(PORT_NUMBER, done);
+            failingServer = new SMTPServer({
+                disabledCommands: ["STARTTLS", "AUTH"],
+
+                onData(stream) {
+                    stream.on("data", () => false);
+                    stream.on("end", () => {
+                        setTimeout(() => {
+                            this.connections.forEach((socket) => socket.close());
+                        }, 150);
+                    });
+                },
+
+                onMailFrom(address, session, callback) {
+                    if (!/@valid.sender/.test(address.address)) {
+                        return callback(new Error("Only user@valid.sender is allowed to send mail"));
+                    }
+                    return callback(); // Accept the address
+                },
+
+                onRcptTo(address, session, callback) {
+                    if (!/@valid.recipient/.test(address.address)) {
+                        return callback(new Error("Only user@valid.recipient is allowed to receive mail"));
+                    }
+                    return callback(); // Accept the address
+                },
+                logger: false
+            });
+
+            server.listen(PORT_NUMBER, (err) => {
+                if (err) {
+                    return done(err);
+                }
+                failingServer.listen(PORT_NUMBER + 1, done);
+            });
         });
 
         afterEach((done) => {
-            server.close(done);
+            server.close(() => failingServer.close(done));
         });
 
         it("Should expose version number", () => {
@@ -136,8 +170,8 @@ describe("net", "mail", "SMTP Transport Tests", function () {
 
         it("Should send mail", (done) => {
             const client = new SMTPTransport(`smtp:localhost:${PORT_NUMBER}?logger=false`);
-            let chunks = [],
-                message = new Array(1024).join("teretere, vana kere\n");
+            const chunks = [];
+            const message = new Array(1024).join("teretere, vana kere\n");
 
             server.on("data", (connection, chunk) => {
                 chunks.push(chunk);
@@ -159,6 +193,39 @@ describe("net", "mail", "SMTP Transport Tests", function () {
                 expect(err).to.not.exist;
                 done();
             });
+        });
+
+        it("Should recover unexpeced close during transmission", (done) => {
+            const client = new SMTPTransport(`smtp:localhost:${PORT_NUMBER + 1}?logger=false`);
+            const chunks = [];
+            const message = new Array(1024).join("teretere, vana kere\n");
+
+            server.on("data", (connection, chunk) => {
+                chunks.push(chunk);
+            });
+
+            server.on("dataReady", (connection, callback) => {
+                const body = Buffer.concat(chunks);
+                expect(body.toString()).to.equal(message.trim().replace(/\n/g, "\r\n"));
+                callback(null, true);
+            });
+
+            client.send(
+                {
+                    data: {},
+                    message: new MockBuilder(
+                        {
+                            from: "test@valid.sender",
+                            to: "test@valid.recipient"
+                        },
+                        message
+                    )
+                },
+                (err) => {
+                    expect(err).to.exist;
+                    done();
+                }
+            );
         });
     });
 
@@ -221,8 +288,8 @@ describe("net", "mail", "SMTP Transport Tests", function () {
                 url: `smtp:testuser:testpass@localhost:${PORT_NUMBER}`,
                 logger: false
             });
-            let chunks = [],
-                message = new Array(1024).join("teretere, vana kere\n");
+            const chunks = [];
+            const message = new Array(1024).join("teretere, vana kere\n");
 
             server.on("data", (connection, chunk) => {
                 chunks.push(chunk);
@@ -289,8 +356,8 @@ describe("net", "mail", "SMTP Transport Tests", function () {
                     });
                 }
             });
-            let chunks = [],
-                message = new Array(1024).join("teretere, vana kere\n");
+            const chunks = [];
+            const message = new Array(1024).join("teretere, vana kere\n");
 
             server.on("data", (connection, chunk) => {
                 chunks.push(chunk);

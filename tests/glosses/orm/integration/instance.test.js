@@ -138,12 +138,12 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         }
 
         if (current.dialect.supports.returnValues.returning) {
-            it("supports returning", function () {
-                return this.User.findById(1).then((user1) => {
-                    return user1.increment("aNumber", { by: 2 }).then(() => {
-                        expect(user1.aNumber).to.be.equal(2);
-                    });
-                });
+            it("supports returning", async function () {
+                const user1 = await this.User.findById(1);
+                await user1.increment("aNumber", { by: 2 });
+                expect(user1.aNumber).to.be.equal(2);
+                const user3 = await user1.increment("bNumber", { by: 2, returning: false });
+                expect(user3.bNumber).to.be.equal(0);
             });
         }
 
@@ -298,12 +298,12 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         }
 
         if (current.dialect.supports.returnValues.returning) {
-            it("supports returning", function () {
-                return this.User.findById(1).then((user1) => {
-                    return user1.decrement("aNumber", { by: 2 }).then(() => {
-                        expect(user1.aNumber).to.be.equal(-2);
-                    });
-                });
+            it("supports returning", async function () {
+                const user1 = await this.User.findById(1);
+                await user1.decrement("aNumber", { by: 2 });
+                expect(user1.aNumber).to.be.equal(-2);
+                const user3 = await user1.decrement('bNumber', { by: 2, returning: false });
+                expect(user3.bNumber).to.be.equal(0);
             });
         }
 

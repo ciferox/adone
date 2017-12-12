@@ -369,13 +369,18 @@ const QueryGenerator = {
     },
 
     arithmeticQuery(operator, tableName, attrValueHash, where, options, attributes) {
+        options = {
+            returning: true,
+            ...options
+        };
+
         attrValueHash = util.removeNullValuesFromHash(attrValueHash, this.options.omitNull);
 
         const values = [];
         let query = "UPDATE <%= table %> SET <%= values %><%= output %> <%= where %>";
         let outputFragment;
 
-        if (this._dialect.supports.returnValues) {
+        if (this._dialect.supports.returnValues && options.returning) {
             if (this._dialect.supports.returnValues.returning) {
                 options.mapToModel = true;
                 query += " RETURNING *";
@@ -1639,6 +1644,15 @@ const QueryGenerator = {
                 ) {
                     subQueryOrder.push(this.quote(order, model, "->"));
                 }
+                if (subQuery) {
+                    // Handle case where sub-query renames attribute we want to order by,
+                    // see https://github.com/sequelize/sequelize/issues/8739
+                    const subQueryAttribute = options.attributes.find((a) => is.array(a) && a[0] === order[0] && a[1]);
+                    if (subQueryAttribute) {
+                        order[0] = new util.Col(subQueryAttribute[1]);
+                    }
+                }
+
                 mainQueryOrder.push(this.quote(order, model, "->"));
             }
         } else if (options.order instanceof util.SequelizeMethod) {

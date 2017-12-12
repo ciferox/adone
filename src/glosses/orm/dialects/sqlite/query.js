@@ -193,7 +193,7 @@ export default class Query extends AbstractQuery {
                                                     });
                                                 }
 
-                                                return tableTypes[name]
+                                                return tableTypes.hasOwnProperty(name)
                                                     ? query.applyParsers(tableTypes[name], value)
                                                     : value;
                                             });

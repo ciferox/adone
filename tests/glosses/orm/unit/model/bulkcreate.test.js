@@ -7,15 +7,14 @@ const current = Support.sequelize;
 
 describe(Support.getTestDialectTeaser("Model"), () => {
     describe("bulkCreate", () => {
-        const Model = current.define("model", {
-            accountId: {
-                type: new type.INTEGER(11).UNSIGNED,
-                allowNull: false,
-                field: "account_id"
-            }
-        }, { timestamps: false });
-
         beforeEach(function () {
+            this.Model = current.define("model", {
+                accountId: {
+                    type: new type.INTEGER(11).UNSIGNED,
+                    allowNull: false,
+                    field: "account_id"
+                }
+            }, { timestamps: false });
             this.stub = stub(current.getQueryInterface(), "bulkInsert").callsFake(() => {
                 return Promise.resolve([]);
             });
@@ -27,7 +26,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
         describe("validations", () => {
             it("should not fail for renamed fields", async function () {
-                await Model.bulkCreate([
+                await this.Model.bulkCreate([
                     { accountId: 42 }
                 ], { validate: true });
                 expect(this.stub.getCall(0).args[1]).to.deep.equal([

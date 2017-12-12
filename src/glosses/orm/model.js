@@ -834,6 +834,7 @@ export default class Model {
         this._findAutoIncrementAttribute();
 
         this._scope = this.options.defaultScope;
+        this._scopeNames = ["defaultScope"];
 
         if (_.isPlainObject(this._scope)) {
             this._conformOptions(this._scope, this);
@@ -1322,6 +1323,7 @@ export default class Model {
         Object.defineProperty(self, "name", { value: this.name });
 
         self._scope = {};
+        self._scopeNames = [];
         self.scoped = true;
 
         if (!option) {
@@ -1369,6 +1371,7 @@ export default class Model {
 
                     return objectValue ? objectValue : sourceValue;
                 });
+                self._scopeNames.push(scopeName ? scopeName : "defaultScope");
             } else {
                 throw new x.ScopeError(`Invalid scope ${scopeName} called.`);
             }
@@ -2600,14 +2603,14 @@ export default class Model {
         this._optionsMustContainWhere(options);
 
         options = util.cloneDeep(options);
-        options = _.defaults(options, {
+        options = this._paranoidClause(this, _.defaults(options, {
             validate: true,
             hooks: true,
             individualHooks: false,
             returning: false,
             force: false,
             sideEffects: true
-        });
+        }));
 
         options.type = queryType.BULKUPDATE;
 
@@ -3118,7 +3121,7 @@ export default class Model {
         options = options || {};
 
         if (key) {
-            if (this._customGetters[key] && !options.raw) {
+            if (this._customGetters.hasOwnProperty(key) && !options.raw) {
                 return this._customGetters[key].call(this, key, options);
             }
             if (options.plain && this._options.include && this._options.includeNames.indexOf(key) !== -1) {
@@ -3278,7 +3281,7 @@ export default class Model {
                 }
 
                 // If there's a data type sanitizer
-                if (!(value instanceof util.SequelizeMethod) && this.constructor._dataTypeSanitizers[key]) {
+                if (!(value instanceof util.SequelizeMethod) && this.constructor._dataTypeSanitizers.hasOwnProperty(key)) {
                     value = this.constructor._dataTypeSanitizers[key].call(this, value, options);
                 }
 
@@ -3883,7 +3886,7 @@ export default class Model {
      * ```sql
      * SET column = column + X
      * ```
-     * query. To get the correct value after an increment into the Instance you should do a reload.
+     * query. The updated instance will be returned by default in Postgres. However, in other dialects, you will need to do a reload to get the new values.
      *
      *```js
     * instance.increment('number') // increment number by 1
@@ -3900,6 +3903,7 @@ export default class Model {
     * @param {Function} [options.logging=false] A function that gets executed while running the query to log the sql.
     * @param {Transaction} [options.transaction]
     * @param  {String}       [options.searchPath=DEFAULT] An optional parameter to specify the schema search_path (Postgres only)
+    * @param {Boolean} [options.returning=true] Append RETURNING * to get back auto generated values (Postgres only)
     *
     * @return {Promise<this>}
     * @since 4.0.0
@@ -3921,7 +3925,7 @@ export default class Model {
      * ```sql
      * SET column = column - X
      * ```
-     * query. To get the correct value after an decrement into the Instance you should do a reload.
+     * query. The updated instance will be returned by default in Postgres. However, in other dialects, you will need to do a reload to get the new values.
      *
      * ```js
      * instance.decrement('number') // decrement number by 1
@@ -3938,6 +3942,7 @@ export default class Model {
      * @param {Function} [options.logging=false] A function that gets executed while running the query to log the sql.
      * @param {Transaction} [options.transaction]
      * @param  {String}       [options.searchPath=DEFAULT] An optional parameter to specify the schema search_path (Postgres only)
+     * @param {Boolean} [options.returning=true] Append RETURNING * to get back auto generated values (Postgres only)
      *
      * @return {Promise}
      */

@@ -31,18 +31,18 @@ describe("templating", "nunjucks", "parser", () => {
                     ofield.forEach((v, i) => {
                         if (ofield[i] instanceof nodes.Node) {
                             _isAST(ofield[i], value[i]);
-                        } else if (ofield[i] !== null && value[i] !== null) {
+                        } else if (!is.null(ofield[i]) && !is.null(value[i])) {
                             expect(ofield[i]).to.be.equal(value[i]);
                         }
                     });
-                } else if ((ofield !== null || value !== null) &&
-                    (ofield !== undefined || value !== undefined)) {
-                    if (ofield === null) {
+                } else if ((!is.null(ofield) || !is.null(value)) &&
+                    (!is.undefined(ofield) || !is.undefined(value))) {
+                    if (is.null(ofield)) {
                         throw new Error(`${value} expected for "${field
-                            }", null found`);
+                        }", null found`);
                     }
 
-                    if (value === null) {
+                    if (is.null(value)) {
                         throw new Error(`${ofield} expected to be null for "${
                             field}"`);
                     }
@@ -51,7 +51,7 @@ describe("templating", "nunjucks", "parser", () => {
                     // whichever object exists
                     if (!ofield) {
                         expect(value).to.be.equal(ofield);
-                    } else if (ofield !== null && ofield instanceof RegExp) {
+                    } else if (!is.null(ofield) && ofield instanceof RegExp) {
                         // This conditional check for RegExp is needed because /a/ != /a/
                         expect(String(ofield)).to.be.equal(String(value));
                     } else {
@@ -87,11 +87,11 @@ describe("templating", "nunjucks", "parser", () => {
                 is.array(ast[4]) ? ast[4].map(toNodes) : ast[4]);
         }
         return new type(0, 0,
-                toNodes(ast[1]),
-                toNodes(ast[2]),
-                toNodes(ast[3]),
-                toNodes(ast[4]),
-                toNodes(ast[5]));
+            toNodes(ast[1]),
+            toNodes(ast[2]),
+            toNodes(ast[3]),
+            toNodes(ast[4]),
+            toNodes(ast[5]));
 
     };
 
@@ -109,37 +109,37 @@ describe("templating", "nunjucks", "parser", () => {
         isAST(parser.parse('{{ "foo" }}'),
             [nodes.Root,
                 [nodes.Output,
-            [nodes.Literal, "foo"]]]);
+                    [nodes.Literal, "foo"]]]);
 
         isAST(parser.parse("{{ 'foo' }}"),
             [nodes.Root,
                 [nodes.Output,
-            [nodes.Literal, "foo"]]]);
+                    [nodes.Literal, "foo"]]]);
 
         isAST(parser.parse("{{ true }}"),
             [nodes.Root,
                 [nodes.Output,
-            [nodes.Literal, true]]]);
+                    [nodes.Literal, true]]]);
 
         isAST(parser.parse("{{ false }}"),
             [nodes.Root,
                 [nodes.Output,
-            [nodes.Literal, false]]]);
+                    [nodes.Literal, false]]]);
 
         isAST(parser.parse("{{ none }}"),
             [nodes.Root,
                 [nodes.Output,
-            [nodes.Literal, null]]]);
+                    [nodes.Literal, null]]]);
 
         isAST(parser.parse("{{ foo }}"),
             [nodes.Root,
                 [nodes.Output,
-            [nodes.Symbol, "foo"]]]);
+                    [nodes.Symbol, "foo"]]]);
 
         isAST(parser.parse("{{ r/23/gi }}"),
             [nodes.Root,
                 [nodes.Output,
-            [nodes.Literal, new RegExp("23", "gi")]]]);
+                    [nodes.Literal, new RegExp("23", "gi")]]]);
     });
 
     it("should parse aggregate types", () => {
@@ -147,36 +147,36 @@ describe("templating", "nunjucks", "parser", () => {
             [nodes.Root,
                 [nodes.Output,
                     [nodes.Array,
-            [nodes.Literal, 1],
-            [nodes.Literal, 2],
-            [nodes.Literal, 3]]]]);
+                        [nodes.Literal, 1],
+                        [nodes.Literal, 2],
+                        [nodes.Literal, 3]]]]);
 
         isAST(parser.parse("{{ (1,2,3) }}"),
             [nodes.Root,
                 [nodes.Output,
                     [nodes.Group,
-            [nodes.Literal, 1],
-            [nodes.Literal, 2],
-            [nodes.Literal, 3]]]]);
+                        [nodes.Literal, 1],
+                        [nodes.Literal, 2],
+                        [nodes.Literal, 3]]]]);
 
         isAST(parser.parse("{{ {foo: 1, 'two': 2} }}"),
             [nodes.Root,
                 [nodes.Output,
                     [nodes.Dict,
                         [nodes.Pair,
-            [nodes.Symbol, "foo"],
-            [nodes.Literal, 1]],
+                            [nodes.Symbol, "foo"],
+                            [nodes.Literal, 1]],
                         [nodes.Pair,
-            [nodes.Literal, "two"],
-            [nodes.Literal, 2]]]]]);
+                            [nodes.Literal, "two"],
+                            [nodes.Literal, 2]]]]]);
     });
 
     it("should parse variables", () => {
         isAST(parser.parse("hello {{ foo }}, how are you"),
             [nodes.Root,
-            [nodes.Output, [nodes.TemplateData, "hello "]],
-            [nodes.Output, [nodes.Symbol, "foo"]],
-            [nodes.Output, [nodes.TemplateData, ", how are you"]]]);
+                [nodes.Output, [nodes.TemplateData, "hello "]],
+                [nodes.Output, [nodes.Symbol, "foo"]],
+                [nodes.Output, [nodes.TemplateData, ", how are you"]]]);
     });
 
     it("should parse operators", () => {
@@ -184,30 +184,45 @@ describe("templating", "nunjucks", "parser", () => {
             [nodes.Root,
                 [nodes.Output,
                     [nodes.Compare,
-            [nodes.Symbol, "x"],
-            [[nodes.CompareOperand, [nodes.Symbol, "y"], "=="]]]]]);
+                        [nodes.Symbol, "x"],
+                        [[nodes.CompareOperand, [nodes.Symbol, "y"], "=="]]]]]);
 
         isAST(parser.parse("{{ x or y }}"),
             [nodes.Root,
                 [nodes.Output,
                     [nodes.Or,
-            [nodes.Symbol, "x"],
-            [nodes.Symbol, "y"]]]]);
+                        [nodes.Symbol, "x"],
+                        [nodes.Symbol, "y"]]]]);
 
         isAST(parser.parse("{{ x in y }}"),
             [nodes.Root,
                 [nodes.Output,
                     [nodes.In,
-            [nodes.Symbol, "x"],
-            [nodes.Symbol, "y"]]]]);
+                        [nodes.Symbol, "x"],
+                        [nodes.Symbol, "y"]]]]);
 
         isAST(parser.parse("{{ x not in y }}"),
             [nodes.Root,
                 [nodes.Output,
                     [nodes.Not,
                         [nodes.In,
-            [nodes.Symbol, "x"],
-            [nodes.Symbol, "y"]]]]]);
+                            [nodes.Symbol, "x"],
+                            [nodes.Symbol, "y"]]]]]);
+
+        isAST(parser.parse("{{ x is callable }}"),
+            [nodes.Root,
+                [nodes.Output,
+                    [nodes.Is,
+                        [nodes.Symbol, "x"],
+                        [nodes.Symbol, "callable"]]]]);
+
+        isAST(parser.parse("{{ x is not callable }}"),
+            [nodes.Root,
+                [nodes.Output,
+                    [nodes.Not,
+                        [nodes.Is,
+                            [nodes.Symbol, "x"],
+                            [nodes.Symbol, "callable"]]]]]);
     });
 
     it("should parse tilde", () => {
@@ -215,8 +230,8 @@ describe("templating", "nunjucks", "parser", () => {
             [nodes.Root,
                 [nodes.Output,
                     [nodes.Concat,
-            [nodes.Literal, 2],
-            [nodes.Literal, 3]
+                        [nodes.Literal, 2],
+                        [nodes.Literal, 3]
                     ]]]
         );
     });
@@ -227,9 +242,9 @@ describe("templating", "nunjucks", "parser", () => {
                 [nodes.Output,
                     [nodes.And,
                         [nodes.In,
-            [nodes.Symbol, "x"],
-            [nodes.Symbol, "y"]],
-            [nodes.Symbol, "z"]]]]);
+                            [nodes.Symbol, "x"],
+                            [nodes.Symbol, "y"]],
+                        [nodes.Symbol, "z"]]]]);
 
         isAST(parser.parse("{{ x not in y or z }}"),
             [nodes.Root,
@@ -237,18 +252,18 @@ describe("templating", "nunjucks", "parser", () => {
                     [nodes.Or,
                         [nodes.Not,
                             [nodes.In,
-            [nodes.Symbol, "x"],
-            [nodes.Symbol, "y"]]],
-            [nodes.Symbol, "z"]]]]);
+                                [nodes.Symbol, "x"],
+                                [nodes.Symbol, "y"]]],
+                        [nodes.Symbol, "z"]]]]);
 
         isAST(parser.parse("{{ x or y and z }}"),
             [nodes.Root,
                 [nodes.Output,
                     [nodes.Or,
-            [nodes.Symbol, "x"],
+                        [nodes.Symbol, "x"],
                         [nodes.And,
-            [nodes.Symbol, "y"],
-            [nodes.Symbol, "z"]]]]]);
+                            [nodes.Symbol, "y"],
+                            [nodes.Symbol, "z"]]]]]);
     });
 
     it("should parse blocks", () => {
@@ -308,12 +323,12 @@ describe("templating", "nunjucks", "parser", () => {
             [nodes.Root,
                 [nodes.For,
                     [nodes.Array,
-            [nodes.Literal, 1],
-            [nodes.Literal, 2]],
-            [nodes.Symbol, "x"],
+                        [nodes.Literal, 1],
+                        [nodes.Literal, 2]],
+                    [nodes.Symbol, "x"],
                     [nodes.NodeList,
                         [nodes.Output,
-            [nodes.Symbol, "x"]]]]]);
+                            [nodes.Symbol, "x"]]]]]);
 
     });
 
@@ -321,14 +336,14 @@ describe("templating", "nunjucks", "parser", () => {
         isAST(parser.parse("{% for x in [] %}{{ x }}{% else %}empty{% endfor %}"),
             [nodes.Root,
                 [nodes.For,
-            [nodes.Array],
-            [nodes.Symbol, "x"],
+                    [nodes.Array],
+                    [nodes.Symbol, "x"],
                     [nodes.NodeList,
                         [nodes.Output,
-            [nodes.Symbol, "x"]]],
+                            [nodes.Symbol, "x"]]],
                     [nodes.NodeList,
                         [nodes.Output,
-            [nodes.TemplateData, "empty"]]]]]);
+                            [nodes.TemplateData, "empty"]]]]]);
 
     });
 
@@ -337,29 +352,29 @@ describe("templating", "nunjucks", "parser", () => {
             [nodes.Root,
                 [nodes.Output,
                     [nodes.Filter,
-            [nodes.Symbol, "bar"],
+                        [nodes.Symbol, "bar"],
                         [nodes.NodeList,
-            [nodes.Symbol, "foo"]]]]]);
+                            [nodes.Symbol, "foo"]]]]]);
 
         isAST(parser.parse("{{ foo | bar | baz }}"),
             [nodes.Root,
                 [nodes.Output,
                     [nodes.Filter,
-            [nodes.Symbol, "baz"],
+                        [nodes.Symbol, "baz"],
                         [nodes.NodeList,
                             [nodes.Filter,
-            [nodes.Symbol, "bar"],
+                                [nodes.Symbol, "bar"],
                                 [nodes.NodeList,
-            [nodes.Symbol, "foo"]]]]]]]);
+                                    [nodes.Symbol, "foo"]]]]]]]);
 
         isAST(parser.parse("{{ foo | bar(3) }}"),
             [nodes.Root,
                 [nodes.Output,
                     [nodes.Filter,
-            [nodes.Symbol, "bar"],
+                        [nodes.Symbol, "bar"],
                         [nodes.NodeList,
-            [nodes.Symbol, "foo"],
-            [nodes.Literal, 3]]]]]);
+                            [nodes.Symbol, "foo"],
+                            [nodes.Literal, 3]]]]]);
     });
 
     it("should parse macro definitions", () => {
@@ -369,15 +384,15 @@ describe("templating", "nunjucks", "parser", () => {
         isAST(ast,
             [nodes.Root,
                 [nodes.Macro,
-            [nodes.Symbol, "foo"],
+                    [nodes.Symbol, "foo"],
                     [nodes.NodeList,
-            [nodes.Symbol, "bar"],
+                        [nodes.Symbol, "bar"],
                         [nodes.KeywordArgs,
                             [nodes.Pair,
-            [nodes.Symbol, "baz"], [nodes.Literal, "foobar"]]]],
+                                [nodes.Symbol, "baz"], [nodes.Literal, "foobar"]]]],
                     [nodes.NodeList,
                         [nodes.Output,
-            [nodes.TemplateData, "This is a macro"]]]]]);
+                            [nodes.TemplateData, "This is a macro"]]]]]);
     });
 
     it("should parse call blocks", () => {
@@ -388,18 +403,18 @@ describe("templating", "nunjucks", "parser", () => {
             [nodes.Root,
                 [nodes.Output,
                     [nodes.FunCall,
-            [nodes.Symbol, "foo"],
+                        [nodes.Symbol, "foo"],
                         [nodes.NodeList,
-            [nodes.Literal, "bar"],
+                            [nodes.Literal, "bar"],
                             [nodes.KeywordArgs,
                                 [nodes.Pair,
-            [nodes.Symbol, "caller"],
+                                    [nodes.Symbol, "caller"],
                                     [nodes.Caller,
-            [nodes.Symbol, "caller"],
-            [nodes.NodeList],
+                                        [nodes.Symbol, "caller"],
+                                        [nodes.NodeList],
                                         [nodes.NodeList,
                                             [nodes.Output,
-            [nodes.TemplateData, "This is the caller"]]]]]]]]]]);
+                                                [nodes.TemplateData, "This is the caller"]]]]]]]]]]);
     });
 
     it("should parse call blocks with args", () => {
@@ -410,50 +425,50 @@ describe("templating", "nunjucks", "parser", () => {
             [nodes.Root,
                 [nodes.Output,
                     [nodes.FunCall,
-            [nodes.Symbol, "foo"],
+                        [nodes.Symbol, "foo"],
                         [nodes.NodeList,
-            [nodes.Literal, "bar"],
+                            [nodes.Literal, "bar"],
                             [nodes.KeywordArgs,
                                 [nodes.Pair,
-            [nodes.Symbol, "baz"], [nodes.Literal, "foobar"]],
+                                    [nodes.Symbol, "baz"], [nodes.Literal, "foobar"]],
                                 [nodes.Pair,
-            [nodes.Symbol, "caller"],
+                                    [nodes.Symbol, "caller"],
                                     [nodes.Caller,
-            [nodes.Symbol, "caller"],
-            [nodes.NodeList, [nodes.Symbol, "i"]],
+                                        [nodes.Symbol, "caller"],
+                                        [nodes.NodeList, [nodes.Symbol, "i"]],
                                         [nodes.NodeList,
                                             [nodes.Output,
-            [nodes.TemplateData, "This is "]],
+                                                [nodes.TemplateData, "This is "]],
                                             [nodes.Output,
-            [nodes.Symbol, "i"]]]]]]]]]]);
+                                                [nodes.Symbol, "i"]]]]]]]]]]);
     });
 
     it("should parse raw", () => {
         isAST(parser.parse("{% raw %}hello {{ {% %} }}{% endraw %}"),
             [nodes.Root,
                 [nodes.Output,
-            [nodes.TemplateData, "hello {{ {% %} }}"]]]);
+                    [nodes.TemplateData, "hello {{ {% %} }}"]]]);
     });
 
     it("should parse raw with broken variables", () => {
         isAST(parser.parse("{% raw %}{{ x }{% endraw %}"),
             [nodes.Root,
                 [nodes.Output,
-            [nodes.TemplateData, "{{ x }"]]]);
+                    [nodes.TemplateData, "{{ x }"]]]);
     });
 
     it("should parse raw with broken blocks", () => {
         isAST(parser.parse("{% raw %}{% if i_am_stupid }Still do your job well{% endraw %}"),
             [nodes.Root,
                 [nodes.Output,
-            [nodes.TemplateData, "{% if i_am_stupid }Still do your job well"]]]);
+                    [nodes.TemplateData, "{% if i_am_stupid }Still do your job well"]]]);
     });
 
     it("should parse raw with pure text", () => {
         isAST(parser.parse("{% raw %}abc{% endraw %}"),
             [nodes.Root,
                 [nodes.Output,
-            [nodes.TemplateData, "abc"]]]);
+                    [nodes.TemplateData, "abc"]]]);
     });
 
 
@@ -461,62 +476,62 @@ describe("templating", "nunjucks", "parser", () => {
         isAST(parser.parse("{% raw %}{% raw %}{{ x }{% endraw %}{% endraw %}"),
             [nodes.Root,
                 [nodes.Output,
-            [nodes.TemplateData, "{% raw %}{{ x }{% endraw %}"]]]);
+                    [nodes.TemplateData, "{% raw %}{{ x }{% endraw %}"]]]);
     });
 
     it("should parse raw with comment blocks", () => {
         isAST(parser.parse("{% raw %}{# test {% endraw %}"),
             [nodes.Root,
                 [nodes.Output,
-            [nodes.TemplateData, "{# test "]]]);
+                    [nodes.TemplateData, "{# test "]]]);
     });
 
     it("should parse multiple raw blocks", () => {
         isAST(parser.parse("{% raw %}{{ var }}{% endraw %}{{ var }}{% raw %}{{ var }}{% endraw %}"),
             [nodes.Root,
-            [nodes.Output, [nodes.TemplateData, "{{ var }}"]],
-            [nodes.Output, [nodes.Symbol, "var"]],
-            [nodes.Output, [nodes.TemplateData, "{{ var }}"]]]);
+                [nodes.Output, [nodes.TemplateData, "{{ var }}"]],
+                [nodes.Output, [nodes.Symbol, "var"]],
+                [nodes.Output, [nodes.TemplateData, "{{ var }}"]]]);
     });
 
     it("should parse multiline multiple raw blocks", () => {
         isAST(parser.parse("\n{% raw %}{{ var }}{% endraw %}\n{{ var }}\n{% raw %}{{ var }}{% endraw %}\n"),
             [nodes.Root,
-            [nodes.Output, [nodes.TemplateData, "\n"]],
-            [nodes.Output, [nodes.TemplateData, "{{ var }}"]],
-            [nodes.Output, [nodes.TemplateData, "\n"]],
-            [nodes.Output, [nodes.Symbol, "var"]],
-            [nodes.Output, [nodes.TemplateData, "\n"]],
-            [nodes.Output, [nodes.TemplateData, "{{ var }}"]],
-            [nodes.Output, [nodes.TemplateData, "\n"]]]);
+                [nodes.Output, [nodes.TemplateData, "\n"]],
+                [nodes.Output, [nodes.TemplateData, "{{ var }}"]],
+                [nodes.Output, [nodes.TemplateData, "\n"]],
+                [nodes.Output, [nodes.Symbol, "var"]],
+                [nodes.Output, [nodes.TemplateData, "\n"]],
+                [nodes.Output, [nodes.TemplateData, "{{ var }}"]],
+                [nodes.Output, [nodes.TemplateData, "\n"]]]);
     });
 
     it("should parse verbatim", () => {
         isAST(parser.parse("{% verbatim %}hello {{ {% %} }}{% endverbatim %}"),
             [nodes.Root,
                 [nodes.Output,
-            [nodes.TemplateData, "hello {{ {% %} }}"]]]);
+                    [nodes.TemplateData, "hello {{ {% %} }}"]]]);
     });
 
     it("should parse verbatim with broken variables", () => {
         isAST(parser.parse("{% verbatim %}{{ x }{% endverbatim %}"),
             [nodes.Root,
                 [nodes.Output,
-            [nodes.TemplateData, "{{ x }"]]]);
+                    [nodes.TemplateData, "{{ x }"]]]);
     });
 
     it("should parse verbatim with broken blocks", () => {
         isAST(parser.parse("{% verbatim %}{% if i_am_stupid }Still do your job well{% endverbatim %}"),
             [nodes.Root,
                 [nodes.Output,
-            [nodes.TemplateData, "{% if i_am_stupid }Still do your job well"]]]);
+                    [nodes.TemplateData, "{% if i_am_stupid }Still do your job well"]]]);
     });
 
     it("should parse verbatim with pure text", () => {
         isAST(parser.parse("{% verbatim %}abc{% endverbatim %}"),
             [nodes.Root,
                 [nodes.Output,
-            [nodes.TemplateData, "abc"]]]);
+                    [nodes.TemplateData, "abc"]]]);
     });
 
 
@@ -524,34 +539,55 @@ describe("templating", "nunjucks", "parser", () => {
         isAST(parser.parse("{% verbatim %}{% verbatim %}{{ x }{% endverbatim %}{% endverbatim %}"),
             [nodes.Root,
                 [nodes.Output,
-            [nodes.TemplateData, "{% verbatim %}{{ x }{% endverbatim %}"]]]);
+                    [nodes.TemplateData, "{% verbatim %}{{ x }{% endverbatim %}"]]]);
     });
 
     it("should parse verbatim with comment blocks", () => {
         isAST(parser.parse("{% verbatim %}{# test {% endverbatim %}"),
             [nodes.Root,
                 [nodes.Output,
-            [nodes.TemplateData, "{# test "]]]);
+                    [nodes.TemplateData, "{# test "]]]);
     });
 
     it("should parse multiple verbatim blocks", () => {
         isAST(parser.parse("{% verbatim %}{{ var }}{% endverbatim %}{{ var }}{% verbatim %}{{ var }}{% endverbatim %}"),
             [nodes.Root,
-            [nodes.Output, [nodes.TemplateData, "{{ var }}"]],
-            [nodes.Output, [nodes.Symbol, "var"]],
-            [nodes.Output, [nodes.TemplateData, "{{ var }}"]]]);
+                [nodes.Output, [nodes.TemplateData, "{{ var }}"]],
+                [nodes.Output, [nodes.Symbol, "var"]],
+                [nodes.Output, [nodes.TemplateData, "{{ var }}"]]]);
     });
 
     it("should parse multiline multiple verbatim blocks", () => {
         isAST(parser.parse("\n{% verbatim %}{{ var }}{% endverbatim %}\n{{ var }}\n{% verbatim %}{{ var }}{% endverbatim %}\n"),
             [nodes.Root,
-            [nodes.Output, [nodes.TemplateData, "\n"]],
-            [nodes.Output, [nodes.TemplateData, "{{ var }}"]],
-            [nodes.Output, [nodes.TemplateData, "\n"]],
-            [nodes.Output, [nodes.Symbol, "var"]],
-            [nodes.Output, [nodes.TemplateData, "\n"]],
-            [nodes.Output, [nodes.TemplateData, "{{ var }}"]],
-            [nodes.Output, [nodes.TemplateData, "\n"]]]);
+                [nodes.Output, [nodes.TemplateData, "\n"]],
+                [nodes.Output, [nodes.TemplateData, "{{ var }}"]],
+                [nodes.Output, [nodes.TemplateData, "\n"]],
+                [nodes.Output, [nodes.Symbol, "var"]],
+                [nodes.Output, [nodes.TemplateData, "\n"]],
+                [nodes.Output, [nodes.TemplateData, "{{ var }}"]],
+                [nodes.Output, [nodes.TemplateData, "\n"]]]);
+    });
+
+    it("should parse switch statements", () => {
+        const tpl = '{% switch foo %}{% case "bar" %}BAR{% case "baz" %}BAZ{% default %}NEITHER FOO NOR BAR{% endswitch %}';
+        isAST(parser.parse(tpl),
+            [nodes.Root,
+                [nodes.Switch,
+                    [nodes.Symbol, "foo"],
+                    [[nodes.Case,
+                        [nodes.Literal, "bar"],
+                        [nodes.NodeList,
+                            [nodes.Output,
+                                [nodes.TemplateData, "BAR"]]]],
+                    [nodes.Case,
+                        [nodes.Literal, "baz"],
+                        [nodes.NodeList,
+                            [nodes.Output,
+                                [nodes.TemplateData, "BAZ"]]]]],
+                    [nodes.NodeList,
+                        [nodes.Output,
+                            [nodes.TemplateData, "NEITHER FOO NOR BAR"]]]]]);
     });
 
     it("should parse keyword and non-keyword arguments", () => {
@@ -559,63 +595,63 @@ describe("templating", "nunjucks", "parser", () => {
             [nodes.Root,
                 [nodes.Output,
                     [nodes.FunCall,
-            [nodes.Symbol, "foo"],
+                        [nodes.Symbol, "foo"],
                         [nodes.NodeList,
-            [nodes.Literal, "bar"],
-            [nodes.Symbol, "falalalala"],
+                            [nodes.Literal, "bar"],
+                            [nodes.Symbol, "falalalala"],
                             [nodes.KeywordArgs,
                                 [nodes.Pair,
-            [nodes.Symbol, "baz"],
-            [nodes.Literal, "foobar"]]]]]]]);
+                                    [nodes.Symbol, "baz"],
+                                    [nodes.Literal, "foobar"]]]]]]]);
     });
 
     it("should parse imports", () => {
         isAST(parser.parse('{% import "foo/bar.njk" as baz %}'),
             [nodes.Root,
                 [nodes.Import,
-            [nodes.Literal, "foo/bar.njk"],
-            [nodes.Symbol, "baz"]]]);
+                    [nodes.Literal, "foo/bar.njk"],
+                    [nodes.Symbol, "baz"]]]);
 
         isAST(parser.parse('{% from "foo/bar.njk" import baz, ' +
             "   foobar as foobarbaz %}"),
-            [nodes.Root,
-                [nodes.FromImport,
-            [nodes.Literal, "foo/bar.njk"],
-                    [nodes.NodeList,
-            [nodes.Symbol, "baz"],
-                        [nodes.Pair,
-            [nodes.Symbol, "foobar"],
-            [nodes.Symbol, "foobarbaz"]]]]]);
+        [nodes.Root,
+            [nodes.FromImport,
+                [nodes.Literal, "foo/bar.njk"],
+                [nodes.NodeList,
+                    [nodes.Symbol, "baz"],
+                    [nodes.Pair,
+                        [nodes.Symbol, "foobar"],
+                        [nodes.Symbol, "foobarbaz"]]]]]);
 
         isAST(parser.parse('{% import "foo/bar.html"|replace("html", "j2") as baz %}'),
             [nodes.Root,
                 [nodes.Import,
                     [nodes.Filter,
-            [nodes.Symbol, "replace"],
+                        [nodes.Symbol, "replace"],
                         [nodes.NodeList,
-            [nodes.Literal, "foo/bar.html"],
-            [nodes.Literal, "html"],
-            [nodes.Literal, "j2"]
+                            [nodes.Literal, "foo/bar.html"],
+                            [nodes.Literal, "html"],
+                            [nodes.Literal, "j2"]
                         ]
                     ],
-            [nodes.Symbol, "baz"]]]);
+                    [nodes.Symbol, "baz"]]]);
 
         isAST(parser.parse('{% from ""|default("foo/bar.njk") import baz, ' +
             "   foobar as foobarbaz %}"),
-            [nodes.Root,
-                [nodes.FromImport,
-                    [nodes.Filter,
-            [nodes.Symbol, "default"],
-                        [nodes.NodeList,
-            [nodes.Literal, ""],
-            [nodes.Literal, "foo/bar.njk"]
-                        ]
-                    ],
+        [nodes.Root,
+            [nodes.FromImport,
+                [nodes.Filter,
+                    [nodes.Symbol, "default"],
                     [nodes.NodeList,
-            [nodes.Symbol, "baz"],
-                        [nodes.Pair,
-            [nodes.Symbol, "foobar"],
-            [nodes.Symbol, "foobarbaz"]]]]]);
+                        [nodes.Literal, ""],
+                        [nodes.Literal, "foo/bar.njk"]
+                    ]
+                ],
+                [nodes.NodeList,
+                    [nodes.Symbol, "baz"],
+                    [nodes.Pair,
+                        [nodes.Symbol, "foobar"],
+                        [nodes.Symbol, "foobarbaz"]]]]]);
     });
 
     it("should parse whitespace control", () => {
@@ -625,127 +661,127 @@ describe("templating", "nunjucks", "parser", () => {
         isAST(parser.parse("{% if x %}\n  hi \n{% endif %}"),
             [nodes.Root,
                 [nodes.If,
-            [nodes.Symbol, "x"],
+                    [nodes.Symbol, "x"],
                     [nodes.NodeList,
                         [nodes.Output,
-            [nodes.TemplateData, "\n  hi \n"]]]]]);
+                            [nodes.TemplateData, "\n  hi \n"]]]]]);
 
         isAST(parser.parse("{% if x -%}\n  hi \n{% endif %}"),
             [nodes.Root,
                 [nodes.If,
-            [nodes.Symbol, "x"],
+                    [nodes.Symbol, "x"],
                     [nodes.NodeList,
                         [nodes.Output,
-            [nodes.TemplateData, "hi \n"]]]]]);
+                            [nodes.TemplateData, "hi \n"]]]]]);
 
         isAST(parser.parse("{% if x %}\n  hi \n{%- endif %}"),
             [nodes.Root,
                 [nodes.If,
-            [nodes.Symbol, "x"],
+                    [nodes.Symbol, "x"],
                     [nodes.NodeList,
                         [nodes.Output,
-            [nodes.TemplateData, "\n  hi"]]]]]);
+                            [nodes.TemplateData, "\n  hi"]]]]]);
 
         isAST(parser.parse("{% if x -%}\n  hi \n{%- endif %}"),
             [nodes.Root,
                 [nodes.If,
-            [nodes.Symbol, "x"],
+                    [nodes.Symbol, "x"],
                     [nodes.NodeList,
                         [nodes.Output,
-            [nodes.TemplateData, "hi"]]]]]);
+                            [nodes.TemplateData, "hi"]]]]]);
 
         isAST(parser.parse("poop  \n{%- if x -%}\n  hi \n{%- endif %}"),
             [nodes.Root,
                 [nodes.Output,
-            [nodes.TemplateData, "poop"]],
+                    [nodes.TemplateData, "poop"]],
                 [nodes.If,
-            [nodes.Symbol, "x"],
+                    [nodes.Symbol, "x"],
                     [nodes.NodeList,
                         [nodes.Output,
-            [nodes.TemplateData, "hi"]]]]]);
+                            [nodes.TemplateData, "hi"]]]]]);
 
         isAST(parser.parse("hello \n{#- comment #}"),
             [nodes.Root,
                 [nodes.Output,
-            [nodes.TemplateData, "hello"]]]);
+                    [nodes.TemplateData, "hello"]]]);
 
         isAST(parser.parse("{# comment -#} \n world"),
             [nodes.Root,
                 [nodes.Output,
-            [nodes.TemplateData, "world"]]]);
+                    [nodes.TemplateData, "world"]]]);
 
         isAST(parser.parse("hello \n{#- comment -#} \n world"),
             [nodes.Root,
                 [nodes.Output,
-            [nodes.TemplateData, "hello"]],
+                    [nodes.TemplateData, "hello"]],
                 [nodes.Output,
-            [nodes.TemplateData, "world"]]]);
+                    [nodes.TemplateData, "world"]]]);
 
         isAST(parser.parse("hello \n{# - comment - #} \n world"),
             [nodes.Root,
                 [nodes.Output,
-            [nodes.TemplateData, "hello \n"]],
+                    [nodes.TemplateData, "hello \n"]],
                 [nodes.Output,
-            [nodes.TemplateData, " \n world"]]]);
+                    [nodes.TemplateData, " \n world"]]]);
 
         // The from statement required a special case so make sure to
         // test it
         isAST(parser.parse("{% from x import y %}\n  hi \n"),
             [nodes.Root,
                 [nodes.FromImport,
-            [nodes.Symbol, "x"],
+                    [nodes.Symbol, "x"],
                     [nodes.NodeList,
-            [nodes.Symbol, "y"]]],
+                        [nodes.Symbol, "y"]]],
                 [nodes.Output,
-            [nodes.TemplateData, "\n  hi \n"]]]);
+                    [nodes.TemplateData, "\n  hi \n"]]]);
 
         isAST(parser.parse("{% from x import y -%}\n  hi \n"),
             [nodes.Root,
                 [nodes.FromImport,
-            [nodes.Symbol, "x"],
+                    [nodes.Symbol, "x"],
                     [nodes.NodeList,
-            [nodes.Symbol, "y"]]],
+                        [nodes.Symbol, "y"]]],
                 [nodes.Output,
-            [nodes.TemplateData, "hi \n"]]]);
+                    [nodes.TemplateData, "hi \n"]]]);
 
         isAST(parser.parse("{% if x -%}{{y}} {{z}}{% endif %}"),
             [nodes.Root,
                 [nodes.If,
-            [nodes.Symbol, "x"],
+                    [nodes.Symbol, "x"],
                     [nodes.NodeList,
                         [nodes.Output,
-            [nodes.Symbol, "y"]],
+                            [nodes.Symbol, "y"]],
                         [nodes.Output,
-            // the value of TemplateData should be ' ' instead of ''
-            [nodes.TemplateData, " "]],
+                            // the value of TemplateData should be ' ' instead of ''
+                            [nodes.TemplateData, " "]],
                         [nodes.Output,
-            [nodes.Symbol, "z"]]]]]);
+                            [nodes.Symbol, "z"]]]]]);
 
         isAST(parser.parse("{% if x -%}{% if y %} {{z}}{% endif %}{% endif %}"),
             [nodes.Root,
                 [nodes.If,
-            [nodes.Symbol, "x"],
+                    [nodes.Symbol, "x"],
                     [nodes.NodeList,
                         [nodes.If,
-            [nodes.Symbol, "y"],
+                            [nodes.Symbol, "y"],
                             [nodes.NodeList,
                                 [nodes.Output,
-            // the value of TemplateData should be ' ' instead of ''
-            [nodes.TemplateData, " "]],
+                                    // the value of TemplateData should be ' ' instead of ''
+                                    [nodes.TemplateData, " "]],
                                 [nodes.Output,
-            [nodes.Symbol, "z"]]
+                                    [nodes.Symbol, "z"]]
                             ]]]]]);
 
         isAST(parser.parse("{% if x -%}{# comment #} {{z}}{% endif %}"),
             [nodes.Root,
                 [nodes.If,
-            [nodes.Symbol, "x"],
+                    [nodes.Symbol, "x"],
                     [nodes.NodeList,
                         [nodes.Output,
-            // the value of TemplateData should be ' ' instead of ''
-            [nodes.TemplateData, " "]],
+                            // the value of TemplateData should be ' ' instead of ''
+                            [nodes.TemplateData, " "]],
                         [nodes.Output,
-            [nodes.Symbol, "z"]]]]]);
+                            [nodes.Symbol, "z"]]]]]);
 
     });
 
@@ -861,40 +897,40 @@ describe("templating", "nunjucks", "parser", () => {
 
         isAST(parser.parse("{% testtag %}", extensions),
             [nodes.Root,
-            [nodes.CallExtension, extensions[0], "foo", undefined, undefined]]);
+                [nodes.CallExtension, extensions[0], "foo", undefined, undefined]]);
 
         isAST(parser.parse("{% testblocktag %}sdfd{% endtestblocktag %}",
             extensions),
-            [nodes.Root,
-                [nodes.CallExtension, extensions[1], "bar", null,
-                    [1, [nodes.NodeList,
-                        [nodes.Output,
-            [nodes.TemplateData, "sdfd"]]]]]]);
+        [nodes.Root,
+            [nodes.CallExtension, extensions[1], "bar", null,
+                [1, [nodes.NodeList,
+                    [nodes.Output,
+                        [nodes.TemplateData, "sdfd"]]]]]]);
 
         isAST(parser.parse("{% testblocktag %}{{ 123 }}{% endtestblocktag %}",
             extensions),
-            [nodes.Root,
-                [nodes.CallExtension, extensions[1], "bar", null,
-                    [1, [nodes.NodeList,
-                        [nodes.Output,
-            [nodes.Literal, 123]]]]]]);
+        [nodes.Root,
+            [nodes.CallExtension, extensions[1], "bar", null,
+                [1, [nodes.NodeList,
+                    [nodes.Output,
+                        [nodes.Literal, 123]]]]]]);
 
         isAST(parser.parse('{% testargs(123, "abc", foo="bar") %}', extensions),
             [nodes.Root,
                 [nodes.CallExtension, extensions[2], "biz",
 
-            // The only arg is the list of run-time arguments
-            // coming from the template
+                    // The only arg is the list of run-time arguments
+                    // coming from the template
                     [nodes.NodeList,
-            [nodes.Literal, 123],
-            [nodes.Literal, "abc"],
+                        [nodes.Literal, 123],
+                        [nodes.Literal, "abc"],
                         [nodes.KeywordArgs,
                             [nodes.Pair,
-            [nodes.Symbol, "foo"],
-            [nodes.Literal, "bar"]]]]]]);
+                                [nodes.Symbol, "foo"],
+                                [nodes.Literal, "bar"]]]]]]);
 
         isAST(parser.parse("{% testargs %}", extensions),
             [nodes.Root,
-            [nodes.CallExtension, extensions[2], "biz", null]]);
+                [nodes.CallExtension, extensions[2], "biz", null]]);
     });
 });

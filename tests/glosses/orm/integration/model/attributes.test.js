@@ -62,6 +62,29 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     expect(self.callCount).to.equal(1);
                 }
             });
+
+            it('allows for an attribute to be called "toString"', async function () {
+                const Person = this.sequelize.define("person", {
+                    name: type.STRING,
+                    nick: type.STRING
+                }, {
+                    timestamps: false
+                });
+
+                await this.sequelize.sync({ force: true });
+                await Person.create({ name: "Jozef", nick: "Joe" });
+                const person = await Person.findOne({
+                    attributes: [
+                        "nick",
+                        ["name", "toString"]
+                    ],
+                    where: {
+                        name: "Jozef"
+                    }
+                });
+                expect(person.dataValues.toString).to.equal("Jozef");
+                expect(person.get("toString")).to.equal("Jozef");
+            });
         });
     });
 });

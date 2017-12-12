@@ -186,8 +186,14 @@ export default class QueryInterface {
             let promises = [];
 
             for (i = 0; i < keyLen; i++) {
-                if (attributes[keys[i]].type instanceof type.ENUM) {
-                    sql = this.QueryGenerator.pgListEnums(tableName, attributes[keys[i]].field || keys[i], options);
+                const attribute = attributes[keys[i]];
+                const t = attribute.type;
+
+                if (
+                    t instanceof type.ENUM
+                    || (t instanceof type.ARRAY && t.type instanceof type.ENUM) // ARRAY sub type is ENUM
+                ) {
+                    sql = this.QueryGenerator.pgListEnums(tableName, attribute.field || keys[i], options);
                     promises.push(this.sequelize.query(
                         sql,
                         _.assign({}, options, { plain: true, raw: true, type: queryType.SELECT })
@@ -201,17 +207,24 @@ export default class QueryInterface {
             let enumIdx = 0;
 
             for (i = 0; i < keyLen; i++) {
-                if (attributes[keys[i]].type instanceof type.ENUM) {
+                const attribute = attributes[keys[i]];
+                const t = attribute.type;
+                const enumType = t.type || t;
+
+                if (
+                    t instanceof type.ENUM ||
+                    (t instanceof type.ARRAY && enumType instanceof type.ENUM) // ARRAY sub type is ENUM
+                ) {
                     // If the enum type doesn't exist then create it
                     if (!results[enumIdx]) {
-                        sql = this.QueryGenerator.pgEnum(tableName, attributes[keys[i]].field || keys[i], attributes[keys[i]], options);
+                        sql = this.QueryGenerator.pgEnum(tableName, attribute.field || keys[i], enumType, options);
                         promises.push(this.sequelize.query(
                             sql,
                             _.assign({}, options, { raw: true })
                         ));
                     } else if (Boolean(results[enumIdx]) && Boolean(model)) {
                         const enumVals = this.QueryGenerator.fromArray(results[enumIdx].enum_value);
-                        const vals = model.rawAttributes[keys[i]].values;
+                        const vals = enumType.values;
 
                         vals.forEach((value, idx) => { // eslint-disable-line
                             // reset out after/before options since it's for every enum value
@@ -226,7 +239,7 @@ export default class QueryInterface {
                                     valueOptions.after = vals[idx - 1];
                                 }
                                 valueOptions.supportsSearchPath = false;
-                                promises.push(this.sequelize.query(this.QueryGenerator.pgEnumAdd(tableName, keys[i], value, valueOptions), valueOptions));
+                                promises.push(this.sequelize.query(this.QueryGenerator.pgEnumAdd(tableName, attribute.field || keys[i], value, valueOptions), valueOptions));
                             }
                         });
                         enumIdx++;
@@ -248,6 +261,12 @@ export default class QueryInterface {
             sql = this.QueryGenerator.createTableQuery(tableName, attributes, options);
 
             await Promise.all(promises);
+
+            // If ENUM processed, then refresh OIDs
+            if (promises.length) {
+                await this.sequelize.dialect.connectionManager._refreshDynamicOIDs();
+                await this.sequelize.refreshTypes(type.postgres);
+            }
 
             return this.sequelize.query(sql, options);
         }
@@ -1136,8 +1155,37 @@ export default class QueryInterface {
         }
     }
 
-    async createFunction(functionName, params, returnType, language, body, options) {
-        const sql = this.QueryGenerator.createFunction(functionName, params, returnType, language, body, options);
+    /**
+     * Create SQL function
+     *
+     * ```js
+     * queryInterface.createFunction(
+     *   'someFunction',
+     *   [
+     *     {type: 'integer', name: 'param', direction: 'IN'}
+     *   ],
+     *   'integer',
+     *   'plpgsql',
+     *   'RETURN param + 1;',
+     *   [
+     *     'IMMUTABLE',
+     *     'LEAKPROOF'
+     *   ]
+     * );
+     * ```
+     *
+     * @param {String} functionName Name of SQL function to create
+     * @param {Array}  params       List of parameters declared for SQL function
+     * @param {String} returnType   SQL type of function returned value
+     * @param {String} language     The name of the language that the function is implemented in
+     * @param {String} body         Source code of function
+     * @param {Array}  optionsArray Extra-options for creation
+     * @param {Object} [options]
+     *
+     * @return {Promise}
+     */
+    async createFunction(functionName, params, returnType, language, body, optionsArray, options) {
+        const sql = this.QueryGenerator.createFunction(functionName, params, returnType, language, body, optionsArray);
         options = options || {};
 
         if (sql) {
@@ -1145,6 +1193,25 @@ export default class QueryInterface {
         }
     }
 
+    /**
+     * Drop SQL function
+     *
+     * ```js
+     * queryInterface.dropFunction(
+     *   'someFunction',
+     *   [
+     *     {type: 'varchar', name: 'param1', direction: 'IN'},
+     *     {type: 'integer', name: 'param2', direction: 'INOUT'}
+     *   ]
+     * );
+     * ```
+     *
+     * @param {String} functionName Name of SQL function to drop
+     * @param {Array}  params       List of parameters declared for SQL function
+     * @param {Object} [options]
+     *
+     * @return {Promise}
+     */
     async dropFunction(functionName, params, options) {
         const sql = this.QueryGenerator.dropFunction(functionName, params);
         options = options || {};
@@ -1154,6 +1221,27 @@ export default class QueryInterface {
         }
     }
 
+    /**
+     * Rename SQL function
+     *
+     * ```js
+     * queryInterface.renameFunction(
+     *   'fooFunction',
+     *   [
+     *     {type: 'varchar', name: 'param1', direction: 'IN'},
+     *     {type: 'integer', name: 'param2', direction: 'INOUT'}
+     *   ],
+     *   'barFunction'
+     * );
+     * ```
+     *
+     * @param {String} oldFunctionName
+     * @param {Array}  params           List of parameters declared for SQL function
+     * @param {String} newFunctionName
+     * @param {Object} [options]
+     *
+     * @return {Promise}
+     */
     async renameFunction(oldFunctionName, params, newFunctionName, options) {
         const sql = this.QueryGenerator.renameFunction(oldFunctionName, params, newFunctionName);
         options = options || {};

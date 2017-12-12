@@ -351,6 +351,23 @@ export class Compiler {
         this.emit(")");
     }
 
+    compileIs(node, frame) {
+        // first, we need to try to get the name of the test function, if it's a
+        // callable (i.e., has args) and not a symbol.
+        const right = node.right.name
+            ? node.right.name.value
+            // otherwise go with the symbol value
+            : node.right.value;
+        this.emit(`env.getTest("${right}").call(context, `);
+        this.compile(node.left, frame);
+        // compile the arguments for the callable if they exist
+        if (node.right.args) {
+            this.emit(",");
+            this.compile(node.right.args, frame);
+        }
+        this.emit(") === true");
+    }
+
     compileNot(node, frame) {
         this.emit("!");
         this.compile(node.target, frame);
@@ -521,6 +538,28 @@ export class Compiler {
                 this.emitLine("}");
             }
         }
+    }
+
+    compileSwitch(node, frame) {
+        this.emit("switch (");
+        this.compile(node.expr, frame);
+        this.emit(") {");
+        for (let i = 0; i < node.cases.length; i += 1) {
+            const c = node.cases[i];
+            this.emit("case ");
+            this.compile(c.cond, frame);
+            this.emit(": ");
+            this.compile(c.body, frame);
+            // preserve fall-throughs
+            if (c.body.children.length) {
+                this.emitLine("break;");
+            }
+        }
+        if (node.default) {
+            this.emit("default:");
+            this.compile(node.default, frame);
+        }
+        this.emit("}");
     }
 
     compileIf(node, frame, async) {

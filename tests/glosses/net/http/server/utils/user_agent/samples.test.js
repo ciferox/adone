@@ -31,7 +31,7 @@ describe("net", "http", "server", "util", "user agent", "samples", () => {
         return c;
     };
 
-    for (const ftype of ["quick", "big"]) {
+    for (const ftype of ["big"]) {
         specify(ftype, async function test() {
             if (ftype === "big") {
                 this.timeout(120000);

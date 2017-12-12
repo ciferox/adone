@@ -632,3 +632,15 @@ export const mixinMethods = (association, obj, methods, aliases) => {
         }
     }
 };
+
+/**
+ * Returns ENUM name by joining table and column name
+ *
+ * @param {String} tableName
+ * @param {String} columnName
+ * @return {String}
+ * @private
+ */
+export const generateEnumName = (tableName, columnName) => {
+    return `enum_${tableName}_${columnName}`;
+};

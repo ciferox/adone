@@ -1,7 +1,8 @@
 const {
     is,
     vendor: { lodash: _ },
-    util
+    util,
+    orm
 } = adone;
 
 export default function definePostgresTypes(BaseTypes) {
@@ -527,10 +528,30 @@ export default function definePostgresTypes(BaseTypes) {
         }, this).join(",")}]`;
 
         if (this.type) {
-            str += `::${this.toSql()}`;
+            let castKey = this.toSql();
+
+            if (this.type instanceof BaseTypes.ENUM) {
+                castKey = `${orm.util.addTicks(
+                    orm.util.generateEnumName(options.field.Model.getTableName(), options.field.fieldName),
+                    '"'
+                )}[]`;
+            }
+
+            str += `::${castKey}`;
         }
 
         return str;
+    };
+
+    class ENUM extends BaseTypes.ENUM {
+        static parse(value) {
+            return value;
+        }
+    }
+
+    BaseTypes.ENUM.types.postgres = {
+        oids: [],
+        array_oids: []
     };
 
     const types = {
@@ -551,7 +572,8 @@ export default function definePostgresTypes(BaseTypes) {
         GEOMETRY,
         GEOGRAPHY,
         HSTORE,
-        RANGE
+        RANGE,
+        ENUM
     };
 
     _.forIn(types, (DataType, key) => {

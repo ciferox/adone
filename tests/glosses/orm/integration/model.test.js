@@ -1105,6 +1105,57 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             }
         });
 
+        it("does not update soft deleted records when model is paranoid", async function () {
+            const ParanoidUser = this.sequelize.define("ParanoidUser", { username: type.STRING }, { paranoid: true });
+
+            await this.sequelize.sync({ force: true });
+            await ParanoidUser.bulkCreate([
+                { username: "user1" },
+                { username: "user2" }
+            ]);
+            await ParanoidUser.destroy({
+                where: {
+                    username: "user1"
+                }
+            });
+            await ParanoidUser.update({ username: "foo" }, {
+                where: {}
+            });
+            const users = await ParanoidUser.findAll({
+                paranoid: false,
+                where: {
+                    username: "foo"
+                }
+            });
+            expect(users).to.have.lengthOf(1, "should not update soft-deleted record");
+        });
+
+        it("updates soft deleted records when paranoid is overridden", async function () {
+            const ParanoidUser = this.sequelize.define("ParanoidUser", { username: type.STRING }, { paranoid: true });
+
+            await this.sequelize.sync({ force: true });
+            await ParanoidUser.bulkCreate([
+                { username: "user1" },
+                { username: "user2" }
+            ]);
+            await ParanoidUser.destroy({
+                where: {
+                    username: "user1"
+                }
+            });
+            await ParanoidUser.update({ username: "foo" }, {
+                where: {},
+                paranoid: false
+            });
+            const users = await ParanoidUser.findAll({
+                paranoid: false,
+                where: {
+                    username: "foo"
+                }
+            });
+            expect(users).to.have.lengthOf(2);
+        });
+
         if (dialect === "postgres") {
             it("returns the affected rows if `options.returning` is true", async function () {
                 const self = this;
@@ -2050,6 +2101,10 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     });
                 });
             });
+        });
+
+        afterEach(async function () {
+            await this.sequelize.dropAllSchemas();
         });
 
         it("should be able to drop with schemas", function () {

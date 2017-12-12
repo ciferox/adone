@@ -59,5 +59,5 @@ export default {
      *     assert.config.proxyExcludedKeys = ['then', 'inspect'];
      */
 
-    proxyExcludedKeys: ["then", "inspect", "toJSON"]
+    proxyExcludedKeys: ["then", "catch", "inspect", "toJSON"]
 };

@@ -487,6 +487,74 @@ export class Parser {
         return node;
     }
 
+    parseSwitch() {
+        /*
+         * Store the tag names in variables in case someone ever wants to
+         * customize this.
+         */
+        const switchStart = "switch";
+        const switchEnd = "endswitch";
+        const caseStart = "case";
+        const caseDefault = "default";
+
+        // Get the switch tag.
+        const tag = this.peekToken();
+
+        // fail early if we get some unexpected tag.
+        if (
+            !this.skipSymbol(switchStart)
+            && !this.skipSymbol(caseStart)
+            && !this.skipSymbol(caseDefault)
+        ) {
+            this.fail('parseSwitch: expected "switch," "case" or "default"', tag.lineno, tag.colno);
+        }
+
+        // parse the switch expression
+        const expr = this.parseExpression();
+
+        // advance until a start of a case, a default case or an endswitch.
+        this.advanceAfterBlockEnd(switchStart);
+        this.parseUntilBlocks(caseStart, caseDefault, switchEnd);
+
+        // this is the first case. it could also be an endswitch, we'll check.
+        let tok = this.peekToken();
+
+        // create new variables for our cases and default case.
+        const cases = [];
+        let defaultCase;
+
+        // while we're dealing with new cases nodes...
+        do {
+            // skip the start symbol and get the case expression
+            this.skipSymbol(caseStart);
+            const cond = this.parseExpression();
+            this.advanceAfterBlockEnd(switchStart);
+            // get the body of the case node and add it to the array of cases.
+            const body = this.parseUntilBlocks(caseStart, caseDefault, switchEnd);
+            cases.push(new nodes.Case(tok.line, tok.col, cond, body));
+            // get our next case
+            tok = this.peekToken();
+        } while (tok && tok.value === caseStart);
+
+        // we either have a default case or a switch end.
+        switch (tok.value) {
+            case caseDefault:
+                this.advanceAfterBlockEnd();
+                defaultCase = this.parseUntilBlocks(switchEnd);
+                this.advanceAfterBlockEnd();
+                break;
+            case switchEnd:
+                this.advanceAfterBlockEnd();
+                break;
+            default:
+                // otherwise bail because EOF
+                this.fail('parseSwitch: expected "case," "default" or "endswitch," got EOF.');
+        }
+
+        // and return the switch node.
+        return new nodes.Switch(tag.lineno, tag.colno, expr, cases, defaultCase);
+    }
+
     parseStatement() {
         const tok = this.peekToken();
 
@@ -540,6 +608,9 @@ export class Parser {
             }
             case "filter": {
                 return this.parseFilterStatement();
+            }
+            case "switch": {
+                return this.parseSwitch();
             }
             default: {
                 if (this.extensions.length) {
@@ -687,7 +758,7 @@ export class Parser {
     }
 
     parseIn() {
-        let node = this.parseCompare();
+        let node = this.parseIs();
         while (true) { // eslint-disable-line no-constant-condition
             // check if the next token is 'not'
             const tok = this.nextToken();
@@ -700,7 +771,7 @@ export class Parser {
                 this.pushToken(tok);
             }
             if (this.skipSymbol("in")) {
-                const node2 = this.parseCompare();
+                const node2 = this.parseIs();
                 node = new nodes.In(node.lineno, node.colno, node, node2);
                 if (invert) {
                     node = new nodes.Not(node.lineno, node.colno, node);
@@ -713,6 +784,27 @@ export class Parser {
                 break;
             }
         }
+        return node;
+    }
+
+    // I put this right after "in" in the operator precedence stack. That can
+    // obviously be changed to be closer to Jinja.
+    parseIs() {
+        let node = this.parseCompare();
+        // look for an is
+        if (this.skipSymbol("is")) {
+            // look for a not
+            const not = this.skipSymbol("not");
+            // get the next node
+            const node2 = this.parseCompare();
+            // create an Is node using the next node and the info from our Is node.
+            node = new nodes.Is(node.lineno, node.colno, node, node2);
+            // if we have a Not, create a Not node from our Is node.
+            if (not) {
+                node = new nodes.Not(node.lineno, node.colno, node);
+            }
+        }
+        // return the node.
         return node;
     }
 

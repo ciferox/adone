@@ -387,10 +387,6 @@
     "compressible": false,
     "extensions": ["woff"]
   },
-  "application/font-woff2": {
-    "compressible": false,
-    "extensions": ["woff2"]
-  },
   "application/framework-attributes+xml": {
     "source": "iana"
   },
@@ -1638,6 +1634,9 @@
     "source": "iana"
   },
   "application/vnd.collabio.xodocuments.presentation": {
+    "source": "iana"
+  },
+  "application/vnd.collabio.xodocuments.presentation-template": {
     "source": "iana"
   },
   "application/vnd.collabio.xodocuments.spreadsheet": {
@@ -3452,9 +3451,6 @@
   "application/vnd.openxmlformats-officedocument.extended-properties+xml": {
     "source": "iana"
   },
-  "application/vnd.openxmlformats-officedocument.presentationml-template": {
-    "source": "iana"
-  },
   "application/vnd.openxmlformats-officedocument.presentationml.commentauthors+xml": {
     "source": "iana"
   },
@@ -3511,16 +3507,13 @@
     "source": "iana"
   },
   "application/vnd.openxmlformats-officedocument.presentationml.template": {
-    "source": "apache",
+    "source": "iana",
     "extensions": ["potx"]
   },
   "application/vnd.openxmlformats-officedocument.presentationml.template.main+xml": {
     "source": "iana"
   },
   "application/vnd.openxmlformats-officedocument.presentationml.viewprops+xml": {
-    "source": "iana"
-  },
-  "application/vnd.openxmlformats-officedocument.spreadsheetml-template": {
     "source": "iana"
   },
   "application/vnd.openxmlformats-officedocument.spreadsheetml.calcchain+xml": {
@@ -3583,7 +3576,7 @@
     "source": "iana"
   },
   "application/vnd.openxmlformats-officedocument.spreadsheetml.template": {
-    "source": "apache",
+    "source": "iana",
     "extensions": ["xltx"]
   },
   "application/vnd.openxmlformats-officedocument.spreadsheetml.template.main+xml": {
@@ -3605,9 +3598,6 @@
     "source": "iana"
   },
   "application/vnd.openxmlformats-officedocument.vmldrawing": {
-    "source": "iana"
-  },
-  "application/vnd.openxmlformats-officedocument.wordprocessingml-template": {
     "source": "iana"
   },
   "application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml": {
@@ -3646,7 +3636,7 @@
     "source": "iana"
   },
   "application/vnd.openxmlformats-officedocument.wordprocessingml.template": {
-    "source": "apache",
+    "source": "iana",
     "extensions": ["dotx"]
   },
   "application/vnd.openxmlformats-officedocument.wordprocessingml.template.main+xml": {
@@ -6451,6 +6441,9 @@
   "text/sgml": {
     "source": "iana",
     "extensions": ["sgml","sgm"]
+  },
+  "text/shex": {
+    "extensions": ["shex"]
   },
   "text/slim": {
     "extensions": ["slim","slm"]

@@ -106,6 +106,22 @@ describe("templating", "nunjucks", "compiler", () => {
         finish(done);
     });
 
+    it("should compile switch statements", () => {
+        // standard switches
+        const tpl1 = '{% switch foo %}{% case "bar" %}BAR{% case "baz" %}BAZ{% default %}NEITHER FOO NOR BAR{% endswitch %}';
+        // test no-default switches
+        const tpl2 = '{% switch foo %}{% case "bar" %}BAR{% case "baz" %}BAZ{% endswitch %}';
+        // test fall-through cases
+        const tpl3 = '{% switch foo %}{% case "bar" %}{% case "baz" %}BAR{% endswitch %}';
+        equal(tpl1, "NEITHER FOO NOR BAR");
+        equal(tpl1, { foo: "bar" }, "BAR");
+        equal(tpl1, { foo: "baz" }, "BAZ");
+        equal(tpl2, "");
+        equal(tpl3, { foo: "bar" }, "BAR");
+        equal(tpl3, { foo: "baz" }, "BAR");
+    });
+
+
     it("should compile if blocks", (done) => {
         const tmpl = ("Give me some {% if hungry %}pizza" +
             "{% else %}water{% endif %}");
@@ -440,6 +456,11 @@ describe("templating", "nunjucks", "compiler", () => {
                 bar: 15
             },
             "yes");
+
+        equal('{{ "yes" if 1 is odd else "no"  }}', "yes");
+        equal('{{ "yes" if 2 is even else "no"  }}', "yes");
+        equal('{{ "yes" if 2 is odd else "no"  }}', "no");
+        equal('{{ "yes" if 1 is even else "no"  }}', "no");
 
         equal("{% if 1 in [1, 2] %}yes{% endif %}", "yes");
         equal("{% if 1 in [2, 3] %}yes{% endif %}", "");

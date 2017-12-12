@@ -170,11 +170,11 @@ export default class SMTPTransport extends EventEmitter {
                 if (returned) {
                     return;
                 }
-                returned = true;
                 const timer = setTimeout(() => {
                     if (returned) {
                         return;
                     }
+                    returned = true;
                     // still have not returned, this means we have an unexpected connection close
                     const err = new x.IllegalState("Unexpected socket close");
                     if (connection && connection._socket && connection._socket.upgrading) {
@@ -210,6 +210,7 @@ export default class SMTPTransport extends EventEmitter {
                 }, "Sending message %s to <%s>", messageId, recipients.join(", "));
 
                 connection.send(envelope, mail.message.createReadStream(), (err, info) => {
+                    returned = true;
                     connection.close();
                     if (err) {
                         this.logger.error({
@@ -249,9 +250,9 @@ export default class SMTPTransport extends EventEmitter {
                         if (returned) {
                             return;
                         }
-                        returned = true;
 
                         if (err) {
+                            returned = true;
                             connection.close();
                             return callback(err);
                         }

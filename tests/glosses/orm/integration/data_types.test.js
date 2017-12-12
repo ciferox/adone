@@ -249,7 +249,7 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
         const Type = new type.UUID();
 
         // there is no dialect.supports.UUID yet
-        if (["postgres", "sqlite"].indexOf(dialect) !== -1) {
+        if (["postgres", "sqlite"].includes(dialect)) {
             return testSuccess(Type, adone.util.uuid.v4());
         }
         // No native uuid type
@@ -260,7 +260,9 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
     it("calls parse and stringify for ENUM", () => {
         const Type = new type.ENUM("hat", "cat");
 
-        // No dialects actually allow us to identify that we get an enum back..
+        if (["postgres"].includes(dialect)) {
+            return testSuccess(Type, "hat");
+        }
         testFailure(Type);
     });
 

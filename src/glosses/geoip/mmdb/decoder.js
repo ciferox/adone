@@ -1,22 +1,22 @@
-const { x, geoip: { mmdb: { __: { helper: { concat2, concat3, concat4 } } } } } = adone;
+const { x, collection, geoip: { mmdb: { __: { helper: { concat2, concat3, concat4 } } } } } = adone;
 
 const types = [
-    "extended",         //  0
-    "pointer",          //  1
-    "utf8_string",      //  2
-    "double",           //  3
-    "bytes",            //  4
-    "uint16",           //  5
-    "uint32",           //  6
-    "map",              //  7
-    "int32",            //  8
-    "uint64",           //  9
-    "uint128",          // 10
-    "array",            // 11
-    "container",        // 12
-    "end_marker",       // 13
-    "boolean",          // 14
-    "float"             // 15
+    "extended", //  0
+    "pointer", //  1
+    "utf8_string", //  2
+    "double", //  3
+    "bytes", //  4
+    "uint16", //  5
+    "uint32", //  6
+    "map", //  7
+    "int32", //  8
+    "uint64", //  9
+    "uint128", // 10
+    "array", // 11
+    "container", // 12
+    "end_marker", // 13
+    "boolean", // 14
+    "float" // 15
 ];
 
 const pointerValueOffset = [0, 2048, 526336, 0];
@@ -25,12 +25,15 @@ const cursor = (value, offset) => ({ value, offset });
 
 
 export default class Decoder {
-    constructor(db, baseOffset = 0) {
+    constructor(db, baseOffset = 0, opts = {}) {
         if (!db) {
             throw new x.InvalidArguemnt("File stream is required");
         }
         this.db = db;
         this.baseOffset = baseOffset;
+        opts.cache = opts.cache || {};
+        opts.cache.max = opts.cache.max || 6000;
+        this.cache = new collection.FastLRU(opts.cache.max);
     }
 
     decode(offset) {
@@ -39,7 +42,7 @@ export default class Decoder {
 
         if (type === "pointer") {
             const tmp = this.decodePointer(ctrlByte, offset);
-            return cursor(this.decode(tmp.value).value, tmp.offset);
+            return cursor(this.decodeFast(tmp.value).value, tmp.offset);
         }
 
         if (type === "extended") {
@@ -54,6 +57,17 @@ export default class Decoder {
 
         const size = this.sizeFromCtrlByte(ctrlByte, offset);
         return this.decodeByType(type, size.offset, size.value);
+    }
+
+    decodeFast(offset) {
+        const cached = this.cache.get(offset);
+        if (cached) {
+            return cached;
+        }
+
+        const result = this.decode(offset);
+        this.cache.set(offset, result);
+        return result;
     }
 
     decodeByType(type, offset, size) {

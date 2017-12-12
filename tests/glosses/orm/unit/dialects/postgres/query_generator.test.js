@@ -31,6 +31,11 @@ describe("[POSTGRES Specific] QueryGenerator", { skip: !/^postgres/.test(dialect
                 expectation: 'UPDATE "myTable" SET "foo"="foo"+ \'bar\' WHERE "bar" = \'biz\' RETURNING *'
             },
             {
+                title: "Should use the plus operator without returning clause",
+                arguments: ["+", "myTable", { foo: "bar" }, {}, { returning: false }],
+                expectation: 'UPDATE "myTable" SET "foo"="foo"+ \'bar\' '
+            },
+            {
                 title: "Should use the minus operator",
                 arguments: ["-", "myTable", { foo: "bar" }, {}, {}],
                 expectation: 'UPDATE "myTable" SET "foo"="foo"- \'bar\'  RETURNING *'
@@ -44,6 +49,11 @@ describe("[POSTGRES Specific] QueryGenerator", { skip: !/^postgres/.test(dialect
                 title: "Should use the minus operator with where clause",
                 arguments: ["-", "myTable", { foo: "bar" }, { bar: "biz" }, {}],
                 expectation: 'UPDATE "myTable" SET "foo"="foo"- \'bar\' WHERE "bar" = \'biz\' RETURNING *'
+            },
+            {
+                title: "Should use the minus operator without returning clause",
+                arguments: ["-", "myTable", { foo: "bar" }, {}, { returning: false }],
+                expectation: 'UPDATE "myTable" SET "foo"="foo"- \'bar\' '
             }
         ],
         attributesToSQL: [

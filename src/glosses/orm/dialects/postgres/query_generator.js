@@ -505,13 +505,24 @@ const QueryGenerator = {
         }
 
         let type;
-        if (attribute.type instanceof orm.type.ENUM) {
-            if (attribute.type.values && !attribute.values) {
-                attribute.values = attribute.type.values;
+        if (
+            attribute.type instanceof orm.type.ENUM
+            || (attribute.type instanceof orm.type.ARRAY && attribute.type.type instanceof orm.type.ENUM)
+        ) {
+            const enumType = attribute.type.type || attribute.type;
+            let values = attribute.values;
+
+            if (enumType.values && !attribute.values) {
+                values = enumType.values;
             }
 
-            if (is.array(attribute.values) && attribute.values.length > 0) {
-                type = `ENUM(${_.map(attribute.values, (value) => this.escape(value)).join(", ")})`;
+            if (is.array(values) && values.length > 0) {
+                type = `ENUM(${values.map((value) => this.escape(value)).join(", ")})`;
+
+                if (attribute.type instanceof orm.type.ARRAY) {
+                    type += "[]";
+                }
+
             } else {
                 throw new Error("Values for ENUM haven't been defined.");
             }
@@ -758,7 +769,7 @@ const QueryGenerator = {
     pgEnumName(tableName, attr, options) {
         options = options || {};
         const tableDetails = this.extractTableDetails(tableName, options);
-        let enumName = `"enum_${tableDetails.tableName}_${attr}"`;
+        let enumName = util.addTicks(util.generateEnumName(tableDetails.tableName, attr), '"');
 
         // pgListEnums requires the enum name only, without the schema
         if (options.schema !== false && tableDetails.schema) {
@@ -766,7 +777,6 @@ const QueryGenerator = {
         }
 
         return enumName;
-
     },
 
     pgListEnums(tableName, attrName, options) {

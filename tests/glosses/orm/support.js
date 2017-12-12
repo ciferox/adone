@@ -202,6 +202,7 @@ after(async () => {
     if (tmp) {
         await tmp.unlink();
     }
+    await Support.sequelize.close();
 });
 
 Support.sequelize = Support.createSequelizeInstance();

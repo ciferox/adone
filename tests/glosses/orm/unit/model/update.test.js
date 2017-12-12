@@ -8,12 +8,11 @@ const { type } = orm;
 describe(Support.getTestDialectTeaser("Model"), () => {
 
     describe("method update", () => {
-        const User = current.define("User", {
-            name: type.STRING,
-            secretValue: type.INTEGER
-        });
-
         beforeEach(function () {
+            this.User = current.define("User", {
+                name: type.STRING,
+                secretValue: type.INTEGER
+            });
             this.updates = { name: "Batman", secretValue: "7" };
             this.cloneUpdates = _.clone(this.updates);
             this.stubUpdate = stub(current.getQueryInterface(), "bulkUpdate").callsFake(() => {
@@ -30,13 +29,13 @@ describe(Support.getTestDialectTeaser("Model"), () => {
         describe("properly clones input values", () => {
             it("with default options", async function () {
                 const self = this;
-                await User.update(self.updates, { where: { secretValue: "1" } });
+                await this.User.update(self.updates, { where: { secretValue: "1" } });
                 expect(self.updates).to.be.deep.eql(self.cloneUpdates);
             });
 
             it("when using fields option", async function () {
                 const self = this;
-                await User.update(self.updates, { where: { secretValue: "1" }, fields: ["name"] });
+                await this.User.update(self.updates, { where: { secretValue: "1" }, fields: ["name"] });
                 expect(self.updates).to.be.deep.eql(self.cloneUpdates);
             });
         });
@@ -48,7 +47,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             };
 
             await assert.throws(async () => {
-                await User.update(self.updates, { where: new Where() });
+                await this.User.update(self.updates, { where: new Where() });
             });
         });
     });

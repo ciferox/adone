@@ -38,7 +38,7 @@ export default class Transaction {
         if (this.parent) {
             this.id = this.parent.id;
             this.parent.savepoints.push(this);
-            this.name = `${this.id}-savepoint-${this.parent.savepoints.length}`;
+            this.name = `${this.id}-sp-${this.parent.savepoints.length}`;
         } else {
             this.id = this.name = generateTransactionId();
         }

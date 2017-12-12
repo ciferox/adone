@@ -191,7 +191,11 @@ export default class RateLimiter {
         }
 
         // Try to remove the requested number of tokens from the token bucket
-        return this.tokenBucket.tryRemoveTokens(count);
+        const removed = this.tokenBucket.tryRemoveTokens(count);
+        if (removed) {
+            this.tokensThisInterval += count;
+        }
+        return removed;
     }
 
     getTokensRemaining() {

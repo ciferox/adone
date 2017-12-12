@@ -251,7 +251,7 @@ export default class HasMany extends association.Base {
 
         options = util.cloneDeep(options);
         options.attributes = [
-            [sequelize.fn("COUNT", sequelize.col(model.primaryKeyField)), "count"]
+            [sequelize.fn("COUNT", sequelize.col(model.name.concat(".", model.primaryKeyField))), "count"]
         ];
         options.raw = true;
         options.plain = true;

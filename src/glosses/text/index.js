@@ -247,10 +247,12 @@ export const stringDistance = (strA, strB, memo) => {
         if (strA.length === 0 || strB.length === 0) {
             memo[strA.length][strB.length] = Math.max(strA.length, strB.length);
         } else {
+            const sliceA = strA.slice(0, -1);
+            const sliceB = strB.slice(0, -1);
             memo[strA.length][strB.length] = Math.min(
-                stringDistance(strA.slice(0, -1), strB, memo) + 1,
-                stringDistance(strA, strB.slice(0, -1), memo) + 1,
-                stringDistance(strA.slice(0, -1), strB.slice(0, -1), memo) +
+                stringDistance(sliceA, strB, memo) + 1,
+                stringDistance(strA, sliceB, memo) + 1,
+                stringDistance(sliceA, sliceB, memo) +
                 (strA.slice(-1) === strB.slice(-1) ? 0 : 1)
             );
         }

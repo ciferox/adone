@@ -157,32 +157,17 @@ export default class ConnectionManager extends AbstractConnectionManager {
             }
         }
 
-        // oids for hstore and geometry are dynamic - so select them at connection time
-        const supportedVersion = this.sequelize.options.databaseVersion !== 0 && adone.semver.gte(this.sequelize.options.databaseVersion, "8.3.0");
-        if (type.HSTORE.types.postgres.oids.length === 0 && supportedVersion) {
-            query += "SELECT typname, oid, typarray FROM pg_type WHERE typtype = 'b' AND typname IN ('hstore', 'geometry', 'geography')";
+        if (query) {
+            await connection.query(query);
         }
 
-        const results = await new Promise((resolve, reject) => {
-            connection.query(query, (error, result) => error ? reject(error) : resolve(result));
-        });
-
-        const result = is.array(results) ? results.pop() : results;
-
-        for (const row of result.rows) {
-            let type;
-            if (row.typname === "geometry") {
-                type = orm.type.postgres.GEOMETRY;
-            } else if (row.typname === "hstore") {
-                type = orm.type.postgres.HSTORE;
-            } else if (row.typname === "geography") {
-                type = orm.type.postgres.GEOGRAPHY;
-            }
-
-            type.types.postgres.oids.push(row.oid);
-            type.types.postgres.array_oids.push(row.typarray);
-
-            this._refreshTypeParser(type);
+        if (
+            type.GEOGRAPHY.types.postgres.oids.length === 0 &&
+            type.GEOMETRY.types.postgres.oids.length === 0 &&
+            type.HSTORE.types.postgres.oids.length === 0 &&
+            type.ENUM.types.postgres.oids.length === 0
+        ) {
+            await this._refreshDynamicOIDs(connection);
         }
 
         return connection;
@@ -197,6 +182,53 @@ export default class ConnectionManager extends AbstractConnectionManager {
 
     validate(connection) {
         return is.undefined(connection._invalid);
+    }
+
+    async _refreshDynamicOIDs(connection) {
+        const databaseVersion = this.sequelize.options.databaseVersion;
+        const supportedVersion = "8.3.0";
+
+        // Check for supported version
+        if ( (databaseVersion && adone.semver.gte(databaseVersion, supportedVersion)) === false) {
+            return Promise.resolve();
+        }
+
+        // Refresh dynamic OIDs for some types
+        // These include, Geometry / HStore / Enum
+        const results = await (connection || this.sequelize).query(
+            "SELECT typname, typtype, oid, typarray FROM pg_type WHERE (typtype = 'b' AND typname IN ('hstore', 'geometry', 'geography')) OR (typtype = 'e')"
+        );
+        const result = is.array(results) ? results.pop() : results;
+
+        // Reset OID mapping for dynamic type
+        [
+            type.postgres.GEOMETRY,
+            type.postgres.HSTORE,
+            type.postgres.GEOGRAPHY,
+            type.postgres.ENUM
+        ].forEach((type) => {
+            type.types.postgres.oids = [];
+            type.types.postgres.array_oids = [];
+        });
+
+        for (const row of result.rows) {
+            let t;
+
+            if (row.typname === "geometry") {
+                t = type.postgres.GEOMETRY;
+            } else if (row.typname === "hstore") {
+                t = type.postgres.HSTORE;
+            } else if (row.typname === "geography") {
+                t = type.postgres.GEOGRAPHY;
+            } else if (row.typtype === "e") {
+                t = type.postgres.ENUM;
+            }
+
+            t.types.postgres.oids.push(row.oid);
+            t.types.postgres.array_oids.push(row.typarray);
+
+            this._refreshTypeParser(t);
+        }
     }
 }
 

@@ -32,7 +32,8 @@ export class Exception extends Error {
         this.id = exceptionIdMap[this.constructor];
         Object.defineProperty(this, "name", {
             enumerable: true,
-            value: this.constructor.name
+            value: this.constructor.name,
+            writable: true
         });
         // void this.stack;
     }

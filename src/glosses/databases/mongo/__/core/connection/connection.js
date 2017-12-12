@@ -247,7 +247,8 @@ const legalSslSocketOptions = [
     "pfx", "key", "passphrase",
     "cert", "ca", "ciphers", "NPNProtocols",
     "ALPNProtocols", "servername", "secureProtocol",
-    "secureContext", "session", "minDHSize"
+    "secureContext", "session", "minDHSize",
+    "ecdhCurve"
 ];
 
 const merge = (options1, options2) => {
@@ -313,6 +314,8 @@ export default class Connection extends EventEmitter {
         this.cert = options.cert || null;
         this.key = options.key || null;
         this.passphrase = options.passphrase || null;
+        this.ciphers = options.ciphers || null;
+        this.ecdhCurve = options.ecdhCurve || null;
         this.ssl = is.boolean(options.ssl) ? options.ssl : false;
         this.rejectUnauthorized = is.boolean(options.rejectUnauthorized) ? options.rejectUnauthorized : true;
         this.checkServerIdentity = is.boolean(options.checkServerIdentity) || is.function(options.checkServerIdentity)
