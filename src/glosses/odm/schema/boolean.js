@@ -39,11 +39,20 @@ export default class SchemaBoolean extends SchemaType {
      * @param {Object} value
      * @api private
      */
-    cast(value) {
+    cast(value, model) {
         if (is.null(value)) {
             return value;
         }
-        if (!this.options.strictBool) {
+        if (this.options.strictBool || (model && model.schema.options.strictBool && this.options.strictBool !== false)) {
+            // strict mode (throws if value is not a boolean, instead of converting)
+            if (value === true || value === "true" || value === 1 || value === "1") {
+                return true;
+            }
+            if (value === false || value === "false" || value === 0 || value === "0") {
+                return false;
+            }
+            throw new CastError("boolean", value, this.path);
+        } else {
             // legacy mode
             if (value === "0") {
                 return false;
@@ -56,14 +65,6 @@ export default class SchemaBoolean extends SchemaType {
             }
             return Boolean(value);
         }
-        // strict mode (throws if value is not a boolean, instead of converting)
-        if (value === true || value === "true" || value === 1 || value === "1") {
-            return true;
-        }
-        if (value === false || value === "false" || value === 0 || value === "0") {
-            return false;
-        }
-        throw new CastError("boolean", value, this.path);
     }
 
     /**

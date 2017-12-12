@@ -453,7 +453,6 @@ const getModelsMapForPopulate = function (model, docs, options) {
                         try {
                             modelForCurrentDoc = model.db.model(modelForFindSchema);
                         } catch (error) {
-                            adone.log(error);
                             return error;
                         }
 
@@ -551,7 +550,6 @@ const getModelsMapForPopulate = function (model, docs, options) {
                     originalModel :
                     model.db.model(modelName);
             } catch (error) {
-                adone.log(error);
                 return error;
             }
 
@@ -2685,7 +2683,7 @@ export default class Model extends Document {
             args.forEach((doc) => {
                 toExecute.push((callback) => {
                     const Model = _this.discriminators && doc[discriminatorKey] ? _this.discriminators[doc[discriminatorKey]] : _this;
-                    const toSave = doc instanceof Model ? doc : new Model(doc);
+                    let toSave = doc;
                     const callbackWrapper = function (error, doc) {
                         if (error) {
                             if (!firstError) {
@@ -2695,6 +2693,14 @@ export default class Model extends Document {
                         }
                         callback(null, { doc });
                     };
+
+                    if (!(toSave instanceof Model)) {
+                        try {
+                            toSave = new Model(toSave);
+                        } catch (error) {
+                            return callbackWrapper(error);
+                        }
+                    }
 
                     // Hack to avoid getting a promise because of
                     // $__registerHooksFromSchema
@@ -2943,7 +2949,6 @@ export default class Model extends Document {
                             });
                         }
                     } catch (error) {
-                        adone.log(error);
                         return callback(error);
                     }
 
@@ -2965,7 +2970,6 @@ export default class Model extends Document {
                             });
                         }
                     } catch (error) {
-                        adone.log(error);
                         return callback(error);
                     }
 
@@ -2977,7 +2981,6 @@ export default class Model extends Document {
                         op.replaceOne.filter = cast(_this.schema,
                             op.replaceOne.filter);
                     } catch (error) {
-                        adone.log(error);
                         return callback(error);
                     }
 
@@ -2997,7 +3000,6 @@ export default class Model extends Document {
                         op.deleteOne.filter = cast(_this.schema,
                             op.deleteOne.filter);
                     } catch (error) {
-                        adone.log(error);
                         return callback(error);
                     }
 
@@ -3009,7 +3011,6 @@ export default class Model extends Document {
                         op.deleteMany.filter = cast(_this.schema,
                             op.deleteMany.filter);
                     } catch (error) {
-                        adone.log(error);
                         return callback(error);
                     }
 
@@ -3872,9 +3873,9 @@ export default class Model extends Document {
         // subclass model using this connection and collection name
         const _this = this;
 
-        const Model = class extends this.prototype.constructor {};
+        const Model = class extends this.prototype.constructor { };
         Model.db = Model.prototype.db = conn;
-    
+
         const s = schema && !is.string(schema) ? schema : _this.prototype.schema;
 
         const options = s.options || {};
@@ -3911,7 +3912,6 @@ export default class Model extends Document {
             try {
                 callback.apply(null, arguments);
             } catch (error) {
-                adone.log(error);
                 _this.emit("error", error);
             }
         };

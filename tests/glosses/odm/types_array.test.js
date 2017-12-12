@@ -2,7 +2,7 @@ const start = require("./common");
 const mongoose = adone.odm;
 const Schema = mongoose.Schema;
 const random = adone.odm.utils.random;
-const mongodb = require("mongodb");
+const mongodb = adone.database.mongo;
 const MongooseArray = mongoose.Types.Array;
 const collection = `avengers_${random()}`;
 

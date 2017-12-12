@@ -869,7 +869,6 @@ export default class SchemaType {
                     try {
                         ok = validator.call(scope, value);
                     } catch (error) {
-                        adone.log(error);
                         ok = false;
                         validatorProperties.reason = error;
                     }
@@ -951,7 +950,6 @@ export default class SchemaType {
                     try {
                         ok = validator.call(scope, value);
                     } catch (error) {
-                        adone.log(error);
                         ok = false;
                         validatorProperties.reason = error;
                     }

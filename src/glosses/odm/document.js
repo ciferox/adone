@@ -3,12 +3,14 @@ const MongooseError = require("./error");
 import MixedSchema from "./schema/mixed";
 import Schema from "./schema";
 const ObjectExpectedError = require("./error/objectExpected");
+const ObjectParameterError = require("./error/objectParameter");
 const StrictModeError = require("./error/strict");
 import SchemaType from "./schematype";
 const ValidatorError = SchemaType.ValidatorError;
 import VirtualType from "./virtualtype";
 const utils = require("./utils");
 const clone = utils.clone;
+const isDefiningProjection = require("./services/projection/isDefiningProjection");
 const isMongooseObject = utils.isMongooseObject;
 const inspect = require("util").inspect;
 const ValidationError = MongooseError.ValidationError;
@@ -131,9 +133,13 @@ const _getPathsToValidate = function (doc) {
         len = subdocs.length;
         for (i = 0; i < len; ++i) {
             subdoc = subdocs[i];
-            if (subdoc.$isSingleNested &&
-                doc.isModified(subdoc.$basePath) &&
+            if (doc.isModified(subdoc.$basePath) &&
                 !doc.isDirectModified(subdoc.$basePath)) {
+                // Remove child paths for now, because we'll be validating the whole
+                // subdoc
+                paths = paths.filter((p) => {
+                    return !is.nil(p) && p.indexOf(`${subdoc.$basePath}.`) !== 0;
+                });
                 paths.push(subdoc.$basePath);
             }
         }
@@ -323,6 +329,10 @@ export default class Document {
         this.errors = undefined;
         this.$__.$options = options || {};
 
+        if (!is.nil(obj) && typeof obj !== "object") {
+            throw new ObjectParameterError(obj, "obj", "Document");
+        }
+
         const schema = this.schema;
 
         if (is.boolean(fields)) {
@@ -400,10 +410,7 @@ export default class Document {
                 while (ki--) {
                     // Does this projection explicitly define inclusion/exclusion?
                     // Explicitly avoid `$meta` and `$slice`
-                    const isDefiningProjection = !fields[keys[ki]] ||
-                        typeof fields[keys[ki]] !== "object" ||
-                        !is.nil(fields[keys[ki]].$elemMatch);
-                    if (keys[ki] !== "_id" && isDefiningProjection) {
+                    if (keys[ki] !== "_id" && isDefiningProjection(fields[keys[ki]])) {
                         exclude = !fields[keys[ki]];
                         break;
                     }
@@ -1328,7 +1335,7 @@ export default class Document {
                 if (cur === "_id") {
                     continue;
                 }
-                if (this.$__.selected[cur] && this.$__.selected[cur].$meta) {
+                if (!isDefiningProjection(this.$__.selected[cur])) {
                     continue;
                 }
                 inclusive = Boolean(this.$__.selected[cur]);
@@ -1404,7 +1411,7 @@ export default class Document {
                 if (cur === "_id") {
                     continue;
                 }
-                if (this.$__.selected[cur] && this.$__.selected[cur].$meta) {
+                if (!isDefiningProjection(this.$__.selected[cur])) {
                     continue;
                 }
                 inclusive = Boolean(this.$__.selected[cur]);
@@ -1490,8 +1497,8 @@ export default class Document {
             });
         }
 
-        let validating = {},
-            total = 0;
+        const validated = {};
+        let total = 0;
 
         const complete = function () {
             const error = _complete();
@@ -1504,11 +1511,11 @@ export default class Document {
         };
 
         const validatePath = function (path) {
-            if (validating[path]) {
+            if (is.nil(path) || validated[path]) {
                 return;
             }
 
-            validating[path] = true;
+            validated[path] = true;
             total++;
 
             process.nextTick(() => {

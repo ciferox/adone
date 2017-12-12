@@ -1,4 +1,4 @@
-const AggregationCursor = require("./cursor/AggregationCursor");
+import AggregationCursor from "./cursor/AggregationCursor";
 const PromiseProvider = require("./promise_provider");
 import Query from "./query";
 const eachAsync = require("./services/cursor/eachAsync");

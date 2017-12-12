@@ -161,9 +161,9 @@ Promise.prototype.error = function (err) {
  */
 
 Promise.prototype.resolve = function (err) {
-    if (err) { 
-return this.error(err); 
-}
+    if (err) {
+        return this.error(err);
+    }
     return this.fulfill.apply(this, Array.prototype.slice.call(arguments, 1));
 };
 

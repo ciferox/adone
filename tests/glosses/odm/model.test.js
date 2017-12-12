@@ -3793,8 +3793,8 @@ describe("Model", () => {
         describe("post", () => {
             it("works", (done) => {
                 let schema = new Schema({
-                        title: String
-                    }),
+                    title: String
+                }),
                     save = false,
                     remove = false,
                     init = false,
@@ -5714,6 +5714,18 @@ describe("Model", () => {
                         done();
                     });
                 });
+            });
+        });
+
+        it('.create() with non-object (gh-2037)', function (done) {
+            var schema = new mongoose.Schema({ name: String });
+
+            var Model = db.model('gh2037', schema);
+
+            Model.create(1, function (error) {
+                assert.ok(error);
+                assert.equal(error.name, 'ObjectParameterError');
+                done();
             });
         });
 

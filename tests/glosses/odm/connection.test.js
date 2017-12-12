@@ -57,7 +57,7 @@ describe("connections:", () => {
                 }).
                 then(() => {
                     return mongoose.disconnect().then(() => {
-                        done(); 
+                        done();
                     });
                 }).
                 catch(done);
@@ -110,13 +110,12 @@ describe("connections:", () => {
             it("disconnected (gh-5498) (gh-5524)", function (done) {
                 this.timeout(25000);
 
-                let conn;
                 let numConnected = 0;
                 let numDisconnected = 0;
                 let numReconnected = 0;
                 let numReconnect = 0;
                 let numClose = 0;
-                conn = mongoose.createConnection("mongodb://localhost:27000/mongoosetest", {
+                const conn = mongoose.createConnection("mongodb://localhost:27000/mongoosetest", {
                     useMongoClient: true
                 });
 
@@ -146,8 +145,8 @@ describe("connections:", () => {
                     then(() => {
                         return new Promise(((resolve) => {
                             setTimeout(() => {
- resolve(); 
-}, 50);
+                                resolve();
+                            }, 50);
                         }));
                     }).
                     then(() => {
@@ -162,8 +161,8 @@ describe("connections:", () => {
                     then(() => {
                         return new Promise(((resolve) => {
                             setTimeout(() => {
- resolve(); 
-}, 2000);
+                                resolve();
+                            }, 2000);
                         }));
                     }).
                     then(() => {
@@ -182,12 +181,11 @@ describe("connections:", () => {
             it("reconnectFailed (gh-4027)", function (done) {
                 this.timeout(25000);
 
-                let conn;
                 let numReconnectFailed = 0;
                 let numConnected = 0;
                 let numDisconnected = 0;
                 let numReconnected = 0;
-                conn = mongoose.createConnection("mongodb://localhost:27000/mongoosetest", {
+                const conn = mongoose.createConnection("mongodb://localhost:27000/mongoosetest", {
                     useMongoClient: true,
                     reconnectTries: 3,
                     reconnectInterval: 100
@@ -214,8 +212,8 @@ describe("connections:", () => {
                     then(() => {
                         return new Promise(((resolve) => {
                             setTimeout(() => {
- resolve(); 
-}, 100);
+                                resolve();
+                            }, 100);
                         }));
                     }).
                     then(() => {
@@ -226,8 +224,8 @@ describe("connections:", () => {
                     then(() => {
                         return new Promise(((resolve) => {
                             setTimeout(() => {
- resolve(); 
-}, 400);
+                                resolve();
+                            }, 400);
                         }));
                     }).
                     then(() => {
@@ -241,8 +239,8 @@ describe("connections:", () => {
                     then(() => {
                         return new Promise(((resolve) => {
                             setTimeout(() => {
- resolve(); 
-}, 2000);
+                                resolve();
+                            }, 2000);
                         }));
                     }).
                     then(() => {
@@ -348,7 +346,7 @@ describe("connections:", () => {
                 }).
                 then((collections) => {
                     const names = collections.map((c) => {
-                        return c.name; 
+                        return c.name;
                     });
                     assert.ok(names.indexOf("gh5712") !== -1);
                     assert.ok(collections[names.indexOf("gh5712")].options.capped);
@@ -359,7 +357,7 @@ describe("connections:", () => {
                 }).
                 then((collections) => {
                     const names = collections.map((c) => {
-                        return c.name; 
+                        return c.name;
                     });
                     assert.ok(names.indexOf("gh5712") !== -1);
                 });
@@ -519,14 +517,14 @@ describe("connections:", () => {
                             assert.ok(db1 !== db.db);
                             assert.ok(db1.serverConfig.port !== db.db.serverConfig.port);
 
-                            var port2 = db.port;
-                            var db2 = db.db;
+                            const port2 = db.port;
+                            const db2 = db.db;
 
-                            db.close(function (err) {
+                            db.close((err) => {
                                 if (err) {
                                     return done(err);
                                 }
-                                db.open(mongod, function (err) {
+                                db.open(mongod, (err) => {
                                     if (err) {
                                         return done(err);
                                     }
@@ -1109,7 +1107,7 @@ describe("connections:", () => {
 
         it("should occur without hanging when password with special chars is used (gh-460)", function (done) {
             this.timeout(1000);
-            var db = mongoose.createConnection("mongodb://aaron:ps#w@localhost/fake?connectTimeoutMS=500", (err) => {
+            const db = mongoose.createConnection("mongodb://aaron:ps#w@localhost/fake?connectTimeoutMS=500", (err) => {
                 assert.ok(err);
                 db.close();
                 done();
@@ -1535,15 +1533,15 @@ describe("connections:", () => {
 
                         m2.findById(i2.id, (err, item2) => {
                             assert.ifError(err);
-                            assert.equal('this is another body', item2.body);
+                            assert.equal("this is another body", item2.body);
                             assert.equal(2, item2.thing);
 
                             // validate the doc doesn't exist in the other db
-                            m1.findById(i2.id, function (err, nothing) {
+                            m1.findById(i2.id, (err, nothing) => {
                                 assert.ifError(err);
                                 assert.strictEqual(null, nothing);
 
-                                m2.findById(i1.id, function (err, nothing) {
+                                m2.findById(i1.id, (err, nothing) => {
                                     assert.ifError(err);
                                     assert.strictEqual(null, nothing);
 

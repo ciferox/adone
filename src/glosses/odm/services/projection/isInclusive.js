@@ -1,3 +1,5 @@
+const isDefiningProjection = require("./isDefiningProjection");
+
 const {
     is
 } = adone;
@@ -17,7 +19,7 @@ module.exports = function isInclusive(projection) {
         const prop = props[i];
         // If field is truthy (1, true, etc.) and not an object, then this
         // projection must be inclusive. If object, assume its $meta, $slice, etc.
-        if (typeof projection[prop] !== "object" && Boolean(projection[prop])) {
+        if (isDefiningProjection(projection[prop]) && Boolean(projection[prop])) {
             return true;
         }
     }

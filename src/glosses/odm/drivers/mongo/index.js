@@ -1,9 +1,9 @@
-const mongodb = require("mongodb");
-const ReadPref = mongodb.ReadPreference;
-
 const {
-    is
+    is,
+    // database: { mongo }
 } = adone;
+
+const mongo = require("mongodb");
 
 /*!
  * Converts arguments to ReadPrefs the driver
@@ -13,13 +13,13 @@ const {
  * @param {Array} [tags]
  */
 
-module.exports = function readPref(pref, tags) {
+exports.ReadPreference = (pref, tags) => {
     if (is.array(pref)) {
         tags = pref[1];
         pref = pref[0];
     }
 
-    if (pref instanceof ReadPref) {
+    if (pref instanceof mongo.ReadPreference) {
         return pref;
     }
 
@@ -41,5 +41,8 @@ module.exports = function readPref(pref, tags) {
             break;
     }
 
-    return new ReadPref(pref, tags);
+    return new mongo.ReadPreference(pref, tags);
 };
+
+exports.Binary = mongo.Binary;
+exports.ObjectId = mongo.ObjectId;

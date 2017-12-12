@@ -15,37 +15,37 @@ describe("database", "mongo", "QueryBuilder", "util", () => {
             done();
         });
 
-        it("clones constructors named ObjectID", (done) => {
-            function ObjectID(id) {
+        it("clones constructors named ObjectId", (done) => {
+            function ObjectId(id) {
                 this.id = id;
             }
 
-            const o1 = new ObjectID("1234");
+            const o1 = new ObjectId("1234");
             const o2 = util.clone(o1);
 
-            assert.ok(o2 instanceof ObjectID);
+            assert.ok(o2 instanceof ObjectId);
             done();
         });
 
         it.skip("optionally clones ObjectId constructors using its clone method", (done) => {
-            function ObjectID(id) {
+            function ObjectId(id) {
                 this.id = id;
                 this.cloned = false;
             }
 
-            ObjectID.prototype.clone = function () {
-                const ret = new ObjectID(this.id);
+            ObjectId.prototype.clone = function () {
+                const ret = new ObjectId(this.id);
                 ret.cloned = true;
                 return ret;
             };
 
             const id = 1234;
-            const o1 = new ObjectID(id);
+            const o1 = new ObjectId(id);
             assert.equal(id, o1.id);
             assert.equal(false, o1.cloned);
 
             const o2 = util.clone(o1);
-            assert.ok(o2 instanceof ObjectID);
+            assert.ok(o2 instanceof ObjectId);
             assert.equal(id, o2.id);
             assert.ok(o2.cloned);
             done();

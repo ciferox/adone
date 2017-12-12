@@ -45,7 +45,36 @@ describe("schematype", () => {
                     }
                 });
             });
+        });
 
+        it("strictBool schema option", (done) => {
+            const db = start();
+            const s1 = new Schema({ b: { type: Boolean } }, { strictBool: true });
+            const M1 = db.model("StrictBoolTrue", s1);
+            db.close();
+
+            const strictValues = [true, false, "true", "false", 0, 1, "0", "1"];
+
+            strictValues.forEach((value) => {
+                const doc = new M1();
+                doc.b = value;
+                doc.validate((error) => {
+                    if (error) {
+                        // test fails as soon as one value fails
+                        return done(error);
+                    }
+                });
+            });
+
+            const doc = new M1();
+            doc.b = "Not a boolean";
+            doc.validate((error) => {
+                if (error) {
+                    done();
+                } else {
+                    done(new Error("ValidationError expected"));
+                }
+            });
         });
     });
 });

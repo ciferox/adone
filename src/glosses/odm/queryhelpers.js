@@ -1,3 +1,4 @@
+const isDefiningProjection = require("./services/projection/isDefiningProjection");
 const utils = require("./utils");
 
 const {
@@ -93,7 +94,8 @@ exports.applyPaths = function applyPaths(fields, schema) {
                 continue;
             }
             field = fields[keys[ki]];
-            if (typeof field === "object" && field && field.$slice) {
+            // Skip `$meta` and `$slice`
+            if (!isDefiningProjection(field)) {
                 continue;
             }
             exclude = field === 0;
@@ -161,7 +163,9 @@ exports.applyPaths = function applyPaths(fields, schema) {
         stack.push(schema);
 
         schema.eachPath((path, type) => {
-            if (prefix) { path = prefix + '.' + path; }
+            if (prefix) {
+                path = `${prefix}.${path}`;
+            }
 
             analyzePath(path, type);
 

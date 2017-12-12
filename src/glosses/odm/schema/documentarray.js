@@ -90,7 +90,9 @@ const scopePaths = function (array, fields, init) {
  */
 export default class DocumentArray extends ArrayType {
     constructor(key, schema, options) {
-        super(key, _createConstructor(schema, options), options);
+        const EmbeddedDocument = _createConstructor(schema, options);
+        EmbeddedDocument.prototype.$basePath = key;
+        super(key, EmbeddedDocument, options);
 
         this.schema = schema;
         this.$isMongooseDocumentArray = true;

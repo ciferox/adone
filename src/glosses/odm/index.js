@@ -23,6 +23,9 @@ const {
 } = adone;
 
 
+const driver = "./drivers/mongo";
+const Connection = require(`${driver}/connection`);
+
 /**
  * Mongoose constructor.
  *
@@ -529,20 +532,11 @@ Mongoose.prototype.__defineGetter__("connection", function () {
 });
 
 Mongoose.prototype.__defineSetter__("connection", function (v) {
-    this.connections[0] = v;
+    if (v instanceof Connection) {
+        this.connections[0] = v;
+        this.models = v.models;
+    }
 });
-
-/*!
- * Driver depentend APIs
- */
-
-const driver = global.MONGOOSE_DRIVER_PATH || "./drivers/node-mongodb-native";
-
-/*!
- * Connection
- */
-
-var Connection = require(`${driver}/connection`);
 
 /*!
  * Collection

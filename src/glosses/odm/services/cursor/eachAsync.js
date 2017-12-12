@@ -31,7 +31,7 @@ module.exports = function eachAsync(next, fn, options, callback) {
                     callback(null);
                 },
                 (error) => {
-                    callback(error);
+                    callback(error || new Error("User's @fn called reject() (without an error)."));
                 });
         } else {
             callback(null);

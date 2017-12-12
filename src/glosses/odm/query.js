@@ -1,7 +1,7 @@
 const CastError = require("./error/cast");
 const ObjectParameterError = require("./error/objectParameter");
 const PromiseProvider = require("./promise_provider");
-const QueryCursor = require("./cursor/QueryCursor");
+import QueryCursor from "./cursor/QueryCursor";
 import QueryStream from "./querystream";
 const cast = require("./cast");
 const castUpdate = require("./services/query/castUpdate");
@@ -1240,11 +1240,11 @@ export default class Query extends mquery {
             return this;
         }
 
-        if (!(options && options.constructor.name === "Object")) {
+        if (is.nil(options)) {
             return this;
         }
 
-        if (options && is.array(options.populate)) {
+        if (is.array(options.populate)) {
             const populate = options.populate;
             delete options.populate;
             const _numPopulate = populate.length;
@@ -1571,9 +1571,10 @@ export default class Query extends mquery {
 
         if (mquery.canMerge(conditions)) {
             this.merge(conditions);
+            prepareDiscriminatorCriteria(this);
+        } else if (!is.nil(conditions)) {
+            this.error(new ObjectParameterError(conditions, "filter", "find"));
         }
-
-        prepareDiscriminatorCriteria(this);
 
         // if we don't have a callback, then just return the query object
         if (!callback) {
@@ -1762,18 +1763,17 @@ export default class Query extends mquery {
 
         if (mquery.canMerge(conditions)) {
             this.merge(conditions);
+
+            prepareDiscriminatorCriteria(this);
+
+            try {
+                this.cast(this.model);
+                this.error(null);
+            } catch (err) {
+                this.error(err);
+            }
         } else if (!is.nil(conditions)) {
-            throw new Error(`Invalid argument to findOne(): ${
-                util.inspect(conditions)}`);
-        }
-
-        prepareDiscriminatorCriteria(this);
-
-        try {
-            this.cast(this.model);
-            this.error(null);
-        } catch (err) {
-            this.error(err);
+            this.error(new ObjectParameterError(conditions, "filter", "findOne"));
         }
 
         if (!callback) {

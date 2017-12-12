@@ -1916,7 +1916,7 @@ describe("document", () => {
             const topLevelSchema = new Schema({
                 embedded: embeddedSchema
             });
-            
+
             const MyModel = db.model("gh5807", topLevelSchema);
 
             return MyModel.create({}).then((doc) => {
@@ -3915,6 +3915,43 @@ describe("document", () => {
                 catch(done);
         });
 
+        it("runs validate hooks on arrays subdocs if not directly modified (gh-5861)", (done) => {
+            const childSchema = new Schema({
+                name: { type: String },
+                friends: [{ type: String }]
+            });
+            let count = 0;
+
+            childSchema.pre("validate", (next) => {
+                ++count;
+                next();
+            });
+
+            const parentSchema = new Schema({
+                name: { type: String },
+                children: [childSchema]
+            });
+
+            const Parent = db.model("gh5861", parentSchema);
+
+            const p = new Parent({
+                name: "Mufasa",
+                children: [{
+                    name: "Simba",
+                    friends: ["Pumbaa", "Timon", "Nala"]
+                }]
+            });
+
+            p.save().then((p) => {
+                assert.equal(count, 1);
+                p.children[0].friends.push("Rafiki");
+                return p.save();
+            }).then(() => {
+                assert.equal(count, 2);
+                done();
+            }).catch(done);
+        });
+
         it("does not overwrite when setting nested (gh-4793)", (done) => {
             const grandchildSchema = new mongoose.Schema();
             grandchildSchema.method({
@@ -5003,6 +5040,7 @@ describe("document", () => {
                 assert.ifError(error);
                 const child = doc.children.id(doc.children[0]._id);
                 child.phoneNumber = "345";
+                assert.equal(contexts.length, 1);
                 doc.save((error) => {
                     assert.ifError(error);
                     assert.equal(contexts.length, 2);
