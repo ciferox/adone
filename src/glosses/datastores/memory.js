@@ -1,4 +1,3 @@
-const setImmediate = require("async/setImmediate");
 const asyncFilter = require("./utils").asyncFilter;
 const asyncSort = require("./utils").asyncSort;
 

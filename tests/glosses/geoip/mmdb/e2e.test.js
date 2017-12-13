@@ -1,5 +1,5 @@
 describe("geoip", "mmdb", "geoip", () => {
-    const { geoip: { mmdb }, net: { address: { IP6 } }, std: { assert } } = adone;
+    const { geoip: { mmdb }, net: { ip: { IP6 } }, std: { assert } } = adone;
 
     const fixtures = new adone.fs.Directory(__dirname, "fixtures");
     const source = fixtures.getDirectory("source");

@@ -1,8 +1,7 @@
-const { is } = adone;
-const IP4 = adone.net.address.IP4;
-const IP6 = adone.net.address.IP6;
-const v6helpers = adone.net.address.v6helpers;
-
+const {
+    is,
+    net: { ip: { IP4, IP6, v6helpers } }
+} = adone;
 
 const valid4 = [
     {
@@ -2221,6 +2220,26 @@ const addressIs = (addressString, descriptors) => {
                     expect(re.test(addressString)).to.equal(true);
                     expect(reSubstring.test(`abc ${addressString} def`)).to.equal(true);
                 });
+
+                it("converts to a byte array and back", () => {
+                    const byteArray = address6.toByteArray();
+
+                    assert.isAtMost(byteArray.length, 16);
+
+                    const converted = IP6.fromByteArray(byteArray);
+
+                    assert.equal(address6.correctForm(), converted.correctForm());
+                });
+
+                it("converts to an unsigned byte array and back", () => {
+                    const byteArray = address6.toUnsignedByteArray();
+
+                    assert.isAtMost(byteArray.length, 16);
+
+                    const converted = IP6.fromUnsignedByteArray(byteArray);
+
+                    assert.equal(address6.correctForm(), converted.correctForm());
+                });
             }
 
             if (descriptor === "invalid-ipv4") {
@@ -2298,7 +2317,7 @@ const loadJsonBatch = (addresses, classes, noMerge) => {
     });
 };
 
-describe("net", "address", () => {
+describe("net", "ip", () => {
     describe("Valid IPv4 addresses", () => {
         loadJsonBatch(valid4, ["valid-ipv4"]);
         loadJsonBatch(valid4, ["invalid-ipv6"], true);
@@ -2856,12 +2875,13 @@ describe("net", "address", () => {
             });
 
             describe("Address from an IPv4 address", () => {
-                const obj = IP6.fromIP4("192.168.0.1");
+                const obj = IP6.fromIP4("192.168.0.1/30");
 
                 it("should parse correctly", () => {
                     expect(obj.valid).to.equal(true);
                     expect(obj.correctForm()).to.equal("::ffff:c0a8:1");
                     expect(obj.to4in6()).to.equal("::ffff:192.168.0.1");
+                    expect(obj.subnetMask).to.equal(126);
                 });
 
                 it("should generate a 6to4 address", () => {

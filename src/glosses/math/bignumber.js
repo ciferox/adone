@@ -347,12 +347,12 @@ BigNumber.prototype.toBuffer = function (opts = {}) {
 
     // zero-pad the hex string so the chunks are all `size` long
     while (hex.length < 2 * len) {
-        hex = `0${hex}`;  // omg
+        hex = `0${hex}`; // omg
     }
 
     const hx = hex.split(new RegExp(`(.{${2 * size}})`)).filter((s) => s.length > 0);
 
-    hx.forEach((chunk, i) => {  // todo
+    hx.forEach((chunk, i) => { // todo
         for (let j = 0; j < size; j++) {
             const ix = i * size + (endian === "big" ? j : size - j - 1);
             buf[ix] = parseInt(chunk.slice(j * 2, j * 2 + 2), 16);

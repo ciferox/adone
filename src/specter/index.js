@@ -22,7 +22,7 @@ class Specter {
                 if (!PROTOCOLS.includes(url.protocol)) {
                     throw new adone.x.NotSupported(`Not supported protocol: ${url.protocol}`);
                 }
-                const hostname = await adone.net.address.lookup(url.hostname);
+                const hostname = await adone.net.ip.lookup(url.hostname);
 
                 let port;
                 if (url.port === "") {

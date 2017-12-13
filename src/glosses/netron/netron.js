@@ -55,9 +55,9 @@ class Gate {
                 for (const addr of access.ips) {
                     let ipAddr;
                     if (is.ip4(addr)) {
-                        ipAddr = new net.address.IP4(addr).toBigNumber();
+                        ipAddr = new net.ip.IP4(addr).toBigNumber();
                     } else if (is.ip6(addr)) {
-                        ipAddr = new net.address.IP6(addr).toBigNumber();
+                        ipAddr = new net.ip.IP6(addr).toBigNumber();
                     } else {
                         throw new x.NotValid(`Address or subnet '${addr}' is not valid`);
                     }
@@ -280,9 +280,9 @@ export default class Netron extends GenesisNetron {
             const peerAddress = peer.getRemoteAddress().address;
             let peerIpBn;
             if (is.ip4(peerAddress)) {
-                peerIpBn = new net.address.IP4(peerAddress).toBigNumber();
+                peerIpBn = new net.ip.IP4(peerAddress).toBigNumber();
             } else if (is.ip6(peerAddress)) {
-                peerIpBn = new net.address.IP6(peerAddress).toBigNumber();
+                peerIpBn = new net.ip.IP6(peerAddress).toBigNumber();
             } else {
                 throw new x.Unknown(`Unknown address: ${peerAddress}`);
             }

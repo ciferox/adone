@@ -91,7 +91,7 @@ export default class Reader {
     scan4(callback) {
         const { nodeByteSize, nodeCount } = this.metadata;
         const toip = (address, subnet) => {
-            return adone.net.address.IP4.fromBitSet(address, subnet);
+            return adone.net.ip.IP4.fromBitSet(address, subnet);
         };
         const scanner = (address, bit, nodeNumber) => {
             if (bit === 32) {
@@ -122,7 +122,7 @@ export default class Reader {
     scan6(callback) {
         const { nodeByteSize, nodeCount } = this.metadata;
         const toip = (address, subnet) => {
-            return adone.net.address.IP6.fromBitSet(address, subnet);
+            return adone.net.ip.IP6.fromBitSet(address, subnet);
         };
         const scanner = (address, bit, nodeNumber) => {
             if (bit === 128) {

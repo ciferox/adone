@@ -260,7 +260,7 @@ adone.lazify({
                 }
             }
         } else if (type === 6) {
-            const addr = new adone.net.address.IP6(str);
+            const addr = new adone.net.ip.IP6(str);
             let b = 0;
             let group;
             if (!addr.valid) {

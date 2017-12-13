@@ -216,12 +216,12 @@ export class Client extends EventEmitter {
         switch (adone.std.net.isIP(this._dstaddr)) {
             case 4: {
                 header.writeUInt8(0x01);
-                header.write(Buffer.from(new adone.net.address.IP4(this._dstaddr).toArray()));
+                header.write(Buffer.from(new adone.net.ip.IP4(this._dstaddr).toArray()));
                 break;
             }
             case 6: {
                 header.writeUInt8(0x04);
-                header.write(Buffer.from(new adone.net.address.IP6(this._dstaddr).toByteArray()));
+                header.write(Buffer.from(new adone.net.ip.IP6(this._dstaddr).toByteArray()));
                 break;
             }
             default: {

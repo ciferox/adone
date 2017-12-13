@@ -1,5 +1,5 @@
 describe("geoip", "mmdb", "Generator", () => {
-    const { net: { address: { IP4, IP6, IPRange } }, geoip: { mmdb: { __: { Reader }, Generator } }, util } = adone;
+    const { net: { ip: { IP4, IP6, IPRange } }, geoip: { mmdb: { __: { Reader }, Generator } }, util } = adone;
 
     for (const recordSize of [24, 28, 32]) {
         describe(`record size of ${recordSize}`, () => {

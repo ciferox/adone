@@ -305,10 +305,15 @@
                 "index": "glosses/net/index",
                 "src": "glosses/net/**/*",
                 "namespace": {
-                    "address": {
+                    "ip": {
                         "description": "Some usefull utilites for manipulating of IPv4/IPv6 addresses",
-                        "index": "glosses/net/address/index",
-                        "src": "glosses/net/address/**/*"
+                        "index": "glosses/net/ip/index",
+                        "src": "glosses/net/ip/**/*"
+                    },
+                    "dns": {
+                        "description": "DNS utilites",
+                        "index": "glosses/net/dns/index",
+                        "src": "glosses/net/dns/**/*"
                     },
                     "http": {
                         "description": "Implementation of http client/server",

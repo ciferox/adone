@@ -1,17 +1,20 @@
-const { net: { address }, std: { net } } = adone;
+const {
+    net: { ip },
+    std: { net }
+} = adone;
 
 export default function splitRange(startAddress, endAddress) {
     let Cls;
-    if (startAddress instanceof address.IP4) {
-        Cls = address.IP4;
-    } else if (startAddress instanceof address.IP6) {
-        Cls = address.IP6;
+    if (startAddress instanceof ip.IP4) {
+        Cls = ip.IP4;
+    } else if (startAddress instanceof ip.IP6) {
+        Cls = ip.IP6;
     } else if (net.isIPv4(startAddress)) {
-        Cls = address.IP4;
+        Cls = ip.IP4;
         startAddress = new Cls(startAddress);
         endAddress = new Cls(endAddress);
     } else {
-        Cls = address.IP6;
+        Cls = ip.IP6;
         startAddress = new Cls(startAddress);
         endAddress = new Cls(endAddress);
     }

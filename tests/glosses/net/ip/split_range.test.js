@@ -1,6 +1,9 @@
-describe("net", "address", "splitRange", () => {
-    const { net: { address: { IP4, IP6, splitRange } }, util } = adone;
+const {
+    net: { ip: { IP4, IP6, splitRange } },
+    util
+} = adone;
 
+describe("net", "ip", "splitRange", () => {
     describe("IPv4", () => {
         const cases = [
             ["192.168.1.0", "192.168.1.255", [

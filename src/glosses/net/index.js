@@ -4,14 +4,7 @@ adone.lazify({
     Socket: "./socket",
     Server: "./server",
     ssh: "./ssh",
-    address: () => adone.lazify({
-        IP4: ["./address", (mod) => mod.IP4],
-        IP6: ["./address", (mod) => mod.IP6],
-        IPRange: ["./address", (mod) => mod.IPRange],
-        v6helpers: "./address/v6helpers",
-        lookup: () => adone.promise.promisify(adone.std.dns.lookup),
-        splitRange: "./address/split_range"
-    }, null, require),
+    ip: "./ip",
     proxy: () => adone.lazify({
         socks: "./proxies/socks",
         http: "./proxies/http",
@@ -21,5 +14,6 @@ adone.lazify({
     http: "./http",
     mail: "./mail",
     mqtt: "./mqtt",
-    amqp: "./amqp"
+    amqp: "./amqp",
+    dns: "./dns"
 }, adone.asNamespace(exports), require);

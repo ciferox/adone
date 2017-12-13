@@ -1,6 +1,9 @@
-describe("net", "address", "IPRange", () => {
-    const { net: { address: { IPRange, IP4, IP6 } }, util } = adone;
+const {
+    net: { ip: { IPRange, IP4, IP6 } },
+    util
+} = adone;
 
+describe("net", "ip", "IPRange", () => {
     describe("v4", () => {
         it("should describe ipv4 range", () => {
             const range = new IPRange("192.168.1.23", "192.168.1.122");

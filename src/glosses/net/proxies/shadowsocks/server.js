@@ -135,7 +135,7 @@ export class Parser extends EventEmitter {
                 return address.toString();
             }
             case 0x04: {
-                return adone.net.address.IP6.fromUnsignedByteArray(address).address;
+                return adone.net.ip.IP6.fromUnsignedByteArray(address).address;
             }
         }
     }

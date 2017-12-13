@@ -1,6 +1,5 @@
 const fs = require("graceful-fs");
 const glob = require("glob");
-const setImmediate = require("async/setImmediate");
 const waterfall = require("async/series");
 const each = require("async/each");
 const mkdirp = require("mkdirp");

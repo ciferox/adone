@@ -336,8 +336,8 @@ export default class Generator {
             subnet += 96;
         }
         const netaddr = this.metadata.ipVersion === 4
-            ? new adone.net.address.IP4(address)
-            : new adone.net.address.IP6(address);
+            ? new adone.net.ip.IP4(address)
+            : new adone.net.ip.IP6(address);
         this.tree.insertSubnet(netaddr.toBitSet(), subnet, data);
     }
 
@@ -348,7 +348,7 @@ export default class Generator {
         if (net.isIPv4(endIp) && this.metadata.ipVersion === 6) {
             endIp = `::${endIp}`;
         }
-        const subnets = adone.net.address.splitRange(startIp, endIp);
+        const subnets = adone.net.ip.splitRange(startIp, endIp);
         for (const subnet of subnets) {
             this.tree.insertSubnet(subnet.toBitSet(), subnet.subnetMask, data);
         }
