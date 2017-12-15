@@ -1,6 +1,11 @@
-const { is, std, noop, collection } = adone;
+const {
+    is,
+    std,
+    noop,
+    collection
+} = adone;
 
-const util = adone.lazify({
+adone.lazify({
     matchPath: "./match_path",
     toposort: "./toposort",
     jsesc: "./jsesc",
@@ -45,6 +50,7 @@ const util = adone.lazify({
     fillRange: "./fill_range",
     toRegexRange: "./to_regex_range",
     splitString: "./split_string",
+    splitBuffer: "./split_buffer",
     match: "./match",
     arrayDiff: "./array_diff",
     retry: "./retry",

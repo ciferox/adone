@@ -18,8 +18,6 @@ export const random = (min = 0, max = 0xFFFFFFFF) => {
     return min + (val % (max - min));
 };
 
-export const hash = (algo, data, encoding = "hex") => adone.std.crypto.createHash(algo).update(data).digest(encoding);
-
 export const max = (array, func = adone.identity) => {
     if (!array.length) {
         return undefined;

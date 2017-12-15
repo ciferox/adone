@@ -374,6 +374,11 @@
                     }
                 }
             },
+            "netron2": {
+                "description": "Implementation of Netron 2",
+                "index": "glosses/netron2/index",
+                "src": "glosses/netron2/**/*"
+            },
             "netscan": {
                 "description": "Network scanning utilites",
                 "index": "glosses/netscan/index",

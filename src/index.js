@@ -337,6 +337,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         multi: "./glosses/multi",
         net: "./glosses/net",
         netron: "./glosses/netron",
+        netron2: "./glosses/netron2",
         metrics: "./glosses/metrics",
         system: "./glosses/system",
         hardware: "./glosses/hardware",

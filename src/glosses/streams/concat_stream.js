@@ -36,8 +36,8 @@ export default class ConcatStream extends adone.std.stream.Writable {
     }
 
     inferEncoding(buff) {
-        const firstBuffer = buff === undefined ? this.body[0] : buff;
-        if (Buffer.isBuffer(firstBuffer)) {
+        const firstBuffer = is.undefined(buff) ? this.body[0] : buff;
+        if (is.buffer(firstBuffer)) {
             return "buffer";
         }
         if (is.uint8Array(firstBuffer)) {

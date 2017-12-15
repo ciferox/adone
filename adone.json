@@ -144,6 +144,11 @@
                     "$src": "src/glosses/netron/**/*.js",
                     "$dst": "lib/glosses/netron"
                 },
+                "netron2": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/netron2/**/*.js",
+                    "$dst": "lib/glosses/netron2"
+                },
                 "netscan": {
                     "$task": "adoneTranspile",
                     "$src": "src/glosses/netscan/**/*.js",

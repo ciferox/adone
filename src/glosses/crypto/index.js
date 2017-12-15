@@ -8,5 +8,7 @@ adone.lazify({
     formatEcdsa: "./ecdsa_format",
     jwa: "./jwa",
     jws: "./jws",
-    jwt: "./jwt"
+    jwt: "./jwt",
+    secp256k1: "./secp256k1",
+    hash: "./hashes"
 }, adone.asNamespace(exports), require);

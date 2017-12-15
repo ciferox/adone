@@ -24,5 +24,6 @@ const stream = adone.lazify({
     core: "./core",
     CoreStream: () => stream.core.CoreStream,
     AssertByteCountStream: "./assert_byte_count",
-    pull: "./pull"
+    pull: "./pull",
+    Multiplex: "./multiplex"
 }, adone.asNamespace(exports), require);

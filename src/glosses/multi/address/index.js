@@ -9,7 +9,8 @@ const __ = adone.lazify({
     convert: ["./convert", (mod) => mod.convert],
     toBuffer: ["./convert", (mod) => mod.toBuffer],
     toString: ["./convert", (mod) => mod.toString],
-    protocols: "./protocols_table"
+    protocols: "./protocols_table",
+    validator: "./validator"
 }, adone.asNamespace(exports), require);
 
 const NotImplemented = new Error("Sorry, Not Implemented Yet.");

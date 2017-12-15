@@ -6,7 +6,8 @@ const {
 const __ = adone.lazify({
     names: ["./constants", (mod) => mod.names],
     codes: ["./constants", (mod) => mod.codes],
-    defaultLengths: ["./constants", (mod) => mod.defaultLengths]
+    defaultLengths: ["./constants", (mod) => mod.defaultLengths],
+    async: "./async"
 }, adone.asNamespace(exports), require);
 
 

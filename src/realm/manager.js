@@ -90,7 +90,7 @@ export default class RealmManager extends task.Manager {
     }
 
     static async create() {
-        const id = adone.math.hash("sha256", `${await util.machineId(true)}${adone.realm.config.realm}`);
+        const id = adone.crypto.hash.sha256(`${await util.machineId(true)}${adone.realm.config.realm}`, "hex");
         const manager = new adone.realm.Manager(id);
 
         // Add default tasks
