@@ -531,7 +531,7 @@ describe("model", () => {
                 });
             });
 
-            it("copies query hooks (gh-5147)", (done) => {
+            it.todo("copies query hooks (gh-5147)", (done) => {
                 const options = { discriminatorKey: "kind" };
 
                 const eventSchema = new mongoose.Schema({ time: Date }, options);
@@ -790,7 +790,7 @@ describe("model", () => {
                                 }
                             }
                         }).then(() => {
-                            return doc; 
+                            return doc;
                         });
                     }).
                     then((doc) => {

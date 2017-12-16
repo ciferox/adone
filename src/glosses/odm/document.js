@@ -42,7 +42,6 @@ const {
  */
 const init = function (self, obj, doc, prefix) {
     prefix = prefix || "";
-
     const keys = Object.keys(obj);
     let len = keys.length;
     let schema;
@@ -61,8 +60,7 @@ const init = function (self, obj, doc, prefix) {
             return;
         }
 
-        if (!schema && utils.isObject(obj[i]) &&
-            (!obj[i].constructor || utils.getFunctionName(obj[i].constructor) === "Object")) {
+        if (!schema && utils.isObject(obj[i]) && (!obj[i].constructor || utils.getFunctionName(obj[i].constructor) === "Object")) {
             // assume nested object
             if (!doc[i]) {
                 doc[i] = {};
@@ -548,8 +546,7 @@ export default class Document {
 
         // handle docs with populated paths
         // If doc._id is not null or undefined
-        if (!is.null(doc._id) && !is.undefined(doc._id) &&
-            opts && opts.populated && opts.populated.length) {
+        if (!is.null(doc._id) && !is.undefined(doc._id) && opts && opts.populated && opts.populated.length) {
             const id = String(doc._id);
             for (let i = 0; i < opts.populated.length; ++i) {
                 const item = opts.populated[i];

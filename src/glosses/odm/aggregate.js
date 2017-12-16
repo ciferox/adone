@@ -555,23 +555,28 @@ export default class Aggregate {
 
             prepareDiscriminatorPipeline(_this);
 
-            _this._model
-                .collection
-                .aggregate(_this._pipeline, _this.options || {})
-                .explain((error, result) => {
-                    if (error) {
-                        if (callback) {
-                            callback(error);
-                        }
-                        reject(error);
-                        return;
-                    }
+            const opts = _this.options || {};
+            opts.cursor = true;
 
+            const p = _this._model
+                .collection
+                .aggregate(_this._pipeline, opts)
+                .explain();
+
+            adone.promise.nodeify(p, (error, result) => {
+                if (error) {
                     if (callback) {
-                        callback(null, result);
+                        callback(error);
                     }
-                    resolve(result);
-                });
+                    reject(error);
+                    return;
+                }
+
+                if (callback) {
+                    callback(null, result);
+                }
+                resolve(result);
+            });
         }));
     }
 
@@ -732,7 +737,6 @@ export default class Aggregate {
         }
         const _this = this;
         const model = this._model;
-        const Promise = PromiseProvider.get();
         const options = utils.clone(this.options || {});
         const pipeline = this._pipeline;
         const collection = this._model.collection;
@@ -740,7 +744,7 @@ export default class Aggregate {
         if (options && options.cursor) {
             if (options.cursor.async) {
                 delete options.cursor.async;
-                return new Promise.ES6(((resolve) => {
+                return new Promise((resolve) => {
                     if (!collection.buffer) {
                         process.nextTick(() => {
                             const cursor = collection.aggregate(pipeline, options);
@@ -756,7 +760,7 @@ export default class Aggregate {
                         resolve(cursor);
                         callback && callback(null, cursor);
                     });
-                }));
+                });
             } else if (options.cursor.useMongooseAggCursor) {
                 delete options.cursor.useMongooseAggCursor;
                 return new AggregationCursor(this);
@@ -766,7 +770,7 @@ export default class Aggregate {
             return cursor;
         }
 
-        return new Promise.ES6(((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             if (!pipeline.length) {
                 const err = new Error("Aggregate has empty pipeline");
                 if (callback) {
@@ -789,7 +793,9 @@ export default class Aggregate {
                     });
                 }
 
-                collection.aggregate(pipeline, options, (error, result) => {
+                // TODO: fix this, remove toArray, our driver works differently
+
+                adone.promise.nodeify(collection.aggregate(pipeline, options), (error, result) => {
                     const _opts = { error };
                     model.hooks.execPost("aggregate", _this, [result], _opts, (error, result) => {
                         if (error) {
@@ -807,7 +813,7 @@ export default class Aggregate {
                     });
                 });
             });
-        }));
+        });
     }
 
     /**

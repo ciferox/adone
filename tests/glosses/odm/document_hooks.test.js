@@ -679,7 +679,7 @@ describe("document: hooks:", () => {
     });
 
     describe("gh-3284", () => {
-        it("should call pre hooks on nested subdoc", function (done) {
+        it("should call pre hooks on nested subdoc", async () => {
             const _this = this;
 
             const childSchema = new Schema({
@@ -712,15 +712,12 @@ describe("document: hooks:", () => {
                 }
             });
 
-            parent.save().then(() => {
-                return Parent.findById(parent._id);
-            }).then(() => {
-                db.close();
-                assert.ok(_this.preinitCalled);
-                assert.ok(_this.prevalidateCalled);
-                assert.ok(_this.presaveCalled);
-                done();
-            });
+            await parent.save();
+            await Parent.findById(parent._id);
+            db.close();
+            assert.ok(_this.preinitCalled);
+            assert.ok(_this.prevalidateCalled);
+            assert.ok(_this.presaveCalled);
         });
     });
 

@@ -28,15 +28,15 @@ export default class SchemaBuffer extends SchemaType {
     }
 
     /**
- * Check if the given value satisfies a required validator. To satisfy a
- * required validator, a buffer must not be null or undefined and have
- * non-zero length.
- *
- * @param {Any} value
- * @param {adone.odm.Document} doc
- * @return {Boolean}
- * @api public
- */
+     * Check if the given value satisfies a required validator. To satisfy a
+     * required validator, a buffer must not be null or undefined and have
+     * non-zero length.
+     *
+     * @param {Any} value
+     * @param {adone.odm.Document} doc
+     * @return {Boolean}
+     * @api public
+     */
     checkRequired(value, doc) {
         if (SchemaType._isRef(this, value, doc, true)) {
             return Boolean(value);
@@ -104,10 +104,10 @@ export default class SchemaBuffer extends SchemaType {
             return value;
         } else if (value instanceof Binary) {
             ret = new MongooseBuffer(value.value(true), [this.path, doc]);
-            if (!is.number(value.sub_type)) {
+            if (!is.number(value.subType)) {
                 throw new CastError("buffer", value, this.path);
             }
-            ret._subtype = value.sub_type;
+            ret._subtype = value.subType;
             return ret;
         }
 

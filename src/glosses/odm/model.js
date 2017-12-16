@@ -307,7 +307,7 @@ const _ensureIndexes = function (model, options, callback) {
 
         indexSingleStart(indexFields, options);
         const methodName = options.createIndex ? "createIndex" : "ensureIndex";
-        model.collection[methodName](indexFields, indexOptions, utils.tick((err, name) => {
+        adone.promise.nodeify(model.collection[methodName](indexFields, indexOptions), utils.tick((err, name) => {
             indexSingleDone(err, indexFields, indexOptions, name);
             if (err) {
                 return done(err);
@@ -345,7 +345,11 @@ const _update = function (model, op, conditions, doc, options, callback) {
     } else {
         conditions = utils.clone(conditions, { retainKeyOrder: true });
     }
-    options = is.function(options) ? options : utils.clone(options);
+    if (is.function(options)) {
+        [options, callback] = [{}, options];
+    } else {
+        options = utils.clone(options);
+    }
 
     if (model.schema.options.versionKey && options && options.upsert) {
         if (options.overwrite) {
@@ -357,8 +361,11 @@ const _update = function (model, op, conditions, doc, options, callback) {
             doc.$setOnInsert[model.schema.options.versionKey] = 0;
         }
     }
-
-    return mq[op](conditions, doc, options, callback);
+    const res = mq[op](conditions, doc, options);
+    if (callback) {
+        return res.exec(callback);
+    }
+    return res;
 };
 
 
@@ -697,7 +704,7 @@ const isDoc = function (doc) {
         return false;
     }
 
-    if (doc.constructor.name === "ObjectID") {
+    if (doc.constructor.name === "ObjectId") {
         return false;
     }
 
@@ -1150,7 +1157,7 @@ export default class Model extends Document {
             }
 
             this.$__version(true, obj);
-            this.collection.insert(obj, safe, (err, ret) => {
+            adone.promise.nodeify(this.collection.insert(obj, safe), (err, ret) => {
                 if (err) {
                     _this.isNew = true;
                     _this.emit("isNew", true);
@@ -1195,7 +1202,7 @@ export default class Model extends Document {
                     }
                 }
 
-                this.collection.update(where, delta[1], safe, (err, ret) => {
+                adone.promise.nodeify(this.collection.update(where, delta[1], safe), (err, ret) => {
                     if (err) {
                         callback(err);
                         return;
@@ -1581,7 +1588,7 @@ export default class Model extends Document {
                 options.safe = _this.schema.options.safe;
             }
 
-            _this.collection.remove(where, options, (err) => {
+            adone.promise.nodeify(_this.collection.remove(where, options), (err) => {
                 if (!err) {
                     _this.$__.isDeleted = true;
                     _this.emit("remove", _this);
@@ -1876,7 +1883,7 @@ export default class Model extends Document {
             callback = this.$wrapCallback(callback);
         }
 
-        return mq.remove(conditions, callback);
+        return adone.promise.nodeify(mq.remove(conditions), callback);
     }
 
     /**
@@ -1910,7 +1917,7 @@ export default class Model extends Document {
             callback = this.$wrapCallback(callback);
         }
 
-        return mq.deleteOne(callback);
+        return adone.promise.nodeify(mq.deleteOne(), callback);
     }
 
     /**
@@ -1944,7 +1951,7 @@ export default class Model extends Document {
             callback = this.$wrapCallback(callback);
         }
 
-        return mq.deleteMany(callback);
+        return adone.promise.nodeify(mq.deleteMany(), callback);
     }
 
     /**
@@ -2016,7 +2023,7 @@ export default class Model extends Document {
             callback = this.$wrapCallback(callback);
         }
 
-        return mq.find(conditions, callback);
+        return adone.promise.nodeify(mq.find(conditions), callback);
     }
 
     /**
@@ -2148,7 +2155,11 @@ export default class Model extends Document {
             callback = this.$wrapCallback(callback);
         }
 
-        return mq.findOne(conditions, callback);
+        const res = mq.findOne(conditions);
+        if (callback) {
+            return res.exec(callback);
+        }
+        return res;
     }
 
     /**
@@ -2179,7 +2190,7 @@ export default class Model extends Document {
             callback = this.$wrapCallback(callback);
         }
 
-        return mq.count(conditions, callback);
+        return adone.promise.nodeify(mq.count(conditions), callback);
     }
 
     /**
@@ -2217,7 +2228,7 @@ export default class Model extends Document {
             callback = this.$wrapCallback(callback);
         }
 
-        return mq.distinct(field, conditions, callback);
+        return adone.promise.nodeify(mq.distinct(field, conditions), callback);
     }
 
     /**
@@ -2243,11 +2254,14 @@ export default class Model extends Document {
      * @return {Query}
      * @api public
      */
-    static where(path, val) {
-        void val; // eslint
+    static where(...args) {
         // get the mongodb collection object
         const mq = new this.Query({}, {}, this, this.collection).find({});
-        return mq.where.apply(mq, arguments);
+        if (is.function(args[args.length - 1])) {
+            const cb = args.pop();
+            return adone.promise.nodeify(mq.where(...args), cb);
+        }
+        return mq.where(...args);
     }
 
     /**
@@ -2264,9 +2278,13 @@ export default class Model extends Document {
      * @see Query.$where #query_Query-%24where
      * @api public
      */
-    static $where() {
+    static $where(...args) {
         const mq = new this.Query({}, {}, this, this.collection).find({});
-        return mq.$where.apply(mq, arguments);
+        if (is.function(args[args.length - 1])) {
+            const cb = args.pop();
+            return adone.promise.nodeify(mq.$where(...args), cb);
+        }
+        return mq.$where(...args);
     }
 
     /**
@@ -2379,7 +2397,11 @@ export default class Model extends Document {
         const mq = new this.Query({}, {}, this, this.collection);
         mq.select(fields);
 
-        return mq.findOneAndUpdate(conditions, update, options, callback);
+        const res = mq.findOneAndUpdate(conditions, update, options);
+        if (callback) {
+            return res.exec(callback);
+        }
+        return res;
     }
 
     /**
@@ -2558,7 +2580,11 @@ export default class Model extends Document {
         const mq = new this.Query({}, {}, this, this.collection);
         mq.select(fields);
 
-        return mq.findOneAndRemove(conditions, options, callback);
+        const res = mq.findOneAndRemove(conditions, options);
+        if (callback) {
+            return res.exec(callback);
+        }
+        return res;
     }
 
     /**
@@ -2734,7 +2760,9 @@ export default class Model extends Document {
                     resolve(savedDocs);
                     cb && cb.call(_this, null, savedDocs);
                 } else {
-                    resolve.apply(promise, savedDocs);
+                    // resolve.apply(promise, savedDocs);
+                    // rest args
+                    resolve(savedDocs.length === 1 ? savedDocs[0] : savedDocs);
                     if (cb) {
                         cb.apply(_this, [null].concat(savedDocs));
                     }
@@ -2838,7 +2866,7 @@ export default class Model extends Document {
                 return doc.toObject(INSERT_MANY_CONVERT_OPTIONS);
             });
 
-            _this.collection.insertMany(docObjects, options, (error, res) => {
+            adone.promise.nodeify(_this.collection.insertMany(docObjects, options), (error, res) => {
                 if (error) {
                     callback && callback(error);
                     return;
@@ -3030,7 +3058,7 @@ export default class Model extends Document {
                     return reject(error);
                 }
 
-                _this.collection.bulkWrite(ops, options, (error, res) => {
+                adone.promise.nodeify(_this.collection.bulkWrite(ops, options), (error, res) => {
                     if (error) {
                         callback && callback(error);
                         return reject(error);
@@ -3310,7 +3338,7 @@ export default class Model extends Document {
                 q = undefined;
             }
 
-            _this.collection.mapReduce(null, null, o, (err, ret, stats) => {
+            adone.promise.nodeify(_this.collection.mapReduce(null, null, o), (err, ret, stats) => {
                 if (err) {
                     callback && callback(err);
                     reject(err);
@@ -3332,14 +3360,14 @@ export default class Model extends Document {
                     return resolveToObject ? resolve({
                         model,
                         stats
-                    }) : resolve(model, stats);
+                    }) : resolve([model, stats]);
                 }
 
                 callback && callback(null, ret, stats);
                 if (resolveToObject) {
                     return resolve({ model: ret, stats });
                 }
-                resolve(ret, stats);
+                resolve([ret, stats]);
             });
         }));
     }
@@ -3399,7 +3427,7 @@ export default class Model extends Document {
         let y;
         const schema = this.schema;
 
-        return new Promise.ES6(((resolve, reject) => {
+        const p = new Promise.ES6(((resolve, reject) => {
             const handler = function (err, res) {
                 if (err) {
                     reject(err);
@@ -3407,7 +3435,7 @@ export default class Model extends Document {
                     return;
                 }
                 if (options.lean) {
-                    resolve(res.results, res.stats);
+                    resolve([res.results, res.stats]);
                     callback && callback(null, res.results, res.stats);
                     return;
                 }
@@ -3415,7 +3443,7 @@ export default class Model extends Document {
                 let count = res.results.length;
                 // if there are no results, fulfill the promise now
                 if (count === 0) {
-                    resolve(res.results, res.stats);
+                    resolve([res.results, res.stats]);
                     callback && callback(null, res.results, res.stats);
                     return;
                 }
@@ -3430,7 +3458,7 @@ export default class Model extends Document {
                         return;
                     }
                     if (--count <= 0) {
-                        resolve(res.results, res.stats);
+                        resolve([res.results, res.stats]);
                         callback && callback(null, res.results, res.stats);
                     }
                 }
@@ -3457,7 +3485,7 @@ export default class Model extends Document {
                 }
                 x = near[0];
                 y = near[1];
-                _this.collection.geoNear(x, y, options, handler);
+                adone.promise.nodeify(_this.collection.geoNear(x, y, options), handler);
             } else {
                 if (near.type !== "Point" || !is.array(near.coordinates)) {
                     error = new Error("Must pass either a legacy coordinate array or " +
@@ -3467,9 +3495,15 @@ export default class Model extends Document {
                     return;
                 }
 
-                _this.collection.geoNear(near, options, handler);
+                adone.promise.nodeify(_this.collection.geoNear(near, options), handler);
             }
         }));
+
+        if (callback) {
+            p.catch(adone.noop); // TODO: ok?
+        }
+
+        return p;
     }
 
     /**
@@ -3537,7 +3571,7 @@ export default class Model extends Document {
             callback = this.$wrapCallback(callback);
         }
 
-        aggregate.exec(callback);
+        adone.promise.nodeify(aggregate.exec(), callback);
     }
 
     /**
@@ -3577,7 +3611,7 @@ export default class Model extends Document {
 
         const _this = this;
         const Promise = PromiseProvider.get();
-        return new Promise.ES6(((resolve, reject) => {
+        const p = new Promise.ES6(((resolve, reject) => {
             let error;
             if (is.undefined(conditions) || !utils.isObject(conditions)) {
                 error = new Error("Must pass conditions to geoSearch");
@@ -3596,7 +3630,7 @@ export default class Model extends Document {
             // send the conditions in the options object
             options.search = conditions;
 
-            _this.collection.geoHaystackSearch(options.near[0], options.near[1], options, (err, res) => {
+            adone.promise.nodeify(_this.collection.geoHaystackSearch(options.near[0], options.near[1], options), (err, res) => {
                 // have to deal with driver problem. Should be fixed in a soon-ish release
                 // (7/8/2013)
                 if (err) {
@@ -3608,7 +3642,7 @@ export default class Model extends Document {
                 let count = res.results.length;
                 if (options.lean || count === 0) {
                     callback && callback(null, res.results, res.stats);
-                    resolve(res.results, res.stats);
+                    resolve([res.results, res.stats]);
                     return;
                 }
 
@@ -3623,7 +3657,7 @@ export default class Model extends Document {
 
                     if (!--count && !errSeen) {
                         callback && callback(null, res.results, res.stats);
-                        resolve(res.results, res.stats);
+                        resolve([res.results, res.stats]);
                     }
                 };
 
@@ -3634,6 +3668,12 @@ export default class Model extends Document {
                 }
             });
         }));
+
+        if (callback) {
+            p.catch(adone.noop); // TODO: ok?
+        }
+
+        return p;
     }
 
     /**
@@ -3787,7 +3827,6 @@ export default class Model extends Document {
         model.base = base;
         model.modelName = name;
         if (!(model.prototype instanceof Model)) {
-            adone.log("BUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU");
             model.__proto__ = Model;
             model.prototype.__proto__ = Model.prototype;
         }

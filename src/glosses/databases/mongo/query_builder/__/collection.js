@@ -8,8 +8,10 @@ export default class Collection {
         this.collectionName = col.collectionName;
     }
 
-    find(match, options) {
-        return this.collection.find(match, options).toArray();
+    async find(match, options) {
+        // TODO: fix that? it comes from odm...
+        const col = await this.collection.find(match, options);
+        return col.toArray();
     }
 
     findOne(match, options) {

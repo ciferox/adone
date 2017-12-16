@@ -74,7 +74,7 @@ module.exports = function (query, schema, castedDoc, options) {
     const numUpdates = updates.length;
     const validatorsToExecute = [];
     const validationErrors = [];
-    function iter(i, v) {
+    const iter = (i, v) => {
         const schemaPath = schema._getSchema(updates[i]);
         if (schemaPath) {
             // gh-4305: `_getSchema()` will report all sub-fields of a 'Mixed' path
@@ -92,11 +92,11 @@ module.exports = function (query, schema, castedDoc, options) {
                         }
                         callback(null);
                     },
-                    query,// options && options.context === "query" ? query : null,
+                    query, // options && options.context === "query" ? query : null,
                     { updateValidator: true });
             });
         }
-    }
+    };
     for (let i = 0; i < numUpdates; ++i) {
         iter(i, updatedValues[updates[i]]);
     }

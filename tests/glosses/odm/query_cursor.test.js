@@ -408,7 +408,7 @@ describe("QueryCursor", () => {
         const users = [];
         for (let i = 0; i < 100; i++) {
             users.push({
-                _id: mongoose.Types.ObjectId(),
+                _id: new mongoose.Types.ObjectId(),
                 name: `Bob${i < 10 ? "0" : ""}${i}`
             });
         }

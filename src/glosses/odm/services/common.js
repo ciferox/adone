@@ -5,14 +5,11 @@ const {
     is
 } = adone;
 
-exports.flatten = flatten;
-exports.modifiedPaths = modifiedPaths;
-
 /*!
  * ignore
  */
 
-function flatten(update, path, options) {
+const flatten = (update, path, options) => {
     let keys;
     if (update && utils.isMongooseObject(update) && !is.buffer(update)) {
         keys = Object.keys(update.toObject({ transform: false, virtuals: false }));
@@ -43,13 +40,13 @@ function flatten(update, path, options) {
     }
 
     return result;
-}
+};
 
 /*!
  * ignore
  */
 
-function modifiedPaths(update, path, result) {
+const modifiedPaths = (update, path, result) => {
     const keys = Object.keys(update || {});
     const numKeys = keys.length;
     result = result || {};
@@ -69,7 +66,7 @@ function modifiedPaths(update, path, result) {
     }
 
     return result;
-}
+};
 
 /*!
  * ignore
@@ -83,3 +80,6 @@ function shouldFlatten(val) {
         (!is.array(val) || val.length > 0) &&
         !(val instanceof Buffer);
 }
+
+exports.flatten = flatten;
+exports.modifiedPaths = modifiedPaths;

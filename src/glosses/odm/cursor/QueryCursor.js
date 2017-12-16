@@ -122,13 +122,10 @@ export default class QueryCursor extends adone.std.stream.Readable {
         const _this = this;
         const model = query.model;
         model.hooks.execPre("find", query, () => {
-            model.collection.find(query._conditions, options, (err, cursor) => {
+            Promise.resolve(model.collection.find(query._conditions, options)).then((cursor) => {
                 if (_this._error) {
                     cursor.close(() => { });
                     _this.listeners("error").length > 0 && _this.emit("error", _this._error);
-                }
-                if (err) {
-                    return _this.emit("error", err);
                 }
                 _this.cursor = cursor;
                 _this.emit("cursor", cursor);

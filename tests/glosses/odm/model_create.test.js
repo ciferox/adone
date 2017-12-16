@@ -3,7 +3,6 @@ const mongoose = adone.odm;
 const random = adone.odm.utils.random;
 const Schema = mongoose.Schema;
 const DocumentObjectId = mongoose.Types.ObjectId;
-const PromiseProvider = adone.odm.PromiseProvider;
 
 /**
  * Setup
@@ -62,7 +61,7 @@ describe("model", () => {
             });
         });
 
-        it("should not cause unhandled reject promise", (done) => {
+        it.todo("should not cause unhandled reject promise", (done) => {
             mongoose.Promise = global.Promise;
             mongoose.Promise = require("bluebird");
 
@@ -73,7 +72,6 @@ describe("model", () => {
                 const p = B.create({ _id: b._id }, (err) => {
                     assert(err);
                     setTimeout(() => {
-                        PromiseProvider.reset();
                         // perr should be null
                         done(perr);
                     }, 100);
@@ -86,9 +84,9 @@ describe("model", () => {
             });
         });
 
-        it("returns a promise", (done) => {
+        it.todo("returns a promise", (done) => {
             var p = B.create({ title: "returns promise" }, () => {
-                assert.ok(p instanceof mongoose.Promise);
+                assert.ok(p instanceof Promise);
                 done();
             });
         });
@@ -144,16 +142,16 @@ describe("model", () => {
                 p.then((doc) => {
                     assert.equal(doc.title, "optional callback");
                     done();
-                }, done).end();
+                }, done);
             });
 
             it("with more than one doc", (done) => {
                 const p = B.create({ title: "optional callback 2" }, { title: "orient expressions" });
-                p.then((doc1, doc2) => {
+                p.then(([doc1, doc2]) => {
                     assert.equal(doc1.title, "optional callback 2");
                     assert.equal(doc2.title, "orient expressions");
                     done();
-                }, done).end();
+                }, done);
             });
 
             it("with array of docs", (done) => {
@@ -161,25 +159,25 @@ describe("model", () => {
                 p.then((docs) => {
                     assert.ok(docs instanceof Array);
                     assert.equal(docs.length, 2);
-                    let doc1 = docs[0];
-                    let doc2 = docs[1];
+                    const doc1 = docs[0];
+                    const doc2 = docs[1];
                     assert.equal(doc1.title, "optional callback3");
                     assert.equal(doc2.title, "3");
                     done();
-                }, done).end();
+                }, done);
             });
 
             it("and should reject promise on error", (done) => {
                 const p = B.create({ title: "optional callback 4" });
                 p.then((doc) => {
-                    let p2 = B.create({ _id: doc._id });
+                    const p2 = B.create({ _id: doc._id });
                     p2.then(() => {
                         assert(false);
                     }, (err) => {
                         assert(err);
                         done();
-                    }).end();
-                }, done).end();
+                    });
+                }, done);
             });
 
             it("if callback is falsy, will ignore it (gh-5061)", (done) => {

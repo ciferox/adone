@@ -268,8 +268,8 @@ describe("query middleware", () => {
                         Author.find({}, (error, res) => {
                             assert.ifError(error);
                             assert.ok(res.length > 1);
-                            res.forEach(function (doc) {
-                                assert.equal(doc.author, 'updatedMany');
+                            res.forEach((doc) => {
+                                assert.equal(doc.author, "updatedMany");
                             });
                             done();
                         });

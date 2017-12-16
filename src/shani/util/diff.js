@@ -185,7 +185,7 @@ export const getDiff = (actual, expected) => {
             case "angle.bracket":
                 return styler.dim(obj);
             case "class.name": {
-                return styler.cyan(obj);
+                return styler.magenta(obj);
             }
             default: {
                 return obj;
@@ -199,6 +199,10 @@ export const getDiff = (actual, expected) => {
         if (mask.length === 1 && mask[0].end - mask[0].start === str.length) {
             // do not apply the mask if it includes the entire string
             // just show the regular diff
+            return str;
+        }
+
+        if (mask.length > str.length / 4) {
             return str;
         }
 
@@ -230,6 +234,8 @@ export const getDiff = (actual, expected) => {
 
     const circular = () => `${colorizer("[", "square.bracket")}${styler.cyan("Circular")}${colorizer("]", "square.bracket")}`;
 
+    const MAX_DEPTH = 3; // todo: customize it
+
     const stringify = (obj, level = 0, stack = []) => {
         const type = adone.util.typeOf(obj);
 
@@ -254,6 +260,10 @@ export const getDiff = (actual, expected) => {
             result += `${indent(level)}${colorizer("}", "curly.bracket")}`;
             return result;
         };
+
+        // if (level === MAX_DEPTH) {
+        //     return `${colorizer("[", "square.bracket")}${styler.cyan("DEPTH LIMIT")}${colorizer("]", "square.bracket")}`;
+        // }
 
         switch (type) {
             case "Array": {
@@ -286,9 +296,10 @@ export const getDiff = (actual, expected) => {
                 if (obj.constructor) {
                     return `${
                         colorizer("[", "square.bracket")
-                    }instance of ${colorizer(obj.constructor.name, "class.name")}${
+                    }${styler.cyan("instance of")} ${colorizer(obj.constructor.name, "class.name")}${
                         colorizer("]", "square.bracket")
-                    } ${handlePlainObject(obj)}`;
+                    }`;
+                    // } ${handlePlainObject(obj)}`;
                 }
                 return obj.toString();
             }
@@ -371,8 +382,14 @@ export const getDiff = (actual, expected) => {
                 return `${colorizer("Symbol", "class.name")}(${obj.toString().slice(7, -1)})`;
             }
             case "function": {
-                // todo: remove body?
-                return obj.toString();
+                let res = "";
+                if (obj.name) {
+                    res += `${styler.cyan("function")} ${obj.name}`;
+                } else {
+                    res += styler.cyan("anonymous function");
+                }
+                // todo: args
+                return res;
             }
             case "class": {
                 return `${colorizer("[", "square.bracket")}${colorizer(`class ${obj.name}`, "class.name")}${colorizer("]", "square.bracket")}`;

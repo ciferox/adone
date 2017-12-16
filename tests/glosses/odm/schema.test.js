@@ -7,7 +7,7 @@ const SchemaTypes = Schema.Types;
 const ObjectId = SchemaTypes.ObjectId;
 const Mixed = SchemaTypes.Mixed;
 const DocumentObjectId = mongoose.Types.ObjectId;
-const ReadPref = mongoose.mongo.ReadPreference;
+const ReadPref = adone.database.mongo.ReadPreference;
 const vm = require("vm");
 
 const {

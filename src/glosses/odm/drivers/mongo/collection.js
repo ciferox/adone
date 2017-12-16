@@ -1,5 +1,5 @@
 const MongooseCollection = require("../../collection");
-const Collection = require("mongodb").Collection;
+const { Collection } = adone.private(adone.database.mongo);
 const utils = require("../../utils");
 
 const {
@@ -35,50 +35,8 @@ NativeCollection.prototype.__proto__ = MongooseCollection.prototype;
 NativeCollection.prototype.onOpen = function () {
     const _this = this;
 
-    // always get a new collection in case the user changed host:port
-    // of parent db instance when re-opening the connection.
 
-    if (!_this.opts.capped.size) {
-        // non-capped
-        callback(null, _this.conn.db.collection(_this.name));
-        return _this.collection;
-    }
-
-    // capped
-    return _this.conn.db.collection(_this.name, (err, c) => {
-        if (err) {
-            return callback(err);
-        }
-
-        // discover if this collection exists and if it is capped
-        _this.conn.db.listCollections({ name: _this.name }).toArray((err, docs) => {
-            if (err) {
-                return callback(err);
-            }
-            const doc = docs[0];
-            const exists = Boolean(doc);
-
-            if (exists) {
-                if (doc.options && doc.options.capped) {
-                    callback(null, c);
-                } else {
-                    const msg = `A non-capped collection exists with the name: ${_this.name}\n\n`
-                        + ` To use this collection as a capped collection, please `
-                        + `first convert it.\n`
-                        + ` http://www.mongodb.org/display/DOCS/Capped+Collections#CappedCollections-Convertingacollectiontocapped`;
-                    err = new Error(msg);
-                    callback(err);
-                }
-            } else {
-                // create
-                const opts = utils.clone(_this.opts.capped);
-                opts.capped = true;
-                _this.conn.db.createCollection(_this.name, opts, callback);
-            }
-        });
-    });
-
-    function callback(err, collection) {
+    const callback = (err, collection) => {
         if (err) {
             // likely a strict mode error
             _this.conn.emit("error", err);
@@ -86,7 +44,47 @@ NativeCollection.prototype.onOpen = function () {
             _this.collection = collection;
             MongooseCollection.prototype.onOpen.call(_this);
         }
+    };
+
+    // always get a new collection in case the user changed host:port
+    // of parent db instance when re-opening the connection.
+    if (!_this.opts.capped.size) {
+        // non-capped
+        callback(null, _this.conn.db.collection(_this.name));
+        return _this.collection;
     }
+
+    // capped
+    const c = _this.conn.db.collection(_this.name);
+
+    // discover if this collection exists and if it is capped
+    const p = _this.conn.db.listCollections({ name: _this.name }).toArray();
+
+    adone.promise.nodeify(p, (err, docs) => {
+        if (err) {
+            return callback(err);
+        }
+        const doc = docs[0];
+        const exists = Boolean(doc);
+
+        if (exists) {
+            if (doc.options && doc.options.capped) {
+                callback(null, c);
+            } else {
+                const msg = `A non-capped collection exists with the name: ${_this.name}\n\n`
+                    + " To use this collection as a capped collection, please "
+                    + "first convert it.\n"
+                    + " http://www.mongodb.org/display/DOCS/Capped+Collections#CappedCollections-Convertingacollectiontocapped";
+                err = new Error(msg);
+                callback(err);
+            }
+        } else {
+            // create
+            const opts = utils.clone(_this.opts.capped);
+            opts.capped = true;
+            adone.promise.nodeify(_this.conn.db.createCollection(_this.name, opts), callback);
+        }
+    });
 };
 
 /**
@@ -103,19 +101,24 @@ NativeCollection.prototype.onClose = function (force) {
  * Copy the collection methods and make them subject to queues
  */
 
-function iter(i) {
-    NativeCollection.prototype[i] = function () {
+const iter = (i) => {
+    NativeCollection.prototype[i] = function (...args) {
+        const collection = this.collection;
+
         // If user force closed, queueing will hang forever. See #5664
         if (this.opts.$wasForceClosed) {
             return this.conn.db.collection(this.name)[i].apply(collection, args);
         }
         if (this.buffer) {
-            this.addQueue(i, arguments);
-            return;
+            if (args.length > 0 && is.function(args[args.length - 1])) {
+                this.addQueue(i, args);
+                return;
+            }
+            return new Promise((resolve) => {
+                this.addQueue(resolve, []);
+            }).then(() => this[i](...args));
         }
 
-        var collection = this.collection;
-        var args = arguments;
         const _this = this;
         const debug = _this.conn.base.options.debug;
 
@@ -127,8 +130,11 @@ function iter(i) {
                 this.$print(_this.name, i, args);
             }
         }
-
         try {
+            if (args.length > 0 && is.function(args[args.length - 1])) {
+                const cb = args.pop();
+                return adone.promise.nodeify(collection[i](...args), cb);
+            }
             return collection[i].apply(collection, args);
         } catch (error) {
             // Collection operation may throw because of max bson size, catch it here
@@ -141,9 +147,9 @@ function iter(i) {
             }
         }
     };
-}
+};
 
-for (const i in Collection.prototype) {
+for (const i of adone.util.keys(Collection.prototype, { all: true })) {
     // Janky hack to work around gh-3005 until we can get rid of the mongoose
     // collection abstraction
     try {
@@ -225,8 +231,8 @@ function format(obj, sub) {
 
     if (!is.nil(x)) {
         if (x.constructor.name === "Binary") {
-            x = `BinData(${x.sub_type}, "${x.toString("base64")}")`;
-        } else if (x.constructor.name === "ObjectID") {
+            x = `BinData(${x.subType}, "${x.toString("base64")}")`;
+        } else if (x.constructor.name === "ObjectId") {
             representation = `ObjectId("${x.toHexString()}")`;
             x = {
                 inspect() {
@@ -251,11 +257,11 @@ function format(obj, sub) {
                         x[key] = x[key].toBSON();
                     }
                     if (x[key].constructor.name === "Binary") {
-                        x[key] = `BinData(${x[key].sub_type}, "${
+                        x[key] = `BinData(${x[key].subType}, "${
                             x[key].buffer.toString("base64")}")`;
                     } else if (x[key].constructor.name === "Object") {
                         x[key] = format(x[key], true);
-                    } else if (x[key].constructor.name === "ObjectID") {
+                    } else if (x[key].constructor.name === "ObjectId") {
                         formatObjectId(x, key);
                     } else if (x[key].constructor.name === "Date") {
                         formatDate(x, key);

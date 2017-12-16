@@ -66,7 +66,7 @@ describe("collections: capped:", () => {
         const conn = `capped_existing_${random()}`;
 
         db.on("open", () => {
-            db.db.createCollection(conn, opts, (err) => {
+            adone.promise.nodeify(db.db.createCollection(conn, opts), (err) => {
                 if (err) {
                     db.close();
                 }

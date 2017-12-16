@@ -1,10 +1,7 @@
 const MongooseConnection = require("../../connection");
-const mongo = require("mongodb");
-const Db = mongo.Db;
-const Server = mongo.Server;
-const Mongos = mongo.Mongos;
+const mongo = adone.database.mongo;
+const { Db, Server, Mongos, ReplSet: ReplSetServers } = adone.private(mongo);
 const STATES = require("../../connectionstate");
-const ReplSetServers = mongo.ReplSet;
 const DisconnectedError = require("../../error/disconnected");
 
 const {
@@ -55,18 +52,20 @@ NativeConnection.prototype.doOpen = function (fn) {
         this.db = new Db(this.name, server, this.options.db);
     }
 
-    this.db.open((err) => {
+    adone.promise.nodeify(this.db.open(), (err) => {
         listen(_this);
 
         if (!mongos) {
             server.s.server.on("error", (error) => {
-        if (/after \d+ attempts/.test(error.message)) {
-          _this.emit('error', new DisconnectedError(server.s.server.name));
-        }
-      });
+                if (/after \d+ attempts/.test(error.message)) {
+                    _this.emit("error", new DisconnectedError(server.s.server.name));
+                }
+            });
         }
 
-        if (err) {return fn(err);}
+        if (err) {
+            return fn(err);
+        }
 
         fn();
     });
@@ -138,14 +137,16 @@ NativeConnection.prototype.useDb = function (name) {
  * Register listeners for important events and bubble appropriately.
  */
 
-function listen(conn) {
+const listen = function (conn) {
     if (conn.db._listening) {
         return;
     }
     conn.db._listening = true;
 
     conn.db.on("close", (force) => {
-        if (conn._closeCalled) {return;}
+        if (conn._closeCalled) {
+            return;
+        }
 
         // the driver never emits an `open` event. auto_reconnect still
         // emits a `close` event but since we never get another
@@ -179,7 +180,7 @@ function listen(conn) {
     conn.db.on("parseError", (err) => {
         conn.emit("parseError", err);
     });
-}
+};
 
 /**
  * Opens a connection to a MongoDB ReplicaSet.
@@ -196,8 +197,8 @@ NativeConnection.prototype.doOpenSet = function (fn) {
         _this = this;
 
     this.hosts.forEach((server) => {
-        let host = server.host || server.ipc;
-        let port = server.port || 27017;
+        const host = server.host || server.ipc;
+        const port = server.port || 27017;
         servers.push(new Server(host, port, _this.options.server));
     });
 
@@ -222,8 +223,10 @@ NativeConnection.prototype.doOpenSet = function (fn) {
         _this.emit("all");
     });
 
-    this.db.open((err) => {
-        if (err) {return fn(err);}
+    adone.promise.nodeify(this.db.open(), (err) => {
+        if (err) {
+            return fn(err);
+        }
         fn();
         listen(_this);
     });
@@ -241,7 +244,8 @@ NativeConnection.prototype.doOpenSet = function (fn) {
  */
 
 NativeConnection.prototype.doClose = function (force, fn) {
-    this.db.close(force, fn);
+    this.db.close(force);
+    fn && process.nextTick(fn);
     return this;
 };
 

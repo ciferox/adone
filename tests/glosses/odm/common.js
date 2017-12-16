@@ -2,8 +2,6 @@
  * Module dependencies.
  */
 
-Error.stackTraceLimit = 10;
-
 const Server = require("mongodb-topology-manager").Server;
 const mongoose = adone.odm;
 const Collection = mongoose.Collection;
@@ -121,7 +119,7 @@ module.exports.mongodVersion = function (cb) {
 
     db.on("open", () => {
         const admin = db.db.admin();
-        admin.serverStatus((err, info) => {
+        adone.promise.nodeify(admin.serverStatus(), (err, info) => {
             if (err) {
                 return cb(err);
             }
@@ -135,28 +133,29 @@ module.exports.mongodVersion = function (cb) {
     });
 };
 
-function dropDBs(done) {
+const dropDBs = (done) => {
     const db = module.exports({ noErrorListener: true });
     db.once("open", () => {
         // drop the default test database
-        db.db.dropDatabase(() => {
+        db.db.dropDatabase().then(() => {
             const db2 = db.useDb("mongoose-test-2");
-            db2.db.dropDatabase(() => {
+            db2.db.dropDatabase().then(() => {
                 // drop mongos test db if exists
-                let mongos = process.env.MONGOOSE_MULTI_MONGOS_TEST_URI;
+                const mongos = process.env.MONGOOSE_MULTI_MONGOS_TEST_URI;
+
                 if (!mongos) {
                     return done();
                 }
 
 
-                let db = mongoose.connect(mongos, { mongos: true });
+                const db = mongoose.connect(mongos, { mongos: true });
                 db.once("open", () => {
                     db.db.dropDatabase(done);
                 });
             });
         });
     });
-}
+};
 
 before(() => {
     return server.purge();

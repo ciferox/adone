@@ -1148,7 +1148,7 @@ describe("Query", () => {
                 const q = Product.where().remove({ strings: "remove-single-condition" });
                 assert.ok(q instanceof mongoose.Query);
                 done();
-            }, done).end();
+            }, done);
         });
 
         it("supports a single callback arg", (done) => {
@@ -1166,7 +1166,7 @@ describe("Query", () => {
                         done();
                     });
                 });
-            }, done).end();
+            }, done);
         });
 
         it("supports conditions and callback args", (done) => {
@@ -1184,7 +1184,7 @@ describe("Query", () => {
                         done();
                     });
                 });
-            }, done).end();
+            }, done);
         });
 
         it("single option, default", (done) => {
@@ -1387,7 +1387,7 @@ describe("Query", () => {
         });
 
         describe("read", () => {
-            const P = mongoose.mongo.ReadPreference;
+            const P = adone.database.mongo.ReadPreference;
 
             describe("without tags", () => {
                 it("works", (done) => {
@@ -2116,7 +2116,7 @@ describe("Query", () => {
             });
         });
 
-        it("report error in pre hook (gh-5520)", (done) => {
+        it.todo("report error in pre hook (gh-5520)", (done) => {
             const TestSchema = new Schema({ name: String });
 
             const ops = [
@@ -2252,7 +2252,7 @@ describe("Query", () => {
             });
         });
 
-        it.only("with non-object args (gh-1698)", (done) => {
+        it("with non-object args (gh-1698)", (done) => {
             const schema = new mongoose.Schema({
                 email: String
             });

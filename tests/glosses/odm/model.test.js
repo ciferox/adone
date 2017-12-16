@@ -365,30 +365,27 @@ describe("Model", () => {
         });
 
 
-        it("when saved using the promise not the callback", (done) => {
-            let db = start(),
-                BlogPost = db.model("BlogPost", collection);
+        it("when saved using the promise not the callback", async () => {
+            const db = start();
+            const BlogPost = db.model("BlogPost", collection);
 
             const post = new BlogPost();
-            const p = post.save();
-            p.onResolve((err, post) => {
-                assert.ifError(err);
-                assert.ok(post.get("_id") instanceof DocumentObjectId);
+            await post.save();
+            assert.ok(post.get("_id") instanceof DocumentObjectId);
 
-                assert.equal(post.get("title"), undefined);
-                assert.equal(post.get("slug"), undefined);
-                assert.equal(post.get("date"), undefined);
-                assert.equal(post.get("published"), undefined);
+            assert.equal(post.get("title"), undefined);
+            assert.equal(post.get("slug"), undefined);
+            assert.equal(post.get("date"), undefined);
+            assert.equal(post.get("published"), undefined);
 
-                assert.equal(typeof post.get("meta"), "object");
-                assert.deepEqual(post.get("meta"), {});
-                assert.equal(post.get("meta.date"), undefined);
-                assert.equal(post.get("meta.visitors"), undefined);
+            assert.equal(typeof post.get("meta"), "object");
+            assert.deepEqual(post.get("meta"), {});
+            assert.equal(post.get("meta.date"), undefined);
+            assert.equal(post.get("meta.visitors"), undefined);
 
-                assert.ok(post.get("owners").isMongooseArray);
-                assert.ok(post.get("comments").isMongooseDocumentArray);
-                db.close(done);
-            });
+            assert.ok(post.get("owners").isMongooseArray);
+            assert.ok(post.get("comments").isMongooseDocumentArray);
+            db.close();
         });
 
 
@@ -1986,23 +1983,15 @@ describe("Model", () => {
             });
         });
 
-        it("works as a promise", (done) => {
-            B.create({}, (err, post) => {
-                assert.ifError(err);
-                B.findById(post, (err, found) => {
-                    assert.ifError(err);
-
-                    found.remove().onResolve((err, doc) => {
-                        assert.ifError(err);
-                        assert.ok(doc);
-                        assert.ok(doc.equals(found));
-                        done();
-                    });
-                });
-            });
+        it("works as a promise", async () => {
+            const post = await B.create({});
+            const found = await B.findById(post);
+            const doc = await found.remove();
+            assert.ok(doc);
+            assert.ok(doc.equals(found));
         });
 
-        it("works as a promise with a hook", (done) => {
+        it("works as a promise with a hook", async () => {
             let called = 0;
             const RHS = new Schema({
                 name: String
@@ -2014,22 +2003,15 @@ describe("Model", () => {
 
             const RH = db.model("RH", RHS, `RH_${random()}`);
 
-            RH.create({ name: "to be removed" }, (err, post) => {
-                assert.ifError(err);
-                assert.ok(post);
-                RH.findById(post, (err, found) => {
-                    assert.ifError(err);
-                    assert.ok(found);
+            const post = await RH.create({ name: "to be removed" });
+            assert.ok(post);
+            const found = await RH.findById(post);
+            assert.ok(found);
 
-                    found.remove().onResolve((err, doc) => {
-                        assert.ifError(err);
-                        assert.equal(called, 1);
-                        assert.ok(doc);
-                        assert.ok(doc.equals(found));
-                        done();
-                    });
-                });
-            });
+            const doc = await found.remove();
+            assert.equal(called, 1);
+            assert.ok(doc);
+            assert.ok(doc.equals(found));
         });
 
         it("passes the removed document (gh-1419)", (done) => {
@@ -2388,7 +2370,7 @@ describe("Model", () => {
                             DooDad.findById(doodad._id, (err, doodad) => {
                                 db.close();
                                 assert.ifError(err);
-                                assert.deepEqual(doodad.nested.arrays.toObject(), [['+10', 'yup', date], ['another', 1]]);
+                                assert.deepEqual(doodad.nested.arrays.toObject(), [["+10", "yup", date], ["another", 1]]);
                                 done();
                             });
                         });
@@ -2433,8 +2415,8 @@ describe("Model", () => {
                             DooDad.findById(doodad._id, (err, doodad) => {
                                 db.close();
                                 assert.ifError(err);
-                                assert.equal(doodad.nested.type, 'nope');
-                                assert.deepEqual(doodad.nested.array.toObject(), ['some', 'new', 'stuff']);
+                                assert.equal(doodad.nested.type, "nope");
+                                assert.deepEqual(doodad.nested.array.toObject(), ["some", "new", "stuff"]);
                                 done();
                             });
                         });
@@ -2631,7 +2613,7 @@ describe("Model", () => {
                             agent2blog.get("comments")[0].body = "second-body";
                             agent2blog.save((err) => {
                                 assert.ifError(err);
-                                BlogPost.findById(blog.id, function (err, foundBlog) {
+                                BlogPost.findById(blog.id, (err, foundBlog) => {
                                     assert.ifError(err);
                                     db.close();
                                     var comment = foundBlog.get('comments')[0];
@@ -2767,7 +2749,7 @@ describe("Model", () => {
     });
 
 
-    it("activePaths should be updated for nested modifieds as promise", (done) => {
+    it("activePaths should be updated for nested modifieds as promise", async () => {
         let db = start(),
             schema = new Schema({
                 nested: {
@@ -2777,15 +2759,11 @@ describe("Model", () => {
 
         const Temp = db.model("NestedPushes", schema, collection);
 
-        const p1 = Temp.create({ nested: { nums: [1, 2, 3, 4, 5] } });
-        p1.onResolve((err, t) => {
-            assert.ifError(err);
-            t.nested.nums.pull(1);
-            t.nested.nums.pull(2);
-            assert.equal(t.$__.activePaths.paths["nested.nums"], "modify");
-            db.close();
-            done();
-        });
+        const t = await Temp.create({ nested: { nums: [1, 2, 3, 4, 5] } });
+        t.nested.nums.pull(1);
+        t.nested.nums.pull(2);
+        assert.equal(t.$__.activePaths.paths["nested.nums"], "modify");
+        db.close();
     });
 
     it("$pull should affect what you see in an array before a save", (done) => {
@@ -3079,7 +3057,7 @@ describe("Model", () => {
                             doc.comments[0].remove();
                             doc.save((err) => {
                                 assert.ifError(err);
-                                B.findById(doc._id, function (err, doc) {
+                                B.findById(doc._id, (err, doc) => {
                                     db.close();
                                     assert.ifError(err);
                                     assert.equal(doc.comments.length, 0);
@@ -3385,9 +3363,9 @@ describe("Model", () => {
                             BlogPost.findById(post2._id, (err, doc) => {
                                 assert.ifError(err);
 
-                                assert.deepEqual(doc.mixed[0], { foo: 'bar' });
-                                assert.deepEqual(doc.mixed[1], { hello: 'world' });
-                                assert.deepEqual(doc.mixed[2], ['foo', 'bar']);
+                                assert.deepEqual(doc.mixed[0], { foo: "bar" });
+                                assert.deepEqual(doc.mixed[1], { hello: "world" });
+                                assert.deepEqual(doc.mixed[2], ["foo", "bar"]);
                                 if (--count) {
                                     return;
                                 }
@@ -3642,7 +3620,7 @@ describe("Model", () => {
             });
 
 
-            it("with an async waterfall", (done) => {
+            it("with an async waterfall", async () => {
                 const db = start();
                 const schema = new Schema({ name: String });
                 let called = 0;
@@ -3663,13 +3641,9 @@ describe("Model", () => {
                 const S = db.model("S", schema, collection);
                 const s = new S({ name: "zupa" });
 
-                const p = s.save();
-                p.onResolve((err) => {
-                    db.close();
-                    assert.ifError(err);
-                    assert.equal(called, 2);
-                    done();
-                });
+                await s.save();
+                db.close();
+                assert.equal(called, 2);
             });
 
 
@@ -3793,8 +3767,8 @@ describe("Model", () => {
         describe("post", () => {
             it("works", (done) => {
                 let schema = new Schema({
-                    title: String
-                }),
+                        title: String
+                    }),
                     save = false,
                     remove = false,
                     init = false,
@@ -3830,7 +3804,7 @@ describe("Model", () => {
                                 assert.ifError(err);
                                 assert.ok(init);
 
-                                doc.remove(function (err) {
+                                doc.remove((err) => {
                                     process.nextTick(function () {
                                         db.close();
                                         assert.ifError(err);
@@ -3993,119 +3967,82 @@ describe("Model", () => {
         });
 
         describe("promises", () => {
-            it("count()", (done) => {
+            it("count()", async () => {
                 let db = start(),
                     BlogPost = db.model(`BlogPost${random()}`, bpSchema);
 
-                BlogPost.create({ title: "interoperable count as promise 2" }, (err) => {
-                    assert.ifError(err);
-                    const query = BlogPost.count({ title: "interoperable count as promise 2" });
-                    const promise = query.exec();
-                    promise.onResolve((err, count) => {
-                        db.close();
-                        assert.ifError(err);
-                        assert.equal(count, 1);
-                        done();
-                    });
-                });
+                await BlogPost.create({ title: "interoperable count as promise 2" });
+                const query = BlogPost.count({ title: "interoperable count as promise 2" });
+                const count = await query.exec();
+                db.close();
+                assert.equal(count, 1);
             });
 
-            it("update()", (done) => {
+            it("update()", async () => {
                 const col = `BlogPost${random()}`;
                 let db = start(),
                     BlogPost = db.model(col, bpSchema);
 
-                BlogPost.create({ title: "interoperable update as promise 2" }, (err) => {
-                    assert.ifError(err);
-                    const query = BlogPost.update({ title: "interoperable update as promise 2" }, { title: "interoperable update as promise delta 2" });
-                    const promise = query.exec();
-                    promise.onResolve((err) => {
-                        assert.ifError(err);
-                        BlogPost.count({ title: "interoperable update as promise delta 2" }, (err, count) => {
-                            db.close();
-                            assert.ifError(err);
-                            assert.equal(count, 1);
-                            done();
-                        });
-                    });
-                });
+                await BlogPost.create({ title: "interoperable update as promise 2" });
+                const query = BlogPost.update({ title: "interoperable update as promise 2" }, { title: "interoperable update as promise delta 2" });
+                await query.exec();
+                const count = await BlogPost.count({ title: "interoperable update as promise delta 2" });
+                db.close();
+                assert.equal(count, 1);
             });
 
-            it("findOne()", (done) => {
+            it("findOne()", async () => {
                 let db = start(),
                     BlogPost = db.model(`BlogPost${random()}`, bpSchema);
 
-                BlogPost.create({ title: "interoperable findOne as promise 2" }, (err, created) => {
-                    assert.ifError(err);
-                    const query = BlogPost.findOne({ title: "interoperable findOne as promise 2" });
-                    const promise = query.exec();
-                    promise.onResolve((err, found) => {
-                        db.close();
-                        assert.ifError(err);
-                        assert.equal(found.id, created.id);
-                        done();
-                    });
-                });
+                const created = await BlogPost.create({ title: "interoperable findOne as promise 2" });
+                const query = BlogPost.findOne({ title: "interoperable findOne as promise 2" });
+                const found = await query.exec();
+                db.close();
+                assert.equal(found.id, created.id);
             });
 
-            it("find()", (done) => {
+            it("find()", async () => {
                 let db = start(),
                     BlogPost = db.model(`BlogPost${random()}`, bpSchema);
 
-                BlogPost.create(
+                const [createdOne, createdTwo] = await BlogPost.create(
                     { title: "interoperable find as promise 2" },
-                    { title: "interoperable find as promise 2" },
-                    (err, createdOne, createdTwo) => {
-                        assert.ifError(err);
-                        const query = BlogPost.find({ title: "interoperable find as promise 2" }).sort("_id");
-                        const promise = query.exec();
-                        promise.onResolve((err, found) => {
-                            db.close();
-                            assert.ifError(err);
-                            assert.equal(found.length, 2);
-                            assert.equal(found[0].id, createdOne.id);
-                            assert.equal(found[1].id, createdTwo.id);
-                            done();
-                        });
-                    });
+                    { title: "interoperable find as promise 2" });
+                const query = BlogPost.find({ title: "interoperable find as promise 2" }).sort("_id");
+                const found = await query.exec();
+                db.close();
+                assert.equal(found.length, 2);
+                assert.equal(found[0].id, createdOne.id);
+                assert.equal(found[1].id, createdTwo.id);
             });
 
-            it("remove()", (done) => {
+            it("remove()", async () => {
                 let db = start(),
                     BlogPost = db.model(`BlogPost${random()}`, bpSchema);
 
-                BlogPost.create(
-                    { title: "interoperable remove as promise 2" },
-                    (err) => {
-                        assert.ifError(err);
-                        const query = BlogPost.remove({ title: "interoperable remove as promise 2" });
-                        const promise = query.exec();
-                        promise.onResolve((err) => {
-                            assert.ifError(err);
-                            BlogPost.count({ title: "interoperable remove as promise 2" }, (err, count) => {
-                                db.close();
-                                assert.equal(count, 0);
-                                done();
-                            });
-                        });
-                    });
+                await BlogPost.create({ title: "interoperable remove as promise 2" });
+                const query = BlogPost.remove({ title: "interoperable remove as promise 2" });
+                await query.exec();
+                try {
+                    const count = await BlogPost.count({ title: "interoperable remove as promise 2" });
+                    assert.equal(count, 0);
+                } finally {
+                    db.close();
+                }
             });
 
-            it("are compatible with op modification on the fly", (done) => {
+            it("are compatible with op modification on the fly", async () => {
                 let db = start(),
                     BlogPost = db.model(`BlogPost${random()}`, bpSchema);
-
-                BlogPost.create({ title: "interoperable ad-hoc as promise 2" }, (err, created) => {
-                    assert.ifError(err);
+                try {
+                    const created = await BlogPost.create({ title: "interoperable ad-hoc as promise 2" });
                     const query = BlogPost.count({ title: "interoperable ad-hoc as promise 2" });
-                    const promise = query.exec("findOne");
-                    promise.onResolve((err, found) => {
-                        db.close();
-                        assert.ifError(err);
-                        assert.equal(found._id.toHexString(), created._id.toHexString());
-                        done();
-                    });
-                });
+                    const found = await query.exec("findOne");
+                    assert.equal(found._id.toHexString(), created._id.toHexString());
+                } finally {
+                    db.close();
+                }
             });
 
             it("are thenable", (done) => {
@@ -4130,7 +4067,7 @@ describe("Model", () => {
 
                                 const promise = B.find({ title: /^then promise/ }).select("_id").exec();
                                 promise.then((blogs) => {
-                                    let ids = blogs.map((m) => {
+                                    const ids = blogs.map((m) => {
                                         return m._id;
                                     });
                                     return P.where("likes").in(ids).exec();
@@ -4465,14 +4402,14 @@ describe("Model", () => {
                             assert.equal(b.numbers[0], 3);
 
                             b.numbers = [3];
-                            let d = b.$__delta();
+                            const d = b.$__delta();
                             assert.ok(!d);
 
                             b.numbers = [4];
                             b.numbers.push(5);
                             b.save((err) => {
                                 assert.ifError(err);
-                                B.findById(b._id, function (err, b) {
+                                B.findById(b._id, (err, b) => {
                                     assert.ifError(err);
                                     assert.ok(Array.isArray(b.numbers));
                                     assert.equal(b.numbers.length, 2);
@@ -5589,7 +5526,7 @@ describe("Model", () => {
                             User.findById(val, (error, val) => {
                                 assert.ifError(error);
                                 assert.equal(val.todos.length, 1);
-                                assert.equal(val.todos[0].title, 'Cook');
+                                assert.equal(val.todos[0].title, "Cook");
                                 done();
                             });
                         });
@@ -5717,7 +5654,7 @@ describe("Model", () => {
             });
         });
 
-        it('.create() with non-object (gh-2037)', function (done) {
+        it(".create() with non-object (gh-2037)", (done) => {
             var schema = new mongoose.Schema({ name: String });
 
             var Model = db.model('gh2037', schema);

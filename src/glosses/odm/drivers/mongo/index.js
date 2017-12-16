@@ -1,9 +1,7 @@
 const {
     is,
-    // database: { mongo }
+    database: { mongo }
 } = adone;
-
-const mongo = require("mongodb");
 
 /*!
  * Converts arguments to ReadPrefs the driver
@@ -46,3 +44,4 @@ exports.ReadPreference = (pref, tags) => {
 
 exports.Binary = mongo.Binary;
 exports.ObjectId = mongo.ObjectId;
+exports.Decimal128 = mongo.Decimal128;

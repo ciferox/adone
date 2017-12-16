@@ -36,7 +36,7 @@ const resetId = function (v) {
  */
 export default class ObjectId extends SchemaType {
     constructor(key, options) {
-        super(key, options, "ObjectID");
+        super(key, options, "ObjectId");
         const isKeyHexStr = is.string(key) && key.length === 24 && /^a-f0-9$/i.test(key);
         const suppressWarning = options && options.suppressWarning;
         if ((isKeyHexStr || is.undefined(key)) && !suppressWarning) {

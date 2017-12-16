@@ -23,7 +23,7 @@ describe("model: populate:", () => {
 
         const construct = {};
         construct.String = random;
-        construct.ObjectId = DocObjectId;
+        construct.ObjectId = () => new DocObjectId();
         construct.Number = random;
         construct.Buffer = function () {
             return new Buffer(random());

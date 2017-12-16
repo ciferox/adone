@@ -850,7 +850,7 @@ describe("model query casting", () => {
             let db = start(),
                 BlogPostB = db.model(modelName, collection);
 
-            const commentId = mongoose.Types.ObjectId(111);
+            const commentId = new mongoose.Types.ObjectId(111);
 
             let post = new BlogPostB({ comments: [{ _id: commentId }] }), id = post._id.toString();
 
@@ -870,7 +870,7 @@ describe("model query casting", () => {
             let db = start(),
                 BlogPostB = db.model(modelName, collection);
 
-            const commentId = mongoose.Types.ObjectId(111);
+            const commentId = new mongoose.Types.ObjectId(111);
 
             let post = new BlogPostB({ comments: [{ _id: commentId }] }), id = post._id.toString();
 

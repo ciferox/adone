@@ -135,12 +135,12 @@ describe("model", () => {
                 });
             });
         });
-        it("returns a promise (gh-1614)", (done) => {
+        it.todo("returns a promise (gh-1614)", (done) => {
             const db = start();
             const Geo = getModel(db);
 
             const prom = Geo.geoSearch({ type: "place" }, { near: [9, 9], maxDistance: 5 }, () => { });
-            assert.ok(prom instanceof mongoose.Promise);
+            assert.ok(prom instanceof Promise);
             db.close();
             done();
         });
@@ -158,7 +158,7 @@ describe("model", () => {
                     assert.doesNotThrow(() => {
                         promise = Geo.geoSearch({ type: 'place' }, { near: [9, 9], maxDistance: 5 });
                     });
-                    function validate(ret, stat) {
+                    function validate([ret, stat]) {
                         assert.equal(ret.length, 1);
                         assert.equal(ret[0].pos[0], 10);
                         assert.equal(ret[0].pos[1], 10);
@@ -168,7 +168,7 @@ describe("model", () => {
                     function finish() {
                         db.close(done);
                     }
-                    promise.then(validate, assert.ifError).then(finish).end();
+                    promise.then(validate, assert.ifError).then(finish);
                 });
             });
         });

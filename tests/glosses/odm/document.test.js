@@ -915,6 +915,7 @@ describe("document", () => {
             assert.ok(doc.update() instanceof Query);
             done();
         });
+
         it("calling update on document should relay to its model (gh-794)", (done) => {
             const db = start();
             const Docs = new Schema({ text: String });
@@ -1140,7 +1141,7 @@ describe("document", () => {
             const promise = m.validate();
             promise.then(() => {
                 const promise2 = mBad.validate();
-                promise2.onReject((err) => {
+                promise2.catch((err) => {
                     assert.ok(Boolean(err));
                     clearTimeout(timeout);
                     db.close(done);

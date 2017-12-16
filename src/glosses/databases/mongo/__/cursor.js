@@ -590,9 +590,9 @@ export default class Cursor extends core.Cursor {
         });
     }
 
-    close() {
+    close(callback) {
         this.s.state = Cursor.CLOSED;
-        this.kill();
+        this.kill(callback);
     }
 
     map(transform) {

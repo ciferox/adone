@@ -1352,27 +1352,17 @@ describe("model: update:", () => {
         });
     });
 
-    it("handles empty update with promises (gh-2796)", (done) => {
+    it("handles empty update with promises (gh-2796)", async () => {
         let db = start();
 
         let schema = new Schema({ eggs: Number });
         let M = db.model("gh-2796", schema);
 
-        M.create({}, (error, doc) => {
-            assert.ifError(error);
-            M.update(
-                { _id: doc._id },
-                { notInSchema: 1 }).
-                exec().
-                then(function (data) {
-                    assert.equal(data.ok, 0);
-                    assert.equal(data.n, 0);
-                    db.close(done);
-                }).
-                onReject(function (error) {
-                    return done(error);
-                });
-        });
+        const doc = await M.create({});
+        const data = await M.update({ _id: doc._id },{ notInSchema: 1 });
+        assert.equal(data.ok, 0);
+        assert.equal(data.n, 0);
+        db.close();
     });
 
     describe("middleware", () => {
@@ -2225,7 +2215,7 @@ describe("model: update:", () => {
             });
         });
 
-        it.only("update handles casting with Long (gh-4283)", (done) => {
+        it("update handles casting with Long (gh-4283)", (done) => {
             var Model = db.model('gh4283', {
                 number: { type: mongoose.Types.Long }
             });

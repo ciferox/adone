@@ -701,7 +701,7 @@ export default class SchemaType {
      */
     getDefault(scope, init) {
         let ret = is.function(this.defaultValue)
-            ? this.defaultValue.call(scope)
+            ? is.class(this.defaultValue) ? new this.defaultValue() : this.defaultValue.call(scope)
             : this.defaultValue;
 
         if (!is.nil(ret)) {
@@ -875,7 +875,7 @@ export default class SchemaType {
                     if (ok && is.function(ok.then)) {
                         ok.then(
                             (ok) => {
-                                validate(ok, validatorProperties); 
+                                validate(ok, validatorProperties);
                             },
                             (error) => {
                                 validatorProperties.reason = error;
@@ -1000,8 +1000,8 @@ export default class SchemaType {
     }
 
     /*!
- * Wraps `castForQuery` to handle context
- */
+     * Wraps `castForQuery` to handle context
+     */
     castForQueryWrapper(params) {
         this.$$context = params.context;
         if ("$conditional" in params) {

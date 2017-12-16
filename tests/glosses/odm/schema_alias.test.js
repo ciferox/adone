@@ -3,7 +3,7 @@ const mongoose = adone.odm;
 const { Schema } = adone.odm;
 
 describe("schema alias option", () => {
-    it("works with all basic schema types", () => {
+    it("works with all basic schema types", (done) => {
         const db = start();
 
         const schema = new Schema({
@@ -39,10 +39,11 @@ describe("schema alias option", () => {
             assert.equal(s.mixed, s.MixedAlias);
             assert.equal(s.objectId, s.ObjectIdAlias);
             assert.equal(s.array, s.ArrayAlias);
+            done();
         });
     });
 
-    it("works with nested schema types", () => {
+    it("works with nested schema types", (done) => {
         const db = start();
 
         const schema = new Schema({
@@ -86,6 +87,7 @@ describe("schema alias option", () => {
             assert.equal(s.nested.mixed, s.MixedAlias);
             assert.equal(s.nested.objectId, s.ObjectIdAlias);
             assert.equal(s.nested.array, s.ArrayAlias);
+            done();
         });
     });
 

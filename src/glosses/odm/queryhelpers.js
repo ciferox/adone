@@ -64,6 +64,7 @@ exports.createModel = function createModel(model, doc, fields, userProvidedField
         ? discriminatorMapping.key
         : null;
 
+
     if (key && doc[key] && model.discriminators && model.discriminators[doc[key]]) {
         const discriminator = model.discriminators[doc[key]];
         const _fields = utils.clone(userProvidedFields);

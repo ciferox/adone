@@ -12,19 +12,11 @@ const {
 } = adone;
 
 function TestDoc(schema) {
-    const Subdocument = function () {
-        Embedded.call(this, {}, new DocumentArray());
-    };
-
-    /**
-   * Inherits from Embedded.
-   */
-
-    Subdocument.prototype.__proto__ = Embedded.prototype;
-
-    /**
-   * Set schema.
-   */
+    class Subdocument extends Embedded {
+        constructor() {
+            super({}, new DocumentArray());
+        }
+    }
 
     const SubSchema = new Schema({
         title: { type: String }
@@ -292,7 +284,7 @@ describe("types.documentarray", () => {
             let subdoc = t.docs.create({ name: 100 });
             assert.ok(subdoc._id);
             assert.equal(subdoc.name, "100");
-            assert.ok(subdoc instanceof EmbeddedDocument);
+            assert.ok(subdoc instanceof Embedded);
             done();
         });
     });

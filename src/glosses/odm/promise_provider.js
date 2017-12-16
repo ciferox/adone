@@ -35,7 +35,7 @@ Promise.set = function (lib) {
     }
     Promise._promise = require("./ES6Promise");
     Promise._promise.use(lib);
-    require("mquery").Promise = Promise._promise.ES6;
+    require("mquery").Promise = Promise._Promise;
 };
 
 /**

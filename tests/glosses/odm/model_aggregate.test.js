@@ -104,7 +104,7 @@ describe("model aggregate", () => {
                 .project(project.$project)
                 .exec((err, res) => {
                     assert.ifError(err);
-                    assert.ok(promise instanceof mongoose.Promise);
+                    // assert.ok(promise instanceof mongoose.Promise);
                     assert.ok(res);
                     assert.equal(res.length, 1);
                     assert.ok("maxAge" in res[0]);
@@ -122,13 +122,13 @@ describe("model aggregate", () => {
                 .exec();
 
             promise.then((res) => {
-                assert.ok(promise instanceof mongoose.Promise);
+                // assert.ok(promise instanceof mongoose.Promise);
                 assert.ok(res);
                 assert.equal(res.length, 1);
                 assert.ok("maxAge" in res[0]);
                 assert.equal(maxAge, res[0].maxAge);
                 done();
-            }).end();
+            });
         });
 
         it("when returning Aggregate", (done) => {
@@ -136,28 +136,23 @@ describe("model aggregate", () => {
             done();
         });
 
-        it("can use helper for $out", function (done) {
+        it("can use helper for $out", async function () {
             if (!mongo26_or_greater) {
-                return done();
+                return this.skip();
             }
 
             this.timeout(4000);
 
             const outputCollection = `aggregate_output_${random()}`;
-            A.aggregate()
+            await A.aggregate()
                 .group(group.$group)
                 .project(project.$project)
                 .out(outputCollection)
-                .exec((error) => {
-                    assert.ifError(error);
-                    A.db.collection(outputCollection).find().toArray((error, documents) => {
-                        assert.ifError(error);
-                        assert.equal(documents.length, 1);
-                        assert.ok("maxAge" in documents[0]);
-                        assert.equal(maxAge, documents[0].maxAge);
-                        done();
-                    });
-                });
+                .exec();
+            const documents = await A.db.collection(outputCollection).find().toArray();
+            assert.equal(documents.length, 1);
+            assert.ok("maxAge" in documents[0]);
+            assert.equal(maxAge, documents[0].maxAge);
         });
     });
 });

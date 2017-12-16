@@ -236,10 +236,10 @@ describe("model", () => {
             assert.deepEqual(ContainerSchema.indexes().map((v) => {
                 return v[0];
             }), [
-                    { "sub.subSub.nested2": 1 },
-                    { "sub.nested1": 1 },
-                    { nested0: 1 }
-                ]);
+                { "sub.subSub.nested2": 1 },
+                { "sub.nested1": 1 },
+                { nested0: 1 }
+            ]);
 
             done();
         });
@@ -294,7 +294,7 @@ describe("model", () => {
                         Test.collection.getIndexes((err, indexes) => {
                             assert.ifError(err);
                             // Only default _id index should exist
-                            assert.deepEqual(['_id_'], Object.keys(indexes));
+                            assert.deepEqual(["_id_"], Object.keys(indexes));
                             done();
                         });
                     }, 100);
@@ -327,7 +327,7 @@ describe("model", () => {
                     Test.create({ name: "Bacon" }, (err) => {
                         assert.ifError(err);
                         setTimeout(() => {
-                            Test.collection.getIndexes(function (err, indexes) {
+                            Test.collection.getIndexes((err, indexes) => {
                                 assert.ifError(err);
                                 assert.deepEqual(['_id_'], Object.keys(indexes));
                                 db.close(done);
@@ -346,11 +346,11 @@ describe("model", () => {
                 done();
             });
 
-            it("returns a Promise", (done) => {
+            it.todo("returns a Promise", (done) => {
                 const schema = new mongoose.Schema({ x: "string" });
                 const Test = mongoose.createConnection().model(`ensureIndexes-${random}`, schema);
                 const p = Test.ensureIndexes();
-                assert.ok(p instanceof mongoose.Promise);
+                assert.ok(p instanceof Promise);
                 done();
             });
 

@@ -54,7 +54,7 @@ module.exports = function discriminator(model, name, schema) {
         }" cannot have field with name "${key}"`);
     }
 
-    function merge(schema, baseSchema) {
+    const merge = (schema, baseSchema) => {
         if (baseSchema.paths._id &&
             baseSchema.paths._id.options &&
             !baseSchema.paths._id.options.auto) {
@@ -122,7 +122,7 @@ module.exports = function discriminator(model, name, schema) {
         schema.callQueue = baseSchema.callQueue.
             concat(schema.callQueue.slice(schema._defaultMiddleware.length));
         schema._requiredpaths = undefined; // reset just in case Schema#requiredPaths() was called on either schema
-    }
+    };
 
     // merges base schema into new discriminator schema and sets new type field.
     merge(schema, model.schema);

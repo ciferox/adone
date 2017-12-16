@@ -402,7 +402,7 @@ describe("types.buffer", () => {
             let buf = new MongooseBuffer(0);
             let out = buf.toObject(2);
             // validate the drivers Binary type output retains the option
-            assert.equal(out.sub_type, 2);
+            assert.equal(out.subType, 2);
             done();
         });
     });

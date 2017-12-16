@@ -7,7 +7,7 @@ const STATES = require("./connectionstate");
 const MongooseError = require("./error");
 const muri = require("muri");
 const PromiseProvider = require("./promise_provider");
-const mongodb = require("mongodb");
+const mongodb = adone.database.mongo;
 const util = require("util");
 
 const {
@@ -322,7 +322,7 @@ Connection.prototype.open = util.deprecate(function () {
                 setImmediate(() => {
                     reject(error);
                     if (!callback && !promise.$hasHandler) {
-                        _this.emit('error', error);
+                        _this.emit("error", error);
                     }
                 });
                 return;
@@ -361,11 +361,44 @@ Connection.prototype._openWithoutPromise = function () {
         if (error && !callback) {
             // Error can be on same tick re: christkv/mongodb-core#157
             setImmediate(() => {
-                _this.emit('error', error);
+                _this.emit("error", error);
             });
 
         }
     });
+};
+
+/*!
+ * ignore
+ */
+
+const _wrapConnHelper = (fn) => {
+    return function () {
+        const _this = this;
+        const Promise = PromiseProvider.get();
+        const cb = arguments.length > 0 ? arguments[arguments.length - 1] : null;
+        const argsWithoutCb = is.function(cb) ?
+            Array.prototype.slice.call(arguments, 0, arguments.length - 1) :
+            Array.prototype.slice.call(arguments);
+        const promise = new Promise.ES6(((resolve, reject) => {
+            if (_this.readyState !== STATES.connected) {
+                _this.on("open", () => {
+                    resolve(fn.apply(_this, argsWithoutCb));
+                });
+            } else {
+                resolve(fn.apply(_this, argsWithoutCb));
+            }
+        }));
+        if (cb) {
+            promise.
+                then(() => {
+                    cb();
+                }, (error) => {
+                    cb(error);
+                });
+        }
+        return promise;
+    };
 };
 
 /**
@@ -382,12 +415,8 @@ Connection.prototype._openWithoutPromise = function () {
  * @api public
  */
 
-Connection.prototype.createCollection = _wrapConnHelper(function createCollection(collection, options, cb) {
-    if (is.function(options)) {
-        cb = options;
-        options = {};
-    }
-    this.db.createCollection(collection, options, cb);
+Connection.prototype.createCollection = _wrapConnHelper(function createCollection(collection, options) {
+    return this.db.createCollection(collection, options);
 });
 
 /**
@@ -416,51 +445,6 @@ Connection.prototype.dropCollection = _wrapConnHelper(function dropCollection(co
 Connection.prototype.dropDatabase = _wrapConnHelper(function dropDatabase(cb) {
     this.db.dropDatabase(cb);
 });
-
-/*!
- * ignore
- */
-
-function _wrapConnHelper(fn) {
-    return function () {
-        const _this = this;
-        const Promise = PromiseProvider.get();
-        const cb = arguments.length > 0 ? arguments[arguments.length - 1] : null;
-        const argsWithoutCb = is.function(cb) ?
-            Array.prototype.slice.call(arguments, 0, arguments.length - 1) :
-            Array.prototype.slice.call(arguments);
-        const promise = new Promise.ES6(((resolve, reject) => {
-            if (_this.readyState !== STATES.connected) {
-                _this.on("open", () => {
-                    fn.apply(_this, argsWithoutCb.concat([function (error) {
-                        if (error) {
-                            reject(error);
-                        } else {
-                            resolve();
-                        }
-                    }]));
-                });
-            } else {
-                fn.apply(_this, argsWithoutCb.concat([function (error) {
-                    if (error) {
-                        reject(error);
-                    } else {
-                        resolve();
-                    }
-                }]));
-            }
-        }));
-        if (cb) {
-            promise.
-                then(() => {
-                    cb();
-                }, (error) => {
-                    cb(error);
-                });
-        }
-        return promise;
-    };
-}
 
 /*!
  * ignore
@@ -633,7 +617,7 @@ Connection.prototype.openSet = util.deprecate(function (uris, database, options,
 
     const _this = this;
     let emitted = false;
-    var promise = new Promise.ES6(((resolve, reject) => {
+    const promise = new Promise.ES6(((resolve, reject) => {
         _this._open(true, (error) => {
             callback && callback(error);
             if (error) {
@@ -707,7 +691,6 @@ Connection.prototype._open = function (emit, callback) {
             }
             return;
         }
-
         _this.onOpen(callback);
     });
 };
@@ -721,7 +704,7 @@ Connection.prototype._open = function (emit, callback) {
 Connection.prototype.onOpen = function (callback) {
     const _this = this;
 
-    function open(err, isAuth) {
+    const open = (err, isAuth) => {
         if (err) {
             _this.readyState = isAuth ? STATES.unauthorized : STATES.disconnected;
             _this.error(err, callback);
@@ -737,14 +720,13 @@ Connection.prototype.onOpen = function (callback) {
                 _this.collections[i].onOpen();
             }
         }
-
         callback && callback();
         _this.emit("open");
-    }
+    };
 
     // re-authenticate if we're not already connected #3871
     if (this._readyState !== STATES.connected && this.shouldAuthenticate()) {
-        _this.db.authenticate(_this.user, _this.pass, _this.options.auth, (err) => {
+        adone.promise.nodeify(_this.db.authenticate(_this.user, _this.pass, _this.options.auth), (err) => {
             open(err, true);
         });
     } else {
@@ -821,7 +803,7 @@ Connection.prototype.openUri = function (uri, options, callback) {
     this._connectionOptions = options;
 
     const promise = new Promise.ES6(((resolve, reject) => {
-        mongodb.MongoClient.connect(uri, options, (error, db) => {
+        adone.promise.nodeify(mongodb.connect(uri, options), (error, db) => {
             if (error) {
                 _this.readyState = STATES.disconnected;
                 if (_this.listeners("error").length) {
@@ -833,18 +815,18 @@ Connection.prototype.openUri = function (uri, options, callback) {
             // Backwards compat for mongoose 4.x
             db.on("reconnect", () => {
                 _this.readyState = STATES.connected;
-                _this.emit('reconnect');
-                _this.emit('reconnected');
+                _this.emit("reconnect");
+                _this.emit("reconnected");
             });
             db.s.topology.on("reconnectFailed", () => {
-                _this.emit('reconnectFailed');
+                _this.emit("reconnectFailed");
             });
             db.s.topology.on("close", () => {
                 // Implicitly emits 'disconnected'
                 _this.readyState = STATES.disconnected;
             });
             db.on("timeout", () => {
-                _this.emit('timeout');
+                _this.emit("timeout");
             });
 
             delete _this.then;
@@ -853,7 +835,7 @@ Connection.prototype.openUri = function (uri, options, callback) {
             _this.db = db;
             _this.readyState = STATES.connected;
 
-            for (let i in _this.collections) {
+            for (const i in _this.collections) {
                 if (utils.object.hasOwnProperty(_this.collections, i)) {
                     _this.collections[i].onOpen();
                 }

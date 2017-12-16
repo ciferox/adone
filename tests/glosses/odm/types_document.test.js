@@ -13,23 +13,25 @@ describe("types.document", () => {
     let MovieSchema;
 
     before(() => {
-        function _Dummy() {
-            mongoose.Document.call(this, {});
+        class _Dummy extends mongoose.Document {
+            constructor() {
+                super({});
+            }
         }
         Dummy = _Dummy;
-        Dummy.prototype.__proto__ = mongoose.Document.prototype;
         Dummy.prototype.$__setSchema(new Schema());
 
-        function _Subdocument() {
-            const arr = new DocumentArray();
-            arr._path = "jsconf.ar";
-            arr._parent = new Dummy();
-            arr[0] = this;
-            Embedded.call(this, {}, arr);
+        class _Subdocument extends Embedded {
+            constructor() {
+                const arr = new DocumentArray();
+                arr._path = "jsconf.ar";
+                arr._parent = new Dummy();
+                super({}, arr);
+                arr[0] = this;
+            }
         }
-        Subdocument = _Subdocument;
 
-        Subdocument.prototype.__proto__ = Embedded.prototype;
+        Subdocument = _Subdocument;
 
         for (const i in EventEmitter.prototype) {
             Subdocument[i] = EventEmitter.prototype[i];

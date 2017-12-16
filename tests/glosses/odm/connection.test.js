@@ -5,6 +5,10 @@ const random = adone.odm.utils.random;
 const server = require("./common").server;
 const start = require("./common");
 
+const {
+    Mongos
+} = adone.private(adone.database.mongo);
+
 const mongoose = adone.odm;
 const Schema = mongoose.Schema;
 
@@ -1356,58 +1360,40 @@ describe("connections:", () => {
 
     it("connecting to single mongos (gh-3537)", (done) => {
         const db = mongoose.createConnection("localhost:27017", { mongos: true });
-        assert.ok(db.db.serverConfig instanceof mongoose.mongo.Mongos);
+        assert.ok(db.db.serverConfig instanceof Mongos);
         db.on("error", () => {
             done();
         });
     });
 
-    it("force close (gh-5664)", (done) => {
+    it("force close (gh-5664)", async () => {
         const opts = { useMongoClient: true };
         const db = mongoose.createConnection("mongodb://localhost:27017/test", opts);
         const coll = db.collection("Test");
-        db.then(() => {
-            setTimeout(() => {
-                coll.insertOne({ x: 1 }, (error) => {
-                    assert.ok(error);
-                    assert.ok(error.message.indexOf("pool was destroyed") !== -1, error.message);
-                    done();
-                });
-            }, 100);
 
-            // Force close
-            db.close(true);
-        });
+        await db;
+
+        db.close(true);
+
+        await adone.promise.delay(100);
+
+        await assert.throws(async () => {
+            await coll.insertOne({ x: 1 });
+        }, "pool was destroyed");
     });
 
-    it("force close with connection created after close (gh-5664)", (done) => {
+    it("force close with connection created after close (gh-5664)", async () => {
         const opts = { useMongoClient: true };
-        const db = mongoose.createConnection("mongodb://localhost:27017/test", opts);
-        db.then(() => {
-            setTimeout(() => {
-                // TODO: enforce error.message, right now get a confusing error
-                /*db.collection('Test').insertOne({x:1}, function(error) {
-                  assert.ok(error);
-        
-                  //assert.ok(error.message.indexOf('pool was destroyed') !== -1, error.message);
-                  done();
-                });*/
+        const db = await mongoose.createConnection("mongodb://localhost:27017/test", opts);
 
-                let threw = false;
-                try {
-                    db.collection("Test").insertOne({ x: 1 }, () => { });
-                } catch (error) {
-                    threw = true;
-                    assert.ok(error);
-                }
+        db.close(true);
 
-                assert.ok(threw);
-                done();
-            }, 100);
+        await adone.promise.delay(100);
 
-            // Force close
-            db.close(true);
+        await assert.throws(async () => {
+            await db.collection("test").insertOne({ x: 1 });
         });
+        // TODO: must throw pool was destoyed
     });
 
     it("bufferCommands (gh-5720)", (done) => {

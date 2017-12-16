@@ -5,8 +5,6 @@ const {
     is
 } = adone;
 
-module.exports = applyHooks;
-
 /*!
  * Register hooks for this model
  *
@@ -14,7 +12,7 @@ module.exports = applyHooks;
  * @param {Schema} schema
  */
 
-function applyHooks(model, schema) {
+const applyHooks = (model, schema) => {
     const q = schema && schema.callQueue;
     let toWrapEl;
     let len;
@@ -199,4 +197,6 @@ function applyHooks(model, schema) {
             model.prototype.$post.apply(model.prototype, args);
         }
     }
-}
+};
+
+module.exports = applyHooks;

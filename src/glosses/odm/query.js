@@ -8,7 +8,6 @@ const castUpdate = require("./services/query/castUpdate");
 const hasDollarKeys = require("./services/query/hasDollarKeys");
 const helpers = require("./queryhelpers");
 const isInclusive = require("./services/projection/isInclusive");
-const mquery = require("mquery");
 const readPref = require("./drivers").ReadPreference;
 const selectPopulatedFields = require("./services/query/selectPopulatedFields");
 const setDefaultsOnInsert = require("./services/setDefaultsOnInsert");
@@ -16,6 +15,7 @@ const slice = require("sliced");
 const updateValidators = require("./services/updateValidators");
 const util = require("util");
 const utils = require("./utils");
+const mongo = adone.database.mongo;
 
 const {
     is
@@ -51,6 +51,40 @@ const completeMany = function (model, docs, fields, userProvidedFields, pop, cal
         arr[i] = helpers.createModel(model, docs[i], fields, userProvidedFields);
         arr[i].init(docs[i], opts, init);
     }
+};
+
+/*!
+ * hydrates many documents
+ *
+ * @param {Model} model
+ * @param {Array} docs
+ * @param {Object} fields
+ * @param {Query} self
+ * @param {Array} [pop] array of paths used in population
+ * @param {Function} callback
+ */
+const completeManyAsync = async function (model, docs, fields, userProvidedFields, pop) {
+    const arr = [];
+    let count = docs.length;
+    const len = count;
+    const opts = pop ? { populated: pop } : undefined;
+    let error = null;
+    return new Promise((resolve, reject) => {
+        const init = function (_error) {
+            if (!is.nil(error)) {
+                return;
+            }
+            if (!is.nil(_error)) {
+                error = _error;
+                return reject(error);
+            }
+            --count || resolve(arr);
+        };
+        for (let i = 0; i < len; ++i) {
+            arr[i] = helpers.createModel(model, docs[i], fields, userProvidedFields);
+            arr[i].init(docs[i], opts, init);
+        }
+    });
 };
 
 /*!
@@ -120,6 +154,42 @@ const completeOne = function (model, doc, res, options, fields, userProvidedFiel
 };
 
 /*!
+ * hydrates a document
+ *
+ * @param {Model} model
+ * @param {Document} doc
+ * @param {Object} res 3rd parameter to callback
+ * @param {Object} fields
+ * @param {Query} self
+ * @param {Array} [pop] array of paths used in population
+ * @param {Function} callback
+ */
+const completeOneAsync = function (model, doc, res, options, fields, userProvidedFields, pop) {
+    const opts = pop ?
+        { populated: pop }
+        : undefined;
+
+    const casted = helpers.createModel(model, doc, fields, userProvidedFields);
+
+    return new Promise((resolve, reject) => {
+        casted.init(doc, opts, (err) => {
+            if (err) {
+                return reject(err);
+            }
+
+            if (options.rawResult) {
+                res.value = casted;
+                return resolve(res);
+            }
+            if (options.passRawResult) {
+                return resolve([casted, decorateResult(res)]);
+            }
+            resolve(casted);
+        });
+    });
+};
+
+/*!
  * If the model is a discriminator type and not root, then add the key & value to the criteria.
  */
 const prepareDiscriminatorCriteria = function (query) {
@@ -134,14 +204,14 @@ const prepareDiscriminatorCriteria = function (query) {
     }
 };
 
-const _completeOneLean = function (doc, res, opts, callback) {
+const _completeOneLeanAsync = function (doc, res, opts) {
     if (opts.rawResult) {
-        return callback(null, res);
+        return res;
     }
     if (opts.passRawResult) {
-        return callback(null, doc, decorateResult(res));
+        return [doc, decorateResult(res)];
     }
-    return callback(null, doc);
+    return doc;
 };
 
 /*!
@@ -170,21 +240,10 @@ const convertSortToArray = function (opts) {
 /*!
  * Internal helper for update, updateMany, updateOne, replaceOne
  */
-const _update = function (query, op, conditions, doc, options, callback) {
+const _update = function (query, op, conditions, doc, options) {
     // make sure we don't send in the whole Document to merge()
     query.op = op;
     conditions = utils.toObject(conditions);
-
-    const oldCb = callback;
-    if (oldCb) {
-        if (is.function(oldCb)) {
-            callback = function (error, result) {
-                oldCb(error, result ? result.result : { ok: 0, n: 0, nModified: 0 });
-            };
-        } else {
-            throw new Error("Invalid callback() argument.");
-        }
-    }
 
     // strict is an option used in the update checking, make sure it gets set
     if (options) {
@@ -202,7 +261,7 @@ const _update = function (query, op, conditions, doc, options, callback) {
         doc = query._updateForExec();
     }
 
-    if (!(conditions instanceof Query) &&
+    if (!(conditions instanceof mongo.QueryBuilder) &&
         !is.nil(conditions) &&
         conditions.toString() !== "[object Object]") {
         query.error(new ObjectParameterError(conditions, "filter", op));
@@ -214,10 +273,7 @@ const _update = function (query, op, conditions, doc, options, callback) {
     const castedQuery = castQuery(query);
     if (castedQuery instanceof Error) {
         query.error(castedQuery);
-        if (callback) {
-            callback(castedQuery);
-            return query;
-        } else if (!options || !options.dontThrowCastError) {
+        if (!options || !options.dontThrowCastError) {
             throw castedQuery;
         }
     }
@@ -233,10 +289,7 @@ const _update = function (query, op, conditions, doc, options, callback) {
             (options && options.overwrite) || op === "replaceOne");
     } catch (err) {
         query.error(castedQuery);
-        if (callback) {
-            callback(err);
-            return query;
-        } else if (!options || !options.dontThrowCastError) {
+        if (!options || !options.dontThrowCastError) {
             throw err;
         }
     }
@@ -245,7 +298,6 @@ const _update = function (query, op, conditions, doc, options, callback) {
     if (!castedDoc) {
         // Make sure promises know that this is still an update, see gh-2796
         query.op = op;
-        callback && callback(null);
         return query;
     }
 
@@ -257,15 +309,18 @@ const _update = function (query, op, conditions, doc, options, callback) {
         query._update = castedDoc;
     }
 
-    // Hooks
-    if (callback) {
-        if (op === "update") {
-            return query._execUpdate(callback);
-        }
-        return query[`_${op}`](callback);
-    }
+    return mongo.QueryBuilder.prototype[op].call(query, castedQuery, castedDoc, options);
+};
 
-    return mquery.prototype[op].call(query, castedQuery, castedDoc, options, callback);
+const Callbackify = (target, key, descriptor) => {
+    const { value } = descriptor;
+    descriptor.value = function (...args) {
+        if (args.length && is.function(args[args.length - 1])) {
+            const cb = args.pop();
+            return adone.promise.nodeify(value.apply(this, args), cb);
+        }
+        return value.apply(this, args);
+    };
 };
 
 /**
@@ -284,7 +339,7 @@ const _update = function (query, op, conditions, doc, options, callback) {
  * @param {Object} [collection] Mongoose collection
  * @api private
  */
-export default class Query extends mquery {
+export default class Query extends mongo.QueryBuilder {
     constructor(conditions, options, model, collection) {
         super(collection, options);
 
@@ -333,24 +388,15 @@ export default class Query extends mquery {
                 numCallbackParams: 1,
                 nullResultByDefault: true
             };
-            this._count = this.model.hooks.createWrapper("count",
-                Query.prototype._count, this, kareemOptions);
-            this._execUpdate = this.model.hooks.createWrapper("update",
-                Query.prototype._execUpdate, this, kareemOptions);
-            this._find = this.model.hooks.createWrapper("find",
-                Query.prototype._find, this, kareemOptions);
-            this._findOne = this.model.hooks.createWrapper("findOne",
-                Query.prototype._findOne, this, kareemOptions);
-            this._findOneAndRemove = this.model.hooks.createWrapper("findOneAndRemove",
-                Query.prototype._findOneAndRemove, this, kareemOptions);
-            this._findOneAndUpdate = this.model.hooks.createWrapper("findOneAndUpdate",
-                Query.prototype._findOneAndUpdate, this, kareemOptions);
-            this._replaceOne = this.model.hooks.createWrapper("replaceOne",
-                Query.prototype._replaceOne, this, kareemOptions);
-            this._updateMany = this.model.hooks.createWrapper("updateMany",
-                Query.prototype._updateMany, this, kareemOptions);
-            this._updateOne = this.model.hooks.createWrapper("updateOne",
-                Query.prototype._updateOne, this, kareemOptions);
+            this._countExec = adone.promise.promisify(this.model.hooks.createWrapper("count", Query.prototype._countExec, this, kareemOptions));
+            this._updateExec = adone.promise.promisify(this.model.hooks.createWrapper("update", Query.prototype._updateExec, this, kareemOptions));
+            this._findExec = adone.promise.promisify(this.model.hooks.createWrapper("find", Query.prototype._findExec, this, kareemOptions));
+            this._findOneExec = adone.promise.promisify(this.model.hooks.createWrapper("findOne", Query.prototype._findOneExec, this, kareemOptions));
+            this._findOneAndRemoveExec = adone.promise.promisify(this.model.hooks.createWrapper("findOneAndRemove", Query.prototype._findOneAndRemoveExec, this, kareemOptions));
+            this._findOneAndUpdateExec = adone.promise.promisify(this.model.hooks.createWrapper("findOneAndUpdate", Query.prototype._findOneAndUpdateExec, this, kareemOptions));
+            this._replaceOneExec = adone.promise.promisify(this.model.hooks.createWrapper("replaceOne", Query.prototype._replaceOneExec, this, kareemOptions));
+            this._updateManyExec = adone.promise.promisify(this.model.hooks.createWrapper("updateMany", Query.prototype._updateManyExec, this, kareemOptions));
+            this._updateOneExec = adone.promise.promisify(this.model.hooks.createWrapper("updateOne", Query.prototype._updateOneExec, this, kareemOptions));
         }
     }
 
@@ -521,249 +567,6 @@ export default class Query extends mquery {
         return this.select(p);
     }
 
-    /**
-     * Specifies the complementary comparison value for paths specified with `where()`
-     *
-     * ####Example
-     *
-     *     User.where('age').equals(49);
-     *
-     *     // is the same as
-     *
-     *     User.where('age', 49);
-     *
-     * @method equals
-     * @memberOf Query
-     * @param {Object} val
-     * @return {Query} this
-     * @api public
-     */
-
-    /**
-     * Specifies arguments for an `$or` condition.
-     *
-     * ####Example
-     *
-     *     query.or([{ color: 'red' }, { status: 'emergency' }])
-     *
-     * @see $or http://docs.mongodb.org/manual/reference/operator/or/
-     * @method or
-     * @memberOf Query
-     * @param {Array} array array of conditions
-     * @return {Query} this
-     * @api public
-     */
-
-    /**
-     * Specifies arguments for a `$nor` condition.
-     *
-     * ####Example
-     *
-     *     query.nor([{ color: 'green' }, { status: 'ok' }])
-     *
-     * @see $nor http://docs.mongodb.org/manual/reference/operator/nor/
-     * @method nor
-     * @memberOf Query
-     * @param {Array} array array of conditions
-     * @return {Query} this
-     * @api public
-     */
-
-    /**
-     * Specifies arguments for a `$and` condition.
-     *
-     * ####Example
-     *
-     *     query.and([{ color: 'green' }, { status: 'ok' }])
-     *
-     * @method and
-     * @memberOf Query
-     * @see $and http://docs.mongodb.org/manual/reference/operator/and/
-     * @param {Array} array array of conditions
-     * @return {Query} this
-     * @api public
-     */
-
-    /**
-     * Specifies a $gt query condition.
-     *
-     * When called with one argument, the most recent path passed to `where()` is used.
-     *
-     * ####Example
-     *
-     *     Thing.find().where('age').gt(21)
-     *
-     *     // or
-     *     Thing.find().gt('age', 21)
-     *
-     * @method gt
-     * @memberOf Query
-     * @param {String} [path]
-     * @param {Number} val
-     * @see $gt http://docs.mongodb.org/manual/reference/operator/gt/
-     * @api public
-     */
-
-    /**
-     * Specifies a $gte query condition.
-     *
-     * When called with one argument, the most recent path passed to `where()` is used.
-     *
-     * @method gte
-     * @memberOf Query
-     * @param {String} [path]
-     * @param {Number} val
-     * @see $gte http://docs.mongodb.org/manual/reference/operator/gte/
-     * @api public
-     */
-
-    /**
-     * Specifies a $lt query condition.
-     *
-     * When called with one argument, the most recent path passed to `where()` is used.
-     *
-     * @method lt
-     * @memberOf Query
-     * @param {String} [path]
-     * @param {Number} val
-     * @see $lt http://docs.mongodb.org/manual/reference/operator/lt/
-     * @api public
-     */
-
-    /**
-     * Specifies a $lte query condition.
-     *
-     * When called with one argument, the most recent path passed to `where()` is used.
-     *
-     * @method lte
-     * @see $lte http://docs.mongodb.org/manual/reference/operator/lte/
-     * @memberOf Query
-     * @param {String} [path]
-     * @param {Number} val
-     * @api public
-     */
-
-    /**
-     * Specifies a $ne query condition.
-     *
-     * When called with one argument, the most recent path passed to `where()` is used.
-     *
-     * @see $ne http://docs.mongodb.org/manual/reference/operator/ne/
-     * @method ne
-     * @memberOf Query
-     * @param {String} [path]
-     * @param {Number} val
-     * @api public
-     */
-
-    /**
-     * Specifies an $in query condition.
-     *
-     * When called with one argument, the most recent path passed to `where()` is used.
-     *
-     * @see $in http://docs.mongodb.org/manual/reference/operator/in/
-     * @method in
-     * @memberOf Query
-     * @param {String} [path]
-     * @param {Number} val
-     * @api public
-     */
-
-    /**
-     * Specifies an $nin query condition.
-     *
-     * When called with one argument, the most recent path passed to `where()` is used.
-     *
-     * @see $nin http://docs.mongodb.org/manual/reference/operator/nin/
-     * @method nin
-     * @memberOf Query
-     * @param {String} [path]
-     * @param {Number} val
-     * @api public
-     */
-
-    /**
-     * Specifies an $all query condition.
-     *
-     * When called with one argument, the most recent path passed to `where()` is used.
-     *
-     * @see $all http://docs.mongodb.org/manual/reference/operator/all/
-     * @method all
-     * @memberOf Query
-     * @param {String} [path]
-     * @param {Number} val
-     * @api public
-     */
-
-    /**
-     * Specifies a $size query condition.
-     *
-     * When called with one argument, the most recent path passed to `where()` is used.
-     *
-     * ####Example
-     *
-     *     MyModel.where('tags').size(0).exec(function (err, docs) {
-     *       if (err) return handleError(err);
-     *
-     *       assert(Array.isArray(docs));
-     *       console.log('documents with 0 tags', docs);
-     *     })
-     *
-     * @see $size http://docs.mongodb.org/manual/reference/operator/size/
-     * @method size
-     * @memberOf Query
-     * @param {String} [path]
-     * @param {Number} val
-     * @api public
-     */
-
-    /**
-     * Specifies a $regex query condition.
-     *
-     * When called with one argument, the most recent path passed to `where()` is used.
-     *
-     * @see $regex http://docs.mongodb.org/manual/reference/operator/regex/
-     * @method regex
-     * @memberOf Query
-     * @param {String} [path]
-     * @param {String|RegExp} val
-     * @api public
-     */
-
-    /**
-     * Specifies a $maxDistance query condition.
-     *
-     * When called with one argument, the most recent path passed to `where()` is used.
-     *
-     * @see $maxDistance http://docs.mongodb.org/manual/reference/operator/maxDistance/
-     * @method maxDistance
-     * @memberOf Query
-     * @param {String} [path]
-     * @param {Number} val
-     * @api public
-     */
-
-
-    /**
-    * Specifies a `$mod` condition, filters documents for documents whose
-    * `path` property is a number that is equal to `remainder` modulo `divisor`.
-    *
-    * ####Example
-    *
-    *     // All find products whose inventory is odd
-    *     Product.find().mod('inventory', [2, 1]);
-    *     Product.find().where('inventory').mod([2, 1]);
-    *     // This syntax is a little strange, but supported.
-    *     Product.find().where('inventory').mod(2, 1);
-    *
-    * @method mod
-    * @memberOf Query
-    * @param {String} [path]
-    * @param {Array} val must be of length 2, first element is `divisor`, 2nd element is `remainder`.
-    * @return {Query} this
-    * @see $mod http://docs.mongodb.org/manual/reference/operator/mod/
-    * @api public
-    */
     mod() {
         let val;
         let path;
@@ -789,276 +592,6 @@ export default class Query extends mquery {
         return this;
     }
 
-    /**
-     * Specifies an `$exists` condition
-     *
-     * ####Example
-     *
-     *     // { name: { $exists: true }}
-     *     Thing.where('name').exists()
-     *     Thing.where('name').exists(true)
-     *     Thing.find().exists('name')
-     *
-     *     // { name: { $exists: false }}
-     *     Thing.where('name').exists(false);
-     *     Thing.find().exists('name', false);
-     *
-     * @method exists
-     * @memberOf Query
-     * @param {String} [path]
-     * @param {Number} val
-     * @return {Query} this
-     * @see $exists http://docs.mongodb.org/manual/reference/operator/exists/
-     * @api public
-     */
-
-    /**
-     * Specifies an `$elemMatch` condition
-     *
-     * ####Example
-     *
-     *     query.elemMatch('comment', { author: 'autobot', votes: {$gte: 5}})
-     *
-     *     query.where('comment').elemMatch({ author: 'autobot', votes: {$gte: 5}})
-     *
-     *     query.elemMatch('comment', function (elem) {
-     *       elem.where('author').equals('autobot');
-     *       elem.where('votes').gte(5);
-     *     })
-     *
-     *     query.where('comment').elemMatch(function (elem) {
-     *       elem.where({ author: 'autobot' });
-     *       elem.where('votes').gte(5);
-     *     })
-     *
-     * @method elemMatch
-     * @memberOf Query
-     * @param {String|Object|Function} path
-     * @param {Object|Function} criteria
-     * @return {Query} this
-     * @see $elemMatch http://docs.mongodb.org/manual/reference/operator/elemMatch/
-     * @api public
-     */
-
-    /**
-     * Defines a `$within` or `$geoWithin` argument for geo-spatial queries.
-     *
-     * ####Example
-     *
-     *     query.where(path).within().box()
-     *     query.where(path).within().circle()
-     *     query.where(path).within().geometry()
-     *
-     *     query.where('loc').within({ center: [50,50], radius: 10, unique: true, spherical: true });
-     *     query.where('loc').within({ box: [[40.73, -73.9], [40.7, -73.988]] });
-     *     query.where('loc').within({ polygon: [[],[],[],[]] });
-     *
-     *     query.where('loc').within([], [], []) // polygon
-     *     query.where('loc').within([], []) // box
-     *     query.where('loc').within({ type: 'LineString', coordinates: [...] }); // geometry
-     *
-     * **MUST** be used after `where()`.
-     *
-     * ####NOTE:
-     *
-     * As of Mongoose 3.7, `$geoWithin` is always used for queries. To change this behavior, see [Query.use$geoWithin](#query_Query-use%2524geoWithin).
-     *
-     * ####NOTE:
-     *
-     * In Mongoose 3.7, `within` changed from a getter to a function. If you need the old syntax, use [this](https://github.com/ebensing/mongoose-within).
-     *
-     * @method within
-     * @see $polygon http://docs.mongodb.org/manual/reference/operator/polygon/
-     * @see $box http://docs.mongodb.org/manual/reference/operator/box/
-     * @see $geometry http://docs.mongodb.org/manual/reference/operator/geometry/
-     * @see $center http://docs.mongodb.org/manual/reference/operator/center/
-     * @see $centerSphere http://docs.mongodb.org/manual/reference/operator/centerSphere/
-     * @memberOf Query
-     * @return {Query} this
-     * @api public
-     */
-
-    /**
-     * Specifies a $slice projection for an array.
-     *
-     * ####Example
-     *
-     *     query.slice('comments', 5)
-     *     query.slice('comments', -5)
-     *     query.slice('comments', [10, 5])
-     *     query.where('comments').slice(5)
-     *     query.where('comments').slice([-10, 5])
-     *
-     * @method slice
-     * @memberOf Query
-     * @param {String} [path]
-     * @param {Number} val number/range of elements to slice
-     * @return {Query} this
-     * @see mongodb http://www.mongodb.org/display/DOCS/Retrieving+a+Subset+of+Fields#RetrievingaSubsetofFields-RetrievingaSubrangeofArrayElements
-     * @see $slice http://docs.mongodb.org/manual/reference/projection/slice/#prj._S_slice
-     * @api public
-     */
-
-    /**
-     * Specifies the maximum number of documents the query will return.
-     *
-     * ####Example
-     *
-     *     query.limit(20)
-     *
-     * ####Note
-     *
-     * Cannot be used with `distinct()`
-     *
-     * @method limit
-     * @memberOf Query
-     * @param {Number} val
-     * @api public
-     */
-
-    /**
-     * Specifies the number of documents to skip.
-     *
-     * ####Example
-     *
-     *     query.skip(100).limit(20)
-     *
-     * ####Note
-     *
-     * Cannot be used with `distinct()`
-     *
-     * @method skip
-     * @memberOf Query
-     * @param {Number} val
-     * @see cursor.skip http://docs.mongodb.org/manual/reference/method/cursor.skip/
-     * @api public
-     */
-
-    /**
-     * Specifies the maxScan option.
-     *
-     * ####Example
-     *
-     *     query.maxScan(100)
-     *
-     * ####Note
-     *
-     * Cannot be used with `distinct()`
-     *
-     * @method maxScan
-     * @memberOf Query
-     * @param {Number} val
-     * @see maxScan http://docs.mongodb.org/manual/reference/operator/maxScan/
-     * @api public
-     */
-
-    /**
-     * Specifies the batchSize option.
-     *
-     * ####Example
-     *
-     *     query.batchSize(100)
-     *
-     * ####Note
-     *
-     * Cannot be used with `distinct()`
-     *
-     * @method batchSize
-     * @memberOf Query
-     * @param {Number} val
-     * @see batchSize http://docs.mongodb.org/manual/reference/method/cursor.batchSize/
-     * @api public
-     */
-
-    /**
-     * Specifies the `comment` option.
-     *
-     * ####Example
-     *
-     *     query.comment('login query')
-     *
-     * ####Note
-     *
-     * Cannot be used with `distinct()`
-     *
-     * @method comment
-     * @memberOf Query
-     * @param {Number} val
-     * @see comment http://docs.mongodb.org/manual/reference/operator/comment/
-     * @api public
-     */
-
-    /**
-     * Specifies this query as a `snapshot` query.
-     *
-     * ####Example
-     *
-     *     query.snapshot() // true
-     *     query.snapshot(true)
-     *     query.snapshot(false)
-     *
-     * ####Note
-     *
-     * Cannot be used with `distinct()`
-     *
-     * @method snapshot
-     * @memberOf Query
-     * @see snapshot http://docs.mongodb.org/manual/reference/operator/snapshot/
-     * @return {Query} this
-     * @api public
-     */
-
-    /**
-     * Sets query hints.
-     *
-     * ####Example
-     *
-     *     query.hint({ indexA: 1, indexB: -1})
-     *
-     * ####Note
-     *
-     * Cannot be used with `distinct()`
-     *
-     * @method hint
-     * @memberOf Query
-     * @param {Object} val a hint object
-     * @return {Query} this
-     * @see $hint http://docs.mongodb.org/manual/reference/operator/hint/
-     * @api public
-     */
-
-    /**
-     * Specifies which document fields to include or exclude (also known as the query "projection")
-     *
-     * When using string syntax, prefixing a path with `-` will flag that path as excluded. When a path does not have the `-` prefix, it is included. Lastly, if a path is prefixed with `+`, it forces inclusion of the path, which is useful for paths excluded at the [schema level](/docs/api.html#schematype_SchemaType-select).
-     *
-     * A projection _must_ be either inclusive or exclusive. In other words, you must
-     * either list the fields to include (which excludes all others), or list the fields
-     * to exclude (which implies all other fields are included). The [`_id` field is the only exception because MongoDB includes it by default](https://docs.mongodb.com/manual/tutorial/project-fields-from-query-results/#suppress-id-field).
-     *
-     * ####Example
-     *
-     *     // include a and b, exclude other fields
-     *     query.select('a b');
-     *
-     *     // exclude c and d, include other fields
-     *     query.select('-c -d');
-     *
-     *     // or you may use object notation, useful when
-     *     // you have keys already prefixed with a "-"
-     *     query.select({ a: 1, b: 1 });
-     *     query.select({ c: 0, d: 0 });
-     *
-     *     // force inclusion of field excluded at schema level
-     *     query.select('+path')
-     *
-     * @method select
-     * @memberOf Query
-     * @param {Object|String} arg
-     * @return {Query} this
-     * @see SchemaType
-     * @api public
-     */
     select() {
         let arg = arguments[0];
         if (!arg) {
@@ -1333,7 +866,7 @@ export default class Query extends mquery {
                 }
                 ret.$set[op] = update[op];
                 ops.splice(i, 1);
-                if (!~ops.indexOf("$set")) {
+                if (!ops.includes("$set")) {
                     ops.push("$set");
                 }
             } else if (op === "$set") {
@@ -1348,31 +881,6 @@ export default class Query extends mquery {
         return ret;
     }
 
-    /**
-     * Makes sure _path is set.
-     *
-     * @method _ensurePath
-     * @param {String} method
-     * @api private
-     * @receiver Query
-     */
-
-    /**
-     * Determines if `conds` can be merged using `mquery().merge()`
-     *
-     * @method canMerge
-     * @memberOf Query
-     * @param {Object} conds
-     * @return {Boolean}
-     * @api private
-     */
-
-    /**
-     * Returns default options for this query.
-     *
-     * @param {Model} model
-     * @api private
-     */
     _optionsForExec(model) {
         const options = super._optionsForExec.call(this);
 
@@ -1495,59 +1003,6 @@ export default class Query extends mquery {
     }
 
     /**
-     * Thunk around find()
-     *
-     * @param {Function} [callback]
-     * @return {Query} this
-     * @api private
-     */
-    _find(callback) {
-        this._castConditions();
-
-        if (!is.nil(this.error())) {
-            callback(this.error());
-            return this;
-        }
-
-        this._applyPaths();
-        this._fields = this._castFields(this._fields);
-
-        const fields = this._fieldsForExec();
-        const options = this._mongooseOptions;
-        const _this = this;
-        const userProvidedFields = _this._userProvidedFields || {};
-
-        const cb = function (err, docs) {
-            if (err) {
-                return callback(err);
-            }
-
-            if (docs.length === 0) {
-                return callback(null, docs);
-            }
-
-            if (!options.populate) {
-                return Boolean(options.lean) === true
-                    ? callback(null, docs)
-                    : completeMany(_this.model, docs, fields, userProvidedFields, null, callback);
-            }
-
-            const pop = helpers.preparePopulationOptionsMQ(_this, options);
-            pop.__noPromise = true;
-            _this.model.populate(docs, pop, (err, docs) => {
-                if (err) {
-                    return callback(err);
-                }
-                return Boolean(options.lean) === true
-                    ? callback(null, docs)
-                    : completeMany(_this.model, docs, fields, userProvidedFields, pop, callback);
-            });
-        };
-
-        return super.find.call(this, {}, cb);
-    }
-
-    /**
      * Finds documents.
      *
      * When no `callback` is passed, the query is not executed. When the query is executed, the result will be an array of documents.
@@ -1569,21 +1024,53 @@ export default class Query extends mquery {
 
         conditions = utils.toObject(conditions);
 
-        if (mquery.canMerge(conditions)) {
+        if (mongo.QueryBuilder.canMerge(conditions)) {
             this.merge(conditions);
             prepareDiscriminatorCriteria(this);
         } else if (!is.nil(conditions)) {
             this.error(new ObjectParameterError(conditions, "filter", "find"));
         }
 
-        // if we don't have a callback, then just return the query object
-        if (!callback) {
-            return super.find.call(this);
+        const res = super.find({});
+        if (callback) {
+            return res.exec(callback);
+        }
+        return res;
+    }
+
+    @Callbackify
+    async _findExec() {
+        this._castConditions();
+
+        if (!is.nil(this.error())) {
+            throw this.error();
         }
 
-        this._find(callback);
+        this._applyPaths();
+        this._fields = this._castFields(this._fields);
 
-        return this;
+        const fields = this._fieldsForExec();
+        const options = this._mongooseOptions;
+        const _this = this;
+        const userProvidedFields = _this._userProvidedFields || {};
+
+        let docs = await super._findExec();
+
+        if (docs.length === 0) {
+            return docs;
+        }
+
+        if (!options.populate) {
+            return Boolean(options.lean) === true
+                ? docs
+                : completeManyAsync(_this.model, docs, fields, userProvidedFields, null);
+        }
+
+        const pop = helpers.preparePopulationOptionsMQ(_this, options);
+        docs = await _this.model.populate(docs, pop);
+        return Boolean(options.lean) === true
+            ? docs
+            : completeManyAsync(_this.model, docs, fields, userProvidedFields, pop);
     }
 
     /**
@@ -1652,55 +1139,6 @@ export default class Query extends mquery {
         return this;
     }
 
-    /**
-     * Thunk around findOne()
-     *
-     * @param {Function} [callback]
-     * @see findOne http://docs.mongodb.org/manual/reference/method/db.collection.findOne/
-     * @api private
-     */
-    _findOne(callback) {
-        this._castConditions();
-
-        if (this.error()) {
-            return callback(this.error());
-        }
-
-        this._applyPaths();
-        this._fields = this._castFields(this._fields);
-
-        const options = this._mongooseOptions;
-        const projection = this._fieldsForExec();
-        const userProvidedFields = this._userProvidedFields || {};
-        const _this = this;
-
-        // don't pass in the conditions because we already merged them in
-        super.findOne.call(_this, {}, (err, doc) => {
-            if (err) {
-                return callback(err);
-            }
-            if (!doc) {
-                return callback(null, null);
-            }
-
-            if (!options.populate) {
-                return Boolean(options.lean) === true
-                    ? callback(null, doc)
-                    : completeOne(_this.model, doc, null, {}, projection, userProvidedFields, null, callback);
-            }
-
-            const pop = helpers.preparePopulationOptionsMQ(_this, options);
-            pop.__noPromise = true;
-            _this.model.populate(doc, pop, (err, doc) => {
-                if (err) {
-                    return callback(err);
-                }
-                return Boolean(options.lean) === true
-                    ? callback(null, doc)
-                    : completeOne(_this.model, doc, null, {}, projection, userProvidedFields, pop, callback);
-            });
-        });
-    }
 
     /**
      * Declares the query a findOne operation. When executed, the first found document is passed to the callback.
@@ -1761,7 +1199,7 @@ export default class Query extends mquery {
             this.select(projection);
         }
 
-        if (mquery.canMerge(conditions)) {
+        if (mongo.QueryBuilder.canMerge(conditions)) {
             this.merge(conditions);
 
             prepareDiscriminatorCriteria(this);
@@ -1776,24 +1214,59 @@ export default class Query extends mquery {
             this.error(new ObjectParameterError(conditions, "filter", "findOne"));
         }
 
-        if (!callback) {
-            // already merged in the conditions, don't need to send them in.
-            return super.findOne.call(this);
+        const res = super.findOne();
+
+        if (callback) {
+            return res.exec(callback);
         }
 
-        this._findOne(callback);
-
-        return this;
+        return res;
     }
 
     /**
-     * Thunk around count()
+     * Thunk around findOne()
      *
      * @param {Function} [callback]
-     * @see count http://docs.mongodb.org/manual/reference/method/db.collection.count/
+     * @see findOne http://docs.mongodb.org/manual/reference/method/db.collection.findOne/
      * @api private
      */
-    _count(callback) {
+    @Callbackify
+    async _findOneExec() {
+        this._castConditions();
+
+        if (this.error()) {
+            throw this.error();
+        }
+
+        this._applyPaths();
+        this._fields = this._castFields(this._fields);
+
+        const options = this._mongooseOptions;
+        const projection = this._fieldsForExec();
+        const userProvidedFields = this._userProvidedFields || {};
+        const _this = this;
+
+        // don't pass in the conditions because we already merged them in
+        let doc = await super._findOneExec({});
+        if (!doc) {
+            return null;
+        }
+
+        if (!options.populate) {
+            return Boolean(options.lean) === true
+                ? doc
+                : completeOneAsync(_this.model, doc, null, {}, projection, userProvidedFields, null);
+        }
+
+        const pop = helpers.preparePopulationOptionsMQ(_this, options);
+        doc = await _this.model.populate(doc, pop);
+        return Boolean(options.lean) === true
+            ? doc
+            : completeOneAsync(_this.model, doc, null, {}, projection, userProvidedFields, pop);
+    }
+
+    @Callbackify
+    async _countExec() {
         try {
             this.cast(this.model);
         } catch (err) {
@@ -1801,13 +1274,13 @@ export default class Query extends mquery {
         }
 
         if (this.error()) {
-            return callback(this.error());
+            throw this.error();
         }
 
         const conds = this._conditions;
         const options = this._optionsForExec();
 
-        this._collection.count(conds, options, utils.tick(callback));
+        return this._collection.count(conds, options);
     }
 
     /**
@@ -1843,16 +1316,15 @@ export default class Query extends mquery {
             conditions = undefined;
         }
 
-        if (mquery.canMerge(conditions)) {
+        if (mongo.QueryBuilder.canMerge(conditions)) {
             this.merge(conditions);
         }
 
         this.op = "count";
-        if (!callback) {
-            return this;
-        }
 
-        this._count(callback);
+        if (callback) {
+            return this.exec(callback);
+        }
 
         return this;
     }
@@ -1894,21 +1366,24 @@ export default class Query extends mquery {
 
         conditions = utils.toObject(conditions);
 
-        if (mquery.canMerge(conditions)) {
+        if (mongo.QueryBuilder.canMerge(conditions)) {
             this.merge(conditions);
         }
 
-        try {
-            this.cast(this.model);
-        } catch (err) {
-            if (!callback) {
-                throw err;
-            }
-            callback(err);
-            return this;
+        this.cast(this.model);
+
+        const res = super.distinct({}, field);
+
+        if (callback) {
+            return res.exec(callback);
         }
 
-        return super.distinct.call(this, {}, field, callback);
+        return res;
+    }
+
+    @Callbackify
+    _distinctExec() {
+        return super._distinctExec();
     }
 
     /**
@@ -1986,7 +1461,6 @@ export default class Query extends mquery {
             callback = filter;
             filter = null;
         }
-
         filter = utils.toObject(filter, { retainKeyOrder: true });
 
         try {
@@ -1998,20 +1472,20 @@ export default class Query extends mquery {
 
         prepareDiscriminatorCriteria(this);
 
-        if (!callback) {
-            return super.remove.call(this);
+        const res = super.remove();
+        if (callback) {
+            return res.exec(callback);
         }
-
-        return this._remove(callback);
+        return res;
     }
 
-    _remove(callback) {
+    @Callbackify
+    async _removeExec() {
         if (!is.nil(this.error())) {
-            callback(this.error());
-            return this;
+            throw this.error();
         }
 
-        return super.remove.call(this, callback);
+        return super._removeExec();
     }
 
     /**
@@ -2050,20 +1524,20 @@ export default class Query extends mquery {
 
         prepareDiscriminatorCriteria(this);
 
-        if (!callback) {
-            return super.deleteOne.call(this);
+        const res = super.deleteOne();
+        if (callback) {
+            return res.exec(callback);
         }
-
-        return this._deleteOne.call(this, callback);
+        return res;
     }
 
-    _deleteOne(callback) {
+    @Callbackify
+    async _deleteOneExec() {
         if (!is.nil(this.error())) {
-            callback(this.error());
-            return this;
+            throw this.error();
         }
 
-        return super.deleteOne.call(this, callback);
+        return super._deleteOneExec();
     }
 
     /**
@@ -2102,20 +1576,21 @@ export default class Query extends mquery {
 
         prepareDiscriminatorCriteria(this);
 
-        if (!callback) {
-            return super.deleteMany.call(this);
-        }
+        const res = super.deleteMany();
 
-        return this._deleteMany.call(this, callback);
+        if (callback) {
+            return res.exec(callback);
+        }
+        return res;
     }
 
-    _deleteMany(callback) {
+    @Callbackify
+    async _deleteManyExec() {
         if (!is.nil(this.error())) {
-            callback(this.error());
-            return this;
+            throw this.error();
         }
 
-        return super.deleteMany.call(this, callback);
+        return super._deleteManyExec();
     }
 
     /**
@@ -2199,7 +1674,7 @@ export default class Query extends mquery {
                 }
         }
 
-        if (mquery.canMerge(criteria)) {
+        if (mongo.QueryBuilder.canMerge(criteria)) {
             this.merge(criteria);
         }
 
@@ -2222,11 +1697,11 @@ export default class Query extends mquery {
             this.setOptions(options);
         }
 
-        if (!callback) {
-            return this;
+        if (callback) {
+            return this.exec(callback);
         }
 
-        return this._findOneAndUpdate(callback);
+        return this;
     }
 
     /*!
@@ -2235,15 +1710,15 @@ export default class Query extends mquery {
     * @param {Function} [callback]
     * @api private
     */
-    _findOneAndUpdate(callback) {
+    @Callbackify
+    async _findOneAndUpdateExec() {
         this._castConditions();
 
         if (!is.nil(this.error())) {
-            return callback(this.error());
+            throw this.error();
         }
 
-        this._findAndModify("update", callback);
-        return this;
+        return this._findAndModify("update");
     }
 
     /**
@@ -2307,36 +1782,28 @@ export default class Query extends mquery {
                 break;
         }
 
-        if (mquery.canMerge(conditions)) {
+        if (mongo.QueryBuilder.canMerge(conditions)) {
             this.merge(conditions);
         }
 
         options && this.setOptions(options);
 
-        if (!callback) {
-            return this;
+        if (callback) {
+            return this.exec(callback);
         }
-
-        this._findOneAndRemove(callback);
 
         return this;
     }
 
-    /*!
-    * Thunk around findOneAndRemove()
-    *
-    * @param {Function} [callback]
-    * @return {Query} this
-    * @api private
-    */
-    _findOneAndRemove(callback) {
+    @Callbackify
+    async _findOneAndRemoveExec() {
         this._castConditions();
 
         if (!is.nil(this.error())) {
-            return callback(this.error());
+            throw this.error();
         }
 
-        super.findOneAndRemove.call(this, callback);
+        return super._findOneAndRemoveExec();
     }
 
     /*!
@@ -2346,26 +1813,20 @@ export default class Query extends mquery {
     * @param {Function} callback
     * @api private
     */
-    _findAndModify(type, callback) {
-        if (!is.function(callback)) {
-            throw new Error("Expected callback in _findAndModify");
-        }
-
+    async _findAndModify(type) {
         const model = this.model;
         const schema = model.schema;
         const _this = this;
-        let castedQuery;
         let castedDoc = this._update;
         let fields;
-        let opts;
         let doValidate;
 
-        castedQuery = castQuery(this);
+        const castedQuery = castQuery(this);
         if (castedQuery instanceof Error) {
-            return callback(castedQuery);
+            throw castedQuery;
         }
 
-        opts = this._optionsForExec(model);
+        const opts = this._optionsForExec(model);
 
         if ("strict" in opts) {
             this._mongooseOptions.strict = opts.strict;
@@ -2403,10 +1864,10 @@ export default class Query extends mquery {
                         delete doc._id;
                         castedDoc = { $set: doc };
                     } else {
-                        return this.findOne(callback);
+                        return this._findOneExec();
                     }
                 } else if (castedDoc instanceof Error) {
-                    return callback(castedDoc);
+                    throw castedDoc;
                 } else {
                     // In order to make MongoDB 2.6 happy (see
                     // https://jira.mongodb.org/browse/SERVER-12266 and related issues)
@@ -2429,7 +1890,7 @@ export default class Query extends mquery {
             fields = utils.clone(this._fields);
             opts.fields = this._castFields(fields);
             if (opts.fields instanceof Error) {
-                return callback(opts.fields);
+                throw opts.fields;
             }
         }
 
@@ -2437,71 +1898,44 @@ export default class Query extends mquery {
             convertSortToArray(opts);
         }
 
-        const cb = function (err, doc, res) {
-            if (err) {
-                return callback(err);
-            }
-
-            if (!doc || (utils.isObject(doc) && Object.keys(doc).length === 0)) {
-                if (opts.rawResult) {
-                    return callback(null, res);
-                }
-                // opts.passRawResult will be deprecated soon
-                if (opts.passRawResult) {
-                    return callback(null, null, decorateResult(res));
-                }
-                return callback(null, null);
-            }
-
-            if (!options.populate) {
-                if (Boolean(options.lean) === true) {
-                    return _completeOneLean(doc, res, opts, callback);
-                }
-                return completeOne(_this.model, doc, res, opts, fields, userProvidedFields, null, callback);
-            }
-
-            const pop = helpers.preparePopulationOptionsMQ(_this, options);
-            pop.__noPromise = true;
-            _this.model.populate(doc, pop, (err, doc) => {
-                if (err) {
-                    return callback(err);
-                }
-
-                if (Boolean(options.lean) === true) {
-                    return _completeOneLean(doc, res, opts, callback);
-                }
-                return completeOne(_this.model, doc, res, opts, fields, userProvidedFields, pop, callback);
-            });
-        };
-
         if (opts.runValidators && doValidate) {
-            const _callback = function (error) {
-                if (error) {
-                    return callback(error);
-                }
-                if (castedDoc && castedDoc.toBSON) {
-                    castedDoc = castedDoc.toBSON();
-                }
-                _this._collection.findAndModify(castedQuery, castedDoc, opts, utils.tick((error, res) => {
-                    return cb(error, res ? res.value : res, res);
-                }));
-            };
+            await new Promise((resolve, reject) => {
+                doValidate((err) => {
+                    err ? reject(err) : resolve();
+                });
+            });
+        }
+        if (castedDoc && castedDoc.toBSON) {
+            castedDoc = castedDoc.toBSON();
+        }
+        const res = await _this._collection.findAndModify(castedQuery, castedDoc, opts);
+        let doc = res ? res.value : res;
 
-            try {
-                doValidate(_callback);
-            } catch (error) {
-                callback(error);
+        if (!doc || (utils.isObject(doc) && Object.keys(doc).length === 0)) {
+            if (opts.rawResult) {
+                return res;
             }
-        } else {
-            if (castedDoc && castedDoc.toBSON) {
-                castedDoc = castedDoc.toBSON();
+            // opts.passRawResult will be deprecated soon
+            if (opts.passRawResult) {
+                return [null, decorateResult(res)];
             }
-            this._collection.findAndModify(castedQuery, castedDoc, opts, utils.tick((error, res) => {
-                return cb(error, res ? res.value : res, res);
-            }));
+            return null;
         }
 
-        return this;
+        if (!options.populate) {
+            if (Boolean(options.lean) === true) {
+                return _completeOneLeanAsync(doc, res, opts);
+            }
+            return completeOneAsync(_this.model, doc, res, opts, fields, userProvidedFields, null);
+        }
+
+        const pop = helpers.preparePopulationOptionsMQ(_this, options);
+        doc = await _this.model.populate(doc, pop);
+
+        if (Boolean(options.lean) === true) {
+            return _completeOneLeanAsync(doc, res, opts);
+        }
+        return completeOneAsync(_this.model, doc, res, opts, fields, userProvidedFields, pop);
     }
 
     /*!
@@ -2524,209 +1958,6 @@ export default class Query extends mquery {
         }
     }
 
-
-    /*!
-    * Internal thunk for .update()
-    *
-    * @param {Function} callback
-    * @see Model.update #model_Model.update
-    * @api private
-    */
-    _execUpdate(callback) {
-        const schema = this.model.schema;
-        let doValidate;
-        let _this;
-
-        this._castConditions();
-
-        const castedQuery = this._conditions;
-        let castedDoc = this._update;
-        const options = this.options;
-
-        if (!is.nil(this.error())) {
-            callback(this.error());
-            return this;
-        }
-
-        const isOverwriting = this.options.overwrite && !hasDollarKeys(castedDoc);
-        if (isOverwriting) {
-            castedDoc = new this.model(castedDoc, null, true);
-        }
-
-        if (this.options.runValidators) {
-            _this = this;
-            if (isOverwriting) {
-                doValidate = function (callback) {
-                    castedDoc.validate(callback);
-                };
-            } else {
-                doValidate = updateValidators(this, schema, castedDoc, options);
-            }
-            const _callback = function (err) {
-                if (err) {
-                    return callback(err);
-                }
-
-                if (castedDoc.toBSON) {
-                    castedDoc = castedDoc.toBSON();
-                }
-                mquery.prototype.update.call(_this, castedQuery, castedDoc, options, callback);
-            };
-            try {
-                doValidate(_callback);
-            } catch (err) {
-                process.nextTick(() => {
-                    callback(err);
-                });
-            }
-            return this;
-        }
-
-        if (castedDoc.toBSON) {
-            castedDoc = castedDoc.toBSON();
-        }
-        super.update.call(this, castedQuery, castedDoc, options, callback);
-        return this;
-    }
-
-    /*!
-    * Internal thunk for .updateMany()
-    *
-    * @param {Function} callback
-    * @see Model.update #model_Model.update
-    * @api private
-    */
-    _updateMany(callback) {
-        const schema = this.model.schema;
-        let doValidate;
-        let _this;
-
-        this._castConditions();
-
-        const castedQuery = this._conditions;
-        const castedDoc = this._update;
-        const options = this.options;
-
-        if (!is.nil(this.error())) {
-            callback(this.error());
-            return this;
-        }
-
-        if (this.options.runValidators) {
-            _this = this;
-            doValidate = updateValidators(this, schema, castedDoc, options);
-            const _callback = function (err) {
-                if (err) {
-                    return callback(err);
-                }
-
-                mquery.prototype.updateMany.call(_this, castedQuery, castedDoc, options, callback);
-            };
-            try {
-                doValidate(_callback);
-            } catch (err) {
-                process.nextTick(() => {
-                    callback(err);
-                });
-            }
-            return this;
-        }
-
-        super.updateMany.call(this, castedQuery, castedDoc, options, callback);
-        return this;
-    }
-
-    /*!
-    * Internal thunk for .updateOne()
-    *
-    * @param {Function} callback
-    * @see Model.update #model_Model.update
-    * @api private
-    */
-    _updateOne(callback) {
-        const schema = this.model.schema;
-        let doValidate;
-        let _this;
-
-        this._castConditions();
-
-        const castedQuery = this._conditions;
-        const castedDoc = this._update;
-        const options = this.options;
-
-        if (!is.nil(this.error())) {
-            callback(this.error());
-            return this;
-        }
-
-        if (this.options.runValidators) {
-            _this = this;
-            doValidate = updateValidators(this, schema, castedDoc, options);
-            const _callback = function (err) {
-                if (err) {
-                    return callback(err);
-                }
-
-                mquery.prototype.updateOne.call(_this, castedQuery, castedDoc, options, callback);
-            };
-            try {
-                doValidate(_callback);
-            } catch (err) {
-                process.nextTick(() => {
-                    callback(err);
-                });
-            }
-            return this;
-        }
-
-        super.updateOne.call(this, castedQuery, castedDoc, options, callback);
-        return this;
-    }
-
-    /*!
-    * Internal thunk for .replaceOne()
-    *
-    * @param {Function} callback
-    * @see Model.replaceOne #model_Model.replaceOne
-    * @api private
-    */
-    _replaceOne(callback) {
-        const schema = this.model.schema;
-        let doValidate;
-        let _this;
-
-        const castedQuery = this._conditions;
-        const castedDoc = this._update;
-        const options = this.options;
-
-        if (!is.nil(this.error())) {
-            callback(this.error());
-            return this;
-        }
-
-        if (this.options.runValidators) {
-            _this = this;
-            doValidate = updateValidators(this, schema, castedDoc, options);
-            const _callback = function (err) {
-                if (err) {
-                    return callback(err);
-                }
-
-                mquery.prototype.replaceOne.call(_this, castedQuery, castedDoc, options, callback);
-            };
-            try {
-                doValidate(_callback);
-            } catch (err) {
-                process.nextTick(() => {
-                    callback(err);
-                });
-            }
-            return this;
-        }
-
-        super.replaceOne.call(this, castedQuery, castedDoc, options, callback);
-        return this;
-    }
 
     /**
      * Declare and/or execute this query as an update() operation.
@@ -2843,7 +2074,146 @@ export default class Query extends mquery {
             callback = undefined;
         }
 
-        return _update(this, "update", conditions, doc, options, callback);
+        const res = _update(this, "update", conditions, doc, options);
+
+        if (callback) {
+            return res.exec(callback);
+        }
+        return res;
+    }
+
+
+    /*!
+    * Internal thunk for .update()
+    *
+    * @param {Function} callback
+    * @see Model.update #model_Model.update
+    * @api private
+    */
+    @Callbackify
+    async _updateExec() {
+        const schema = this.model.schema;
+        let doValidate;
+
+        this._castConditions();
+
+        const castedQuery = this._conditions;
+        let castedDoc = this._update;
+        const options = this.options;
+
+        if (!castedDoc) {
+            return { ok: 0, n: 0, nModified: 0 };
+        }
+
+        if (!is.nil(this.error())) {
+            throw this.error();
+        }
+
+        const isOverwriting = this.options.overwrite && !hasDollarKeys(castedDoc);
+        if (isOverwriting) {
+            castedDoc = new this.model(castedDoc, null, true);
+        }
+
+        if (this.options.runValidators) {
+            if (isOverwriting) {
+                doValidate = function (callback) {
+                    castedDoc.validate(callback);
+                };
+            } else {
+                doValidate = updateValidators(this, schema, castedDoc, options);
+            }
+
+            await new Promise((resolve, reject) => {
+                doValidate((err) => err ? reject(err) : resolve());
+            });
+        }
+
+        if (castedDoc.toBSON) {
+            castedDoc = castedDoc.toBSON();
+        }
+
+        const _op = this.op;
+        super.update(castedQuery, castedDoc, options);
+        this.op = _op; // fixme: such an ugly thing...
+        const result = await super._updateExec();
+        return result ? result.result : { ok: 0, n: 0, nModified: 0 };
+    }
+
+    /*!
+    * Internal thunk for .updateMany()
+    *
+    * @param {Function} callback
+    * @see Model.update #model_Model.update
+    * @api private
+    */
+    @Callbackify
+    async _updateManyExec() {
+        const schema = this.model.schema;
+        let doValidate;
+
+        this._castConditions();
+
+        const castedQuery = this._conditions;
+        const castedDoc = this._update;
+        const options = this.options;
+
+        if (!castDoc) {
+            return { ok: 0, n: 0, nModified: 0 };
+        }
+
+        if (!is.nil(this.error())) {
+            throw this.error();
+        }
+
+        if (this.options.runValidators) {
+            doValidate = updateValidators(this, schema, castedDoc, options);
+
+            await new Promise((resolve, reject) => {
+                doValidate((err) => err ? reject(err) : resolve);
+            });
+        }
+        super.updateMany(castedQuery, castedDoc, options);
+        const result = await super._updateManyExec();
+        return result ? result.result : { ok: 0, n: 0, nModified: 0 };
+    }
+
+    /*!
+    * Internal thunk for .updateOne()
+    *
+    * @param {Function} callback
+    * @see Model.update #model_Model.update
+    * @api private
+    */
+    @Callbackify
+    async _updateOneExec() {
+        const schema = this.model.schema;
+        let doValidate;
+
+        this._castConditions();
+
+        const castedQuery = this._conditions;
+        const castedDoc = this._update;
+        const options = this.options;
+
+        if (!castedDoc) {
+            return { ok: 0, n: 0, nModified: 0 };
+        }
+
+        if (!is.nil(this.error())) {
+            throw this.error();
+        }
+
+        if (this.options.runValidators) {
+            doValidate = updateValidators(this, schema, castedDoc, options);
+
+            await new Promise((resolve, reject) => {
+                doValidate((err) => err ? reject(err) : resolve());
+            });
+        }
+
+        super.updateOne(this, castedQuery, castedDoc, options);
+        const result = await super._updateOneExec();
+        return result ? result.result : { ok: 0, n: 0, nModified: 0 };
     }
 
     /**
@@ -2894,7 +2264,11 @@ export default class Query extends mquery {
             callback = undefined;
         }
 
-        return _update(this, "updateMany", conditions, doc, options, callback);
+        const res = _update(this, "updateMany", conditions, doc, options);
+        if (callback) {
+            return res.exec(callback);
+        }
+        return res;
     }
 
     /**
@@ -2944,7 +2318,12 @@ export default class Query extends mquery {
             callback = undefined;
         }
 
-        return _update(this, "updateOne", conditions, doc, options, callback);
+        const res = _update(this, "updateOne", conditions, doc, options);
+
+        if (callback) {
+            return res.exec(callback);
+        }
+        return res;
     }
 
     /**
@@ -2968,33 +2347,54 @@ export default class Query extends mquery {
      * @see writeOpResult http://mongodb.github.io/node-mongodb-native/2.2/api/Collection.html#~WriteOpResult
      * @api public
      */
-    replaceOne(conditions, doc, options, callback) {
-        if (is.function(options)) {
-            // .update(conditions, doc, callback)
-            callback = options;
-            options = null;
-        } else if (is.function(doc)) {
-            // .update(doc, callback);
-            callback = doc;
-            doc = conditions;
-            conditions = {};
-            options = null;
-        } else if (is.function(conditions)) {
-            // .update(callback)
-            callback = conditions;
-            conditions = undefined;
-            doc = undefined;
-            options = undefined;
-        } else if (typeof conditions === "object" && !doc && !options && !callback) {
+    replaceOne(conditions, doc, options) {
+        if (typeof conditions === "object" && !doc && !options) {
             // .update(doc)
             doc = conditions;
             conditions = undefined;
             options = undefined;
-            callback = undefined;
         }
 
         this.setOptions({ overwrite: true });
-        return _update(this, "replaceOne", conditions, doc, options, callback);
+        return _update(this, "replaceOne", conditions, doc, options);
+    }
+
+
+    /*!
+    * Internal thunk for .replaceOne()
+    *
+    * @param {Function} callback
+    * @see Model.replaceOne #model_Model.replaceOne
+    * @api private
+    */
+    @Callbackify
+    async _replaceOneExec() {
+        const schema = this.model.schema;
+        let doValidate;
+
+        const castedQuery = this._conditions;
+        const castedDoc = this._update;
+        const options = this.options;
+
+        if (!castedDoc) {
+            return { ok: 0, n: 0, nModified: 0 };
+        }
+
+        if (!is.nil(this.error())) {
+            throw this.error();
+        }
+
+        if (this.options.runValidators) {
+            doValidate = updateValidators(this, schema, castedDoc, options);
+
+            await new Promise((resolve, reject) => {
+                doValidate((err) => err ? reject(err) : resolve());
+            });
+        }
+
+        super.replaceOne(castedQuery, castedDoc, options);
+        const result = await super._replaceOneExec();
+        return result ? result.result : { ok: 0, n: 0, nModified: 0 };
     }
 
     /**
@@ -3014,49 +2414,28 @@ export default class Query extends mquery {
      * @api public
      */
     exec(op, callback) {
-        const Promise = PromiseProvider.get();
-        const _this = this;
-
         if (is.function(op)) {
-            callback = op;
-            op = null;
-        } else if (is.string(op)) {
-            this.op = op;
+            [op, callback] = [undefined, op];
         }
 
-        let _results;
-        const promise = new Promise.ES6(((resolve, reject) => {
-            if (!_this.op) {
-                resolve();
-                return;
-            }
-
-            _this[_this.op].call(_this, function (error, res) {
-                if (error) {
-                    reject(error);
-                    return;
-                }
-                _results = arguments;
-                resolve(res);
-            });
-        }));
+        const promise = super.exec(op);
 
         if (callback) {
             promise.then(
-                () => {
-                    callback.apply(null, _results);
+                (res) => {
+                    callback(null, res);
                     return null;
                 },
                 (error) => {
                     callback(error, null);
-                }).
-                catch((error) => {
-                    // If we made it here, we must have an error in the callback re:
-                    // gh-4500, so we need to emit.
-                    setImmediate(() => {
-                        _this.model.emit("error", error);
-                    });
+                }).catch((error) => {
+                // If we made it here, we must have an error in the callback re:
+                // gh-4500, so we need to emit.
+                setImmediate(() => {
+                    this.model.emit("error", error);
                 });
+            });
+            return this;
         }
 
         return promise;
@@ -3765,7 +3144,7 @@ export default class Query extends mquery {
  * @api public
  */
 
-Query.use$geoWithin = mquery.use$geoWithin;
+Query.use$geoWithin = mongo.QueryBuilder.use$geoWithin;
 
 Query.prototype.stream = util.deprecate(Query.prototype.stream, "Mongoose: " +
     "Query.prototype.stream() is deprecated in mongoose >= 4.5.0, " +
@@ -3783,7 +3162,7 @@ Query.prototype.stream = util.deprecate(Query.prototype.stream, "Mongoose: " +
  * @memberOf Query
  */
 
-Query.prototype.maxscan = mquery.prototype.maxScan;
+Query.prototype.maxscan = mongo.QueryBuilder.prototype.maxScan;
 
 /**
  * Specifies a $center or $centerSphere condition.
@@ -3826,4 +3205,4 @@ Query.prototype.maxscan = mquery.prototype.maxScan;
  * @api public
  */
 
-Query.prototype.center = mquery.prototype.circle;
+Query.prototype.center = mongo.QueryBuilder.prototype.circle;

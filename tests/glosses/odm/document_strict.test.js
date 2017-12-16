@@ -47,9 +47,9 @@ describe("document: strict mode:", () => {
                 assert.ifError(error);
                 Lax.findById(l).exec((error, doc) => {
                     assert.ifError(error);
-                    var lo = doc.toObject();
-                    assert.equal(lo.content, 'sample');
-                    assert.equal(lo.rouge, 'data');
+                    const lo = doc.toObject();
+                    assert.equal(lo.content, "sample");
+                    assert.equal(lo.rouge, "data");
                     assert.deepEqual(lo.items, {});
                     done();
                 });
@@ -166,7 +166,7 @@ describe("document: strict mode:", () => {
             content: String
         });
 
-        const Lax = db.model("EmbeddedLax", new Schema({ dox: [lax] }, { strict: false }), `embdoc${ random()}`);
+        const Lax = db.model("EmbeddedLax", new Schema({ dox: [lax] }, { strict: false }), `embdoc${random()}`);
         const Strict = db.model("EmbeddedStrict", new Schema({ dox: [strict] }, { strict: false }), `embdoc${random()}`);
 
         let l = new Lax({ dox: [{ content: "sample", rouge: "data" }] });
@@ -268,7 +268,7 @@ describe("document: strict mode:", () => {
                 doc.bool = undefined;
                 doc.set("notInSchema", undefined, { strict: false });
                 doc.save(() => {
-                    Strict.findById(doc._id, function (err, doc) {
+                    Strict.findById(doc._id, (err, doc) => {
                         assert.ifError(err);
                         assert.equal(doc._doc.bool, undefined);
                         assert.equal(doc._doc.notInSchema, undefined);
@@ -301,18 +301,17 @@ describe("document: strict mode:", () => {
                 assert.equal(doc._doc.bool, true);
                 assert.equal(doc._doc.notInSchema, true);
 
-                Strict.update({ _id: doc._id }, { $unset: { bool: 1, notInSchema: 1 } }, { strict: false },
-                    (err) => {
-                        assert.ifError(err);
+                Strict.update({ _id: doc._id }, { $unset: { bool: 1, notInSchema: 1 } }, { strict: false }, (err) => {
+                    assert.ifError(err);
 
-                        Strict.findById(doc._id, function (err, doc) {
-                            db.close();
-                            assert.ifError(err);
-                            assert.equal(doc._doc.bool, undefined);
-                            assert.equal(doc._doc.notInSchema, undefined);
-                            done();
-                        });
+                    Strict.findById(doc._id, (err, doc) => {
+                        db.close();
+                        assert.ifError(err);
+                        assert.equal(doc._doc.bool, undefined);
+                        assert.equal(doc._doc.notInSchema, undefined);
+                        done();
                     });
+                });
             });
         });
     });
@@ -343,7 +342,7 @@ describe("document: strict mode:", () => {
                     (err) => {
                         assert.ifError(err);
 
-                        Strict.findById(doc._id, function (err, doc) {
+                        Strict.findById(doc._id, (err, doc) => {
                             assert.ifError(err);
                             assert.equal(doc._doc.bool, undefined);
                             assert.equal(doc._doc.notInSchema, undefined);
@@ -358,7 +357,7 @@ describe("document: strict mode:", () => {
         it("throws on set() of unknown property", (done) => {
             const schema = new Schema({ n: String, docs: [{ x: [{ y: String }] }] });
             schema.set("strict", "throw");
-            const M = mongoose.model("throwStrictSet", schema, `tss_${  random()}`);
+            const M = mongoose.model("throwStrictSet", schema, `tss_${random()}`);
             const m = new M();
 
             const badField = /Field `[\w\.]+` is not in schema/;
@@ -434,7 +433,7 @@ describe("document: strict mode:", () => {
             const Foo = mongoose.model("gh2665", FooSchema);
 
             assert.doesNotThrow(() => {
-                new Foo({ name: mongoose.Types.ObjectId(), father: { name: { full: "bacon" } } });
+                new Foo({ name: new mongoose.Types.ObjectId(), father: { name: { full: "bacon" } } });
             });
 
             done();

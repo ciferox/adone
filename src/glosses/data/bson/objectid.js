@@ -118,6 +118,10 @@ export default class ObjectId {
         return this.toHexString();
     }
 
+    inspect() {
+        return `ObjectId(${this.toHexString()})`;
+    }
+
     toJSON() {
         return this.toHexString();
     }

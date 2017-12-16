@@ -110,7 +110,7 @@ export default class QueryStream extends Stream {
      *
      * @api private
      */
-    _init() {
+    async _init() {
         if (this._destroyed) {
             return;
         }
@@ -129,13 +129,14 @@ export default class QueryStream extends Stream {
         _this._fields = utils.clone(query._fields);
         options.fields = query._castFields(_this._fields);
 
-        model.collection.find(query._conditions, options, (err, cursor) => {
-            if (err) {
-                return _this.destroy(err);
-            }
-            _this._cursor = cursor;
-            _this._next();
-        });
+        let cursor;
+        try {
+            cursor = await model.collection.find(query._conditions, options);
+        } catch (err) {
+            return this._destroy(err);
+        }
+        _this._cursor = cursor;
+        _this._next();
     }
 
     /**
@@ -181,7 +182,7 @@ export default class QueryStream extends Stream {
         const _this = this;
         _this._inline = T_INIT;
 
-        _this._cursor.nextObject(function cursorcb(err, doc) {
+        adone.promise.nodeify(_this._cursor.nextObject(), function cursorcb(err, doc) {
             _this._onNextObject(err, doc);
         });
 

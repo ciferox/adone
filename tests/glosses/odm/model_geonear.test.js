@@ -20,7 +20,7 @@ function metersToRadians(m) {
 }
 
 describe("model", () => {
-    let schema = new Schema({
+    const schema = new Schema({
         coordinates: { type: [Number] },
         type: String,
         priority: Number
@@ -39,15 +39,19 @@ describe("model", () => {
     let count = 0;
     function getModel(db) {
         ++count;
-        return db.model("GeoNear" + count, schema, "geonear" + count);
+        return db.model(`GeoNear${count}`, schema, `geonear${count}`);
     }
 
     let mongo24_or_greater = false;
     before((done) => {
-        start.mongodVersion(function (err, version) {
-            if (err) throw err;
+        start.mongodVersion((err, version) => {
+            if (err) {
+                throw err;
+            }
             mongo24_or_greater = version[0] > 2 || (version[0] === 2 && version[1] >= 4);
-            if (!mongo24_or_greater) console.log('not testing mongodb 2.4 features');
+            if (!mongo24_or_greater) {
+                console.log("not testing mongodb 2.4 features");
+            }
             done();
         });
     });
@@ -59,32 +63,32 @@ describe("model", () => {
             }
         });
 
-        it('works with legacy coordinate points', function (done) {
-            var Geo = getModel(db);
+        it("works with legacy coordinate points", (done) => {
+            const Geo = getModel(db);
             assert.ok(Geo.geoNear instanceof Function);
 
-            Geo.init().then(function () {
-                var geos = [];
+            Geo.init().then(() => {
+                const geos = [];
                 geos[0] = new Geo({
                     coordinates: testLocations.MONGODB_NYC_OFFICE,
-                    type: 'Point'
+                    type: "Point"
                 });
                 geos[1] = new Geo({
                     coordinates: testLocations.BRYANT_PARK_NY,
-                    type: 'Point'
+                    type: "Point"
                 });
                 geos[2] = new Geo({
                     coordinates: testLocations.EAST_HARLEM_SHOP,
-                    type: 'Point'
+                    type: "Point"
                 });
                 geos[3] = new Geo({
                     coordinates: testLocations.CENTRAL_PARK_ZOO,
-                    type: 'Point'
+                    type: "Point"
                 });
-                var count = geos.length;
+                let count = geos.length;
 
-                for (var i = 0; i < geos.length; i++) {
-                    geos[i].save(function (err) {
+                for (let i = 0; i < geos.length; i++) {
+                    geos[i].save((err) => {
                         assert.ifError(err);
                         --count || next();
                     });
@@ -92,11 +96,11 @@ describe("model", () => {
 
                 function next() {
                     // using legacy coordinates -- maxDistance units in radians
-                    var options = { spherical: true, maxDistance: metersToRadians(300) };
-                    Geo.geoNear(testLocations.PORT_AUTHORITY_STATION, options).then(function (results) {
+                    const options = { spherical: true, maxDistance: metersToRadians(300) };
+                    Geo.geoNear(testLocations.PORT_AUTHORITY_STATION, options).then(([results]) => {
                         assert.equal(1, results.length);
 
-                        assert.equal(results[0].obj.type, 'Point');
+                        assert.equal(results[0].obj.type, "Point");
                         assert.equal(results[0].obj.coordinates.length, 2);
                         assert.equal(results[0].obj.coordinates[0], testLocations.MONGODB_NYC_OFFICE[0]);
                         assert.equal(results[0].obj.coordinates[1], testLocations.MONGODB_NYC_OFFICE[1]);
@@ -108,44 +112,44 @@ describe("model", () => {
             });
         });
 
-        it('works with GeoJSON coordinate points', function (done) {
-            var Geo = getModel(db);
+        it("works with GeoJSON coordinate points", (done) => {
+            const Geo = getModel(db);
             assert.ok(Geo.geoNear instanceof Function);
 
-            Geo.init().then(function () {
-                var geos = [];
+            Geo.init().then(() => {
+                const geos = [];
                 geos[0] = new Geo({
                     coordinates: testLocations.MONGODB_NYC_OFFICE,
-                    type: 'Point'
+                    type: "Point"
                 });
                 geos[1] = new Geo({
                     coordinates: testLocations.BRANT_PARK_NY,
-                    type: 'Point'
+                    type: "Point"
                 });
                 geos[2] = new Geo({
                     coordinates: testLocations.EAST_HARLEM_SHOP,
-                    type: 'Point'
+                    type: "Point"
                 });
                 geos[3] = new Geo({
                     coordinates: testLocations.CENTRAL_PARK_ZOO,
-                    type: 'Point'
+                    type: "Point"
                 });
-                var count = geos.length;
+                let count = geos.length;
 
-                for (var i = 0; i < geos.length; i++) {
-                    geos[i].save(function () {
+                for (let i = 0; i < geos.length; i++) {
+                    geos[i].save(() => {
                         --count || next();
                     });
                 }
 
                 function next() {
-                    var pnt = { type: 'Point', coordinates: testLocations.PORT_AUTHORITY_STATION };
-                    Geo.geoNear(pnt, { spherical: true, maxDistance: 300 }, function (err, results) {
+                    const pnt = { type: "Point", coordinates: testLocations.PORT_AUTHORITY_STATION };
+                    Geo.geoNear(pnt, { spherical: true, maxDistance: 300 }, (err, results) => {
                         assert.ifError(err);
 
                         assert.equal(results.length, 1);
 
-                        assert.equal(results[0].obj.type, 'Point');
+                        assert.equal(results[0].obj.type, "Point");
                         assert.equal(results[0].obj.coordinates.length, 2);
                         assert.equal(results[0].obj.coordinates[0], testLocations.MONGODB_NYC_OFFICE[0]);
                         assert.equal(results[0].obj.coordinates[1], testLocations.MONGODB_NYC_OFFICE[1]);
@@ -157,44 +161,44 @@ describe("model", () => {
             }).catch(done);
         });
 
-        it('works with lean', function (done) {
-            var Geo = getModel(db);
+        it("works with lean", (done) => {
+            const Geo = getModel(db);
             assert.ok(Geo.geoNear instanceof Function);
 
-            Geo.init().then(function () {
-                var geos = [];
+            Geo.init().then(() => {
+                const geos = [];
                 geos[0] = new Geo({
                     coordinates: testLocations.MONGODB_NYC_OFFICE,
-                    type: 'Point'
+                    type: "Point"
                 });
                 geos[1] = new Geo({
                     coordinates: testLocations.BRANT_PARK_NY,
-                    type: 'Point'
+                    type: "Point"
                 });
                 geos[2] = new Geo({
                     coordinates: testLocations.EAST_HARLEM_SHOP,
-                    type: 'Point'
+                    type: "Point"
                 });
                 geos[3] = new Geo({
                     coordinates: testLocations.CENTRAL_PARK_ZOO,
-                    type: 'Point'
+                    type: "Point"
                 });
-                var count = geos.length;
+                let count = geos.length;
 
-                for (var i = 0; i < geos.length; i++) {
-                    geos[i].save(function () {
+                for (let i = 0; i < geos.length; i++) {
+                    geos[i].save(() => {
                         --count || next();
                     });
                 }
 
                 function next() {
-                    var pnt = { type: 'Point', coordinates: testLocations.PORT_AUTHORITY_STATION };
-                    Geo.geoNear(pnt, { spherical: true, maxDistance: 300, lean: true }, function (err, results) {
+                    const pnt = { type: "Point", coordinates: testLocations.PORT_AUTHORITY_STATION };
+                    Geo.geoNear(pnt, { spherical: true, maxDistance: 300, lean: true }, (err, results) => {
                         assert.ifError(err);
 
                         assert.equal(results.length, 1);
 
-                        assert.equal(results[0].obj.type, 'Point');
+                        assert.equal(results[0].obj.type, "Point");
                         assert.equal(results[0].obj.coordinates.length, 2);
                         assert.equal(results[0].obj.coordinates[0], testLocations.MONGODB_NYC_OFFICE[0]);
                         assert.equal(results[0].obj.coordinates[1], testLocations.MONGODB_NYC_OFFICE[1]);
@@ -206,27 +210,27 @@ describe("model", () => {
             });
         });
 
-        it('throws the correct error messages', function (done) {
-            var Geo = getModel(db);
+        it("throws the correct error messages", (done) => {
+            const Geo = getModel(db);
 
-            Geo.init().then(function () {
-                var g = new Geo({ coordinates: [10, 10], type: 'place' });
-                g.save(function () {
-                    Geo.geoNear('1,2', {}, function (e) {
+            Geo.init().then(() => {
+                const g = new Geo({ coordinates: [10, 10], type: "place" });
+                g.save(() => {
+                    Geo.geoNear("1,2", {}, (e) => {
                         assert.ok(e);
-                        assert.equal(e.message, 'Must pass either a legacy coordinate array or GeoJSON Point to geoNear');
+                        assert.equal(e.message, "Must pass either a legacy coordinate array or GeoJSON Point to geoNear");
 
-                        Geo.geoNear([1], {}, function (e) {
+                        Geo.geoNear([1], {}, (e) => {
                             assert.ok(e);
-                            assert.equal(e.message, 'If using legacy coordinates, must be an array of size 2 for geoNear');
+                            assert.equal(e.message, "If using legacy coordinates, must be an array of size 2 for geoNear");
 
-                            Geo.geoNear({ type: 'Square' }, {}, function (e) {
+                            Geo.geoNear({ type: "Square" }, {}, (e) => {
                                 assert.ok(e);
-                                assert.equal(e.message, 'Must pass either a legacy coordinate array or GeoJSON Point to geoNear');
+                                assert.equal(e.message, "Must pass either a legacy coordinate array or GeoJSON Point to geoNear");
 
-                                Geo.geoNear({ type: 'Point', coordinates: '1,2' }, {}, function (e) {
+                                Geo.geoNear({ type: "Point", coordinates: "1,2" }, {}, (e) => {
                                     assert.ok(e);
-                                    assert.equal(e.message, 'Must pass either a legacy coordinate array or GeoJSON Point to geoNear');
+                                    assert.equal(e.message, "Must pass either a legacy coordinate array or GeoJSON Point to geoNear");
 
                                     done();
                                 });
@@ -237,30 +241,30 @@ describe("model", () => {
             });
         });
 
-        it('returns a promise (gh-1614)', function (done) {
-            var Geo = getModel(db);
+        it.todo("returns a promise (gh-1614)", (done) => {
+            const Geo = getModel(db);
 
-            var pnt = { type: 'Point', coordinates: testLocations.PORT_AUTHORITY_STATION };
+            const pnt = { type: "Point", coordinates: testLocations.PORT_AUTHORITY_STATION };
             // using GeoJSON point
-            var prom = Geo.geoNear(pnt, { spherical: true, maxDistance: 300 }, function () { });
-            assert.ok(prom instanceof mongoose.Promise);
+            const prom = Geo.geoNear(pnt, { spherical: true, maxDistance: 300 }, () => { });
+            assert.ok(prom instanceof Promise);
             done();
         });
 
-        it('allows not passing a callback (gh-1614)', function (done) {
-            var Geo = getModel(db);
-            Geo.init().then(function () {
-                var g = new Geo({ coordinates: testLocations.MONGODB_NYC_OFFICE, type: 'Point' });
-                g.save(function (err) {
+        it("allows not passing a callback (gh-1614)", (done) => {
+            const Geo = getModel(db);
+            Geo.init().then(() => {
+                const g = new Geo({ coordinates: testLocations.MONGODB_NYC_OFFICE, type: "Point" });
+                g.save((err) => {
                     assert.ifError(err);
 
-                    var pnt = { type: 'Point', coordinates: testLocations.PORT_AUTHORITY_STATION };
-                    var promise;
-                    assert.doesNotThrow(function () {
+                    const pnt = { type: "Point", coordinates: testLocations.PORT_AUTHORITY_STATION };
+                    let promise;
+                    assert.doesNotThrow(() => {
                         promise = Geo.geoNear(pnt, { spherical: true, maxDistance: 300 });
                     });
 
-                    function validate(ret, stat) {
+                    function validate([ret, stat]) {
                         assert.equal(ret.length, 1);
                         assert.equal(ret[0].obj.coordinates[0], testLocations.MONGODB_NYC_OFFICE[0]);
                         assert.equal(ret[0].obj.coordinates[1], testLocations.MONGODB_NYC_OFFICE[1]);
@@ -271,21 +275,21 @@ describe("model", () => {
                         done();
                     }
 
-                    promise.then(validate, assert.ifError).then(finish).end();
+                    promise.then(validate, assert.ifError).then(finish);
                 });
             });
         });
 
-        it('promise fulfill even when no results returned', function (done) {
-            var Geo = getModel(db);
-            Geo.init().then(function () {
-                var g = new Geo({ coordinates: [1, 1], type: 'Point' });
-                g.save(function (err) {
+        it("promise fulfill even when no results returned", (done) => {
+            const Geo = getModel(db);
+            Geo.init().then(() => {
+                const g = new Geo({ coordinates: [1, 1], type: "Point" });
+                g.save((err) => {
                     assert.ifError(err);
 
-                    var pnt = { type: 'Point', coordinates: [90, 45] };
-                    var promise;
-                    assert.doesNotThrow(function () {
+                    const pnt = { type: "Point", coordinates: [90, 45] };
+                    let promise;
+                    assert.doesNotThrow(() => {
                         promise = Geo.geoNear(pnt, { spherical: true, maxDistance: 1000 });
                     });
 
@@ -293,23 +297,23 @@ describe("model", () => {
                         done();
                     }
 
-                    promise.then(finish).end();
+                    promise.then(finish);
                 });
             });
         });
 
-        it('casts (gh-5765)', function (done) {
-            var Geo = getModel(db);
-            Geo.init().then(function () {
-                var g = new Geo({ coordinates: [1, 1], type: 'Point', priority: 1 });
-                g.save(function (error) {
+        it("casts (gh-5765)", (done) => {
+            const Geo = getModel(db);
+            Geo.init().then(() => {
+                const g = new Geo({ coordinates: [1, 1], type: "Point", priority: 1 });
+                g.save((error) => {
                     assert.ifError(error);
-                    var opts = {
+                    const opts = {
                         maxDistance: 1000,
-                        query: { priority: '1' },
+                        query: { priority: "1" },
                         spherical: true
                     };
-                    Geo.geoNear([1, 1], opts, function (error, res) {
+                    Geo.geoNear([1, 1], opts, (error, res) => {
                         assert.ifError(error);
                         assert.equal(res.length, 1);
                         assert.equal(res[0].obj.priority, 1);

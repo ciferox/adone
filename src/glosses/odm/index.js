@@ -755,7 +755,7 @@ Mongoose.prototype.CastError = require("./error/cast");
  * @api public
  */
 
-Mongoose.prototype.mongo = require("mongodb");
+// Mongoose.prototype.mongo = adone.database.mongo;
 
 /**
  * The [mquery](https://github.com/aheckmann/mquery) query builder Mongoose uses.
@@ -764,7 +764,7 @@ Mongoose.prototype.mongo = require("mongodb");
  * @api public
  */
 
-Mongoose.prototype.mquery = require("mquery");
+// Mongoose.prototype.mquery = require("mquery");
 
 /**
  * Wraps the given Mongoose instance into a thenable (pseudo-promise). This

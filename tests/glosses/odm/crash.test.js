@@ -3,7 +3,7 @@
 const mongoose = adone.odm;
 
 describe("crash: (gh-407)", () => {
-    it("test mongodb crash with invalid objectid string", (done) => {
+    it.todo("test mongodb crash with invalid objectid string", (done) => {
         const db = mongoose.createConnection("mongodb://localhost/test-crash");
 
         const IndexedGuy = new mongoose.Schema({

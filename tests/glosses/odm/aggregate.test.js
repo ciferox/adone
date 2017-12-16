@@ -17,8 +17,7 @@ const EmployeeSchema = new Schema({
 
 mongoose.model("Employee", EmployeeSchema);
 
-function setupData(callback) {
-    let saved = 0;
+const setupData = async () => {
     const emps = [
         { name: "Alice", sal: 18000, dept: "sales", customers: ["Eve", "Fred"] },
         { name: "Bob", sal: 15000, dept: "sales", customers: ["Gary", "Herbert", "Isaac"], reportsTo: "Alice" },
@@ -28,24 +27,20 @@ function setupData(callback) {
     const db = start();
     const Employee = db.model("Employee");
 
-    emps.forEach((data) => {
-        const emp = new Employee(data);
+    await Promise.all(emps.map(async (data) => {
+        await new Employee(data).save();
+    }));
 
-        emp.save(() => {
-            if (++saved === emps.length) {
-                callback(db);
-            }
-        });
-    });
-}
+    return db;
+};
 
 /**
- * Test.
+ * Test
  */
 
 describe("aggregate: ", () => {
     describe("append", () => {
-        it("(pipeline)", (done) => {
+        it("(pipeline)", () => {
             const aggregate = new Aggregate();
 
             assert.equal(aggregate.append({ $a: 1 }, { $b: 2 }, { $c: 3 }), aggregate);
@@ -53,11 +48,9 @@ describe("aggregate: ", () => {
 
             aggregate.append({ $d: 4 }, { $c: 5 });
             assert.deepEqual(aggregate._pipeline, [{ $a: 1 }, { $b: 2 }, { $c: 3 }, { $d: 4 }, { $c: 5 }]);
-
-            done();
         });
 
-        it("supports array as single argument", (done) => {
+        it("supports array as single argument", () => {
             const aggregate = new Aggregate();
 
             assert.equal(aggregate.append([{ $a: 1 }, { $b: 2 }, { $c: 3 }]), aggregate);
@@ -65,11 +58,9 @@ describe("aggregate: ", () => {
 
             aggregate.append([{ $d: 4 }, { $c: 5 }]);
             assert.deepEqual(aggregate._pipeline, [{ $a: 1 }, { $b: 2 }, { $c: 3 }, { $d: 4 }, { $c: 5 }]);
-
-            done();
         });
 
-        it("throws if non-operator parameter is passed", (done) => {
+        it("throws if non-operator parameter is passed", () => {
             const aggregate = new Aggregate();
             const regexp = /Arguments must be aggregate pipeline operators/;
 
@@ -88,39 +79,32 @@ describe("aggregate: ", () => {
             assert.throws(() => {
                 aggregate.append([{ $a: 1 }, { a: 1 }]);
             }, regexp);
-
-            done();
         });
 
-        it("does not throw when 0 args passed", (done) => {
+        it("does not throw when 0 args passed", () => {
             const aggregate = new Aggregate();
 
             assert.doesNotThrow(() => {
                 aggregate.append();
             });
-
-            done();
         });
 
-        it("does not throw when empty array is passed as single argument", (done) => {
+        it("does not throw when empty array is passed as single argument", () => {
             const aggregate = new Aggregate();
 
             assert.doesNotThrow(() => {
                 aggregate.append([]);
             });
-
-            done();
         });
 
-        it("called from constructor", (done) => {
+        it("called from constructor", () => {
             const aggregate = new Aggregate({ $a: 1 }, { $b: 2 }, { $c: 3 });
             assert.deepEqual(aggregate._pipeline, [{ $a: 1 }, { $b: 2 }, { $c: 3 }]);
-            done();
         });
     });
 
     describe("project", () => {
-        it("(object)", (done) => {
+        it("(object)", () => {
             const aggregate = new Aggregate();
 
             assert.equal(aggregate.project({ a: 1, b: 1, c: 0 }), aggregate);
@@ -128,11 +112,9 @@ describe("aggregate: ", () => {
 
             aggregate.project({ b: 1 });
             assert.deepEqual(aggregate._pipeline, [{ $project: { a: 1, b: 1, c: 0 } }, { $project: { b: 1 } }]);
-
-            done();
         });
 
-        it("(string)", (done) => {
+        it("(string)", () => {
             const aggregate = new Aggregate();
 
             aggregate.project(" a b   -c  ");
@@ -140,31 +122,25 @@ describe("aggregate: ", () => {
 
             aggregate.project("b");
             assert.deepEqual(aggregate._pipeline, [{ $project: { a: 1, b: 1, c: 0 } }, { $project: { b: 1 } }]);
-
-            done();
         });
 
-        it('("a","b","c")', (done) => {
+        it('("a","b","c")', () => {
             assert.throws(() => {
                 const aggregate = new Aggregate();
                 aggregate.project("a", "b", "c");
             }, /Invalid project/);
-
-            done();
         });
 
-        it('["a","b","c"]', (done) => {
+        it('["a","b","c"]', () => {
             assert.throws(() => {
                 const aggregate = new Aggregate();
                 aggregate.project(["a", "b", "c"]);
             }, /Invalid project/);
-
-            done();
         });
     });
 
     describe("group", () => {
-        it("works", (done) => {
+        it("works", () => {
             const aggregate = new Aggregate();
 
             assert.equal(aggregate.group({ a: 1, b: 2 }), aggregate);
@@ -172,13 +148,11 @@ describe("aggregate: ", () => {
 
             aggregate.group({ c: 3 });
             assert.deepEqual(aggregate._pipeline, [{ $group: { a: 1, b: 2 } }, { $group: { c: 3 } }]);
-
-            done();
         });
     });
 
     describe("skip", () => {
-        it("works", (done) => {
+        it("works", () => {
             const aggregate = new Aggregate();
 
             assert.equal(aggregate.skip(42), aggregate);
@@ -186,13 +160,11 @@ describe("aggregate: ", () => {
 
             aggregate.skip(42);
             assert.deepEqual(aggregate._pipeline, [{ $skip: 42 }, { $skip: 42 }]);
-
-            done();
         });
     });
 
     describe("limit", () => {
-        it("works", (done) => {
+        it("works", () => {
             const aggregate = new Aggregate();
 
             assert.equal(aggregate.limit(42), aggregate);
@@ -200,13 +172,11 @@ describe("aggregate: ", () => {
 
             aggregate.limit(42);
             assert.deepEqual(aggregate._pipeline, [{ $limit: 42 }, { $limit: 42 }]);
-
-            done();
         });
     });
 
     describe("unwind", () => {
-        it('("field")', (done) => {
+        it('("field")', () => {
             const aggregate = new Aggregate();
 
             assert.equal(aggregate.unwind("field"), aggregate);
@@ -219,13 +189,11 @@ describe("aggregate: ", () => {
                 { $unwind: "$b" },
                 { $unwind: "$c" }
             ]);
-
-            done();
         });
     });
 
     describe("match", () => {
-        it("works", (done) => {
+        it("works", () => {
             const aggregate = new Aggregate();
 
             assert.equal(aggregate.match({ a: 1 }), aggregate);
@@ -233,13 +201,11 @@ describe("aggregate: ", () => {
 
             aggregate.match({ b: 2 });
             assert.deepEqual(aggregate._pipeline, [{ $match: { a: 1 } }, { $match: { b: 2 } }]);
-
-            done();
         });
     });
 
     describe("sort", () => {
-        it("(object)", (done) => {
+        it("(object)", () => {
             const aggregate = new Aggregate();
 
             assert.equal(aggregate.sort({ a: 1, b: "asc", c: "descending" }), aggregate);
@@ -247,11 +213,9 @@ describe("aggregate: ", () => {
 
             aggregate.sort({ b: "desc" });
             assert.deepEqual(aggregate._pipeline, [{ $sort: { a: 1, b: 1, c: -1 } }, { $sort: { b: -1 } }]);
-
-            done();
         });
 
-        it("(string)", (done) => {
+        it("(string)", () => {
             const aggregate = new Aggregate();
 
             aggregate.sort(" a b   -c  ");
@@ -259,31 +223,25 @@ describe("aggregate: ", () => {
 
             aggregate.sort("b");
             assert.deepEqual(aggregate._pipeline, [{ $sort: { a: 1, b: 1, c: -1 } }, { $sort: { b: 1 } }]);
-
-            done();
         });
 
-        it('("a","b","c")', (done) => {
+        it('("a","b","c")', () => {
             assert.throws(() => {
                 const aggregate = new Aggregate();
                 aggregate.sort("a", "b", "c");
             }, /Invalid sort/);
-
-            done();
         });
 
-        it('["a","b","c"]', (done) => {
+        it('["a","b","c"]', () => {
             assert.throws(() => {
                 const aggregate = new Aggregate();
                 aggregate.sort(["a", "b", "c"]);
             }, /Invalid sort/);
-
-            done();
         });
     });
 
     describe("near", () => {
-        it("works", (done) => {
+        it("works", () => {
             const aggregate = new Aggregate();
 
             assert.equal(aggregate.near({ a: 1 }), aggregate);
@@ -291,11 +249,9 @@ describe("aggregate: ", () => {
 
             aggregate.near({ b: 2 });
             assert.deepEqual(aggregate._pipeline, [{ $geoNear: { a: 1 } }, { $geoNear: { b: 2 } }]);
-
-            done();
         });
 
-        it("works with discriminators (gh-3304)", (done) => {
+        it("works with discriminators (gh-3304)", () => {
             let aggregate = new Aggregate();
             const stub = {
                 schema: {
@@ -322,13 +278,11 @@ describe("aggregate: ", () => {
             Aggregate._prepareDiscriminatorPipeline(aggregate);
             assert.deepEqual(aggregate._pipeline,
                 [{ $geoNear: { b: 2, query: { x: 1, __t: "subschema" } } }]);
-
-            done();
         });
     });
 
     describe("lookup", () => {
-        it("works", (done) => {
+        it("works", () => {
             const aggregate = new Aggregate();
             const obj = {
                 from: "users",
@@ -341,31 +295,27 @@ describe("aggregate: ", () => {
 
             assert.equal(aggregate._pipeline.length, 1);
             assert.deepEqual(aggregate._pipeline[0].$lookup, obj);
-            done();
         });
     });
 
     describe("sample", () => {
-        it("works", (done) => {
+        it("works", () => {
             const aggregate = new Aggregate();
 
             aggregate.sample(3);
 
             assert.equal(aggregate._pipeline.length, 1);
             assert.deepEqual(aggregate._pipeline[0].$sample, { size: 3 });
-            done();
         });
     });
 
     describe("bind", () => {
-        it("works", (done) => {
+        it("works", () => {
             const aggregate = new Aggregate();
             const model = { foo: 42 };
 
             assert.equal(aggregate.model(model), aggregate);
             assert.equal(aggregate._model, model);
-
-            done();
         });
     });
 
@@ -394,7 +344,7 @@ describe("aggregate: ", () => {
         }
     }, () => {
         describe("graphLookup", () => {
-            it("works", (done) => {
+            it("works", () => {
                 const aggregate = new Aggregate();
                 aggregate.graphLookup({
                     startWith: "$test",
@@ -410,10 +360,9 @@ describe("aggregate: ", () => {
                     connectFromField: "testFromField",
                     connectToField: "_id"
                 });
-                done();
             });
 
-            it("automatically prepends $ to the startWith field", (done) => {
+            it("automatically prepends $ to the startWith field", () => {
                 const aggregate = new Aggregate();
                 aggregate.graphLookup({
                     startWith: "test"
@@ -422,23 +371,18 @@ describe("aggregate: ", () => {
                 assert.deepEqual(aggregate._pipeline[0].$graphLookup, {
                     startWith: "$test"
                 });
-                done();
             });
 
-            it("Throws if no options are passed to graphLookup", (done) => {
+            it("Throws if no options are passed to graphLookup", () => {
                 const aggregate = new Aggregate();
-                try {
+                assert.throws(() => {
                     aggregate.graphLookup("invalid options");
-                    done(new Error("Should have errored"));
-                } catch (error) {
-                    assert.ok(error instanceof TypeError);
-                    done();
-                }
+                });
             });
         });
 
         describe("addFields", () => {
-            it("(object)", (done) => {
+            it("(object)", () => {
                 const aggregate = new Aggregate();
 
                 assert.equal(aggregate.addFields({ a: 1, b: 1, c: 0 }), aggregate);
@@ -446,12 +390,11 @@ describe("aggregate: ", () => {
 
                 aggregate.addFields({ d: { $add: ["$a", "$b"] } });
                 assert.deepEqual(aggregate._pipeline, [{ $addFields: { a: 1, b: 1, c: 0 } }, { $addFields: { d: { $add: ["$a", "$b"] } } }]);
-                done();
             });
         });
 
         describe("facet", () => {
-            it("works", (done) => {
+            it("works", () => {
                 const aggregate = new Aggregate();
 
                 aggregate.facet({
@@ -493,7 +436,6 @@ describe("aggregate: ", () => {
                         }
                     ]
                 });
-                done();
             });
         });
     });
@@ -501,379 +443,297 @@ describe("aggregate: ", () => {
     describe("exec", () => {
         let db;
 
-        before((done) => {
-            setupData((_db) => {
-                db = _db;
-                done();
+        before(async () => {
+            db = await setupData();
+        });
+
+        after(async () => {
+            if (db) {
+                await db.close();
+            }
+        });
+
+        it("project", async () => {
+            const aggregate = new Aggregate();
+
+            const docs = await aggregate
+                .model(db.model("Employee"))
+                .project({ sal: 1, sal_k: { $divide: ["$sal", 1000] } })
+                .exec();
+
+            docs.forEach((doc) => {
+                assert.equal(doc.sal / 1000, doc.sal_k);
             });
         });
 
-        after((done) => {
-            db.close(done);
-        });
-
-        it("project", (done) => {
+        it("group", async () => {
             const aggregate = new Aggregate();
 
-            aggregate.
-                model(db.model("Employee")).
-                project({ sal: 1, sal_k: { $divide: ["$sal", 1000] } }).
-                exec((err, docs) => {
-                    assert.ifError(err);
-                    docs.forEach((doc) => {
-                        assert.equal(doc.sal / 1000, doc.sal_k);
-                    });
+            const docs = await aggregate
+                .model(db.model("Employee"))
+                .group({ _id: "$dept" })
+                .exec();
+            assert.equal(docs.length, 2);
 
-                    done();
-                });
+            const depts = docs.map((doc) => {
+                return doc._id;
+            });
+            assert.notEqual(depts.indexOf("sales"), -1);
+            assert.notEqual(depts.indexOf("r&d"), -1);
         });
 
-        it("group", (done) => {
+        it("skip", async () => {
             const aggregate = new Aggregate();
 
-            aggregate.
-                model(db.model("Employee")).
-                group({ _id: "$dept" }).
-                exec((err, docs) => {
-                    assert.ifError(err);
-                    assert.equal(docs.length, 2);
+            const docs = await aggregate
+                .model(db.model("Employee"))
+                .skip(1)
+                .exec();
 
-                    const depts = docs.map((doc) => {
-                        return doc._id;
-                    });
-                    assert.notEqual(depts.indexOf("sales"), -1);
-                    assert.notEqual(depts.indexOf("r&d"), -1);
-                    done();
-                });
+            assert.equal(docs.length, 3);
         });
 
-        it("skip", (done) => {
+        it("limit", async () => {
             const aggregate = new Aggregate();
 
-            aggregate.
-                model(db.model("Employee")).
-                skip(1).
-                exec((err, docs) => {
-                    assert.ifError(err);
-                    assert.equal(docs.length, 3);
-
-                    done();
-                });
+            const docs = await aggregate
+                .model(db.model("Employee"))
+                .limit(3)
+                .exec();
+            assert.equal(docs.length, 3);
         });
 
-        it("limit", (done) => {
+        it("unwind", async () => {
             const aggregate = new Aggregate();
 
-            aggregate.
-                model(db.model("Employee")).
-                limit(3).
-                exec((err, docs) => {
-                    assert.ifError(err);
-                    assert.equal(docs.length, 3);
-
-                    done();
-                });
+            const docs = await aggregate
+                .model(db.model("Employee"))
+                .unwind("customers")
+                .exec();
+            assert.equal(docs.length, 5);
         });
 
-        it("unwind", (done) => {
+        it("unwind with obj", () => {
             const aggregate = new Aggregate();
 
-            aggregate.
-                model(db.model("Employee")).
-                unwind("customers").
-                exec((err, docs) => {
-                    assert.ifError(err);
-                    assert.equal(docs.length, 5);
-
-                    done();
-                });
-        });
-
-        it("unwind with obj", (done) => {
-            const aggregate = new Aggregate();
-
-            const agg = aggregate.
-                model(db.model("Employee")).
-                unwind({ path: "$customers", preserveNullAndEmptyArrays: true });
+            const agg = aggregate
+                .model(db.model("Employee"))
+                .unwind({ path: "$customers", preserveNullAndEmptyArrays: true });
 
             assert.equal(agg._pipeline.length, 1);
             assert.strictEqual(agg._pipeline[0].$unwind.preserveNullAndEmptyArrays,
                 true);
-            done();
         });
 
-        it("unwind throws with bad arg", (done) => {
+        it("unwind throws with bad arg", () => {
             const aggregate = new Aggregate();
 
-            let threw = false;
-            try {
-                aggregate.
-                    model(db.model("Employee")).
-                    unwind(36);
-            } catch (err) {
-                assert.ok(err.message.indexOf("to unwind()") !== -1);
-                threw = true;
-            }
-            assert.ok(threw);
-            done();
+            assert.throws(() => {
+                aggregate
+                    .model(db.model("Employee"))
+                    .unwind(36);
+            }, "to unwind()");
         });
 
-        it("match", (done) => {
+        it("match", async () => {
             const aggregate = new Aggregate();
 
-            aggregate.
-                model(db.model("Employee")).
-                match({ sal: { $gt: 15000 } }).
-                exec((err, docs) => {
-                    assert.ifError(err);
-                    assert.equal(docs.length, 1);
+            const docs = await aggregate
+                .model(db.model("Employee"))
+                .match({ sal: { $gt: 15000 } })
+                .exec();
+            assert.equal(docs.length, 1);
+        });
 
-                    done();
+        it("sort", async () => {
+            const aggregate = new Aggregate();
+
+            const docs = await aggregate
+                .model(db.model("Employee"))
+                .sort("sal")
+                .exec();
+            assert.equal(docs[0].sal, 14000);
+        });
+
+        it("graphLookup", async function () {
+            const version = await new Promise((resolve, reject) => {
+                start.mongodVersion((err, version) => {
+                    err ? reject(err) : resolve(version);
                 });
-        });
-
-        it("sort", (done) => {
-            const aggregate = new Aggregate();
-
-            aggregate.
-                model(db.model("Employee")).
-                sort("sal").
-                exec((err, docs) => {
-                    assert.ifError(err);
-                    assert.equal(docs[0].sal, 14000);
-
-                    done();
-                });
-        });
-
-        it("graphLookup", function (done) {
-            const _this = this;
-            start.mongodVersion((err, version) => {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                const mongo34 = version[0] > 3 || (version[0] === 3 && version[1] >= 4);
-                if (!mongo34) {
-                    _this.skip();
-                }
-                test();
             });
 
-            function test() {
-                const aggregate = new Aggregate();
-
-                aggregate.
-                    model(db.model("Employee")).
-                    graphLookup({
-                        from: "employees",
-                        startWith: "$reportsTo",
-                        connectFromField: "reportsTo",
-                        connectToField: "name",
-                        as: "employeeHierarchy"
-                    }).
-                    sort({ name: 1 }).
-                    exec((err, docs) => {
-                        if (err) {
-                            return done(err);
-                        }
-                        const lowest = docs[3];
-                        assert.equal(lowest.name, "Dave");
-                        assert.equal(lowest.employeeHierarchy.length, 3);
-
-                        // First result in array is max depth result
-                        const names = lowest.employeeHierarchy.map((doc) => {
-                            return doc.name;
-                        }).sort();
-                        assert.equal(names[0], "Alice");
-                        assert.equal(names[1], "Bob");
-                        assert.equal(names[2], "Carol");
-                        done();
-                    });
+            const mongo34 = version[0] > 3 || (version[0] === 3 && version[1] >= 4);
+            if (!mongo34) {
+                return this.skip();
             }
+            const aggregate = new Aggregate();
+
+            const docs = await aggregate
+                .model(db.model("Employee"))
+                .graphLookup({
+                    from: "employees",
+                    startWith: "$reportsTo",
+                    connectFromField: "reportsTo",
+                    connectToField: "name",
+                    as: "employeeHierarchy"
+                })
+                .sort({ name: 1 })
+                .exec();
+            const lowest = docs[3];
+            assert.equal(lowest.name, "Dave");
+            assert.equal(lowest.employeeHierarchy.length, 3);
+
+            // First result in array is max depth result
+            const names = lowest.employeeHierarchy.map((doc) => {
+                return doc.name;
+            }).sort();
+            assert.equal(names[0], "Alice");
+            assert.equal(names[1], "Bob");
+            assert.equal(names[2], "Carol");
         });
 
-        it("facet", function (done) {
-            const _this = this;
-            start.mongodVersion((err, version) => {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                const mongo34 = version[0] > 3 || (version[0] === 3 && version[1] >= 4);
-                if (!mongo34) {
-                    _this.skip();
-                }
-                test();
+        it("facet", async function () {
+            const version = await new Promise((resolve, reject) => {
+                start.mongodVersion((err, version) => {
+                    err ? reject(err) : resolve(version);
+                });
             });
 
-            function test() {
-                const aggregate = new Aggregate();
-
-                aggregate.
-                    model(db.model("Employee")).
-                    facet({
-                        departments: [
-                            {
-                                $group: { _id: "$dept", count: { $sum: 1 } }
-                            }
-                        ],
-                        employeesPerCustomer: [
-                            { $unwind: "$customers" },
-                            { $sortByCount: "$customers" },
-                            { $sort: { _id: 1 } }
-                        ]
-                    }).
-                    exec((error, docs) => {
-                        if (error) {
-                            return done(error);
-                        }
-                        assert.deepEqual(docs[0].departments, [
-                            { _id: "r&d", count: 2 },
-                            { _id: "sales", count: 2 }
-                        ]);
-
-                        assert.deepEqual(docs[0].employeesPerCustomer, [
-                            { _id: "Eve", count: 1 },
-                            { _id: "Fred", count: 1 },
-                            { _id: "Gary", count: 1 },
-                            { _id: "Herbert", count: 1 },
-                            { _id: "Isaac", count: 1 }
-                        ]);
-                        done();
-                    });
+            const mongo34 = version[0] > 3 || (version[0] === 3 && version[1] >= 4);
+            if (!mongo34) {
+                return this.skip();
             }
-        });
 
-        it("complex pipeline", (done) => {
             const aggregate = new Aggregate();
 
-            aggregate.
-                model(db.model("Employee")).
-                match({ sal: { $lt: 16000 } }).
-                unwind("customers").
-                project({ emp: "$name", cust: "$customers" }).
-                sort("-cust").
-                skip(2).
-                exec((err, docs) => {
-                    assert.ifError(err);
-                    assert.equal(docs.length, 1);
-                    assert.equal(docs[0].cust, "Gary");
-                    assert.equal(docs[0].emp, "Bob");
+            const docs = await aggregate
+                .model(db.model("Employee"))
+                .facet({
+                    departments: [
+                        {
+                            $group: { _id: "$dept", count: { $sum: 1 } }
+                        }
+                    ],
+                    employeesPerCustomer: [
+                        { $unwind: "$customers" },
+                        { $sortByCount: "$customers" },
+                        { $sort: { _id: 1 } }
+                    ]
+                })
+                .exec();
+            assert.deepEqual(docs[0].departments, [
+                { _id: "r&d", count: 2 },
+                { _id: "sales", count: 2 }
+            ]);
 
-                    done();
-                });
+            assert.deepEqual(docs[0].employeesPerCustomer, [
+                { _id: "Eve", count: 1 },
+                { _id: "Fred", count: 1 },
+                { _id: "Gary", count: 1 },
+                { _id: "Herbert", count: 1 },
+                { _id: "Isaac", count: 1 }
+            ]);
         });
 
-        it("pipeline() (gh-5825)", (done) => {
+        it("complex pipeline", async () => {
             const aggregate = new Aggregate();
 
-            const pipeline = aggregate.
-                model(db.model("Employee")).
-                match({ sal: { $lt: 16000 } }).
-                pipeline();
+            const docs = await aggregate
+                .model(db.model("Employee"))
+                .match({ sal: { $lt: 16000 } })
+                .unwind("customers")
+                .project({ emp: "$name", cust: "$customers" })
+                .sort("-cust")
+                .skip(2)
+                .exec();
+            assert.equal(docs.length, 1);
+            assert.equal(docs[0].cust, "Gary");
+            assert.equal(docs[0].emp, "Bob");
+        });
+
+        it("pipeline() (gh-5825)", () => {
+            const aggregate = new Aggregate();
+
+            const pipeline = aggregate
+                .model(db.model("Employee"))
+                .match({ sal: { $lt: 16000 } })
+                .pipeline();
 
             assert.deepEqual(pipeline, [{ $match: { sal: { $lt: 16000 } } }]);
-            done();
         });
 
-        it("explain()", (done) => {
+        it("explain()", async () => {
             const aggregate = new Aggregate();
-            start.mongodVersion((err, version) => {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                const mongo26 = version[0] > 2 || (version[0] === 2 && version[1] >= 6);
-                if (!mongo26) {
-                    done();
-                    return;
-                }
 
-                aggregate.
-                    model(db.model("Employee")).
-                    match({ sal: { $lt: 16000 } }).
-                    explain((err1, output) => {
-                        assert.ifError(err1);
-                        assert.ok(output);
-                        // make sure we got explain output
-                        assert.ok(output.stages);
-
-                        done();
-                    });
+            const version = await new Promise((resolve, reject) => {
+                start.mongodVersion((err, version) => {
+                    err ? reject(err) : resolve(version);
+                });
             });
+
+
+            const mongo26 = version[0] > 2 || (version[0] === 2 && version[1] >= 6);
+            if (!mongo26) {
+                return;
+            }
+
+            const output = await aggregate
+                .model(db.model("Employee"))
+                .match({ sal: { $lt: 16000 } })
+                .explain();
+            assert.ok(output);
+            // make sure we got explain output
+            assert.ok(output.stages);
         });
 
         describe("error when empty pipeline", () => {
-            it("without a callback", (done) => {
+            it("works", async () => {
                 const agg = new Aggregate();
 
                 agg.model(db.model("Employee"));
-                const promise = agg.exec();
-                assert.ok(promise instanceof mongoose.Promise);
-                promise.onResolve((err) => {
-                    assert.ok(err);
-                    assert.equal(err.message, "Aggregate has empty pipeline");
-                    done();
-                });
-            });
 
-            it("with a callback", (done) => {
-                const aggregate = new Aggregate();
-                let callback;
-
-                aggregate.model(db.model("Employee"));
-                callback = function (err) {
-                    assert.ok(err);
-                    assert.equal(err.message, "Aggregate has empty pipeline");
-                    done();
-                };
-
-                aggregate.exec(callback);
+                await assert.throws(async () => {
+                    await agg.exec();
+                }, "Aggregate has empty pipeline");
             });
         });
 
         describe("error when not bound to a model", () => {
-            it("with callback", (done) => {
+            it("works", () => {
                 const aggregate = new Aggregate();
 
                 aggregate.skip(0);
                 assert.throws(() => {
                     aggregate.exec();
                 }, "Aggregate not bound to any Model");
-
-                done();
             });
         });
 
-        it("handles aggregation options", (done) => {
-            start.mongodVersion((err, version) => {
-                if (err) {
-                    throw err;
-                }
-                const mongo26_or_greater = version[0] > 2 || (version[0] === 2 && version[1] >= 6);
-
-                const m = db.model("Employee");
-                const match = { $match: { sal: { $gt: 15000 } } };
-                const pref = "primaryPreferred";
-                const aggregate = m.aggregate(match).read(pref);
-                if (mongo26_or_greater) {
-                    aggregate.allowDiskUse(true);
-                }
-
-                assert.equal(aggregate.options.readPreference.mode, pref);
-                if (mongo26_or_greater) {
-                    assert.equal(aggregate.options.allowDiskUse, true);
-                }
-
-                aggregate.
-                    exec((err, docs) => {
-                        assert.ifError(err);
-                        assert.equal(1, docs.length);
-                        assert.equal(docs[0].sal, 18000);
-                        done();
-                    });
+        it("handles aggregation options", async () => {
+            const version = await new Promise((resolve, reject) => {
+                start.mongodVersion((err, version) => {
+                    err ? reject(err) : resolve(version);
+                });
             });
+
+            const mongo26orGt = version[0] > 2 || (version[0] === 2 && version[1] >= 6);
+
+            const m = db.model("Employee");
+            const match = { $match: { sal: { $gt: 15000 } } };
+            const pref = "primaryPreferred";
+            const aggregate = m.aggregate(match).read(pref);
+            if (mongo26orGt) {
+                aggregate.allowDiskUse(true);
+            }
+
+            assert.equal(aggregate.options.readPreference.mode, pref);
+            if (mongo26orGt) {
+                assert.equal(aggregate.options.allowDiskUse, true);
+            }
+
+            const docs = await aggregate.exec();
+            assert.equal(1, docs.length);
+            assert.equal(docs[0].sal, 18000);
         });
 
         describe("middleware (gh-5251)", () => {
@@ -883,14 +743,15 @@ describe("aggregate: ", () => {
                 db = start();
             });
 
-            after((done) => {
-                db.close(done);
+            after(async () => {
+                await db.close();
             });
 
-            it("pre", (done) => {
+            it("pre", async () => {
                 const s = new Schema({ name: String });
 
                 let called = 0;
+
                 s.pre("aggregate", (next) => {
                     ++called;
                     next();
@@ -898,15 +759,12 @@ describe("aggregate: ", () => {
 
                 const M = db.model("gh5251", s);
 
-                M.aggregate([{ $match: { name: "test" } }], (error, res) => {
-                    assert.ifError(error);
-                    assert.deepEqual(res, []);
-                    assert.equal(called, 1);
-                    done();
-                });
+                const res = await M.aggregate([{ $match: { name: "test" } }]);
+                assert.deepEqual(res, []);
+                assert.equal(called, 1);
             });
 
-            it("post", (done) => {
+            it("post", async () => {
                 const s = new Schema({ name: String });
 
                 const calledWith = [];
@@ -916,17 +774,13 @@ describe("aggregate: ", () => {
                 });
 
                 const M = db.model("gh5251_post", s);
-
-                M.aggregate([{ $match: { name: "test" } }], (error, res) => {
-                    assert.ifError(error);
-                    assert.deepEqual(res, []);
-                    assert.equal(calledWith.length, 1);
-                    assert.deepEqual(calledWith[0], []);
-                    done();
-                });
+                const res = await M.aggregate([{ $match: { name: "test" } }]);
+                assert.deepEqual(res, []);
+                assert.equal(calledWith.length, 1);
+                assert.deepEqual(calledWith[0], []);
             });
 
-            it("error handler with agg error", (done) => {
+            it("error handler with agg error", async () => {
                 const s = new Schema({ name: String });
 
                 const calledWith = [];
@@ -937,18 +791,15 @@ describe("aggregate: ", () => {
 
                 const M = db.model("gh5251_error_agg", s);
 
-                M.aggregate([{ $fakeStage: { name: "test" } }], (error, res) => {
-                    assert.ok(error);
-                    assert.ok(error.message.indexOf("Unrecognized pipeline stage") !== -1,
-                        error.message);
-                    assert.equal(res, null);
-                    assert.equal(calledWith.length, 1);
-                    assert.equal(calledWith[0], error);
-                    done();
-                });
+                const error = await assert.throws(async () => {
+                    await M.aggregate([{ $fakeStage: { name: "test" } }]);
+                }, "Unrecognized pipeline stage");
+
+                assert.equal(calledWith.length, 1);
+                assert.equal(calledWith[0], error);
             });
 
-            it("error handler with pre error", (done) => {
+            it("error handler with pre error", async () => {
                 const s = new Schema({ name: String });
 
                 const calledWith = [];
@@ -962,17 +813,15 @@ describe("aggregate: ", () => {
 
                 const M = db.model("gh5251_error", s);
 
-                M.aggregate([{ $match: { name: "test" } }], (error, res) => {
-                    assert.ok(error);
-                    assert.equal(error.message, "woops");
-                    assert.equal(res, null);
-                    assert.equal(calledWith.length, 1);
-                    assert.equal(calledWith[0], error);
-                    done();
-                });
+                const error = await assert.throws(async () => {
+                    await M.aggregate([{ $match: { name: "test" } }]);
+                }, "woops");
+
+                assert.equal(calledWith.length, 1);
+                assert.equal(calledWith[0], error);
             });
 
-            it("with agg cursor", (done) => {
+            it("with agg cursor", async () => {
                 const s = new Schema({ name: String });
 
                 let calledPre = 0;
@@ -989,23 +838,20 @@ describe("aggregate: ", () => {
                 const M = db.model("gh5251_cursor", s);
 
                 let numDocs = 0;
-                M.
-                    aggregate([{ $match: { name: "test" } }]).
-                    cursor({ useMongooseAggCursor: true }).
-                    exec().
-                    eachAsync(() => {
+                await M
+                    .aggregate([{ $match: { name: "test" } }])
+                    .cursor({ useMongooseAggCursor: true })
+                    .exec()
+                    .eachAsync(() => {
                         ++numDocs;
-                    }).
-                    then(() => {
-                        assert.equal(numDocs, 0);
-                        assert.equal(calledPre, 1);
-                        assert.equal(calledPost, 0);
-                        done();
                     });
+                assert.equal(numDocs, 0);
+                assert.equal(calledPre, 1);
+                assert.equal(calledPost, 0);
             });
         });
 
-        it("readPref from schema (gh-5522)", (done) => {
+        it("readPref from schema (gh-5522)", () => {
             const schema = new Schema({ name: String }, { read: "secondary" });
             const M = db.model("gh5522", schema);
             const a = M.aggregate();
@@ -1014,175 +860,139 @@ describe("aggregate: ", () => {
             a.read("secondaryPreferred");
 
             assert.equal(a.options.readPreference.mode, "secondaryPreferred");
-
-            done();
         });
     });
 
-    it("cursor (gh-3160)", (done) => {
+    it("cursor (gh-3160)", async () => {
         const db = start();
 
         const MyModel = db.model("gh3160", { name: String });
 
-        MyModel.create({ name: "test" }, (error) => {
-            assert.ifError(error);
-            MyModel.
-                aggregate([{ $match: { name: "test" } }, { $project: { name: "$name" } }]).
-                allowDiskUse(true).
-                cursor({ batchSize: 2500, async: true }).
-                exec((error, cursor) => {
-                    assert.ifError(error);
-                    assert.ok(cursor);
-                    cursor.toArray((error) => {
-                        assert.ifError(error);
-                        db.close(done);
-                    });
-                });
-        });
+        await MyModel.create({ name: "test" });
+        const cursor = await MyModel
+            .aggregate([{ $match: { name: "test" } }, { $project: { name: "$name" } }])
+            .allowDiskUse(true)
+            .cursor({ batchSize: 2500, async: true })
+            .exec();
+        assert.ok(cursor);
+        await cursor.toArray();
+        await db.close();
     });
 
-    it("cursor() without options (gh-3855)", (done) => {
+    it.todo("cursor() without options (gh-3855)", async () => {
         const db = start();
 
         const MyModel = db.model("gh3855", { name: String });
 
-        db.on("open", () => {
-            const cursor = MyModel.
-                aggregate([{ $match: { name: "test" } }]).
-                cursor().
-                exec();
-            assert.ok(cursor instanceof require("stream").Readable);
-            done();
-        });
+        await new Promise((resolve) => db.on("open", resolve));
+
+        const cursor = MyModel
+            .aggregate([{ $match: { name: "test" } }])
+            .cursor()
+            .exec();
+        assert.ok(cursor instanceof adone.std.stream.Readable);
     });
 
-    it("cursor() with useMongooseAggCursor (gh-5145)", (done) => {
+    it("cursor() with useMongooseAggCursor (gh-5145)", async () => {
         const db = start();
 
         const MyModel = db.model("gh5145", { name: String });
 
-        const cursor = MyModel.
-            aggregate([{ $match: { name: "test" } }]).
-            cursor({ useMongooseAggCursor: true }).
-            exec();
-        assert.ok(cursor instanceof require("stream").Readable);
-
-        done();
+        const cursor = MyModel
+            .aggregate([{ $match: { name: "test" } }])
+            .cursor({ useMongooseAggCursor: true })
+            .exec();
+        assert.ok(cursor instanceof adone.std.stream.Readable);
     });
 
-    it("cursor() with useMongooseAggCursor works (gh-5145) (gh-5394)", (done) => {
+    it("cursor() with useMongooseAggCursor works (gh-5145) (gh-5394)", async () => {
         const db = start();
 
         const MyModel = db.model("gh5394", { name: String });
 
-        MyModel.create({ name: "test" }, (error) => {
-            assert.ifError(error);
+        await MyModel.create({ name: "test" });
 
-            const docs = [];
-            MyModel.
-                aggregate([{ $match: { name: "test" } }]).
-                cursor({ useMongooseAggCursor: true }).
-                exec().
-                eachAsync((doc) => {
-                    docs.push(doc);
-                }).
-                then(() => {
-                    assert.equal(docs.length, 1);
-                    assert.equal(docs[0].name, "test");
-                    done();
-                });
-        });
+        const docs = [];
+        await MyModel
+            .aggregate([{ $match: { name: "test" } }])
+            .cursor({ useMongooseAggCursor: true })
+            .exec()
+            .eachAsync((doc) => {
+                docs.push(doc);
+            });
+        assert.equal(docs.length, 1);
+        assert.equal(docs[0].name, "test");
     });
 
-    it("cursor() eachAsync (gh-4300)", (done) => {
+    it("cursor() eachAsync (gh-4300)", async () => {
         const db = start();
 
         const MyModel = db.model("gh4300", { name: String });
 
         let cur = 0;
         const expectedNames = ["Axl", "Slash"];
-        MyModel.create([{ name: "Axl" }, { name: "Slash" }]).
-            then(() => {
-                return MyModel.aggregate([{ $sort: { name: 1 } }]).
-                    cursor().
-                    exec().
-                    eachAsync((doc) => {
-                        const _cur = cur;
-                        assert.equal(doc.name, expectedNames[cur]);
-                        return {
-                            then(onResolve) {
-                                setTimeout(() => {
-                                    assert.equal(_cur, cur++);
-                                    onResolve();
-                                }, 50);
-                            }
-                        };
-                    }).
-                    then(() => {
-                        done();
-                    });
-            }).
-            catch(done);
+        await MyModel.create([{ name: "Axl" }, { name: "Slash" }]);
+        await MyModel.aggregate([{ $sort: { name: 1 } }])
+            .cursor()
+            .exec()
+            .eachAsync((doc) => {
+                const _cur = cur;
+                assert.equal(doc.name, expectedNames[cur]);
+                return {
+                    then(onResolve) {
+                        setTimeout(() => {
+                            assert.equal(_cur, cur++);
+                            onResolve();
+                        }, 50);
+                    }
+                };
+            });
+        assert.equal(cur, 2);
     });
 
-    it("ability to add noCursorTimeout option (gh-4241)", (done) => {
+    it("ability to add noCursorTimeout option (gh-4241)", async () => {
         const db = start();
 
         const MyModel = db.model("gh4241", {
             name: String
         });
 
-        MyModel.
-            aggregate([{ $match: { name: "test" } }]).
-            addCursorFlag("noCursorTimeout", true).
-            cursor({ async: true }).
-            exec((error, cursor) => {
-                assert.ifError(error);
-                assert.ok(cursor.s.cmd.noCursorTimeout);
-                done();
-            });
+        const cursor = await MyModel
+            .aggregate([{ $match: { name: "test" } }])
+            .addCursorFlag("noCursorTimeout", true)
+            .cursor({ async: true })
+            .exec();
+        assert.ok(cursor.s.cmd.noCursorTimeout);
     });
 
-    it("query by document (gh-4866)", (done) => {
+    it("query by document (gh-4866)", async () => {
         const db = start();
 
         const MyModel = db.model("gh4866", {
             name: String
         });
 
-        MyModel.create({ name: "test" }).
-            then((doc) => {
-                return MyModel.aggregate([{ $match: doc }]);
-            }).
-            then(() => {
-                done();
-            }).
-            catch(done);
+        const doc = await MyModel.create({ name: "test" });
+        await MyModel.aggregate([{ $match: doc }]);
     });
 
-    it("sort by text score (gh-5258)", (done) => {
+    it("sort by text score (gh-5258)", async () => {
         const db = start();
 
         const mySchema = new Schema({ test: String });
         mySchema.index({ test: "text" });
         const M = db.model("gh5258", mySchema);
 
-        M.on("index", (error) => {
-            assert.ifError(error);
-            M.create([{ test: "test test" }, { test: "a test" }], (error) => {
-                assert.ifError(error);
-                const aggregate = M.aggregate();
-                aggregate.match({ $text: { $search: "test" } });
-                aggregate.sort({ score: { $meta: "textScore" } });
+        await new Promise((resolve) => M.on("index", resolve));
 
-                aggregate.exec((error, res) => {
-                    assert.ifError(error);
-                    assert.equal(res.length, 2);
-                    assert.equal(res[0].test, "test test");
-                    assert.equal(res[1].test, "a test");
-                    done();
-                });
-            });
-        });
+        await M.create([{ test: "test test" }, { test: "a test" }]);
+        const aggregate = M.aggregate();
+        aggregate.match({ $text: { $search: "test" } });
+        aggregate.sort({ score: { $meta: "textScore" } });
+
+        const res = await aggregate.exec();
+        assert.equal(res.length, 2);
+        assert.equal(res[0].test, "test test");
+        assert.equal(res[1].test, "a test");
     });
 });
