@@ -116,7 +116,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             }
 
             obj[privateSymbol] = adone.lazify(modules, null, _require, options);
-            return obj;
+            return obj[privateSymbol];
         },
         definePrivate: (modules, obj) => {
             if (adone.is.plainObject(obj[privateSymbol])) {

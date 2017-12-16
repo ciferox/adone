@@ -177,14 +177,14 @@ describe("multi", "address", "validator", () => {
         assertMismatches(validator.Reliable, goodIP, goodUDP);
     });
 
-    it("WebSockets validation", () => {
-        assertMatches(validator.WebSockets, goodWS);
-        assertMismatches(validator.WebSockets, goodIP, goodUDP, badWS);
+    it("WebSocket validation", () => {
+        assertMatches(validator.WebSocket, goodWS);
+        assertMismatches(validator.WebSocket, goodIP, goodUDP, badWS);
     });
 
-    it("WebSocketsSecure validation", () => {
-        assertMatches(validator.WebSocketsSecure, goodWSS);
-        assertMismatches(validator.WebSocketsSecure, goodIP, badWSS, goodUDP, badWS);
+    it("WebSocketSecure validation", () => {
+        assertMatches(validator.WebSocketSecure, goodWSS);
+        assertMismatches(validator.WebSocketSecure, goodIP, badWSS, goodUDP, badWS);
     });
 
     it("WebSocketStar validation", () => {

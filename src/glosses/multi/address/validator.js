@@ -138,12 +138,12 @@ export const DNS = or(
     _DNS
 );
 
-export const WebSockets = or(
+export const WebSocket = or(
     and(TCP, base("ws")),
     and(DNS, base("ws"))
 );
 
-export const WebSocketsSecure = or(
+export const WebSocketSecure = or(
     and(TCP, base("wss")),
     and(DNS, base("wss"))
 );
@@ -155,22 +155,22 @@ export const HTTP = or(
 );
 
 export const WebRTCStar = or(
-    and(WebSockets, base("p2p-webrtc-star"), base("ipfs")),
-    and(WebSocketsSecure, base("p2p-webrtc-star"), base("ipfs"))
+    and(WebSocket, base("p2p-webrtc-star"), base("ipfs")),
+    and(WebSocketSecure, base("p2p-webrtc-star"), base("ipfs"))
 );
 
 export const WebSocketStar = or(
-    and(WebSockets, base("p2p-websocket-star"), base("ipfs")),
-    and(WebSocketsSecure, base("p2p-websocket-star"), base("ipfs")),
-    and(WebSockets, base("p2p-websocket-star")),
-    and(WebSocketsSecure, base("p2p-websocket-star"))
+    and(WebSocket, base("p2p-websocket-star"), base("ipfs")),
+    and(WebSocketSecure, base("p2p-websocket-star"), base("ipfs")),
+    and(WebSocket, base("p2p-websocket-star")),
+    and(WebSocketSecure, base("p2p-websocket-star"))
 );
 
 export const WebRTCDirect = and(HTTP, base("p2p-webrtc-direct"));
 
 export const Reliable = or(
-    WebSockets,
-    WebSocketsSecure,
+    WebSocket,
+    WebSocketSecure,
     HTTP,
     WebRTCStar,
     WebRTCDirect,

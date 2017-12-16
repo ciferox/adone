@@ -79,6 +79,10 @@ export default function (buf, splitBuf, includeDelim) {
     const lines = [];
     const move = includeDelim ? splitBuf.length : 0;
 
+    if (is.string(buf)) {
+        buf = Buffer.from(buf);
+    }
+
     while ((search = bufferIndexOf(buf, splitBuf)) > -1) {
         lines.push(buf.slice(0, search + move));
         buf = buf.slice(search + splitBuf.length, buf.length);

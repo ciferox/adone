@@ -1,11 +1,11 @@
-const baseTable = require("./base_table");
-
 const {
     data: { varint },
     is
 } = adone;
 
-adone.asNamespace(exports);
+const __ = adone.lazify({
+    baseTable: "./base_table"
+}, adone.asNamespace(exports), require);
 
 const util = {
     bufferToNumber(buf) {
@@ -30,8 +30,8 @@ const util = {
 // this creates a map for code as hexString -> codecName
 const codeToCodecName = {};
 
-for (const encodingName in baseTable) {
-    const code = baseTable[encodingName];
+for (const encodingName in __.baseTable) {
+    const code = __.baseTable[encodingName];
     codeToCodecName[code.toString("hex")] = encodingName;
 }
 
@@ -39,10 +39,12 @@ for (const encodingName in baseTable) {
 // this creates a map for codecName -> codeVarintBuffer
 const codecNameToCodeVarint = {};
 
-for (const encodingName in baseTable) {
-    const code = baseTable[encodingName];
+for (const encodingName in __.baseTable) {
+    const code = __.baseTable[encodingName];
     codecNameToCodeVarint[encodingName] = util.varintBufferEncode(code);
 }
+
+export const varintTable = codecNameToCodeVarint;
 
 
 /**
