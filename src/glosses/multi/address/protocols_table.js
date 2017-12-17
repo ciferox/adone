@@ -18,16 +18,16 @@ export default function protocols(proto) {
             return protocols.codes[proto];
         }
 
-        throw new Error(`no protocol with code: ${proto}`);
-    } else if (is.string(proto) || proto instanceof String) {
+        throw new adone.x.Unknown(`No protocol with code: ${proto}`);
+    } else if (is.string(proto)) {
         if (protocols.names[proto]) {
             return protocols.names[proto];
         }
 
-        throw new Error(`no protocol with name: ${proto}`);
+        throw new adone.x.Unknown(`No protocol with name: ${proto}`);
     }
 
-    throw new Error(`invalid protocol id type: ${proto}`);
+    throw new adone.x.NotValid(`Invalid protocol id type: ${proto}`);
 }
 
 protocols.lengthPrefixedVarSize = V;
@@ -63,7 +63,7 @@ protocols.object = p;
 
 // populate tables
 map(protocols.table, (row) => {
-    const proto = p.apply(null, row);
+    const proto = p(...row);
     protocols.codes[proto.code] = proto;
     protocols.names[proto.name] = proto;
 });

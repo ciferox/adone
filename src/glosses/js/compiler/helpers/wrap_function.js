@@ -1,27 +1,25 @@
 const {
-    js: { compiler: { types: t, template } }
+    js: { compiler: { types: t, template, helper: { functionName } } }
 } = adone;
 
-const buildWrapper = template(`
-  (() => {
+const buildExpressionWrapper = template.expression(`
+  (function () {
     var REF = FUNCTION;
     return function NAME(PARAMS) {
       return REF.apply(this, arguments);
     };
-  })
+  })()
 `);
 
-const namedBuildWrapper = template(`
-  (() => {
-    var REF = FUNCTION;
-    function NAME(PARAMS) {
-      return REF.apply(this, arguments);
-    }
-    return NAME;
-  })
+const buildDeclarationWrapper = template(`
+  function NAME(PARAMS) { return REF.apply(this, arguments); }
+  function REF() {
+    REF = FUNCTION;
+    return REF.apply(this, arguments);
+  }
 `);
 
-const classOrObjectMethod = function (path, callId: Object) {
+const classOrObjectMethod = function (path: NodePath, callId: Object) {
     const node = path.node;
     const body = node.body;
 
@@ -34,7 +32,7 @@ const classOrObjectMethod = function (path, callId: Object) {
     body.body = [
         t.returnStatement(
             t.callExpression(t.callExpression(callId, [container]), []),
-        )
+        ),
     ];
 
     // Regardless of whether or not the wrapped function is a an async method
@@ -48,16 +46,16 @@ const classOrObjectMethod = function (path, callId: Object) {
         .unwrapFunctionEnvironment();
 };
 
-const plainFunction = function (path, callId: Object) {
+const plainFunction = function (path: NodePath, callId: Object) {
     const node = path.node;
     const isDeclaration = path.isFunctionDeclaration();
     const functionId = node.id;
-    let wrapper = buildWrapper;
+    const wrapper = isDeclaration
+        ? buildDeclarationWrapper
+        : buildExpressionWrapper;
 
     if (path.isArrowFunctionExpression()) {
         path.arrowFunctionToExpression();
-    } else if (!isDeclaration && functionId) {
-        wrapper = namedBuildWrapper;
     }
 
     node.id = null;
@@ -69,7 +67,7 @@ const plainFunction = function (path, callId: Object) {
     const built = t.callExpression(callId, [node]);
     const container = wrapper({
         NAME: functionId || null,
-        REF: path.scope.generateUidIdentifier("ref"),
+        REF: path.scope.generateUidIdentifier(functionId ? functionId.name : "ref"),
         FUNCTION: built,
         PARAMS: node.params.reduce(
             (acc, param) => {
@@ -84,49 +82,30 @@ const plainFunction = function (path, callId: Object) {
             },
             {
                 params: [],
-                done: false
+                done: false,
             },
-        ).params
-    }).expression;
+        ).params,
+    });
 
-    if (isDeclaration && functionId) {
-        const declar = t.variableDeclaration("let", [
-            t.variableDeclarator(
-                t.identifier(functionId.name),
-                t.callExpression(container, []),
-            )
-        ]);
-        (declar: any)._blockHoist = true;
-
-        if (path.parentPath.isExportDefaultDeclaration()) {
-            // change the path type so that replaceWith() does not wrap
-            // the identifier into an expressionStatement
-            path.parentPath.insertBefore(declar);
-            path.parentPath.replaceWith(
-                t.exportNamedDeclaration(null, [
-                    t.exportSpecifier(
-                        t.identifier(functionId.name),
-                        t.identifier("default"),
-                    )
-                ]),
-            );
-            return;
-        }
-
-        path.replaceWith(declar);
+    if (isDeclaration) {
+        const basePath = path.parentPath.isExportDeclaration()
+            ? path.parentPath
+            : path;
+        basePath.insertAfter(container[1]);
+        path.replaceWith(container[0]);
     } else {
-        const retFunction = container.body.body[1].argument;
+        const retFunction = container.callee.body.body[1].argument;
         if (!functionId) {
-            adone.js.compiler.helper.functionName({
+            functionName({
                 node: retFunction,
                 parent: path.parent,
-                scope: path.scope
+                scope: path.scope,
             });
         }
 
         if (!retFunction || retFunction.id || node.params.length) {
             // we have an inferred function id or params so we need this wrapper
-            path.replaceWith(t.callExpression(container, []));
+            path.replaceWith(container);
         } else {
             // we can omit this wrapper as the conditions it protects for do not apply
             path.replaceWith(built);
@@ -134,7 +113,7 @@ const plainFunction = function (path, callId: Object) {
     }
 };
 
-export default function wrapFunction(path, callId: Object) {
+export default function wrapFunction(path: NodePath, callId: Object) {
     if (path.isClassMethod() || path.isObjectMethod()) {
         classOrObjectMethod(path, callId);
     } else {

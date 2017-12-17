@@ -80,9 +80,7 @@ export class Multiaddr {
      * // '<Multiaddr 047f000001060fa1 - /ip4/127.0.0.1/tcp/4001>'
      */
     inspect() {
-        return `<Multiaddr ${
-            this.buffer.toString("hex")} - ${
-            __.codec.bufferToString(this.buffer)}>`;
+        return `<Multiaddr ${this.buffer.toString("hex")} - ${__.codec.bufferToString(this.buffer)}>`;
     }
 
     /**
@@ -446,6 +444,6 @@ export const resolve = (addr, callback) => {
     *   - how to achieve it in the browser?
     */
     return callback(new Error("not implemented yet"));
-}
+};
 
 export const create = (addr) => new Multiaddr(addr);

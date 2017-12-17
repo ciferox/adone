@@ -563,19 +563,19 @@ describe("multi", "address", () => {
             it("number", () => {
                 expect(
                     () => address.protocols(1234)
-                ).to.throw(/no protocol with code/);
+                ).to.throw(adone.x.Unknown);
             });
 
             it("string", () => {
                 expect(
                     () => address.protocols("hello")
-                ).to.throw(/no protocol with name/);
+                ).to.throw(adone.x.Unknown);
             });
 
             it("else", () => {
                 expect(
                     () => address.protocols({ hi: 34 })
-                ).to.throw(/invalid protocol id type/);
+                ).to.throw(adone.x.NotValid);
             });
         });
     });
@@ -628,11 +628,7 @@ describe("multi", "address", () => {
 
         describe(".stringTuplesToTuples", () => {
             it("handles non array tuples", () => {
-                expect(
-                    address.codec.stringTuplesToTuples([["ip4", "0.0.0.0"], "utp"])
-                ).to.be.eql(
-                    [[4, Buffer.from([0, 0, 0, 0])], [302]]
-                    );
+                expect(address.codec.stringTuplesToTuples([["ip4", "0.0.0.0"], "utp"])).to.be.eql([[4, Buffer.from([0, 0, 0, 0])], [302]]);
             });
         });
 

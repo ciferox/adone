@@ -4,6 +4,8 @@ const {
     vendor: { lodash: { map, filter } }
 } = adone;
 
+export const parseError = (str) => new Error(`Error parsing address: ${str}`);
+
 export const sizeForAddr = (p, addr) => {
     if (p.size > 0) {
         return p.size / 8;
@@ -37,7 +39,7 @@ export const bufferToTuples = (buf) => {
         i += (size + n);
 
         if (i > buf.length) { // did not end _exactly_ at buffer.length
-            throw ParseError(`Invalid address buffer: ${buf.toString("hex")}`);
+            throw parseError(`Invalid address buffer: ${buf.toString("hex")}`);
         }
 
         // ok, tuple seems good.
@@ -58,8 +60,6 @@ export const validateBuffer = (buf) => {
 export const isValidBuffer = (buf) => is.undefined(validateBuffer(buf));
 
 export const cleanPath = (str) => `/${filter(str.trim().split("/")).join("/")}`;
-
-export const ParseError = (str) => new Error(`Error parsing address: ${str}`);
 
 export const protoFromTuple = (tup) => {
     const proto = adone.multi.address.protocols(tup[0]);
@@ -85,7 +85,7 @@ export const stringToStringTuples = (str) => {
 
         p++; // advance addr part
         if (p >= parts.length) {
-            throw ParseError(`invalid address: ${str}`);
+            throw parseError(`invalid address: ${str}`);
         }
 
         tuples.push([part, parts[p]]);

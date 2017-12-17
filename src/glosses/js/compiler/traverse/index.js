@@ -7,6 +7,7 @@ const {
   vendor: { lodash: { includes } }
 } = adone;
 
+
 export default function traverse(
   parent: Object | Array<Object>,
   opts?: Object,
@@ -21,7 +22,9 @@ export default function traverse(
     if (parent.type !== "Program" && parent.type !== "File") {
       throw new Error(
         "You must pass a scope and parentPath unless traversing a Program/File. " +
-          `Instead of that you tried to traverse a ${parent.type} node without ` +
+          `Instead of that you tried to traverse a ${
+            parent.type
+          } node without ` +
           "passing scope and parentPath.",
       );
     }
@@ -39,8 +42,6 @@ import Hub from "./hub";
 traverse.NodePath = NodePath;
 traverse.Scope = Scope;
 traverse.Hub = Hub;
-traverse.visitors = visitors;
-
 traverse.visitors = visitors;
 traverse.verify = visitors.verify;
 traverse.explode = visitors.explode;

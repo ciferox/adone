@@ -3,7 +3,7 @@
 import rewriteForAwait from "./for-await";
 
 const {
-    js: { compiler: { types: t } }
+    js: { compiler: { types: t, helper: { wrapFunction, annotateAsPure } } }
 } = adone;
 
 const awaitVisitor = {
@@ -30,13 +30,11 @@ const awaitVisitor = {
 
     ForOfStatement(path, { file, wrapAwait }) {
         const { node } = path;
-        if (!node.await) {
-            return;
-        }
+        if (!node.await) return;
 
         const build = rewriteForAwait(path, {
             getAsyncIterator: file.addHelper("asyncIterator"),
-            wrapAwait
+            wrapAwait,
         });
 
         const { declar, loop } = build;
@@ -61,17 +59,29 @@ const awaitVisitor = {
         } else {
             path.replaceWithMultiple(build.node);
         }
-    }
+    },
 };
 
-export default function (path, file: Object, helpers: Object) {
+export default function (path: NodePath, file: Object, helpers: Object) {
     path.traverse(awaitVisitor, {
         file,
-        wrapAwait: helpers.wrapAwait
+        wrapAwait: helpers.wrapAwait,
     });
+
+    const isIIFE = path.parentPath.isCallExpression({ callee: path.node });
 
     path.node.async = false;
     path.node.generator = true;
 
-    adone.js.compiler.helper.wrapFunction(path, helpers.wrapAsync);
+    wrapFunction(path, helpers.wrapAsync);
+
+    const isProperty =
+        path.isObjectMethod() ||
+        path.isClassMethod() ||
+        path.parentPath.isObjectProperty() ||
+        path.parentPath.isClassProperty();
+
+    if (!isProperty && !isIIFE && path.isExpression()) {
+        annotateAsPure(path);
+    }
 }

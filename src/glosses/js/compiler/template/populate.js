@@ -40,7 +40,9 @@ export default function populatePlaceholders(
           (replacements && replacements[placeholder.name]) || null,
         );
       } catch (e) {
-        e.message = `babel-template placeholder "${placeholder.name}": ${e.message}`;
+        e.message = `babel-template placeholder "${placeholder.name}": ${
+          e.message
+        }`;
         throw e;
       }
     });

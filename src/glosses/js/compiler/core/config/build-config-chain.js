@@ -1,7 +1,6 @@
 // @flow
 
 import path from "path";
-
 import {
   validate,
   type ValidatedOptions,
@@ -85,7 +84,9 @@ class ConfigChainBuilder {
   mergeConfigFile(file: ConfigFile, envName: string) {
     if (this.seenFiles.has(file)) {
       throw new Error(
-        `Cycle detected in Babel configuration file through "${file.filepath}".`,
+        `Cycle detected in Babel configuration file through "${
+          file.filepath
+        }".`,
       );
     }
 

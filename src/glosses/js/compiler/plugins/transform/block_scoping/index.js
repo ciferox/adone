@@ -14,7 +14,7 @@ const buildRetCheck = template(`
   if (typeof RETURN === "object") return RETURN.v;
 `);
 
-const isBlockScoped = (node) => {
+const isBlockScoped = function (node) {
     if (!t.isVariableDeclaration(node)) {
         return false;
     }
@@ -31,7 +31,7 @@ const isBlockScoped = (node) => {
  * If there is a loop ancestor closer than the closest function, we
  * consider ourselves to be in a loop.
  */
-const isInLoop = (path) => {
+const isInLoop = function (path) {
     const loopOrFunctionParent = path.find(
         (path) => path.isLoop() || path.isFunction(),
     );
@@ -39,13 +39,13 @@ const isInLoop = (path) => {
     return loopOrFunctionParent && loopOrFunctionParent.isLoop();
 };
 
-const convertBlockScopedToVar = (
+const convertBlockScopedToVar = function (
     path,
     node,
     parent,
     scope,
     moveBindingsToParent = false,
-) => {
+) {
     if (!node) {
         node = path.node;
     }
@@ -176,7 +176,7 @@ const continuationVisitor = {
     }
 };
 
-const loopNodeTo = (node) => {
+const loopNodeTo = function (node) {
     if (t.isBreakStatement(node)) {
         return "break";
     } else if (t.isContinueStatement(node)) {
@@ -584,20 +584,20 @@ class BlockScoping {
 
         //
         if (block.body) {
+            const declarPaths = this.blockPath.get("body");
             for (let i = 0; i < block.body.length; i++) {
-                const declarPath = this.blockPath.get("body")[i];
-                addDeclarationsFromChild(declarPath);
+                addDeclarationsFromChild(declarPaths[i]);
             }
         }
 
         if (block.cases) {
+            const declarPaths = this.blockPath.get("cases");
             for (let i = 0; i < block.cases.length; i++) {
                 const consequents = block.cases[i].consequent;
 
                 for (let j = 0; j < consequents.length; j++) {
-                    const declarPath = this.blockPath.get("cases")[i];
                     const declar = consequents[j];
-                    addDeclarationsFromChild(declarPath, declar);
+                    addDeclarationsFromChild(declarPaths[i], declar);
                 }
             }
         }
@@ -645,7 +645,7 @@ class BlockScoping {
      * later on.
      */
 
-    checkLoop() {
+    checkLoop(): Object {
         const state = {
             hasBreakContinue: false,
             ignoreLabeless: false,
@@ -677,7 +677,7 @@ class BlockScoping {
      * their declarations hoisted to before the closure wrapper.
      */
 
-    pushDeclar(node) {
+    pushDeclar(node: { type: "VariableDeclaration" }): Array<Object> {
         const declars = [];
         const names = t.getBindingIdentifiers(node);
         for (const name in names) {
@@ -701,7 +701,7 @@ class BlockScoping {
         return replace;
     }
 
-    buildHas(ret) {
+    buildHas(ret: { type: "Identifier" }) {
         const body = this.body;
 
         let retCheck;
@@ -753,6 +753,7 @@ class BlockScoping {
         }
     }
 }
+
 
 export default function (api, opts) {
     const { throwIfClosureRequired = false, tdz: tdzEnabled = false } = opts;
