@@ -1,5 +1,6 @@
 const {
     is,
+    x,
     std,
     noop,
     collection
@@ -288,21 +289,37 @@ export const pluralizeWord = (str, plural, count) => {
     return count === 1 ? str : plural;
 };
 
-export const functionParams = (func) => {
-    let str = func;
-    if (!is.string(str)) {
-        str = str.toString();
+export const functionParams = (fn) => {
+    if (!is.function(fn)) {
+        throw new x.InvalidArgument("The first argument must be a function");
     }
-    str = str.replace(/(\/\/.*$)|(\/\*[\s\S]*?\*\/)|(\s*=[^,)]*(("(?:\\"|[^"\r\n])*")|("(?:\\"|[^"\r\n])*"))|(\s*=[^,)]*))/mg, "").trim();
-    if (str.indexOf("function") === 0) {
-        str = str.match(/^function\s*[^(]*\(\s*([^)]*)\)/m)[1];
-    } else if (str.indexOf("=>") > -1) {
-        str = str.split("=>")[0].trim();
+    if (fn.length === 0) { // todo: default args?
+        return [];
     }
-    if (str[0] === "(" && str[str.length - 1] === ")") {
-        str = str.slice(1, -1);
+
+    // from https://github.com/jrburke/requirejs
+    const reComments = /(\/\*([\s\S]*?)\*\/|([^:]|^)\/\/(.*)$)/mg;
+    const fnToStr = Function.prototype.toString;
+    let fnStr = fnToStr.call(fn);
+    if (fnStr.startsWith("async")) {
+        fnStr = fnStr.slice(5);
     }
-    return str.length ? str.split(/,/g).map((p) => p.trim()) : [];
+    fnStr = fnStr.replace(reComments, "") || fnStr;
+    fnStr = fnStr.slice(0, fnStr.indexOf("{"));
+
+    let open = fnStr.indexOf("(");
+    let close = fnStr.indexOf(")");
+
+    open = open >= 0 ? open + 1 : 0;
+    close = close > 0 ? close : fnStr.indexOf("=");
+
+    fnStr = fnStr.slice(open, close);
+    fnStr = `(${fnStr})`;
+
+    const match = fnStr.match(/\(([\s\S]*)\)/);
+    return match ? match[1].split(",").map((param) => {
+        return param.trim();
+    }) : [];
 };
 
 export const randomChoice = (arrayLike, from = 0, to = arrayLike.length) => arrayLike[adone.math.random(from, to)];

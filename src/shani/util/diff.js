@@ -1,3 +1,48 @@
+const { is } = adone;
+
+/**
+ * TODO: some things are taken from adone.js.compiler.codeFrame, genrealize it?
+ */
+
+const BRACKET = /^[()\[\]{}]$/;
+const NEWLINE = /\r\n|[\n\r\u2028\u2029]/;
+
+const getTokenType = (match) => {
+    const token = adone.js.tokens.matchToToken(match);
+
+    if (token.type === "name") {
+        // todo: es7?
+        if (adone.js.compiler.esutils.keyword.isReservedWordES6(token.value) || token.value === "async") {
+            return "keyword";
+        }
+
+        if (token.value[0] !== token.value[0].toLowerCase()) {
+            return "capitalized";
+        }
+    }
+
+    if (token.type === "punctuator" && BRACKET.test(token.value)) {
+        // TODO: the output wrong for some reason
+        // const { value } = token;
+        // if (value === "[" || value === "]") {
+        //     return "square.bracket";
+        // }
+        // if (value === "{" || value === "}") {
+        //     return "curly.bracket";
+        // }
+        return "bracket";
+    }
+
+    if (
+        token.type === "invalid" &&
+        (token.value === "@" || token.value === "#")
+    ) {
+        return "punctuator";
+    }
+
+    return token.type;
+};
+
 class Differ extends adone.event.EventEmitter {
     diff(actual, expected, key) {
         if (actual === expected) {
@@ -184,12 +229,27 @@ export const getDiff = (actual, expected) => {
             case "square.bracket":
             case "angle.bracket":
                 return styler.dim(obj);
-            case "class.name": {
+            case "class.name":
                 return styler.magenta(obj);
+            case "regex": {
+                let src;
+                let flags;
+                if (is.regexp(obj)) {
+                    src = obj.source;
+                    flags = obj.flags;
+                } else {
+                    const match = obj.match(/^\/(.+)\/([gimuy]*)$/);
+                    src = match[1];
+                    flags = match[2] || "";
+                }
+                return `${styler.green("/")}${styler.cyan(src)}${styler.green("/")}${styler.magenta(flags)}`;
             }
-            default: {
+            case "comment":
+                return styler.dim(obj);
+            case "keyword":
+                return styler.cyan(obj);
+            default:
                 return obj;
-            }
         }
     };
 
@@ -202,7 +262,14 @@ export const getDiff = (actual, expected) => {
             return str;
         }
 
-        if (mask.length > str.length / 4) {
+        let maskLength = 0;
+        for (const { action, start, end } of mask) {
+            if (action === "add" || action === "delete") {
+                maskLength += end - start;
+            }
+        }
+
+        if (maskLength > str.length / 3) {
             return str;
         }
 
@@ -357,7 +424,7 @@ export const getDiff = (actual, expected) => {
             case "WeakMap":
                 return `${colorizer(type, "class.name")} {}`;
             case "RegExp": {
-                return `${styler.green("/")}${styler.cyan(obj.source)}${styler.green("/")}${styler.magenta(obj.flags)}`;
+                return colorizer(obj, "regex");
             }
             case "Buffer": {
                 const contents = obj.length > 20
@@ -369,7 +436,7 @@ export const getDiff = (actual, expected) => {
                 }${
                     colorizer("Buffer ", "class.name")
                 }${
-                    [...contents].map((x) => colorizer(x, "number")).join(" ")
+                    [...contents].map((x) => colorizer(x.toString(16).padStart(2, "0"), "number")).join(" ")
                 }${
                     contents.length < obj.length
                         ? ` ${styler.dim("...")} `
@@ -382,14 +449,36 @@ export const getDiff = (actual, expected) => {
                 return `${colorizer("Symbol", "class.name")}(${obj.toString().slice(7, -1)})`;
             }
             case "function": {
-                let res = "";
-                if (obj.name) {
-                    res += `${styler.cyan("function")} ${obj.name}`;
-                } else {
-                    res += styler.cyan("anonymous function");
-                }
-                // todo: args
-                return res;
+                let { code } = adone.js.compiler.core.transform(`const a = ${obj.toString()}`, {
+                    plugins: [({ types: t }) => ({
+                        visitor: {
+                            FunctionExpression(path) {
+                                path.node.body.body = [];
+                            },
+                            ArrowFunctionExpression(path) {
+                                if (path.node.body.type === "BlockStatement") {
+                                    path.node.body.body = [];
+                                } else {
+                                    path.node.body = t.blockStatement([]);
+                                }
+                            }
+                        }
+                    })],
+                    generatorOpts: {
+                        comments: false,
+                        compact: false,
+                        quotes: "double",
+                        retainFunctionParens: true
+                    }
+                });
+                code = code.slice(10, -1).replace(adone.js.tokens.regex, (...args) => {
+                    const type = getTokenType(args);
+                    return args[0]
+                        .split(NEWLINE)
+                        .map((str) => colorizer(str, type))
+                        .join("\n");
+                });
+                return `${code.slice(0, -3)} { ... }`;
             }
             case "class": {
                 return `${colorizer("[", "square.bracket")}${colorizer(`class ${obj.name}`, "class.name")}${colorizer("]", "square.bracket")}`;

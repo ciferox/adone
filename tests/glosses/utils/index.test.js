@@ -864,7 +864,7 @@ describe("util", () => {
         });
     });
 
-    describe.only("omit", () => {
+    describe("omit", () => {
         const { omit } = util;
 
         it("should omit a key from the object", () => {
@@ -901,42 +901,6 @@ describe("util", () => {
         });
     });
 
-    describe("max", () => {
-        const { max } = util;
-
-        it("should find the maximum value of an array", () => {
-            expect(max([1, 2, 3])).to.be.equal(3);
-            expect(max([-1, -2, -2])).to.be.equal(-1);
-        });
-
-        it("should return undefined for empty array", () => {
-            expect(max([])).to.be.undefined;
-        });
-
-        it("should support score evaluator", () => {
-            const f = (x) => x[0] + x[1];
-            expect(max([[1, 2], [3, 4], [-1, 7]], f)).to.be.deep.equal([3, 4]);
-        });
-    });
-
-    describe("min", () => {
-        const { min } = util;
-
-        it("should find the maximum value of an array", () => {
-            expect(min([1, 2, 3])).to.be.equal(1);
-            expect(min([-1, -2, -2])).to.be.equal(-2);
-        });
-
-        it("should return undefined for empty array", () => {
-            expect(min([])).to.be.undefined;
-        });
-
-        it("should support score evaluator", () => {
-            const f = (x) => x[0] + x[1];
-            expect(min([[1, 2], [3, 4], [-1, 7]], f)).to.be.deep.equal([1, 2]);
-        });
-    });
-
     describe("parseTime", () => {
         const { parseTime } = util;
 
@@ -960,5 +924,70 @@ describe("util", () => {
         it("should work with no spaces", () => {
             expect(parseTime("10minutes")).to.be.equal(10 * 60 * 1000);
         });
+    });
+
+    describe("functionParams", () => {
+        // disable the rules to have correct tests
+        /* eslint-disable prefer-arrow-callback  */
+        /* eslint-disable space-before-function-paren  */
+
+        const { functionParams } = util;
+
+        it("should throw if not a function is passed", () => {
+            const fixture = () => {
+                functionParams(123);
+            };
+
+            assert.throws(fixture, "must be a function");
+        });
+
+        it("should return empty array if not arguments", () => {
+            assert.deepEqual(functionParams(function () {}), []);
+        });
+
+        it("should work when using comments", () => {
+            assert.deepEqual(functionParams(function /* something */ (
+                // go,
+                go,
+                /* wrong, */
+                here
+                // (when, using, comments) {}
+            ) {}), ["go", "here"]);
+        });
+
+        it("should get array with arguments names from regular function", () => {
+            assert.deepEqual(functionParams(function (a, b, c) {}), ["a", "b", "c"]);
+            assert.deepEqual(functionParams(function named (a, b, c) {}), ["a", "b", "c"]);
+            assert.deepEqual(functionParams(function named2(a, b, c) {}), ["a", "b", "c"]);
+        });
+
+        it("should get arguments of an arrow and generator functions", () => {
+            assert.deepEqual(functionParams(a => {}), ["a"]); // eslint-disable-line arrow-parens
+            assert.deepEqual(functionParams((a, b) => {}), ["a", "b"]);
+            assert.deepEqual(functionParams(function * (a, b, c) {}), ["a", "b", "c"]);
+            assert.deepEqual(functionParams(function * named (a, b, c) {}), ["a", "b", "c"]);
+            assert.deepEqual(functionParams(function * named2(a, b, c) {}), ["a", "b", "c"]);
+        });
+
+        it("should work with async functions", () => {
+            assert.deepEqual(functionParams(async function () {}), []);
+            assert.deepEqual(functionParams(async function (a) {}), ["a"]);
+            assert.deepEqual(functionParams(async function (a, b) {}), ["a", "b"]);
+            assert.deepEqual(functionParams(async function named (a, b) {}), ["a", "b"]);
+            assert.deepEqual(functionParams(async function named2(a, b) {}), ["a", "b"]);
+        });
+
+        it("should work with arrow async functions", () => {
+            assert.deepEqual(functionParams(async () => {}), []);
+            assert.deepEqual(functionParams(async (a) => {}), ["a"]);
+            assert.deepEqual(functionParams(async (a, b) => {}), ["a", "b"]);
+        });
+
+        it.todo("it should correctly handle default params", () => {
+            //
+        });
+
+        /* eslint-enable prefer-arrow-callback */
+        /* eslint-enable space-before-function-paren */
     });
 });
