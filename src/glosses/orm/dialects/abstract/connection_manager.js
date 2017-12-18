@@ -41,10 +41,6 @@ export default class ConnectionManager {
             Promise
         });
 
-        // Save a reference to the bound version so we can remove it with removeListener
-        this._onProcessExit = this._onProcessExit.bind(this);
-        process.on("exit", this._onProcessExit);
-
         this.initPools();
     }
 
@@ -83,9 +79,6 @@ export default class ConnectionManager {
      * @return {Promise}
      */
     close() {
-        // Remove the listener, so all references to this instance can be garbage collected.
-        process.removeListener("exit", this._onProcessExit);
-
         // Mark close of pool
         this.getConnection = function getConnection() {
             return Promise.reject(new Error("ConnectionManager.getConnection was called after the connection manager was closed!"));

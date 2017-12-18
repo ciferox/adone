@@ -164,16 +164,9 @@ export default class Query extends AbstractQuery {
 
     static formatBindParameters(sql, values, dialect) {
         const bindParam = {};
-        let i = 0;
-        const seen = {};
         const replacementFunc = (match, key, values) => {
-            if (!is.undefined(seen[key])) {
-                return seen[key];
-            }
             if (!is.undefined(values[key])) {
-                i = i + 1;
                 bindParam[key] = values[key];
-                seen[key] = `$${i}`;
                 return `@${key}`;
             }
             return undefined;

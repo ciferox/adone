@@ -2380,7 +2380,9 @@ export default class Model {
             const results = await this.QueryInterface.bulkInsert(this.getTableName(options), records, options, attributes);
             if (is.array(results)) {
                 results.forEach((result, i) => {
-                    instances[i] && instances[i].set(this.primaryKeyAttribute, result[this.primaryKeyField], { raw: true });
+                    if (instances[i] && !instances[i].get(this.primaryKeyAttribute)) {
+                        instances[i] && instances[i].set(this.primaryKeyAttribute, result[this.primaryKeyField], { raw: true });
+                    }
                 });
             }
         }
@@ -2395,6 +2397,8 @@ export default class Model {
                     instance.set(attr, instance.dataValues[this.rawAttributes[attr].field]);
                     delete instance.dataValues[this.rawAttributes[attr].field];
                 }
+                instance._previousDataValues[attr] = instance.dataValues[attr];
+                instance.changed(attr, false);
             }
             instance.isNewRecord = false;
         });

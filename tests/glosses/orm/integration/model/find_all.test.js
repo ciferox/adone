@@ -42,6 +42,12 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             });
         }
 
+        it("should not crash on an empty where array", function () {
+            return this.User.findAll({
+                where: []
+            });
+        });
+
         describe("special where conditions/smartWhere object", () => {
             beforeEach(function () {
                 this.buf = Buffer.alloc(16).fill("\x01");
@@ -436,13 +442,23 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             });
         });
 
-        it("should not crash on an empty where array", function () {
-            return this.User.findAll({
-                where: []
-            });
-        });
-
         describe("eager loading", () => {
+            it("should not ignore where condition with empty includes, #8771", function () {
+                return this.User.bulkCreate([
+                    { username: "D.E.N.N.I.S", intVal: 6 },
+                    { username: "F.R.A.N.K", intVal: 5 },
+                    { username: "W.I.L.D C.A.R.D", intVal: 8 }
+                ]).then(() => this.User.findAll({
+                    where: {
+                        intVal: 8
+                    },
+                    include: []
+                })).then((users) => {
+                    expect(users).to.have.length(1);
+                    expect(users[0].get("username")).to.be.equal("W.I.L.D C.A.R.D");
+                });
+            });
+
             describe("belongsTo", () => {
                 beforeEach(function () {
                     const self = this;
