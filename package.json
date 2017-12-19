@@ -132,6 +132,9 @@
     "kareem": "^1.5.0",
     "keypair": "^1.0.1",
     "libp2p-spdy": "^0.11.0",
+    "libp2p-webrtc-star": "^0.13.3",
+    "libp2p-websocket-star": "^0.7.2",
+    "libp2p-websocket-star-rendezvous": "^0.2.2",
     "lodash": "^4.17.4",
     "lodash.get": "^4.4.2",
     "mpath": "^0.3.0",
@@ -152,7 +155,9 @@
     "run-parallel": "^1.1.6",
     "run-series": "^1.1.4",
     "sliced": "^1.0.1",
+    "time-cache": "^0.3.0",
     "write-file-atomic": "^2.3.0",
+    "wrtc": "0.0.63",
     "xor-distance": "^1.0.0",
     "xorshift.js": "^1.0.3"
   }

@@ -354,6 +354,11 @@
                             "index": "glosses/utils/uuid/index",
                             "src": "glosses/utils/uuid/**/*"
                         }
+                    },
+                    "utp": {
+                        "description": "Binding to libutp",
+                        "index": "glosses/net/utp/index",
+                        "src": "glosses/net/utp/index"
                     }
                 }
             },

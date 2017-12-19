@@ -15,5 +15,6 @@ adone.lazify({
     mail: "./mail",
     mqtt: "./mqtt",
     amqp: "./amqp",
-    dns: "./dns"
+    dns: "./dns",
+    utp: "./utp"
 }, adone.asNamespace(exports), require);
