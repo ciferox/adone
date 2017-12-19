@@ -209,6 +209,7 @@ describe("model: update:", () => {
         });
     });
 
+    // does not work in the origin
     it("casts doc arrays", (done) => {
         let db = start(),
             BlogPost = db.model("BlogPostForUpdates", collection);

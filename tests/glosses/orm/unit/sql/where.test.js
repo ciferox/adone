@@ -820,7 +820,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                         type: new type.JSONB()
                     }
                 }, {
-                    mysql: "CAST((`data`->>'$.nested') AS DECIMAL) BETWEEN 1 AND 2",
+                    mysql: "CAST((`data`->>'$.\"nested\"') AS DECIMAL) BETWEEN 1 AND 2",
                     postgres: "CAST((\"data\"#>>'{nested}') AS DOUBLE PRECISION) BETWEEN 1 AND 2",
                     sqlite: "CAST(json_extract(`data`, '$.nested') AS DOUBLE PRECISION) BETWEEN 1 AND 2"
                 });

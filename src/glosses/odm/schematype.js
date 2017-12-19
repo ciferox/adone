@@ -867,7 +867,8 @@ export default class SchemaType {
                         validate);
                 } else {
                     try {
-                        ok = validator.call(scope, value);
+                        // requiredValidator uses "this", but the scope can be undefined and it leads to errors in strict mode
+                        ok = validator.call(scope || {}, value);
                     } catch (error) {
                         ok = false;
                         validatorProperties.reason = error;

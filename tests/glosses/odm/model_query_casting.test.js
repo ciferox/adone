@@ -170,7 +170,7 @@ describe("model query casting", () => {
                 assert.ifError(err);
                 Nin.create({ num: 3 }, (err) => {
                     assert.ifError(err);
-                    Nin.find({ num: { $nin: [2] } }, function (err, found) {
+                    Nin.find({ num: { $nin: [2] } }, (err, found) => {
                         assert.ifError(err);
                         assert.equal(found.length, 2);
                         db.close(done);
@@ -198,7 +198,7 @@ describe("model query casting", () => {
                 doc.meta.date = null;
                 doc.save((err) => {
                     assert.ifError(err);
-                    P.findById(doc._id, function (err, doc) {
+                    P.findById(doc._id, (err, doc) => {
                         assert.ifError(err);
                         assert.strictEqual(doc.meta.date, null);
                         db.close(done);
@@ -264,7 +264,7 @@ describe("model query casting", () => {
         db.close(done);
     });
 
-    describe("$near", function () {
+    describe("$near", () => {
         // this.slow(60);
 
         it("with arrays", (done) => {
@@ -364,7 +364,7 @@ describe("model query casting", () => {
         });
     });
 
-    describe("$nearSphere", function () {
+    describe("$nearSphere", () => {
         // this.slow(70);
 
         it("with arrays", (done) => {
@@ -458,7 +458,7 @@ describe("model query casting", () => {
         });
     });
 
-    describe("$within", function () {
+    describe("$within", () => {
         // this.slow(60);
 
         describe("$centerSphere", () => {
@@ -1187,7 +1187,7 @@ describe("model query casting", () => {
                     exec((error, results) => {
                         assert.ifError(error);
                         assert.equal(results.length, 1);
-                        assert.equal(results[0].name, 'Squaw Valley');
+                        assert.equal(results[0].name, "Squaw Valley");
                         done();
                     });
             });

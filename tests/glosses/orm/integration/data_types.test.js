@@ -463,46 +463,35 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
         expect(record.type).to.be.eql("class s");
     });
 
-    it("should return YYYY-MM-DD format string for DATEONLY", function () {
+    it("should return YYYY-MM-DD format string for DATEONLY", async function () {
         const Model = this.sequelize.define("user", {
             stamp: type.DATEONLY
         });
         const testDate = adone.datetime().format("YYYY-MM-DD");
         const newDate = new Date();
 
-        return Model.sync({ force: true })
-            .then(() => Model.create({ stamp: testDate }))
-            .then((record) => {
-                expect(typeof record.stamp).to.be.eql("string");
-                expect(record.stamp).to.be.eql(testDate);
+        await Model.sync({ force: true })
+        let record = await Model.create({ stamp: testDate });
+        expect(typeof record.stamp).to.be.eql("string");
+        expect(record.stamp).to.be.eql(testDate);
 
-                return Model.findById(record.id);
-            }).then((record) => {
-                expect(typeof record.stamp).to.be.eql("string");
-                expect(record.stamp).to.be.eql(testDate);
+        record = await Model.findById(record.id);
+        expect(typeof record.stamp).to.be.eql("string");
+        expect(record.stamp).to.be.eql(testDate);
 
-                return record.update({
-                    stamp: testDate
-                });
-            }).then((record) => {
-                return record.reload();
-            }).then((record) => {
-                expect(typeof record.stamp).to.be.eql("string");
-                expect(record.stamp).to.be.eql(testDate);
+        await record.update({
+            stamp: testDate
+        });
+        await record.reload();
+        expect(typeof record.stamp).to.be.eql("string");
+        expect(record.stamp).to.be.eql(testDate);
 
-                return record.update({
-                    stamp: newDate
-                });
-            }).then((record) => {
-                return record.reload();
-            }).then((record) => {
-                expect(typeof record.stamp).to.be.eql("string");
-                newDate.setUTCHours(0);
-                newDate.setUTCMinutes(0);
-                newDate.setUTCSeconds(0);
-                newDate.setUTCMilliseconds(0);
-                expect(new Date(record.stamp)).to.be.deep.equal(newDate);
-            });
+        await record.update({
+            stamp: newDate
+        });
+        await record.reload();
+        expect(typeof record.stamp).to.be.eql("string");
+        expect(record.stamp).to.be.equal(adone.datetime(newDate).format("YYYY-MM-DD"));
     });
 
     it("should return set DATEONLY field to NULL correctly", function () {

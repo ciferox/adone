@@ -5,7 +5,7 @@ exports.Document = // @deprecate
 exports.Embedded = require("./embedded");
 
 exports.DocumentArray = require("./documentarray");
-exports.Decimal128 = require("bson").Decimal128;
+exports.Decimal128 = require("./decimal128");
 exports.ObjectId = require("./objectid");
 
 exports.Subdocument = require("./subdocument");

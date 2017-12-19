@@ -631,7 +631,6 @@ export default class Document {
             key = keys[i];
             const pathName = prefix + key;
             pathtype = this.schema.pathType(pathName);
-
             if (!is.null(path[key])
                 && path[key] !== void 0
                 // need to know if plain object - no Buffer, ObjectId, ref, etc
@@ -679,7 +678,6 @@ export default class Document {
             adhocs = this.$__.adhocPaths || (this.$__.adhocPaths = {});
             adhocs[path] = Schema.interpretAsType(path, type, this.schema.options);
         }
-
 
         if (!is.string(path)) {
             // new Document({ key: val })
