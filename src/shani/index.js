@@ -131,6 +131,7 @@ class Block {
         this._level = null;
         this._todo = false;
         this._skip = false;
+        this._cancelled = false;
         this._only = false;
         this._watch = false;
         this._options = options;
@@ -225,6 +226,10 @@ class Block {
         return this._todo === true;
     }
 
+    isCancelled() {
+        return this._cancelled === true;
+    }
+
     hasInclusive(exclusiveMode = false) {
         for (const child of this.children) {
             if (
@@ -243,6 +248,7 @@ class Block {
     skip() {
         this._skip = true;
         this._todo = false;
+        this._cancelled = false;
         return this;
     }
 
@@ -255,6 +261,16 @@ class Block {
         this.skip();
         this._todo = true;
         return this;
+    }
+
+    cancel(reason, type) {
+        this.skip();
+        this._cancelled = true;
+        this.cancelReason = reason;
+        this.cancelType = type;
+        for (const i of this.children) {
+            i.cancel(reason, type);
+        }
     }
 
     timeout(ms = adone.null) {
@@ -322,6 +338,7 @@ class Test {
         this._skip = false;
         this._only = false;
         this._todo = false;
+        this._cancelled = false;
         this._timeout = adone.null;
         this._beforeHooks = [];
         this._afterHooks = [];
@@ -505,8 +522,13 @@ class Test {
         return this._todo === true;
     }
 
+    isCancelled() {
+        return this._cancelled === true;
+    }
+
     skip() {
         this._todo = false;
+        this._cancelled = false;
         this._skip = true;
         return this;
     }
@@ -519,6 +541,14 @@ class Test {
     todo() {
         this.skip();
         this._todo = true;
+        return this;
+    }
+
+    cancel(reason, type) {
+        this.skip();
+        this._cancelled = true;
+        this.cancelReason = reason;
+        this.cancelType = type;
         return this;
     }
 
@@ -859,6 +889,7 @@ export class Engine {
                         }
                     } else {
                         // at least 1 test will be executed (if no hook fails)
+                        let err;
                         for (const parentBlock of block.blockChain()) {
                             if (stopped) {
                                 break;
@@ -879,6 +910,7 @@ export class Engine {
                                 const meta = await hook.run();
                                 emitter.emit("end before hook", { block, hook, meta });
                                 if (meta.err) {
+                                    err = meta.err;
                                     hookFailed = true;
                                     break;
                                 }
@@ -887,46 +919,55 @@ export class Engine {
                                 break;
                             }
                         }
-                        if (!hookFailed) { // before hook failed?
-                            for (const node of block.children) {
-                                if (stopped || hookFailed) {
-                                    break;
-                                }
-                                if (node instanceof Test && node.isExclusive()) {
-                                    emitter.emit("skip test", { block, test: node, runtime: false });
-                                    continue;
-                                }
-                                if (node instanceof Block) {
-                                    // eslint-disable-next-line no-await-in-loop
-                                    const meta = await executor(node);
-                                    failed = failed || meta.failed;
-                                    // hookFailed should be always false here, so just assign
-                                    hookFailed = meta.hookFailed;
-                                } else {
-                                    const blocksFired = [];
-                                    for (const parentBlock of block.blockChain()) {
+                        for (const node of block.children) {
+                            if (stopped) {
+                                break;
+                            }
+                            if (hookFailed) {
+                                node.cancel(err, "beforeHook");
+                            }
+                            if (node instanceof Test && node.isExclusive()) {
+                                emitter.emit("skip test", { block, test: node, runtime: false });
+                                continue;
+                            }
+                            if (node instanceof Block) {
+                                // eslint-disable-next-line no-await-in-loop
+                                const meta = await executor(node);
+                                failed = failed || meta.failed;
+                                // hookFailed should be always false here, so just assign
+                                // hookFailed = meta.hookFailed;
+                            } else {
+                                const blocksFired = [];
+                                let hookFailed = false;
+                                let err;
+                                for (const parentBlock of block.blockChain()) {
+                                    if (stopped) {
+                                        break;
+                                    }
+                                    for (const hook of parentBlock.beforeEachHooks()) {
                                         if (stopped) {
                                             break;
                                         }
-                                        for (const hook of parentBlock.beforeEachHooks()) {
-                                            if (stopped) {
-                                                break;
-                                            }
-                                            emitter.emit("start before each hook", { block, test: node, hook });
-                                            // eslint-disable-next-line no-await-in-loop
-                                            const meta = await hook.run();
-                                            emitter.emit("end before each hook", { block, test: node, hook, meta });
-                                            if (meta.err) {
-                                                hookFailed = true;
-                                                break;
-                                            }
-                                        }
-                                        blocksFired.push(parentBlock);
-                                        if (hookFailed) {
+                                        emitter.emit("start before each hook", { block, test: node, hook });
+                                        // eslint-disable-next-line no-await-in-loop
+                                        const meta = await hook.run();
+                                        emitter.emit("end before each hook", { block, test: node, hook, meta });
+                                        if (meta.err) {
+                                            err = meta.err;
+                                            hookFailed = true;
                                             break;
                                         }
                                     }
-                                    if (!stopped) {
+                                    blocksFired.push(parentBlock);
+                                    if (hookFailed) {
+                                        break;
+                                    }
+                                }
+                                if (!stopped) {
+                                    if (hookFailed) {
+                                        node.cancel(err, "beforeEach");
+                                        emitter.emit("skip test", { block, test: node, runtime: false });
+                                    } else {
                                         for (const hook of node.beforeHooks()) {
                                             if (stopped) {
                                                 break;
@@ -936,51 +977,58 @@ export class Engine {
                                             const meta = await hook.run();
                                             emitter.emit("end before test hook", { block, test: node, hook, meta });
                                             if (meta.err) {
+                                                err = meta.err;
                                                 hookFailed = true;
                                                 break;
                                             }
                                         }
                                         if (!stopped) {
-                                            emitter.emit("start test", { block, test: node });
-                                            let meta;
-                                            if (!hookFailed) {
-                                                // eslint-disable-next-line no-await-in-loop
-                                                meta = await node.run();
+                                            if (hookFailed) {
+                                                node.cancel(err, "beforeTest");
+                                                emitter.emit("skip test", { block, test: node, runtime: false });
+                                                continue;
                                             } else {
-                                                meta = { elapsed: 0, err: new Error("Rejected due the hook fail") };
-                                            }
+                                                emitter.emit("start test", { block, test: node });
+                                                let meta;
+                                                if (!hookFailed) {
+                                                    // eslint-disable-next-line no-await-in-loop
+                                                    meta = await node.run();
+                                                } else {
+                                                    meta = { elapsed: 0, err: new Error("Rejected due the hook fail") };
+                                                }
 
-                                            // it can be skipped in runtime
-                                            meta.skipped = node.isExclusive();
-                                            if (meta.skipped) {
-                                                emitter.emit("skip test", { block, test: node, runtime: true });
-                                            }
+                                                // it can be skipped in runtime
+                                                meta.skipped = node.isExclusive();
+                                                if (meta.skipped) {
+                                                    emitter.emit("skip test", { block, test: node, runtime: true });
+                                                }
 
-                                            emitter.emit("end test", { block, test: node, meta });
-                                            if (meta.err) {
-                                                failed = true;
-                                            }
-                                        }
-                                        for (const hook of node.afterHooks()) {
-                                            emitter.emit("start after test hook", { block, test: node, hook });
-                                            // eslint-disable-next-line no-await-in-loop
-                                            const meta = await hook.run();
-                                            emitter.emit("end after test hook", { block, test: node, hook, meta });
-                                            if (meta.err) {
-                                                hookFailed = true;
-                                                break;
+                                                emitter.emit("end test", { block, test: node, meta });
+                                                if (meta.err) {
+                                                    failed = true;
+                                                }
                                             }
                                         }
                                     }
-                                    for (const parentBlock of blocksFired.reverse()) {
-                                        for (const hook of parentBlock.afterEachHooks()) {
-                                            emitter.emit("start after each hook", { block, test: node, hook });
-                                            // eslint-disable-next-line no-await-in-loop
-                                            const meta = await hook.run();
-                                            emitter.emit("end after each hook", { block, test: node, hook, meta });
-                                            if (meta.err) {
-                                                hookFailed = true;
-                                            }
+                                    for (const hook of node.afterHooks()) {
+                                        emitter.emit("start after test hook", { block, test: node, hook });
+                                        // eslint-disable-next-line no-await-in-loop
+                                        const meta = await hook.run();
+                                        emitter.emit("end after test hook", { block, test: node, hook, meta });
+                                        if (meta.err) {
+                                            hookFailed = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                for (const parentBlock of blocksFired.reverse()) {
+                                    for (const hook of parentBlock.afterEachHooks()) {
+                                        emitter.emit("start after each hook", { block, test: node, hook });
+                                        // eslint-disable-next-line no-await-in-loop
+                                        const meta = await hook.run();
+                                        emitter.emit("end after each hook", { block, test: node, hook, meta });
+                                        if (meta.err) {
+                                            hookFailed = true;
                                         }
                                     }
                                 }
@@ -1323,6 +1371,8 @@ export const consoleReporter = ({
         let failed = 0;
         let passed = 0;
         let todos = 0;
+        const cancelled = [];
+        const hooksFails = [];
         let testsElapsed = 0;
         let totalElapsed = hrtime();
         const errors = [];
@@ -1399,13 +1449,29 @@ export const consoleReporter = ({
                 .on("end after test hook", endHookHandler("after test"));
         }
 
+        const endHookHandler = (type) => {
+            return ({ hook, meta: { err }, block }) => {
+                if (err) {
+                    hooksFails.push([hook, err, type, block]);
+                }
+            };
+        };
+
+        emitter
+            .on("end before hook", endHookHandler("before"))
+            .on("end before each hook", endHookHandler("before each"))
+            .on("end before test hook", endHookHandler("before test"))
+            .on("end after hook", endHookHandler("after"))
+            .on("end after each hook", endHookHandler("after each"))
+            .on("end after test hook", endHookHandler("after test"));
+
         let enteredBlocks = [];
         let blockLevel = 0;
 
         const createTestBar = (test) => {
             const padding = "    ".repeat(test.block.level() + 1);
             const options = {
-                schema: `${padding}:spinner {:color-fg}{escape}${test.description}{/escape}{/}:suffix`
+                schema: `${padding}:spinner {:tag}{escape}${test.description}{/escape}{/}:suffix`
             };
             if (timers || allTimings) {
                 options.timeFormatter = (x) => elapsedToString(x, test.timeout());
@@ -1444,7 +1510,7 @@ export const consoleReporter = ({
             .on("start test", reportOnThrow(({ test }) => {
                 bar = createTestBar(test);
                 bar.update(0, {
-                    color: "grey",
+                    tag: "grey-fg",
                     suffix: timers ? " (:elapsed)" : ""
                 });
             }))
@@ -1455,7 +1521,7 @@ export const consoleReporter = ({
                 }
 
                 bar.complete(!err, {
-                    color: err ? "red" : "grey",
+                    tag: err ? "red-fg" : "grey-fg",
                     prefix: err ? `${failed + 1})` : "",
                     suffix: allTimings ? " (:elapsed)" : ""
                 });
@@ -1473,13 +1539,19 @@ export const consoleReporter = ({
                 }
                 if (test.isTodo()) {
                     bar.complete("{yellow-fg}?{/yellow-fg}", {
-                        color: "yellow",
+                        tag: "yellow-fg",
                         suffix: ""
                     });
                     ++todos;
+                } else if (test.isCancelled()) {
+                    bar.complete("{magenta-fg}#{/magenta-fg}", {
+                        tag: "magenta-fg",
+                        suffix: ""
+                    });
+                    cancelled.push(test);
                 } else {
                     bar.complete(`{cyan-fg}${symbol.minus}{/cyan-fg}`, {
-                        color: "cyan",
+                        tag: "cyan-fg",
                         suffix: ""
                     });
                     ++pending;
@@ -1519,6 +1591,62 @@ export const consoleReporter = ({
                     }
                 }
 
+                if (hooksFails.length) {
+                    log();
+                    log("Hooks fails:\n");
+                    for (let [idx, [hook, err, type, block]] of adone.util.enumerate(hooksFails, 1)) {
+                        // print block chain
+                        const stack = new adone.collection.Stack();
+                        do {
+                            stack.push(block.name);
+                            block = block.parent;
+                        } while (block && block.level() >= 0);
+                        log(`${idx}) ${type} hook failed {escape}${[...stack].join(` ${symbol.arrowRight}  `)} ${hook.description ? `: ${hook.description}` : ""}{/escape}`);
+                        log();
+
+                        if (err.name && err.message) {
+                            log(`{red-fg}{escape}${err.name}: ${err.message}{/escape}{/}`);
+                        } else {
+                            log(`{red-fg}{escape}${err}{/escape}{/}`);
+                        }
+
+                        if (adone.is.string(err.stack)) {
+                            const stackMsg = err.stack.split("\n").slice(1).map((x) => `    ${x.trim()}`).join("\n");
+                            log(`{grey-fg}{escape}${stackMsg}{/escape}{/}`);
+                        }
+                    }
+                }
+
+                if (cancelled.length) {
+                    log();
+                    log("Cancel reasons:\n");
+                    for (const [idx, test] of adone.util.enumerate(cancelled, 1)) {
+                        const err = test.cancelReason;
+                        const type = test.cancelType;
+                        let block = test.block;
+                        // print block chain
+                        const stack = new adone.collection.Stack();
+                        do {
+                            stack.push(block.name);
+                            block = block.parent;
+                        } while (block && block.level() >= 0);
+                        log(`${idx}) {escape}${[...stack].join(` ${symbol.arrowRight}  `)} : ${test.description}{/escape} was cancelled due to ${type} fail:`);
+                        log();
+
+                        if (err.name && err.message) {
+                            log(`{magenta-fg}{escape}${err.name}: ${err.message}{/escape}{/}`);
+                        } else {
+                            log(`{magenta-fg}{escape}${err}{/escape}{/}`);
+                        }
+
+                        if (adone.is.string(err.stack)) {
+                            const stackMsg = err.stack.split("\n").slice(1).map((x) => `    ${x.trim()}`).join("\n");
+                            log(`{grey-fg}{escape}${stackMsg}{/escape}{/}`);
+                        }
+                        log();
+                    }
+                }
+
                 if (globalErrors.length) {
                     log();
                     log("Global errors:\n");
@@ -1550,8 +1678,14 @@ export const consoleReporter = ({
                 if (failed) {
                     log(`{red-fg}    ${failed} failed{/}`);
                 }
+                if (hooksFails.length) {
+                    log(`{red-fg}    ${hooksFails.length} ${adone.util.pluralizeWord("hook", hooksFails.length)} failed{/}`);
+                }
                 if (todos) {
                     log(`{yellow-fg}    ${todos} todo{/}`);
+                }
+                if (cancelled.length) {
+                    log(`{magenta-fg}    ${cancelled.length} cancelled{/}`);
                 }
                 if (globalErrors.length) {
                     log(`{#ff9500-fg}    ${globalErrors.length} error${globalErrors.length > 1 ? "s" : ""}{/}`);
@@ -1795,6 +1929,8 @@ export const simpleReporter = ({
         let failed = 0;
         let passed = 0;
         let todos = 0;
+        const cancelled = [];
+        const hooksFails = [];
         let testsElapsed = 0;
         let totalElapsed = hrtime();
         const errors = [];
@@ -1851,6 +1987,23 @@ export const simpleReporter = ({
                 .on("end after test hook", endHookHandler("after test"));
         }
 
+
+        const endHookHandler = (type) => {
+            return ({ hook, meta: { err }, block }) => {
+                if (err) {
+                    hooksFails.push([hook, err, type, block]);
+                }
+            };
+        };
+
+        emitter
+            .on("end before hook", endHookHandler("before"))
+            .on("end before each hook", endHookHandler("before each"))
+            .on("end before test hook", endHookHandler("before test"))
+            .on("end after hook", endHookHandler("after"))
+            .on("end after each hook", endHookHandler("after each"))
+            .on("end after test hook", endHookHandler("after test"));
+
         let enteredBlocks = [];
         let blockLevel = 0;
         let firstBlock = true;
@@ -1904,6 +2057,9 @@ export const simpleReporter = ({
                 if (test.isTodo()) {
                     msg = `{yellow-fg}? {escape}${test.description}{/escape}{/}`;
                     ++todos;
+                } else if (test.isCancelled()) {
+                    msg = `{magenta-fg}# {escape}${test.description}{/escape}{/}`;
+                    cancelled.push(test);
                 } else {
                     msg = `{cyan-fg}\u2212 {escape}${test.description}{/escape}{/}`;
                     ++pending;
@@ -1945,6 +2101,62 @@ export const simpleReporter = ({
                     }
                 }
 
+                if (hooksFails.length) {
+                    log();
+                    log("Hooks fails:\n");
+                    for (let [idx, [hook, err, type, block]] of adone.util.enumerate(hooksFails, 1)) {
+                        // print block chain
+                        const stack = new adone.collection.Stack();
+                        do {
+                            stack.push(block.name);
+                            block = block.parent;
+                        } while (block && block.level() >= 0);
+                        log(`${idx}) ${type} hook failed {escape}${[...stack].join(` ${symbol.arrowRight}  `)} ${hook.description ? `: ${hook.description}` : ""}{/escape}`);
+                        log();
+
+                        if (err.name && err.message) {
+                            log(`{red-fg}{escape}${err.name}: ${err.message}{/escape}{/}`);
+                        } else {
+                            log(`{red-fg}{escape}${err}{/escape}{/}`);
+                        }
+
+                        if (adone.is.string(err.stack)) {
+                            const stackMsg = err.stack.split("\n").slice(1).map((x) => `    ${x.trim()}`).join("\n");
+                            log(`{grey-fg}{escape}${stackMsg}{/escape}{/}`);
+                        }
+                    }
+                }
+
+                if (cancelled.length) {
+                    log();
+                    log("Cancel reasons:\n");
+                    for (const [idx, test] of adone.util.enumerate(cancelled, 1)) {
+                        const err = test.cancelReason;
+                        const type = test.cancelType;
+                        let block = test.block;
+                        // print block chain
+                        const stack = new adone.collection.Stack();
+                        do {
+                            stack.push(block.name);
+                            block = block.parent;
+                        } while (block && block.level() >= 0);
+                        log(`${idx}) {escape}${[...stack].join(` ${symbol.arrowRight}  `)} : ${test.description}{/escape} was cancelled due to ${type} fail:`);
+                        log();
+
+                        if (err.name && err.message) {
+                            log(`{magenta-fg}{escape}${err.name}: ${err.message}{/escape}{/}`);
+                        } else {
+                            log(`{magenta-fg}{escape}${err}{/escape}{/}`);
+                        }
+
+                        if (adone.is.string(err.stack)) {
+                            const stackMsg = err.stack.split("\n").slice(1).map((x) => `    ${x.trim()}`).join("\n");
+                            log(`{grey-fg}{escape}${stackMsg}{/escape}{/}`);
+                        }
+                        log();
+                    }
+                }
+
                 if (globalErrors.length) {
                     log();
                     log("Global errors:\n");
@@ -1976,8 +2188,14 @@ export const simpleReporter = ({
                 if (failed) {
                     log(`{red-fg}    ${failed} failed{/}`);
                 }
+                if (hooksFails.length) {
+                    log(`{red-fg}    ${hooksFails.length} ${adone.util.pluralizeWord("hook", hooksFails.length)} failed{/}`);
+                }
                 if (todos) {
                     log(`{yellow-fg}    ${todos} todo{/}`);
+                }
+                if (cancelled.length) {
+                    log(`{magenta-fg}    ${cancelled.length} cancelled{/}`);
                 }
                 if (globalErrors.length) {
                     log(`{#ff9500-fg}    ${globalErrors.length} error${globalErrors.length > 1 ? "s" : ""}{/}`);

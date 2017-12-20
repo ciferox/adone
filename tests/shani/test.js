@@ -1122,7 +1122,7 @@ describe("Engine", () => {
                 assert.deepEqual([["start", "/", "before"], ["end", "/", "before"], "1"], results);
             });
 
-            it("should set the error property and stop executing", async () => {
+            it("should cancel all the tests if throws", async () => {
                 const engine = new Engine();
                 const { describe, it, start, before } = engine.context();
 
@@ -1150,8 +1150,12 @@ describe("Engine", () => {
                     results.push(meta.err && meta.err.message);
                 });
 
+                e.on("skip test", ({ test }) => {
+                    results.push([test.description, test.isCancelled()]);
+                });
+
                 await waitFor(e, "done");
-                assert.deepEqual(results, ["123"]);
+                assert.deepEqual(results, ["123", ["test1", true], ["test2", true]]);
             });
 
             it("should set the elapsed property", async () => {
@@ -1609,7 +1613,7 @@ describe("Engine", () => {
                 assert.deepEqual(["1", ["start", "/", "after"], ["end", "/", "after"]], results);
             });
 
-            it("should set the error property and stop executing", async () => {
+            it("should set the error property and continue executing", async () => {
                 const engine = new Engine();
                 const { describe, it, start, after } = engine.context();
 
@@ -1642,7 +1646,7 @@ describe("Engine", () => {
                 });
 
                 await waitFor(e, "done");
-                assert.deepEqual(results, ["1", "2", "123"]);
+                assert.deepEqual(results, ["1", "2", "123", "3"]);
             });
 
             it("should set the elapsed property", async () => {
@@ -1970,7 +1974,7 @@ describe("Engine", () => {
                 ]);
             });
 
-            it("should set the error property and stop executing", async () => {
+            it("should set the error property, cancel the test and continue executing", async () => {
                 const engine = new Engine();
                 const { describe, it, start, beforeEach } = engine.context();
 
@@ -2002,8 +2006,12 @@ describe("Engine", () => {
                     results.push(meta.err && meta.err.message);
                 });
 
+                e.on("skip test", ({ test }) => {
+                    results.push([test.description, test.isCancelled()]);
+                });
+
                 await waitFor(e, "done");
-                assert.deepEqual(results, ["1", "123"]);
+                assert.deepEqual(results, ["1", "123", ["test2", true], "3"]);
             });
 
             it("should set the elapsed property", async () => {
@@ -2066,7 +2074,7 @@ describe("Engine", () => {
                 });
 
                 await waitFor(e, "done");
-                assert.deepEqual(["Timeout of 240ms exceeded"], results);
+                assert.deepEqual(["Timeout of 240ms exceeded", "Timeout of 240ms exceeded"], results);
             });
 
             it("should throw a timeout error (sync)", async () => {
@@ -2100,7 +2108,7 @@ describe("Engine", () => {
                 });
 
                 await waitFor(e, "done");
-                assert.deepEqual(["Timeout of 240ms exceeded"], results);
+                assert.deepEqual(["Timeout of 240ms exceeded", "Timeout of 240ms exceeded"], results);
             });
 
             describe("defaultHookTimeout", () => {
@@ -2330,7 +2338,7 @@ describe("Engine", () => {
                 ]);
             });
 
-            it("should set the error property and stop executing", async () => {
+            it("should set the error property and continue executing", async () => {
                 const engine = new Engine();
                 const { describe, it, start, afterEach } = engine.context();
 
@@ -2363,7 +2371,7 @@ describe("Engine", () => {
                 });
 
                 await waitFor(e, "done");
-                assert.deepEqual(results, ["1", "2", "123"]);
+                assert.deepEqual(results, ["1", "2", "123", "3"]);
             });
 
             it("should set the elapsed property", async () => {
@@ -2426,7 +2434,7 @@ describe("Engine", () => {
                 });
 
                 await waitFor(e, "done");
-                assert.deepEqual(["1", "Timeout of 240ms exceeded"], results);
+                assert.deepEqual(["1", "Timeout of 240ms exceeded", "2", "Timeout of 240ms exceeded"], results);
             });
 
             it("should throw a timeout error (sync)", async () => {
@@ -2460,7 +2468,7 @@ describe("Engine", () => {
                 });
 
                 await waitFor(e, "done");
-                assert.deepEqual(["1", "Timeout of 240ms exceeded"], results);
+                assert.deepEqual(["1", "Timeout of 240ms exceeded", "2", "Timeout of 240ms exceeded"], results);
             });
 
             describe("defaultHookTimeout", () => {
