@@ -363,7 +363,17 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         shani: "./shani",
         specter: "./specter",
 
-        // thrid parties
+        // third parties
+        dev: () => {
+            let mounts;
+            if (adone.fs.existsSync(adone.realm.config.devmntPath)) {
+                mounts = require(adone.realm.config.devmntPath);
+            } else {
+                mounts = {};
+            }
+            
+            return adone.asNamespace(adone.lazify(mounts, null));
+        },
         vendor: "./vendor",
         npm: "./npm"
     }, adone);

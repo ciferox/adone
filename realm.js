@@ -50,6 +50,7 @@ const config = {
     logsPath,
     packagesPath: join(home, "packages"),
     lockFilePath: join(runtimePath, "realm"),
+    devmntPath: join(configsPath, "devmnt.json"),
 
     omnitron: {
         logsPath: omnitronLogsPath,

@@ -195,6 +195,11 @@
                 "index": "glosses/datetime/index",
                 "src": "glosses/datetime/**/*"
             },
+            "dev": {
+                "description": "Development stuff",
+                "index": "glosses/dev/index",
+                "src": "glosses/dev/**/*"
+            },
             "diff": {
                 "description": "Text differencing",
                 "index": "glosses/diff/index",

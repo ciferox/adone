@@ -24,6 +24,12 @@ const baseSubsystem = (name) => std.path.join(__dirname, "..", "lib", "cli", "su
             group: "cli",
             description: "Adone cli link management",
             subsystem: baseSubsystem("link")
+        },
+        {
+            name: "inspect",
+            group: "dev",
+            description: "Inspect adone namespace/object",
+            subsystem: baseSubsystem("inspect")
         }
     ]
 })
@@ -211,7 +217,69 @@ class AdoneCLI extends application.CliApplication {
 
             return 0;
         } catch (err) {
-            adone.log(err);
+            term.print(`{red-fg}${err.message}{/}`);
+            return 1;
+        }
+    }
+
+    @DCliCommand({
+        name: "mount",
+        group: "realm",
+        help: "Mount new namespace to 'adone.dev'",
+        arguments: [
+            {
+                name: "name",
+                type: String,
+                required: true,
+                help: "Namespace name"
+            },
+            {
+                name: "path",
+                type: String,
+                required: true,
+                help: "Path to namespace implementation"
+            }
+        ]
+    })
+    async mountCommand(args) {
+        try {
+            const realmManager = await adone.realm.getManager();
+            const observer = await realmManager.mount({
+                name: args.get("name"),
+                path: args.get("path")
+            });
+            await observer.result;
+
+            return 0;
+        } catch (err) {
+            // term.print(`{red-fg}${err.message}{/}`);
+            return 1;
+        }
+    }
+
+    @DCliCommand({
+        name: "unmount",
+        group: "realm",
+        help: "Unmount namespace from 'adone.dev'",
+        arguments: [
+            {
+                name: "name",
+                type: String,
+                required: true,
+                help: "Namespace name"
+            }
+        ]
+    })
+    async unmountCommand(args) {
+        try {
+            const realmManager = await adone.realm.getManager();
+            const observer = await realmManager.unmount({
+                name: args.get("name")
+            });
+            await observer.result;
+
+            return 0;
+        } catch (err) {
             // term.print(`{red-fg}${err.message}{/}`);
             return 1;
         }
@@ -336,179 +404,6 @@ class AdoneCLI extends application.CliApplication {
             adone.log(`\nConfiguration saved to ${outPath}!`);
         }
         return 0;
-    }
-
-    @DCliCommand({
-        name: "inspect",
-        help: "Inspect adone namespace/object",
-        arguments: [
-            {
-                name: "name",
-                type: String,
-                default: "",
-                help: "Name of class/object/function/namespace"
-            }
-        ],
-        options: [
-            {
-                name: "--all",
-                help: "Show all properties"
-            },
-            {
-                name: "--depth",
-                type: Number,
-                default: 1,
-                help: "The depth of object inspection"
-            }
-        ]
-    })
-    async inspectCommand(args, opts) {
-        try {
-            const name = args.get("name");
-            const { namespace, objectName } = adone.meta.parseName(name);
-            const inspectOptions = {
-                style: "color",
-                depth: opts.get("depth"),
-                noDescriptor: true,
-                noNotices: true,
-                sort: true,
-                proto: true
-            };
-
-            let ns;
-            if (namespace === "global" || namespace === "") {
-                ns = global;
-            } else {
-                if (namespace === "adone") {
-                    ns = adone;
-                } else {
-                    ns = adone.vendor.lodash.get(adone, namespace.substring("adone".length + 1));
-                }
-            }
-
-            if (objectName === "") {
-                const { util } = adone;
-
-                const styleType = (type) => `{magenta-fg}${type}{/magenta-fg}`;
-                const styleName = (name) => `{green-fg}{bold}${name}{/bold}{/green-fg}`;
-                const styleArgs = (args) => `{green-fg}(${args.join(", ")}){/green-fg}`;
-                const styleLiteral = (type, name) => `${styleName(name)}: ${styleType(type)}`;
-                const styleLiteralArgs = (type, name, args) => `${styleName(name)}: ${styleType(type)}${styleArgs(args)}`;
-                const styleLiteralValue = (type, name, value) => {
-                    if (is.string(value)) {
-                        value = `"${value}"`;
-                    }
-
-                    return `${styleName(name)}: ${styleType(type)} = {blue-fg}${value}{/blue-fg}`;
-                };
-
-                const list = [];
-                for (let [key, value] of util.entries(ns, { all: opts.has("all") })) {
-                    const origType = util.typeOf(value);
-                    let type = origType;
-
-                    switch (type) {
-                        case "function": {
-                            try {
-                                const result = adone.js.parseFunction(value);
-                                type = "";
-                                if (result.isAsync) {
-                                    type += "async ";
-                                }
-                                if (!result.isArrow) {
-                                    type += "function ";
-                                }
-
-                                value = result.args;
-                            } catch (err) {
-                                if (value.toString().includes("[native code]")) {
-                                    type = "native function ";
-                                } else {
-                                    type = "function ";
-                                }
-
-                                value = [];
-                            }
-                            break;
-                        }
-                        case "Object": {
-                            if (is.class(value.constructor)) {
-                                type = value.constructor.name;
-                            } else {
-                                type = "object ";
-                            }
-                            break;
-                        }
-                    }
-
-                    list.push({
-                        origType,
-                        type,
-                        key,
-                        value
-                    });
-                }
-
-                list.sort((a, b) => {
-                    if (a.key < b.key) {
-                        return -1;
-                    } else if (a.key > b.key) {
-                        return 1;
-                    }
-                    return 0;
-                });
-
-                term.print(`${styleType("namespace")} ${styleName(namespace)}\n`);
-                for (const { origType, type, key, value } of list) {
-                    term.print("    ");
-                    switch (origType) {
-                        case "string": {
-                            term.print(`${styleLiteralValue(type, key, value)} {italic}{grey-fg}(${value.length}){/grey-fg}{/italic}`);
-                            break;
-                        }
-                        case "number":
-                        case "boolean":
-                            term.print(`${styleLiteralValue(type, key, value)}`);
-                            break;
-                        case "function": {
-                            term.print(styleLiteralArgs(type, key, value));
-                            break;
-                        }
-                        case "class": {
-                            term.print(styleLiteral(type, key));
-                            break;
-                        }
-                        case "namespace": {
-                            term.print(styleLiteral(type, key));
-                            break;
-                        }
-                        case "Object": {
-                            term.print(styleLiteral(type, key));
-                            break;
-                        }
-                        default:
-                            term.print(styleLiteral(type, key));
-                    }
-                    term.print("\n");
-                }
-                // adone.log(adone.meta.inspect(ns, inspectOptions));
-            } else if (adone.vendor.lodash.has(ns, objectName)) {
-                const obj = adone.vendor.lodash.get(ns, objectName);
-                const type = adone.util.typeOf(obj);
-                if (type === "function") {
-                    adone.log(obj.toString());
-                } else {
-                    adone.log(adone.meta.inspect(adone.vendor.lodash.get(ns, objectName), inspectOptions));
-                }
-            } else {
-                throw new adone.x.Unknown(`Unknown object: ${name}`);
-            }
-            return 0;
-        } catch (err) {
-            adone.log(err);
-            // adone.error(err.message);
-            return 1;
-        }
     }
 
     // Temporary commands, until the builds for all supported systems are ready
