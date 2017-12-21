@@ -7,8 +7,7 @@ const stream = adone.lazify({
         ReadableStream: ["./buffer_stream", (mod) => mod.ReadableStream],
         WritableStream: ["./buffer_stream", (mod) => mod.WritableStream]
     }, null, require),
-    ConcatStream: "./concat_stream",
-    concat: () => (opts) => new stream.ConcatStream(opts),
+    concat: "./concat",
     MuteStream: "./mute_stream",
     iconv: "./iconv",
     CountingStream: "./counting_stream",

@@ -150,9 +150,19 @@
                         "src": "glosses/data/base58.js"
                     },
                     "varint": {
-                        "description": "Implementation of Protobuf varint serializer",
+                        "description": "Implementation of Protobuf varint",
                         "index": "glosses/data/varint",
                         "src": "glosses/data/varint.js"
+                    },
+                    "varintSigned": {
+                        "description": "Implementation of Protobuf signed varint",
+                        "index": "glosses/data/varint_signed",
+                        "src": "glosses/data/varint_signed.js"
+                    },
+                    "protobuf": {
+                        "description": "Implementation of Protocol Buffers",
+                        "index": "glosses/data/protobuf/index",
+                        "src": "glosses/data/protobuf/**/*"
                     }
                 }
             },

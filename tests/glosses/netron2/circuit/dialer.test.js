@@ -1,0 +1,258 @@
+const nodes = require("./fixtures/nodes");
+const handshake = require("pull-handshake");
+const waterfall = require("async/waterfall");
+const lp = require("pull-length-prefixed");
+
+const {
+    multi,
+    netron2: { PeerId, PeerInfo, Connection },
+    stream: { pull }
+} = adone;
+
+const { CircuitDialer, StreamHandler, protocol, utils } = adone.private(adone.netron2.circuit);
+
+describe("netron", "circuit", "dialer", () => {
+    describe(".dial", () => {
+        const dialer = stub.createStubInstance(CircuitDialer);
+
+        beforeEach(() => {
+            dialer.relayPeers = new Map();
+            dialer.relayPeers.set(nodes.node2.id, new Connection());
+            dialer.relayPeers.set(nodes.node3.id, new Connection());
+            dialer.dial.callThrough();
+        });
+
+        afterEach(() => {
+            dialer._dialPeer.reset();
+        });
+
+        it("fail on non circuit addr", () => {
+            const dstMa = multi.address.create(`/ipfs/${nodes.node4.id}`);
+            expect(() => dialer.dial(dstMa, (err) => {
+                err.to.match(/invalid circuit address/);
+            }));
+        });
+
+        it("dial a peer", (done) => {
+            const dstMa = multi.address.create(`/p2p-circuit/ipfs/${nodes.node3.id}`);
+            dialer._dialPeer.callsFake((dstMa, relay, callback) => {
+                return callback(null, dialer.relayPeers.get(nodes.node3.id));
+            });
+
+            dialer.dial(dstMa, (err, conn) => {
+                assert.notExists(err);
+                assert.instanceOf(conn, Connection);
+                done();
+            });
+        });
+
+        it("dial a peer over the specified relay", (done) => {
+            const dstMa = multi.address.create(`/ipfs/${nodes.node3.id}/p2p-circuit/ipfs/${nodes.node4.id}`);
+            dialer._dialPeer.callsFake((dstMa, relay, callback) => {
+                expect(relay.toString()).to.equal(`/ipfs/${nodes.node3.id}`);
+                return callback(null, new Connection());
+            });
+
+            dialer.dial(dstMa, (err, conn) => {
+                assert.notExists(err);
+                assert.instanceOf(conn, Connection);
+                done();
+            });
+        });
+    });
+
+    describe(".canHop", () => {
+        const dialer = stub.createStubInstance(CircuitDialer);
+
+        let stream = null;
+        let shake = null;
+        let fromConn = null;
+        const peer = new PeerInfo(PeerId.createFromB58String("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA"));
+
+        beforeEach(() => {
+            stream = handshake({ timeout: 1000 * 60 });
+            shake = stream.handshake;
+            fromConn = new Connection(stream);
+
+            dialer.relayPeers = new Map();
+            dialer.utils = utils({});
+            dialer.canHop.callThrough();
+        });
+
+        afterEach(() => {
+            dialer._dialRelay.reset();
+        });
+
+        it("should handle successful CAN_HOP", () => {
+            pull(
+                pull.values([protocol.CircuitRelay.encode({
+                    type: protocol.CircuitRelay.type.HOP,
+                    code: protocol.CircuitRelay.Status.SUCCESS
+                })]),
+                lp.encode(),
+                pull.collect((err, encoded) => {
+                    assert.notExists(err);
+                    encoded.forEach((e) => shake.write(e));
+                    dialer._dialRelay.callsFake((peer, cb) => {
+                        cb(null, new StreamHandler(fromConn));
+                    });
+                })
+            );
+
+            dialer.canHop(peer, (err) => {
+                assert.notExists(err);
+                assert.isOk(dialer.relayPeers.has(peer.id.toB58String()));
+            });
+        });
+
+        it("should handle failed CAN_HOP", () => {
+            pull(
+                pull.values([protocol.CircuitRelay.encode({
+                    type: protocol.CircuitRelay.type.HOP,
+                    code: protocol.CircuitRelay.Status.HOP_CANT_SPEAK_RELAY
+                })]),
+                lp.encode(),
+                pull.collect((err, encoded) => {
+                    assert.notExists(err);
+                    encoded.forEach((e) => shake.write(e));
+                    dialer._dialRelay.callsFake((peer, cb) => {
+                        cb(null, new StreamHandler(fromConn));
+                    });
+                })
+            );
+
+            dialer.canHop(peer, (err) => {
+                assert.notExists(err);
+                assert.isNotOk(dialer.relayPeers.has(peer.id.toB58String()));
+            });
+        });
+    });
+
+    describe("._dialPeer", () => {
+        const dialer = stub.createStubInstance(CircuitDialer);
+
+        beforeEach(() => {
+            dialer.relayPeers = new Map();
+            dialer.relayPeers.set(nodes.node1.id, new Connection());
+            dialer.relayPeers.set(nodes.node2.id, new Connection());
+            dialer.relayPeers.set(nodes.node3.id, new Connection());
+            dialer._dialPeer.callThrough();
+        });
+
+        afterEach(() => {
+            dialer._negotiateRelay.reset();
+        });
+
+        it("should dial a peer over any relay", (done) => {
+            const dstMa = multi.address.create(`/ipfs/${nodes.node4.id}`);
+            dialer._negotiateRelay.callsFake((conn, dstMa, callback) => {
+                if (conn === dialer.relayPeers.get(nodes.node3.id)) {
+                    return callback(null, dialer.relayPeers.get(nodes.node3.id));
+                }
+
+                callback(new Error("error"));
+            });
+
+            dialer._dialPeer(dstMa, (err, conn) => {
+                assert.notExists(err);
+                expect(conn).to.be.an.instanceOf(Connection);
+                expect(conn).to.deep.equal(dialer.relayPeers.get(nodes.node3.id));
+                done();
+            });
+        });
+
+        it("should fail dialing a peer over any relay", (done) => {
+            const dstMa = multi.address.create(`/ipfs/${nodes.node4.id}`);
+            dialer._negotiateRelay.callsFake((conn, dstMa, callback) => {
+                callback(new Error("error"));
+            });
+
+            dialer._dialPeer(dstMa, (err, conn) => {
+                assert.isUndefined(conn);
+                assert.isNotNull(err);
+                expect(err).to.equal("no relay peers were found or all relays failed to dial");
+                done();
+            });
+        });
+    });
+
+    describe("._negotiateRelay", () => {
+        const dialer = stub.createStubInstance(CircuitDialer);
+        const dstMa = multi.address.create(`/ipfs/${nodes.node4.id}`);
+
+        let conn;
+        let stream;
+        let shake;
+        const callback = stub();
+
+        beforeEach((done) => {
+            waterfall([
+                (cb) => PeerId.createFromJSON(nodes.node4, cb),
+                (peerId, cb) => PeerInfo.create(peerId, cb),
+                (peer, cb) => {
+                    peer.multiaddrs.add("/p2p-circuit/ipfs/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE");
+                    dialer.swarm = {
+                        _peerInfo: peer
+                    };
+                    cb();
+                },
+                (cb) => {
+                    dialer.relayConns = new Map();
+                    dialer._negotiateRelay.callThrough();
+                    stream = handshake({ timeout: 1000 * 60 });
+                    shake = stream.handshake;
+                    conn = new Connection();
+                    conn.setPeerInfo(new PeerInfo(PeerId.createFromB58String("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE")));
+                    conn.setInnerConn(stream);
+                    dialer._negotiateRelay(conn, dstMa, callback);
+                    cb();
+                }
+            ], done);
+        });
+
+        afterEach(() => {
+            callback.reset();
+        });
+
+        it("should write the correct dst addr", (done) => {
+            lp.decodeFromReader(shake, (err, msg) => {
+                shake.write(protocol.CircuitRelay.encode({
+                    type: protocol.CircuitRelay.Type.STATUS,
+                    code: protocol.CircuitRelay.Status.SUCCESS
+                }));
+                assert.notExists(err);
+                expect(protocol.CircuitRelay.decode(msg).dstPeer.addrs[0]).to.deep.equal(dstMa.buffer);
+                done();
+            });
+        });
+
+        it("should handle failed relay negotiation", (done) => {
+            callback.callsFake((err, msg) => {
+                assert.isNotNull(err);
+                expect(err).to.be.an.instanceOf(Error);
+                expect(err.message).to.be.equal("Got 400 error code trying to dial over relay");
+                assert.isOk(callback.calledOnce);
+                done();
+            });
+
+            // send failed message
+            lp.decodeFromReader(shake, (err, msg) => {
+                if (err) {
+                    return done(err);
+                }
+
+                pull(
+                    pull.values([protocol.CircuitRelay.encode({
+                        type: protocol.CircuitRelay.Type.STATUS,
+                        code: protocol.CircuitRelay.Status.MALFORMED_MESSAGE
+                    })]), // send arbitrary non 200 code
+                    lp.encode(),
+                    pull.collect((err, encoded) => {
+                        assert.notExists(err);
+                        encoded.forEach((e) => shake.write(e));
+                    })
+                );
+            });
+        });
+    });
+});

@@ -1,9 +1,12 @@
-const { is, stream: { concat } } = adone;
+const {
+    is,
+    stream: { concat }
+} = adone;
 
 describe("stream", "concat", () => {
     context("array", () => {
         it("should support arrays", async () => {
-            const arrays = concat({ encoding: "array" });
+            const arrays = concat.create({ encoding: "array" });
             arrays.write([1, 2, 3]);
             arrays.write([4, 5, 6]);
             arrays.end();
@@ -14,7 +17,7 @@ describe("stream", "concat", () => {
 
     context("buffers", () => {
         it("should support buffers", async () => {
-            const buffers = concat();
+            const buffers = concat.create();
             buffers.write(Buffer.from("pizza Array is not a ", "utf8"));
             buffers.write(Buffer.from("stringy cat"));
             buffers.end();
@@ -24,7 +27,7 @@ describe("stream", "concat", () => {
         });
 
         specify("mixed writes", async () => {
-            const buffers = concat();
+            const buffers = concat.create();
             buffers.write(Buffer.from("pizza"));
             buffers.write(" Array is not a ");
             buffers.write([115, 116, 114, 105, 110, 103, 121]);
@@ -40,7 +43,7 @@ describe("stream", "concat", () => {
     });
 
     specify("type inference works as expected", () => {
-        const stream = concat();
+        const stream = concat.create();
         assert.equal(stream.inferEncoding(["hello"]), "array", "array");
         assert.equal(stream.inferEncoding(Buffer.from("hello")), "buffer", "buffer");
         assert.equal(stream.inferEncoding(undefined), "buffer", "buffer");
@@ -53,7 +56,7 @@ describe("stream", "concat", () => {
 
     context("objects", () => {
         it("should support objects", async () => {
-            const stream = concat({ encoding: "objects" });
+            const stream = concat.create({ encoding: "objects" });
             stream.write({ foo: "bar" });
             stream.write({ baz: "taco" });
             stream.end();
@@ -64,7 +67,7 @@ describe("stream", "concat", () => {
         });
 
         it("should switch to objects encoding if no encoding specified and objects are written", async () => {
-            const stream = concat();
+            const stream = concat.create();
             stream.write({ foo: "bar" });
             stream.write({ baz: "taco" });
             stream.end();
@@ -77,7 +80,7 @@ describe("stream", "concat", () => {
 
     context("string", () => {
         specify("string -> buffer", async () => {
-            const strings = concat({ encoding: "buffer" });
+            const strings = concat.create({ encoding: "buffer" });
             strings.write("nacho ");
             strings.write("dogs");
             strings.end();
@@ -85,7 +88,7 @@ describe("stream", "concat", () => {
         });
 
         specify("string stream", async () => {
-            const strings = concat({ encoding: "string" });
+            const strings = concat.create({ encoding: "string" });
             strings.write("nacho ");
             strings.write("dogs");
             strings.end();
@@ -93,7 +96,7 @@ describe("stream", "concat", () => {
         });
 
         specify("end chunk", async () => {
-            const strings = concat({ encoding: "string" });
+            const strings = concat.create({ encoding: "string" });
             strings.write("this ");
             strings.write("is ");
             strings.end("the end");
@@ -101,7 +104,7 @@ describe("stream", "concat", () => {
         });
 
         specify("string from mixed write encodings", async () => {
-            const strings = concat({ encoding: "string" });
+            const strings = concat.create({ encoding: "string" });
             strings.write("na");
             strings.write(Buffer.from("cho"));
             strings.write([32, 100]);
@@ -112,7 +115,7 @@ describe("stream", "concat", () => {
         });
 
         specify("string from buffers with multibyte characters", async () => {
-            const strings = concat({ encoding: "string" });
+            const strings = concat.create({ encoding: "string" });
             const snowman = Buffer.from("☃");
             for (let i = 0; i < 8; i++) {
                 strings.write(snowman.slice(0, 1));
@@ -123,7 +126,7 @@ describe("stream", "concat", () => {
         });
 
         specify("string infer encoding with empty string chunk", async () => {
-            const strings = concat();
+            const strings = concat.create();
             strings.write("");
             strings.write("nacho ");
             strings.write("dogs");
@@ -132,7 +135,7 @@ describe("stream", "concat", () => {
         });
 
         specify("to string numbers", async () => {
-            const strings = concat();
+            const strings = concat.create();
             strings.write("a");
             strings.write(1000);
             strings.end();
@@ -149,7 +152,7 @@ describe("stream", "concat", () => {
             const c = new Uint8Array(4);
             c[0] = 32; c[1] = 120; c[2] = 121; c[3] = 122;
 
-            const arrays = concat({ encoding: "Uint8Array" });
+            const arrays = concat.create({ encoding: "Uint8Array" });
             arrays.write(a);
             arrays.write(b);
             arrays.end(c);
@@ -157,7 +160,7 @@ describe("stream", "concat", () => {
         });
 
         specify("typed array from strings, buffers, and arrays", async () => {
-            const arrays = concat({ encoding: "Uint8Array" });
+            const arrays = concat.create({ encoding: "Uint8Array" });
             arrays.write("abcde");
             arrays.write(Buffer.from(" fg "));
             arrays.end([120, 121, 122]);

@@ -1,0 +1,202 @@
+const crypto = require("./rsa");
+const KEYUTIL = require("jsrsasign").KEYUTIL;
+
+const {
+    is,
+    data: { base58, protobuf },
+    multi: { hash: { async: multihashing } }
+} = adone;
+
+const pbm = protobuf.create(require("./keys.proto"));
+
+
+const ensure = function (cb) {
+    if (!is.function(cb)) {
+        throw new Error("callback is required");
+    }
+};
+
+class RsaPublicKey {
+    constructor(key) {
+        this._key = key;
+    }
+
+    verify(data, sig, callback) {
+        ensure(callback);
+        crypto.hashAndVerify(this._key, sig, data, callback);
+    }
+
+    marshal() {
+        return crypto.utils.jwkToPkix(this._key);
+    }
+
+    get bytes() {
+        return pbm.PublicKey.encode({
+            Type: pbm.KeyType.RSA,
+            Data: this.marshal()
+        });
+    }
+
+    encrypt(bytes) {
+        return this._key.encrypt(bytes, "RSAES-PKCS1-V1_5");
+    }
+
+    equals(key) {
+        return this.bytes.equals(key.bytes);
+    }
+
+    hash(callback) {
+        ensure(callback);
+        multihashing(this.bytes, "sha2-256", callback);
+    }
+}
+
+class RsaPrivateKey {
+    // key       - Object of the jwk format
+    // publicKey - Buffer of the spki format
+    constructor(key, publicKey) {
+        this._key = key;
+        this._publicKey = publicKey;
+    }
+
+    genSecret() {
+        return crypto.getRandomValues(new Uint8Array(16));
+    }
+
+    sign(message, callback) {
+        ensure(callback);
+        crypto.hashAndSign(this._key, message, callback);
+    }
+
+    get public() {
+        if (!this._publicKey) {
+            throw new Error("public key not provided");
+        }
+
+        return new RsaPublicKey(this._publicKey);
+    }
+
+    decrypt(msg, callback) {
+        crypto.decrypt(this._key, msg, callback);
+    }
+
+    marshal() {
+        return crypto.utils.jwkToPkcs1(this._key);
+    }
+
+    get bytes() {
+        return pbm.PrivateKey.encode({
+            Type: pbm.KeyType.RSA,
+            Data: this.marshal()
+        });
+    }
+
+    equals(key) {
+        return this.bytes.equals(key.bytes);
+    }
+
+    hash(callback) {
+        ensure(callback);
+        multihashing(this.bytes, "sha2-256", callback);
+    }
+
+    /**
+   * Gets the ID of the key.
+   *
+   * The key id is the base58 encoding of the SHA-256 multihash of its public key.
+   * The public key is a protobuf encoding containing a type and the DER encoding
+   * of the PKCS SubjectPublicKeyInfo.
+   *
+   * @param {function(Error, id)} callback
+   * @returns {undefined}
+   */
+    id(callback) {
+        this.public.hash((err, hash) => {
+            if (err) {
+                return callback(err);
+            }
+            callback(null, base58.encode(hash));
+        });
+    }
+
+    /**
+     * Exports the key into a password protected PEM format
+     *
+     * @param {string} [format] - Defaults to 'pkcs-8'.
+     * @param {string} password - The password to read the encrypted PEM
+     * @param {function(Error, KeyInfo)} callback
+     * @returns {undefined}
+     */
+    export(format, password, callback) {
+        if (is.function(password)) {
+            callback = password;
+            password = format;
+            format = "pkcs-8";
+        }
+
+        setImmediate(() => {
+            ensure(callback);
+
+            let err = null;
+            let pem = null;
+            try {
+                const key = KEYUTIL.getKey(this._key); // _key is a JWK (JSON Web Key)
+                if (format === "pkcs-8") {
+                    pem = KEYUTIL.getPEM(key, "PKCS8PRV", password);
+                } else {
+                    err = new Error(`Unknown export format '${format}'`);
+                }
+            } catch (e) {
+                err = e;
+            }
+
+            callback(err, pem);
+        });
+    }
+}
+
+const unmarshalRsaPrivateKey = function (bytes, callback) {
+    const jwk = crypto.utils.pkcs1ToJwk(bytes);
+    crypto.unmarshalPrivateKey(jwk, (err, keys) => {
+        if (err) {
+            return callback(err);
+        }
+
+        callback(null, new RsaPrivateKey(keys.privateKey, keys.publicKey));
+    });
+};
+
+const unmarshalRsaPublicKey = function (bytes) {
+    const jwk = crypto.utils.pkixToJwk(bytes);
+
+    return new RsaPublicKey(jwk);
+};
+
+const generateKeyPair = function (bits, cb) {
+    crypto.generateKey(bits, (err, keys) => {
+        if (err) {
+            return cb(err);
+        }
+
+        cb(null, new RsaPrivateKey(keys.privateKey, keys.publicKey));
+    });
+};
+
+const fromJwk = function (jwk, callback) {
+    crypto.unmarshalPrivateKey(jwk, (err, keys) => {
+        if (err) {
+            return callback(err);
+        }
+
+        callback(null, new RsaPrivateKey(keys.privateKey, keys.publicKey));
+    });
+};
+
+module.exports = {
+    RsaPublicKey,
+    RsaPrivateKey,
+    unmarshalRsaPublicKey,
+    unmarshalRsaPrivateKey,
+    generateKeyPair,
+    fromJwk
+};

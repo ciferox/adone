@@ -1,3 +1,5 @@
+adone.asNamespace(exports);
+
 const MSB = 0x80;
 const REST = 0x7F;
 const MSBALL = ~REST;
@@ -21,7 +23,6 @@ export const encode = (num, out, offset = 0) => {
 
     return out;
 };
-
 
 export const decode = (buf, offset = 0) => {
     let res = 0;

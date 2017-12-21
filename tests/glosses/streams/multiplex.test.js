@@ -1,8 +1,7 @@
-const concat = require("concat-stream");
 const chunky = require("chunky");
 
 const {
-    stream: { Multiplex, through },
+    stream: { concat, Multiplex, through },
     std: { net }
 } = adone;
 
@@ -11,11 +10,12 @@ describe("stream", "multiplex", () => {
         const plex1 = new Multiplex();
         const stream1 = plex1.createStream();
         const stream2 = plex1.createStream();
+
         let pending = 2;
         const results = [];
 
         const collect = function () {
-            return concat((data) => {
+            return concat.create((data) => {
                 results.push(data.toString());
                 if (--pending === 0) {
                     results.sort();
@@ -59,7 +59,7 @@ describe("stream", "multiplex", () => {
         const results = [];
 
         const collect = function () {
-            return concat((data) => {
+            return concat.create((data) => {
                 results.push(data.toString());
                 if (--pending === 0) {
                     results.sort();
@@ -157,10 +157,10 @@ describe("stream", "multiplex", () => {
     });
 
     it("2 buffers packed into 1 chunk", (done) => {
-        let server;
+        let server = null;
         const plex1 = new Multiplex();
         const plex2 = new Multiplex((b) => {
-            b.pipe(concat((body) => {
+            b.pipe(concat.create((body) => {
                 assert.equal(body.toString("utf8"), "abc\n123\n");
                 done();
                 server.close();
@@ -188,7 +188,7 @@ describe("stream", "multiplex", () => {
             const results = [];
 
             return function () {
-                return concat((data) => {
+                return concat.create((data) => {
                     results.push(data.toString());
                     if (--pending === 0) {
                         results.sort();

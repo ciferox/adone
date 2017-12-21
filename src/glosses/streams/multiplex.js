@@ -1,23 +1,22 @@
 const {
+    event: { EventEmitter },
+    data: { varint },
     is,
-    data: { varint }
+    stream: { Duplexify }
 } = adone;
 
-const SIGNAL_FLUSH = Buffer.from([0]);
-
-const empty = Buffer.allocUnsafe(0);
-let pool = Buffer.alloc(10 * 1024);
-let used = 0;
-
 class Channel extends adone.std.stream.Duplex {
-    constructor(name, plex, opts = {}) {
-        super();
+    constructor(name/* : Buffer | string */, plex/* : Multiplex */, opts/* : ChannelOpts = {} */) {
+        const halfOpen = Boolean(opts.halfOpen);
+        super({
+            allowHalfOpen: halfOpen
+        });
 
         this.name = name;
         this.channel = 0;
         this.initiator = false;
         this.chunked = Boolean(opts.chunked);
-        this.halfOpen = Boolean(opts.halfOpen);
+        this.halfOpen = halfOpen;
         this.destroyed = false;
         this.finalized = false;
 
@@ -30,11 +29,13 @@ class Channel extends adone.std.stream.Duplex {
         let finished = false;
         let ended = false;
 
-        this.once("end", function () {
+        this.once("end", () => {
             this._read(); // trigger drain
+
             if (this.destroyed) {
                 return;
             }
+
             ended = true;
             if (finished) {
                 this._finalize();
@@ -47,44 +48,63 @@ class Channel extends adone.std.stream.Duplex {
             if (this.destroyed) {
                 return;
             }
+
             if (!this._opened) {
-                this.once("open", onfinish);
-            } else {
-                if (this._lazy && this.initiator) {
-                    this._open();
-                }
-                this._multiplex._send(this.channel << 3 | (this.initiator ? 4 : 3), null);
-                finished = true;
-                if (ended) {
-                    this._finalize();
-                }
+                return this.once("open", onfinish);
+            }
+
+            if (this._lazy && this.initiator) {
+                this._open();
+            }
+
+            this._multiplex._send(
+                this.channel << 3 | (this.initiator ? 4 : 3),
+                null
+            );
+
+            finished = true;
+
+            if (ended) {
+                this._finalize();
             }
         });
     }
 
-    destroy(err) {
+    destroy(err/* : Error */) {
         this._destroy(err, true);
     }
 
-    _destroy(err, local) {
+    _destroy(err/* : Error */, local/* : bool */) {
         if (this.destroyed) {
             return;
         }
+
         this.destroyed = true;
-        if (err && (!local || adone.event.EventEmitter.listenerCount(this, "error"))) {
+
+        const hasErrorListeners = EventEmitter.listenerCount(this, "error") > 0;
+
+        if (err && (!local || hasErrorListeners)) {
             this.emit("error", err);
         }
+
         this.emit("close");
+
         if (local && this._opened) {
             if (this._lazy && this.initiator) {
                 this._open();
             }
+
+            const msg = err ? Buffer.from(err.message) : null;
             try {
-                this._multiplex._send(this.channel << 3 | (this.initiator ? 6 : 5), err ? Buffer.from(err.message) : null);
+                this._multiplex._send(
+                    this.channel << 3 | (this.initiator ? 6 : 5),
+                    msg
+                );
             } catch (e) {
                 //
             }
         }
+
         this._finalize();
     }
 
@@ -92,29 +112,39 @@ class Channel extends adone.std.stream.Duplex {
         if (this.finalized) {
             return;
         }
+
         this.finalized = true;
         this.emit("finalize");
     }
 
-    _write(data, enc, cb) {
+    _write(data/* : Buffer */, enc/* : string */, cb/* : () => void */) {
         if (!this._opened) {
-            this.once("open", this._write.bind(this, data, enc, cb));
+            this.once("open", () => {
+                this._write(data, enc, cb);
+            });
             return;
         }
+
         if (this.destroyed) {
-            return cb();
+            cb();
+            return;
         }
 
         if (this._lazy && this.initiator) {
             this._open();
         }
 
-        const drained = this._multiplex._send(this._dataHeader, data);
+        const drained = this._multiplex._send(
+            this._dataHeader,
+            data
+        );
+
         if (drained) {
             cb();
-        } else {
-            this._multiplex._ondrain.push(cb);
+            return;
         }
+
+        this._multiplex._ondrain.push(cb);
     }
 
     _read() {
@@ -132,11 +162,12 @@ class Channel extends adone.std.stream.Duplex {
         } else if (this.name !== this.channel.toString()) {
             buf = Buffer.from(this.name);
         }
+
         this._lazy = false;
         this._multiplex._send(this.channel << 3 | 0, buf);
     }
 
-    open(channel, initiator) {
+    open(channel/* : number */, initiator/* : bool */) {
         this.channel = channel;
         this.initiator = initiator;
         this._dataHeader = channel << 3 | (initiator ? 2 : 1);
@@ -148,23 +179,45 @@ class Channel extends adone.std.stream.Duplex {
     }
 }
 
-export default class Multiplex extends adone.std.stream.Duplex {
-    constructor(opts, onchannel) {
-        super();
+const SIGNAL_FLUSH = Buffer.from([0]);
 
+const empty = Buffer.allocUnsafe(0);
+let pool = Buffer.alloc(10 * 1024);
+let used = 0;
+
+/* ::
+type MultiplexOpts = {
+  binaryName?: bool,
+  limit?: number,
+  initiator?: bool
+}
+
+type ChannelCallback = (Channel) => void
+*/
+
+export default class Multiplex extends adone.std.stream.Duplex {
+    constructor(opts/* :: ?: MultiplexOpts | ChannelCallback */, onchannel /* :: ?: ChannelCallback */) {
+        super();
         if (is.function(opts)) {
             onchannel = opts;
-            opts = null;
+            opts = {};
         }
+
         if (!opts) {
             opts = {};
         }
+
         if (onchannel) {
             this.on("stream", onchannel);
         }
 
         this.destroyed = false;
         this.limit = opts.limit || 0;
+        if (is.nil(opts.initiator)) {
+            opts.initiator = true;
+        }
+
+        this.initiator = opts.initiator;
 
         this._corked = 0;
         this._options = opts;
@@ -179,58 +232,84 @@ export default class Multiplex extends adone.std.stream.Duplex {
         this._channel = 0;
         this._missing = 0;
         this._message = null;
-        this._buf = Buffer.alloc(this.limit ? varint.encodingLength(this.limit) : 100);
+
+        let bufSize = 100;
+        if (this.limit) {
+            bufSize = varint.encodingLength(this.limit);
+        }
+        this._buf = Buffer.alloc(bufSize);
         this._ptr = 0;
         this._awaitChannelDrains = 0;
         this._onwritedrain = null;
         this._ondrain = [];
         this._finished = false;
 
-        this.on("finish", this._clear);
+        this.once("finish", this._clear);
+
+        // setup id handling
+        this._nextId = this.initiator ? 0 : 1;
     }
 
-    createStream(name, opts) {
+    // Generate the next stream id
+    _nextStreamId()/* : number */ {
+        const id = this._nextId;
+        this._nextId += 2;
+        return id;
+    }
+
+    createStream(name/* : Buffer | string */, opts/* : ChannelOpts */)/* : Channel */ {
         if (this.destroyed) {
             throw new Error("Multiplexer is destroyed");
         }
-        let id = this._local.indexOf(null);
-        if (id === -1) {
-            id = this._local.push(null) - 1;
-        }
-        const channel = new Channel(this._name(name || id.toString()), this, Object.assign({}, this._options, opts));
+        const id = this._nextStreamId();
+        const channelName = this._name(name || id.toString());
+        const options = Object.assign(this._options, opts);
+
+        const channel = new Channel(channelName, this, options);
         return this._addChannel(channel, id, this._local);
     }
 
-    receiveStream(name, opts) {
+    receiveStream(name/* : Buffer | string */, opts/* : ChannelOpts */)/* : Channel */ {
         if (this.destroyed) {
             throw new Error("Multiplexer is destroyed");
         }
+
         if (is.nil(name)) {
             throw new Error("Name is needed when receiving a stream");
         }
-        const channel = new Channel(this._name(name), this, Object.assign({}, this._options, opts));
+
+        const channelName = this._name(name);
+        const channel = new Channel(
+            channelName,
+            this,
+            Object.assign(this._options, opts)
+        );
+
         if (!this._receiving) {
             this._receiving = {};
         }
+
         if (this._receiving[channel.name]) {
             throw new Error("You are already receiving this stream");
         }
+
         this._receiving[channel.name] = channel;
+
         return channel;
     }
 
-    createSharedStream(name, opts) {
-        return new adone.stream.Duplexify(this.createStream(name, Object.assign({}, opts, { lazy: true })), this.receiveStream(name, opts));
+    createSharedStream(name/* : Buffer | string */, opts/* : ChannelOpts */)/* : stream.Duplex */ {
+        return new Duplexify(this.createStream(name, Object.assign(opts, { lazy: true })), this.receiveStream(name, opts));
     }
 
-    _name(name) {
+    _name(name/* : Buffer | string */)/* : Buffer | string */ {
         if (!this._binaryName) {
             return name.toString();
         }
         return is.buffer(name) ? name : Buffer.from(name);
     }
 
-    _send(header, data) {
+    _send(header/* : number */, data /* :: ?: Buffer */)/* : bool */ {
         const len = data ? data.length : 0;
         const oldUsed = used;
         let drained = true;
@@ -250,57 +329,62 @@ export default class Multiplex extends adone.std.stream.Duplex {
         if (data) {
             drained = this.push(data);
         }
+
         return drained;
     }
 
-    _addChannel(channel, id, list) {
-        while (list.length <= id) {
-            list.push(null);
-        }
+    _addChannel(channel/* : Channel */, id/* : number */, list/* : Array<Channel|null> */)/* : Channel */ {
         list[id] = channel;
         channel.on("finalize", () => {
             list[id] = null;
         });
-
         channel.open(id, list === this._local);
 
         return channel;
     }
 
-    _writeVarint(data, offset) {
+    _writeVarint(data/* : Buffer */, offset/* : number */)/* : number */ {
         for (offset; offset < data.length; offset++) {
             if (this._ptr === this._buf.length) {
                 return this._lengthError(data);
             }
+
             this._buf[this._ptr++] = data[offset];
+
             if (!(data[offset] & 0x80)) {
                 if (this._state === 0) {
                     const header = varint.decode(this._buf);
                     this._type = header & 7;
                     this._channel = header >> 3;
                     this._list = this._type & 1 ? this._local : this._remote;
-                    const chunked = this._list.length > this._channel && this._list[this._channel] && this._list[this._channel].chunked;
+                    const chunked = this._list.length > this._channel &&
+                        this._list[this._channel] &&
+                        this._list[this._channel].chunked;
+
                     this._chunked = Boolean(this._type === 1 || this._type === 2) && chunked;
                 } else {
                     this._missing = varint.decode(this._buf);
+
                     if (this.limit && this._missing > this.limit) {
                         return this._lengthError(data);
                     }
                 }
+
                 this._state++;
                 this._ptr = 0;
                 return offset + 1;
             }
         }
+
         return data.length;
     }
 
-    _lengthError(data) {
+    _lengthError(data/* : Buffer */)/* : number */ {
         this.destroy(new Error("Incoming message is too big"));
         return data.length;
     }
 
-    _writeMessage(data, offset) {
+    _writeMessage(data/* : Buffer */, offset/* : number */)/* : number */ {
         const free = data.length - offset;
         const missing = this._missing;
 
@@ -332,7 +416,7 @@ export default class Multiplex extends adone.std.stream.Duplex {
         return data.length;
     }
 
-    _push(data) {
+    _push(data/* : Buffer */) {
         if (!this._missing) {
             this._ptr = 0;
             this._state = 0;
@@ -344,16 +428,23 @@ export default class Multiplex extends adone.std.stream.Duplex {
                 return;
             }
 
-            const name = this._binaryName ? data : (data.toString() || this._channel.toString());
+            let name;
+            if (this._binaryName) {
+                name = data;
+            } else {
+                name = data.toString() || this._channel.toString();
+            }
             let channel;
-
             if (this._receiving && this._receiving[name]) {
                 channel = this._receiving[name];
                 delete this._receiving[name];
                 this._addChannel(channel, this._channel, this._list);
             } else {
                 channel = new Channel(name, this, this._options);
-                this.emit("stream", this._addChannel(channel, this._channel, this._list), channel.name);
+                this.emit("stream", this._addChannel(
+                    channel,
+                    this._channel,
+                    this._list), channel.name);
             }
             return;
         }
@@ -365,10 +456,11 @@ export default class Multiplex extends adone.std.stream.Duplex {
 
         switch (this._type) {
             case 5: // local error
-            case 6: // remote error
-                stream._destroy(new Error(data.toString() || "Channel destroyed"), false);
+            case 6: { // remote error
+                const error = new Error(data.toString() || "Channel destroyed");
+                stream._destroy(error, false);
                 return;
-
+            }
             case 3: // local end
             case 4: // remote end
                 stream.push(null);
@@ -384,31 +476,38 @@ export default class Multiplex extends adone.std.stream.Duplex {
         }
     }
 
-    _onchanneldrain(drained) {
+    _onchanneldrain(drained/* : number */) {
         this._awaitChannelDrains -= drained;
+
         if (this._awaitChannelDrains) {
             return;
         }
+
         const ondrain = this._onwritedrain;
         this._onwritedrain = null;
+
         if (ondrain) {
             ondrain();
         }
     }
 
-    _write(data, enc, cb) {
+    _write(data/* : Buffer */, enc/* : string */, cb/* : () => void */) {
         if (this._finished) {
-            return cb();
+            cb();
+            return;
         }
+
         if (this._corked) {
-            return this._onuncork(this._write.bind(this, data, enc, cb));
+            this._onuncork(this._write.bind(this, data, enc, cb));
+            return;
         }
+
         if (data === SIGNAL_FLUSH) {
-            return this._finish(cb);
+            this._finish(cb);
+            return;
         }
 
         let offset = 0;
-
         while (offset < data.length) {
             if (this._state === 2) {
                 offset = this._writeMessage(data, offset);
@@ -416,6 +515,7 @@ export default class Multiplex extends adone.std.stream.Duplex {
                 offset = this._writeVarint(data, offset);
             }
         }
+
         if (this._state === 2 && !this._missing) {
             this._push(empty);
         }
@@ -427,14 +527,13 @@ export default class Multiplex extends adone.std.stream.Duplex {
         }
     }
 
-    _finish(cb) {
-        const self = this;
+    _finish(cb/* : () => void */) {
         this._onuncork(() => {
-            if (self._writableState.prefinished === false) {
-                self._writableState.prefinished = true;
+            if (this._writableState.prefinished === false) {
+                this._writableState.prefinished = true;
             }
-            self.emit("prefinish");
-            self._onuncork(cb);
+            this.emit("prefinish");
+            this._onuncork(cb);
         });
     }
 
@@ -450,28 +549,34 @@ export default class Multiplex extends adone.std.stream.Duplex {
         }
     }
 
-    end(data, enc, cb) {
+    end(data/* :: ?: Buffer | () => void */, enc/* :: ?: string | () => void */, cb/* :: ?: () => void */) {
         if (is.function(data)) {
-            return this.end(null, null, data);
+            cb = data;
+            data = undefined;
         }
         if (is.function(enc)) {
-            return this.end(data, null, enc);
+            cb = enc;
+            enc = undefined;
         }
+
         if (data) {
             this.write(data);
         }
+
         if (!this._writableState.ending) {
             this.write(SIGNAL_FLUSH);
         }
-        return super.end(cb);
+
+        return adone.std.stream.Writable.prototype.end.call(this, cb);
     }
 
-    _onuncork(fn) {
+    _onuncork(fn/* : () => void */) {
         if (this._corked) {
             this.once("uncork", fn);
-        } else {
-            fn();
+            return;
         }
+
+        fn();
     }
 
     _read() {
@@ -484,6 +589,7 @@ export default class Multiplex extends adone.std.stream.Duplex {
         if (this._finished) {
             return;
         }
+
         this._finished = true;
 
         const list = this._local.concat(this._remote);
@@ -504,15 +610,26 @@ export default class Multiplex extends adone.std.stream.Duplex {
         this._clear();
     }
 
-    destroy(err) {
+    destroy(err/* :: ?: Error */) {
         if (this.destroyed) {
             return;
         }
+
+        const list = this._local.concat(this._remote);
+
         this.destroyed = true;
-        this._clear();
+
         if (err) {
             this.emit("error", err);
         }
         this.emit("close");
+
+        list.forEach((stream) => {
+            if (stream) {
+                stream.emit("error", err || new Error("underlying socket has been closed"));
+            }
+        });
+
+        this._clear();
     }
 }

@@ -8,5 +8,7 @@ adone.lazify({
     yaml: "./yaml",
     basex: "./basex",
     base58: "./base58",
-    varint: "./varint"
+    varint: "./varint",
+    varintSigned: "./varint_signed",
+    protobuf: "./protobuf"
 }, adone.asNamespace(exports), require);

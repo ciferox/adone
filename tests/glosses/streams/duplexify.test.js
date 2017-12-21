@@ -1,7 +1,10 @@
-const { stream: { concat, through, Duplexify } } = adone;
+const {
+    stream: { concat, through, Duplexify },
+    std: { net }
+} = adone;
 
 describe("stream", "Duplexify", () => {
-    it("passthrough", async () => {
+    it("passthrough", () => {
         const pt = through.base();
         const dup = new Duplexify(pt, pt);
 
@@ -9,14 +12,12 @@ describe("stream", "Duplexify", () => {
         dup.on("finish", () => {
             assert.isOk(true, "should finish");
         });
-        const c = concat();
-        dup.pipe(c);
-
-        const data = await c;
-        assert.equal(data.toString(), "hello world");
+        dup.pipe(concat.create((data) => {
+            assert.deepEqual(data.toString(), "hello world", "same in as out");
+        }));
     });
 
-    it("passthrough + double end", async () => {
+    it("passthrough + double end", () => {
         const pt = through.base();
         const dup = new Duplexify(pt, pt);
 
@@ -26,13 +27,12 @@ describe("stream", "Duplexify", () => {
         dup.on("finish", () => {
             assert.isOk(true, "should finish");
         });
-        const c = concat();
-        dup.pipe(c);
-        const data = await c;
-        assert.equal(data.toString(), "hello world");
+        dup.pipe(concat.create((data) => {
+            assert.deepEqual(data.toString(), "hello world", "same in as out");
+        }));
     });
 
-    it("async passthrough + end", async () => {
+    it("async passthrough + end", () => {
         const pt = through.obj({ highWaterMark: 1 }, (data, enc, cb) => {
             setTimeout(() => {
                 cb(null, data);
@@ -48,19 +48,18 @@ describe("stream", "Duplexify", () => {
         dup.on("finish", () => {
             assert.isOk(true, "should finish");
         });
-        const c = concat();
-        dup.pipe(c);
-        const data = await c;
-        assert.equal(data.toString(), "hello world");
+        dup.pipe(concat.create((data) => {
+            assert.deepEqual(data.toString(), "hello world", "same in as out");
+        }));
     });
 
-    it("duplex", (done) => {
+    it("duplex", () => {
         const readExpected = ["read-a", "read-b", "read-c"];
         const writeExpected = ["write-a", "write-b", "write-c"];
 
         const readable = through.obj();
         const writable = through.obj((data, enc, cb) => {
-            assert.equal(data, writeExpected.shift());
+            assert.deepEqual(data, writeExpected.shift(), "onwrite should match");
             cb();
         });
 
@@ -77,23 +76,24 @@ describe("stream", "Duplexify", () => {
         dup.end();
 
         dup.on("data", (data) => {
-            assert.equal(data, readExpected.shift());
+            assert.deepEqual(data, readExpected.shift(), "ondata should match");
         });
         dup.on("end", () => {
             assert.isOk(true, "should end");
-            done();
         });
         dup.on("finish", () => {
             assert.isOk(true, "should finish");
         });
     });
 
-    it("async", async () => {
+    it("async", (done) => {
         const dup = new Duplexify();
         const pt = through.base();
 
-        const c = concat();
-        dup.pipe(c);
+        dup.pipe(concat.create((data) => {
+            assert.deepEqual(data.toString(), "i was async", "same in as out");
+            done();
+        }));
 
         dup.write("i");
         dup.write(" was ");
@@ -105,12 +105,9 @@ describe("stream", "Duplexify", () => {
                 dup.setReadable(pt);
             }, 50);
         }, 50);
-
-        const data = await c;
-        assert.equal(data.toString(), "i was async", "same in as out");
     });
 
-    it("destroy", (done) => {
+    it("destroy", () => {
         const write = through.base();
         const read = through.base();
         const dup = new Duplexify(write, read);
@@ -121,14 +118,13 @@ describe("stream", "Duplexify", () => {
 
         dup.on("close", () => {
             assert.isOk(true, "close emitted");
-            done();
         });
 
         dup.destroy();
         dup.destroy(); // should only work once
     });
 
-    it("destroy both", (done) => {
+    it("destroy both", () => {
         const write = through.base();
         const read = through.base();
         const dup = new Duplexify(write, read);
@@ -143,41 +139,38 @@ describe("stream", "Duplexify", () => {
 
         dup.on("close", () => {
             assert.isOk(true, "close emitted");
-            done();
         });
 
         dup.destroy();
         dup.destroy(); // should only work once
     });
 
-    it("bubble read errors", (done) => {
+    it("bubble read errors", () => {
         const write = through.base();
         const read = through.base();
         const dup = new Duplexify(write, read);
 
         dup.on("error", (err) => {
-            assert.equal(err.message, "read-error", "received read error");
+            assert.deepEqual(err.message, "read-error", "received read error");
         });
         dup.on("close", () => {
             assert.isOk(true, "close emitted");
-            done();
         });
 
         read.emit("error", new Error("read-error"));
         write.emit("error", new Error("write-error")); // only emit first error
     });
 
-    it("bubble write errors", (done) => {
+    it("bubble write errors", () => {
         const write = through.base();
         const read = through.base();
         const dup = new Duplexify(write, read);
 
         dup.on("error", (err) => {
-            assert.equal(err.message, "write-error", "received write error");
+            assert.deepEqual(err.message, "write-error", "received write error");
         });
         dup.on("close", () => {
             assert.isOk(true, "close emitted");
-            done();
         });
 
         write.emit("error", new Error("write-error"));
@@ -194,13 +187,13 @@ describe("stream", "Duplexify", () => {
         const dup = new Duplexify(passthrough, passthrough);
 
         dup.once("data", (data) => {
-            assert.equal(data.toString(), "hello");
+            assert.deepEqual(data.toString(), "hello");
             dup.setWritable(upper);
             dup.setReadable(upper);
             dup.once("data", (data) => {
-                assert.equal(data.toString(), "HELLO");
+                assert.deepEqual(data.toString(), "HELLO");
                 dup.once("data", (data) => {
-                    assert.equal(data.toString(), "HI");
+                    assert.deepEqual(data.toString(), "HI");
                     done();
                 });
             });
@@ -249,7 +242,7 @@ describe("stream", "Duplexify", () => {
     it("close", (done) => {
         const passthrough = through.base();
         const dup = new Duplexify(passthrough, passthrough);
-
+        
         passthrough.emit("close");
         dup.on("close", () => {
             assert.isOk(true, "should forward close");
@@ -258,7 +251,7 @@ describe("stream", "Duplexify", () => {
     });
 
     it("works with node native streams (net)", (done) => {
-        const server = adone.std.net.createServer((socket) => {
+        const server = net.createServer((socket) => {
             const dup = new Duplexify(socket, socket);
 
             dup.once("data", (chunk) => {
@@ -270,7 +263,7 @@ describe("stream", "Duplexify", () => {
         });
 
         server.listen(0, () => {
-            const socket = adone.std.net.connect(server.address().port);
+            const socket = net.connect(server.address().port);
             const dup = new Duplexify(socket, socket);
 
             dup.write(Buffer.from("hello world"));

@@ -19,7 +19,7 @@ describe("archive", "tar", "raw", () => {
 
             pack.finalize();
 
-            const data = await pack.pipe(concat());
+            const data = await pack.pipe(concat.create());
             expect(data.length & 511).to.be.equal(0);
             const file = await fixtures.get("one-file.tar");
             expect(data).to.be.deep.equal(await file.contents("buffer"));
@@ -51,7 +51,7 @@ describe("archive", "tar", "raw", () => {
 
             pack.finalize();
 
-            const data = await pack.pipe(concat());
+            const data = await pack.pipe(concat.create());
             expect(data.length & 511).to.be.equal(0);
             expect(data).to.be.deep.equal(await fixtures.getFile("multi-file.tar").contents("buffer"));
         });
@@ -72,7 +72,7 @@ describe("archive", "tar", "raw", () => {
 
             pack.finalize();
 
-            const data = await pack.pipe(concat());
+            const data = await pack.pipe(concat.create());
             expect(data.length & 511).to.be.equal(0);
             expect(data).to.be.deep.equal(await fixtures.getFile("pax.tar").contents("buffer"));
         });
@@ -106,7 +106,7 @@ describe("archive", "tar", "raw", () => {
 
             pack.finalize();
 
-            const data = await pack.pipe(concat());
+            const data = await pack.pipe(concat.create());
             expect(data.length & 511).to.be.equal(0);
             expect(data).to.be.deep.equal(await fixtures.getFile("types.tar").contents("buffer"));
         });
@@ -127,7 +127,7 @@ describe("archive", "tar", "raw", () => {
 
             pack.finalize();
 
-            const data = await pack.pipe(concat());
+            const data = await pack.pipe(concat.create());
             expect(data.length & 511).to.be.equal(0);
             expect(data).to.be.deep.equal(await fixtures.getFile("long-name.tar").contents("buffer"));
         });
@@ -147,7 +147,7 @@ describe("archive", "tar", "raw", () => {
 
             pack.finalize();
 
-            const data = await pack.pipe(concat());
+            const data = await pack.pipe(concat.create());
 
             expect(data.length & 511).to.be.equal(0);
             expect(data).to.be.deep.equal(await fixtures.getFile("large-uid-gid.tar").contents("buffer"));
@@ -169,7 +169,7 @@ describe("archive", "tar", "raw", () => {
 
             pack.finalize();
 
-            const data = await pack.pipe(concat());
+            const data = await pack.pipe(concat.create());
 
             expect(data.length & 511).to.be.equal(0);
             expect(data).to.be.deep.equal(await fixtures.getFile("unicode.tar").contents("buffer"));
@@ -201,7 +201,7 @@ describe("archive", "tar", "raw", () => {
             let entries = new Promise((resolve) => {
                 const entries = [];
                 extract.on("entry", (header, stream, callback) => {
-                    stream.pipe(concat()).then((data) => {
+                    stream.pipe(concat.create()).then((data) => {
                         entries.push({ header, data });
                         callback();
                     });
@@ -237,7 +237,7 @@ describe("archive", "tar", "raw", () => {
             let entries = new Promise((resolve) => {
                 const entries = [];
                 extract.on("entry", (header, stream, callback) => {
-                    stream.pipe(concat()).then((data) => {
+                    stream.pipe(concat.create()).then((data) => {
                         entries.push({ header, data });
                         callback();
                     });
@@ -278,7 +278,7 @@ describe("archive", "tar", "raw", () => {
             let entries = new Promise((resolve) => {
                 const entries = [];
                 extract.on("entry", (header, stream, callback) => {
-                    stream.pipe(concat()).then((data) => {
+                    stream.pipe(concat.create()).then((data) => {
                         entries.push({ header, data });
                         callback();
                     });
@@ -331,7 +331,7 @@ describe("archive", "tar", "raw", () => {
             let entries = new Promise((resolve) => {
                 const entries = [];
                 extract.on("entry", (header, stream, callback) => {
-                    stream.pipe(concat()).then((data) => {
+                    stream.pipe(concat.create()).then((data) => {
                         entries.push({ header, data });
                         callback();
                     });
@@ -388,7 +388,7 @@ describe("archive", "tar", "raw", () => {
             let entries = new Promise((resolve) => {
                 const entries = [];
                 extract.on("entry", (header, stream, callback) => {
-                    stream.pipe(concat()).then((data) => {
+                    stream.pipe(concat.create()).then((data) => {
                         entries.push({ header, data });
                         callback();
                     });
@@ -426,7 +426,7 @@ describe("archive", "tar", "raw", () => {
             let entries = new Promise((resolve) => {
                 const entries = [];
                 extract.on("entry", (header, stream, callback) => {
-                    stream.pipe(concat()).then((data) => {
+                    stream.pipe(concat.create()).then((data) => {
                         entries.push({ header, data });
                         callback();
                     });
@@ -479,7 +479,7 @@ describe("archive", "tar", "raw", () => {
             let entries = new Promise((resolve) => {
                 const entries = [];
                 extract.on("entry", (header, stream, callback) => {
-                    stream.pipe(concat()).then((data) => {
+                    stream.pipe(concat.create()).then((data) => {
                         entries.push({ header, data });
                         callback();
                     });
@@ -516,7 +516,7 @@ describe("archive", "tar", "raw", () => {
             let entries = new Promise((resolve) => {
                 const entries = [];
                 extract.on("entry", (header, stream, callback) => {
-                    stream.pipe(concat()).then((data) => {
+                    stream.pipe(concat.create()).then((data) => {
                         entries.push({ header, data });
                         callback();
                     });
@@ -554,7 +554,7 @@ describe("archive", "tar", "raw", () => {
             let entries = new Promise((resolve) => {
                 const entries = [];
                 extract.on("entry", (header, stream, callback) => {
-                    stream.pipe(concat()).then((data) => {
+                    stream.pipe(concat.create()).then((data) => {
                         entries.push({ header, data });
                         callback();
                     });
@@ -592,7 +592,7 @@ describe("archive", "tar", "raw", () => {
             let entries = new Promise((resolve) => {
                 const entries = [];
                 extract.on("entry", (header, stream, callback) => {
-                    stream.pipe(concat()).then((data) => {
+                    stream.pipe(concat.create()).then((data) => {
                         entries.push({ header, data });
                         callback();
                     });
@@ -628,7 +628,7 @@ describe("archive", "tar", "raw", () => {
             let entries = new Promise((resolve) => {
                 const entries = [];
                 extract.on("entry", (header, stream, callback) => {
-                    stream.pipe(concat()).then((data) => {
+                    stream.pipe(concat.create()).then((data) => {
                         entries.push({ header, data });
                         callback();
                     });
@@ -649,7 +649,7 @@ describe("archive", "tar", "raw", () => {
             let entries = new Promise((resolve) => {
                 const entries = [];
                 extract.on("entry", (header, stream, callback) => {
-                    stream.pipe(concat()).then((data) => {
+                    stream.pipe(concat.create()).then((data) => {
                         entries.push({ header, data });
                         callback();
                     });
@@ -671,7 +671,7 @@ describe("archive", "tar", "raw", () => {
             let entries = new Promise((resolve) => {
                 const entries = [];
                 extract.on("entry", (header, stream, callback) => {
-                    stream.pipe(concat()).then((data) => {
+                    stream.pipe(concat.create()).then((data) => {
                         entries.push({ header, data });
                         callback();
                     });

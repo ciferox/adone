@@ -1,3 +1,7 @@
+const {
+    stream: { concat: concatStream, replace: replaceStream }
+} = adone;
+
 describe("stream", "replace", () => {
     const script = [
         '<script type="text/javascript">',
@@ -8,11 +12,9 @@ describe("stream", "replace", () => {
         "</script>"
     ].join("\n");
 
-    const { stream: { concat: concatStream, replace: replaceStream } } = adone;
-
     it("should be able to replace within a chunk", async () => {
         const replace = replaceStream("</head>", `${script}</head>`);
-        const data = replace.pipe(concatStream({ encoding: "string" }, ));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }, ));
         replace.end([
             "<!DOCTYPE html>",
             "<html>",
@@ -44,7 +46,7 @@ describe("stream", "replace", () => {
         ];
 
         const replace = replaceStream("</head>", `${script}</head>`);
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
 
         haystacks.forEach((haystack) => {
             replace.write(haystack);
@@ -56,7 +58,7 @@ describe("stream", "replace", () => {
 
     it("should default to case insensitive string matches", async () => {
         const replace = replaceStream("</HEAD>", `${script}</head>`);
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
         replace.end([
             "<!DOCTYPE html>",
             "<html>",
@@ -73,7 +75,7 @@ describe("stream", "replace", () => {
 
     it("should be possible to force case sensitive string matches", async () => {
         const replace = replaceStream("</HEAD>", `${script}</head>`, { ignoreCase: false });
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
         replace.end([
             "<!DOCTYPE html>",
             "<html>",
@@ -105,7 +107,7 @@ describe("stream", "replace", () => {
         ];
 
         const replace = replaceStream("</head>", `${script}</head>`);
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
 
         haystacks.forEach((haystack) => {
             replace.write(haystack);
@@ -117,7 +119,7 @@ describe("stream", "replace", () => {
 
     it("should be able to handle dangling tails", async () => {
         const replace = replaceStream("</head>", `${script}</head>`);
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
         replace.end([
             "<!DOCTYPE html>",
             "<html>",
@@ -149,7 +151,7 @@ describe("stream", "replace", () => {
         ];
 
         const replace = replaceStream("</p>", ", world</p>");
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
 
         haystacks.forEach((haystack) => {
             replace.write(haystack);
@@ -194,7 +196,7 @@ describe("stream", "replace", () => {
         ];
 
         const replace = replaceStream("</p>", ", world</p>", { limit: 3 });
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
 
         haystacks.forEach((haystack) => {
             replace.write(haystack);
@@ -239,7 +241,7 @@ describe("stream", "replace", () => {
         ];
 
         const replace = replaceStream("</P>", ", world</P>", { regExpOptions: "gm" });
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
 
         haystacks.forEach((haystack) => {
             replace.write(haystack);
@@ -265,7 +267,7 @@ describe("stream", "replace", () => {
 
     it("should replace characters specified and not modify partial matches", async () => {
         const replace = replaceStream("ab", "Z");
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
         replace.end([
             "ab",
             "a",
@@ -282,7 +284,7 @@ describe("stream", "replace", () => {
 
     it("should handle partial matches between complete matches", async () => {
         const replace = replaceStream("ab", "Z");
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
         replace.end([
             "ab",
             "a",
@@ -299,7 +301,7 @@ describe("stream", "replace", () => {
 
     it("should only replace characters specified", async () => {
         const replace = replaceStream("ab", "Z");
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
         replace.end([
             "ab",
             "a",
@@ -332,7 +334,7 @@ describe("stream", "replace", () => {
             expect(match).to.equal("</head>");
             return `${script}</head>`;
         });
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
 
         haystacks.forEach((haystack) => {
             replace.write(haystack);
@@ -365,7 +367,7 @@ describe("stream", "replace", () => {
         const greetings = ["Hi", "Hey", "Gday", "Bonjour", "Greetings"];
 
         const replace = replaceStream("Hello", greetings.shift.bind(greetings));
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
 
         haystacks.forEach((haystack) => {
             replace.write(haystack);
@@ -391,7 +393,7 @@ describe("stream", "replace", () => {
 
     it("should be able to replace within a chunk using regex", async () => {
         const replace = replaceStream(/<\/head>/, `${script}</head>`);
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
         replace.end([
             "<!DOCTYPE html>",
             "<html>",
@@ -423,7 +425,7 @@ describe("stream", "replace", () => {
         ];
 
         const replace = replaceStream(/fe+d/, "foooooooood");
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
 
         haystacks.forEach((haystack) => {
             replace.write(haystack);
@@ -450,7 +452,7 @@ describe("stream", "replace", () => {
         ];
 
         const replace = replaceStream(/<\/head>/, `${script}</head>`);
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
 
         haystacks.forEach((haystack) => {
             replace.write(haystack);
@@ -462,7 +464,7 @@ describe("stream", "replace", () => {
 
     it("should be able to handle dangling tails using regex", async () => {
         const replace = replaceStream(/<\/head>/, `${script}</head>`);
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
 
         replace.end([
             "<!DOCTYPE html>",
@@ -495,7 +497,7 @@ describe("stream", "replace", () => {
         ];
 
         const replace = replaceStream(/<\/p>/g, ", world</p>");
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
 
         haystacks.forEach((haystack) => {
             replace.write(haystack);
@@ -540,7 +542,7 @@ describe("stream", "replace", () => {
         ];
 
         const replace = replaceStream(/<\/p>/g, ", world</p>", { limit: 3 });
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
 
         haystacks.forEach((haystack) => {
             replace.write(haystack);
@@ -585,7 +587,7 @@ describe("stream", "replace", () => {
         ];
 
         const replace = replaceStream(/<\/P>/, ", world</P>", { regExpOptions: "gm" });
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
 
         haystacks.forEach((haystack) => {
             replace.write(haystack);
@@ -630,7 +632,7 @@ describe("stream", "replace", () => {
         ];
 
         const replace = replaceStream(/<\/P>/gm, ", world</P>");
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
 
         haystacks.forEach((haystack) => {
             replace.write(haystack);
@@ -656,7 +658,7 @@ describe("stream", "replace", () => {
 
     it("should replace characters specified and not modify partial matches using regex", async () => {
         const replace = replaceStream("ab", "Z");
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
         replace.end([
             "ab",
             "a",
@@ -673,7 +675,7 @@ describe("stream", "replace", () => {
 
     it("should handle partial matches between complete matches using regex", async () => {
         const replace = replaceStream(/ab/g, "Z");
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
         replace.end([
             "ab",
             "a",
@@ -690,7 +692,7 @@ describe("stream", "replace", () => {
 
     it("should only replace characters specified using regex", async () => {
         const replace = replaceStream(/ab/, "Z");
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
         replace.end([
             "ab",
             "a",
@@ -728,7 +730,7 @@ describe("stream", "replace", () => {
         };
 
         const replace = replaceStream(/<\/(head)>/, replaceFn);
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
 
         haystacks.forEach((haystack) => {
             replace.write(haystack);
@@ -761,7 +763,7 @@ describe("stream", "replace", () => {
         const greetings = ["Hi", "Hey", "Gday", "Bonjour", "Greetings"];
 
         const replace = replaceStream(/Hello/g, greetings.shift.bind(greetings));
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
 
         haystacks.forEach((haystack) => {
             replace.write(haystack);
@@ -787,7 +789,7 @@ describe("stream", "replace", () => {
 
     it("should be able to replace captures using $1 notation", async () => {
         const replace = replaceStream(/(a)(b)/g, "this is $1 and this is $2 and this is again $1");
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
         replace.end([
             "ab",
             "a",
@@ -804,7 +806,7 @@ describe("stream", "replace", () => {
 
     it("should be able to replace when the match is a tail using a regex", async () => {
         const replace = replaceStream(/<\/html>/g, `${script}</html>`);
-        const data = replace.pipe(concatStream({ encoding: "string" }));
+        const data = replace.pipe(concatStream.create({ encoding: "string" }));
         replace.end([
             "<!DOCTYPE html>",
             "<html>",

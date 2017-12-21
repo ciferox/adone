@@ -876,7 +876,7 @@ describe("fs", "engine", "MemoryEngine", () => {
                 }));
 
                 const stream = engine.createReadStream("/a");
-                const res = await stream.pipe(concat("string"));
+                const res = await stream.pipe(concat.create("string"));
                 expect(res).to.be.deep.equal("hello");
             });
 
@@ -887,7 +887,7 @@ describe("fs", "engine", "MemoryEngine", () => {
 
                 const fd = await engine.open("/a", "r");
                 const stream = await engine.createReadStream(null, { fd, autoClose: true });
-                const res = await stream.pipe(concat("string"));
+                const res = await stream.pipe(concat.create("string"));
                 expect(res).to.be.deep.equal("hello");
             });
         });

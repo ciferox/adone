@@ -1,6 +1,28 @@
-const { is, stream: { shift, eos } } = adone;
+const {
+    is,
+    std: { stream },
+    stream: { shift, eos }
+} = adone;
 
 const SIGNAL_FLUSH = Buffer.from([0]);
+
+const onuncork = function (self, fn) {
+    if (self._corked) {
+        self.once("uncork", fn);
+    } else {
+        fn();
+    }
+};
+
+const destroyer = function (self, end) {
+    return function (err) {
+        if (err) {
+            self.destroy(err.message === "premature close" ? null : err);
+        } else if (end && !self._ended) {
+            self.end();
+        }
+    };
+};
 
 const end = function (ws, fn) {
     if (!ws) {
@@ -16,9 +38,9 @@ const end = function (ws, fn) {
     fn();
 };
 
-const toStreams2 = (rs) => new (adone.std.stream.Readable)({ objectMode: true, highWaterMark: 16 }).wrap(rs);
+const toStreams2 = (rs) => new (stream.Readable)({ objectMode: true, highWaterMark: 16 }).wrap(rs);
 
-export default class Duplexify extends adone.std.stream.Duplex {
+export default class Duplexify extends stream.Duplex {
     constructor(writable, readable, opts) {
         super(opts);
 
@@ -75,18 +97,19 @@ export default class Duplexify extends adone.std.stream.Duplex {
             return;
         }
 
-        const unend = eos(writable, { writable: true, readable: false }, this._destroyer(this._forwardEnd));
+        const self = this;
+        const unend = eos(writable, { writable: true, readable: false }, destroyer(this, this._forwardEnd));
 
-        const ondrain = () => {
-            const ondrain = this._ondrain;
-            this._ondrain = null;
+        const ondrain = function () {
+            const ondrain = self._ondrain;
+            self._ondrain = null;
             if (ondrain) {
                 ondrain();
             }
         };
 
-        const clear = () => {
-            this._writable.removeListener("drain", ondrain);
+        const clear = function () {
+            self._writable.removeListener("drain", ondrain);
             unend();
         };
 
@@ -120,7 +143,7 @@ export default class Duplexify extends adone.std.stream.Duplex {
         }
 
         const self = this;
-        const unend = eos(readable, { writable: false, readable: true }, this._destroyer());
+        const unend = eos(readable, { writable: false, readable: true }, destroyer(this));
 
         const onreadable = function () {
             self._forward();
@@ -209,7 +232,7 @@ export default class Duplexify extends adone.std.stream.Duplex {
             return cb();
         }
         if (this._corked) {
-            return this._onuncork(this._write.bind(this, data, enc, cb));
+            return onuncork(this, this._write.bind(this, data, enc, cb));
         }
         if (data === SIGNAL_FLUSH) {
             return this._finish(cb);
@@ -226,15 +249,16 @@ export default class Duplexify extends adone.std.stream.Duplex {
     }
 
     _finish(cb) {
+        const self = this;
         this.emit("preend");
-        this._onuncork(() => {
-            end(this._forwardEnd && this._writable, () => {
+        onuncork(this, () => {
+            end(self._forwardEnd && self._writable, () => {
                 // haxx to not emit prefinish twice
-                if (this._writableState.prefinished === false) {
-                    this._writableState.prefinished = true;
+                if (self._writableState.prefinished === false) {
+                    self._writableState.prefinished = true;
                 }
-                this.emit("prefinish");
-                this._onuncork(cb);
+                self.emit("prefinish");
+                onuncork(self, cb);
             });
         });
     }
@@ -253,25 +277,7 @@ export default class Duplexify extends adone.std.stream.Duplex {
         if (!this._writableState.ending) {
             this.write(SIGNAL_FLUSH);
         }
-        return adone.std.stream.Writable.prototype.end.call(this, cb);
-    }
-
-    _onuncork(fn) {
-        if (this._corked) {
-            this.once("uncork", fn);
-        } else {
-            fn();
-        }
-    }
-
-    _destroyer(end) {
-        return (err) => {
-            if (err) {
-                this.destroy(err.message === "premature close" ? null : err);
-            } else if (end && !this._ended) {
-                this.end();
-            }
-        };
+        return stream.Writable.prototype.end.call(this, cb);
     }
 
     static obj(writable, readable, opts) {
